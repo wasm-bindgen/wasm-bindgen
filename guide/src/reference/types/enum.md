@@ -27,8 +27,6 @@ The generated TypeScript declarations for the above:
 <!-- remember to keep this up to date! copy enum.rs (above) into the lib.rs file a new wasm-bindgen crate; use `wasm-pack build`; then copy pkg/testcrate.d.ts. also ran it through a formatter. -->
 
 ```ts
-/* tslint:disable */
-/* eslint-disable */
 /**
  * @param {NumberEnum} x
  */
