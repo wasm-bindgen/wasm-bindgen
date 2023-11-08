@@ -66,4 +66,7 @@ export enum NumberEnum {
   Bar = 1,
   Baz = 2,
 }
+
+// no types generated for StringEnum (yet) :(
+// see the note above
 ```
