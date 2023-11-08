@@ -12,8 +12,10 @@
 
 ## Example JavaScript Usage
 
-Unfortunately, string enums don't fully work yet; no TypeScript is generated and functions using them accept or return `any`. The JavaScript part works fine, though.
-
 ```js
 placeholder;
 ```
+
+## TypeScript
+
+Unfortunately, string enums don't fully work yet; no TypeScript is generated and functions using them accept or return `any`. The JavaScript part works fine, though. See [Issue #3057](https://github.com/rustwasm/wasm-bindgen/issues/3057)
