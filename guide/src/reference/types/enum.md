@@ -2,7 +2,7 @@
 
 | `T` parameter | `&T` parameter | `&mut T` parameter | `T` return value | `Option<T>` parameter | `Option<T>` return value | JavaScript representation |
 | :-----------: | :------------: | :----------------: | :--------------: | :-------------------: | :----------------------: | :-----------------------: |
-|      Yes      |       No       |         No         |        No        |          Yes          |           Yes            |   `string` or `number`    |
+|      Yes      |       No       |         No         |       Yes        |          Yes          |           Yes            |   `string` or `number`    |
 
 ## Example Rust Usage
 
