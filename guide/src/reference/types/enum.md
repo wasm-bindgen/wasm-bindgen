@@ -13,7 +13,7 @@
 ## Example JavaScript Usage
 
 ```js
-placeholder;
+{{#include ../../../../examples/guide-supported-types-examples/enum.js}}
 ```
 
 ## TypeScript
@@ -24,7 +24,7 @@ See [Issue #3057](https://github.com/rustwasm/wasm-bindgen/issues/3057)
 
 The generated TypeScript declarations for the above:
 
-<!-- remember to keep this up to date! copy enum.rs (above) into the lib.rs file a new wasm-bindgen crate; use `wasm-pack build`; then copy pkg/testcrate.d.ts. also ran it through a formatter. -->
+<!-- remember to keep this up to date! copy enum.rs (above) into the lib.rs file of a new wasm-bindgen crate; use `wasm-pack build`; then copy pkg/testcrate.d.ts. also ran it through a formatter. -->
 
 ```ts
 /**
