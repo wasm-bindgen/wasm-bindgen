@@ -7,13 +7,13 @@
 ## Example Rust Usage
 
 ```rust
-{{#include ../../../../examples/guide-supported-types-examples/src/enum.rs}}
+{{#include ../../../../examples/guide-supported-types-examples/src/enums.rs}}
 ```
 
 ## Example JavaScript Usage
 
 ```js
-{{#include ../../../../examples/guide-supported-types-examples/enum.js}}
+{{#include ../../../../examples/guide-supported-types-examples/enums.js}}
 ```
 
 ## TypeScript
