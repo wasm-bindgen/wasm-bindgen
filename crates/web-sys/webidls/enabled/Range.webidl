@@ -10,10 +10,10 @@
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
- */
+ */ 
 
 [Constructor]
-interface Range {
+interface Range : AbstractRange {
   [Throws]
   readonly attribute Node startContainer;
   [Throws]
