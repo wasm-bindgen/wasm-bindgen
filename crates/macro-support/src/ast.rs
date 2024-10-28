@@ -83,6 +83,32 @@ impl Program {
     }
 }
 
+/// The name of a JS method, field, or property.
+///
+/// JavaScript, broadly, has 2 ways to access properties on objects:
+///
+/// 1. String properties. E.g. `obj.foo` or `obj['foo']`.
+/// 2. Symbol properties. E.g. `obj[Symbol.iterator]`.
+///
+/// String properties are the most common, and are represented by the
+/// `Identifier` variant. This makes code gen easier, because we allowed to
+/// use the `.` operator in JS to access the property.
+///
+/// Symbol properties are less common but no less important. Many JS protocols
+/// (like iterators) are defined by well-known symbols. Furthermore, this also
+/// supports custom symbols created by `Symbol.for(key)`.
+///
+/// Note that symbols are only allowed for properties, fields, and methods.
+/// Free functions, enums, types, and classes cannot be named with symbols.
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone)]
+pub enum Name {
+    /// A valid JS identifier.
+    Identifier(String),
+    /// The name of a well-known symbol. E.g. `iterator` for `Symbol.iterator`.
+    Symbol(String),
+}
+
 /// An abstract syntax tree representing a link to a module in Rust.
 /// In contrast to Program, LinkToModule must expand to an expression.
 /// linked_modules of the inner Program must contain exactly one element
@@ -270,9 +296,9 @@ pub enum OperationKind {
     /// A free function that receives JS `this` as its first parameter
     RegularThis,
     /// A method for getting the value of the provided Ident or String
-    Getter(Option<String>),
+    Getter(Option<Name>),
     /// A method for setting the value of the provided Ident or String
-    Setter(Option<String>),
+    Setter(Option<Name>),
     /// A dynamically intercepted getter
     IndexingGetter,
     /// A dynamically intercepted setter
@@ -401,7 +427,7 @@ pub struct StringEnum {
 #[derive(Clone)]
 pub struct Function {
     /// The exported name of the function
-    pub name: String,
+    pub name: Name,
     /// The span of the function's name in Rust code
     pub name_span: Span,
     /// The arguments to the function
@@ -486,7 +512,7 @@ pub struct StructField {
     /// The name of the field in Rust code
     pub rust_name: syn::Member,
     /// The name of the field in JS code
-    pub js_name: String,
+    pub js_name: Name,
     /// The name of the struct this field is part of
     pub struct_name: Ident,
     /// Whether this value is read-only to JS
@@ -572,7 +598,7 @@ impl Export {
             generated_name.push_str(class);
         }
         generated_name.push('_');
-        generated_name.push_str(&self.function.name.to_string());
+        generated_name.push_str(&self.function.name.as_ref().disambiguated_name());
         Ident::new(&generated_name, Span::call_site())
     }
 
@@ -580,10 +606,10 @@ impl Export {
     /// ABI form of its arguments and converts them back into their normal,
     /// "high level" form before calling the actual function.
     pub(crate) fn export_name(&self) -> String {
-        let fn_name = self.function.name.to_string();
+        let fn_name = self.function.name.as_ref();
         let base_name = match &self.js_class {
-            Some(class) => shared::struct_function_export_name(class, &fn_name),
-            None => shared::free_function_export_name(&fn_name),
+            Some(class) => shared::struct_function_export_name(class, fn_name),
+            None => shared::free_function_export_name(fn_name),
         };
 
         if let Some(ns) = &self.js_namespace {
@@ -607,26 +633,41 @@ impl ImportKind {
     }
 }
 
+impl Name {
+    /// Turn this into a name ref to take advantage of shared logic.
+    pub fn as_ref(&self) -> shared::NameRef<'_> {
+        match self {
+            Name::Identifier(s) => shared::NameRef::Identifier(s),
+            Name::Symbol(s) => shared::NameRef::Symbol(s),
+        }
+    }
+}
+
 impl Function {
     /// If the rust object has a `fn xxx(&self) -> MyType` method, get the name for a getter in
     /// javascript (in this case `xxx`, so you can write `val = obj.xxx`)
-    pub fn infer_getter_property(&self) -> &str {
+    pub fn infer_getter_property(&self) -> &Name {
         &self.name
     }
 
     /// If the rust object has a `fn set_xxx(&mut self, MyType)` style method, get the name
     /// for a setter in javascript (in this case `xxx`, so you can write `obj.xxx = val`)
-    pub fn infer_setter_property(&self) -> Result<String, Diagnostic> {
-        let name = self.name.to_string();
+    pub fn infer_setter_property(&self) -> Result<Name, Diagnostic> {
+        match &self.name {
+            Name::Identifier(ref name) => {
+                let name = name.to_string();
 
-        // Otherwise we infer names based on the Rust function name.
-        if !name.starts_with("set_") {
-            bail_span!(
-                syn::token::Pub(self.name_span),
-                "setters must start with `set_`, found: {}",
-                name,
-            );
+                // Otherwise we infer names based on the Rust function name.
+                if !name.starts_with("set_") {
+                    bail_span!(
+                        syn::token::Pub(self.name_span),
+                        "setters must start with `set_`, found: {}",
+                        name,
+                    );
+                }
+                Ok(Name::Identifier(name[4..].to_string()))
+            }
+            Name::Symbol(_) => Ok(self.name.clone()),
         }
-        Ok(name[4..].to_string())
     }
 }

@@ -3,6 +3,7 @@
 
 extern crate alloc;
 
+use alloc::format;
 use alloc::string::{String, ToString};
 
 pub mod identifier;
@@ -63,6 +64,11 @@ macro_rules! shared_api {
             Enum(StringEnum<'a>),
         }
 
+        enum Name<'a> {
+            Identifier(&'a str),
+            Symbol(&'a str),
+        }
+
         struct ImportFunction<'a> {
             shim: &'a str,
             catch: bool,
@@ -91,8 +97,8 @@ macro_rules! shared_api {
         enum OperationKind<'a> {
             Regular,
             RegularThis,
-            Getter(&'a str),
-            Setter(&'a str),
+            Getter(Name<'a>),
+            Setter(Name<'a>),
             IndexingGetter,
             IndexingSetter,
             IndexingDeleter,
@@ -157,7 +163,7 @@ macro_rules! shared_api {
         struct Function<'a> {
             args: Vec<FunctionArgumentData<'a>>,
             asyncness: bool,
-            name: &'a str,
+            name: Name<'a>,
             generate_typescript: bool,
             generate_jsdoc: bool,
             variadic: bool,
@@ -184,7 +190,7 @@ macro_rules! shared_api {
         }
 
         struct StructField<'a> {
-            name: &'a str,
+            name: Name<'a>,
             readonly: bool,
             comments: Vec<&'a str>,
             generate_typescript: bool,
@@ -242,33 +248,70 @@ pub fn unwrap_function(struct_name: &str) -> String {
     name
 }
 
-pub fn free_function_export_name(function_name: &str) -> String {
-    function_name.to_string()
+#[derive(Debug, Hash)]
+pub enum NameRef<'a> {
+    Identifier(&'a str),
+    Symbol(&'a str),
 }
 
-pub fn struct_function_export_name(struct_: &str, f: &str) -> String {
+impl NameRef<'_> {
+    /// Returns the identifier name of a free function.
+    ///
+    /// If the name is a symbol, this will panic.
+    pub fn free_function(&self) -> &str {
+        match self {
+            NameRef::Identifier(name) => name,
+            _ => {
+                panic!(
+                    "The name of a free function name cannot be a symbol: {}",
+                    self.debug_name()
+                )
+            }
+        }
+    }
+
+    pub fn debug_name(&self) -> String {
+        match self {
+            NameRef::Identifier(name) => name.to_string(),
+            NameRef::Symbol(name) => format!("Symbol.{name}"),
+        }
+    }
+
+    pub fn disambiguated_name(&self) -> String {
+        match self {
+            NameRef::Identifier(s) => s.to_string(),
+            NameRef::Symbol(s) => format!("Symbol_{s}"),
+        }
+    }
+}
+
+pub fn free_function_export_name(function_name: NameRef) -> String {
+    function_name.free_function().to_string()
+}
+
+pub fn struct_function_export_name(struct_: &str, f: NameRef) -> String {
     let mut name = struct_
         .chars()
         .flat_map(|s| s.to_lowercase())
         .collect::<String>();
     name.push('_');
-    name.push_str(f);
+    name.push_str(&f.disambiguated_name());
     name
 }
 
-pub fn struct_field_get(struct_: &str, f: &str) -> String {
+pub fn struct_field_get(struct_: &str, f: NameRef) -> String {
     let mut name = String::from("__wbg_get_");
     name.extend(struct_.chars().flat_map(|s| s.to_lowercase()));
     name.push('_');
-    name.push_str(f);
+    name.push_str(&f.disambiguated_name());
     name
 }
 
-pub fn struct_field_set(struct_: &str, f: &str) -> String {
+pub fn struct_field_set(struct_: &str, f: NameRef) -> String {
     let mut name = String::from("__wbg_set_");
     name.extend(struct_.chars().flat_map(|s| s.to_lowercase()));
     name.push('_');
-    name.push_str(f);
+    name.push_str(&f.disambiguated_name());
     name
 }
 

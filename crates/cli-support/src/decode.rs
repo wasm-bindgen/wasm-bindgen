@@ -173,3 +173,19 @@ macro_rules! decode_api {
 }
 
 wasm_bindgen_shared::shared_api!(decode_api);
+
+impl Name<'_> {
+    pub fn as_ref(&self) -> wasm_bindgen_shared::NameRef<'_> {
+        match self {
+            Name::Identifier(s) => wasm_bindgen_shared::NameRef::Identifier(s),
+            Name::Symbol(s) => wasm_bindgen_shared::NameRef::Symbol(s),
+        }
+    }
+
+    pub fn to_aux(&self) -> crate::wit::AuxName {
+        match self {
+            Name::Identifier(s) => crate::wit::AuxName::Identifier(s.to_string()),
+            Name::Symbol(s) => crate::wit::AuxName::Symbol(s.to_string()),
+        }
+    }
+}
