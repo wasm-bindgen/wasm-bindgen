@@ -134,7 +134,7 @@ fn bindgen(
             const _: () = {
                 #wasm_bindgen_path::__rt::wasm_bindgen::__wbindgen_coverage! {
                 #[export_name = ::core::concat!(#prefix, #ignore_name, "_", ::core::module_path!(), "::", ::core::stringify!(#ident))]
-                #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
+                #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten")))]
                 extern "C" fn __wbgt_test(cx: &#wasm_bindgen_path::__rt::Context) {
                     let test_name = ::core::concat!(::core::module_path!(), "::", ::core::stringify!(#ident));
                     #test_body
@@ -146,7 +146,7 @@ fn bindgen(
 
     if let Some(path) = attributes.unsupported {
         tokens.extend(
-            quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #path)] },
+            quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten"))), #path)] },
         );
 
         if let Some(should_panic) = should_panic {
@@ -157,7 +157,7 @@ fn bindgen(
             };
 
             tokens.extend(
-                quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #should_panic)] }
+                quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten"))), #should_panic)] }
             )
         }
 
@@ -169,7 +169,7 @@ fn bindgen(
             };
 
             tokens.extend(
-                quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #ignore)] }
+                quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten"))), #ignore)] }
             )
         }
     } else {
