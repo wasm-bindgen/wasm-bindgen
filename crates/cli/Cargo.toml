@@ -47,6 +47,7 @@ tempfile = "3.0"
 ureq = { version = "3", default-features = false, features = ["brotli", "gzip"] }
 walrus = "0.24.2"
 wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.106" }
+wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.106" }
 
 [dev-dependencies]
 assert_cmd = "2"

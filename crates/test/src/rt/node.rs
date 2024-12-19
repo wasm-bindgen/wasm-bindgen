@@ -37,3 +37,14 @@ impl super::Formatter for Node {
         NodeError::from(err.clone()).stack()
     }
 }
+
+/// Path to use for coverage data.
+#[wasm_bindgen]
+pub fn __wbgtest_coverage_path(
+    env: Option<String>,
+    pid: u32,
+    temp_dir: &str,
+    module_signature: u64,
+) -> String {
+    wasm_bindgen_test_shared::coverage_path(env.as_deref(), pid, temp_dir, module_signature)
+}

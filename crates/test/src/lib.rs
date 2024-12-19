@@ -3,6 +3,7 @@
 //! More documentation can be found in the README for this crate!
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(wasm_bindgen_unstable_test_coverage, feature(coverage_attribute))]
 #![cfg_attr(target_feature = "atomics", feature(thread_local))]
 #![deny(missing_docs)]
 

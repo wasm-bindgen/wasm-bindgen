@@ -224,6 +224,7 @@ jobs:
     - run: cargo test -p wasm-bindgen-macro-support
     - run: cargo test -p wasm-bindgen-futures
     - run: cargo test -p wasm-bindgen-shared
+    - run: cargo test -p wasm-bindgen-test-shared
 
   test_with_geckodriver:
     strategy:

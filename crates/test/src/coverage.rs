@@ -23,3 +23,15 @@ pub fn __wbgtest_cov_dump() -> Option<Vec<u8>> {
 pub fn __wbgtest_cov_dump() -> Option<Vec<u8>> {
     None
 }
+
+#[cfg(wasm_bindgen_unstable_test_coverage)]
+#[wasm_bindgen]
+pub fn __wbgtest_module_signature() -> Option<u64> {
+    Some(minicov::module_signature())
+}
+
+#[cfg(not(wasm_bindgen_unstable_test_coverage))]
+#[wasm_bindgen]
+pub fn __wbgtest_module_signature() -> Option<u64> {
+    None
+}

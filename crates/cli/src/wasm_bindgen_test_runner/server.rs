@@ -1,8 +1,8 @@
 use std::borrow::Cow;
-use std::fs;
 use std::io::{Read, Write};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
+use std::{env, fs, process};
 
 use anyhow::{anyhow, Context, Error};
 use rouille::{Request, Response, Server};
@@ -18,15 +18,15 @@ pub(crate) fn spawn(
     tests: Tests,
     test_mode: TestMode,
     isolate_origin: bool,
-    coverage: PathBuf,
     benchmark: PathBuf,
 ) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
     let mut js_to_execute = String::new();
 
     let cov_import = if test_mode.no_modules() {
-        "let __wbgtest_cov_dump = wasm_bindgen.__wbgtest_cov_dump;"
+        "let __wbgtest_cov_dump = wasm_bindgen.__wbgtest_cov_dump;\n\
+         let __wbgtest_module_signature = wasm_bindgen.__wbgtest_module_signature;"
     } else {
-        "__wbgtest_cov_dump,"
+        "__wbgtest_cov_dump,__wbgtest_module_signature,"
     };
 
     let cov_dump = r#"
@@ -36,6 +36,9 @@ pub(crate) fn spawn(
         if (coverage !== undefined) {
             await fetch("/__wasm_bindgen/coverage", {
                 method: "POST",
+                headers: {
+                    "Module-Signature": __wbgtest_module_signature(),
+                },
                 body: coverage
             });
         }
@@ -371,7 +374,13 @@ pub(crate) fn spawn(
 
             return response;
         } else if request.url() == "/__wasm_bindgen/coverage" {
-            return if let Err(e) = handle_coverage_dump(&coverage, request) {
+            let module_signature = request
+                .header("Module-Signature")
+                .expect("sent coverage data without module signature")
+                .parse()
+                .expect("sent invalid module signature");
+
+            return if let Err(e) = handle_coverage_dump(module_signature, request) {
                 let s: &str = &format!("Failed to dump coverage: {e}");
                 log::error!("{s}");
                 let mut ret = Response::text(s);
@@ -460,9 +469,17 @@ fn handle_benchmark_dump(path: &Path, request: &Request) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn handle_coverage_dump(profraw_path: &Path, request: &Request) -> anyhow::Result<()> {
+fn handle_coverage_dump(module_signature: u64, request: &Request) -> anyhow::Result<()> {
     // This is run after all tests are done and dumps the data received in the request
     // into a single profraw file
+    let profraw_path = wasm_bindgen_test_shared::coverage_path(
+        env::var("LLVM_PROFILE_FILE").ok().as_deref(),
+        process::id(),
+        env::temp_dir()
+            .to_str()
+            .context("failed to parse path to temporary directory")?,
+        module_signature,
+    );
     let mut profraw = std::fs::File::create(profraw_path)?;
     let mut data = Vec::new();
     if let Some(mut r_data) = request.data() {

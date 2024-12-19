@@ -28,6 +28,7 @@ const CRATES_TO_PUBLISH: &[&str] = &[
     "wasm-bindgen-cli",
     "wasm-bindgen-test-macro",
     "wasm-bindgen-test",
+    "wasm-bindgen-test-shared",
 ];
 
 const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
