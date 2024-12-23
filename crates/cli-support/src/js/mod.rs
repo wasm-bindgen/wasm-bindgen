@@ -263,7 +263,8 @@ impl<'a> Context<'a> {
                 | OutputMode::Node { module: true }
                 | OutputMode::Web
                 | OutputMode::Module
-                | OutputMode::Deno => {
+                | OutputMode::Deno
+                | OutputMode::Emscripten => {
                     if export_name == "default" {
                         self.globals.push_str(&format!("export default {id};\n"));
                     } else if export_name == id {
@@ -644,7 +645,7 @@ __wbg_set_wasm(wasm);"
             // browsers don't support natively importing Wasm right now so we
             // expose the same initialization function as `--target no-modules`
             // as the default export of the module.
-            OutputMode::Web => {
+            OutputMode::Web | OutputMode::Emscripten => {
                 self.imports_post.push_str("let wasm;\n");
                 init = self.gen_init(needs_manual_start, Some(&mut imports))?;
                 footer.push_str("export { initSync };\n");
@@ -772,7 +773,8 @@ wasm = wasmInstance.exports;
             | OutputMode::Node { module: true }
             | OutputMode::Web
             | OutputMode::Module
-            | OutputMode::Deno => {
+            | OutputMode::Deno
+            | OutputMode::Emscripten => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
                     imports.push_str("import { ");
                     for (i, (item, rename)) in items.iter().enumerate() {
@@ -3721,7 +3723,8 @@ wasm = wasmInstance.exports;
                         | OutputMode::Bundler { .. }
                         | OutputMode::Module
                         | OutputMode::Deno
-                        | OutputMode::Node { module: true } => "import.meta.url",
+                        | OutputMode::Node { module: true }
+                        | OutputMode::Emscripten => "import.meta.url",
                         OutputMode::Node { module: false } => {
                             "require('url').pathToFileURL(__filename)"
                         }

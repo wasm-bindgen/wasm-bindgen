@@ -14,6 +14,7 @@ enum Target {
     Deno,
     ExperimentalNodejsModule,
     Module,
+    Emscripten,
 }
 
 #[derive(Debug, Parser)]
@@ -114,6 +115,8 @@ struct Args {
     #[arg(long, hide = true)]
     #[deprecated(note = "automatically inferred from the Wasm features")]
     reference_types: bool,
+    #[arg(long, help = "trigger `--target emscripten`")]
+    emscripten: bool,
 }
 
 pub fn run_cli_with_args<I, T>(args: I) -> anyhow::Result<()>
@@ -145,6 +148,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         Target::Deno => b.deno(true)?,
         Target::ExperimentalNodejsModule => b.nodejs_module(true)?,
         Target::Module => b.module(true)?,
+        Target::Emscripten => b.emscripten(true)?
     };
     #[allow(deprecated)]
     b.input_path(&args.input)
@@ -154,6 +158,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .no_modules(args.no_modules)?
         .debug(args.debug)
         .demangle(!args.no_demangle)
+        .emscripten(args.emscripten)?
         .keep_lld_exports(args.keep_lld_exports)
         .keep_debug(args.keep_debug)
         .remove_name_section(args.remove_name_section)
