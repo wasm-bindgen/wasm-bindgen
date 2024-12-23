@@ -209,7 +209,8 @@ impl<'a> Context<'a> {
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
-            | OutputMode::Deno => match export {
+            | OutputMode::Deno 
+            | OutputMode::Emscripten => match export {
                 ExportJs::Class(class) => {
                     assert_eq!(export_name, definition_name);
                     format!("export {}\n", class)
@@ -598,7 +599,7 @@ __wbg_set_wasm(wasm);"
             // browsers don't support natively importing Wasm right now so we
             // expose the same initialization function as `--target no-modules`
             // as the default export of the module.
-            OutputMode::Web => {
+            OutputMode::Web | OutputMode::Emscripten => {
                 self.imports_post.push_str("let wasm;\n");
                 init = self.gen_init(needs_manual_start, Some(&mut imports))?;
                 footer.push_str("export { initSync };\n");
@@ -698,7 +699,8 @@ __wbg_set_wasm(wasm);"
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
-            | OutputMode::Deno => {
+            | OutputMode::Deno
+            | OutputMode::Emscripten => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
                     imports.push_str("import { ");
                     for (i, (item, rename)) in items.iter().enumerate() {
@@ -1771,7 +1773,8 @@ __wbg_set_wasm(wasm);"
             OutputMode::Deno
             | OutputMode::Web
             | OutputMode::NoModules { .. }
-            | OutputMode::Bundler { browser_only: true } => {
+            | OutputMode::Bundler { browser_only: true } 
+            | OutputMode::Emscripten => {
                 self.global(&format!("const cached{0} = (typeof {0} !== 'undefined' ? new {0}{1} : {{ {2}: () => {{ throw Error('{0} not available') }} }} );", s, args, op))
             }
         };
@@ -1785,7 +1788,8 @@ __wbg_set_wasm(wasm);"
                 OutputMode::Deno
                 | OutputMode::Web
                 | OutputMode::NoModules { .. }
-                | OutputMode::Bundler { browser_only: true } => self.global(&format!(
+                | OutputMode::Bundler { browser_only: true }
+                | OutputMode::Emscripten => self.global(&format!(
                     "if (typeof {} !== 'undefined') {{ {} }};",
                     s, init
                 )),
@@ -3522,7 +3526,8 @@ __wbg_set_wasm(wasm);"
                         OutputMode::Web
                         | OutputMode::Bundler { .. }
                         | OutputMode::Deno
-                        | OutputMode::Node { module: true } => "import.meta.url",
+                        | OutputMode::Node { module: true }
+                        | OutputMode::Emscripten => "import.meta.url",
                         OutputMode::Node { module: false } => {
                             "require('url').pathToFileURL(__filename)"
                         }

@@ -66,6 +66,7 @@ enum OutputMode {
     NoModules { global: String },
     Node { module: bool },
     Deno,
+    Emscripten,    
 }
 
 enum Input {
@@ -222,6 +223,13 @@ impl Bindgen {
         match &mut self.mode {
             OutputMode::NoModules { global } => *global = name.to_string(),
             _ => bail!("can only specify `--no-modules-global` with `--target no-modules`"),
+        }
+        Ok(self)
+    }
+
+    pub fn emscripten(&mut self, emscripten: bool) -> Result<&mut Bindgen, Error> {
+        if emscripten {
+            self.switch_mode(OutputMode::Emscripten, "--target emscripten")?;
         }
         Ok(self)
     }
@@ -559,6 +567,10 @@ impl OutputMode {
     fn no_modules(&self) -> bool {
         matches!(self, OutputMode::NoModules { .. })
     }
+    
+    // fn emscripten(&self) -> bool {
+    //     matches!(self, OutputMode::Emscripten { .. })
+    // }
 
     fn esm_integration(&self) -> bool {
         matches!(

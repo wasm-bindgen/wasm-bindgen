@@ -22,6 +22,8 @@ struct Args {
     #[arg(long, help = "Deprecated, use `--target no-modules`")]
     no_modules: bool,
     #[arg(long, help = "Output a TypeScript definition file (on by default)")]
+    emscripten: bool,
+    #[arg(long, help = "testing, also see if `--target emscripten` is hooked up properly")]
     typescript: bool,
     #[arg(long, help = "Don't emit a *.d.ts file")]
     no_typescript: bool,
@@ -110,6 +112,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
             "nodejs" => b.nodejs(true)?,
             "deno" => b.deno(true)?,
             "experimental-nodejs-module" => b.nodejs_module(true)?,
+            "emscripten" => b.emscripten(true)?,
             s => bail!("invalid encode-into mode: `{}`", s),
         };
     }
@@ -118,6 +121,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .web(args.web)?
         .browser(args.browser)?
         .no_modules(args.no_modules)?
+        .emscripten(args.emscripten)?
         .debug(args.debug)
         .demangle(!args.no_demangle)
         .keep_lld_exports(args.keep_lld_exports)
