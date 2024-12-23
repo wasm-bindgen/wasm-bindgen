@@ -503,7 +503,6 @@ impl ToTokens for ast::StructField {
                 #wasm_bindgen::__wbindgen_coverage! {
                 #[cfg_attr(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten")), no_mangle)]
                 #[doc(hidden)]
-
                 pub unsafe extern "C" fn #getter(js: u32)
                     -> #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi>
                 {
