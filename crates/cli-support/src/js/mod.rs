@@ -26,6 +26,7 @@ mod binding;
 pub struct Context<'a> {
     globals: String,
     intrinsics: Option<BTreeMap<Cow<'static, str>, Cow<'static, str>>>,
+    emscripten_library: String,
     imports_post: String,
     typescript: String,
     config: &'a Bindgen,
@@ -176,6 +177,7 @@ impl<'a> Context<'a> {
         Ok(Context {
             globals: String::new(),
             intrinsics: Some(Default::default()),
+            emscripten_library: String::new(),
             imports_post: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
             imported_names: Default::default(),
@@ -263,8 +265,7 @@ impl<'a> Context<'a> {
                 | OutputMode::Node { module: true }
                 | OutputMode::Web
                 | OutputMode::Module
-                | OutputMode::Deno
-                | OutputMode::Emscripten => {
+                | OutputMode::Deno => {
                     if export_name == "default" {
                         self.globals.push_str(&format!("export default {id};\n"));
                     } else if export_name == id {
@@ -281,7 +282,30 @@ impl<'a> Context<'a> {
                         self.globals
                             .push_str(&format!("export {{ {id} as '{export_name}' }}\n"));
                     }
-                }
+                },
+                OutputMode::Emscripten => match export {
+                    ExportJs::Class(class) => {
+                        assert_eq!(export_name, definition_name);
+                        format!("{}\nModule.{} = {};\n", class.replace("wasm", "wasmExports"), export_name, export_name)
+                    }
+                    ExportJs::Function(function) => {
+                        let body = function.strip_prefix("function")
+                                    .unwrap()
+                                    .replace("wasm", "wasmExports");
+                        if export_name == definition_name {
+                            format!("Module.{} = function{}\n", export_name, body)
+                        } else {
+                            format!(
+                                "function {}{}\nexport {{ {} as {} }};\n",
+                                definition_name, body, definition_name, export_name,
+                            )
+                        }
+                    }
+                    ExportJs::Expression(expr) => {
+                        assert_eq!(export_name, definition_name);
+                        format!("export const {} = {};\n", export_name, expr.replace("wasm", "wasmExports"))
+                    }
+                },
             };
             if self.config.typescript && !ts_decl.is_empty() {
                 if export_name == "default" {
@@ -304,7 +328,7 @@ impl<'a> Context<'a> {
     pub fn finalize(
         &mut self,
         module_name: &str,
-    ) -> Result<(String, String, Option<String>), Error> {
+    ) -> Result<(String, String, String, Option<String>), Error> {
         // Finalize all bindings for JS classes. This is where we'll generate JS
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
@@ -475,9 +499,10 @@ impl<'a> Context<'a> {
         &mut self,
         module_name: &str,
         needs_manual_start: bool,
-    ) -> Result<(String, String, Option<String>), Error> {
+    ) -> Result<(String, String, String, Option<String>), Error> {
         let mut ts;
         let mut js = String::new();
+        let mut js_emscripten_library = String::new();
         let mut start = None;
 
         // take globals
@@ -721,6 +746,30 @@ wasm = wasmInstance.exports;
         // Generate the initialization glue, if there was any
         let nl = push_with_newline(&init_js, nl);
         push_with_newline(&footer, nl);
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            js_emscripten_library.push_str(&self.emscripten_library);
+            js_emscripten_library.push('\n');
+            js_emscripten_library.push_str("var LibraryWbg = {\n");
+            js_emscripten_library.push_str(&init_js);
+            js_emscripten_library.push_str(
+            "};
+            \n
+            addToLibrary(LibraryWbg);");
+            push_with_newline("var Module = {\n
+  onRuntimeInitialized: () => {
+    wasmExports.__wbindgen_start();");
+            push_with_newline(&self.globals);
+            push_with_newline("}\n};");
+        } else {
+            push_with_newline(&imports);
+            push_with_newline(&self.imports_post);
+            // Emit all our exports from this module
+            push_with_newline(&self.globals);
+            // Generate the initialization glue, if there was any
+            push_with_newline(&init_js);
+            push_with_newline(&footer);
+        }
+
         if self.config.mode.no_modules() {
             js.push_str("})();\n");
         }
@@ -729,7 +778,7 @@ wasm = wasmInstance.exports;
             js = js.replace("\n\n\n", "\n\n");
         }
 
-        Ok((js, ts, start))
+        Ok((js, js_emscripten_library, ts, start))
     }
 
     fn js_import_header(&self) -> Result<String, Error> {
@@ -925,20 +974,41 @@ wasm = wasmInstance.exports;
         // directed to wire up.
         let mut imports_init = String::new();
 
-        imports_init.push_str("imports.");
-        imports_init.push_str(module_name);
-        imports_init.push_str(" = {};\n");
+        if !matches!(self.config.mode, OutputMode::Emscripten) {
+            imports_init.push_str("imports.");
+            imports_init.push_str(module_name);
+            imports_init.push_str(" = {};\n");
+        }
 
         for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
             import.module = module_name.to_string();
-            imports_init.push_str("imports.");
-            imports_init.push_str(module_name);
-            imports_init.push('.');
-            imports_init.push_str(&import.name);
-            imports_init.push_str(" = ");
-            imports_init.push_str(js.trim());
-            imports_init.push_str(";\n");
+            if !matches!(self.config.mode, OutputMode::Emscripten) {
+                imports_init.push_str("imports.");
+                imports_init.push_str(module_name);
+                imports_init.push('.');
+                imports_init.push_str(&import.name);
+                imports_init.push_str(" = ");
+                imports_init.push_str(js.trim());
+                imports_init.push_str(";\n");
+            } else {
+                imports_init.push_str(&import.name);
+                if import.name == "__wbindgen_init_externref_table" {
+                    imports_init.push_str(": () =>");
+                    imports_init.push_str(&js
+                        .trim()
+                        .strip_prefix("function()")
+                        .unwrap()
+                        .replace("wasm", "wasmExports"));
+                    imports_init.push_str(",\n");
+                } else {
+                   imports_init.push_str(": (function() {\n");
+                   imports_init.push_str("return ");
+                   imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
+                   imports_init.push_str(";\n");
+                   imports_init.push_str("}()),\n");
+                }
+            }
         }
 
         let extra_modules = self
@@ -959,7 +1029,9 @@ wasm = wasmInstance.exports;
                 None => bail!("cannot import from modules (`{extra}`) with `--no-modules`"),
             };
             imports.push_str(&format!("import * as __wbg_star{i} from '{extra}';\n"));
-            imports_init.push_str(&format!("imports['{extra}'] = __wbg_star{i};\n"));
+            if !matches!(self.config.mode, OutputMode::Emscripten) {
+                imports_init.push_str(&format!("imports['{extra}'] = __wbg_star{i};\n"));
+            }
         }
 
         let mut init_memviews = String::new();
@@ -976,7 +1048,14 @@ wasm = wasmInstance.exports;
             }
         }
 
-        let js = format!(
+
+        let js = match &self.config.mode {
+            OutputMode::Emscripten => format!(
+            "\
+                    {imports_init}",
+                imports_init = imports_init
+            ),
+            _ => format!(
             "
                 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
@@ -1098,7 +1177,8 @@ wasm = wasmInstance.exports;
             } else {
                 String::new()
             },
-        );
+            )
+        };
 
         Ok((js, ts))
     }
@@ -1996,6 +2076,28 @@ wasm = wasmInstance.exports;
             .into()
         });
         ret
+
+        // Typically we try to give a raw view of memory out to `TextDecoder` to
+        // avoid copying too much data. If, however, a `SharedArrayBuffer` is
+        // being used it looks like that is rejected by `TextDecoder` or
+        // otherwise doesn't work with it. When we detect a shared situation we
+        // use `slice` which creates a new array instead of `subarray` which
+        // creates just a view. That way in shared mode we copy more data but in
+        // non-shared mode there's no need to copy the data except for the
+        // string itself.
+        // let is_shared = self.module.memories.get(memory).shared;
+        // let method = if is_shared { "slice" } else { "subarray" };
+        // if matches!(self.config.mode, OutputMode::Emscripten) {
+        //     self.emscripten_library.push_str(&format!(
+        //         "
+        //         function {}(ptr, len) {{
+        //             ptr = ptr >>> 0;
+        //             return cachedTextDecoder.decode(HEAP8.{}(ptr, ptr + len));
+        //         }}\n
+        //         ",
+        //         ret, method
+        //     ));
+        // } 
     }
 
     fn expose_get_cached_string_from_wasm(
@@ -2232,18 +2334,26 @@ wasm = wasmInstance.exports;
                 // which is indicated by a length of 0.
                 format!("{cache}.byteLength === 0")
             };
-            format!(
-                "
-                let {cache} = null;
-                function {view}() {{
-                    if ({cache} === null || {resized_check}) {{
-                        {cache} = new {kind}(wasm.{mem}.buffer);
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                // Emscripten provides its own version of getMemory
+                // so don't write out the memory function.
+                // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
+                // for more details.
+                "".into()
+            } else {
+                format!(
+                    "
+                    let {cache} = null;
+                    function {view}() {{
+                        if ({cache} === null || {resized_check}) {{
+                            {cache} = new {kind}(wasm.{mem}.buffer);
+                        }}
+                        return {cache};
                     }}
-                    return {cache};
-                }}
-                ",
-            )
-            .into()
+                    ",
+                )
+                .into()
+            }
         });
         view
     }
