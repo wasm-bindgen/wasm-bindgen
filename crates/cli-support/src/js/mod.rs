@@ -23,6 +23,7 @@ mod binding;
 
 pub struct Context<'a> {
     globals: String,
+    emscripten_library: String,
     imports_post: String,
     typescript: String,
     exposed_globals: Option<HashSet<Cow<'static, str>>>,
@@ -146,6 +147,7 @@ impl<'a> Context<'a> {
     ) -> Result<Context<'a>, Error> {
         Ok(Context {
             globals: String::new(),
+            emscripten_library: String::new(),
             imports_post: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
             exposed_globals: Some(Default::default()),
@@ -209,8 +211,7 @@ impl<'a> Context<'a> {
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
-            | OutputMode::Deno 
-            | OutputMode::Emscripten => match export {
+            | OutputMode::Deno => match export {
                 ExportJs::Class(class) => {
                     assert_eq!(export_name, definition_name);
                     format!("export {}\n", class)
@@ -231,6 +232,29 @@ impl<'a> Context<'a> {
                     format!("export const {} = {};\n", export_name, expr)
                 }
             },
+            OutputMode::Emscripten => match export {
+                ExportJs::Class(class) => {
+                    assert_eq!(export_name, definition_name);
+                    format!("{}\nModule.{} = {};\n", class.replace("wasm", "wasmExports"), export_name, export_name)
+                }
+                ExportJs::Function(function) => {
+                    let body = function.strip_prefix("function")
+                                .unwrap()
+                                .replace("wasm", "wasmExports");
+                    if export_name == definition_name {
+                        format!("Module.{} = function{}\n", export_name, body)
+                    } else {
+                        format!(
+                            "function {}{}\nexport {{ {} as {} }};\n",
+                            definition_name, body, definition_name, export_name,
+                        )
+                    }
+                }
+                ExportJs::Expression(expr) => {
+                    assert_eq!(export_name, definition_name);
+                    format!("export const {} = {};\n", export_name, expr.replace("wasm", "wasmExports"))
+                }
+            },
         };
         self.global(&global);
         Ok(())
@@ -239,7 +263,7 @@ impl<'a> Context<'a> {
     pub fn finalize(
         &mut self,
         module_name: &str,
-    ) -> Result<(String, String, Option<String>), Error> {
+    ) -> Result<(String, String, String, Option<String>), Error> {
         // Finalize all bindings for JS classes. This is where we'll generate JS
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
@@ -444,9 +468,10 @@ impl<'a> Context<'a> {
         &mut self,
         module_name: &str,
         needs_manual_start: bool,
-    ) -> Result<(String, String, Option<String>), Error> {
+    ) -> Result<(String, String, String, Option<String>), Error> {
         let mut ts;
         let mut js = String::new();
+        let mut js_emscripten_library = String::new();
         let mut start = None;
 
         if let OutputMode::NoModules { global } = &self.config.mode {
@@ -636,15 +661,30 @@ __wbg_set_wasm(wasm);"
             }
         };
 
-        push_with_newline(&imports);
-        push_with_newline(&self.imports_post);
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            js_emscripten_library.push_str(&self.emscripten_library);
+            js_emscripten_library.push('\n');
+            js_emscripten_library.push_str("var LibraryWbg = {\n");
+            js_emscripten_library.push_str(&init_js);
+            js_emscripten_library.push_str(
+            "};
+            \n
+            addToLibrary(LibraryWbg);");
+            push_with_newline("var Module = {\n
+  onRuntimeInitialized: () => {
+    wasmExports.__wbindgen_start();");
+            push_with_newline(&self.globals);
+            push_with_newline("}\n};");
+        } else {
+            push_with_newline(&imports);
+            push_with_newline(&self.imports_post);
+            // Emit all our exports from this module
+            push_with_newline(&self.globals);
+            // Generate the initialization glue, if there was any
+            push_with_newline(&init_js);
+            push_with_newline(&footer);
+        }
 
-        // Emit all our exports from this module
-        push_with_newline(&self.globals);
-
-        // Generate the initialization glue, if there was any
-        push_with_newline(&init_js);
-        push_with_newline(&footer);
         if self.config.mode.no_modules() {
             js.push_str("})();\n");
         }
@@ -653,7 +693,7 @@ __wbg_set_wasm(wasm);"
             js = js.replace("\n\n\n", "\n\n");
         }
 
-        Ok((js, ts, start))
+        Ok((js, js_emscripten_library, ts, start))
     }
 
     fn js_import_header(&self) -> Result<String, Error> {
@@ -860,20 +900,41 @@ __wbg_set_wasm(wasm);"
         // directed to wire up.
         let mut imports_init = String::new();
 
-        imports_init.push_str("imports.");
-        imports_init.push_str(module_name);
-        imports_init.push_str(" = {};\n");
+        if !matches!(self.config.mode, OutputMode::Emscripten) {
+            imports_init.push_str("imports.");
+            imports_init.push_str(module_name);
+            imports_init.push_str(" = {};\n");
+        }
 
         for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
             import.module = module_name.to_string();
-            imports_init.push_str("imports.");
-            imports_init.push_str(module_name);
-            imports_init.push('.');
-            imports_init.push_str(&import.name);
-            imports_init.push_str(" = ");
-            imports_init.push_str(js.trim());
-            imports_init.push_str(";\n");
+            if !matches!(self.config.mode, OutputMode::Emscripten) {
+                imports_init.push_str("imports.");
+                imports_init.push_str(module_name);
+                imports_init.push('.');
+                imports_init.push_str(&import.name);
+                imports_init.push_str(" = ");
+                imports_init.push_str(js.trim());
+                imports_init.push_str(";\n");
+            } else {
+                imports_init.push_str(&import.name);
+                if import.name == "__wbindgen_init_externref_table" {
+                    imports_init.push_str(": () =>");
+                    imports_init.push_str(&js
+                        .trim()
+                        .strip_prefix("function()")
+                        .unwrap()
+                        .replace("wasm", "wasmExports"));
+                    imports_init.push_str(",\n");
+                } else {
+                   imports_init.push_str(": (function() {\n");
+                   imports_init.push_str("return ");
+                   imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
+                   imports_init.push_str(";\n");
+                   imports_init.push_str("}()),\n");
+                }
+            }
         }
 
         let extra_modules = self
@@ -897,7 +958,9 @@ __wbg_set_wasm(wasm);"
                 ),
             };
             imports.push_str(&format!("import * as __wbg_star{} from '{}';\n", i, extra));
-            imports_init.push_str(&format!("imports['{}'] = __wbg_star{};\n", extra, i));
+            if !matches!(self.config.mode, OutputMode::Emscripten) {
+                imports_init.push_str(&format!("imports['{}'] = __wbg_star{};\n", extra, i));
+            }
         }
 
         let mut init_memviews = String::new();
@@ -916,7 +979,13 @@ __wbg_set_wasm(wasm);"
             }
         }
 
-        let js = format!(
+         let js = match &self.config.mode {
+            OutputMode::Emscripten => format!(
+            "\
+                    {imports_init}",
+                imports_init = imports_init
+            ),
+            _ => format!(
             "\
                 async function __wbg_load(module, imports) {{
                     if (typeof Response === 'function' && module instanceof Response) {{
@@ -1052,8 +1121,9 @@ __wbg_set_wasm(wasm);"
                 )
             } else {
                 String::new()
-            },
-        );
+            }
+            )
+        };
 
         Ok((js, ts))
     }
@@ -1773,9 +1843,11 @@ __wbg_set_wasm(wasm);"
             OutputMode::Deno
             | OutputMode::Web
             | OutputMode::NoModules { .. }
-            | OutputMode::Bundler { browser_only: true } 
-            | OutputMode::Emscripten => {
+            | OutputMode::Bundler { browser_only: true } => {
                 self.global(&format!("const cached{0} = (typeof {0} !== 'undefined' ? new {0}{1} : {{ {2}: () => {{ throw Error('{0} not available') }} }} );", s, args, op))
+            }
+            OutputMode::Emscripten => {
+                self.emscripten_library.push_str(&format!("const cached{0} = (typeof {0} !== 'undefined' ? new {0}{1} : {{ {2}: () => {{ throw Error('{0} not available') }} }} );\n\n", s, args, op));
             }
         };
 
@@ -1788,9 +1860,12 @@ __wbg_set_wasm(wasm);"
                 OutputMode::Deno
                 | OutputMode::Web
                 | OutputMode::NoModules { .. }
-                | OutputMode::Bundler { browser_only: true }
-                | OutputMode::Emscripten => self.global(&format!(
+                | OutputMode::Bundler { browser_only: true } => self.global(&format!(
                     "if (typeof {} !== 'undefined') {{ {} }};",
+                    s, init
+                )),
+                OutputMode::Emscripten => self.emscripten_library.push_str(&format!(
+                    "if (typeof {} !== 'undefined') {{ {} }};\n\n",
                     s, init
                 )),
             }
@@ -1821,16 +1896,27 @@ __wbg_set_wasm(wasm);"
         // string itself.
         let is_shared = self.module.memories.get(memory).shared;
         let method = if is_shared { "slice" } else { "subarray" };
-
-        self.global(&format!(
-            "
-            function {}(ptr, len) {{
-                ptr = ptr >>> 0;
-                return cachedTextDecoder.decode({}().{}(ptr, ptr + len));
-            }}
-            ",
-            ret, mem, method
-        ));
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library.push_str(&format!(
+                "
+                function {}(ptr, len) {{
+                    ptr = ptr >>> 0;
+                    return cachedTextDecoder.decode(HEAP8.{}(ptr, ptr + len));
+                }}\n
+                ",
+                ret, method
+            ));
+        } else {
+            self.global(&format!(
+                "
+                function {}(ptr, len) {{
+                    ptr = ptr >>> 0;
+                    return cachedTextDecoder.decode({}().{}(ptr, ptr + len));
+                }}
+                ",
+                ret, mem, method
+            ));
+        }
         Ok(ret)
     }
 
@@ -2083,6 +2169,13 @@ __wbg_set_wasm(wasm);"
             format!("{cache}.byteLength === 0", cache = cache)
         };
 
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Emscripten provides its own version of getMemory
+            // so don't write out the memory function.
+            // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
+            // for more details.
+            return view;
+        }
         self.global(&format!("let {cache} = null;\n"));
 
         self.global(&format!(

@@ -51,6 +51,7 @@ pub struct Output {
 struct Generated {
     mode: OutputMode,
     js: String,
+    js_emscripten_library: String,
     ts: String,
     start: Option<String>,
     snippets: HashMap<String, Vec<String>>,
@@ -440,7 +441,7 @@ impl Bindgen {
             .unwrap();
         let mut cx = js::Context::new(&mut module, self, &adapters, &aux)?;
         cx.generate()?;
-        let (js, ts, start) = cx.finalize(stem)?;
+        let (js, js_emscripten_library, ts, start) = cx.finalize(stem)?;
         let generated = Generated {
             snippets: aux.snippets.clone(),
             local_modules: aux.local_modules.clone(),
@@ -448,6 +449,7 @@ impl Bindgen {
             typescript: self.typescript,
             npm_dependencies: cx.npm_dependencies.clone(),
             js,
+            js_emscripten_library,
             ts,
             start,
         };
@@ -725,6 +727,11 @@ export * from \"./{js_name}\";
                 )?;
             }
             write(out_dir.join(&js_name), reset_indentation(&gen.js))?;
+        } else if matches!(self.generated.mode, OutputMode::Emscripten) {
+            let wbg_path = out_dir.join("library_wbg.js");
+            let pre_js_path = out_dir.join("wbg_pre.js");
+            write(&wbg_path, reset_indentation(&gen.js_emscripten_library))?;
+            write(&pre_js_path, reset_indentation(&gen.js))?;
         } else {
             write(&js_path, reset_indentation(&gen.js))?;
         }
