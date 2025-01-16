@@ -59,6 +59,11 @@
   The constructor now correctly uses the aliased `FinalizationRegistry` identifier.
   [#4932](https://github.com/wasm-bindgen/wasm-bindgen/pull/4932)
 
+* Fixed `unfulfilled_lint_expectations` warnings when using `#[expect(...)]` attributes
+  on functions annotated with `#[wasm_bindgen]`. The `#[expect]` attributes are now
+  converted to `#[allow]` in generated code to prevent spurious warnings.
+  [#4409](https://github.com/wasm-bindgen/wasm-bindgen/pull/4409)
+
 ### Removed
 
 ## [0.2.108](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.107...0.2.108)
