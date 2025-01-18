@@ -14,4 +14,6 @@ pub enum VideoColorPrimaries {
     Bt709 = "bt709",
     Bt470bg = "bt470bg",
     Smpte170m = "smpte170m",
+    Bt2020 = "bt2020",
+    Smpte432 = "smpte432",
 }

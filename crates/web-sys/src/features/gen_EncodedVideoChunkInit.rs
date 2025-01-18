@@ -69,6 +69,24 @@ extern "C" {
     #[wasm_bindgen(method, setter = "timestamp")]
     pub fn set_timestamp(this: &EncodedVideoChunkInit, val: f64);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Get the `transfer` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedVideoChunkInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "transfer")]
+    pub fn get_transfer(this: &EncodedVideoChunkInit) -> Option<::js_sys::Array>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `transfer` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedVideoChunkInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "transfer")]
+    pub fn set_transfer(this: &EncodedVideoChunkInit, val: &::wasm_bindgen::JsValue);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "EncodedVideoChunkType")]
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
@@ -122,6 +140,12 @@ impl EncodedVideoChunkInit {
     #[deprecated = "Use `set_timestamp()` instead."]
     pub fn timestamp(&mut self, val: f64) -> &mut Self {
         self.set_timestamp(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
+    #[deprecated = "Use `set_transfer()` instead."]
+    pub fn transfer(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+        self.set_transfer(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
