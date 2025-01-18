@@ -747,6 +747,13 @@ mod gen_BiquadFilterType;
 #[allow(unused_imports)]
 pub use gen_BiquadFilterType::*;
 
+#[cfg(feature = "BitrateMode")]
+#[allow(non_snake_case)]
+mod gen_BitrateMode;
+#[cfg(feature = "BitrateMode")]
+#[allow(unused_imports)]
+pub use gen_BitrateMode::*;
+
 #[cfg(feature = "Blob")]
 #[allow(non_snake_case)]
 mod gen_Blob;
