@@ -1949,8 +1949,8 @@ extern "C" {
     /// habits and allowing for more efficient code minification.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
-    #[wasm_bindgen(constructor)]
-    pub fn new_with_args(args: &str, body: &str) -> Function;
+    #[wasm_bindgen(constructor, catch)]
+    pub fn new_with_args(args: &str, body: &str) -> Result<Function, JsValue>;
 
     /// The `Function` constructor creates a new `Function` object. Calling the
     /// constructor directly can create functions dynamically, but suffers from
@@ -1960,8 +1960,8 @@ extern "C" {
     /// habits and allowing for more efficient code minification.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
-    #[wasm_bindgen(constructor)]
-    pub fn new_no_args(body: &str) -> Function;
+    #[wasm_bindgen(constructor, catch)]
+    pub fn new_no_args(body: &str) -> Result<Function, JsValue>;
 
     /// The `apply()` method calls a function with a given this value, and arguments provided as an array
     /// (or an array-like object).
@@ -6102,6 +6102,7 @@ pub fn global() -> Object {
         // global object in a sort of roundabout way that should hopefully work in
         // all contexts like ESM, node, browsers, etc.
         let this = Function::new_no_args("return this")
+            .unwrap()
             .call0(&JsValue::undefined())
             .ok();
 

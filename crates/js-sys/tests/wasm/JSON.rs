@@ -67,7 +67,7 @@ fn stringify() {
 
 #[wasm_bindgen_test]
 fn stringify_error() {
-    let func = Function::new_no_args("throw new Error(\"rust really rocks\")");
+    let func = Function::new_no_args("throw new Error(\"rust really rocks\")").unwrap();
     let obj = Object::new();
     Reflect::set(obj.as_ref(), &JsValue::from("toJSON"), func.as_ref()).unwrap();
 
@@ -100,7 +100,8 @@ fn stringify_with_replacer() {
     assert_eq!(output1, "{\"hello\":\"world\"}");
 
     let replacer_func =
-        Function::new_with_args("key, value", "return key === 'hello' ? undefined : value");
+        Function::new_with_args("key, value", "return key === 'hello' ? undefined : value")
+            .unwrap();
     let output2: String =
         JSON::stringify_with_replacer(&JsValue::from(obj), &JsValue::from(replacer_func))
             .unwrap()
@@ -115,7 +116,7 @@ fn stringify_with_replacer_error() {
     arr.push(&JsValue::from(true));
     arr.push(&JsValue::from("hello"));
 
-    let replacer = Function::new_no_args("throw new Error(\"rust really rocks\")");
+    let replacer = Function::new_no_args("throw new Error(\"rust really rocks\")").unwrap();
 
     let result = JSON::stringify_with_replacer(&JsValue::from(arr), &JsValue::from(replacer));
     assert!(result.is_err());
@@ -163,7 +164,8 @@ fn stringify_with_replacer_and_space() {
     assert_eq!(output2, "{\n    \"hello\": \"world\"\n}");
 
     let replacer_func =
-        Function::new_with_args("key, value", "return key === 'hello' ? undefined : value");
+        Function::new_with_args("key, value", "return key === 'hello' ? undefined : value")
+            .unwrap();
     let output3: String = JSON::stringify_with_replacer_and_space(
         &JsValue::from(obj),
         &JsValue::from(replacer_func),
@@ -181,7 +183,7 @@ fn stringify_with_replacer_and_space_error() {
     arr.push(&JsValue::from(true));
     arr.push(&JsValue::from("hello"));
 
-    let replacer = Function::new_no_args("throw new Error(\"rust really rocks\")");
+    let replacer = Function::new_no_args("throw new Error(\"rust really rocks\")").unwrap();
 
     let result = JSON::stringify_with_replacer_and_space(
         &JsValue::from(arr),

@@ -11,7 +11,7 @@ fn multi_op_same_name() {
 
 #[wasm_bindgen_test]
 fn single_op_function() {
-    let a = Function::new_no_args("");
+    let a = Function::new_no_args("").unwrap();
     let b = TakeCallbackInterface::new().unwrap();
     b.a_with_callback(&a);
 }
@@ -26,12 +26,12 @@ fn single_op_dict() {
 #[wasm_bindgen_test]
 fn dict_methods() {
     let mut a = CallbackInterface1::new();
-    a.foo(&Function::new_no_args(""));
+    a.foo(&Function::new_no_args("").unwrap());
 }
 
 #[wasm_bindgen_test]
 fn dict_methods1() {
     let mut a = CallbackInterface2::new();
-    a.foo(&Function::new_no_args(""));
-    a.bar(&Function::new_no_args(""));
+    a.foo(&Function::new_no_args("").unwrap());
+    a.bar(&Function::new_no_args("").unwrap());
 }
