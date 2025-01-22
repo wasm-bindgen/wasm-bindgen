@@ -4724,6 +4724,12 @@ pub mod WebAssembly {
         /// accessible and mutable from both JavaScript and WebAssembly.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory)
+        ///
+        /// # Exceptions
+        ///
+        /// * If `descriptor` is not of type `Object`, a `TypeError` is thrown.
+        /// * If `descriptor.maximum` is specified and is smaller than
+        ///   `descriptor.initial`, a `RangeError` is thrown.
         #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
         pub fn new(descriptor: &Object) -> Result<Memory, JsValue>;
 
@@ -4742,8 +4748,13 @@ pub mod WebAssembly {
         /// previous size of memory, in pages.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/grow)
-        #[wasm_bindgen(method, js_namespace = WebAssembly)]
-        pub fn grow(this: &Memory, pages: u32) -> u32;
+        ///
+        /// # Exceptions
+        ///
+        /// A `RangeError` is thrown if adding pages would exceed the maximum
+        /// memory.
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
+        pub fn grow(this: &Memory, pages: u32) -> Result<u32, JsValue>;
     }
 }
 

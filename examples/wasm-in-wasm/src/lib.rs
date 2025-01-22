@@ -32,10 +32,13 @@ async fn run_async() -> Result<(), JsValue> {
     let mem = Reflect::get(c.as_ref(), &"memory".into())?
         .dyn_into::<WebAssembly::Memory>()
         .expect("memory export wasn't a `WebAssembly.Memory`");
-    console_log!("created module has {} pages of memory", mem.grow(0));
+    console_log!(
+        "created module has {} pages of memory",
+        mem.grow(0).unwrap()
+    );
     console_log!("giving the module 4 more pages of memory");
-    mem.grow(4);
-    console_log!("now the module has {} pages of memory", mem.grow(0));
+    let new_pages = mem.grow(4).unwrap();
+    console_log!("now the module has {} pages of memory", new_pages);
 
     Ok(())
 }
