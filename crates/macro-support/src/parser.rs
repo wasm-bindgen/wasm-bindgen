@@ -831,17 +831,24 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
     }
 }
 
-impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
+impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>)>
+    for syn::ForeignItemType
+{
     type Target = ast::ImportKind;
 
     fn convert(
         self,
-        (program, attrs): (&ast::Program, BindgenAttrs),
+        (program, attrs, module): (&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>),
     ) -> Result<Self::Target, Diagnostic> {
         let js_name = attrs
             .js_name()
             .map(|s| s.0)
             .map_or_else(|| self.ident.to_string(), |s| s.to_string());
+        let path_name = match module {
+            Some(ast::ImportModule::RawNamed(path, _)) => Some(path.clone()),
+            Some(ast::ImportModule::Named(path, _)) if !path.starts_with("/") => Some(path.clone()),
+            _ => None,
+        };
         let typescript_type = attrs.typescript_type().map(|s| s.0.to_string());
         let is_type_of = attrs.is_type_of().cloned();
         let shim = format!(
@@ -871,6 +878,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
             attrs: self.attrs,
             doc_comment: None,
             instanceof_shim: shim,
+            path_name,
             is_type_of,
             rust_name: self.ident,
             typescript_type,
@@ -1925,7 +1933,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
 
         let kind = match self {
             syn::ForeignItem::Fn(f) => f.convert((program, item_opts, &module))?,
-            syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
+            syn::ForeignItem::Type(t) => t.convert((program, item_opts, &module))?,
             syn::ForeignItem::Static(s) => s.convert((program, item_opts, &module))?,
             _ => panic!("only foreign functions/types allowed for now"),
         };
