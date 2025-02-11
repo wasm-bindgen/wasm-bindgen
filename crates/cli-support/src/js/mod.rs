@@ -324,11 +324,12 @@ impl<'a> Context<'a> {
             }
         }
     }
+}
 
     pub fn finalize(
         &mut self,
         module_name: &str,
-    ) -> Result<(String, String, String, Option<String>), Error> {
+    ) -> Result<(String, String, Option<String>), Error> {
         // Finalize all bindings for JS classes. This is where we'll generate JS
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
@@ -499,10 +500,9 @@ impl<'a> Context<'a> {
         &mut self,
         module_name: &str,
         needs_manual_start: bool,
-    ) -> Result<(String, String, String, Option<String>), Error> {
+    ) -> Result<(String, String, Option<String>), Error> {
         let mut ts;
         let mut js = String::new();
-        let mut js_emscripten_library = String::new();
         let mut start = None;
 
         // take globals
@@ -747,19 +747,18 @@ wasm = wasmInstance.exports;
         let nl = push_with_newline(&init_js, nl);
         push_with_newline(&footer, nl);
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            js_emscripten_library.push_str(&self.emscripten_library);
-            js_emscripten_library.push('\n');
-            js_emscripten_library.push_str("var LibraryWbg = {\n");
-            js_emscripten_library.push_str(&init_js);
-            js_emscripten_library.push_str(
-            "};
-            \n
-            addToLibrary(LibraryWbg);");
-            push_with_newline("var Module = {\n
-  onRuntimeInitialized: () => {
+            push_with_newline("var LibraryWbg = {\n");
+            push_with_newline(&init_js);
+            push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',");
+            push_with_newline("$initBindgen: () => {\n
     wasmExports.__wbindgen_start();");
+            self.globals = self.globals.replace("wasm", "wasmExports");
             push_with_newline(&self.globals);
-            push_with_newline("}\n};");
+            push_with_newline("},");
+            push_with_newline(
+                "};\n
+                extraLibraryFuncs.push('$initBindgen');
+                addToLibrary(LibraryWbg);");
         } else {
             push_with_newline(&imports);
             push_with_newline(&self.imports_post);
@@ -778,7 +777,7 @@ wasm = wasmInstance.exports;
             js = js.replace("\n\n\n", "\n\n");
         }
 
-        Ok((js, js_emscripten_library, ts, start))
+        Ok((js, ts, start))
     }
 
     fn js_import_header(&self) -> Result<String, Error> {
@@ -1003,6 +1002,7 @@ wasm = wasmInstance.exports;
                     imports_init.push_str(",\n");
                 } else {
                    imports_init.push_str(": (function() {\n");
+                   imports_init.push_str(&self.emscripten_library);
                    imports_init.push_str("return ");
                    imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
                    imports_init.push_str(";\n");
@@ -2039,6 +2039,9 @@ wasm = wasmInstance.exports;
         // users will have to make sure themselves not to use any corresponding APIs. But
         // when spawning audio worklets, its fine to have `TextDe/Encoder` in a "normal worker"
         // while not using corresponding APIs in the audio worklet itself.
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            dst
+        }
         if module.memories.get(memory).shared {
             dst.push_str(&format!(
                 "{decl_kind} cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : undefined);\n"
