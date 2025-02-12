@@ -91,7 +91,7 @@ which is currently Node 8 and above.
 
 ## Node.js Module
 
-**`--target experemintal-nodejs-module`**
+**`--target experimental-nodejs-module`**
 
 If you're deploying WebAssembly into Node.js as a JavaScript module,
 then you'll want to pass the `--target experimental-nodejs-module` flag to `wasm-bindgen`.
