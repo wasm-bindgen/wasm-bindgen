@@ -117,12 +117,17 @@ fn main() -> anyhow::Result<()> {
         .map(Path::new)
         .context("file to test is not a valid file, can't extract file name")?;
 
+    let debug = env::var("WASM_BINDGEN_NO_DEBUG").is_err();
+
     // Collect all tests that the test harness is supposed to run. We assume
     // that any exported function with the prefix `__wbg_test` is a test we need
     // to execute.
     let wasm = fs::read(&cli.file).context("failed to read Wasm file")?;
-    let mut wasm =
-        walrus::Module::from_buffer(&wasm).context("failed to deserialize Wasm module")?;
+    let mut wasm = walrus::ModuleConfig::new()
+        // generate dwarf for debug
+        .generate_dwarf(debug)
+        .parse(&wasm)
+        .context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
 
     'outer: for export in wasm.exports.iter() {
@@ -233,7 +238,6 @@ fn main() -> anyhow::Result<()> {
     };
 
     let headless = env::var("NO_HEADLESS").is_err();
-    let debug = env::var("WASM_BINDGEN_NO_DEBUG").is_err();
 
     // Gracefully handle requests to execute only node or only web tests.
     let node = matches!(test_mode, TestMode::Node { .. });
@@ -306,7 +310,6 @@ fn main() -> anyhow::Result<()> {
 
     b.debug(debug)
         .input_module(module, wasm)
-        .keep_debug(false)
         .emit_start(false)
         .generate(&tmpdir)
         .context("executing `wasm-bindgen` over the Wasm file")?;
