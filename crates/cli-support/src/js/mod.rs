@@ -18,12 +18,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
 use wasm_bindgen_shared::identifier::is_valid_ident;
+use regex::Regex;
 
 mod binding;
 
 pub struct Context<'a> {
     globals: String,
     emscripten_library: String,
+    emscripten_deps: HashSet<String>,
     imports_post: String,
     typescript: String,
     exposed_globals: Option<HashSet<Cow<'static, str>>>,
@@ -148,6 +150,7 @@ impl<'a> Context<'a> {
         Ok(Context {
             globals: String::new(),
             emscripten_library: String::new(),
+            emscripten_deps: HashSet::new(),
             imports_post: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
             exposed_globals: Some(Default::default()),
@@ -659,19 +662,26 @@ __wbg_set_wasm(wasm);"
             }
         };
 
+        let set_to_list = |set: &HashSet<String>| -> Vec<String> {
+            set.iter().cloned().collect()
+        };
+
         if matches!(self.config.mode, OutputMode::Emscripten) {
             push_with_newline("var LibraryWbg = {\n");
+            push_with_newline(&self.emscripten_library);
             push_with_newline(&init_js);
+            push_with_newline("$initBindgen__deps: ['$addOnInit'],");
             push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',");
             push_with_newline("$initBindgen: () => {\n
     wasmExports.__wbindgen_start();");
-            self.globals = self.globals.replace("wasm", "wasmExports");
+            self.globals = self.globals.replace("wasm.", "wasmExports.");
             push_with_newline(&self.globals);
             push_with_newline("},");
+            let deps: Vec<String> = set_to_list(&self.emscripten_deps); 
             push_with_newline(
-                "};\n
-                extraLibraryFuncs.push('$initBindgen');
-                addToLibrary(LibraryWbg);");
+                &format!("}};\n
+                extraLibraryFuncs.push('$initBindgen','$addOnInit',{});
+                addToLibrary(LibraryWbg);", deps.join(",")));
         } else {
             push_with_newline(&imports);
             push_with_newline(&self.imports_post);
@@ -925,12 +935,9 @@ __wbg_set_wasm(wasm);"
                         .replace("wasm", "wasmExports"));
                     imports_init.push_str(",\n");
                 } else {
-                   imports_init.push_str(": (function() {\n");
-                   imports_init.push_str(&self.emscripten_library);
-                   imports_init.push_str("return ");
+                   imports_init.push_str(": ");
                    imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
-                   imports_init.push_str(";\n");
-                   imports_init.push_str("}()),\n");
+                   imports_init.push_str(",\n");
                 }
             }
         }
@@ -1893,10 +1900,10 @@ __wbg_set_wasm(wasm);"
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_library.push_str(&format!(
                 "
-                function {}(ptr, len) {{
+                ${}(ptr, len) {{
                     ptr = ptr >>> 0;
                     return UTF8Decoder.decode(HEAP8.{}(ptr, ptr + len));
-                }}\n
+                }},\n
                 ",
                 ret, method
             ));
@@ -2501,34 +2508,68 @@ __wbg_set_wasm(wasm);"
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
-        self.global(&format!(
-            "
-            function makeMutClosure(arg0, arg1, dtor, f) {{
-                const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
-                const real = (...args) => {{
-                    // First up with a closure we increment the internal reference
-                    // count. This ensures that the Rust closure environment won't
-                    // be deallocated while we're invoking it.
-                    state.cnt++;
-                    const a = state.a;
-                    state.a = 0;
-                    try {{
-                        return f(a, state.b, ...args);
-                    }} finally {{
-                        if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(a, state.b);
-                            CLOSURE_DTORS.unregister(state);
-                        }} else {{
-                            state.a = a;
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library.push_str(&format!(
+                "
+                $makeMutClosure: function(arg0, arg1, dtor, f) {{
+                    const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                    const real = (...args) => {{
+                        // First up with a closure we increment the internal reference
+                        // count. This ensures that the Rust closure environment won't
+                        // be deallocated while we're invoking it.
+                        state.cnt++;
+                        const a = state.a;
+                        state.a = 0;
+                        try {{
+                            return f(a, state.b, ...args);
+                        }} finally {{
+                            if (--state.cnt === 0) {{
+                                wasmExports.{table}.get(state.dtor)(a, state.b);
+                                CLOSURE_DTORS.unregister(state);
+                            }} else {{
+                                state.a = a;
+                            }}
                         }}
-                    }}
-                }};
-                real.original = state;
-                CLOSURE_DTORS.register(real, state, state);
-                return real;
-            }}
-            ",
-        ));
+                    }};
+                    real.original = state;
+                    CLOSURE_DTORS.register(real, state, state);
+                    return real;
+                }},
+                $makeMutClosure__deps: ['$CLOSURE_DTORS'],\n
+                ",
+            ));
+            self.emscripten_deps.insert("'$CLOSURE_DTORS'".to_string());
+        } else {
+            self.global(&format!(
+                "
+                function makeMutClosure(arg0, arg1, dtor, f) {{
+                    const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                    const real = (...args) => {{
+                        // First up with a closure we increment the internal reference
+                        // count. This ensures that the Rust closure environment won't
+                        // be deallocated while we're invoking it.
+                        state.cnt++;
+                        const a = state.a;
+                        state.a = 0;
+                        try {{
+                            return f(a, state.b, ...args);
+                        }} finally {{
+                            if (--state.cnt === 0) {{
+                                wasm.{table}.get(state.dtor)(a, state.b);
+                                CLOSURE_DTORS.unregister(state);
+                            }} else {{
+                                state.a = a;
+                            }}
+                        }}
+                    }};
+                    real.original = state;
+                    CLOSURE_DTORS.register(real, state, state);
+                    return real;
+                }},\n
+                ",
+            ));
+        }
 
         Ok(())
     }
@@ -2547,32 +2588,61 @@ __wbg_set_wasm(wasm);"
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
-        self.global(&format!(
-            "
-            function makeClosure(arg0, arg1, dtor, f) {{
-                const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
-                const real = (...args) => {{
-                    // First up with a closure we increment the internal reference
-                    // count. This ensures that the Rust closure environment won't
-                    // be deallocated while we're invoking it.
-                    state.cnt++;
-                    try {{
-                        return f(state.a, state.b, ...args);
-                    }} finally {{
-                        if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library.push_str(&format!(
+                "
+                $makeClosure: function(arg0, arg1, dtor, f) {{
+                    const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                    const real = (...args) => {{
+                        // First up with a closure we increment the internal reference
+                        // count. This ensures that the Rust closure environment won't
+                        // be deallocated while we're invoking it.
+                        state.cnt++;
+                        try {{
+                            return f(state.a, state.b, ...args);
+                        }} finally {{
+                            if (--state.cnt === 0) {{
+                                wasmExports.{table}.get(state.dtor)(state.a, state.b);
+                                state.a = 0;
+                                CLOSURE_DTORS.unregister(state);
+                            }}
                         }}
-                    }}
-                }};
-                real.original = state;
-                CLOSURE_DTORS.register(real, state, state);
-                return real;
-            }}
-            ",
-        ));
-
+                    }};
+                    real.original = state;
+                    CLOSURE_DTORS.register(real, state, state);
+                    return real;
+                }},
+                $makeClosure__deps: ['$CLOSURE_DTORS'],\n
+                "
+            ));
+            self.emscripten_deps.insert("'$CLOSURE_DTORS'".to_string());
+        } else {
+            self.global(&format!(
+                "
+                function makeClosure(arg0, arg1, dtor, f) {{
+                    const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                    const real = (...args) => {{
+                        // First up with a closure we increment the internal reference
+                        // count. This ensures that the Rust closure environment won't
+                        // be deallocated while we're invoking it.
+                        state.cnt++;
+                        try {{
+                            return f(state.a, state.b, ...args);
+                        }} finally {{
+                            if (--state.cnt === 0) {{
+                                wasm.{table}.get(state.dtor)(state.a, state.b);
+                                state.a = 0;
+                                CLOSURE_DTORS.unregister(state);
+                            }}
+                        }}
+                    }};
+                    real.original = state;
+                    CLOSURE_DTORS.register(real, state, state);
+                    return real;
+                }}
+                ",
+            ));
+        }
         Ok(())
     }
 
@@ -2581,16 +2651,28 @@ __wbg_set_wasm(wasm);"
             return Ok(());
         }
         let table = self.export_function_table()?;
-        self.global(&format!(
-            "
-            const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
-                ? {{ register: () => {{}}, unregister: () => {{}} }}
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library.push_str(&format!(
+                "
+                $CLOSURE_DTORS: `(typeof FinalizationRegistry === 'undefined')
+                    ? {{ register: () => {{}}, unregister: () => {{}} }}
                 : new FinalizationRegistry(state => {{
-                    wasm.{table}.get(state.dtor)(state.a, state.b)
-                }});
-            "
-        ));
-
+                    wasmExports.__indirect_function_table.get(state.dtor)(state.a, state.b)
+                }})`,\n
+                "
+            ));
+           
+        } else {
+            self.global(&format!(
+                "
+                const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
+                    ? {{ register: () => {{}}, unregister: () => {{}} }}
+                    : new FinalizationRegistry(state => {{
+                        wasm.{table}.get(state.dtor)(state.a, state.b)
+                    }});
+                "
+            ));
+        }
         Ok(())
     }
     fn global(&mut self, s: &str) {
@@ -2956,7 +3038,7 @@ __wbg_set_wasm(wasm);"
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
-
+        let mut import_deps: Vec<String> = Default::default();
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -2980,6 +3062,7 @@ __wbg_set_wasm(wasm);"
                 &debug_name,
                 ret_ty_override,
                 ret_desc,
+                &mut import_deps,
             )
             .with_context(|| "failed to generates bindings for ".to_string() + &debug_name)?;
 
@@ -3104,8 +3187,17 @@ __wbg_set_wasm(wasm);"
                         code
                     )
                 } else {
-                    format!("function{}", code)
+                    if !import_deps.is_empty() {
+                        for dep in &import_deps{
+                            self.emscripten_deps.insert(dep.clone());
+                        }
+                        format!("function{},\n{}__deps:  [{}]", code, self.module.imports.get(core).name, import_deps.join(","))
+                    }
+                    else {
+                        format!("function{}\n",code)
+                    }
                 };
+
 
                 self.wasm_import_definitions.insert(core, code);
             }
@@ -3113,10 +3205,18 @@ __wbg_set_wasm(wasm);"
                 assert!(!catch);
                 assert!(!log_error);
 
-                self.globals.push_str("function ");
-                self.globals.push_str(&self.adapter_name(id));
-                self.globals.push_str(&code);
-                self.globals.push_str("\n\n");
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    self.emscripten_library.push_str("$");
+                    self.emscripten_library.push_str(&self.adapter_name(id));
+                    self.emscripten_library.push_str(": function");
+                    self.emscripten_library.push_str(&code.replace("wasm.", "wasmExports."));
+                    self.emscripten_library.push_str(",\n\n");
+                } else {
+                    self.globals.push_str("function ");
+                    self.globals.push_str(&self.adapter_name(id));
+                    self.globals.push_str(&code);
+                    self.globals.push_str("\n\n");
+                }
             }
         }
         Ok(())
@@ -3340,6 +3440,7 @@ __wbg_set_wasm(wasm);"
         args: &[String],
         variadic: bool,
         prelude: &mut String,
+        import_deps: &mut Vec<String>,
     ) -> Result<String, Error> {
         let variadic_args = |js_arguments: &[String]| {
             Ok(if !variadic {
@@ -3356,6 +3457,18 @@ __wbg_set_wasm(wasm);"
                 }
             })
         };
+
+        // Emscripten needs the function name extracted from the full function call here
+        // to construct dependency lists for each import.
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            let re = Regex::new(r"([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(").unwrap();
+            for arg in args {
+                if let Some(result) = re.captures(arg) {
+                    import_deps.push(format!("'${}'", &result[1]));
+                }
+            }
+        }
+
         match import {
             AuxImport::Value(val) => match kind {
                 AdapterJsImportKind::Constructor => {
@@ -3467,10 +3580,12 @@ __wbg_set_wasm(wasm);"
                 assert_eq!(args.len(), 3);
 
                 let call = self.adapter_name(*adapter);
-
+                import_deps.push(format!("'${}'", call));
                 if *mutable {
                     self.expose_make_mut_closure()?;
-
+                    if matches!(self.config.mode, OutputMode::Emscripten) {
+                        import_deps.push("'$makeMutClosure'".to_string());
+                    }
                     Ok(format!(
                         "makeMutClosure({arg0}, {arg1}, {dtor}, {call})",
                         arg0 = &args[0],
@@ -3480,7 +3595,9 @@ __wbg_set_wasm(wasm);"
                     ))
                 } else {
                     self.expose_make_closure()?;
-
+                    if matches!(self.config.mode, OutputMode::Emscripten) {
+                        import_deps.push("'$makeClosure'".to_string());
+                    }
                     Ok(format!(
                         "makeClosure({arg0}, {arg1}, {dtor}, {call})",
                         arg0 = &args[0],

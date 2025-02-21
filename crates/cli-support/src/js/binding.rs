@@ -130,6 +130,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         debug_name: &str,
         ret_ty_override: &Option<String>,
         ret_desc: &Option<String>,
+        import_deps: &mut Vec<String>,
     ) -> Result<JsFunction, Error> {
         if self
             .cx
@@ -194,6 +195,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 &instr.instr,
                 &mut self.log_error,
                 &self.constructor,
+                import_deps,
             )?;
         }
 
@@ -727,6 +729,7 @@ fn instruction(
     instr: &Instruction,
     log_error: &mut bool,
     constructor: &Option<String>,
+    import_deps: &mut Vec<String>,
 ) -> Result<(), Error> {
     fn wasm_to_string_enum(name: &str, index: &str) -> String {
         // e.g. ["a","b","c"][someIndex]
@@ -807,7 +810,7 @@ fn instruction(
             }
 
             // Call the function through an export of the underlying module.
-            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
+            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error, import_deps)?;
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
@@ -1637,6 +1640,7 @@ impl Invocation {
         args: &[String],
         prelude: &mut String,
         log_error: &mut bool,
+        import_deps: &mut Vec<String>,
     ) -> Result<String, Error> {
         match self {
             Invocation::Core { id, .. } => {
@@ -1656,7 +1660,8 @@ impl Invocation {
                 if cx.import_never_log_error(import) {
                     *log_error = false;
                 }
-                cx.invoke_import(import, kind, args, variadic, prelude)
+                let ret = cx.invoke_import(import, kind, args, variadic, prelude, import_deps);
+                return ret
             }
         }
     }
