@@ -2566,7 +2566,7 @@ __wbg_set_wasm(wasm);"
                     real.original = state;
                     CLOSURE_DTORS.register(real, state, state);
                     return real;
-                }},\n
+                }}
                 ",
             ));
         }

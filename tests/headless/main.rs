@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 
 extern crate wasm_bindgen;
 extern crate wasm_bindgen_test;

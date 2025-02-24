@@ -353,37 +353,76 @@ pub(crate) fn spawn(
         response
     })
     .map_err(|e| anyhow!("{}", e))?;
-    return Ok(srv);
+    return Ok(srv);    
+}
 
-    fn try_asset(request: &Request, dir: &Path) -> Response {
-        let response = rouille::match_assets(request, dir);
-        if response.is_success() {
+pub(crate) fn spawn_emscripten(
+    addr: &SocketAddr,
+    tmpdir: &Path,
+    isolate_origin: bool,
+) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
+    let js_path = tmpdir.join("run.js");
+    fs::write(js_path, include_str!("emscripten_test.js")).context("failed to write JS file")?;
+    let tmpdir = tmpdir.to_path_buf();
+    let srv = Server::new(addr, move |request| {
+        if request.url() == "/" {
+            let s = 
+                include_str!("index-emscripten.html");
+            let s = 
+                s.replace(
+                    "<!-- {IMPORT_SCRIPTS} -->",
+                    "<script src=\"run.js\"></script>\n     <script src=\"library_bindgen.js\"></script>",
+                );
+
+            let response = Response::from_data("text/html", s);
+
             return response;
         }
 
-        // When a browser is doing ES imports it's using the directives we
-        // write in the code that *don't* have file extensions (aka we say `from
-        // 'foo'` instead of `from 'foo.js'`. Fixup those paths here to see if a
-        // `js` file exists.
-        if let Some(part) = request.url().split('/').last() {
-            if !part.contains('.') {
-                let new_request = Request::fake_http(
-                    request.method(),
-                    format!("{}.js", request.url()),
-                    request
-                        .headers()
-                        .map(|(a, b)| (a.to_string(), b.to_string()))
-                        .collect(),
-                    Vec::new(),
-                );
-                let response = rouille::match_assets(&new_request, dir);
-                if response.is_success() {
-                    return response;
-                }
-            }
+        let mut response = try_asset(request, &tmpdir);
+        if !response.is_success() {
+            response = try_asset(request, ".".as_ref());
+        }
+        // Make sure browsers don't cache anything (Chrome appeared to with this
+        // header?)
+        response.headers.retain(|(k, _)| k != "Cache-Control");
+        if isolate_origin {
+            set_isolate_origin_headers(&mut response)
         }
         response
+    })
+    .map_err(|e| anyhow!("{}", e))?;
+    return Ok(srv);
+}
+
+fn try_asset(request: &Request, dir: &Path) -> Response {
+    let response = rouille::match_assets(request, dir);
+    if response.is_success() {
+        return response;
     }
+
+    // When a browser is doing ES imports it's using the directives we
+    // write in the code that *don't* have file extensions (aka we say `from
+    // 'foo'` instead of `from 'foo.js'`. Fixup those paths here to see if a
+    // `js` file exists.
+    if let Some(part) = request.url().split('/').last() {
+        if !part.contains('.') {
+            let new_request = Request::fake_http(
+                request.method(),
+                format!("{}.js", request.url()),
+                request
+                    .headers()
+                    .map(|(a, b)| (a.to_string(), b.to_string()))
+                    .collect(),
+                Vec::new(),
+            );
+            let response = rouille::match_assets(&new_request, dir);
+            if response.is_success() {
+                return response;
+            }
+        }
+    }
+    response
 }
 
 fn handle_coverage_dump(profraw_path: &Path, request: &Request) -> anyhow::Result<()> {

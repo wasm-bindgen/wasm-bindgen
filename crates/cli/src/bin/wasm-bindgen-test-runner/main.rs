@@ -111,16 +111,27 @@ fn main() -> anyhow::Result<()> {
 
     let shell = shell::Shell::new();
 
-    let file_name = cli
+    let mut file_name = cli
         .file
         .file_name()
         .map(Path::new)
         .context("file to test is not a valid file, can't extract file name")?;
 
+    let mut file_name_buf= PathBuf::from(cli.file.clone());
+
+    // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
+    // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
+    // file as the primary executor which is inconsitent with what is expected here.
+    if file_name.extension().unwrap() == "js" {
+        file_name_buf.pop();
+        file_name_buf.push(file_name.file_stem().unwrap());
+        file_name_buf.set_extension("wasm");
+        file_name = Path::new(&file_name_buf);
+    }
     // Collect all tests that the test harness is supposed to run. We assume
     // that any exported function with the prefix `__wbg_test` is a test we need
     // to execute.
-    let wasm = fs::read(&cli.file).context("failed to read Wasm file")?;
+    let wasm = fs::read(&file_name_buf).context("failed to read Wasm file")?;
     let mut wasm =
         walrus::Module::from_buffer(&wasm).context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
@@ -203,6 +214,7 @@ fn main() -> anyhow::Result<()> {
         Some(section) if section.data.contains(&0x03) => TestMode::SharedWorker { no_modules },
         Some(section) if section.data.contains(&0x04) => TestMode::ServiceWorker { no_modules },
         Some(section) if section.data.contains(&0x05) => TestMode::Node { no_modules },
+        Some(section) if section.data.contains(&0x06) => TestMode::Emscripten {},
         Some(_) => bail!("invalid __wasm_bingen_test_unstable value"),
         None => {
             let mut modes = Vec::new();
@@ -295,6 +307,9 @@ fn main() -> anyhow::Result<()> {
             } else {
                 b.web(true)?
             }
+        },
+        TestMode::Emscripten {} => {
+            b.emscripten(true)?
         }
     };
 
@@ -315,6 +330,19 @@ fn main() -> anyhow::Result<()> {
     match test_mode {
         TestMode::Node { no_modules } => {
             node::execute(module, tmpdir.path(), cli, tests, !no_modules, coverage)?
+        }
+        TestMode::Emscripten => {
+            let srv = server::spawn_emscripten(
+                &"127.0.0.1:0".parse().unwrap(), 
+                tmpdir.path(), 
+                std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err()).context("failed to spawn server")?;
+            let addr = srv.server_addr();
+            println!(
+                "Tests are now available at http://{}",
+                addr
+            );
+            thread::spawn(|| srv.run());
+            headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
         }
         TestMode::Deno => deno::execute(module, tmpdir.path(), cli, tests)?,
         TestMode::Browser { .. }
@@ -372,6 +400,7 @@ enum TestMode {
     DedicatedWorker { no_modules: bool },
     SharedWorker { no_modules: bool },
     ServiceWorker { no_modules: bool },
+    Emscripten,
 }
 
 impl TestMode {
@@ -384,7 +413,7 @@ impl TestMode {
 
     fn no_modules(self) -> bool {
         match self {
-            Self::Deno => true,
+            Self::Deno | Self::Emscripten => true,
             Self::Browser { no_modules }
             | Self::Node { no_modules }
             | Self::DedicatedWorker { no_modules }
@@ -401,6 +430,7 @@ impl TestMode {
             TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
             TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
             TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
+            TestMode::Emscripten { .. } => "WASM_BINDGEN_USE_EMSCRIPTEN",
         }
     }
 }
