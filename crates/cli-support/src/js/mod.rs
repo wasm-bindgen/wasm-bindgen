@@ -2706,7 +2706,6 @@ wasm = wasmInstance.exports;
                 .into();
             }
         });
-
         Ok(())
     }
 
