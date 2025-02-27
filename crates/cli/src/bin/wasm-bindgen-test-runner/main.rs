@@ -117,7 +117,7 @@ fn main() -> anyhow::Result<()> {
         .map(Path::new)
         .context("file to test is not a valid file, can't extract file name")?;
 
-    let mut file_name_buf= PathBuf::from(cli.file.clone());
+    let mut file_name_buf = PathBuf::from(cli.file.clone());
 
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
     // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
@@ -307,10 +307,8 @@ fn main() -> anyhow::Result<()> {
             } else {
                 b.web(true)?
             }
-        },
-        TestMode::Emscripten {} => {
-            b.emscripten(true)?
         }
+        TestMode::Emscripten {} => b.emscripten(true)?,
     };
 
     if std::env::var("WASM_BINDGEN_SPLIT_LINKED_MODULES").is_ok() {
@@ -333,14 +331,13 @@ fn main() -> anyhow::Result<()> {
         }
         TestMode::Emscripten => {
             let srv = server::spawn_emscripten(
-                &"127.0.0.1:0".parse().unwrap(), 
-                tmpdir.path(), 
-                std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err()).context("failed to spawn server")?;
+                &"127.0.0.1:0".parse().unwrap(),
+                tmpdir.path(),
+                std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
+            )
+            .context("failed to spawn server")?;
             let addr = srv.server_addr();
-            println!(
-                "Tests are now available at http://{}",
-                addr
-            );
+            println!("Tests are now available at http://{}", addr);
             thread::spawn(|| srv.run());
             headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
         }

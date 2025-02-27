@@ -10,6 +10,7 @@ use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
 use crate::{reset_indentation, Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
+use regex::Regex;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt;
@@ -18,7 +19,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
 use wasm_bindgen_shared::identifier::is_valid_ident;
-use regex::Regex;
 
 mod binding;
 
@@ -241,8 +241,7 @@ impl<'a> Context<'a> {
                     format!("{}\nModule.{} = {};\n", class, export_name, export_name)
                 }
                 ExportJs::Function(function) => {
-                    let body = function.strip_prefix("function")
-                                .unwrap();
+                    let body = function.strip_prefix("function").unwrap();
                     if export_name == definition_name {
                         format!("Module.{} = function{}\n", export_name, body)
                     } else {
@@ -662,9 +661,7 @@ __wbg_set_wasm(wasm);"
             }
         };
 
-        let set_to_list = |set: &HashSet<String>| -> Vec<String> {
-            set.iter().cloned().collect()
-        };
+        let set_to_list = |set: &HashSet<String>| -> Vec<String> { set.iter().cloned().collect() };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             push_with_newline("var LibraryWbg = {\n");
@@ -672,16 +669,20 @@ __wbg_set_wasm(wasm);"
             push_with_newline(&init_js);
             push_with_newline("$initBindgen__deps: ['$addOnInit'],");
             push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',");
-            push_with_newline("$initBindgen: () => {\n
-    wasmExports.__wbindgen_start();");
+            push_with_newline(
+                "$initBindgen: () => {\n
+    wasmExports.__wbindgen_start();",
+            );
             self.globals = self.globals.replace("wasm.", "wasmExports.");
             push_with_newline(&self.globals);
             push_with_newline("},");
-            let deps: Vec<String> = set_to_list(&self.emscripten_deps); 
-            push_with_newline(
-                &format!("}};\n
+            let deps: Vec<String> = set_to_list(&self.emscripten_deps);
+            push_with_newline(&format!(
+                "}};\n
                 extraLibraryFuncs.push('$initBindgen','$addOnInit',{});
-                addToLibrary(LibraryWbg);", deps.join(",")));
+                addToLibrary(LibraryWbg);",
+                deps.join(",")
+            ));
         } else {
             push_with_newline(&imports);
             push_with_newline(&self.imports_post);
@@ -928,16 +929,17 @@ __wbg_set_wasm(wasm);"
                 imports_init.push_str(&import.name);
                 if import.name == "__wbindgen_init_externref_table" {
                     imports_init.push_str(": () =>");
-                    imports_init.push_str(&js
-                        .trim()
-                        .strip_prefix("function()")
-                        .unwrap()
-                        .replace("wasm", "wasmExports"));
+                    imports_init.push_str(
+                        &js.trim()
+                            .strip_prefix("function()")
+                            .unwrap()
+                            .replace("wasm", "wasmExports"),
+                    );
                     imports_init.push_str(",\n");
                 } else {
-                   imports_init.push_str(": ");
-                   imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
-                   imports_init.push_str(",\n");
+                    imports_init.push_str(": ");
+                    imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
+                    imports_init.push_str(",\n");
                 }
             }
         }
@@ -984,7 +986,7 @@ __wbg_set_wasm(wasm);"
             }
         }
 
-         let js = match &self.config.mode {
+        let js = match &self.config.mode {
             OutputMode::Emscripten => format!(
             "\
                     {imports_init}",
@@ -1868,7 +1870,7 @@ __wbg_set_wasm(wasm);"
                     "if (typeof {} !== 'undefined') {{ {} }};",
                     s, init
                 )),
-                OutputMode::Emscripten => {},
+                OutputMode::Emscripten => {}
             }
         }
 
@@ -2661,7 +2663,6 @@ __wbg_set_wasm(wasm);"
                 }})`,\n
                 "
             ));
-           
         } else {
             self.global(&format!(
                 "
@@ -3188,16 +3189,19 @@ __wbg_set_wasm(wasm);"
                     )
                 } else {
                     if !import_deps.is_empty() {
-                        for dep in &import_deps{
+                        for dep in &import_deps {
                             self.emscripten_deps.insert(dep.clone());
                         }
-                        format!("function{},\n{}__deps:  [{}]", code, self.module.imports.get(core).name, import_deps.join(","))
-                    }
-                    else {
-                        format!("function{}\n",code)
+                        format!(
+                            "function{},\n{}__deps:  [{}]",
+                            code,
+                            self.module.imports.get(core).name,
+                            import_deps.join(",")
+                        )
+                    } else {
+                        format!("function{}\n", code)
                     }
                 };
-
 
                 self.wasm_import_definitions.insert(core, code);
             }
@@ -3209,7 +3213,8 @@ __wbg_set_wasm(wasm);"
                     self.emscripten_library.push_str("$");
                     self.emscripten_library.push_str(&self.adapter_name(id));
                     self.emscripten_library.push_str(": function");
-                    self.emscripten_library.push_str(&code.replace("wasm.", "wasmExports."));
+                    self.emscripten_library
+                        .push_str(&code.replace("wasm.", "wasmExports."));
                     self.emscripten_library.push_str(",\n\n");
                 } else {
                     self.globals.push_str("function ");

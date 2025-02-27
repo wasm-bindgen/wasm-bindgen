@@ -66,7 +66,7 @@ enum OutputMode {
     NoModules { global: String },
     Node { module: bool },
     Deno,
-    Emscripten,    
+    Emscripten,
 }
 
 enum Input {

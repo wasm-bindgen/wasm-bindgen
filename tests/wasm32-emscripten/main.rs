@@ -26,7 +26,7 @@ pub struct Interval {
 impl Interval {
     pub fn new<F: 'static>(millis: u32, f: F) -> Interval
     where
-        F: FnMut()
+        F: FnMut(),
     {
         // Construct a new closure.
         let closure = Closure::new(f);
