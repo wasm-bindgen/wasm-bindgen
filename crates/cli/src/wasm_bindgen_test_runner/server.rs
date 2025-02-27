@@ -441,7 +441,7 @@ pub(crate) fn spawn(
         response
     })
     .map_err(|e| anyhow!("{}", e))?;
-    return Ok(srv);    
+    return Ok(srv);
 }
 
 pub(crate) fn spawn_emscripten(
@@ -454,13 +454,11 @@ pub(crate) fn spawn_emscripten(
     let tmpdir = tmpdir.to_path_buf();
     let srv = Server::new(addr, move |request| {
         if request.url() == "/" {
-            let s = 
-                include_str!("index-emscripten.html");
-            let s = 
-                s.replace(
-                    "<!-- {IMPORT_SCRIPTS} -->",
-                    "<script src=\"run.js\"></script>\n     <script src=\"library_bindgen.js\"></script>",
-                );
+            let s = include_str!("index-emscripten.html");
+            let s = s.replace(
+                "<!-- {IMPORT_SCRIPTS} -->",
+                "<script src=\"run.js\"></script>\n     <script src=\"library_bindgen.js\"></script>",
+            );
 
             let response = Response::from_data("text/html", s);
 

@@ -349,10 +349,8 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             } else {
                 b.web(true)?
             }
-        },
-        TestMode::Emscripten {} => {
-            b.emscripten(true)?
         }
+        TestMode::Emscripten {} => b.emscripten(true)?,
     };
 
     if std::env::var("WASM_BINDGEN_SPLIT_LINKED_MODULES").is_ok() {
@@ -395,14 +393,13 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
         TestMode::Emscripten => {
             let srv = server::spawn_emscripten(
-                &"127.0.0.1:0".parse().unwrap(), 
-                tmpdir.path(), 
-                std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err()).context("failed to spawn server")?;
+                &"127.0.0.1:0".parse().unwrap(),
+                tmpdir.path(),
+                std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
+            )
+            .context("failed to spawn server")?;
             let addr = srv.server_addr();
-            println!(
-                "Tests are now available at http://{}",
-                addr
-            );
+            println!("Tests are now available at http://{}", addr);
             thread::spawn(|| srv.run());
             headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
         }

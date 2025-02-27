@@ -1511,7 +1511,10 @@ pub trait UnwrapThrowExt<T>: Sized {
     #[cfg_attr(
         any(
             debug_assertions,
-            not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten")))
+            not(all(
+                target_arch = "wasm32",
+                any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+            ))
         ),
         track_caller
     )]
@@ -1520,7 +1523,11 @@ pub trait UnwrapThrowExt<T>: Sized {
             debug_assertions,
             all(
                 target_arch = "wasm32",
-                any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+                any(
+                    target_os = "unknown",
+                    target_os = "none",
+                    target_os = "emscripten"
+                )
             )
         )) {
             let loc = core::panic::Location::caller();
@@ -1543,7 +1550,10 @@ pub trait UnwrapThrowExt<T>: Sized {
     #[cfg_attr(
         any(
             debug_assertions,
-            not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten")))
+            not(all(
+                target_arch = "wasm32",
+                any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+            ))
         ),
         track_caller
     )]
@@ -1556,7 +1566,11 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
 
         if cfg!(all(
             target_arch = "wasm32",
-            any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+            any(
+                target_os = "unknown",
+                target_os = "none",
+                target_os = "emscripten"
+            )
         )) {
             if let Some(val) = self {
                 val
@@ -1576,7 +1590,11 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
     fn expect_throw(self, message: &str) -> T {
         if cfg!(all(
             target_arch = "wasm32",
-            any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+            any(
+                target_os = "unknown",
+                target_os = "none",
+                target_os = "emscripten"
+            )
         )) {
             if let Some(val) = self {
                 val
@@ -1604,7 +1622,11 @@ where
 
         if cfg!(all(
             target_arch = "wasm32",
-            any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+            any(
+                target_os = "unknown",
+                target_os = "none",
+                target_os = "emscripten"
+            )
         )) {
             match self {
                 Ok(val) => val,
@@ -1632,7 +1654,11 @@ where
     fn expect_throw(self, message: &str) -> T {
         if cfg!(all(
             target_arch = "wasm32",
-            any(target_os = "unknown", target_os = "none", target_os = "emscripten")
+            any(
+                target_os = "unknown",
+                target_os = "none",
+                target_os = "emscripten"
+            )
         )) {
             match self {
                 Ok(val) => val,

@@ -11,6 +11,7 @@ use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
 use crate::{reset_indentation, Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
+use regex::Regex;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -20,7 +21,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
 use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
-use regex::Regex;
 
 mod binding;
 
@@ -286,30 +286,28 @@ impl<'a> Context<'a> {
                             .push_str(&format!("export {{ {id} as '{export_name}' }}\n"));
                     }
                 },
-                OutputMode::Emscripten => match export {
-                    ExportJs::Class(class) => {
-                        assert_eq!(export_name, definition_name);
-                        format!("{}\nModule.{} = {};\n", class.replace("wasm", "wasmExports"), export_name, export_name)
+                OutputMode::Emscripten => {
+                    let decl_modified = decl.replace("wasm", "wasmExports");
+
+                    if let Some(c) = comments {
+                        self.globals.push_str(c);
                     }
-                    ExportJs::Function(function) => {
-                        let body = function.strip_prefix("function")
-                                    .unwrap()
-                                    .replace("wasm", "wasmExports");
-                        if export_name == definition_name {
-                            format!("Module.{} = function{}\n", export_name, body)
+
+                    if decl_modified.trim_start().starts_with("const") {
+                        self.globals.push_str("export ");
+                        self.globals.push_str(&decl_modified);
+                    } else {
+                        self.globals.push_str(&decl_modified);
+
+                        if export_name == id {
+                                self.global(&format!("Module.{} = {};\n", export_name, id));
                         } else {
-                            format!(
-                                "function {}{}\nexport {{ {} as {} }};\n",
-                                definition_name, body, definition_name, export_name,
-                            )
+                            self.global(&format!("export {{ {} as {} }};\n", id, export_name));
                         }
                     }
-                    ExportJs::Expression(expr) => {
-                        assert_eq!(export_name, definition_name);
-                        format!("export const {} = {};\n", export_name, expr.replace("wasm", "wasmExports"))
-                    }
-                },
-            };
+                }
+            }
+
             if self.config.typescript && !ts_decl.is_empty() {
                 if export_name == "default" {
                     self.typescript.push_str(&format!("export default {id};\n"));
@@ -327,7 +325,6 @@ impl<'a> Context<'a> {
             }
         }
     }
-}
 
     pub fn finalize(
         &mut self,
@@ -736,6 +733,8 @@ wasm = wasmInstance.exports;
             }
         };
 
+        let set_to_list = |set: &HashSet<String>| -> Vec<String> { set.iter().cloned().collect() };
+
         if matches!(self.config.mode, OutputMode::Emscripten) {
             push_with_newline("var LibraryWbg = {", true);
             push_with_newline(&init_js, true);
@@ -743,16 +742,17 @@ wasm = wasmInstance.exports;
             push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',", true);
             push_with_newline("$initBindgen: () => {\n
     wasmExports.__wbindgen_start();", true);
-            push_with_newline(&intrinsics, false) || nl;
+            push_with_newline(&intrinsics, false);
             push_with_newline(&self.emscripten_library, true);
             self.globals = self.globals.replace("wasm.", "wasmExports.");
-            push_with_newline(&self.globals, nl);
+            push_with_newline(&self.globals, true);
             push_with_newline("},", false);
             let deps: Vec<String> = set_to_list(&self.emscripten_deps); 
             push_with_newline(
                 &format!("}};\n
                 extraLibraryFuncs.push('$initBindgen','$addOnInit',{});
-                addToLibrary(LibraryWbg);", deps.join(","), true)
+                addToLibrary(LibraryWbg);", deps.join(",")),
+                true
             );
         } else {
             let nl = push_with_newline(&imports, false);
@@ -995,16 +995,17 @@ wasm = wasmInstance.exports;
                 imports_init.push_str(&import.name);
                 if import.name == "__wbindgen_init_externref_table" {
                     imports_init.push_str(": () =>");
-                    imports_init.push_str(&js
-                        .trim()
-                        .strip_prefix("function()")
-                        .unwrap()
-                        .replace("wasm", "wasmExports"));
+                    imports_init.push_str(
+                        &js.trim()
+                            .strip_prefix("function()")
+                            .unwrap()
+                            .replace("wasm", "wasmExports"),
+                    );
                     imports_init.push_str(",\n");
                 } else {
-                   imports_init.push_str(": ");
-                   imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
-                   imports_init.push_str(",\n");
+                    imports_init.push_str(": ");
+                    imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
+                    imports_init.push_str(",\n");
                 }
             }
         }
@@ -1045,7 +1046,6 @@ wasm = wasmInstance.exports;
                 .unwrap()
             }
         }
-
 
         let js = match &self.config.mode {
             OutputMode::Emscripten => format!(
@@ -1899,7 +1899,7 @@ wasm = wasmInstance.exports;
     fn expose_text_encoder(&mut self, memory: MemoryId) {
         intrinsic(&mut self.intrinsics, "text_encoder".into(), || {
             let mut dst =
-                Self::write_text_processor(self.module, memory, "const", "TextEncoder", "()", None);
+                Self::write_text_processor(self.module, memory, "const", "TextEncoder", "()", None, self.config.mode.clone());
 
             let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
                 const buf = cachedTextEncoder.encode(arg);
@@ -1961,6 +1961,7 @@ wasm = wasmInstance.exports;
                 "TextDecoder",
                 "('utf-8', { ignoreBOM: true, fatal: true })",
                 init,
+                self.config.mode.clone()
             );
 
             // Typically we try to give a raw view of memory out to `TextDecoder` to
@@ -2031,15 +2032,16 @@ wasm = wasmInstance.exports;
         s: &str,
         args: &str,
         init: Option<&str>,
+        config_mode: OutputMode,
     ) -> String {
-        let mut dst = String::new();
+        let mut dst: String = String::new();
+        if matches!(config_mode, OutputMode::Emscripten) {
+            return dst
+        }
         // Audio worklets don't support `TextDe/Encoder`. When using audio worklets directly,
         // users will have to make sure themselves not to use any corresponding APIs. But
         // when spawning audio worklets, its fine to have `TextDe/Encoder` in a "normal worker"
         // while not using corresponding APIs in the audio worklet itself.
-        if matches!(self.config.mode, OutputMode::Emscripten) {
-            dst
-        }
         if module.memories.get(memory).shared {
             dst.push_str(&format!(
                 "{decl_kind} cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : undefined);\n"
@@ -2679,7 +2681,7 @@ wasm = wasmInstance.exports;
                     }},
                     $makeMutClosure__deps: ['$CLOSURE_DTORS'],\n
                     ",
-                ).into();
+                ).into()
             } else {
                 format!(
                     "
@@ -2703,10 +2705,9 @@ wasm = wasmInstance.exports;
                     }}
                     "
                 )
-                .into();
+                .into()
             }
         });
-        Ok(())
     }
 
     fn expose_make_closure(&mut self) {
@@ -2760,7 +2761,7 @@ wasm = wasmInstance.exports;
                     }},
                     $makeMutClosure__deps: ['$CLOSURE_DTORS'],\n
                     ",
-                ).into();
+                ).into()
             } else {
                 format!(
                     "
@@ -2801,10 +2802,10 @@ wasm = wasmInstance.exports;
                 format!(
                     "
                     $CLOSURE_DTORS: `(typeof FinalizationRegistry === 'undefined')
-                        ? { register: () => {}, unregister: () => {} }
-                    : new FinalizationRegistry(state => {
+                        ? {{ register: () => {{}}, unregister: () => {{}} }}
+                    : new FinalizationRegistry(state => {{
                         wasmExports['__indirect_function_table'].get(state.dtor)(state.a, state.b)
-                    })`,\n
+                    }})`,\n
                     ",
                 ).into()
             } else {
@@ -3430,16 +3431,19 @@ wasm = wasmInstance.exports;
                     format!("function() {{ return logError(function {code}, arguments) }}")
                 } else {
                     if !import_deps.is_empty() {
-                        for dep in &import_deps{
+                        for dep in &import_deps {
                             self.emscripten_deps.insert(dep.clone());
                         }
-                        format!("function{},\n{}__deps:  [{}]", code, self.module.imports.get(core).name, import_deps.join(","))
-                    }
-                    else {
-                        format!("function{code}")
+                        format!(
+                            "function{},\n{}__deps:  [{}]",
+                            code,
+                            self.module.imports.get(core).name,
+                            import_deps.join(",")
+                        )
+                    } else {
+                        format!("function{}\n", code)
                     }
                 };
-
 
                 self.wasm_import_definitions.insert(core, code);
             }
@@ -3449,13 +3453,14 @@ wasm = wasmInstance.exports;
 
                 if matches!(self.config.mode, OutputMode::Emscripten) {
                     self.emscripten_library.push_str("$");
-                    self.emscripten_library.push_str(&self.adapter_name(id));
+                    self.emscripten_library.push_str(&self.export_adapter_name(id));
                     self.emscripten_library.push_str(": function");
-                    self.emscripten_library.push_str(&code.replace("wasm.", "wasmExports."));
+                    self.emscripten_library
+                        .push_str(&code.replace("wasm.", "wasmExports."));
                     self.emscripten_library.push_str(",\n\n");
                 } else {
                     self.globals.push_str("function ");
-                    self.globals.push_str(&self.adapter_name(id));
+                    self.globals.push_str(&self.export_adapter_name(id));
                     self.globals.push_str(&code);
                     self.globals.push_str("\n\n");
                 }
