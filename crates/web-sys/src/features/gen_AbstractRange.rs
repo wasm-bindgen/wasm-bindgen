@@ -13,35 +13,35 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AbstractRange`*"]
     pub type AbstractRange;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "AbstractRange" , js_name = startContainer)]
+    # [wasm_bindgen (structural , method , getter , js_class = "AbstractRange" , js_name = startContainer)]
     #[doc = "Getter for the `startContainer` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AbstractRange/startContainer)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AbstractRange`, `Node`*"]
-    pub fn start_container(this: &AbstractRange) -> Result<Node, JsValue>;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "AbstractRange" , js_name = startOffset)]
+    pub fn start_container(this: &AbstractRange) -> Node;
+    # [wasm_bindgen (structural , method , getter , js_class = "AbstractRange" , js_name = startOffset)]
     #[doc = "Getter for the `startOffset` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AbstractRange/startOffset)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AbstractRange`*"]
-    pub fn start_offset(this: &AbstractRange) -> Result<u32, JsValue>;
+    pub fn start_offset(this: &AbstractRange) -> u32;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "AbstractRange" , js_name = endContainer)]
+    # [wasm_bindgen (structural , method , getter , js_class = "AbstractRange" , js_name = endContainer)]
     #[doc = "Getter for the `endContainer` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AbstractRange/endContainer)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AbstractRange`, `Node`*"]
-    pub fn end_container(this: &AbstractRange) -> Result<Node, JsValue>;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "AbstractRange" , js_name = endOffset)]
+    pub fn end_container(this: &AbstractRange) -> Node;
+    # [wasm_bindgen (structural , method , getter , js_class = "AbstractRange" , js_name = endOffset)]
     #[doc = "Getter for the `endOffset` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AbstractRange/endOffset)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AbstractRange`*"]
-    pub fn end_offset(this: &AbstractRange) -> Result<u32, JsValue>;
+    pub fn end_offset(this: &AbstractRange) -> u32;
     # [wasm_bindgen (structural , method , getter , js_class = "AbstractRange" , js_name = collapsed)]
     #[doc = "Getter for the `collapsed` field of this object."]
     #[doc = ""]
