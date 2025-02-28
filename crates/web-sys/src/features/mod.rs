@@ -12,6 +12,13 @@ mod gen_AbortSignal;
 #[allow(unused_imports)]
 pub use gen_AbortSignal::*;
 
+#[cfg(feature = "AbstractRange")]
+#[allow(non_snake_case)]
+mod gen_AbstractRange;
+#[cfg(feature = "AbstractRange")]
+#[allow(unused_imports)]
+pub use gen_AbstractRange::*;
+
 #[cfg(feature = "AddEventListenerOptions")]
 #[allow(non_snake_case)]
 mod gen_AddEventListenerOptions;
@@ -8635,6 +8642,20 @@ mod gen_SpeechSynthesisVoice;
 #[cfg(feature = "SpeechSynthesisVoice")]
 #[allow(unused_imports)]
 pub use gen_SpeechSynthesisVoice::*;
+
+#[cfg(feature = "StaticRange")]
+#[allow(non_snake_case)]
+mod gen_StaticRange;
+#[cfg(feature = "StaticRange")]
+#[allow(unused_imports)]
+pub use gen_StaticRange::*;
+
+#[cfg(feature = "StaticRangeInit")]
+#[allow(non_snake_case)]
+mod gen_StaticRangeInit;
+#[cfg(feature = "StaticRangeInit")]
+#[allow(unused_imports)]
+pub use gen_StaticRangeInit::*;
 
 #[cfg(feature = "StereoPannerNode")]
 #[allow(non_snake_case)]

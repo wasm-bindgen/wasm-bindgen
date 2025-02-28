@@ -8,6 +8,11 @@
 * Deprecate async constructors.
   [#4402](https://github.com/rustwasm/wasm-bindgen/pull/4402)
 
+### Added
+
+* Added bindings for `StaticRange` and `AbstractRange`.
+  [#4221](https://github.com/rustwasm/wasm-bindgen/pull/4221)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
