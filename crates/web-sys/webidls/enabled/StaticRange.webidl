@@ -7,7 +7,7 @@
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
- */ 
+ */
 
 dictionary StaticRangeInit {
   required Node startContainer;
@@ -18,5 +18,5 @@ dictionary StaticRangeInit {
 
 [Exposed=Window]
 interface StaticRange : AbstractRange {
-  constructor(StaticRangeInit init);
+  [Throws] constructor(StaticRangeInit init);
 };
