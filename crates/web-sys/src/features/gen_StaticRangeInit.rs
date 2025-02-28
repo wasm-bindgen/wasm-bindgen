@@ -68,10 +68,10 @@ impl StaticRangeInit {
     ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-        ret.end_container(end_container);
-        ret.end_offset(end_offset);
-        ret.start_container(start_container);
-        ret.start_offset(start_offset);
+        ret.set_end_container(end_container);
+        ret.set_end_offset(end_offset);
+        ret.set_start_container(start_container);
+        ret.set_start_offset(start_offset);
         ret
     }
     #[cfg(feature = "Node")]
