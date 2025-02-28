@@ -7,17 +7,12 @@
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
- */ 
-
+ */
 
 interface AbstractRange {
-  [Throws]
   readonly attribute Node startContainer;
-  [Throws]
   readonly attribute unsigned long startOffset;
-  [Throws]
   readonly attribute Node endContainer;
-  [Throws]
   readonly attribute unsigned long endOffset;
   readonly attribute boolean collapsed;
 };
