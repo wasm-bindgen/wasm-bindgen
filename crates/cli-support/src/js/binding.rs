@@ -1660,8 +1660,7 @@ impl Invocation {
                 if cx.import_never_log_error(import) {
                     *log_error = false;
                 }
-                let ret = cx.invoke_import(import, kind, args, variadic, prelude, import_deps);
-                return ret;
+                cx.invoke_import(import, kind, args, variadic, prelude, import_deps)
             }
         }
     }

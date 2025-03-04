@@ -353,7 +353,7 @@ pub(crate) fn spawn(
         response
     })
     .map_err(|e| anyhow!("{}", e))?;
-    return Ok(srv);
+    Ok(srv)
 }
 
 pub(crate) fn spawn_emscripten(
@@ -390,7 +390,7 @@ pub(crate) fn spawn_emscripten(
         response
     })
     .map_err(|e| anyhow!("{}", e))?;
-    return Ok(srv);
+    Ok(srv)
 }
 
 fn try_asset(request: &Request, dir: &Path) -> Response {

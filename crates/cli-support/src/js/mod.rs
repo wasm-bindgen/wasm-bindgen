@@ -987,11 +987,7 @@ __wbg_set_wasm(wasm);"
         }
 
         let js = match &self.config.mode {
-            OutputMode::Emscripten => format!(
-            "\
-                    {imports_init}",
-                imports_init = imports_init
-            ),
+            OutputMode::Emscripten => imports_init.to_string(),
             _ => format!(
             "\
                 async function __wbg_load(module, imports) {{
@@ -2654,15 +2650,15 @@ __wbg_set_wasm(wasm);"
         }
         let table = self.export_function_table()?;
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_library.push_str(&format!(
+            self.emscripten_library.push_str(
                 "
                 $CLOSURE_DTORS: `(typeof FinalizationRegistry === 'undefined')
                     ? {{ register: () => {{}}, unregister: () => {{}} }}
                 : new FinalizationRegistry(state => {{
                     wasmExports.__indirect_function_table.get(state.dtor)(state.a, state.b)
                 }})`,\n
-                "
-            ));
+                ",
+            );
         } else {
             self.global(&format!(
                 "
@@ -3187,20 +3183,20 @@ __wbg_set_wasm(wasm);"
                         "function() {{ return logError(function {}, arguments) }}",
                         code
                     )
-                } else {
-                    if !import_deps.is_empty() {
-                        for dep in &import_deps {
-                            self.emscripten_deps.insert(dep.clone());
-                        }
-                        format!(
-                            "function{},\n{}__deps:  [{}]",
-                            code,
-                            self.module.imports.get(core).name,
-                            import_deps.join(",")
-                        )
-                    } else {
-                        format!("function{}\n", code)
+                } else if (matches!(self.config.mode, OutputMode::Emscripten)
+                    && !import_deps.is_empty())
+                {
+                    for dep in &import_deps {
+                        self.emscripten_deps.insert(dep.clone());
                     }
+                    format!(
+                        "function{},\n{}__deps:  [{}]",
+                        code,
+                        self.module.imports.get(core).name,
+                        import_deps.join(",")
+                    )
+                } else {
+                    format!("function{}\n", code)
                 };
 
                 self.wasm_import_definitions.insert(core, code);
@@ -3210,7 +3206,7 @@ __wbg_set_wasm(wasm);"
                 assert!(!log_error);
 
                 if matches!(self.config.mode, OutputMode::Emscripten) {
-                    self.emscripten_library.push_str("$");
+                    self.emscripten_library.push('$');
                     self.emscripten_library.push_str(&self.adapter_name(id));
                     self.emscripten_library.push_str(": function");
                     self.emscripten_library

@@ -117,7 +117,7 @@ fn main() -> anyhow::Result<()> {
         .map(Path::new)
         .context("file to test is not a valid file, can't extract file name")?;
 
-    let mut file_name_buf = PathBuf::from(cli.file.clone());
+    let mut file_name_buf = cli.file.clone();
 
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
     // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
