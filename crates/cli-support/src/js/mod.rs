@@ -1048,11 +1048,7 @@ wasm = wasmInstance.exports;
         }
 
         let js = match &self.config.mode {
-            OutputMode::Emscripten => format!(
-            "\
-                    {imports_init}",
-                imports_init = imports_init
-            ),
+            OutputMode::Emscripten => imports_init.to_string(),
             _ => format!(
             "
                 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
@@ -3425,25 +3421,32 @@ wasm = wasmInstance.exports;
                 }
             }
             ContextAdapterKind::Import(core) => {
-                let code = if catch {
-                    format!("function() {{ return handleError(function {code}, arguments) }}")
+                let mut code = if catch {
+                    format!(
+                        "function() {{ return handleError(function {code}, arguments) }}",
+                        code
+                    )
                 } else if log_error {
                     format!("function() {{ return logError(function {code}, arguments) }}")
                 } else {
-                    if !import_deps.is_empty() {
-                        for dep in &import_deps {
-                            self.emscripten_deps.insert(dep.clone());
-                        }
-                        format!(
-                            "function{},\n{}__deps:  [{}]",
-                            code,
-                            self.module.imports.get(core).name,
-                            import_deps.join(",")
-                        )
-                    } else {
-                        format!("function{}\n", code)
-                    }
+                    format!("function{code}")
                 };
+
+                if matches!(self.config.mode, OutputMode::Emscripten) && !import_deps.is_empty() {
+                    let mut import_deps_vec = import_deps
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect::<Vec<&str>>();
+                    // sort to generate deterministic output.
+                    import_deps_vec.sort();
+                    let deps: String = format!(
+                        "{}__deps:  [{}]\n",
+                        self.module.imports.get(core).name,
+                        import_deps_vec.join(",")
+                    );
+                    code = format!("{},\n{}\n", code, deps);
+                }
+
 
                 self.wasm_import_definitions.insert(core, code);
             }

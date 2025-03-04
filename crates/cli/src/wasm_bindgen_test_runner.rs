@@ -129,9 +129,6 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    // Collect all tests that the test harness is supposed to run. We assume
-    // that any exported function with the prefix `__wbg_test` is a test we need
-    // to execute.
     let mut file_name_buf= PathBuf::from(cli.file.clone());
 
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.

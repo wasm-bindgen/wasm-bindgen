@@ -2,9 +2,10 @@
 runner = 'cargo run -p wasm-bindgen-cli --bin wasm-bindgen-test-runner --'
 
 [build]
+
 [target.'cfg(all(target_arch = "wasm32", target_os = "emscripten"))']
 rustflags = [
-    "-Cllvm-args=-enable-emscripten-cxx-exceptions=0", 
-    "-Clink-arg=-Wno-undefined",    
-    "-Crelocation-model=static",                                                                                                                                                                                                     
+  "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+  "-Clink-arg=-Wno-undefined",
+  "-Crelocation-model=static",
 ]
