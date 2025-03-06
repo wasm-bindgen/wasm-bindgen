@@ -126,7 +126,9 @@ pub fn run(
         session: None,
     };
     println!("Try find `webdriver.json` for configure browser's capabilities:");
-    let capabilities: Capabilities = match File::open("webdriver.json") {
+    let capabilities: Capabilities = match File::open(
+        std::env::var("WASM_BINDGEN_WEBDRIVER_JSON").unwrap_or("webdriver.json".to_string()),
+    ) {
         Ok(file) => {
             println!("Ok");
             serde_json::from_reader(file)
