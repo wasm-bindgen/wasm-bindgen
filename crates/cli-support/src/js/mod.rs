@@ -1058,7 +1058,7 @@ wasm = wasmInstance.exports;
                     global = "$textEncoder: \"new TextEncoder()\",";
                 }
 
-                if global != "" {
+                if !global.is_empty() {
                     global_emscripten_initializer = format!(
                         "{}{}\n",
                         global_emscripten_initializer, global
@@ -1071,7 +1071,7 @@ wasm = wasmInstance.exports;
                 {}
                 $initBindgen__deps: ['$addOnInit'],
                 $initBindgen__postset: 'addOnInit(initBindgen);',
-            ", imports_init.to_string(), global_emscripten_initializer
+            ", imports_init, global_emscripten_initializer
             )}
             _ => format!(
             "
@@ -1910,7 +1910,9 @@ wasm = wasmInstance.exports;
                             "const add = {add}(array[i]); {mem}().setUint32(ptr + 4 * i, add, true);"
                         )
                     };
-
+                    if matches!(self.config.mode, OutputMode::Emscripten) {
+                        import_deps.insert("'${add}'".to_string());
+                    }
                     format!(
                         "
                         function {ret}(array, malloc) {{
@@ -3115,12 +3117,12 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         self.emscripten_library.push('\n');
     }
 
-    fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &Vec<String>) {
+    fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &[String]) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_library(&format!(
-                "
-                ${}: function{} {{
-                {},
+                "${}: function{} {{
+                {}
+                }},
                 ",
                 func_name,
                 args,
@@ -3136,11 +3138,12 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             }
         } else {
             self.global(&format!(
-                "
-            function {}{} {{
-            {}
+                "function {}{} {{{}
+            }}
             ",
-                func_name, args, body
+                func_name,
+                args,
+                body.trim()
             ));
         }
     }
