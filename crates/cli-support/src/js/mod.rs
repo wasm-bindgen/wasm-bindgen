@@ -243,7 +243,7 @@ impl<'a> Context<'a> {
                 ExportJs::Function(function) => {
                     let body = function.strip_prefix("function").unwrap();
                     if export_name == definition_name {
-                        format!("Module.{} = function{}\n", export_name, body)
+                        format!("Module.{} = function{};\n", export_name, body)
                     } else {
                         format!(
                             "function {}{}\nexport {{ {} as {} }};\n",
@@ -667,8 +667,6 @@ __wbg_set_wasm(wasm);"
             push_with_newline("var LibraryWbg = {\n");
             push_with_newline(&self.emscripten_library);
             push_with_newline(&init_js);
-            push_with_newline("$initBindgen__deps: ['$addOnInit'],");
-            push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',");
             push_with_newline(
                 "$initBindgen: () => {\n
     wasmExports.__wbindgen_start();",
@@ -987,7 +985,31 @@ __wbg_set_wasm(wasm);"
         }
 
         let js = match &self.config.mode {
-            OutputMode::Emscripten => imports_init.to_string(),
+            OutputMode::Emscripten => {
+            let mut global_emscripten_initializer: String = Default::default();
+            for global_dep in self.emscripten_deps.iter() {
+                let mut global = "";
+                if global_dep == "'$WASM_VECTOR_LEN'" {
+                    global = "$WASM_VECTOR_LEN: '0',";
+                } else if global_dep == "'$TextEncoder'" {
+                    global = "$textEncoder: \"new TextEncoder()\",";
+                }
+
+                if global != "" {
+                    global_emscripten_initializer = format!(
+                        "{}{}\n",
+                        global_emscripten_initializer, global
+                    );
+                }
+            }
+            format!(
+            "\
+            {}
+                {}
+                $initBindgen__deps: ['$addOnInit'],
+                $initBindgen__postset: 'addOnInit(initBindgen);',
+            ", imports_init.to_string(), global_emscripten_initializer
+            )}
             _ => format!(
             "\
                 async function __wbg_load(module, imports) {{
@@ -1520,15 +1542,25 @@ __wbg_set_wasm(wasm);"
         );
     }
 
-    fn expose_wasm_vector_len(&mut self) {
+    fn expose_wasm_vector_len(&mut self, import_deps: &mut HashSet<String>) {
+        import_deps.insert("'$WASM_VECTOR_LEN'".to_string());
         if !self.should_write_global("wasm_vector_len") {
             return;
         }
-        self.global("let WASM_VECTOR_LEN = 0;");
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_deps
+                .insert("'$WASM_VECTOR_LEN'".to_string());
+        } else {
+            self.global("let WASM_VECTOR_LEN = 0;");
+        }
     }
 
-    fn expose_pass_string_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
-        self.expose_wasm_vector_len();
+    fn expose_pass_string_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
+        self.expose_wasm_vector_len(import_deps);
 
         let debug = if self.config.debug {
             "
@@ -1548,55 +1580,101 @@ __wbg_set_wasm(wasm);"
         }
         self.expose_text_encoder()?;
 
+        let mut text_encoder = "cachedTextEncoder";
+        let mut mem_formatted = format!("{mem}()");
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            text_encoder = "textEncoder";
+            mem_formatted = "HEAP8".to_string();
+        };
         // The first implementation we have for this is to use
         // `TextEncoder#encode` which has been around for quite some time.
-        let encode = "function (arg, view) {
-            const buf = cachedTextEncoder.encode(arg);
+        let encode = format!(
+            "function (arg, view) {{
+            const buf = {text_encoder}.encode(arg);
             view.set(buf);
-            return {
+            return {{
                 read: arg.length,
                 written: buf.length
-            };
-        }";
+            }};
+        }}"
+        );
 
         // Another possibility is to use `TextEncoder#encodeInto` which is much
         // newer and isn't implemented everywhere yet. It's more efficient,
         // however, because it allows us to elide an intermediate allocation.
-        let encode_into = "function (arg, view) {
-            return cachedTextEncoder.encodeInto(arg, view);
-        }";
+        let encode_into = format!(
+            "function (arg, view) {{
+            return {text_encoder}.encodeInto(arg, view);
+        }}"
+        );
 
         // Looks like `encodeInto` doesn't currently work when the memory passed
         // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
         // a `SharedArrayBuffer` is in use.
         let shared = self.module.memories.get(memory).shared;
 
-        match self.config.encode_into {
-            EncodeInto::Always if !shared => {
-                self.global(&format!(
-                    "
-                    const encodeString = {};
-                ",
-                    encode_into
-                ));
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            match self.config.encode_into {
+                EncodeInto::Always if !shared => {
+                    self.emscripten_library.push_str(&format!(
+                        "
+                        $encodeString : {},
+                    ",
+                        encode_into
+                    ));
+                }
+                EncodeInto::Test if !shared => {
+                    self.emscripten_library.push_str(&format!(
+                        "
+                        $encodeString : function (arg, view) {{
+                        if (typeof TextEncoder.encodeInto === 'function') {{
+                            return {}
+                        }}
+                        return {}
+                        }},
+                    ",
+                        encode_into, encode
+                    ));
+                }
+                _ => {
+                    self.emscripten_library.push_str(&format!(
+                        "
+                        $encodeString : {},
+                    ",
+                        encode
+                    ));
+                }
             }
-            EncodeInto::Test if !shared => {
-                self.global(&format!(
-                    "
-                    const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
-                        ? {}
-                        : {});
-                ",
-                    encode_into, encode
-                ));
-            }
-            _ => {
-                self.global(&format!(
-                    "
-                    const encodeString = {};
-                ",
-                    encode
-                ));
+            self.emscripten_library
+                .push_str("$encodeString__deps: ['$textEncoder'],\n");
+        } else {
+            match self.config.encode_into {
+                EncodeInto::Always if !shared => {
+                    self.global(&format!(
+                        "
+                        const encodeString = {};
+                    ",
+                        encode_into
+                    ));
+                }
+                EncodeInto::Test if !shared => {
+                    self.global(&format!(
+                        "
+                        const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
+                            ? {}
+                            : {});
+                    ",
+                        encode_into, encode
+                    ));
+                }
+                _ => {
+                    self.global(&format!(
+                        "
+                        const encodeString = {};
+                    ",
+                        encode
+                    ));
+                }
             }
         }
 
@@ -1612,9 +1690,9 @@ __wbg_set_wasm(wasm);"
         let encode_as_ascii = format!(
             "\
                 if (realloc === undefined) {{
-                    const buf = cachedTextEncoder.encode(arg);
+                    const buf = {text_encoder}.encode(arg);
                     const ptr = malloc(buf.length, 1) >>> 0;
-                    {mem}().subarray(ptr, ptr + buf.length).set(buf);
+                    {mem_formatted}.subarray(ptr, ptr + buf.length).set(buf);
                     WASM_VECTOR_LEN = buf.length;
                     return ptr;
                 }}
@@ -1622,7 +1700,7 @@ __wbg_set_wasm(wasm);"
                 let len = arg.length;
                 let ptr = malloc(len, 1) >>> 0;
 
-                const mem = {mem}();
+                const mem = {mem_formatted};
 
                 let offset = 0;
 
@@ -1631,12 +1709,11 @@ __wbg_set_wasm(wasm);"
                     if (code > 0x7F) break;
                     mem[ptr + offset] = code;
                 }}
-            ",
-            mem = mem,
+            "
         );
-
-        self.global(&format!(
-            "function {name}(arg, malloc, realloc) {{
+        self.write_js_function(
+            &format!(
+                "
                 {debug}
                 {ascii}
                 if (offset !== len) {{
@@ -1644,7 +1721,7 @@ __wbg_set_wasm(wasm);"
                         arg = arg.slice(offset);
                     }}
                     ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
-                    const view = {mem}().subarray(ptr + offset, ptr + len);
+                    const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
                     const ret = encodeString(arg, view);
                     {debug_end}
                     offset += ret.written;
@@ -1654,51 +1731,86 @@ __wbg_set_wasm(wasm);"
                 WASM_VECTOR_LEN = offset;
                 return ptr;
             }}",
-            name = ret,
-            debug = debug,
-            ascii = encode_as_ascii,
-            mem = mem,
-            debug_end = if self.config.debug {
-                "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
-            } else {
-                ""
-            },
-        ));
+                debug = debug,
+                ascii = encode_as_ascii,
+                mem_formatted = mem_formatted,
+                debug_end = if self.config.debug {
+                    "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
+                } else {
+                    ""
+                },
+            ),
+            &format!("{ret}"),
+            "(arg, malloc, realloc)",
+            &vec![
+                format!("'$encodeString'"),
+                format!("'${text_encoder}'"),
+                format!("'$WASM_VECTOR_LEN'"),
+            ],
+        );
 
         Ok(ret)
     }
 
-    fn expose_pass_array8_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array8_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let view = self.expose_uint8_memory(memory);
-        self.pass_array_to_wasm("passArray8ToWasm", view, 1)
+        self.pass_array_to_wasm("passArray8ToWasm", view, 1, import_deps)
     }
 
-    fn expose_pass_array16_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array16_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let view = self.expose_uint16_memory(memory);
-        self.pass_array_to_wasm("passArray16ToWasm", view, 2)
+        self.pass_array_to_wasm("passArray16ToWasm", view, 2, import_deps)
     }
 
-    fn expose_pass_array32_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array32_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let view = self.expose_uint32_memory(memory);
-        self.pass_array_to_wasm("passArray32ToWasm", view, 4)
+        self.pass_array_to_wasm("passArray32ToWasm", view, 4, import_deps)
     }
 
-    fn expose_pass_array64_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array64_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let view = self.expose_uint64_memory(memory);
-        self.pass_array_to_wasm("passArray64ToWasm", view, 8)
+        self.pass_array_to_wasm("passArray64ToWasm", view, 8, import_deps)
     }
 
-    fn expose_pass_array_f32_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array_f32_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let view = self.expose_f32_memory(memory);
-        self.pass_array_to_wasm("passArrayF32ToWasm", view, 4)
+        self.pass_array_to_wasm("passArrayF32ToWasm", view, 4, import_deps)
     }
 
-    fn expose_pass_array_f64_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array_f64_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let view = self.expose_f64_memory(memory);
-        self.pass_array_to_wasm("passArrayF64ToWasm", view, 8)
+        self.pass_array_to_wasm("passArrayF64ToWasm", view, 8, import_deps)
     }
 
-    fn expose_pass_array_jsvalue_to_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
+    fn expose_pass_array_jsvalue_to_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         let mem = self.expose_dataview_memory(memory);
         let ret = MemView {
             name: "passArrayJsValueToWasm".into(),
@@ -1707,15 +1819,15 @@ __wbg_set_wasm(wasm);"
         if !self.should_write_global(ret.to_string()) {
             return Ok(ret);
         }
-        self.expose_wasm_vector_len();
+        self.expose_wasm_vector_len(import_deps);
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 // TODO: using `addToExternrefTable` goes back and forth between wasm
                 // and JS a lot, we should have a bulk operation for this.
-                let add = self.expose_add_to_externref_table(table, alloc)?;
-                self.global(&format!(
-                    "
-                        function {ret}(array, malloc) {{
+                let add = self.expose_add_to_externref_table(table, alloc, import_deps)?;
+                self.write_js_function(
+                    &format!(
+                        "
                             const ptr = malloc(array.length * 4, 4) >>> 0;
                             for (let i = 0; i < array.length; i++) {{
                                 const add = {add}(array[i]);
@@ -1725,7 +1837,11 @@ __wbg_set_wasm(wasm);"
                             return ptr;
                         }}
                     ",
-                ));
+                    ),
+                    &format!("{ret}"),
+                    "(array, malloc)",
+                    &vec![format!("'${add}'"), format!("'$WASM_VECTOR_LEN'")],
+                );
             }
             _ => {
                 self.expose_add_heap_object();
@@ -1752,6 +1868,7 @@ __wbg_set_wasm(wasm);"
         name: &'static str,
         view: MemView,
         size: usize,
+        import_deps: &mut HashSet<String>,
     ) -> Result<MemView, Error> {
         let ret = MemView {
             name: name.into(),
@@ -1760,7 +1877,7 @@ __wbg_set_wasm(wasm);"
         if !self.should_write_global(ret.to_string()) {
             return Ok(ret);
         }
-        self.expose_wasm_vector_len();
+        self.expose_wasm_vector_len(import_deps);
         self.global(&format!(
             "
             function {}(arg, malloc) {{
@@ -1789,6 +1906,7 @@ __wbg_set_wasm(wasm);"
         if !self.should_write_global("text_encoder") {
             return Ok(());
         }
+        self.emscripten_deps.insert("'$TextEncoder'".to_string());
         self.expose_text_processor("TextEncoder", "encode", "('utf-8')", None)
     }
 
@@ -2313,7 +2431,8 @@ __wbg_set_wasm(wasm);"
         ));
     }
 
-    fn expose_handle_error(&mut self) -> Result<(), Error> {
+    fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(), Error> {
+        import_deps.insert("'$handleError'".to_string());
         if !self.should_write_global("handle_error") {
             return Ok(());
         }
@@ -2324,10 +2443,10 @@ __wbg_set_wasm(wasm);"
         let store = self.export_name_of(store);
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
-                let add = self.expose_add_to_externref_table(table, alloc)?;
-                self.global(&format!(
-                    "\
-                    function handleError(f, args) {{
+                let add = self.expose_add_to_externref_table(table, alloc, import_deps)?;
+                self.write_js_function(
+                    &format!(
+                        "\
                         try {{
                             return f.apply(this, args);
                         }} catch (e) {{
@@ -2336,13 +2455,18 @@ __wbg_set_wasm(wasm);"
                         }}
                     }}
                     ",
-                    add, store,
-                ));
+                        add, store,
+                    ),
+                    "handleError",
+                    "(f, args)",
+                    &vec![format!("'${add}'")],
+                );
             }
             _ => {
                 self.expose_add_heap_object();
-                self.global(&format!(
-                    "\
+                self.write_js_function(
+                    &format!(
+                        "\
                     function handleError(f, args) {{
                         try {{
                             return f.apply(this, args);
@@ -2351,20 +2475,24 @@ __wbg_set_wasm(wasm);"
                         }}
                     }}
                     ",
-                    store,
-                ));
+                        store,
+                    ),
+                    "handleError",
+                    "(f, args)",
+                    &vec![format!("'$addHeapObject'")],
+                );
             }
         }
         Ok(())
     }
 
-    fn expose_log_error(&mut self) {
+    fn expose_log_error(&mut self, import_deps: &mut HashSet<String>) {
+        import_deps.insert("'$logError'".to_string());
         if !self.should_write_global("log_error") {
             return;
         }
-        self.global(
+        self.write_js_function(
             "\
-            function logError(f, args) {
                 try {
                     return f.apply(this, args);
                 } catch (e) {
@@ -2384,22 +2512,38 @@ __wbg_set_wasm(wasm);"
                 }
             }
             ",
+            "logError",
+            "(f, args)",
+            &Default::default(),
         );
     }
 
-    fn pass_to_wasm_function(&mut self, t: VectorKind, memory: MemoryId) -> Result<MemView, Error> {
+    fn pass_to_wasm_function(
+        &mut self,
+        t: VectorKind,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> Result<MemView, Error> {
         match t {
-            VectorKind::String => self.expose_pass_string_to_wasm(memory),
+            VectorKind::String => self.expose_pass_string_to_wasm(memory, import_deps),
             VectorKind::I8 | VectorKind::U8 | VectorKind::ClampedU8 => {
-                self.expose_pass_array8_to_wasm(memory)
+                self.expose_pass_array8_to_wasm(memory, import_deps)
             }
-            VectorKind::U16 | VectorKind::I16 => self.expose_pass_array16_to_wasm(memory),
-            VectorKind::I32 | VectorKind::U32 => self.expose_pass_array32_to_wasm(memory),
-            VectorKind::I64 | VectorKind::U64 => self.expose_pass_array64_to_wasm(memory),
-            VectorKind::F32 => self.expose_pass_array_f32_to_wasm(memory),
-            VectorKind::F64 => self.expose_pass_array_f64_to_wasm(memory),
-            VectorKind::Externref => self.expose_pass_array_jsvalue_to_wasm(memory),
-            VectorKind::NamedExternref(_) => self.expose_pass_array_jsvalue_to_wasm(memory),
+            VectorKind::U16 | VectorKind::I16 => {
+                self.expose_pass_array16_to_wasm(memory, import_deps)
+            }
+            VectorKind::I32 | VectorKind::U32 => {
+                self.expose_pass_array32_to_wasm(memory, import_deps)
+            }
+            VectorKind::I64 | VectorKind::U64 => {
+                self.expose_pass_array64_to_wasm(memory, import_deps)
+            }
+            VectorKind::F32 => self.expose_pass_array_f32_to_wasm(memory, import_deps),
+            VectorKind::F64 => self.expose_pass_array_f64_to_wasm(memory, import_deps),
+            VectorKind::Externref => self.expose_pass_array_jsvalue_to_wasm(memory, import_deps),
+            VectorKind::NamedExternref(_) => {
+                self.expose_pass_array_jsvalue_to_wasm(memory, import_deps)
+            }
         }
     }
 
@@ -2453,17 +2597,31 @@ __wbg_set_wasm(wasm);"
         );
     }
 
-    fn expose_is_like_none(&mut self) {
+    fn expose_is_like_none(&mut self, import_deps: &mut HashSet<String>) {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            import_deps.insert("'$isLikeNone'".to_string());
+        }
         if !self.should_write_global("is_like_none") {
             return;
         }
-        self.global(
-            "
-            function isLikeNone(x) {
-                return x === undefined || x === null;
-            }
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library.push_str(
+                "
+            $isLikeNone: function(x) {
+                return x == null;
+            },
         ",
-        );
+            );
+        } else {
+            self.global(
+                "
+                function isLikeNone(x) {
+                    return x == null;
+                }
+            ",
+            );
+        }
     }
 
     fn expose_assert_non_null(&mut self) {
@@ -2653,10 +2811,10 @@ __wbg_set_wasm(wasm);"
             self.emscripten_library.push_str(
                 "
                 $CLOSURE_DTORS: `(typeof FinalizationRegistry === 'undefined')
-                    ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry(state => {{
+                    ? { register: () => {}, unregister: () => {} }
+                : new FinalizationRegistry(state => {
                     wasmExports.__indirect_function_table.get(state.dtor)(state.a, state.b)
-                }})`,\n
+                })`,\n
                 ",
             );
         } else {
@@ -2682,6 +2840,50 @@ __wbg_set_wasm(wasm);"
         }
         self.globals.push_str(s);
         self.globals.push('\n');
+    }
+
+    fn emscripten_library(&mut self, s: &str) {
+        let s = s.trim();
+
+        // Ensure a blank line between adjacent items, and ensure everything is
+        // terminated with a newline.
+        while !self.emscripten_library.ends_with("\n\n\n")
+            && !self.emscripten_library.ends_with("*/\n")
+        {
+            self.emscripten_library.push('\n');
+        }
+        self.emscripten_library.push_str(s);
+        self.emscripten_library.push('\n');
+    }
+
+    fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &Vec<String>) {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library(&format!(
+                "
+                ${}: function{} {{
+                {},
+                ",
+                func_name,
+                args,
+                body.trim().replace("wasm.", "wasmExports.")
+            ));
+            if !deps.is_empty() {
+                self.emscripten_library.push_str(&format!(
+                    "${}_deps: [{}],
+                    ",
+                    func_name,
+                    deps.join(",")
+                ));
+            }
+        } else {
+            self.global(&format!(
+                "
+            function {}{} {{
+            {}
+            ",
+                func_name, args, body
+            ));
+        }
     }
 
     fn require_class_wrap(&mut self, name: &str) {
@@ -2869,24 +3071,30 @@ __wbg_set_wasm(wasm);"
         &mut self,
         table: TableId,
         alloc: FunctionId,
+        import_deps: &mut HashSet<String>,
     ) -> Result<MemView, Error> {
         let view = self.memview_table("addToExternrefTable", table);
         assert!(self.config.externref);
+        import_deps.insert(format!("'${}'", view).to_string());
         if !self.should_write_global(view.to_string()) {
             return Ok(view);
         }
         let alloc = self.export_name_of(alloc);
         let table = self.export_name_of(table);
-        self.global(&format!(
-            "
-                function {}(obj) {{
+        self.write_js_function(
+            &format!(
+                "
                     const idx = wasm.{}();
                     wasm.{}.set(idx, obj);
                     return idx;
                 }}
             ",
-            view, alloc, table,
-        ));
+                alloc, table,
+            ),
+            &format!("{}", view),
+            "(obj)",
+            &Default::default(),
+        );
 
         Ok(view)
     }
@@ -3035,7 +3243,7 @@ __wbg_set_wasm(wasm);"
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
-        let mut import_deps: Vec<String> = Default::default();
+        let mut import_deps: HashSet<String> = Default::default();
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -3173,7 +3381,7 @@ __wbg_set_wasm(wasm);"
                 }
             }
             ContextAdapterKind::Import(core) => {
-                let code = if catch {
+                let mut code = if catch {
                     format!(
                         "function() {{ return handleError(function {}, arguments) }}",
                         code
@@ -3183,21 +3391,24 @@ __wbg_set_wasm(wasm);"
                         "function() {{ return logError(function {}, arguments) }}",
                         code
                     )
-                } else if (matches!(self.config.mode, OutputMode::Emscripten)
-                    && !import_deps.is_empty())
-                {
-                    for dep in &import_deps {
-                        self.emscripten_deps.insert(dep.clone());
-                    }
-                    format!(
-                        "function{},\n{}__deps:  [{}]",
-                        code,
-                        self.module.imports.get(core).name,
-                        import_deps.join(",")
-                    )
                 } else {
-                    format!("function{}\n", code)
+                    format!("function{}", code)
                 };
+
+                if matches!(self.config.mode, OutputMode::Emscripten) && !import_deps.is_empty() {
+                    let mut import_deps_vec = import_deps
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect::<Vec<&str>>();
+                    // sort to generate deterministic output.
+                    import_deps_vec.sort();
+                    let deps: String = format!(
+                        "{}__deps:  [{}]\n",
+                        self.module.imports.get(core).name,
+                        import_deps_vec.join(",")
+                    );
+                    code = format!("{},\n{}\n", code, deps);
+                }
 
                 self.wasm_import_definitions.insert(core, code);
             }
@@ -3441,7 +3652,7 @@ __wbg_set_wasm(wasm);"
         args: &[String],
         variadic: bool,
         prelude: &mut String,
-        import_deps: &mut Vec<String>,
+        import_deps: &mut HashSet<String>,
     ) -> Result<String, Error> {
         let variadic_args = |js_arguments: &[String]| {
             Ok(if !variadic {
@@ -3465,7 +3676,7 @@ __wbg_set_wasm(wasm);"
             let re = Regex::new(r"([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(").unwrap();
             for arg in args {
                 if let Some(result) = re.captures(arg) {
-                    import_deps.push(format!("'${}'", &result[1]));
+                    import_deps.insert(format!("'${}'", &result[1]));
                 }
             }
         }
@@ -3581,11 +3792,11 @@ __wbg_set_wasm(wasm);"
                 assert_eq!(args.len(), 3);
 
                 let call = self.adapter_name(*adapter);
-                import_deps.push(format!("'${}'", call));
+                import_deps.insert(format!("'${}'", call));
                 if *mutable {
                     self.expose_make_mut_closure()?;
                     if matches!(self.config.mode, OutputMode::Emscripten) {
-                        import_deps.push("'$makeMutClosure'".to_string());
+                        import_deps.insert("'$makeMutClosure'".to_string());
                     }
                     Ok(format!(
                         "makeMutClosure({arg0}, {arg1}, {dtor}, {call})",
@@ -3597,7 +3808,7 @@ __wbg_set_wasm(wasm);"
                 } else {
                     self.expose_make_closure()?;
                     if matches!(self.config.mode, OutputMode::Emscripten) {
-                        import_deps.push("'$makeClosure'".to_string());
+                        import_deps.insert("'$makeClosure'".to_string());
                     }
                     Ok(format!(
                         "makeClosure({arg0}, {arg1}, {dtor}, {call})",
@@ -3719,7 +3930,7 @@ __wbg_set_wasm(wasm);"
             AuxImport::Intrinsic(intrinsic) => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
-                self.invoke_intrinsic(intrinsic, args, prelude)
+                self.invoke_intrinsic(intrinsic, args, prelude, import_deps)
             }
 
             AuxImport::LinkTo(path, content) => {
@@ -3785,6 +3996,7 @@ __wbg_set_wasm(wasm);"
         intrinsic: &Intrinsic,
         args: &[String],
         prelude: &mut String,
+        import_deps: &mut HashSet<String>,
     ) -> Result<String, Error> {
         let expr = match intrinsic {
             Intrinsic::JsvalEq => {
@@ -4121,6 +4333,7 @@ __wbg_set_wasm(wasm);"
             Intrinsic::DebugString => {
                 assert_eq!(args.len(), 1);
                 self.expose_debug_string();
+                import_deps.insert("'$debugString'".to_string());
                 format!("debugString({})", args[0])
             }
 
@@ -4395,9 +4608,8 @@ __wbg_set_wasm(wasm);"
             return;
         }
 
-        self.global(
+        self.write_js_function(
             "
-           function debugString(val) {
                 // primitive types
                 const type = typeof val;
                 if (type == 'number' || type == 'boolean' || val == null) {
@@ -4462,6 +4674,9 @@ __wbg_set_wasm(wasm);"
                 return className;
             }
         ",
+            "debugString",
+            "(val)",
+            &Default::default(),
         );
     }
 
