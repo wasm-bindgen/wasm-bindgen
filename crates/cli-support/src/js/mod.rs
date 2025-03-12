@@ -995,7 +995,7 @@ __wbg_set_wasm(wasm);"
                     global = "$textEncoder: \"new TextEncoder()\",";
                 }
 
-                if global != "" {
+                if !global.is_empty() {
                     global_emscripten_initializer = format!(
                         "{}{}\n",
                         global_emscripten_initializer, global
@@ -1008,7 +1008,7 @@ __wbg_set_wasm(wasm);"
                 {}
                 $initBindgen__deps: ['$addOnInit'],
                 $initBindgen__postset: 'addOnInit(initBindgen);',
-            ", imports_init.to_string(), global_emscripten_initializer
+            ", imports_init, global_emscripten_initializer
             )}
             _ => format!(
             "\
@@ -1729,8 +1729,7 @@ __wbg_set_wasm(wasm);"
                 }}
 
                 WASM_VECTOR_LEN = offset;
-                return ptr;
-            }}",
+                return ptr;",
                 debug = debug,
                 ascii = encode_as_ascii,
                 mem_formatted = mem_formatted,
@@ -1742,10 +1741,10 @@ __wbg_set_wasm(wasm);"
             ),
             &format!("{ret}"),
             "(arg, malloc, realloc)",
-            &vec![
-                format!("'$encodeString'"),
+            &[
+                "'$encodeString'".to_string(),
                 format!("'${text_encoder}'"),
-                format!("'$WASM_VECTOR_LEN'"),
+                "'$WASM_VECTOR_LEN'".to_string(),
             ],
         );
 
@@ -1835,12 +1834,11 @@ __wbg_set_wasm(wasm);"
                             }}
                             WASM_VECTOR_LEN = array.length;
                             return ptr;
-                        }}
                     ",
                     ),
                     &format!("{ret}"),
                     "(array, malloc)",
-                    &vec![format!("'${add}'"), format!("'$WASM_VECTOR_LEN'")],
+                    &[format!("'${add}'"), "'$WASM_VECTOR_LEN'".to_string()],
                 );
             }
             _ => {
@@ -2453,13 +2451,12 @@ __wbg_set_wasm(wasm);"
                             const idx = {}(e);
                             wasm.{}(idx);
                         }}
-                    }}
                     ",
                         add, store,
                     ),
                     "handleError",
                     "(f, args)",
-                    &vec![format!("'${add}'")],
+                    &[format!("'${add}'")],
                 );
             }
             _ => {
@@ -2467,19 +2464,17 @@ __wbg_set_wasm(wasm);"
                 self.write_js_function(
                     &format!(
                         "\
-                    function handleError(f, args) {{
                         try {{
                             return f.apply(this, args);
                         }} catch (e) {{
                             wasm.{}(addHeapObject(e));
                         }}
-                    }}
                     ",
                         store,
                     ),
                     "handleError",
                     "(f, args)",
-                    &vec![format!("'$addHeapObject'")],
+                    &["'$addHeapObject'".to_string()],
                 );
             }
         }
@@ -2510,11 +2505,10 @@ __wbg_set_wasm(wasm);"
                                     error);
                     throw e;
                 }
-            }
             ",
             "logError",
             "(f, args)",
-            &Default::default(),
+            &[],
         );
     }
 
@@ -2856,12 +2850,12 @@ __wbg_set_wasm(wasm);"
         self.emscripten_library.push('\n');
     }
 
-    fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &Vec<String>) {
+    fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &[String]) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_library(&format!(
-                "
-                ${}: function{} {{
-                {},
+                "${}: function{} {{
+                {}
+                }},
                 ",
                 func_name,
                 args,
@@ -2877,11 +2871,12 @@ __wbg_set_wasm(wasm);"
             }
         } else {
             self.global(&format!(
-                "
-            function {}{} {{
-            {}
+                "function {}{} {{{}
+            }}
             ",
-                func_name, args, body
+                func_name,
+                args,
+                body.trim()
             ));
         }
     }
@@ -3087,13 +3082,12 @@ __wbg_set_wasm(wasm);"
                     const idx = wasm.{}();
                     wasm.{}.set(idx, obj);
                     return idx;
-                }}
             ",
                 alloc, table,
             ),
             &format!("{}", view),
             "(obj)",
-            &Default::default(),
+            &[],
         );
 
         Ok(view)
@@ -4672,11 +4666,10 @@ __wbg_set_wasm(wasm);"
                 }
                 // TODO we could test for more things here, like `Set`s and `Map`s.
                 return className;
-            }
         ",
             "debugString",
             "(val)",
-            &Default::default(),
+            &[],
         );
     }
 
