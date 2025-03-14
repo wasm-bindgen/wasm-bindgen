@@ -929,7 +929,12 @@ wasm = wasmInstance.exports;
         needs_manual_start: bool,
         mut imports: Option<&mut String>,
     ) -> Result<(String, String), Error> {
-        let module_name = "wbg";
+        let module_name;
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            module_name = "env";
+        } else {
+            module_name = "wbg";
+        }
         let mut init_memory_arg = "";
         let mut init_memory_arg_alone = "";
         let mut has_memory = false;
@@ -999,12 +1004,11 @@ wasm = wasmInstance.exports;
                         &js.trim()
                             .strip_prefix("function()")
                             .unwrap()
-                            .replace("wasm", "wasmExports"),
                     );
                     imports_init.push_str(",\n");
                 } else {
                     imports_init.push_str(": ");
-                    imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
+                    imports_init.push_str(&js.trim().replace("wasm.", "_"));
                     imports_init.push_str(",\n");
                 }
             }
@@ -3681,7 +3685,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                     self.emscripten_library.push_str(&self.export_adapter_name(id));
                     self.emscripten_library.push_str(": function");
                     self.emscripten_library
-                        .push_str(&code.replace("wasm.", "wasmExports."));
+                        .push_str(&code.replace("wasm.", "_"));
                     self.emscripten_library.push_str(",\n\n");
                 } else {
                     self.globals.push_str("function ");
@@ -4539,7 +4543,15 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                     .aux
                     .externref_table
                     .ok_or_else(|| anyhow!("must enable externref to use externref intrinsic"))?;
+                let mut base = "\n".to_string();
                 let name = self.export_name_of(table);
+
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    base.push_str(&format!("const table = wasmExports['{name}'];\n"));
+                } else {
+                    base.push_str(&format!("const table = wasm.{name};\n"));
+                }
+
                 // Grow the table to insert our initial values, and then also
                 // set the 0th slot to `undefined` since that's what we've
                 // historically used for our ABI which is that the index of 0
