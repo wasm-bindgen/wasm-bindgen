@@ -669,9 +669,9 @@ __wbg_set_wasm(wasm);"
             push_with_newline(&init_js);
             push_with_newline(
                 "$initBindgen: () => {\n
-    wasmExports.__wbindgen_start();",
+    wasmExports['__wbindgen_start']();",
             );
-            self.globals = self.globals.replace("wasm.", "wasmExports.");
+            self.globals = self.globals.replace("wasm.", "_");
             push_with_newline(&self.globals);
             push_with_newline("},");
             let deps: Vec<String> = set_to_list(&self.emscripten_deps);
@@ -853,7 +853,12 @@ __wbg_set_wasm(wasm);"
         needs_manual_start: bool,
         mut imports: Option<&mut String>,
     ) -> Result<(String, String), Error> {
-        let module_name = "wbg";
+        let module_name;
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            module_name = "env";
+        } else {
+            module_name = "wbg";
+        }
         let mut init_memory_arg = "";
         let mut init_memory = String::new();
         let mut has_memory = false;
@@ -931,12 +936,11 @@ __wbg_set_wasm(wasm);"
                         &js.trim()
                             .strip_prefix("function()")
                             .unwrap()
-                            .replace("wasm", "wasmExports"),
                     );
                     imports_init.push_str(",\n");
                 } else {
                     imports_init.push_str(": ");
-                    imports_init.push_str(&js.trim().replace("wasm", "wasmExports"));
+                    imports_init.push_str(&js.trim().replace("wasm.", "_"));
                     imports_init.push_str(",\n");
                 }
             }
@@ -2675,7 +2679,7 @@ __wbg_set_wasm(wasm);"
                             return f(a, state.b, ...args);
                         }} finally {{
                             if (--state.cnt === 0) {{
-                                wasmExports.{table}.get(state.dtor)(a, state.b);
+                                wasmExports['{table}'].get(state.dtor)(a, state.b);
                                 CLOSURE_DTORS.unregister(state);
                             }} else {{
                                 state.a = a;
@@ -2752,7 +2756,7 @@ __wbg_set_wasm(wasm);"
                             return f(state.a, state.b, ...args);
                         }} finally {{
                             if (--state.cnt === 0) {{
-                                wasmExports.{table}.get(state.dtor)(state.a, state.b);
+                                wasmExports['{table}'].get(state.dtor)(state.a, state.b);
                                 state.a = 0;
                                 CLOSURE_DTORS.unregister(state);
                             }}
@@ -2807,7 +2811,7 @@ __wbg_set_wasm(wasm);"
                 $CLOSURE_DTORS: `(typeof FinalizationRegistry === 'undefined')
                     ? { register: () => {}, unregister: () => {} }
                 : new FinalizationRegistry(state => {
-                    wasmExports.__indirect_function_table.get(state.dtor)(state.a, state.b)
+                    wasmExports.['__indirect_function_table'].get(state.dtor)(state.a, state.b)
                 })`,\n
                 ",
             );
@@ -3415,7 +3419,7 @@ __wbg_set_wasm(wasm);"
                     self.emscripten_library.push_str(&self.adapter_name(id));
                     self.emscripten_library.push_str(": function");
                     self.emscripten_library
-                        .push_str(&code.replace("wasm.", "wasmExports."));
+                        .push_str(&code.replace("wasm.", "_"));
                     self.emscripten_library.push_str(",\n\n");
                 } else {
                     self.globals.push_str("function ");
@@ -4404,20 +4408,25 @@ __wbg_set_wasm(wasm);"
                     .aux
                     .externref_table
                     .ok_or_else(|| anyhow!("must enable externref to use externref intrinsic"))?;
+                let mut base = "\n".to_string();
                 let name = self.export_name_of(table);
+
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    base.push_str(&format!("const table = wasmExports['{name}'];\n"));
+                } else {
+                    base.push_str(&format!("const table = wasm.{name};\n"));
+                }
+
                 // Grow the table to insert our initial values, and then also
                 // set the 0th slot to `undefined` since that's what we've
                 // historically used for our ABI which is that the index of 0
                 // returns `undefined` for types like `None` going out.
-                let mut base = format!(
-                    "
-                      const table = wasm.{};
-                      const offset = table.grow({});
+                base.push_str(&format!(
+                    " const offset = table.grow({});
                       table.set(0, undefined);
                     ",
-                    name,
                     INITIAL_HEAP_VALUES.len(),
-                );
+                ));
                 for (i, value) in INITIAL_HEAP_VALUES.iter().enumerate() {
                     base.push_str(&format!("table.set(offset + {}, {});\n", i, value));
                 }
