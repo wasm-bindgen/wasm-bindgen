@@ -292,6 +292,11 @@ function passStringToWasm0(arg, malloc, realloc) {
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+function isLikeNone(x) {
+    return x == null;
+}
+
 cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
 let numBytesDecoded = 0;

@@ -3,6 +3,11 @@ export function __wbg_set_wasm(val) {
     wasm = val;
 }
 
+
+function isLikeNone(x) {
+    return x == null;
+}
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);

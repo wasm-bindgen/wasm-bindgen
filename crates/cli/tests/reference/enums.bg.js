@@ -17,7 +17,7 @@ function getUint8ArrayMemory0() {
 }
 
 function isLikeNone(x) {
-    return x === undefined || x === null;
+    return x == null;
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });

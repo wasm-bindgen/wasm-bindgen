@@ -929,12 +929,11 @@ wasm = wasmInstance.exports;
         needs_manual_start: bool,
         mut imports: Option<&mut String>,
     ) -> Result<(String, String), Error> {
-        let module_name;
-        if matches!(self.config.mode, OutputMode::Emscripten) {
-            module_name = "env";
+        let module_name = if matches!(self.config.mode, OutputMode::Emscripten) {
+            "env"
         } else {
-            module_name = "wbg";
-        }
+            "wbg"
+        };
         let mut init_memory_arg = "";
         let mut init_memory_arg_alone = "";
         let mut has_memory = false;
@@ -1000,11 +999,7 @@ wasm = wasmInstance.exports;
                 imports_init.push_str(&import.name);
                 if import.name == "__wbindgen_init_externref_table" {
                     imports_init.push_str(": () =>");
-                    imports_init.push_str(
-                        &js.trim()
-                            .strip_prefix("function()")
-                            .unwrap()
-                    );
+                    imports_init.push_str(js.trim().strip_prefix("function()").unwrap());
                     imports_init.push_str(",\n");
                 } else {
                     imports_init.push_str(": ");
@@ -3142,7 +3137,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             }
         } else {
             self.global(&format!(
-                "function {}{} {{{}
+                "function {}{} {{
+                {}
             }}
             ",
                 func_name,

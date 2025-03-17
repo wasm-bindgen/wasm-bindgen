@@ -17,7 +17,7 @@ function getUint8ArrayMemory0() {
 }
 
 function isLikeNone(x) {
-    return x === undefined || x === null;
+    return x == null;
 }
 
 function passStringToWasm0(arg, malloc, realloc) {
