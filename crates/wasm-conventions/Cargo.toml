@@ -17,7 +17,7 @@ walrus = "0.23"
 # Matching the version `walrus` depends on.
 anyhow = "1.0"
 log = "0.4"
-wasmparser = "0.214"
+wasmparser = "0.227"
 
 [lints]
 workspace = true
