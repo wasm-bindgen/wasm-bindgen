@@ -355,11 +355,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         ) in args_data
             .iter()
             .zip(arg_tys)
-            .zip(
-                arg_tys_map
-                    .as_ref()
-                    .unwrap_or(&std::iter::repeat_n(None, arg_tys.len()).collect()),
-            )
+            .zip(arg_tys_map.as_ref().unwrap_or(&vec![None; arg_tys.len()]))
             .rev()
         {
             // In TypeScript, we can mark optional parameters as omittable
@@ -499,11 +495,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         ) in fn_arg_names
             .iter()
             .zip(arg_tys)
-            .zip(
-                arg_tys_map
-                    .as_ref()
-                    .unwrap_or(&std::iter::repeat_n(None, arg_tys.len()).collect()),
-            )
+            .zip(arg_tys_map.as_ref().unwrap_or(&vec![None; arg_tys.len()]))
             .rev()
         {
             let mut arg = "@param {".to_string();
