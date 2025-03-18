@@ -191,6 +191,8 @@ impl<'a> Context<'a> {
                     arguments: vec![Descriptor::I32; 3],
                     ret: Descriptor::Externref,
                     inner_ret: None,
+                    inner_ret_map: None,
+                    args_ty_map: None,
                 };
                 let id = self.import_adapter(*id, signature, AdapterJsImportKind::Normal)?;
                 // Synthesize the two integer pointers we pass through which
@@ -352,6 +354,8 @@ impl<'a> Context<'a> {
             arguments: Vec::new(),
             ret: Descriptor::String,
             inner_ret: None,
+            inner_ret_map: None,
+            args_ty_map: None,
         };
         let id = self.import_adapter(id, descriptor, AdapterJsImportKind::Normal)?;
         let (path, content) = match module {
@@ -812,6 +816,8 @@ impl<'a> Context<'a> {
                 shim_idx: 0,
                 ret: descriptor,
                 inner_ret: None,
+                inner_ret_map: None,
+                args_ty_map: None,
             },
             AdapterJsImportKind::Normal,
         )?;
@@ -839,6 +845,8 @@ impl<'a> Context<'a> {
                 shim_idx: 0,
                 ret: Descriptor::Externref,
                 inner_ret: None,
+                inner_ret_map: None,
+                args_ty_map: None,
             },
             AdapterJsImportKind::Normal,
         )?;
@@ -869,6 +877,8 @@ impl<'a> Context<'a> {
                 shim_idx: 0,
                 ret: Descriptor::Boolean,
                 inner_ret: None,
+                inner_ret_map: None,
+                args_ty_map: None,
             },
             AdapterJsImportKind::Normal,
         )?;
@@ -954,6 +964,8 @@ impl<'a> Context<'a> {
                 shim_idx: 0,
                 ret: descriptor.clone(),
                 inner_ret: Some(descriptor.clone()),
+                inner_ret_map: None,
+                args_ty_map: None,
             };
             let getter_id = self.export_adapter(getter_id, getter_descriptor)?;
             self.aux.export_map.insert(
@@ -988,6 +1000,8 @@ impl<'a> Context<'a> {
                 shim_idx: 0,
                 ret: Descriptor::Unit,
                 inner_ret: None,
+                inner_ret_map: None,
+                args_ty_map: None,
             };
             let setter_id = self.export_adapter(setter_id, setter_descriptor)?;
             self.aux.export_map.insert(
@@ -1051,6 +1065,8 @@ impl<'a> Context<'a> {
                 arguments,
                 ret,
                 inner_ret: None,
+                inner_ret_map: None,
+                args_ty_map: None,
             };
             let id = self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
             self.aux.import_map.insert(id, aux_import);
@@ -1263,6 +1279,8 @@ impl<'a> Context<'a> {
                 name: import_name,
                 kind,
             },
+            None,
+            None,
         );
         instructions.push(InstructionData {
             instr: Instruction::CallAdapter(f),
@@ -1296,6 +1314,8 @@ impl<'a> Context<'a> {
             results,
             vec![],
             AdapterKind::Local { instructions },
+            None,
+            None,
         );
         args.cx.adapters.implements.push((import_id, core_id, id));
         Ok(f)
@@ -1377,6 +1397,18 @@ impl<'a> Context<'a> {
 
         // ... then the returned value being translated back
 
+        // convert args and return type map describers to adapter
+        let inner_results_map = signature
+            .inner_ret_map
+            .as_ref()
+            .and_then(outgoing::describe_map_to_adapter);
+        let params_map = signature.args_ty_map.as_ref().map(|args_ty_map| {
+            args_ty_map
+                .iter()
+                .map(outgoing::describe_map_to_adapter)
+                .collect()
+        });
+
         let inner_ret_output = if signature.inner_ret.is_some() {
             let mut inner_ret = args.cx.instruction_builder(true);
             inner_ret.outgoing(&signature.inner_ret.unwrap())?;
@@ -1447,6 +1479,8 @@ impl<'a> Context<'a> {
             ret.output,
             inner_ret_output,
             AdapterKind::Local { instructions },
+            inner_results_map,
+            params_map,
         ))
     }
 

@@ -40,3 +40,8 @@ pub fn is_valid_ident(name: &str) -> bool {
             }
         })
 }
+
+/// An arbitrary code for describing a type map
+/// This is hash of `TYPE_DESCRIBE_MAP` truncated to u32
+/// using `std::hash::DefaultHasher`
+pub const TYPE_DESCRIBE_MAP: u32 = 2728578646;

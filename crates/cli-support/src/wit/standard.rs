@@ -32,6 +32,8 @@ pub struct Adapter {
     pub results: Vec<AdapterType>,
     pub inner_results: Vec<AdapterType>,
     pub kind: AdapterKind,
+    pub inner_results_map: Option<AdapterType>,
+    pub params_map: Option<Vec<Option<AdapterType>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -95,6 +97,11 @@ pub enum AdapterType {
     NamedExternref(String),
     Function,
     NonNull,
+    Unit,
+    Generic {
+        ty: Box<AdapterType>,
+        args: Box<[AdapterType]>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -404,6 +411,8 @@ impl NonstandardWitSection {
         results: Vec<AdapterType>,
         inner_results: Vec<AdapterType>,
         kind: AdapterKind,
+        inner_results_map: Option<AdapterType>,
+        params_map: Option<Vec<Option<AdapterType>>>,
     ) -> AdapterId {
         let id = AdapterId(self.adapters.len());
         self.adapters.insert(
@@ -414,6 +423,8 @@ impl NonstandardWitSection {
                 results,
                 inner_results,
                 kind,
+                inner_results_map,
+                params_map,
             },
         );
         id

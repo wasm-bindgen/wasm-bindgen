@@ -282,6 +282,8 @@ impl<'a, 'b> Builder<'a, 'b> {
             asyncness,
             variadic,
             ret_ty_override,
+            &adapter.params_map,
+            &adapter.inner_results_map,
         );
         let js_doc = if generate_jsdoc {
             self.js_doc_comments(
@@ -291,6 +293,8 @@ impl<'a, 'b> Builder<'a, 'b> {
                 variadic,
                 ret_ty_override,
                 ret_desc,
+                &adapter.params_map,
+                &adapter.inner_results_map,
             )
         } else {
             String::new()
@@ -332,6 +336,8 @@ impl<'a, 'b> Builder<'a, 'b> {
         asyncness: bool,
         variadic: bool,
         ret_ty_override: &Option<String>,
+        arg_tys_map: &Option<Vec<Option<AdapterType>>>,
+        result_ty_map: &Option<AdapterType>,
     ) -> (String, Vec<String>, Option<String>, HashSet<TsReference>) {
         // Build up the typescript signature as well
         let mut omittable = true;
@@ -339,11 +345,22 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut ts_arg_tys = Vec::new();
         let mut ts_refs = HashSet::new();
         for (
-            AuxFunctionArgumentData {
-                name, ty_override, ..
-            },
-            ty,
-        ) in args_data.iter().zip(arg_tys).rev()
+            (
+                AuxFunctionArgumentData {
+                    name, ty_override, ..
+                },
+                ty,
+            ),
+            ty_map,
+        ) in args_data
+            .iter()
+            .zip(arg_tys)
+            .zip(
+                arg_tys_map
+                    .as_ref()
+                    .unwrap_or(&std::iter::repeat_n(None, arg_tys.len()).collect()),
+            )
+            .rev()
         {
             // In TypeScript, we can mark optional parameters as omittable
             // using the `?` suffix, but only if they're not followed by
@@ -357,15 +374,31 @@ impl<'a, 'b> Builder<'a, 'b> {
                 arg.push_str(": ");
                 ts.push_str(v);
             } else {
+                // build generics
+                let generics = ty_map
+                    .as_ref()
+                    .map(|ty| build_ts_generics(ty, TypePosition::Argument, None, true));
                 match ty {
                     AdapterType::Option(ty) if omittable => {
                         // e.g. `foo?: string | null`
                         arg.push_str("?: ");
-                        adapter2ts(ty, TypePosition::Argument, &mut ts, Some(&mut ts_refs));
+                        adapter2ts(
+                            ty,
+                            TypePosition::Argument,
+                            &mut ts,
+                            Some(&mut ts_refs),
+                            generics,
+                        );
                         ts.push_str(" | null");
                     }
                     ty => {
-                        adapter2ts(ty, TypePosition::Argument, &mut ts, Some(&mut ts_refs));
+                        adapter2ts(
+                            ty,
+                            TypePosition::Argument,
+                            &mut ts,
+                            Some(&mut ts_refs),
+                            generics,
+                        );
                         omittable = false;
                         arg.push_str(": ");
                     }
@@ -407,12 +440,19 @@ impl<'a, 'b> Builder<'a, 'b> {
             } else {
                 match result_tys.len() {
                     0 => ret.push_str("void"),
-                    1 => adapter2ts(
-                        &result_tys[0],
-                        TypePosition::Return,
-                        &mut ret,
-                        Some(&mut ts_refs),
-                    ),
+                    1 => {
+                        // build generics
+                        let generics = result_ty_map
+                            .as_ref()
+                            .map(|ty| build_ts_generics(ty, TypePosition::Return, None, true));
+                        adapter2ts(
+                            &result_tys[0],
+                            TypePosition::Return,
+                            &mut ret,
+                            Some(&mut ts_refs),
+                            generics,
+                        )
+                    }
                     _ => ret.push_str("[any]"),
                 }
             }
@@ -435,6 +475,8 @@ impl<'a, 'b> Builder<'a, 'b> {
         variadic: bool,
         ret_ty_override: &Option<String>,
         ret_desc: &Option<String>,
+        arg_tys_map: &Option<Vec<Option<AdapterType>>>,
+        result_ty_map: &Option<AdapterType>,
     ) -> String {
         let (variadic_arg, fn_arg_names) = match args_data.split_last() {
             Some((last, args)) if variadic => (Some(last), args),
@@ -445,13 +487,24 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js_doc_args = Vec::new();
 
         for (
-            AuxFunctionArgumentData {
-                name,
-                ty_override,
-                desc,
-            },
-            ty,
-        ) in fn_arg_names.iter().zip(arg_tys).rev()
+            (
+                AuxFunctionArgumentData {
+                    name,
+                    ty_override,
+                    desc,
+                },
+                ty,
+            ),
+            ty_map,
+        ) in fn_arg_names
+            .iter()
+            .zip(arg_tys)
+            .zip(
+                arg_tys_map
+                    .as_ref()
+                    .unwrap_or(&std::iter::repeat_n(None, arg_tys.len()).collect()),
+            )
+            .rev()
         {
             let mut arg = "@param {".to_string();
 
@@ -461,9 +514,13 @@ impl<'a, 'b> Builder<'a, 'b> {
                 arg.push_str("} ");
                 arg.push_str(name);
             } else {
+                // build generics
+                let generics = ty_map.as_ref().map(|v: &AdapterType| {
+                    build_ts_generics(v, TypePosition::Argument, None, true)
+                });
                 match ty {
                     AdapterType::Option(ty) if omittable => {
-                        adapter2ts(ty, TypePosition::Argument, &mut arg, None);
+                        adapter2ts(ty, TypePosition::Argument, &mut arg, None, generics);
                         arg.push_str(" | null} ");
                         arg.push('[');
                         arg.push_str(name);
@@ -471,7 +528,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                     }
                     _ => {
                         omittable = false;
-                        adapter2ts(ty, TypePosition::Argument, &mut arg, None);
+                        adapter2ts(ty, TypePosition::Argument, &mut arg, None, generics);
                         arg.push_str("} ");
                         arg.push_str(name);
                     }
@@ -501,7 +558,11 @@ impl<'a, 'b> Builder<'a, 'b> {
             if let Some(v) = ty_override {
                 ret.push_str(v);
             } else {
-                adapter2ts(ty, TypePosition::Argument, &mut ret, None);
+                // build generics
+                let generics = result_ty_map
+                    .as_ref()
+                    .map(|ty| build_ts_generics(ty, TypePosition::Return, None, true));
+                adapter2ts(ty, TypePosition::Argument, &mut ret, None, generics);
             }
             ret.push_str("} ");
             ret.push_str(name);
@@ -1680,6 +1741,7 @@ fn adapter2ts(
     position: TypePosition,
     dst: &mut String,
     refs: Option<&mut HashSet<TsReference>>,
+    generics: Option<String>,
 ) {
     match ty {
         AdapterType::I32
@@ -1700,24 +1762,106 @@ fn adapter2ts(
         AdapterType::String => dst.push_str("string"),
         AdapterType::Externref => dst.push_str("any"),
         AdapterType::Bool => dst.push_str("boolean"),
-        AdapterType::Vector(kind) => dst.push_str(&kind.js_ty()),
+        AdapterType::Vector(kind) => dst.push_str(&kind.js_ty(generics)),
         AdapterType::Option(ty) => {
-            adapter2ts(ty, position, dst, refs);
+            adapter2ts(ty, position, dst, refs, generics);
             dst.push_str(match position {
                 TypePosition::Argument => " | null | undefined",
                 TypePosition::Return => " | undefined",
             });
         }
-        AdapterType::NamedExternref(name) => dst.push_str(name),
-        AdapterType::Struct(name) => dst.push_str(name),
-        AdapterType::Enum(name) => dst.push_str(name),
+        AdapterType::NamedExternref(name) => {
+            dst.push_str(name);
+            dst.push_str(&generics.unwrap_or_default());
+        }
+        AdapterType::Struct(name) => {
+            dst.push_str(name);
+            dst.push_str(&generics.unwrap_or_default());
+        }
+        AdapterType::Enum(name) => {
+            dst.push_str(name);
+            dst.push_str(&generics.unwrap_or_default());
+        }
         AdapterType::StringEnum(name) => {
             if let Some(refs) = refs {
                 refs.insert(TsReference::StringEnum(name.clone()));
             }
 
             dst.push_str(name);
+            dst.push_str(&generics.unwrap_or_default());
         }
         AdapterType::Function => dst.push_str("any"),
+        _ => unreachable!(),
+    }
+}
+
+/// Recursively builds ts generic arguments for the given type,
+/// which later on will be appended to the original parent ts type
+fn build_ts_generics(
+    ty: &AdapterType,
+    position: TypePosition,
+    generics: Option<String>,
+    is_root: bool,
+) -> String {
+    // at start, we need to check if the given type is generic or not
+    // and return early if not to avoid returning a non-generic type
+    // as a generic arg
+    if is_root && !is_generic(ty) {
+        return String::new();
+    }
+    match ty {
+        AdapterType::I32
+        | AdapterType::S8
+        | AdapterType::S16
+        | AdapterType::S32
+        | AdapterType::U8
+        | AdapterType::U16
+        | AdapterType::U32
+        | AdapterType::F32
+        | AdapterType::F64
+        | AdapterType::NonNull => "number".to_string(),
+        AdapterType::I64
+        | AdapterType::S64
+        | AdapterType::U64
+        | AdapterType::S128
+        | AdapterType::U128 => "bigint".to_string(),
+        AdapterType::String => "string".to_string(),
+        AdapterType::Externref => "any".to_string(),
+        AdapterType::Bool => "boolean".to_string(),
+        AdapterType::Vector(kind) => kind.js_ty(generics),
+        AdapterType::Option(ty) => {
+            let mut res = build_ts_generics(ty, position, generics, false);
+            match position {
+                TypePosition::Argument => res.push_str(" | null | undefined"),
+                TypePosition::Return => res.push_str(" | undefined"),
+            };
+            res
+        }
+        AdapterType::NamedExternref(name)
+        | AdapterType::Struct(name)
+        | AdapterType::Enum(name)
+        | AdapterType::StringEnum(name) => name.clone() + generics.unwrap_or_default().as_str(),
+        AdapterType::Function => "any".to_string(),
+        AdapterType::Unit => "undefined".to_string(),
+        AdapterType::Generic { ty, args } => {
+            let mut gens = vec![];
+            for arg in args {
+                gens.push(build_ts_generics(arg, position, None, false));
+            }
+            if is_root {
+                format!("<{}>", gens.join(", "))
+            } else {
+                build_ts_generics(ty, position, Some(format!("<{}>", gens.join(", "))), false)
+            }
+        }
+    }
+}
+
+/// Determines if the given type is a generic with nested argument types
+fn is_generic(ty: &AdapterType) -> bool {
+    match ty {
+        AdapterType::Generic { .. } => true,
+        AdapterType::Option(ty) => is_generic(ty),
+        _ => false,
     }
 }

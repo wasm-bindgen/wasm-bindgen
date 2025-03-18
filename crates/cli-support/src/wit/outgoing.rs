@@ -173,6 +173,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::ClampedU8 => unreachable!(),
 
             Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
+
+            // canot be reached
+            Descriptor::Generic { .. } => unreachable!(),
         }
         Ok(())
     }
@@ -503,6 +506,9 @@ impl InstructionBuilder<'_, '_> {
                 "unsupported Result type for returning from exported Rust function: {:?}",
                 arg
             ),
+
+            // canot be reached
+            Descriptor::Generic { .. } => unreachable!(),
         }
         Ok(())
     }
@@ -613,5 +619,124 @@ impl InstructionBuilder<'_, '_> {
             Instruction::OptionF64Sentinel,
             &[ty.option()],
         );
+    }
+}
+
+/// Converts a Descriptor to an AdapterType with handling generics/nested types
+pub fn describe_map_to_adapter(arg: &Descriptor) -> Option<AdapterType> {
+    match arg {
+        Descriptor::Unit => Some(AdapterType::Unit),
+        Descriptor::NonNull => Some(AdapterType::NonNull),
+
+        Descriptor::I8 => Some(AdapterType::S8),
+        Descriptor::U8 => Some(AdapterType::U8),
+        Descriptor::I16 => Some(AdapterType::S16),
+        Descriptor::U16 => Some(AdapterType::U16),
+        Descriptor::I32 => Some(AdapterType::S32),
+        Descriptor::U32 => Some(AdapterType::U32),
+        Descriptor::I64 => Some(AdapterType::I64),
+        Descriptor::U64 => Some(AdapterType::U64),
+        Descriptor::I128 => Some(AdapterType::S128),
+        Descriptor::U128 => Some(AdapterType::U128),
+        Descriptor::F32 => Some(AdapterType::F32),
+        Descriptor::F64 => Some(AdapterType::F64),
+        Descriptor::Boolean => Some(AdapterType::Bool),
+        Descriptor::Char | Descriptor::CachedString | Descriptor::String => {
+            Some(AdapterType::String)
+        }
+
+        Descriptor::Enum { name, .. } => Some(AdapterType::Enum(name.clone())),
+        Descriptor::StringEnum { name, .. } => Some(AdapterType::StringEnum(name.clone())),
+        Descriptor::RustStruct(class) => Some(AdapterType::Struct(class.clone())),
+
+        Descriptor::Externref => Some(AdapterType::Externref),
+        Descriptor::NamedExternref(name) => Some(AdapterType::NamedExternref(name.clone())),
+
+        Descriptor::Ref(d) | Descriptor::RefMut(d) | Descriptor::Result(d) => {
+            describe_map_to_adapter(d)
+        }
+
+        Descriptor::Option(d) => Some(describe_map_to_adapter(d)?.option()),
+        Descriptor::Vector(_) => {
+            let kind = arg.vector_kind()?;
+            Some(AdapterType::Vector(kind))
+        }
+
+        // Largely synthetic and can't show up
+        Descriptor::ClampedU8 => unreachable!(),
+
+        Descriptor::Function(_) | Descriptor::Closure(_) | Descriptor::Slice(_) => None,
+
+        Descriptor::Generic { ty, args } => match &**ty {
+            Descriptor::Result(d) => {
+                if let Some(generics) = resolve_inner(args) {
+                    Some(AdapterType::Generic {
+                        ty: Box::new(describe_map_to_adapter(d)?),
+                        args: generics.into_boxed_slice(),
+                    })
+                } else {
+                    describe_map_to_adapter(d)
+                }
+            }
+            Descriptor::Option(d) => {
+                if let Some(generics) = resolve_inner(args) {
+                    Some(AdapterType::Generic {
+                        ty: Box::new(describe_map_to_adapter(d)?.option()),
+                        args: generics.into_boxed_slice(),
+                    })
+                } else {
+                    Some(describe_map_to_adapter(d)?.option())
+                }
+            }
+            Descriptor::Vector(_d) => {
+                let kind = ty.vector_kind()?;
+                if let Some(generics) = resolve_inner(args) {
+                    Some(AdapterType::Generic {
+                        ty: Box::new(AdapterType::Vector(kind)),
+                        args: generics.into_boxed_slice(),
+                    })
+                } else {
+                    Some(AdapterType::Vector(kind))
+                }
+            }
+            _ => {
+                let mut generics = vec![];
+                for arg in args {
+                    generics.push(describe_map_to_adapter(arg)?);
+                }
+                if generics.is_empty() {
+                    describe_map_to_adapter(ty)
+                } else {
+                    Some(AdapterType::Generic {
+                        ty: Box::new(describe_map_to_adapter(ty)?),
+                        args: generics.into_boxed_slice(),
+                    })
+                }
+            }
+        },
+    }
+}
+
+/// Handles the generic argument of rust Result, Option and Vectors types.
+/// This is because these types are generic but are encoded differently throughout
+/// this repo compared to other generic types
+pub fn resolve_inner(args: &[Descriptor]) -> Option<Vec<AdapterType>> {
+    if let Some(Descriptor::Generic { ty, args, .. }) = args.first() {
+        // vectors, results and options are already on level flattened, so we
+        // need to check one level deeper for their possible generics
+        match &**ty {
+            Descriptor::Vector(_) | Descriptor::Result(_) | Descriptor::Option(_) => {
+                resolve_inner(args)
+            }
+            _ => {
+                let mut generic_args = vec![];
+                for arg in args {
+                    generic_args.push(describe_map_to_adapter(arg)?);
+                }
+                Some(generic_args)
+            }
+        }
+    } else {
+        None
     }
 }

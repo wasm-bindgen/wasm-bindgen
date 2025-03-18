@@ -1,6 +1,6 @@
 use std::char;
 
-use wasm_bindgen_shared::identifier::is_valid_ident;
+use wasm_bindgen_shared::identifier::{is_valid_ident, TYPE_DESCRIBE_MAP};
 
 macro_rules! tys {
     ($($a:ident)*) => (tys! { @ ($($a)*) 0 });
@@ -89,6 +89,10 @@ pub enum Descriptor {
     Result(Box<Descriptor>),
     Unit,
     NonNull,
+    Generic {
+        ty: Box<Descriptor>,
+        args: Box<[Descriptor]>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -97,6 +101,8 @@ pub struct Function {
     pub shim_idx: u32,
     pub ret: Descriptor,
     pub inner_ret: Option<Descriptor>,
+    pub inner_ret_map: Option<Descriptor>,
+    pub args_ty_map: Option<Vec<Descriptor>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -279,20 +285,46 @@ impl Closure {
 impl Function {
     fn decode(data: &mut &[u32]) -> Function {
         let shim_idx = get(data);
-        let arguments = (0..get(data))
+        let args_len = get(data);
+        let arguments = (0..args_len)
             .map(|_| Descriptor::_decode(data, false))
             .collect::<Vec<_>>();
+        let ret = Descriptor::_decode(data, false);
+        let inner_ret = Some(Descriptor::_decode(data, false));
+
+        // decode inner retrun type map
+        let inner_ret_map = if !data.is_empty() && data[0] == TYPE_DESCRIBE_MAP {
+            get(data);
+            Some(decode_ty_map(data))
+        } else {
+            None
+        };
+
+        // decode args type map
+        let args_ty_map = if !data.is_empty() && data[0] == TYPE_DESCRIBE_MAP {
+            get(data);
+            let mut args = vec![];
+            for _i in 0..args_len {
+                args.push(decode_ty_map(data));
+            }
+            Some(args)
+        } else {
+            None
+        };
+
         Function {
             arguments,
             shim_idx,
-            ret: Descriptor::_decode(data, false),
-            inner_ret: Some(Descriptor::_decode(data, false)),
+            ret,
+            inner_ret,
+            inner_ret_map,
+            args_ty_map,
         }
     }
 }
 
 impl VectorKind {
-    pub fn js_ty(&self) -> String {
+    pub fn js_ty(&self, generics: Option<String>) -> String {
         match *self {
             VectorKind::String => "string".to_string(),
             VectorKind::I8 => "Int8Array".to_string(),
@@ -309,9 +341,9 @@ impl VectorKind {
             VectorKind::Externref => "any[]".to_string(),
             VectorKind::NamedExternref(ref name) => {
                 if is_valid_ident(name.as_str()) {
-                    format!("{}[]", name)
+                    format!("{}{}[]", name, generics.unwrap_or_default())
                 } else {
-                    format!("({})[]", name)
+                    format!("({}){}[]", name, generics.unwrap_or_default())
                 }
             }
         }
@@ -333,6 +365,25 @@ impl VectorKind {
             VectorKind::F64 => 8,
             VectorKind::Externref => 4,
             VectorKind::NamedExternref(_) => 4,
+        }
+    }
+}
+
+/// Decodes a type map recursively to a Descriptor
+/// Type map is a tree like structure of a type's wasm describes
+pub fn decode_ty_map(data: &mut &[u32]) -> Descriptor {
+    let len = get(data);
+    let ty = Descriptor::_decode(data, false);
+    if len == 0 {
+        ty
+    } else {
+        let mut args = vec![];
+        for _i in 0..len {
+            args.push(decode_ty_map(data));
+        }
+        Descriptor::Generic {
+            ty: Box::new(ty),
+            args: args.into_boxed_slice(),
         }
     }
 }
