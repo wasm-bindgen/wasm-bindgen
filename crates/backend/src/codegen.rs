@@ -9,8 +9,8 @@ use quote::{quote, ToTokens};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use syn::parse_quote;
-use syn::spanned::Spanned;
-use wasm_bindgen_shared as shared;
+use syn::{spanned::Spanned, PathArguments, PathSegment, Type};
+use wasm_bindgen_shared::{self as shared, identifier::TYPE_DESCRIBE_MAP};
 
 /// A trait for converting AST structs into Tokens and adding them to a TokenStream,
 /// or providing a diagnostic if conversion fails.
@@ -863,21 +863,29 @@ impl TryToTokens for ast::Export {
         })
         .to_tokens(into);
 
+        let mut args_ty_map = Vec::new();
         let describe_args: TokenStream = argtys
             .iter()
-            .map(|ty| match ty {
-                syn::Type::Reference(reference)
-                    if self.function.r#async && reference.mutability.is_none() =>
-                {
-                    let inner = &reference.elem;
-                    quote! {
-                        inform(LONGREF);
-                        <#inner as WasmDescribe>::describe();
+            .map(|ty| {
+                args_ty_map.push(map_type_describe(ty));
+                match ty {
+                    syn::Type::Reference(reference)
+                        if self.function.r#async && reference.mutability.is_none() =>
+                    {
+                        let inner = &reference.elem;
+                        quote! {
+                            inform(LONGREF);
+                            <#inner as WasmDescribe>::describe();
+                        }
                     }
+                    _ => quote! { <#ty as WasmDescribe>::describe(); },
                 }
-                _ => quote! { <#ty as WasmDescribe>::describe(); },
             })
             .collect();
+
+        // build the return type map and args type map
+        let ret_ty_map = map_type_describe(syn_ret);
+        let args_ty_map: TokenStream = args_ty_map.into_iter().collect();
 
         // In addition to generating the shim function above which is what
         // our generated JS will invoke, we *also* generate a "descriptor"
@@ -904,6 +912,10 @@ impl TryToTokens for ast::Export {
                 inform(#nargs);
                 #describe_args
                 #describe_ret
+                inform(#TYPE_DESCRIBE_MAP);
+                #ret_ty_map
+                inform(#TYPE_DESCRIBE_MAP);
+                #args_ty_map
             },
             attrs: attrs.clone(),
             wasm_bindgen: &self.wasm_bindgen,
@@ -1985,4 +1997,81 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
         new_tokens.push(token);
     }
     new_tokens.into_iter().collect()
+}
+
+/// Recursively maps the given type to its WasmDescribe sequence
+pub fn map_type_describe(typ: &Type) -> TokenStream {
+    let default = quote! {
+        inform(0u32);
+        inform(EXTERNREF);
+    };
+    match typ {
+        Type::Path(type_path) => {
+            if let Some(PathSegment { ident, arguments }) = &type_path.path.segments.last() {
+                match arguments {
+                    // this is the end point where a type has no more nested types
+                    PathArguments::None => quote! {
+                        inform(0u32);
+                        <#type_path as WasmDescribe>::describe();
+                    },
+                    PathArguments::AngleBracketed(angle_bracket) => {
+                        // process each generic type recursively
+                        let mut len = angle_bracket.args.len() as u32;
+                        // for "Result" the second arg usually does not impl WasmDescribe
+                        // and is not needed for ts typings either, so we skip over it
+                        if ident == "Result" {
+                            len -= 1;
+                        };
+                        let mut generics = vec![quote! {
+                            inform(#len);
+                            <#type_path as WasmDescribe>::describe();
+                        }];
+                        for arg in &angle_bracket.args {
+                            if len == 0 {
+                                break;
+                            }
+                            if let syn::GenericArgument::Type(generic) = arg {
+                                generics.push(map_type_describe(generic));
+                            }
+                            len -= 1;
+                        }
+                        generics.into_iter().collect()
+                    }
+                    PathArguments::Parenthesized(_) => default,
+                }
+            } else {
+                default
+            }
+        }
+        Type::Ptr(type_ptr) => map_type_describe(&type_ptr.elem),
+        Type::Reference(type_reference) => map_type_describe(&type_reference.elem),
+        Type::Paren(type_paren) => map_type_describe(&type_paren.elem),
+        Type::Array(type_array) => {
+            let inner = map_type_describe(&type_array.elem);
+            quote! {
+                inform(1);
+                <#type_array as WasmDescribe>::describe();
+                #inner
+            }
+        }
+        Type::Slice(type_slice) => {
+            let inner = map_type_describe(&type_slice.elem);
+            quote! {
+                inform(1);
+                <#type_slice as WasmDescribe>::describe();
+                #inner
+            }
+        }
+        Type::Tuple(type_tuple) => {
+            if type_tuple.elems.is_empty() {
+                quote! {
+                    inform(0);
+                    <#type_tuple as WasmDescribe>::describe();
+                }
+            } else {
+                default
+            }
+        }
+        _ => default,
+    }
 }

@@ -45,7 +45,9 @@ macro_rules! intrinsics {
                                 shim_idx: 0,
                                 arguments: vec![$($arg),*],
                                 ret: $ret,
-                                inner_ret: None
+                                inner_ret: None,
+                                inner_ret_map: None,
+                                args_ty_map: None,
                             }
                         }
                     )*

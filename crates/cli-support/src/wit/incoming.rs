@@ -181,6 +181,9 @@ impl InstructionBuilder<'_, '_> {
                 Instruction::I32FromNonNull,
                 &[AdapterType::I32],
             ),
+
+            // cant be reached
+            Descriptor::Generic { .. } => unreachable!(),
         }
         Ok(())
     }
