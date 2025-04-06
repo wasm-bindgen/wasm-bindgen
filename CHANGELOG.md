@@ -8,6 +8,9 @@
 * Deprecate async constructors.
   [#4402](https://github.com/rustwasm/wasm-bindgen/pull/4402)
 
+* Add a workaround for a TextDecoder bug in Safari causing a RangeError to be thrown
+  [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
