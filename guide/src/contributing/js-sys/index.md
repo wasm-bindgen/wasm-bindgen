@@ -24,7 +24,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub fn timed(callback: &js_sys::Function) -> f64 {
     let then = js_sys::Date::now();
-    callback.apply(JsValue::null(), &js_sys::Array::new()).unwrap();
+    callback.apply(&JsValue::null(), &js_sys::Array::new()).unwrap();
     let now = js_sys::Date::now();
     now - then
 }
