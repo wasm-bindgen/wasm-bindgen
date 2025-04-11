@@ -1050,11 +1050,17 @@ wasm = wasmInstance.exports;
             OutputMode::Emscripten => {
             let mut global_emscripten_initializer: String = Default::default();
             for global_dep in self.emscripten_deps.iter() {
-                let mut global = "";
+                let mut global: String = "".to_string();
                 if global_dep == "'$WASM_VECTOR_LEN'" {
-                    global = "$WASM_VECTOR_LEN: '0',";
+                    global = "$WASM_VECTOR_LEN: '0',".to_string();
                 } else if global_dep == "'$TextEncoder'" {
-                    global = "$textEncoder: \"new TextEncoder()\",";
+                    global = "$textEncoder: \"new TextEncoder()\",".to_string();
+                } else if global_dep == "'$heap'" {
+                    global = format!("
+                    $heap: \"new Array({}).fill(undefined)\",
+                    \"heap.push({})\",", INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES.join(", "));
+                } else if global_dep == "'$stack_pointer'" {
+                    global = format!("$stack_pointer : \"{}\",", INITIAL_HEAP_OFFSET)
                 }
 
                 if !global.is_empty() {
@@ -1659,6 +1665,10 @@ wasm = wasmInstance.exports;
 
     fn expose_global_heap(&mut self, import_deps: &mut HashSet<String>) {
         assert!(!self.config.externref);
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_deps.insert("'$heap'".to_string());
+            return;
+        }
         intrinsic(&mut self.intrinsics, "heap".into(), None, import_deps, || {
             format!(
                 "
@@ -2226,28 +2236,6 @@ wasm = wasmInstance.exports;
             .into()
         });
         ret
-
-        // Typically we try to give a raw view of memory out to `TextDecoder` to
-        // avoid copying too much data. If, however, a `SharedArrayBuffer` is
-        // being used it looks like that is rejected by `TextDecoder` or
-        // otherwise doesn't work with it. When we detect a shared situation we
-        // use `slice` which creates a new array instead of `subarray` which
-        // creates just a view. That way in shared mode we copy more data but in
-        // non-shared mode there's no need to copy the data except for the
-        // string itself.
-        // let is_shared = self.module.memories.get(memory).shared;
-        // let method = if is_shared { "slice" } else { "subarray" };
-        // if matches!(self.config.mode, OutputMode::Emscripten) {
-        //     self.emscripten_library.push_str(&format!(
-        //         "
-        //         function {}(ptr, len) {{
-        //             ptr = ptr >>> 0;
-        //             return cachedTextDecoder.decode(HEAP8.{}(ptr, ptr + len));
-        //         }}\n
-        //         ",
-        //         ret, method
-        //     ));
-        // } 
     }
 
     fn expose_get_cached_string_from_wasm(
@@ -2259,7 +2247,7 @@ wasm = wasmInstance.exports;
         let get_object = if let Some(table) = table {
             self.expose_get_from_externref_table(table).to_string()
         } else {
-            self.expose_get_object();
+            self.expose_get_object(import_deps);
             "getObject".to_string()
         };
         let get_string = self.expose_get_string_from_wasm(memory);
@@ -2343,59 +2331,103 @@ wasm = wasmInstance.exports;
         ret
     }
 
-    fn expose_get_array_i8_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_i8_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_int8_memory(memory);
-        self.arrayget("getArrayI8FromWasm", view, 1)
+        self.arrayget("getArrayI8FromWasm", view, 1, import_deps)
     }
 
-    fn expose_get_array_u8_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_u8_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_uint8_memory(memory);
-        self.arrayget("getArrayU8FromWasm", view, 1)
+        self.arrayget("getArrayU8FromWasm", view, 1, import_deps)
     }
 
-    fn expose_get_clamped_array_u8_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_clamped_array_u8_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_clamped_uint8_memory(memory);
-        self.arrayget("getClampedArrayU8FromWasm", view, 1)
+        self.arrayget("getClampedArrayU8FromWasm", view, 1, import_deps)
     }
 
-    fn expose_get_array_i16_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_i16_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_int16_memory(memory);
-        self.arrayget("getArrayI16FromWasm", view, 2)
+        self.arrayget("getArrayI16FromWasm", view, 2, import_deps)
     }
 
-    fn expose_get_array_u16_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_u16_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_uint16_memory(memory);
-        self.arrayget("getArrayU16FromWasm", view, 2)
+        self.arrayget("getArrayU16FromWasm", view, 2, import_deps)
     }
 
-    fn expose_get_array_i32_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_i32_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_int32_memory(memory);
-        self.arrayget("getArrayI32FromWasm", view, 4)
+        self.arrayget("getArrayI32FromWasm", view, 4, import_deps)
     }
 
-    fn expose_get_array_u32_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_u32_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_uint32_memory(memory);
-        self.arrayget("getArrayU32FromWasm", view, 4)
+        self.arrayget("getArrayU32FromWasm", view, 4, import_deps)
     }
 
-    fn expose_get_array_i64_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_i64_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_int64_memory(memory);
-        self.arrayget("getArrayI64FromWasm", view, 8)
+        self.arrayget("getArrayI64FromWasm", view, 8, import_deps)
     }
 
-    fn expose_get_array_u64_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_u64_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_uint64_memory(memory);
-        self.arrayget("getArrayU64FromWasm", view, 8)
+        self.arrayget("getArrayU64FromWasm", view, 8, import_deps)
     }
 
-    fn expose_get_array_f32_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_f32_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_f32_memory(memory);
-        self.arrayget("getArrayF32FromWasm", view, 4)
+        self.arrayget("getArrayF32FromWasm", view, 4, import_deps)
     }
 
-    fn expose_get_array_f64_from_wasm(&mut self, memory: MemoryId) -> MemView {
+    fn expose_get_array_f64_from_wasm(
+        &mut self,
+        memory: MemoryId,
+        import_deps: &mut HashSet<String>,
+    ) -> MemView {
         let view = self.expose_f64_memory(memory);
-        self.arrayget("getArrayF64FromWasm", view, 8)
+        self.arrayget("getArrayF64FromWasm", view, 8, import_deps)
     }
 
     fn arrayget(&mut self, name: &'static str, view: MemView, size: usize, import_deps: &mut HashSet<String>) -> MemView {
@@ -2466,6 +2498,32 @@ wasm = wasmInstance.exports;
     }
 
     fn memview(&mut self, kind: &'static str, memory: walrus::MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Emscripten provides its own version of getMemory
+            // so don't write out the memory function.
+            // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
+            // for more details.
+            let emscripten_heap: &'static str = match kind {
+                "Int8Array" => "HEAP8",
+                "Uint8Array" | "Uint8ClampedArray" => "HEAPU8",
+                "Int16Array" => "HEAP16",
+                "Uint16Array" => "HEAPU16",
+                "Int32Array" => "HEAP32",
+                "Uint32Array" => "HEAPU32",
+                "Float32Array" => "HEAPF32",
+                "Float64Array" => "HEAPF64",
+                "DataView" => "HEAP_DATA_VIEW",
+                _ => "",
+            };
+            // Emscripten provides its own version of getMemory
+            // so don't write out the memory function.
+            // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
+            // for more details.
+            intrinsic(&mut self.intrinsics, view.name.to_string().into(), None, import_deps, || {
+                "".into()
+            });
+            return self.memview_memory(emscripten_heap, memory);
+        }
         let view = self.memview_memory(kind, memory);
         let mem = self.export_name_of(memory);
         intrinsic(&mut self.intrinsics, view.name.to_string().into(), None, import_deps, || {
@@ -2485,26 +2543,18 @@ wasm = wasmInstance.exports;
                 // which is indicated by a length of 0.
                 format!("{cache}.byteLength === 0")
             };
-            if matches!(self.config.mode, OutputMode::Emscripten) {
-                // Emscripten provides its own version of getMemory
-                // so don't write out the memory function.
-                // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
-                // for more details.
-                "".into()
-            } else {
-                format!(
-                    "
-                    let {cache} = null;
-                    function {view}() {{
-                        if ({cache} === null || {resized_check}) {{
-                            {cache} = new {kind}(wasm.{mem}.buffer);
-                        }}
-                        return {cache};
+            format!(
+                "
+                let {cache} = null;
+                function {view}() {{
+                    if ({cache} === null || {resized_check}) {{
+                        {cache} = new {kind}(wasm.{mem}.buffer);
                     }}
-                    ",
-                )
-                .into()
-            }
+                    return {cache};
+                }}
+                ",
+            )
+            .into()
         });
         view
     }
@@ -2516,9 +2566,16 @@ wasm = wasmInstance.exports;
             .entry(memory)
             .or_insert((next, Default::default()));
         kinds.insert(kind);
-        MemView {
-            name: format!("get{kind}Memory").into(),
-            num,
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            MemView {
+                name: format!("{kind}").into(),
+                num,
+            }
+        } else {
+            MemView {
+                name: format!("get{kind}Memory").into(),
+                num,
+            }
         }
     }
 
@@ -2721,22 +2778,28 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         }
     }
 
-    fn expose_get_vector_from_wasm(&mut self, ty: VectorKind, memory: MemoryId) -> MemView {
+    fn expose_get_vector_from_wasm(&mut self, ty: VectorKind, import_deps: &mut HashSet<String>, memory: MemoryId) -> MemView {
         match ty {
-            VectorKind::String => self.expose_get_string_from_wasm(memory),
-            VectorKind::I8 => self.expose_get_array_i8_from_wasm(memory),
-            VectorKind::U8 => self.expose_get_array_u8_from_wasm(memory),
-            VectorKind::ClampedU8 => self.expose_get_clamped_array_u8_from_wasm(memory),
-            VectorKind::I16 => self.expose_get_array_i16_from_wasm(memory),
-            VectorKind::U16 => self.expose_get_array_u16_from_wasm(memory),
-            VectorKind::I32 => self.expose_get_array_i32_from_wasm(memory),
-            VectorKind::U32 => self.expose_get_array_u32_from_wasm(memory),
-            VectorKind::I64 => self.expose_get_array_i64_from_wasm(memory),
-            VectorKind::U64 => self.expose_get_array_u64_from_wasm(memory),
-            VectorKind::F32 => self.expose_get_array_f32_from_wasm(memory),
-            VectorKind::F64 => self.expose_get_array_f64_from_wasm(memory),
-            VectorKind::Externref => self.expose_get_array_js_value_from_wasm(memory),
-            VectorKind::NamedExternref(_) => self.expose_get_array_js_value_from_wasm(memory),
+            VectorKind::String => self.expose_get_string_from_wasm(memory)?,
+            VectorKind::I8 => self.expose_get_array_i8_from_wasm(memory, import_deps),
+            VectorKind::U8 => self.expose_get_array_u8_from_wasm(memory, import_deps),
+            VectorKind::ClampedU8 => {
+                self.expose_get_clamped_array_u8_from_wasm(memory, import_deps)
+            }
+            VectorKind::I16 => self.expose_get_array_i16_from_wasm(memory, import_deps),
+            VectorKind::U16 => self.expose_get_array_u16_from_wasm(memory, import_deps),
+            VectorKind::I32 => self.expose_get_array_i32_from_wasm(memory, import_deps),
+            VectorKind::U32 => self.expose_get_array_u32_from_wasm(memory, import_deps),
+            VectorKind::I64 => self.expose_get_array_i64_from_wasm(memory, import_deps),
+            VectorKind::U64 => self.expose_get_array_u64_from_wasm(memory, import_deps),
+            VectorKind::F32 => self.expose_get_array_f32_from_wasm(memory, import_deps),
+            VectorKind::F64 => self.expose_get_array_f64_from_wasm(memory, import_deps),
+            VectorKind::Externref => {
+                self.expose_get_array_js_value_from_wasm(memory, import_deps)?
+            }
+            VectorKind::NamedExternref(_) => {
+                self.expose_get_array_js_value_from_wasm(memory, import_deps)?
+            }
         }
     }
 
@@ -3090,7 +3153,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         Ok(())
     }
 
-   fn global(&mut self, s: &str) {
+    fn global(&mut self, s: &str) {
         let s = s.trim();
 
         // Ensure a blank line between adjacent items, and ensure everything is
@@ -3118,6 +3181,13 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
 
     fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &[String]) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
+            let re = Regex::new(r"(?:wasmExports|wasm)\.([a-zA-Z0-9_$]*)").unwrap();
+            let formatted_body = if let Some(_) = re.captures(body) {
+                re.replace_all(body, "wasmExports[\'$1\']").to_string()
+            } else {
+                body.to_string()
+            };
+
             self.emscripten_library(&format!(
                 "${}: function{} {{
                 {}
@@ -3125,7 +3195,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                 ",
                 func_name,
                 args,
-                body.trim().replace("wasm.", "wasmExports.")
+                formatted_body.trim()
             ));
             if !deps.is_empty() {
                 self.emscripten_library.push_str(&format!(
@@ -4490,7 +4560,10 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                     );
                 }
                 drop(memories);
-                format!("wasm.{}", self.export_name_of(memory))
+                match self.config.mode {
+                    OutputMode::Emscripten { .. } => "HEAPU8".to_string(),
+                    _ => format!("wasm.{}", self.export_name_of(memory)),
+                }
             }
 
             Intrinsic::FunctionTable => {

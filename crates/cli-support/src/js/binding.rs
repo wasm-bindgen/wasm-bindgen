@@ -631,32 +631,32 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stack.push(arg);
     }
 
-    fn assert_class(&mut self, arg: &str, class: &str) {
-        self.cx.expose_assert_class();
+    fn assert_class(&mut self, arg: &str, class: &str, import_deps: &mut HashSet<String>) {
+        self.cx.expose_assert_class(import_deps);
         self.prelude(&format!("_assertClass({arg}, {class});"));
     }
 
-    fn assert_number(&mut self, arg: &str) {
+    fn assert_number(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_assert_num();
+        self.cx.expose_assert_num(import_deps);
         self.prelude(&format!("_assertNum({arg});"));
     }
 
-    fn assert_bigint(&mut self, arg: &str) {
+    fn assert_bigint(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_assert_bigint();
+        self.cx.expose_assert_bigint(import_deps);
         self.prelude(&format!("_assertBigInt({arg});"));
     }
 
-    fn assert_bool(&mut self, arg: &str) {
+    fn assert_bool(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_assert_bool();
+        self.cx.expose_assert_bool(import_deps);
         self.prelude(&format!("_assertBoolean({arg});"));
     }
 
@@ -666,7 +666,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
         self.cx.expose_is_like_none(import_deps);
         self.prelude(&format!("if (!isLikeNone({arg})) {{"));
-        self.assert_number(arg);
+        self.assert_number(arg, import_deps);
         self.prelude("}");
     }
 
@@ -686,7 +686,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
         self.cx.expose_is_like_none(import_deps);
         self.prelude(&format!("if (!isLikeNone({arg})) {{"));
-        self.assert_bigint(arg);
+        self.assert_bigint(arg, import_deps);
         self.prelude("}");
     }
 
@@ -696,7 +696,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
         self.cx.expose_is_like_none(import_deps);
         self.prelude(&format!("if (!isLikeNone({arg})) {{"));
-        self.assert_bool(arg);
+        self.assert_bool(arg, import_deps);
         self.prelude("}");
     }
 
@@ -858,7 +858,7 @@ fn instruction(
 
         Instruction::Int32ToWasm => {
             let val = js.pop();
-            js.assert_number(&val);
+            js.assert_number(&val, import_deps);
             js.push(val);
         }
         Instruction::WasmToInt32 { unsigned_32 } => {
@@ -875,7 +875,7 @@ fn instruction(
 
         Instruction::Int64ToWasm => {
             let val = js.pop();
-            js.assert_bigint(&val);
+            js.assert_bigint(&val, import_deps);
             js.push(val);
         }
         Instruction::WasmToInt64 { unsigned } => {
@@ -889,7 +889,7 @@ fn instruction(
 
         Instruction::Int128ToWasm => {
             let val = js.pop();
-            js.assert_bigint(&val);
+            js.assert_bigint(&val, import_deps);
             let (low, high) = int128_to_int64x2(&val);
             js.push(low);
             js.push(high);
@@ -1036,7 +1036,7 @@ fn instruction(
 
         Instruction::I32FromBool => {
             let val = js.pop();
-            js.assert_bool(&val);
+            js.assert_bool(&val, import_deps);
             // JS will already coerce booleans into numbers for us
             js.push(val);
         }
@@ -1057,7 +1057,7 @@ fn instruction(
         }
 
         Instruction::I32FromExternrefBorrow => {
-            js.cx.expose_borrowed_objects();
+            js.cx.expose_borrowed_objects(import_deps);
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
             js.push(format!("addBorrowedObject({val})"));
@@ -1066,7 +1066,7 @@ fn instruction(
 
         Instruction::I32FromExternrefRustOwned { class } => {
             let val = js.pop();
-            js.assert_class(&val, class);
+            js.assert_class(&val, class, import_deps);
             js.assert_not_moved(&val);
             let i = js.tmp();
             js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
@@ -1075,7 +1075,7 @@ fn instruction(
 
         Instruction::I32FromExternrefRustBorrow { class } => {
             let val = js.pop();
-            js.assert_class(&val, class);
+            js.assert_class(&val, class, import_deps);
             js.assert_not_moved(&val);
             js.push(format!("{val}.__wbg_ptr"));
         }
@@ -1086,7 +1086,7 @@ fn instruction(
             let i = js.tmp();
             js.prelude(&format!("let ptr{i} = 0;"));
             js.prelude(&format!("if (!isLikeNone({val})) {{"));
-            js.assert_class(&val, class);
+            js.assert_class(&val, class, import_deps);
             js.assert_not_moved(&val);
             js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
             js.prelude("}");
@@ -1221,7 +1221,7 @@ fn instruction(
                     .expose_take_from_externref_table(table, drop)
                     .to_string()
             } else {
-                js.cx.expose_take_object();
+                js.cx.expose_take_object(import_deps);
                 "takeObject".to_string()
             };
             // is_err is popped first. The original layout was: ResultAbi {
@@ -1247,7 +1247,7 @@ fn instruction(
                     .expose_take_from_externref_table(table, drop)
                     .to_string()
             } else {
-                js.cx.expose_take_object();
+                js.cx.expose_take_object(import_deps);
                 "takeObject".to_string()
             };
             let is_err = js.pop();
@@ -1335,7 +1335,7 @@ fn instruction(
                     .expose_take_from_externref_table(table, drop)
                     .to_string()
             } else {
-                js.cx.expose_take_object();
+                js.cx.expose_take_object(import_deps);
                 "takeObject".to_string()
             };
             let val = js.pop();
@@ -1402,7 +1402,7 @@ fn instruction(
             let ptr = js.pop();
             let tmp = js.tmp();
 
-            let get = js.cx.expose_get_cached_string_from_wasm(*mem, *table);
+            let get = js.cx.expose_get_cached_string_from_wasm(*mem, *table, import_deps);
 
             js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
@@ -1418,7 +1418,7 @@ fn instruction(
 
         Instruction::TableGet => {
             let val = js.pop();
-            js.cx.expose_get_object();
+            js.cx.expose_get_object(import_deps);
             js.push(format!("getObject({val})"));
         }
 
@@ -1488,7 +1488,7 @@ fn instruction(
         Instruction::VectorLoad { kind, mem, free } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps);
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
@@ -1502,7 +1502,7 @@ fn instruction(
         Instruction::OptionVectorLoad { kind, mem, free } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps);
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("let v{i};"));
@@ -1519,14 +1519,14 @@ fn instruction(
         Instruction::View { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps);
             js.push(format!("{f}({ptr}, {len})"));
         }
 
         Instruction::OptionView { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps);
             js.push(format!("{ptr} === 0 ? undefined : {f}({ptr}, {len})"));
         }
 
