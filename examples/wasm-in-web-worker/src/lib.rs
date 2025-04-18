@@ -1,7 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-use web_sys::{console, HtmlElement, HtmlInputElement, MessageEvent, Worker};
+use web_sys::{
+    console, HtmlElement, HtmlInputElement, MessageEvent, Worker, WorkerOptions, WorkerType,
+};
 
 /// A number evaluation struct
 ///
@@ -45,7 +47,11 @@ pub fn startup() {
     // able to interact with the code in the worker. Therefore, we wrap it in
     // `Rc<RefCell>` following the interior mutability pattern. Here, it would
     // not be needed but we include the wrapping anyway as example.
-    let worker_handle = Rc::new(RefCell::new(Worker::new("./worker.js").unwrap()));
+    let worker_options = WorkerOptions::new();
+    worker_options.set_type(WorkerType::Module);
+    let worker_handle = Rc::new(RefCell::new(
+        Worker::new_with_options("./worker.js", &worker_options).unwrap(),
+    ));
     console::log_1(&"Created a new worker from within Wasm".into());
 
     // Pass the worker to the function which sets up the `oninput` callback.
