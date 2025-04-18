@@ -1,12 +1,9 @@
-// We only need `startup` here which is the main entry point
-// In theory, we could also use all other functions/struct types from Rust which we have bound with
-// `#[wasm_bindgen]`
-const {startup} = wasm_bindgen;
+// Use ES module import syntax to import functionality from the module
+// that we have compiled.
+import init, { startup } from './pkg/wasm_in_web_worker.js';
 
 async function run_wasm() {
-    // Load the Wasm file by awaiting the Promise returned by `wasm_bindgen`
-    // `wasm_bindgen` was imported in `index.html`
-    await wasm_bindgen();
+    await init();
 
     console.log('index.js loaded');
 

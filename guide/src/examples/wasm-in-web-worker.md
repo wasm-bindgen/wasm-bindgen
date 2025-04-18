@@ -8,13 +8,6 @@ A simple example of parallel execution by spawning a web worker with `web_sys`,
 loading Wasm code in the web worker and interacting between the main thread and
 the worker.
 
-## Building & compatibility
-
-At the time of this writing, only Chrome supports modules in web workers, e.g.
-Firefox does not. To have compatibility across browsers, the whole example is
-set up without relying on ES modules as target. Therefore we have to build
-with `--target no-modules`. The full command can be found in `build.sh`.
-
 ## `Cargo.toml`
 
 The `Cargo.toml` enables features necessary to work with the DOM, log output to
