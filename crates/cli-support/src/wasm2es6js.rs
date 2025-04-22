@@ -63,8 +63,11 @@ fn args_are_optional(name: &str) -> bool {
 pub fn interface(module: &Module) -> Result<String, Error> {
     let mut exports = String::new();
     module_export_types(module, |name, ty| {
-        let comment = if name.contains("::") { "// " } else { "" };
-        writeln!(exports, "  {}readonly {}: {};", comment, name, ty).unwrap();
+        if name.contains(":") {
+            writeln!(exports, "  readonly {:?}: {};", name, ty).unwrap();
+        } else {
+            writeln!(exports, "  readonly {}: {};", name, ty).unwrap();
+        }
     });
     Ok(exports)
 }

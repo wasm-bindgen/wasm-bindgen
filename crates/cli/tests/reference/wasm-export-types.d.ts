@@ -72,7 +72,7 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly example: (a: number, b: bigint, c: any, d: number, e: number) => [number, number];
   readonly example_128: (a: bigint, b: bigint) => [number, bigint, bigint];
-  // readonly __wbgt__reference_test::example_test: (a: number) => void;
+  readonly "__wbgt__reference_test::example_test": (a: number) => void;
   readonly __wbgtest_cov_dump: () => [number, number];
   readonly __wbg_wasmbindgentestcontext_free: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_new: () => number;
