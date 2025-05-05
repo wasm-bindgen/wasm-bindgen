@@ -6,9 +6,8 @@ use std::env;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering::SeqCst;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Once;
 
 use crate::ast;
 use proc_macro2::{self, Ident};
@@ -133,13 +132,13 @@ pub fn wrap_import_function(function: ast::ImportFunction) -> ast::Import {
 pub struct ShortHash<T>(pub T);
 
 impl<T: Hash> fmt::Display for ShortHash<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        static HASHED: AtomicBool = AtomicBool::new(false);
-        static HASH: AtomicUsize = AtomicUsize::new(0);
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        static INIT: Once = Once::new();
+        static HASH_SEED: AtomicUsize = AtomicUsize::new(0);
 
         // Try to amortize the cost of loading env vars a lot as we're gonna be
         // hashing for a lot of symbols.
-        if !HASHED.load(SeqCst) {
+        INIT.call_once(|| {
             let mut h = DefaultHasher::new();
             env::var("CARGO_PKG_NAME")
                 .expect("should have CARGO_PKG_NAME env var")
@@ -149,13 +148,26 @@ impl<T: Hash> fmt::Display for ShortHash<T> {
                 .hash(&mut h);
             // This may chop off 32 bits on 32-bit platforms, but that's ok, we
             // just want something to mix in below anyway.
-            HASH.store(h.finish() as usize, SeqCst);
-            HASHED.store(true, SeqCst);
-        }
+            HASH_SEED.store(h.finish() as usize, Ordering::Release);
+        });
+
+        let seed = HASH_SEED.load(Ordering::Acquire);
 
         let mut h = DefaultHasher::new();
-        HASH.load(SeqCst).hash(&mut h);
+        seed.hash(&mut h);
         self.0.hash(&mut h);
         write!(f, "{:016x}", h.finish())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_short_hash_eq() {
+        let hash = ShortHash("Hello World");
+        let hash_str = format!("{}", hash);
+        assert_eq!(&hash_str, "0711bda1e8c6f44a");
     }
 }
