@@ -33,6 +33,7 @@ interface Blob {
   [NewObject] ReadableStream stream();
   [NewObject] Promise<DOMString> text();
   [NewObject] Promise<ArrayBuffer> arrayBuffer();
+  [NewObject] Promise<Uint8Array> bytes();
 };
 
 enum EndingTypes { "transparent", "native" };
