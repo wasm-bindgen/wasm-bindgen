@@ -7,17 +7,25 @@
 
 * Added format and colorSpace support to VideoFrameCopyToOptions
   [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
+
 * Added support for the [`onbeforeinput`](https://developer.mozilla.org/en-US/docs/Web/API/Element/beforeinput_event) attribute.
   [#4544](https://github.com/wasm-bindgen/wasm-bindgen/pull/4544)
+
 * `TypedArray::new_from_slice(&[T])` constructor that allows to create a
   JS-owned `TypedArray` from a Rust slice.
   [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
 * Added `Function::call4` and `Function::bind4` through `Function::call9` `Function::bind9` methods for calling  and binding JavaScript functions with 4-9 arguments.
   [#4572](https://github.com/wasm-bindgen/wasm-bindgen/pull/4572)
+
 * Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
   [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
+
 * Add bindings for `PictureInPicture`.
   [#4593](https://github.com/rustwasm/wasm-bindgen/pull/4593)
+
+* Added `bytes` method for the `Blob` idl
+  [#4506](https://github.com/wasm-bindgen/wasm-bindgen/pull/4506)
 
 ### Changed
 
