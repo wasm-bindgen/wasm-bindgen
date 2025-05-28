@@ -39,7 +39,6 @@ pub struct Bindgen {
     multi_value: bool,
     encode_into: EncodeInto,
     split_linked_modules: bool,
-    symbol_dispose: bool,
 }
 
 pub struct Output {
@@ -86,7 +85,6 @@ impl Bindgen {
         let externref =
             env::var("WASM_BINDGEN_ANYREF").is_ok() || env::var("WASM_BINDGEN_EXTERNREF").is_ok();
         let multi_value = env::var("WASM_BINDGEN_MULTI_VALUE").is_ok();
-        let symbol_dispose = env::var("WASM_BINDGEN_EXPERIMENTAL_SYMBOL_DISPOSE").is_ok();
         Bindgen {
             input: Input::None,
             out_name: None,
@@ -107,7 +105,6 @@ impl Bindgen {
             encode_into: EncodeInto::Test,
             omit_default_module_path: true,
             split_linked_modules: false,
-            symbol_dispose,
         }
     }
 
