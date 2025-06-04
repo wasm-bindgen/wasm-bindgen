@@ -28,6 +28,7 @@ pub struct Context<'a> {
     emscripten_deps: HashSet<String>,
     imports_post: String,
     typescript: String,
+    typescript_emscripten_classes: String,
     exposed_globals: Option<HashSet<Cow<'static, str>>>,
     next_export_idx: usize,
     config: &'a Bindgen,
@@ -153,6 +154,7 @@ impl<'a> Context<'a> {
             emscripten_deps: HashSet::new(),
             imports_post: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
+            typescript_emscripten_classes: String::new(),
             exposed_globals: Some(Default::default()),
             imported_names: Default::default(),
             js_imports: Default::default(),
@@ -638,6 +640,16 @@ __wbg_set_wasm(wasm);"
             ts = String::from("declare namespace wasm_bindgen {\n\t");
             ts.push_str(&self.typescript.replace('\n', "\n\t"));
             ts.push_str("\n}\n");
+        } else if matches!(self.config.mode, OutputMode::Emscripten) {
+            ts = self.typescript_emscripten_classes.clone();
+
+            ts.push_str("interface BindgenModule {\n");
+            for line in self.typescript.clone().lines() {
+                ts.push_str("  ");
+                ts.push_str(line);
+                ts.push('\n');
+            }
+            ts.push_str("}\n\n");
         } else {
             ts = self.typescript.clone();
         }
@@ -773,6 +785,9 @@ __wbg_set_wasm(wasm);"
         has_memory: bool,
         has_module_or_path_optional: bool,
     ) -> Result<String, Error> {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return Ok("".to_string())
+        }
         let output = crate::wasm2es6js::interface(self.module)?;
 
         let (memory_doc, memory_param) = if has_memory {
@@ -1168,7 +1183,9 @@ __wbg_set_wasm(wasm);"
     fn write_class(&mut self, name: &str, class: &ExportedClass) -> Result<(), Error> {
         let mut dst = format!("class {} {{\n", name);
         let mut ts_dst = format!("export {}", dst);
-
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            ts_dst = format!("export class {} {{\n", name);
+        }
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
             ts_dst.push_str("  private constructor();\n");
@@ -1316,8 +1333,15 @@ __wbg_set_wasm(wasm);"
         self.export(name, ExportJs::Class(&dst), Some(&class.comments))?;
 
         if class.generate_typescript {
-            self.typescript.push_str(&class.comments);
-            self.typescript.push_str(&ts_dst);
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                self.typescript_emscripten_classes.push_str(&class.comments);
+                self.typescript_emscripten_classes.push_str(&ts_dst);
+                self.typescript_emscripten_classes.push('\n');
+                self.typescript.push_str(&format!("{}: typeof {};\n", name, name));
+            } else {
+                self.typescript.push_str(&class.comments);
+                self.typescript.push_str(&ts_dst);
+            }
         }
 
         Ok(())
@@ -3460,7 +3484,9 @@ __wbg_set_wasm(wasm);"
                     AuxExportKind::Function(name) => {
                         if let Some(ts_sig) = ts_sig {
                             self.typescript.push_str(&ts_docs);
-                            self.typescript.push_str("export function ");
+                            if !matches!(self.config.mode, OutputMode::Emscripten) {
+                                self.typescript.push_str("export function ");
+                            }
                             self.typescript.push_str(name);
                             self.typescript.push_str(ts_sig);
                             self.typescript.push_str(";\n");
