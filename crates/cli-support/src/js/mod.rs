@@ -31,6 +31,7 @@ pub struct Context<'a> {
     emscripten_deps: HashSet<String>,
     imports_post: String,
     typescript: String,
+    typescript_emscripten_classes: String,
     config: &'a Bindgen,
     pub module: &'a mut Module,
     aux: &'a WasmBindgenAux,
@@ -183,6 +184,7 @@ impl<'a> Context<'a> {
             emscripten_deps: HashSet::new(),
             imports_post: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
+            typescript_emscripten_classes: String::new(),
             imported_names: Default::default(),
             js_imports: Default::default(),
             defined_identifiers: Default::default(),
@@ -245,7 +247,7 @@ impl<'a> Context<'a> {
                     self.typescript.push_str(c);
                 }
                 // in nomodules, we output into a namespace, which is already ambient
-                if !self.config.mode.no_modules() {
+                if !self.config.mode.no_modules() && !self.config.mode.emscripten() {
                     self.typescript.push_str("declare ");
                 }
                 self.typescript.push_str(ts_decl);
@@ -706,6 +708,16 @@ wasm = wasmInstance.exports;
             ts = String::from("declare namespace wasm_bindgen {\n\t");
             ts.push_str(&self.typescript.replace('\n', "\n\t"));
             ts.push_str("\n}\n");
+        } else if matches!(self.config.mode, OutputMode::Emscripten) {
+            ts = self.typescript_emscripten_classes.clone();
+
+            ts.push_str("interface BindgenModule {\n");
+            for line in self.typescript.clone().lines() {
+                ts.push_str("  ");
+                ts.push_str(line);
+                ts.push('\n');
+            }
+            ts.push_str("}\n\n");
         } else {
             ts = self.typescript.clone();
         }
@@ -856,6 +868,9 @@ wasm = wasmInstance.exports;
         has_memory: bool,
         has_module_or_path_optional: bool,
     ) -> Result<String, Error> {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return Ok("".to_string())
+        }
         let output = crate::wasm2es6js::interface(self.module)?;
 
         let (memory_doc, memory_param) = if has_memory {
@@ -1390,10 +1405,28 @@ wasm = wasmInstance.exports;
         dst.push_str("}\n");
         ts_dst.push_str("}\n");
 
-        // For hidden classes, add export type statement
-        if class.private {
-            ts_dst.push_str(&format!("export type {{ {name} }};\n"));
-        }
+        let ts_definition = if class.generate_typescript {
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                self.typescript_emscripten_classes.push_str(&class.comments);
+                self.typescript_emscripten_classes.push_str("export ");
+                self.typescript_emscripten_classes.push_str(&ts_dst);
+                self.typescript_emscripten_classes.push('\n');
+
+                self.typescript.push_str(&format!("{}: typeof {};\n", name, name));
+
+                String::new()
+            } else {
+                let mut ts = ts_dst;
+                // For hidden classes, add export type statement
+                if class.private {
+                    ts.push_str(&format!("export type {{ {name} }};\n"));
+                }
+                ts
+            }
+        } else {
+            String::new()
+        };
+
 
         dst.push_str(&format!(
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
@@ -1413,11 +1446,7 @@ wasm = wasmInstance.exports;
                 identifier: class.identifier,
                 comments: Some(class.comments),
                 definition: dst,
-                ts_definition: if class.generate_typescript {
-                    ts_dst
-                } else {
-                    String::new()
-                },
+                ts_definition: ts_definition,
                 ts_comments,
                 private: class.private,
             }),
@@ -3618,15 +3647,25 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                     AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) => {
                         let identifier = self.generate_identifier(name);
 
-                        let mut typescript = String::new();
-                        let ts_comments = if let Some(ts_sig) = ts_sig {
-                            typescript.push_str("function ");
-                            typescript.push_str(&identifier);
-                            typescript.push_str(ts_sig);
-                            typescript.push_str(";\n");
-                            Some(ts_docs)
+                        let (ts_definition, ts_comments) = if let Some(ts_sig) = ts_sig {
+                            if matches!(self.config.mode, OutputMode::Emscripten) {
+                                // Emscripten: Write "name(args): ret;" directly to buffer
+                                self.typescript.push_str(&ts_docs);
+                                self.typescript.push_str(&identifier); // No "function" prefix
+                                self.typescript.push_str(ts_sig);
+                                self.typescript.push_str(";\n");
+                                
+                                (String::new(), None)
+                            } else {
+                                let mut typescript = String::new();
+                                typescript.push_str("function ");
+                                typescript.push_str(&identifier);
+                                typescript.push_str(ts_sig);
+                                typescript.push_str(";\n");
+                                (typescript, Some(ts_docs))
+                            }
                         } else {
-                            None
+                            (String::new(), None)
                         };
 
                         let definition = format!("function {identifier}{code}\n");
