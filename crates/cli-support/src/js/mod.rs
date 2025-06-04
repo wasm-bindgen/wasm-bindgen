@@ -1168,7 +1168,9 @@ __wbg_set_wasm(wasm);"
     fn write_class(&mut self, name: &str, class: &ExportedClass) -> Result<(), Error> {
         let mut dst = format!("class {} {{\n", name);
         let mut ts_dst = format!("export {}", dst);
-
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            ts_dst = format!("{}: {{\n", name);
+        }
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
             ts_dst.push_str("  private constructor();\n");
@@ -3460,7 +3462,9 @@ __wbg_set_wasm(wasm);"
                     AuxExportKind::Function(name) => {
                         if let Some(ts_sig) = ts_sig {
                             self.typescript.push_str(&ts_docs);
-                            self.typescript.push_str("export function ");
+                            if !matches!(self.config.mode, OutputMode::Emscripten) {
+                                self.typescript.push_str("export function ");
+                            }
                             self.typescript.push_str(name);
                             self.typescript.push_str(ts_sig);
                             self.typescript.push_str(";\n");
