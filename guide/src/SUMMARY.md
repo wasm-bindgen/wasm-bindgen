@@ -2,7 +2,7 @@
 
 [Introduction](./introduction.md)
 
----
+--------------------------------------------------------------------------------
 
 - [Examples](./examples/index.md)
   - [Hello, World!](./examples/hello-world.md)
@@ -31,7 +31,6 @@
   - [Wasm Audio Worklet](./examples/wasm-audio-worklet.md)
   - [web-sys: A TODO MVC App](./examples/todomvc.md)
 - [Reference](./reference/index.md)
-
   - [Deployment](./reference/deployment.md)
   - [JS snippets](./reference/js-snippets.md)
   - [Static JS Objects](./reference/static-js-objects.md)
@@ -102,7 +101,6 @@
       - [`return_description` and `param_description`](./reference/attributes/on-rust-exports/description.md)
 
 - [`web-sys`](./web-sys/index.md)
-
   - [Using `web-sys`](./web-sys/using-web-sys.md)
   - [Cargo Features](./web-sys/cargo-features.md)
   - [Function Overloads](./web-sys/function-overloads.md)
@@ -111,7 +109,6 @@
   - [Unstable APIs](./web-sys/unstable-apis.md)
 
 - [Testing with `wasm-bindgen-test`](./wasm-bindgen-test/index.md)
-
   - [Usage](./wasm-bindgen-test/usage.md)
   - [Writing Asynchronous Tests](./wasm-bindgen-test/asynchronous-tests.md)
   - [Testing in Headless Browsers](./wasm-bindgen-test/browsers.md)
