@@ -8,7 +8,7 @@ import {
   return_number_option,
   return_string_option,
   NumberEnum,
-  // nothing generated for StringEnum :(
+  StringEnum,
 } from "./guide_supported_types_examples";
 
 take_enum_number(NumberEnum.Foo);
