@@ -20,8 +20,8 @@ take_enum_number_option(undefined);
 take_enum_string_option("eggs");
 take_enum_string_option(undefined);
 
-return_number(); // -> `NumberEnum`
-return_string(); // -> `StringEnum`
+return_enum_number(); // -> `NumberEnum`
+return_enum_string(); // -> `StringEnum`
 
-return_number_option(); // -> `NumberEnum | undefined`
-return_string_option(); // -> `StringEnum | undefined`
+return_enum_number_option(); // -> `NumberEnum | undefined`
+return_enum_string_option(); // -> `StringEnum | undefined`
