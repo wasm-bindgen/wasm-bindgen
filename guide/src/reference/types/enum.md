@@ -18,10 +18,6 @@
 
 ## TypeScript
 
-Unfortunately, string enums don't fully work yet; no TypeScript is generated for the enum itself and functions using them accept or return `any`.
-They work correctly, it's just there's no type hints.
-See [Issue #3057](https://github.com/rustwasm/wasm-bindgen/issues/3057)
-
 The generated TypeScript declarations for the above:
 
 <!-- remember to keep this up to date! copy enum.rs (above) into the lib.rs file of a new wasm-bindgen crate; use `wasm-pack build`; then copy pkg/testcrate.d.ts. also ran it through a formatter. -->

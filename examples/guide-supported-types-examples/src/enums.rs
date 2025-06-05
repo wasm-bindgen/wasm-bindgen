@@ -15,33 +15,33 @@ pub enum StringEnum {
 }
 
 #[wasm_bindgen]
-pub fn take_number(x: NumberEnum) {}
+pub fn take_enum_number(x: NumberEnum) {}
 
 #[wasm_bindgen]
-pub fn take_string(x: StringEnum) {}
+pub fn take_enum_string(x: StringEnum) {}
 
 #[wasm_bindgen]
-pub fn take_number_option(x: Option<NumberEnum>) {}
+pub fn take_enum_number_option(x: Option<NumberEnum>) {}
 
 #[wasm_bindgen]
-pub fn take_string_option(x: Option<StringEnum>) {}
+pub fn take_enum_string_option(x: Option<StringEnum>) {}
 
 #[wasm_bindgen]
-pub fn return_number() -> NumberEnum {
+pub fn return_enum_number() -> NumberEnum {
     todo!()
 }
 
 #[wasm_bindgen]
-pub fn return_string() -> StringEnum {
+pub fn return_enum_string() -> StringEnum {
     todo!()
 }
 
 #[wasm_bindgen]
-pub fn return_number_option() -> Option<NumberEnum> {
+pub fn return_enum_number_option() -> Option<NumberEnum> {
     todo!()
 }
 
 #[wasm_bindgen]
-pub fn return_string_option() -> Option<StringEnum> {
+pub fn return_enum_string_option() -> Option<StringEnum> {
     todo!()
 }
