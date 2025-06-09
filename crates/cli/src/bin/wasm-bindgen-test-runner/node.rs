@@ -146,7 +146,8 @@ pub fn execute(
         .arg("--expose-gc")
         .args(&extra_node_args)
         .arg(&js_path)
-        .status()?;
+        .status()
+        .context("failed to find or execute node")?;
 
     if !status.success() {
         process::exit(status.code().unwrap_or(1))
