@@ -160,9 +160,9 @@ macro_rules! attrgen {
             (method, false, Method(Span)),
             (static_method_of, false, StaticMethodOf(Span, Ident)),
             (js_namespace, false, JsNamespace(Span, JsNamespace, Vec<Span>)),
-            (module, false, Module(Span, String, Span)),
-            (raw_module, false, RawModule(Span, String, Span)),
-            (inline_js, false, InlineJs(Span, String, Span)),
+            (module, true, Module(Span, String, Span)),
+            (raw_module, true, RawModule(Span, String, Span)),
+            (inline_js, true, InlineJs(Span, String, Span)),
             (getter, false, Getter(Span, Option<String>)),
             (setter, false, Setter(Span, Option<String>)),
             (indexing_getter, false, IndexingGetter(Span)),
@@ -2202,7 +2202,7 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
             let unused_attrs = unused_attrs.iter().map(|UnusedState { error, ident }| {
                 if *error {
                     let text = format!("invalid attribute {} in this position", ident);
-                    quote::quote! { ::core::compile_error!(#text); }
+                    quote::quote_spanned! { ident.span() => ::core::compile_error!(#text); }
                 } else {
                     quote::quote! { let #ident: (); }
                 }
