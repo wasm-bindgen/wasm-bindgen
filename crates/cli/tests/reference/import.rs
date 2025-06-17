@@ -1,3 +1,5 @@
+// FLAGS: --target=web
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -15,12 +17,27 @@ extern "C" {
     fn reload();
     #[wasm_bindgen(js_namespace = ["window", "document"])]
     fn write(s: &str);
+}
 
-    // module import
-    #[wasm_bindgen(module = "./foo.js")]
+// module import
+#[wasm_bindgen(module = "tests/wasm/imports.js")]
+extern "C" {
     fn bar_from_foo();
-    #[wasm_bindgen(inline_js = "export function add(a,b) { return a + b; }")]
+}
+
+#[wasm_bindgen(raw_module = "foo-raw")]
+extern "C" {
+    fn bar_from_foo_raw();
+}
+
+#[wasm_bindgen(inline_js = "export function add(a,b) { return a + b; }")]
+extern "C" {
     fn add(a: f64, b: f64) -> f64;
+}
+
+#[link(wasm_import_module = "pure-extern")]
+extern "C" {
+    fn extern_fn();
 }
 
 #[wasm_bindgen(js_namespace = ["a"])]
@@ -45,6 +62,10 @@ extern "C" {
 #[wasm_bindgen]
 pub fn exported() -> Result<(), JsValue> {
     bar_from_foo();
+    bar_from_foo_raw();
+    unsafe {
+        extern_fn();
+    }
     let _ = add(CONST.with(Clone::clone), 2.0);
     reload();
     write("");
