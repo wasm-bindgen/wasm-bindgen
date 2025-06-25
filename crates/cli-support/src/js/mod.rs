@@ -773,6 +773,9 @@ __wbg_set_wasm(wasm);"
         has_memory: bool,
         has_module_or_path_optional: bool,
     ) -> Result<String, Error> {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return Ok("".to_string())
+        }
         let output = crate::wasm2es6js::interface(self.module)?;
 
         let (memory_doc, memory_param) = if has_memory {
@@ -1169,7 +1172,7 @@ __wbg_set_wasm(wasm);"
         let mut dst = format!("class {} {{\n", name);
         let mut ts_dst = format!("export {}", dst);
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            ts_dst = format!("{}: {{\n", name);
+            ts_dst = format!("{}: typeof {};\nexport class {} {{\n", name, name, name);
         }
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
