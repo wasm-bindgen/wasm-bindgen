@@ -42,7 +42,7 @@ export function echo_u128(a) {
 }
 
 function isLikeNone(x) {
-    return x === undefined || x === null;
+    return x == null;
 }
 /**
  * @param {bigint | null} [a]

@@ -5,7 +5,7 @@ export function __wbg_set_wasm(val) {
 
 
 function isLikeNone(x) {
-    return x === undefined || x === null;
+    return x == null;
 }
 
 function addToExternrefTable0(obj) {

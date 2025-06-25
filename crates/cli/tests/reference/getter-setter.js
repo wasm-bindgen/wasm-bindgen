@@ -25,7 +25,7 @@ function getStringFromWasm0(ptr, len) {
 }
 
 function isLikeNone(x) {
-    return x === undefined || x === null;
+    return x == null;
 }
 
 let WASM_VECTOR_LEN = 0;
@@ -48,7 +48,6 @@ const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
 });
 
 function passStringToWasm0(arg, malloc, realloc) {
-
     if (realloc === undefined) {
         const buf = cachedTextEncoder.encode(arg);
         const ptr = malloc(buf.length, 1) >>> 0;
