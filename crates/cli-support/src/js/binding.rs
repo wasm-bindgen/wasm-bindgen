@@ -2276,25 +2276,30 @@ pub(crate) fn adapter2ts(
         AdapterType::String => dst.push_str("string"),
         AdapterType::Externref => dst.push_str("any"),
         AdapterType::Bool => dst.push_str("boolean"),
-        AdapterType::Vector(kind) => match kind {
-            VectorKind::NamedExternref(name) => {
-                let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
-                if is_valid_ident(resolved) {
-                    dst.push_str(&format!("{resolved}[]"));
-                } else {
-                    dst.push_str(&format!("({resolved})[]"));
+        AdapterType::Vector(kind) => {
+            match kind {
+                VectorKind::NamedExternref(name) => {
+                    let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
+                    if is_valid_ident(resolved) {
+                        dst.push_str(&format!("{resolved}[]"));
+                    } else {
+                        dst.push_str(&format!("({resolved})[]"));
+                    }
+                }
+                VectorKind::String | VectorKind::Externref => dst.push_str(&kind.js_ty()),
+                _ => {
+                    dst.push_str(&kind.js_ty());
+                    // Owned typed-array returns are always copied out of wasm
+                    // memory into a fresh, non-shared `ArrayBuffer`.
+                    if typed_array_buffers && matches!(position, TypePosition::Return) {
+                        dst.push_str("<ArrayBuffer>");
+                    }
                 }
             }
-            VectorKind::String | VectorKind::Externref => dst.push_str(&kind.js_ty()),
-            _ => {
-                dst.push_str(&kind.js_ty());
-                // Owned typed-array returns are always copied out of wasm
-                // memory into a fresh, non-shared `ArrayBuffer`.
-                if typed_array_buffers && matches!(position, TypePosition::Return) {
-                    dst.push_str("<ArrayBuffer>");
-                }
+            if let TypePosition::Argument = position {
+                dst.push_str(" | number[]");
             }
-        },
+        }
         AdapterType::Option(ty) => {
             adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
             dst.push_str(match position {
