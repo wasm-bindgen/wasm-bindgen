@@ -101,7 +101,6 @@ pub struct Function {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Closure {
-    pub shim_idx: u32,
     pub dtor_idx: u32,
     pub function: Function,
     pub mutable: bool,
@@ -263,12 +262,14 @@ fn get_string(data: &mut &[u32]) -> String {
 
 impl Closure {
     fn decode(data: &mut &[u32]) -> Closure {
-        let shim_idx = get(data);
         let dtor_idx = get(data);
-        let mutable = get(data) == REFMUT;
+        let mutable = match get(data) {
+            0 => false,
+            1 => true,
+            other => panic!("expected bool value, got {other}"),
+        };
         assert_eq!(get(data), FUNCTION);
         Closure {
-            shim_idx,
             dtor_idx,
             mutable,
             function: Function::decode(data),

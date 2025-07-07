@@ -199,7 +199,7 @@ impl<'a> Context<'a> {
                 let mut function = descriptor.function.clone();
                 function.arguments.insert(0, Descriptor::I32);
                 function.arguments.insert(0, Descriptor::I32);
-                let adapter = self.table_element_adapter(descriptor.shim_idx, function)?;
+                let adapter = self.table_element_adapter(descriptor.function.shim_idx, function)?;
                 self.aux.import_map.insert(
                     id,
                     AuxImport::Closure {
