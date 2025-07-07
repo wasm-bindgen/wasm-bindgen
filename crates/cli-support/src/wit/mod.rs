@@ -167,9 +167,7 @@ impl<'a> Context<'a> {
 
             // If any closures exist we need to prevent the function table from
             // getting gc'd
-            if !closure_imports.is_empty() {
-                self.aux.function_table = self.module.tables.main_function_table()?;
-            }
+            self.aux.function_table = self.module.tables.main_function_table()?;
 
             // Register all the injected closure imports as that they're expected
             // to manufacture a particular type of closure.

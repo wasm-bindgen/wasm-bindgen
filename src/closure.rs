@@ -345,7 +345,7 @@ where
                 }
                 drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
             }
-            inform(destroy::<T> as u32);
+            inform(destroy::<T> as usize as u32);
 
             inform(T::IS_MUT as u32);
             T::describe();
