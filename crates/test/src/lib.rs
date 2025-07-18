@@ -117,3 +117,5 @@ pub mod __rt;
 // That way you can use normal cargo test without minicov
 #[cfg(target_arch = "wasm32")]
 mod coverage;
+
+pub mod utils;
