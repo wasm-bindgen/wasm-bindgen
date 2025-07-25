@@ -923,7 +923,7 @@ __wbg_set_wasm(wasm);"
                                 return await WebAssembly.instantiateStreaming(module, imports);
 
                             }} catch (e) {{
-                                if (module.headers.get('Content-Type') != 'application/wasm') {{
+                                if (module.headers.get('Content-Type') !== 'application/wasm') {{
                                     console.warn(\"`WebAssembly.instantiateStreaming` failed \
                                                     because your server does not serve Wasm with \
                                                     `application/wasm` MIME type. Falling back to \
@@ -3178,7 +3178,7 @@ __wbg_set_wasm(wasm);"
         self.expose_not_defined();
         let name = self.import_name(js)?;
         let js = format!(
-            "typeof {name} == 'function' ? {name} : notDefined('{name}')",
+            "typeof {name} === 'function' ? {name} : notDefined('{name}')",
             name = name,
         );
         self.wasm_import_definitions.insert(id, js);
@@ -4190,23 +4190,23 @@ __wbg_set_wasm(wasm);"
            function debugString(val) {
                 // primitive types
                 const type = typeof val;
-                if (type == 'number' || type == 'boolean' || val == null) {
+                if (type === 'number' || type === 'boolean' || val === null) {
                     return  `${val}`;
                 }
-                if (type == 'string') {
+                if (type === 'string') {
                     return `\"${val}\"`;
                 }
-                if (type == 'symbol') {
+                if (type === 'symbol') {
                     const description = val.description;
-                    if (description == null) {
+                    if (description === null) {
                         return 'Symbol';
                     } else {
                         return `Symbol(${description})`;
                     }
                 }
-                if (type == 'function') {
+                if (type === 'function') {
                     const name = val.name;
-                    if (typeof name == 'string' && name.length > 0) {
+                    if (typeof name === 'string' && name.length > 0) {
                         return `Function(${name})`;
                     } else {
                         return 'Function';
@@ -4234,7 +4234,7 @@ __wbg_set_wasm(wasm);"
                     // Failed to match the standard '[object ClassName]'
                     return toString.call(val);
                 }
-                if (className == 'Object') {
+                if (className === 'Object') {
                     // we're a user defined class or Object
                     // JSON.stringify avoids problems with cycles, and is generally much
                     // easier than looping through ownProperties of `val`.
