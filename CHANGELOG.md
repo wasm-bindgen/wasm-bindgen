@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+### Added
+
+* Added format and colorSpace support to VideoFrameCopyToOptions
+  [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
+
 ### Changed
 
 * Deprecate async constructors.
