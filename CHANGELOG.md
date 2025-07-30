@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+### Added
+
+* Added support for the [`onbeforeinput`](https://developer.mozilla.org/en-US/docs/Web/API/Element/beforeinput_event) attribute.
+  [#4544](https://github.com/wasm-bindgen/wasm-bindgen/pull/4544)
+
 ### Changed
 
 * Deprecate async constructors.
