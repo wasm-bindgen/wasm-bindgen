@@ -133,7 +133,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Scheduler`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn scheduler(this: &WorkerGlobalScope) -> Scheduler;
     # [wasm_bindgen (catch , method , structural , variadic , js_class = "WorkerGlobalScope" , js_name = importScripts)]
     #[doc = "The `importScripts()` method."]
@@ -355,7 +355,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame(
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,
@@ -464,7 +464,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,
@@ -594,7 +594,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,
@@ -739,7 +739,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,

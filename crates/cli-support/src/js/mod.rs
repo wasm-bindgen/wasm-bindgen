@@ -1694,7 +1694,7 @@ __wbg_set_wasm(wasm);"
         }
 
         // This is needed to workaround a bug in Safari
-        // See: https://github.com/rustwasm/wasm-bindgen/issues/1825
+        // See: https://github.com/wasm-bindgen/wasm-bindgen/issues/1825
         let init = Some("cachedTextDecoder.decode();");
 
         // `ignoreBOM` is needed so that the BOM will be preserved when sending a string from Rust to JS
@@ -3486,7 +3486,7 @@ __wbg_set_wasm(wasm);"
                         .to_owned())
                 } else {
                     Err(anyhow!("wasm-bindgen needs to be invoked with `--split-linked-modules`, because \"{}\" cannot be embedded.\n\
-                        See https://rustwasm.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details.", path))
+                        See https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details.", path))
                 }
             }
 
@@ -4221,7 +4221,7 @@ __wbg_set_wasm(wasm);"
                     let mut name = to_js_identifier(s);
 
                     // Account for duplicate export names.
-                    // See https://github.com/rustwasm/wasm-bindgen/issues/4371.
+                    // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4371.
                     if self.module.exports.get_func(&name).is_ok() {
                         name.push_str(&self.next_export_idx.to_string());
                     }

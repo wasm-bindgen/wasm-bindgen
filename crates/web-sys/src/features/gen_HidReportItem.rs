@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type HidReportItem;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `hasNull` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "hasNull")]
     pub fn get_has_null(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -29,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "hasNull")]
     pub fn set_has_null(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "hasPreferredState")]
     pub fn get_has_preferred_state(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -47,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "hasPreferredState")]
     pub fn set_has_preferred_state(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -56,7 +56,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isAbsolute")]
     pub fn get_is_absolute(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -65,7 +65,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isAbsolute")]
     pub fn set_is_absolute(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -74,7 +74,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isArray")]
     pub fn get_is_array(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -83,7 +83,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isArray")]
     pub fn set_is_array(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -92,7 +92,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isBufferedBytes")]
     pub fn get_is_buffered_bytes(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -101,7 +101,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isBufferedBytes")]
     pub fn set_is_buffered_bytes(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -110,7 +110,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isConstant")]
     pub fn get_is_constant(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -119,7 +119,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isConstant")]
     pub fn set_is_constant(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -128,7 +128,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isLinear")]
     pub fn get_is_linear(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -137,7 +137,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isLinear")]
     pub fn set_is_linear(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -146,7 +146,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isRange")]
     pub fn get_is_range(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -155,7 +155,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isRange")]
     pub fn set_is_range(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -164,7 +164,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "isVolatile")]
     pub fn get_is_volatile(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -173,7 +173,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "isVolatile")]
     pub fn set_is_volatile(this: &HidReportItem, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -182,7 +182,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "logicalMaximum")]
     pub fn get_logical_maximum(this: &HidReportItem) -> Option<i32>;
     #[cfg(web_sys_unstable_apis)]
@@ -191,7 +191,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "logicalMaximum")]
     pub fn set_logical_maximum(this: &HidReportItem, val: i32);
     #[cfg(web_sys_unstable_apis)]
@@ -200,7 +200,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "logicalMinimum")]
     pub fn get_logical_minimum(this: &HidReportItem) -> Option<i32>;
     #[cfg(web_sys_unstable_apis)]
@@ -209,7 +209,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "logicalMinimum")]
     pub fn set_logical_minimum(this: &HidReportItem, val: i32);
     #[cfg(web_sys_unstable_apis)]
@@ -218,7 +218,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "physicalMaximum")]
     pub fn get_physical_maximum(this: &HidReportItem) -> Option<i32>;
     #[cfg(web_sys_unstable_apis)]
@@ -227,7 +227,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "physicalMaximum")]
     pub fn set_physical_maximum(this: &HidReportItem, val: i32);
     #[cfg(web_sys_unstable_apis)]
@@ -236,7 +236,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "physicalMinimum")]
     pub fn get_physical_minimum(this: &HidReportItem) -> Option<i32>;
     #[cfg(web_sys_unstable_apis)]
@@ -245,7 +245,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "physicalMinimum")]
     pub fn set_physical_minimum(this: &HidReportItem, val: i32);
     #[cfg(web_sys_unstable_apis)]
@@ -254,7 +254,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "reportCount")]
     pub fn get_report_count(this: &HidReportItem) -> Option<u16>;
     #[cfg(web_sys_unstable_apis)]
@@ -263,7 +263,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "reportCount")]
     pub fn set_report_count(this: &HidReportItem, val: u16);
     #[cfg(web_sys_unstable_apis)]
@@ -272,7 +272,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "reportSize")]
     pub fn get_report_size(this: &HidReportItem) -> Option<u16>;
     #[cfg(web_sys_unstable_apis)]
@@ -281,7 +281,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "reportSize")]
     pub fn set_report_size(this: &HidReportItem, val: u16);
     #[cfg(web_sys_unstable_apis)]
@@ -290,7 +290,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "strings")]
     pub fn get_strings(this: &HidReportItem) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -299,7 +299,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "strings")]
     pub fn set_strings(this: &HidReportItem, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
@@ -308,7 +308,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitExponent")]
     pub fn get_unit_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -317,7 +317,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitExponent")]
     pub fn set_unit_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -326,7 +326,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitFactorCurrentExponent")]
     pub fn get_unit_factor_current_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -335,7 +335,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitFactorCurrentExponent")]
     pub fn set_unit_factor_current_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -344,7 +344,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitFactorLengthExponent")]
     pub fn get_unit_factor_length_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -353,7 +353,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitFactorLengthExponent")]
     pub fn set_unit_factor_length_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -362,7 +362,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitFactorLuminousIntensityExponent")]
     pub fn get_unit_factor_luminous_intensity_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -371,7 +371,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitFactorLuminousIntensityExponent")]
     pub fn set_unit_factor_luminous_intensity_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -380,7 +380,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitFactorMassExponent")]
     pub fn get_unit_factor_mass_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -389,7 +389,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitFactorMassExponent")]
     pub fn set_unit_factor_mass_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -398,7 +398,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitFactorTemperatureExponent")]
     pub fn get_unit_factor_temperature_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -407,7 +407,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitFactorTemperatureExponent")]
     pub fn set_unit_factor_temperature_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -416,7 +416,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitFactorTimeExponent")]
     pub fn get_unit_factor_time_exponent(this: &HidReportItem) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
@@ -425,7 +425,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitFactorTimeExponent")]
     pub fn set_unit_factor_time_exponent(this: &HidReportItem, val: i8);
     #[cfg(web_sys_unstable_apis)]
@@ -435,7 +435,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`, `HidUnitSystem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "unitSystem")]
     pub fn get_unit_system(this: &HidReportItem) -> Option<HidUnitSystem>;
     #[cfg(web_sys_unstable_apis)]
@@ -445,7 +445,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`, `HidUnitSystem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "unitSystem")]
     pub fn set_unit_system(this: &HidReportItem, val: HidUnitSystem);
     #[cfg(web_sys_unstable_apis)]
@@ -454,7 +454,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "usageMaximum")]
     pub fn get_usage_maximum(this: &HidReportItem) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -463,7 +463,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "usageMaximum")]
     pub fn set_usage_maximum(this: &HidReportItem, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -472,7 +472,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "usageMinimum")]
     pub fn get_usage_minimum(this: &HidReportItem) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -481,7 +481,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "usageMinimum")]
     pub fn set_usage_minimum(this: &HidReportItem, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -490,7 +490,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "usages")]
     pub fn get_usages(this: &HidReportItem) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -499,7 +499,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "usages")]
     pub fn set_usages(this: &HidReportItem, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
@@ -508,7 +508,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "wrap")]
     pub fn get_wrap(this: &HidReportItem) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -517,7 +517,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "wrap")]
     pub fn set_wrap(this: &HidReportItem, val: bool);
 }
@@ -528,7 +528,7 @@ impl HidReportItem {
     #[doc = "*This API requires the following crate features to be activated: `HidReportItem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

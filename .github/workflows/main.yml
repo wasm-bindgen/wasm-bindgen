@@ -624,7 +624,7 @@ jobs:
     permissions:
       contents: write #  to push changes in repo (jamesives/github-pages-deploy-action)
 
-    if: github.repository == 'rustwasm/wasm-bindgen'
+    if: github.repository == 'wasm-bindgen/wasm-bindgen'
     needs:
       - doc_api
       - doc_book

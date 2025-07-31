@@ -327,7 +327,7 @@ an environment variable. When rerun the tests will start a server that you can
 visit in a web browser, and headless testing should not be used.
 
 If you're still having difficulty resolving this error, please feel free to open
-an issue against rustwasm/wasm-bindgen!
+an issue against wasm-bindgen/wasm-bindgen!
     "
         )
     }
