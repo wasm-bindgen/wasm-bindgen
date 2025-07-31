@@ -7,7 +7,7 @@ performance suite for WebAssembly for Rust.
 
 [View benchmarks for `master` branch online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/benchmarks/
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/benchmarks/
 
 ## Building and Running
 

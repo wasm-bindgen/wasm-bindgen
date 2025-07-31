@@ -2,7 +2,7 @@
 
 [View full source code][code]
 
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/synchronous-instantiation
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/synchronous-instantiation
 
 This example shows how to synchronously initialize a WebAssembly module as opposed to [asynchronously][without-bundler]. In most cases, the default way of asynchronously initializing a module will suffice. However, there might be use cases where you'd like to lazy load a module on demand and synchronously compile and instantiate it. Note that this only works off the main thread and since compilation and instantiation of large modules can be expensive you should only use this method if it's absolutely required in your use case. Otherwise you should use the [default method][without-bundler].
 

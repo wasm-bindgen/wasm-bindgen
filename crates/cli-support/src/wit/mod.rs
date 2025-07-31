@@ -1627,7 +1627,7 @@ binary with:
     cargo install -f wasm-bindgen-cli --version {their_version}
 
 if this warning fails to go away though and you're not sure what to do feel free
-to open an issue at https://github.com/rustwasm/wasm-bindgen/issues!
+to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
 "
                 );
             }

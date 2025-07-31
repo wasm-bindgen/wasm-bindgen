@@ -5,7 +5,7 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 
-/// A list of all the attributes can be found here: https://rustwasm.github.io/docs/wasm-bindgen/reference/attributes/index.html
+/// A list of all the attributes can be found here: https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/index.html
 #[proc_macro_attribute]
 pub fn wasm_bindgen(attr: TokenStream, input: TokenStream) -> TokenStream {
     match wasm_bindgen_macro_support::expand(attr.into(), input.into()) {

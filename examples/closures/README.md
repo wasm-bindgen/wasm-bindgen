@@ -3,8 +3,8 @@
 [View documentation for this example online][dox] or [View compiled example
 online][compiled]
 
-[compiled]: https://rustwasm.github.io/wasm-bindgen/exbuild/closures/
-[dox]: https://rustwasm.github.io/docs/wasm-bindgen/examples/closures.html
+[compiled]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/closures/
+[dox]: https://wasm-bindgen.github.io/wasm-bindgen/examples/closures.html
 
 You can build the example locally with:
 
