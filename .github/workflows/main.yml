@@ -364,6 +364,7 @@ jobs:
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
         cargo install --path crates/cli --debug
+    - run: npm install -g pnpm@latest-10
     # crete a workspace of all examples and install their dependencies at once
     # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
