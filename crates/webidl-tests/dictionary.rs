@@ -67,7 +67,7 @@ fn many_types() {
 
 #[wasm_bindgen_test]
 fn required() {
-    let dict = Required::new(1, "a");
+    let dict = Required::new(3, "a");
     dict.set_c(4);
     assert_dict_required(&dict);
 }
