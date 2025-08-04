@@ -166,7 +166,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             let arg = match args_data {
                 Some(list) => list[i].clone(),
                 None => AuxFunctionArgumentData {
-                    name: format!("arg{}", i),
+                    name: format!("arg{i}"),
                     ty_override: None,
                     desc: None,
                 },
@@ -200,14 +200,13 @@ impl<'a, 'b> Builder<'a, 'b> {
         assert_eq!(
             js.stack.len(),
             adapter.results.len(),
-            "stack size mismatch for {}",
-            debug_name
+            "stack size mismatch for {debug_name}"
         );
         match js.stack.len() {
             0 => {}
             1 => {
                 let val = js.pop();
-                js.prelude(&format!("return {};", val));
+                js.prelude(&format!("return {val};"));
             }
 
             // TODO: this should be pretty trivial to support (commented out
@@ -417,7 +416,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 }
             }
             if asyncness {
-                ret = format!("Promise<{}>", ret);
+                ret = format!("Promise<{ret}>");
             }
             ts.push_str(&ret);
             ts_ret = Some(ret);
@@ -516,7 +515,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         if let Some(ts) = ret_ty_override.as_ref().or(ts_ret.as_ref()) {
             // skip if type is void and there is no description
             if ts != "void" || ret_desc.is_some() {
-                ret.push_str(&format!("@returns {{{}}}", ts));
+                ret.push_str(&format!("@returns {{{ts}}}"));
             }
             // append return description
             if let Some(v) = ret_desc {
@@ -612,7 +611,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn assert_class(&mut self, arg: &str, class: &str) {
         self.cx.expose_assert_class();
-        self.prelude(&format!("_assertClass({}, {});", arg, class));
+        self.prelude(&format!("_assertClass({arg}, {class});"));
     }
 
     fn assert_number(&mut self, arg: &str) {
@@ -620,7 +619,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_num();
-        self.prelude(&format!("_assertNum({});", arg));
+        self.prelude(&format!("_assertNum({arg});"));
     }
 
     fn assert_bigint(&mut self, arg: &str) {
@@ -628,7 +627,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bigint();
-        self.prelude(&format!("_assertBigInt({});", arg));
+        self.prelude(&format!("_assertBigInt({arg});"));
     }
 
     fn assert_bool(&mut self, arg: &str) {
@@ -636,7 +635,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bool();
-        self.prelude(&format!("_assertBoolean({});", arg));
+        self.prelude(&format!("_assertBoolean({arg});"));
     }
 
     fn assert_optional_number(&mut self, arg: &str) {
@@ -644,19 +643,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({})) {{", arg));
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
         self.assert_number(arg);
         self.prelude("}");
     }
 
     fn assert_non_null(&mut self, arg: &str) {
         self.cx.expose_assert_non_null();
-        self.prelude(&format!("_assertNonNull({});", arg));
+        self.prelude(&format!("_assertNonNull({arg});"));
     }
 
     fn assert_char(&mut self, arg: &str) {
         self.cx.expose_assert_char();
-        self.prelude(&format!("_assertChar({});", arg));
+        self.prelude(&format!("_assertChar({arg});"));
     }
 
     fn assert_optional_bigint(&mut self, arg: &str) {
@@ -664,7 +663,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({})) {{", arg));
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
         self.assert_bigint(arg);
         self.prelude("}");
     }
@@ -674,7 +673,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({})) {{", arg));
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
         self.assert_bool(arg);
         self.prelude("}");
     }
@@ -685,11 +684,10 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
         self.prelude(&format!(
             "\
-                if ({0}.__wbg_ptr === 0) {{
+                if ({arg}.__wbg_ptr === 0) {{
                     throw new Error('Attempt to use a moved value');
                 }}
             ",
-            arg,
         ));
     }
 
@@ -708,16 +706,11 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             None => String::new(),
         };
         self.prelude(&format!(
-            "const ptr{i} = {f}({0}, wasm.{malloc}{realloc});",
-            val,
-            i = i,
-            f = pass,
-            malloc = malloc,
-            realloc = realloc,
+            "const ptr{i} = {pass}({val}, wasm.{malloc}{realloc});",
         ));
-        self.prelude(&format!("const len{} = WASM_VECTOR_LEN;", i));
-        self.push(format!("ptr{}", i));
-        self.push(format!("len{}", i));
+        self.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
+        self.push(format!("ptr{i}"));
+        self.push(format!("len{i}"));
         Ok(())
     }
 }
@@ -814,17 +807,17 @@ fn instruction(
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    js.finally(&format!("{};", call));
+                    js.finally(&format!("{call};"));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => js.prelude(&format!("{};", call)),
+                (false, 0) => js.prelude(&format!("{call};")),
                 (false, n) => {
-                    js.prelude(&format!("const ret = {};", call));
+                    js.prelude(&format!("const ret = {call};"));
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {
                         for i in 0..n {
-                            js.push(format!("ret[{}]", i));
+                            js.push(format!("ret[{i}]"));
                         }
                     }
                 }
@@ -842,7 +835,7 @@ fn instruction(
                 // When converting to a JS number we need to specially handle the `u32`
                 // case because if the high bit is set then it comes out as a negative
                 // number, but we want to switch that to an unsigned representation.
-                js.push(format!("{} >>> 0", val))
+                js.push(format!("{val} >>> 0"))
             } else {
                 js.push(val)
             }
@@ -933,7 +926,7 @@ fn instruction(
             let len = js.pop();
             let ptr = js.pop();
             let get = js.cx.expose_get_string_from_wasm(*mem)?;
-            js.push(format!("{}({}, {})", get, ptr, len));
+            js.push(format!("{get}({ptr}, {len})"));
         }
 
         Instruction::StringToMemory {
@@ -947,10 +940,9 @@ fn instruction(
         Instruction::Retptr { size } => {
             js.cx.inject_stack_pointer_shim()?;
             js.prelude(&format!(
-                "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{});",
-                size
+                "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{size});"
             ));
-            js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({});", size));
+            js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({size});"));
             js.stack.push("retptr".to_string());
         }
 
@@ -995,11 +987,10 @@ fn instruction(
             // it earlier, and we always push the same value, so load that value
             // here
             let expr = format!(
-                "{}().{}(retptr + {} * {}, true)",
-                mem, method, size, scaled_offset
+                "{mem}().{method}(retptr + {size} * {scaled_offset}, true)"
             );
-            js.prelude(&format!("var r{} = {};", offset, expr));
-            js.push(format!("r{}", offset));
+            js.prelude(&format!("var r{offset} = {expr};"));
+            js.push(format!("r{offset}"));
         }
 
         Instruction::I32FromBool => {
@@ -1021,14 +1012,14 @@ fn instruction(
         Instruction::I32FromExternrefOwned => {
             js.cx.expose_add_heap_object();
             let val = js.pop();
-            js.push(format!("addHeapObject({})", val));
+            js.push(format!("addHeapObject({val})"));
         }
 
         Instruction::I32FromExternrefBorrow => {
             js.cx.expose_borrowed_objects();
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
-            js.push(format!("addBorrowedObject({})", val));
+            js.push(format!("addBorrowedObject({val})"));
             js.finally("heap[stack_pointer++] = undefined;");
         }
 
@@ -1037,28 +1028,28 @@ fn instruction(
             js.assert_class(&val, class);
             js.assert_not_moved(&val);
             let i = js.tmp();
-            js.prelude(&format!("var ptr{} = {}.__destroy_into_raw();", i, val));
-            js.push(format!("ptr{}", i));
+            js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
+            js.push(format!("ptr{i}"));
         }
 
         Instruction::I32FromExternrefRustBorrow { class } => {
             let val = js.pop();
             js.assert_class(&val, class);
             js.assert_not_moved(&val);
-            js.push(format!("{}.__wbg_ptr", val));
+            js.push(format!("{val}.__wbg_ptr"));
         }
 
         Instruction::I32FromOptionRust { class } => {
             let val = js.pop();
             js.cx.expose_is_like_none();
             let i = js.tmp();
-            js.prelude(&format!("let ptr{} = 0;", i));
-            js.prelude(&format!("if (!isLikeNone({0})) {{", val));
+            js.prelude(&format!("let ptr{i} = 0;"));
+            js.prelude(&format!("if (!isLikeNone({val})) {{"));
             js.assert_class(&val, class);
             js.assert_not_moved(&val);
-            js.prelude(&format!("ptr{} = {}.__destroy_into_raw();", i, val));
+            js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
             js.prelude("}");
-            js.push(format!("ptr{}", i));
+            js.push(format!("ptr{i}"));
         }
 
         Instruction::I32FromOptionExternref { table_and_alloc } => {
@@ -1067,11 +1058,11 @@ fn instruction(
             match table_and_alloc {
                 Some((table, alloc)) => {
                     let alloc = js.cx.expose_add_to_externref_table(*table, *alloc)?;
-                    js.push(format!("isLikeNone({0}) ? 0 : {1}({0})", val, alloc));
+                    js.push(format!("isLikeNone({val}) ? 0 : {alloc}({val})"));
                 }
                 None => {
                     js.cx.expose_add_heap_object();
-                    js.push(format!("isLikeNone({0}) ? 0 : addHeapObject({0})", val));
+                    js.push(format!("isLikeNone({val}) ? 0 : addHeapObject({val})"));
                 }
             }
         }
@@ -1080,14 +1071,14 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none();
             js.assert_optional_number(&val);
-            js.push(format!("isLikeNone({0}) ? 0xFFFFFF : {0}", val));
+            js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val}"));
         }
 
         Instruction::I32FromOptionBool => {
             let val = js.pop();
             js.cx.expose_is_like_none();
             js.assert_optional_bool(&val);
-            js.push(format!("isLikeNone({0}) ? 0xFFFFFF : {0} ? 1 : 0", val));
+            js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val} ? 1 : 0"));
         }
 
         Instruction::I32FromOptionChar => {
@@ -1095,8 +1086,7 @@ fn instruction(
             let i = js.tmp();
             js.cx.expose_is_like_none();
             js.prelude(&format!(
-                "const char{i} = isLikeNone({0}) ? 0xFFFFFF : {0}.codePointAt(0);",
-                val
+                "const char{i} = isLikeNone({val}) ? 0xFFFFFF : {val}.codePointAt(0);"
             ));
             let val = format!("char{i}");
             js.cx.expose_assert_char();
@@ -1110,7 +1100,7 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none();
             js.assert_optional_number(&val);
-            js.push(format!("isLikeNone({0}) ? {1} : {0}", val, hole));
+            js.push(format!("isLikeNone({val}) ? {hole} : {val}"));
         }
 
         Instruction::F64FromOptionSentinelInt { signed } => {
@@ -1159,7 +1149,7 @@ fn instruction(
             } else {
                 js.assert_optional_number(&val);
             }
-            js.push(format!("!isLikeNone({0})", val));
+            js.push(format!("!isLikeNone({val})"));
             js.push(format!(
                 "isLikeNone({val}) ? {zero} : {val}",
                 zero = if *ty == ValType::I64 {
@@ -1178,15 +1168,11 @@ fn instruction(
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
             js.prelude(&format!(
-                "const ptr{i} = {f}({0}, wasm.{malloc});",
-                val,
-                i = i,
-                f = func,
-                malloc = malloc,
+                "const ptr{i} = {func}({val}, wasm.{malloc});",
             ));
-            js.prelude(&format!("const len{} = WASM_VECTOR_LEN;", i));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
         }
 
         Instruction::UnwrapResult { table_and_drop } => {
@@ -1212,9 +1198,6 @@ fn instruction(
                     throw {take_object}({err});
                 }}
                 ",
-                take_object = take_object,
-                is_err = is_err,
-                err = err,
             ));
         }
 
@@ -1241,15 +1224,9 @@ fn instruction(
                     throw {take_object}({err});
                 }}
                 ",
-                take_object = take_object,
-                is_err = is_err,
-                err = err,
-                i = i,
-                ptr = ptr,
-                len = len,
             ));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
         }
 
         Instruction::OptionString {
@@ -1267,16 +1244,11 @@ fn instruction(
                 None => String::new(),
             };
             js.prelude(&format!(
-                "var ptr{i} = isLikeNone({0}) ? 0 : {f}({0}, wasm.{malloc}{realloc});",
-                val,
-                i = i,
-                f = func,
-                malloc = malloc,
-                realloc = realloc,
+                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, wasm.{malloc}{realloc});",
             ));
-            js.prelude(&format!("var len{} = WASM_VECTOR_LEN;", i));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
         }
 
         Instruction::OptionVector { kind, mem, malloc } => {
@@ -1286,15 +1258,11 @@ fn instruction(
             let malloc = js.cx.export_name_of(*malloc);
             let val = js.pop();
             js.prelude(&format!(
-                "var ptr{i} = isLikeNone({0}) ? 0 : {f}({0}, wasm.{malloc});",
-                val,
-                i = i,
-                f = func,
-                malloc = malloc,
+                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, wasm.{malloc});",
             ));
-            js.prelude(&format!("var len{} = WASM_VECTOR_LEN;", i));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
         }
 
         Instruction::MutableSliceToMemory { kind, malloc, mem } => {
@@ -1304,16 +1272,12 @@ fn instruction(
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
             js.prelude(&format!(
-                "var ptr{i} = {f}({val}, wasm.{malloc});",
-                val = val,
-                i = i,
-                f = func,
-                malloc = malloc,
+                "var ptr{i} = {func}({val}, wasm.{malloc});",
             ));
-            js.prelude(&format!("var len{} = WASM_VECTOR_LEN;", i));
+            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             // Then pass it the pointer and the length of where we copied it.
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
             // Then we give Wasm a reference to the original typed array, so that it can
             // update it with modifications made on the Wasm side before returning.
             js.push(val);
@@ -1321,7 +1285,7 @@ fn instruction(
 
         Instruction::BoolFromI32 => {
             let val = js.pop();
-            js.push(format!("{} !== 0", val));
+            js.push(format!("{val} !== 0"));
         }
 
         Instruction::ExternrefLoadOwned { table_and_drop } => {
@@ -1334,12 +1298,12 @@ fn instruction(
                 "takeObject".to_string()
             };
             let val = js.pop();
-            js.push(format!("{}({})", take_object, val));
+            js.push(format!("{take_object}({val})"));
         }
 
         Instruction::StringFromChar => {
             let val = js.pop();
-            js.push(format!("String.fromCodePoint({})", val));
+            js.push(format!("String.fromCodePoint({val})"));
         }
 
         Instruction::RustFromI32 { class } => {
@@ -1356,7 +1320,7 @@ fn instruction(
                 }
                 Some(_) | None => {
                     js.cx.require_class_wrap(class);
-                    js.push(format!("{}.__wrap({})", class, val));
+                    js.push(format!("{class}.__wrap({val})"));
                 }
             }
         }
@@ -1366,8 +1330,7 @@ fn instruction(
             let val = js.pop();
             js.cx.require_class_wrap(class);
             js.push(format!(
-                "{0} === 0 ? undefined : {1}.__wrap({0})",
-                val, class,
+                "{val} === 0 ? undefined : {class}.__wrap({val})",
             ));
         }
 
@@ -1383,25 +1346,22 @@ fn instruction(
 
             let get = js.cx.expose_get_cached_string_from_wasm(*mem, *table)?;
 
-            js.prelude(&format!("var v{} = {}({}, {});", tmp, get, ptr, len));
+            js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
             if *owned {
                 let free = js.cx.export_name_of(*free);
                 js.prelude(&format!(
-                    "if ({ptr} !== 0) {{ wasm.{}({ptr}, {len}, 1); }}",
-                    free,
-                    ptr = ptr,
-                    len = len,
+                    "if ({ptr} !== 0) {{ wasm.{free}({ptr}, {len}, 1); }}",
                 ));
             }
 
-            js.push(format!("v{}", tmp));
+            js.push(format!("v{tmp}"));
         }
 
         Instruction::TableGet => {
             let val = js.pop();
             js.cx.expose_get_object();
-            js.push(format!("getObject({})", val));
+            js.push(format!("getObject({val})"));
         }
 
         Instruction::StackClosure {
@@ -1412,9 +1372,9 @@ fn instruction(
             let i = js.tmp();
             let b = js.pop();
             let a = js.pop();
-            js.prelude(&format!("var state{} = {{a: {}, b: {}}};", i, a, b));
+            js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
             let args = (0..*nargs)
-                .map(|i| format!("arg{}", i))
+                .map(|i| format!("arg{i}"))
                 .collect::<Vec<_>>()
                 .join(", ");
             let wrapper = js.cx.adapter_name(*adapter);
@@ -1427,21 +1387,15 @@ fn instruction(
                         const a = state{i}.a;
                         state{i}.a = 0;
                         try {{
-                            return {name}(a, state{i}.b, {args});
+                            return {wrapper}(a, state{i}.b, {args});
                         }} finally {{
                             state{i}.a = a;
                         }}
                     }};",
-                    i = i,
-                    args = args,
-                    name = wrapper,
                 ));
             } else {
                 js.prelude(&format!(
                     "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
-                    i = i,
-                    args = args,
-                    wrapper = wrapper,
                 ));
             }
 
@@ -1449,8 +1403,8 @@ fn instruction(
             // back to Rust to ensure that any lingering references to the
             // closure will fail immediately due to null pointers passed in
             // to Rust.
-            js.finally(&format!("state{}.a = state{0}.b = 0;", i));
-            js.push(format!("cb{}", i));
+            js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+            js.push(format!("cb{i}"));
         }
 
         Instruction::VectorLoad { kind, mem, free } => {
@@ -1459,7 +1413,7 @@ fn instruction(
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)?;
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
-            js.prelude(&format!("var v{} = {}({}, {}).slice();", i, f, ptr, len));
+            js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
                 "wasm.{}({}, {} * {size}, {size});",
                 free,
@@ -1467,7 +1421,7 @@ fn instruction(
                 len,
                 size = kind.size()
             ));
-            js.push(format!("v{}", i))
+            js.push(format!("v{i}"))
         }
 
         Instruction::OptionVectorLoad { kind, mem, free } => {
@@ -1476,9 +1430,9 @@ fn instruction(
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)?;
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
-            js.prelude(&format!("let v{};", i));
-            js.prelude(&format!("if ({} !== 0) {{", ptr));
-            js.prelude(&format!("v{} = {}({}, {}).slice();", i, f, ptr, len));
+            js.prelude(&format!("let v{i};"));
+            js.prelude(&format!("if ({ptr} !== 0) {{"));
+            js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
                 "wasm.{}({}, {} * {size}, {size});",
                 free,
@@ -1487,14 +1441,14 @@ fn instruction(
                 size = kind.size()
             ));
             js.prelude("}");
-            js.push(format!("v{}", i));
+            js.push(format!("v{i}"));
         }
 
         Instruction::View { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)?;
-            js.push(format!("{f}({ptr}, {len})", ptr = ptr, len = len, f = f));
+            js.push(format!("{f}({ptr}, {len})"));
         }
 
         Instruction::OptionView { kind, mem } => {
@@ -1502,21 +1456,18 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)?;
             js.push(format!(
-                "{ptr} === 0 ? undefined : {f}({ptr}, {len})",
-                ptr = ptr,
-                len = len,
-                f = f
+                "{ptr} === 0 ? undefined : {f}({ptr}, {len})"
             ));
         }
 
         Instruction::OptionF64Sentinel => {
             let val = js.pop();
-            js.push(format!("{0} === 0x100000001 ? undefined : {0}", val));
+            js.push(format!("{val} === 0x100000001 ? undefined : {val}"));
         }
 
         Instruction::OptionU32Sentinel => {
             let val = js.pop();
-            js.push(format!("{0} === 0xFFFFFF ? undefined : {0}", val));
+            js.push(format!("{val} === 0xFFFFFF ? undefined : {val}"));
         }
 
         Instruction::ToOptionNative { ty, signed } => {
@@ -1539,20 +1490,19 @@ fn instruction(
 
         Instruction::OptionBoolFromI32 => {
             let val = js.pop();
-            js.push(format!("{0} === 0xFFFFFF ? undefined : {0} !== 0", val));
+            js.push(format!("{val} === 0xFFFFFF ? undefined : {val} !== 0"));
         }
 
         Instruction::OptionCharFromI32 => {
             let val = js.pop();
             js.push(format!(
-                "{0} === 0xFFFFFF ? undefined : String.fromCodePoint({0})",
-                val,
+                "{val} === 0xFFFFFF ? undefined : String.fromCodePoint({val})",
             ));
         }
 
         Instruction::OptionEnumFromI32 { hole } => {
             let val = js.pop();
-            js.push(format!("{0} === {1} ? undefined : {0}", val, hole));
+            js.push(format!("{val} === {hole} ? undefined : {val}"));
         }
 
         Instruction::I32FromNonNull => {
@@ -1565,12 +1515,12 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none();
             js.assert_optional_number(&val);
-            js.push(format!("isLikeNone({0}) ? 0 : {0}", val));
+            js.push(format!("isLikeNone({val}) ? 0 : {val}"));
         }
 
         Instruction::OptionNonNullFromI32 => {
             let val = js.pop();
-            js.push(format!("{0} === 0 ? undefined : {0} >>> 0", val));
+            js.push(format!("{val} === 0 ? undefined : {val} >>> 0"));
         }
     }
     Ok(())

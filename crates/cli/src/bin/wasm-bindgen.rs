@@ -94,7 +94,7 @@ fn main() {
         Ok(()) => return,
         Err(e) => e,
     };
-    eprintln!("error: {:?}", err);
+    eprintln!("error: {err:?}");
     process::exit(1);
 }
 

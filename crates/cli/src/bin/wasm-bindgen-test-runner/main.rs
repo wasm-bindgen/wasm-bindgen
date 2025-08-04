@@ -274,7 +274,7 @@ fn main() -> anyhow::Result<()> {
             let timeout = timeout
                 .parse()
                 .expect("Could not parse 'WASM_BINDGEN_TEST_TIMEOUT'");
-            println!("Set timeout to {} seconds...", timeout);
+            println!("Set timeout to {timeout} seconds...");
             timeout
         })
         .unwrap_or(20);
@@ -345,8 +345,7 @@ fn main() -> anyhow::Result<()> {
             // (gracefully) here, but for now this just runs forever.
             if !headless {
                 println!(
-                    "Interactive browsers tests are now available at http://{}",
-                    addr
+                    "Interactive browsers tests are now available at http://{addr}"
                 );
                 println!();
                 println!("Note that interactive mode is enabled because `NO_HEADLESS`");
