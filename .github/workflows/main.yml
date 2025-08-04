@@ -342,7 +342,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: rustup update --no-self-update 1.78.0 && rustup default 1.78.0
+    - run: rustup update --no-self-update 1.88.0 && rustup default 1.88.0
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
 
