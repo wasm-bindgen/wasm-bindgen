@@ -112,7 +112,7 @@ jobs:
     name: Clippy `no_std` with `atomics`
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: -Ctarget-feature=+atomics,+bulk-memory
+      RUSTFLAGS: -Ctarget-feature=+atomics
     steps:
     - uses: actions/checkout@v4
     - run: rustup default nightly-2024-07-06
@@ -210,11 +210,11 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v4
-    - run: rustup default nightly-2024-07-06
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add rust-src
     - run: |
-        RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+        RUSTFLAGS='-C target-feature=+atomics' \
           cargo test --target wasm32-unknown-unknown -Z build-std=std,panic_abort
 
   # I don't know why this is failing so comment this out for now, but ideally
