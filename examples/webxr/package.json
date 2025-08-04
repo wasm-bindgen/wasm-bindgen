@@ -1,13 +1,11 @@
 {
   "scripts": {
-    "build": "webpack",
-    "serve": "webpack serve"
-  },
-  "dependencies": {
-    "webxr": "./pkg"
+    "build": "cross-env RUSTFLAGS=--cfg=web_sys_unstable_apis webpack",
+    "serve": "npm run build -- serve"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "catalog:",
+    "cross-env": "^10.0.0",
     "html-webpack-plugin": "catalog:",
     "webpack": "catalog:",
     "webpack-cli": "catalog:",
