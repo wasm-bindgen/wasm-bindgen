@@ -363,7 +363,7 @@ jobs:
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
-        cargo install -p wasm-bindgen-cli --debug
+        cargo install --path crates/cli --debug
     # crete a workspace of all examples and install their dependencies at once
     # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
