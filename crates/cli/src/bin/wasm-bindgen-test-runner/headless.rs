@@ -111,7 +111,7 @@ pub fn run(
                 child.print_stdio_on_drop = false;
             });
 
-            Url::parse(&format!("http://{}", driver_addr)).map_err(Error::from)
+            Url::parse(&format!("http://{driver_addr}")).map_err(Error::from)
         }
     }?;
     println!(
@@ -155,10 +155,10 @@ pub fn run(
             }
             url.to_string()
         }
-        Err(_) => format!("http://{}", server),
+        Err(_) => format!("http://{server}"),
     };
 
-    shell.status(&format!("Visiting {}...", url));
+    shell.status(&format!("Visiting {url}..."));
     client.goto(&id, &url)?;
     shell.status("Loading page elements...");
     let output = client.element(&id, "#output")?;
@@ -198,7 +198,7 @@ pub fn run(
     let errors = client.text(&id, &errors)?;
 
     if output.contains("test result: ") {
-        println!("{}", output);
+        println!("{output}");
 
         // If the tests harness finished (either successfully or unsuccessfully)
         // then in theory all the info needed to debug the failure is in its own
@@ -494,7 +494,7 @@ impl Client {
     fn close_window(&mut self, id: &str) -> Result<(), Error> {
         #[derive(Deserialize)]
         struct Response {}
-        let _: Response = self.delete(&format!("/session/{}/window", id))?;
+        let _: Response = self.delete(&format!("/session/{id}/window"))?;
         Ok(())
     }
 
@@ -509,7 +509,7 @@ impl Client {
         let request = Request {
             url: url.to_string(),
         };
-        let _: Response = self.post(&format!("/session/{}/url", id), &request)?;
+        let _: Response = self.post(&format!("/session/{id}/url"), &request)?;
         Ok(())
     }
 
@@ -535,7 +535,7 @@ impl Client {
             using: "css selector".to_string(),
             value: selector.to_string(),
         };
-        let x: Response = self.post(&format!("/session/{}/element", id), &request)?;
+        let x: Response = self.post(&format!("/session/{id}/element"), &request)?;
         x.value
             .gecko_reference
             .or(x.value.safari_reference)
@@ -547,7 +547,7 @@ impl Client {
         struct Response {
             value: String,
         }
-        let x: Response = self.get(&format!("/session/{}/element/{}/text", id, element))?;
+        let x: Response = self.get(&format!("/session/{id}/element/{element}/text"))?;
         Ok(x.value)
     }
 
@@ -555,7 +555,7 @@ impl Client {
     where
         U: for<'a> Deserialize<'a>,
     {
-        debug!("GET {}", path);
+        debug!("GET {path}");
         let result = self.doit(path, Method::Get)?;
         Ok(serde_json::from_str(&result)?)
     }
@@ -566,7 +566,7 @@ impl Client {
         U: for<'a> Deserialize<'a>,
     {
         let input = serde_json::to_string(data)?;
-        debug!("POST {} {}", path, input);
+        debug!("POST {path} {input}");
         let result = self.doit(path, Method::Post(&input))?;
         Ok(serde_json::from_str(&result)?)
     }
@@ -575,7 +575,7 @@ impl Client {
     where
         U: for<'a> Deserialize<'a>,
     {
-        debug!("DELETE {}", path);
+        debug!("DELETE {path}");
         let result = self.doit(path, Method::Delete)?;
         Ok(serde_json::from_str(&result)?)
     }
@@ -598,7 +598,7 @@ impl Client {
         if response_code != 200 {
             bail!("non-200 response code: {}\n{}", response_code, result);
         }
-        debug!("got: {}", result);
+        debug!("got: {result}");
         Ok(result)
     }
 }
@@ -610,7 +610,7 @@ impl Drop for Client {
             None => return,
         };
         if let Err(e) = self.close_window(&id) {
-            warn!("failed to close window {:?}", e);
+            warn!("failed to close window {e:?}");
         }
     }
 }
@@ -643,10 +643,10 @@ impl<'a> BackgroundChild<'a> {
         cmd.stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .stdin(Stdio::null());
-        log::debug!("executing {:?}", cmd);
+        log::debug!("executing {cmd:?}");
         let mut child = cmd
             .spawn()
-            .context(format!("failed to spawn {:?} binary", path))?;
+            .context(format!("failed to spawn {path:?} binary"))?;
         let mut stdout = child.stdout.take().unwrap();
         let mut stderr = child.stderr.take().unwrap();
         let stdout = Some(thread::spawn(move || {
@@ -702,7 +702,7 @@ impl Drop for BackgroundChild<'_> {
         }
 
         self.shell.clear();
-        println!("driver status: {}", status);
+        println!("driver status: {status}");
 
         let stdout = self.stdout.take().unwrap().join().unwrap().unwrap();
         if !stdout.is_empty() {

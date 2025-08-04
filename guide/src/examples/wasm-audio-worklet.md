@@ -19,7 +19,7 @@ One of the major gotchas with threaded WebAssembly is that Rust does not ship a
 precompiled target (e.g. standard library) which has threading support enabled.
 This means that you'll need to recompile the standard library with the
 appropriate rustc flags, namely
-`-C target-feature=+atomics,+bulk-memory,+mutable-globals`.
+`-C target-feature=+atomics`.
 Note that this requires a nightly Rust toolchain. See the [more detailed
 instructions][build] of the parallel-raytrace example.
 

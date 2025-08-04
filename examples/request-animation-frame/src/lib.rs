@@ -55,7 +55,7 @@ fn run() -> Result<(), JsValue> {
         // Set the body's text content to how many times this
         // requestAnimationFrame callback has fired.
         i += 1;
-        let text = format!("requestAnimationFrame has been called {} times.", i);
+        let text = format!("requestAnimationFrame has been called {i} times.");
         body().set_text_content(Some(&text));
 
         // Schedule ourself for another requestAnimationFrame callback.
