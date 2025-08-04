@@ -363,19 +363,15 @@ jobs:
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
-        cargo build -p wasm-bindgen-cli
-        ln -snf `pwd`/target/debug/wasm-bindgen $(dirname `which cargo`)/wasm-bindgen
+        cargo install -p wasm-bindgen-cli --debug
     # crete a workspace of all examples and install their dependencies at once
     # sed is used to convert the literal "\n" to a newline character
-    - run: |
-        [ -f pnpm-workspace.yaml ] || (echo 'packages:\n  - "examples/*"' > pnpm-workspace.yaml && sed -i -e 's/\\n/\n/g' pnpm-workspace.yaml)
-    - run: |
-        [ -f package.json ] || (echo '{}' > package.json)
-    - run: corepack pnpm install -r
+    - run: pnpm install
+      working-directory: examples
     - run: |
         function build() {
           (cd examples/$1 &&
-            (corepack pnpm run build -- --output-path ../../exbuild/$1 ||
+            (pnpm run build -- --output-path ../../exbuild/$1 ||
               (./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore))
           ) || exit 1;
         }
