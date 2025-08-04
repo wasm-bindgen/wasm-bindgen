@@ -100,7 +100,10 @@ impl Tests {
 }
 
 struct Test {
+    // test name
     name: String,
+    // symbol name
+    export: String,
     ignored: bool,
 }
 
@@ -130,8 +133,14 @@ fn main() -> anyhow::Result<()> {
             continue;
         };
         let modifiers = name.split_once('_').expect("found invalid identifier").0;
+
+        let Some(name) = export.name.split_once("::").map(|s| s.1) else {
+            continue;
+        };
+
         let test = Test {
-            name: export.name.clone(),
+            name: name.into(),
+            export: export.name.clone(),
             ignored: modifiers.contains('$'),
         };
 
@@ -170,7 +179,7 @@ fn main() -> anyhow::Result<()> {
 
     if cli.list {
         for test in tests.tests {
-            println!("{}: test", test.name.split_once("::").unwrap().1);
+            println!("{}: test", test.name);
         }
 
         // Returning cleanly has the strange effect of outputting
