@@ -372,8 +372,11 @@ jobs:
     - run: |
         function build() {
           (cd examples/$1 &&
-            (pnpm run build -- --output-path ../../exbuild/$1 ||
-              (./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore))
+            if [ -f package.json ]; then
+              pnpm run build -- --output-path ../../exbuild/$1
+            else
+              ./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore
+            fi
           ) || exit 1;
         }
         export -f build
