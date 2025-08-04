@@ -344,9 +344,7 @@ fn main() -> anyhow::Result<()> {
             // TODO: eventually we should provide the ability to exit at some point
             // (gracefully) here, but for now this just runs forever.
             if !headless {
-                println!(
-                    "Interactive browsers tests are now available at http://{addr}"
-                );
+                println!("Interactive browsers tests are now available at http://{addr}");
                 println!();
                 println!("Note that interactive mode is enabled because `NO_HEADLESS`");
                 println!("is specified in the environment of this process. Once you're");

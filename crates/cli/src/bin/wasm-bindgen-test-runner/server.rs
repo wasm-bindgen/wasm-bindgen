@@ -305,9 +305,7 @@ pub(crate) fn spawn(
             let s = if !test_mode.is_worker() && test_mode.no_modules() {
                 s.replace(
                     "<!-- {IMPORT_SCRIPTS} -->",
-                    &format!(
-                        "<script src='{module}.js'></script>\n<script src='run.js'></script>"
-                    ),
+                    &format!("<script src='{module}.js'></script>\n<script src='run.js'></script>"),
                 )
             } else {
                 s.replace(

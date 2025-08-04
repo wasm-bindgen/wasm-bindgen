@@ -986,9 +986,7 @@ fn instruction(
             // If we're loading from the return pointer then we must have pushed
             // it earlier, and we always push the same value, so load that value
             // here
-            let expr = format!(
-                "{mem}().{method}(retptr + {size} * {scaled_offset}, true)"
-            );
+            let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
             js.prelude(&format!("var r{offset} = {expr};"));
             js.push(format!("r{offset}"));
         }
@@ -1167,9 +1165,7 @@ fn instruction(
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem)?;
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!(
-                "const ptr{i} = {func}({val}, wasm.{malloc});",
-            ));
+            js.prelude(&format!("const ptr{i} = {func}({val}, wasm.{malloc});",));
             js.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
             js.push(format!("len{i}"));
@@ -1271,9 +1267,7 @@ fn instruction(
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem)?;
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!(
-                "var ptr{i} = {func}({val}, wasm.{malloc});",
-            ));
+            js.prelude(&format!("var ptr{i} = {func}({val}, wasm.{malloc});",));
             js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             // Then pass it the pointer and the length of where we copied it.
             js.push(format!("ptr{i}"));
@@ -1329,9 +1323,7 @@ fn instruction(
             assert!(constructor.is_none());
             let val = js.pop();
             js.cx.require_class_wrap(class);
-            js.push(format!(
-                "{val} === 0 ? undefined : {class}.__wrap({val})",
-            ));
+            js.push(format!("{val} === 0 ? undefined : {class}.__wrap({val})",));
         }
 
         Instruction::CachedStringLoad {
@@ -1455,9 +1447,7 @@ fn instruction(
             let len = js.pop();
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)?;
-            js.push(format!(
-                "{ptr} === 0 ? undefined : {f}({ptr}, {len})"
-            ));
+            js.push(format!("{ptr} === 0 ? undefined : {f}({ptr}, {len})"));
         }
 
         Instruction::OptionF64Sentinel => {

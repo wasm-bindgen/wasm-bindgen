@@ -344,9 +344,7 @@ impl InterfaceAttribute {
             });
 
         let doc_comment = comment(
-            format!(
-                "{prefix} for the `{js_name}` field of this object.\n\n{mdn_docs}"
-            ),
+            format!("{prefix} for the `{js_name}` field of this object.\n\n{mdn_docs}"),
             &doc_comment,
         );
 

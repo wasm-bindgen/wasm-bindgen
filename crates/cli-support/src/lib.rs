@@ -476,9 +476,7 @@ impl Bindgen {
         unique_crate_identifier: &str,
         snippet_idx_in_crate: usize,
     ) -> String {
-        format!(
-            "./snippets/{unique_crate_identifier}/inline{snippet_idx_in_crate}.js",
-        )
+        format!("./snippets/{unique_crate_identifier}/inline{snippet_idx_in_crate}.js",)
     }
 }
 

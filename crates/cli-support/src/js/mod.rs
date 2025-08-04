@@ -491,11 +491,10 @@ impl<'a> Context<'a> {
                     footer.push_str(";\n");
                 }
 
-                footer.push_str(
-                    &self.generate_node_wasm_loading(Path::new(&format!(
+                footer
+                    .push_str(&self.generate_node_wasm_loading(Path::new(&format!(
                         "./{module_name}_bg.wasm"
-                    ))),
-                );
+                    ))));
 
                 if needs_manual_start {
                     footer.push_str("\nwasm.__wbindgen_start();\n");
@@ -798,9 +797,8 @@ __wbg_set_wasm(wasm);"
         if let Some(mem) = self.module.memories.iter().next() {
             if let Some(id) = mem.import {
                 self.module.imports.get_mut(id).module = module_name.to_string();
-                init_memory = format!(
-                    "imports.{module_name}.memory = memory || new WebAssembly.Memory({{"
-                );
+                init_memory =
+                    format!("imports.{module_name}.memory = memory || new WebAssembly.Memory({{");
                 init_memory.push_str(&format!("initial:{}", mem.initial));
                 if let Some(max) = mem.maximum {
                     init_memory.push_str(&format!(",maximum:{max}"));
@@ -1757,9 +1755,9 @@ __wbg_set_wasm(wasm);"
                 OutputMode::Deno
                 | OutputMode::Web
                 | OutputMode::NoModules { .. }
-                | OutputMode::Bundler { browser_only: true } => self.global(&format!(
-                    "if (typeof {s} !== 'undefined') {{ {init} }};"
-                )),
+                | OutputMode::Bundler { browser_only: true } => {
+                    self.global(&format!("if (typeof {s} !== 'undefined') {{ {init} }};"))
+                }
             }
         }
 
@@ -2026,9 +2024,7 @@ __wbg_set_wasm(wasm);"
             // doesn't detach old references; instead, it just leaves them pointing to a
             // slice of the up-to-date memory. So in order to check if it's been grown, we
             // have to compare it to the up-to-date buffer.
-            format!(
-                "{cache}.buffer !== wasm.{mem}.buffer"
-            )
+            format!("{cache}.buffer !== wasm.{mem}.buffer")
         } else if kind == "DataView" {
             // `DataView`s throw when accessing detached memory, including `byteLength`.
             // However this requires JS engine support, so we fallback to comparing the buffer.
@@ -2949,13 +2945,9 @@ __wbg_set_wasm(wasm);"
             }
             ContextAdapterKind::Import(core) => {
                 let code = if catch {
-                    format!(
-                        "function() {{ return handleError(function {code}, arguments) }}"
-                    )
+                    format!("function() {{ return handleError(function {code}, arguments) }}")
                 } else if log_error {
-                    format!(
-                        "function() {{ return logError(function {code}, arguments) }}"
-                    )
+                    format!("function() {{ return logError(function {code}, arguments) }}")
                 } else {
                     format!("function{code}")
                 };
@@ -3121,9 +3113,7 @@ __wbg_set_wasm(wasm);"
 
         self.expose_not_defined();
         let name = self.import_name(js)?;
-        let js = format!(
-            "typeof {name} == 'function' ? {name} : notDefined('{name}')",
-        );
+        let js = format!("typeof {name} == 'function' ? {name} : notDefined('{name}')",);
         self.wasm_import_definitions.insert(id, js);
         Ok(true)
     }

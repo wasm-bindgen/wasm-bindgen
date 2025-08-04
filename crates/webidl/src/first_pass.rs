@@ -558,9 +558,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)> for weedle::interface::Int
             InterfaceMember::Iterable(iterable) => iterable.first_pass(record, ctx),
             InterfaceMember::AsyncIterable(iterable) => iterable.first_pass(record, ctx),
             InterfaceMember::Stringifier(_) => {
-                log::warn!(
-                    "Unsupported WebIDL Stringifier interface member: {self:?}"
-                );
+                log::warn!("Unsupported WebIDL Stringifier interface member: {self:?}");
                 Ok(())
             }
         }
