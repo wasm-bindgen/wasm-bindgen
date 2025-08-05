@@ -14,4 +14,4 @@ Documentation for the published version of this crate is available on
 documentation][masterdoc] for the crate.
 
 [docsrs]: https://docs.rs/web-sys
-[masterdoc]: https://rustwasm.github.io/wasm-bindgen/api/web_sys/
+[masterdoc]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/

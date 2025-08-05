@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/webaudio/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/webaudio
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/webaudio/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/webaudio
 
 This example creates an [FM
 oscillator](https://en.wikipedia.org/wiki/Frequency_modulation_synthesis) using

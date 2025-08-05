@@ -4891,7 +4891,7 @@ extern "C" {
     ///
     /// Additionally, this function accepts `u16` for character codes, but
     /// fixing others requires a breaking change release
-    /// (see https://github.com/rustwasm/wasm-bindgen/issues/1460 for details).
+    /// (see https://github.com/wasm-bindgen/wasm-bindgen/issues/1460 for details).
     #[wasm_bindgen(static_method_of = JsString, js_class = "String", js_name = fromCharCode, variadic)]
     pub fn from_char_code(char_codes: &[u16]) -> JsString;
 
@@ -5352,7 +5352,7 @@ impl JsString {
     /// For more information, see the documentation on [JS strings vs Rust
     /// strings][docs]
     ///
-    /// [docs]: https://rustwasm.github.io/docs/wasm-bindgen/reference/types/str.html
+    /// [docs]: https://wasm-bindgen.github.io/wasm-bindgen/reference/types/str.html
     pub fn is_valid_utf16(&self) -> bool {
         core::char::decode_utf16(self.iter()).all(|i| i.is_ok())
     }
@@ -5386,7 +5386,7 @@ impl JsString {
         }
 
         // This will be simplified when definitions are fixed:
-        // https://github.com/rustwasm/wasm-bindgen/issues/1362
+        // https://github.com/wasm-bindgen/wasm-bindgen/issues/1362
         let cp = self.code_point_at(0).as_f64().unwrap_throw() as u32;
 
         let c = core::char::from_u32(cp)?;
@@ -6146,6 +6146,16 @@ macro_rules! arrays {
 
             /// An
             #[doc = $ctor]
+            /// which creates an array from a Rust slice.
+            ///
+            /// [MDN documentation](
+            #[doc = $mdn]
+            /// )
+            #[wasm_bindgen(constructor)]
+            pub fn new_from_slice(slice: &[$ty]) -> $name;
+
+            /// An
+            #[doc = $ctor]
             /// which creates an array with the given buffer but is a
             /// view starting at `byte_offset`.
             ///
@@ -6380,7 +6390,7 @@ macro_rules! arrays {
             #[inline]
             fn from(slice: &'a [$ty]) -> $name {
                 // This is safe because the `new` function makes a copy if its argument is a TypedArray
-                unsafe { $name::new(&$name::view(slice)) }
+                $name::new_from_slice(slice)
             }
         }
 

@@ -36,7 +36,8 @@ impl A {
     #[wasm_bindgen]
     pub async fn fn_with_unused_attr(
         #[wasm_bindgen(param_description = "some number")]
-        #[wasm_bindgen(param_description = "some other description")] arg: u32,
+        #[wasm_bindgen(param_description = "some other description")]
+        arg: u32,
     ) -> JsValue {
         arg.into()
     }
@@ -68,7 +69,7 @@ impl B {
     param_description = "somthing"
 )]
 pub enum C {
-    Variat
+    Variat,
 }
 
 #[wasm_bindgen(

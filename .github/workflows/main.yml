@@ -112,10 +112,10 @@ jobs:
     name: Clippy `no_std` with `atomics`
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: -Ctarget-feature=+atomics,+bulk-memory
+      RUSTFLAGS: -Ctarget-feature=+atomics
     steps:
     - uses: actions/checkout@v4
-    - run: rustup default nightly-2024-07-06
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add clippy rust-src
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -Zbuild-std=core,alloc -- -D warnings
@@ -210,11 +210,11 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v4
-    - run: rustup default nightly-2024-07-06
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add rust-src
     - run: |
-        RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+        RUSTFLAGS='-C target-feature=+atomics' \
           cargo test --target wasm32-unknown-unknown -Z build-std=std,panic_abort
 
   # I don't know why this is failing so comment this out for now, but ideally
@@ -342,7 +342,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: rustup update --no-self-update 1.78.0 && rustup default 1.78.0
+    - run: rustup update --no-self-update 1.88.0 && rustup default 1.88.0
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
 
@@ -363,26 +363,28 @@ jobs:
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
-        cargo build -p wasm-bindgen-cli
-        ln -snf `pwd`/target/debug/wasm-bindgen $(dirname `which cargo`)/wasm-bindgen
+        cargo install --path crates/cli --debug
+    - run: npm install -g pnpm@latest-10
     # crete a workspace of all examples and install their dependencies at once
     # sed is used to convert the literal "\n" to a newline character
-    - run: |
-        [ -f pnpm-workspace.yaml ] || (echo 'packages:\n  - "examples/*"' > pnpm-workspace.yaml && sed -i -e 's/\\n/\n/g' pnpm-workspace.yaml)
-    - run: |
-        [ -f package.json ] || (echo '{}' > package.json)
-    - run: corepack pnpm install -r
+    - run: pnpm install
+      working-directory: examples
     - run: |
         function build() {
-          (cd examples/$1 &&
-            (corepack pnpm run build -- --output-path ../../exbuild/$1 ||
-              (./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore))
+          (cd $1 &&
+            if [ -f package.json ]; then
+              pnpm run build -- --output-path ../../exbuild/$1
+            elif [ -f build.sh ]; then
+              ./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore
+            else
+              echo "ERROR: Don't know how to build $1" >&2
+              exit 1
+            fi
           ) || exit 1;
         }
         export -f build
-        ls examples | grep -v README | grep -v raytrace | grep -v deno | grep -v wasm-audio-worklet | parallel -j4 build
-      env:
-        RUSTFLAGS: --cfg=web_sys_unstable_apis
+        ls -d */ | grep -Ev 'node_modules|raytrace|deno|wasm-audio-worklet' | parallel -j4 build
+      working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
         name: examples1
@@ -392,7 +394,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: rustup default nightly-2024-07-06
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add rust-src
     - run: |
@@ -622,7 +624,7 @@ jobs:
     permissions:
       contents: write #  to push changes in repo (jamesives/github-pages-deploy-action)
 
-    if: github.repository == 'rustwasm/wasm-bindgen'
+    if: github.repository == 'wasm-bindgen/wasm-bindgen'
     needs:
       - doc_api
       - doc_book

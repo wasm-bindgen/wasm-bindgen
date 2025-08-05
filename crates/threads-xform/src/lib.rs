@@ -366,7 +366,7 @@ fn inject_destroy(
 
     // Ideally, at this point, we would destroy the values stored in TLS.
     // We can't really do that without help from the standard library.
-    // See https://github.com/rustwasm/wasm-bindgen/pull/2769#issuecomment-1015775467.
+    // See https://github.com/wasm-bindgen/wasm-bindgen/pull/2769#issuecomment-1015775467.
 
     body.local_get(tls_base).if_else(
         None,
