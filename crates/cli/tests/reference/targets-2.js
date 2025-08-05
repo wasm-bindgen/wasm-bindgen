@@ -16,6 +16,8 @@ let wasm_bindgen;
         return ret >>> 0;
     };
 
+    const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
+
     async function __wbg_load(module, imports) {
         if (typeof Response === 'function' && module instanceof Response) {
             if (typeof WebAssembly.instantiateStreaming === 'function') {
@@ -23,9 +25,7 @@ let wasm_bindgen;
                     return await WebAssembly.instantiateStreaming(module, imports);
 
                 } catch (e) {
-                    const expectedTypes = new Set(['basic', 'cors', 'default']);
-
-                    const validResponse = module.ok && expectedTypes.has(module.type);
+                    const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
 
                     if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
                         console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
