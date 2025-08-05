@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::fmt::{self, Display, Formatter, Write};
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::time::{Duration, Instant};
 use std::{env, str};
 
@@ -19,6 +19,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::net::TcpStream;
+use tokio::process::Command;
 use tokio::sync::oneshot;
 use tokio::time::timeout;
 use tokio_tungstenite::tungstenite::{self, Message};
@@ -317,12 +318,12 @@ fn handle_log_event(params: Value) -> anyhow::Result<()> {
 /// build it if prebuilt examples weren't provided.
 pub async fn test_example(
     name: &str,
-    build: impl FnOnce() -> anyhow::Result<PathBuf>,
+    build: impl AsyncFnOnce() -> anyhow::Result<PathBuf>,
 ) -> anyhow::Result<()> {
     let path = if let Some(value) = env::var_os("EXBUILD") {
         Path::new(&value).join(name)
     } else {
-        build()?
+        build().await?
     };
 
     let mut driver = WebDriver::new().await?;
@@ -476,18 +477,24 @@ pub async fn test_example(
     result
 }
 
-pub fn run(command: &mut Command) -> anyhow::Result<()> {
+pub async fn run(command: &mut Command) -> anyhow::Result<()> {
     // Format the command to use in errors.
-    let mut cmdline = command.get_program().to_string_lossy().to_string();
-    for arg in command.get_args().map(|arg| arg.to_string_lossy()) {
+    let mut cmdline = command.as_std().get_program().to_string_lossy().to_string();
+    for arg in command.as_std().get_args().map(|arg| arg.to_string_lossy()) {
         cmdline += " ";
         cmdline += &arg;
     }
 
-    let status = command.status()?;
+    let output = command.output().await?;
+
+    let status = output.status;
     if !status.success() {
-        bail!("`{cmdline}` failed with {status}");
+        bail!(
+            "`{cmdline}` failed with {status}:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
+
     Ok(())
 }
 
