@@ -371,7 +371,7 @@ jobs:
       working-directory: examples
     - run: |
         function build() {
-          (cd examples/$1 &&
+          (cd $1 &&
             if [ -f package.json ]; then
               pnpm run build -- --output-path ../../exbuild/$1
             else
@@ -380,7 +380,8 @@ jobs:
           ) || exit 1;
         }
         export -f build
-        ls examples | grep -v README | grep -v raytrace | grep -v deno | grep -v wasm-audio-worklet | parallel -j4 build
+        ls -d */ | grep -v raytrace | grep -v deno | grep -v wasm-audio-worklet | parallel -j4 build
+      working-directory: examples
       env:
         RUSTFLAGS: --cfg=web_sys_unstable_apis
     - uses: actions/upload-artifact@v4
