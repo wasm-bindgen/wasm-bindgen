@@ -16,6 +16,8 @@
 * Add a workaround for `TextDecoder` failing in older version of Safari when too many bytes are decoded through it over its lifetime.
   [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
 
+* Fix incorrect assertion when load and store memory
+  [#4554](https://github.com/wasm-bindgen/wasm-bindgen/pull/4554)
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
