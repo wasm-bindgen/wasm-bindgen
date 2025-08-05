@@ -1,5 +1,5 @@
-use tokio::process::Command;
 use std::str;
+use tokio::process::Command;
 
 use example_tests::{example_dir, run, test_example};
 
@@ -8,7 +8,8 @@ async fn test_shell_example(name: &str, envs: &[(&str, &str)]) -> anyhow::Result
         let path = example_dir(name);
         run(Command::new(path.join("build.sh"))
             .current_dir(&path)
-            .envs(envs.iter().copied())).await?;
+            .envs(envs.iter().copied()))
+        .await?;
         Ok(path)
     })
     .await
