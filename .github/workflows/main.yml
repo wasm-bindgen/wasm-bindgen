@@ -382,8 +382,6 @@ jobs:
         export -f build
         ls -d */ | grep -v raytrace | grep -v deno | grep -v wasm-audio-worklet | parallel -j4 build
       working-directory: examples
-      env:
-        RUSTFLAGS: --cfg=web_sys_unstable_apis
     - uses: actions/upload-artifact@v4
       with:
         name: examples1
