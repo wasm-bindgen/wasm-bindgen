@@ -6146,6 +6146,16 @@ macro_rules! arrays {
 
             /// An
             #[doc = $ctor]
+            /// which creates an array from a Rust slice.
+            ///
+            /// [MDN documentation](
+            #[doc = $mdn]
+            /// )
+            #[wasm_bindgen(constructor)]
+            pub fn new_from_slice(slice: &[$ty]) -> $name;
+
+            /// An
+            #[doc = $ctor]
             /// which creates an array with the given buffer but is a
             /// view starting at `byte_offset`.
             ///
@@ -6380,7 +6390,7 @@ macro_rules! arrays {
             #[inline]
             fn from(slice: &'a [$ty]) -> $name {
                 // This is safe because the `new` function makes a copy if its argument is a TypedArray
-                unsafe { $name::new(&$name::view(slice)) }
+                $name::new_from_slice(slice)
             }
         }
 
