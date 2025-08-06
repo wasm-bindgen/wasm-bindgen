@@ -61,7 +61,7 @@ impl<'src> Decode<'src> for &'src str {
         let (a, b) = data.split_at(n as usize);
         *data = b;
         let r = str::from_utf8(a).unwrap();
-        log::trace!("decoded string {:?}", r);
+        log::trace!("decoded string {r:?}");
         r
     }
 }
@@ -76,7 +76,7 @@ impl<'src, T: Decode<'src>> Decode<'src> for Vec<T> {
     fn decode(data: &mut &'src [u8]) -> Self {
         let n = u32::decode(data);
         let mut v = Vec::with_capacity(n as usize);
-        log::trace!("found a list of length {}", n);
+        log::trace!("found a list of length {n}");
         for _ in 0..n {
             v.push(Decode::decode(data));
         }

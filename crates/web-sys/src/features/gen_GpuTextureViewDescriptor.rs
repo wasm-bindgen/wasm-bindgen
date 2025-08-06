@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuTextureViewDescriptor;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `label` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "label")]
     pub fn get_label(this: &GpuTextureViewDescriptor) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
@@ -29,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &GpuTextureViewDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "arrayLayerCount")]
     pub fn get_array_layer_count(this: &GpuTextureViewDescriptor) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -47,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "arrayLayerCount")]
     pub fn set_array_layer_count(this: &GpuTextureViewDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -57,7 +57,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureAspect`, `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "aspect")]
     pub fn get_aspect(this: &GpuTextureViewDescriptor) -> Option<GpuTextureAspect>;
     #[cfg(web_sys_unstable_apis)]
@@ -67,7 +67,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureAspect`, `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "aspect")]
     pub fn set_aspect(this: &GpuTextureViewDescriptor, val: GpuTextureAspect);
     #[cfg(web_sys_unstable_apis)]
@@ -76,7 +76,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "baseArrayLayer")]
     pub fn get_base_array_layer(this: &GpuTextureViewDescriptor) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -85,7 +85,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "baseArrayLayer")]
     pub fn set_base_array_layer(this: &GpuTextureViewDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -94,7 +94,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "baseMipLevel")]
     pub fn get_base_mip_level(this: &GpuTextureViewDescriptor) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -103,7 +103,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "baseMipLevel")]
     pub fn set_base_mip_level(this: &GpuTextureViewDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -113,7 +113,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`, `GpuTextureViewDimension`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "dimension")]
     pub fn get_dimension(this: &GpuTextureViewDescriptor) -> Option<GpuTextureViewDimension>;
     #[cfg(web_sys_unstable_apis)]
@@ -123,7 +123,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`, `GpuTextureViewDimension`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "dimension")]
     pub fn set_dimension(this: &GpuTextureViewDescriptor, val: GpuTextureViewDimension);
     #[cfg(web_sys_unstable_apis)]
@@ -133,7 +133,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureFormat`, `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "format")]
     pub fn get_format(this: &GpuTextureViewDescriptor) -> Option<GpuTextureFormat>;
     #[cfg(web_sys_unstable_apis)]
@@ -143,7 +143,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureFormat`, `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "format")]
     pub fn set_format(this: &GpuTextureViewDescriptor, val: GpuTextureFormat);
     #[cfg(web_sys_unstable_apis)]
@@ -152,7 +152,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "mipLevelCount")]
     pub fn get_mip_level_count(this: &GpuTextureViewDescriptor) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -161,7 +161,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "mipLevelCount")]
     pub fn set_mip_level_count(this: &GpuTextureViewDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -170,7 +170,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "usage")]
     pub fn get_usage(this: &GpuTextureViewDescriptor) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -179,7 +179,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "usage")]
     pub fn set_usage(this: &GpuTextureViewDescriptor, val: u32);
 }
@@ -190,7 +190,7 @@ impl GpuTextureViewDescriptor {
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

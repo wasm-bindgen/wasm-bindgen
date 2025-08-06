@@ -2389,7 +2389,7 @@ Released 2018-11-12.
   added since `structural` is now the default
   [#1019](https://github.com/rustwasm/wasm-bindgen/pull/1019)
 
-[final-dox]: https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-js-imports/final.html
+[final-dox]: https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/final.html
 
 * A new CLI flag, `--remove-name-section`, can be passed to remove the wasm
   `name` section which contains the names of functions for debugging (typically
@@ -2742,7 +2742,7 @@ Released 2018-08-13.
   renamed imported JS classes now properly works with constructors.
 
 [rfc-2]: https://rustwasm.github.io/rfcs/002-wasm-bindgen-inheritance-casting.html
-[extends-attr]: https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-js-imports/extends.html
+[extends-attr]: https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/extends.html
 [#662]: https://github.com/rustwasm/wasm-bindgen/pull/662
 
 --------------------------------------------------------------------------------
@@ -2810,7 +2810,7 @@ expose all APIs browsers have. More info on this soon!
 * A `--keep-debug` flag has been added to the CLI to retain debug sections by
   default. This happens by default when `--debug` is passed.
 
-[book]: https://rustwasm.github.io/wasm-bindgen/
+[book]: https://wasm-bindgen.github.io/wasm-bindgen/
 
 ### Fixed
 

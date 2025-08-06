@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuAdapterInfo;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUAdapterInfo" , js_name = vendor)]
@@ -25,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn vendor(this: &GpuAdapterInfo) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUAdapterInfo" , js_name = architecture)]
@@ -36,7 +36,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn architecture(this: &GpuAdapterInfo) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUAdapterInfo" , js_name = device)]
@@ -47,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device(this: &GpuAdapterInfo) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUAdapterInfo" , js_name = description)]
@@ -58,6 +58,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn description(this: &GpuAdapterInfo) -> ::alloc::string::String;
 }

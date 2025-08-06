@@ -4,26 +4,23 @@ use wasm_bindgen::prelude::*;
 pub struct A;
 
 #[wasm_bindgen]
-default impl A {
-}
+default impl A {}
 
 #[wasm_bindgen]
-unsafe impl A {
-}
+unsafe impl A {}
 
 #[wasm_bindgen]
-impl Clone for A {
-}
+impl Clone for A {}
 
 #[wasm_bindgen]
-impl<T> A {
-}
+impl<T> A {}
 
 #[wasm_bindgen]
-impl &'static A {
-}
+impl &'static A {}
 
-macro_rules! x { () => () }
+macro_rules! x {
+    () => {};
+}
 
 #[wasm_bindgen]
 impl A {

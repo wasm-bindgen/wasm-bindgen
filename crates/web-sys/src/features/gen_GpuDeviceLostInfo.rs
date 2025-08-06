@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuDeviceLostInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuDeviceLostInfo;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuDeviceLostReason")]
@@ -26,7 +26,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuDeviceLostInfo`, `GpuDeviceLostReason`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn reason(this: &GpuDeviceLostInfo) -> GpuDeviceLostReason;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUDeviceLostInfo" , js_name = message)]
@@ -37,6 +37,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuDeviceLostInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn message(this: &GpuDeviceLostInfo) -> ::alloc::string::String;
 }

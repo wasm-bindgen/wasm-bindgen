@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type RequestDeviceOptions;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `acceptAllDevices` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "acceptAllDevices")]
     pub fn get_accept_all_devices(this: &RequestDeviceOptions) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -29,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "acceptAllDevices")]
     pub fn set_accept_all_devices(this: &RequestDeviceOptions, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "filters")]
     pub fn get_filters(this: &RequestDeviceOptions) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -47,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "filters")]
     pub fn set_filters(this: &RequestDeviceOptions, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
@@ -56,7 +56,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "optionalServices")]
     pub fn get_optional_services(this: &RequestDeviceOptions) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -65,7 +65,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "optionalServices")]
     pub fn set_optional_services(this: &RequestDeviceOptions, val: &::wasm_bindgen::JsValue);
 }
@@ -76,7 +76,7 @@ impl RequestDeviceOptions {
     #[doc = "*This API requires the following crate features to be activated: `RequestDeviceOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

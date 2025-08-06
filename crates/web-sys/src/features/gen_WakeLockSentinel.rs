@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WakeLockSentinel`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type WakeLockSentinel;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "WakeLockSentinel" , js_name = released)]
@@ -25,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WakeLockSentinel`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn released(this: &WakeLockSentinel) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WakeLockType")]
@@ -37,7 +37,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WakeLockSentinel`, `WakeLockType`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(this: &WakeLockSentinel) -> WakeLockType;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "WakeLockSentinel" , js_name = onrelease)]
@@ -48,7 +48,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WakeLockSentinel`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn onrelease(this: &WakeLockSentinel) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "WakeLockSentinel" , js_name = onrelease)]
@@ -59,7 +59,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WakeLockSentinel`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_onrelease(this: &WakeLockSentinel, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "WakeLockSentinel" , js_name = release)]
@@ -70,6 +70,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WakeLockSentinel`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn release(this: &WakeLockSentinel) -> ::js_sys::Promise;
 }

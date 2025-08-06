@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type SchedulerPostTaskOptions;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `delay` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "delay")]
     pub fn get_delay(this: &SchedulerPostTaskOptions) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
@@ -29,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "delay")]
     pub fn set_delay(this: &SchedulerPostTaskOptions, val: f64);
     #[cfg(web_sys_unstable_apis)]
@@ -39,7 +39,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`, `TaskPriority`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "priority")]
     pub fn get_priority(this: &SchedulerPostTaskOptions) -> Option<TaskPriority>;
     #[cfg(web_sys_unstable_apis)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`, `TaskPriority`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "priority")]
     pub fn set_priority(this: &SchedulerPostTaskOptions, val: TaskPriority);
     #[cfg(web_sys_unstable_apis)]
@@ -59,7 +59,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AbortSignal`, `SchedulerPostTaskOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "signal")]
     pub fn get_signal(this: &SchedulerPostTaskOptions) -> Option<AbortSignal>;
     #[cfg(web_sys_unstable_apis)]
@@ -69,7 +69,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AbortSignal`, `SchedulerPostTaskOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "signal")]
     pub fn set_signal(this: &SchedulerPostTaskOptions, val: &AbortSignal);
 }
@@ -80,7 +80,7 @@ impl SchedulerPostTaskOptions {
     #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

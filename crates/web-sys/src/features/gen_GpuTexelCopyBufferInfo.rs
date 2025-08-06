@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuTexelCopyBufferInfo;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `bytesPerRow` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "bytesPerRow")]
     pub fn get_bytes_per_row(this: &GpuTexelCopyBufferInfo) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -29,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "bytesPerRow")]
     pub fn set_bytes_per_row(this: &GpuTexelCopyBufferInfo, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "offset")]
     pub fn get_offset(this: &GpuTexelCopyBufferInfo) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
@@ -47,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "offset")]
     pub fn set_offset(this: &GpuTexelCopyBufferInfo, val: f64);
     #[cfg(web_sys_unstable_apis)]
@@ -56,7 +56,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "rowsPerImage")]
     pub fn get_rows_per_image(this: &GpuTexelCopyBufferInfo) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -65,7 +65,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "rowsPerImage")]
     pub fn set_rows_per_image(this: &GpuTexelCopyBufferInfo, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -75,7 +75,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "buffer")]
     pub fn get_buffer(this: &GpuTexelCopyBufferInfo) -> GpuBuffer;
     #[cfg(web_sys_unstable_apis)]
@@ -85,7 +85,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "buffer")]
     pub fn set_buffer(this: &GpuTexelCopyBufferInfo, val: &GpuBuffer);
 }
@@ -97,7 +97,7 @@ impl GpuTexelCopyBufferInfo {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuTexelCopyBufferInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(buffer: &GpuBuffer) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

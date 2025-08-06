@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuQueue;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUQueue" , js_name = label)]
@@ -25,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(this: &GpuQueue) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "GPUQueue" , js_name = label)]
@@ -36,7 +36,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_label(this: &GpuQueue, value: &str);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -51,7 +51,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuCopyExternalImageDestInfo`, `GpuCopyExternalImageSourceInfo`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_external_image_to_texture_with_u32_sequence(
         this: &GpuQueue,
         source: &GpuCopyExternalImageSourceInfo,
@@ -72,7 +72,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuCopyExternalImageDestInfo`, `GpuCopyExternalImageSourceInfo`, `GpuExtent3dDict`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_external_image_to_texture_with_gpu_extent_3d_dict(
         this: &GpuQueue,
         source: &GpuCopyExternalImageSourceInfo,
@@ -88,7 +88,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn on_submitted_work_done(this: &GpuQueue) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUQueue" , js_name = submit)]
@@ -99,7 +99,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn submit(this: &GpuQueue, command_buffers: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBuffer")]
@@ -111,7 +111,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -128,7 +128,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -145,7 +145,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -162,7 +162,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -179,7 +179,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -196,7 +196,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -213,7 +213,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -231,7 +231,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -249,7 +249,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -267,7 +267,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -285,7 +285,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -303,7 +303,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -321,7 +321,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -339,7 +339,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -357,7 +357,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -375,7 +375,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -393,7 +393,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -411,7 +411,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -429,7 +429,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source_and_u32_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -448,7 +448,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source_and_u32_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -467,7 +467,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice_and_u32_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -486,7 +486,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice_and_u32_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -505,7 +505,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array_and_u32_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -524,7 +524,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array_and_u32_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -543,7 +543,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source_and_f64_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -562,7 +562,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source_and_f64_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -581,7 +581,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice_and_f64_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -600,7 +600,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice_and_f64_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -619,7 +619,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array_and_f64_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -638,7 +638,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array_and_f64_and_u32(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -657,7 +657,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source_and_u32_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -676,7 +676,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source_and_u32_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -695,7 +695,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice_and_u32_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -714,7 +714,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice_and_u32_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -733,7 +733,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array_and_u32_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -752,7 +752,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array_and_u32_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -771,7 +771,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_buffer_source_and_f64_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -790,7 +790,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_buffer_source_and_f64_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -809,7 +809,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_slice_and_f64_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -828,7 +828,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -847,7 +847,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_u32_and_u8_array_and_f64_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -866,7 +866,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_buffer_with_f64_and_u8_array_and_f64_and_f64(
         this: &GpuQueue,
         buffer: &GpuBuffer,
@@ -888,7 +888,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`, `GpuTexelCopyBufferLayout`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_texture_with_buffer_source_and_u32_sequence(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
@@ -909,7 +909,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`, `GpuTexelCopyBufferLayout`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_texture_with_u8_slice_and_u32_sequence(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
@@ -930,7 +930,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQueue`, `GpuTexelCopyBufferLayout`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_texture_with_u8_array_and_u32_sequence(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
@@ -952,7 +952,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuQueue`, `GpuTexelCopyBufferLayout`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_texture_with_buffer_source_and_gpu_extent_3d_dict(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
@@ -974,7 +974,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuQueue`, `GpuTexelCopyBufferLayout`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_texture_with_u8_slice_and_gpu_extent_3d_dict(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
@@ -996,7 +996,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuQueue`, `GpuTexelCopyBufferLayout`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_texture_with_u8_array_and_gpu_extent_3d_dict(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,

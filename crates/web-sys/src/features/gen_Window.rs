@@ -1923,7 +1923,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ongamepadconnected(this: &Window) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "Window" , js_name = ongamepadconnected)]
@@ -1934,7 +1934,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_ongamepadconnected(this: &Window, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "Window" , js_name = ongamepaddisconnected)]
@@ -1945,7 +1945,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ongamepaddisconnected(this: &Window) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "Window" , js_name = ongamepaddisconnected)]
@@ -1956,7 +1956,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_ongamepaddisconnected(this: &Window, value: Option<&::js_sys::Function>);
     #[cfg(feature = "Storage")]
     # [wasm_bindgen (structural , catch , method , getter , js_class = "Window" , js_name = localStorage)]
@@ -2014,7 +2014,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Scheduler`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn scheduler(this: &Window) -> Scheduler;
     #[cfg(feature = "Storage")]
     # [wasm_bindgen (structural , catch , method , getter , js_class = "Window" , js_name = sessionStorage)]
@@ -2244,7 +2244,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn query_local_fonts(this: &Window) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "QueryOptions")]
@@ -2256,7 +2256,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `QueryOptions`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn query_local_fonts_with_options(
         this: &Window,
         options: &QueryOptions,
@@ -2379,7 +2379,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn show_directory_picker(this: &Window) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DirectoryPickerOptions")]
@@ -2391,7 +2391,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn show_directory_picker_with_options(
         this: &Window,
         options: &DirectoryPickerOptions,
@@ -2405,7 +2405,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn show_open_file_picker(this: &Window) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "OpenFilePickerOptions")]
@@ -2417,7 +2417,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenFilePickerOptions`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn show_open_file_picker_with_options(
         this: &Window,
         options: &OpenFilePickerOptions,
@@ -2431,7 +2431,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn show_save_file_picker(this: &Window) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SaveFilePickerOptions")]
@@ -2443,7 +2443,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SaveFilePickerOptions`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn show_save_file_picker_with_options(
         this: &Window,
         options: &SaveFilePickerOptions,
@@ -2597,7 +2597,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame(
         this: &Window,
         a_image: &VideoFrame,
@@ -2706,7 +2706,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame_and_image_bitmap_options(
         this: &Window,
         a_image: &VideoFrame,
@@ -2836,7 +2836,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &Window,
         a_image: &VideoFrame,
@@ -2981,7 +2981,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &Window,
         a_image: &VideoFrame,

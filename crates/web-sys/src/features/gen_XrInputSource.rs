@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrInputSource`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type XrInputSource;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrHandedness")]
@@ -26,7 +26,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrHandedness`, `XrInputSource`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn handedness(this: &XrInputSource) -> XrHandedness;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrTargetRayMode")]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrInputSource`, `XrTargetRayMode`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn target_ray_mode(this: &XrInputSource) -> XrTargetRayMode;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrSpace")]
@@ -50,7 +50,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrInputSource`, `XrSpace`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn target_ray_space(this: &XrInputSource) -> XrSpace;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrSpace")]
@@ -62,7 +62,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrInputSource`, `XrSpace`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn grip_space(this: &XrInputSource) -> Option<XrSpace>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "XRInputSource" , js_name = profiles)]
@@ -73,7 +73,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrInputSource`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn profiles(this: &XrInputSource) -> ::js_sys::Array;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Gamepad")]
@@ -85,7 +85,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Gamepad`, `XrInputSource`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn gamepad(this: &XrInputSource) -> Option<Gamepad>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrHand")]
@@ -97,6 +97,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XrHand`, `XrInputSource`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn hand(this: &XrInputSource) -> Option<XrHand>;
 }

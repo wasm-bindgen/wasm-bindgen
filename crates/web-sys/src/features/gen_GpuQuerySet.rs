@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQuerySet`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuQuerySet;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuQueryType")]
@@ -26,7 +26,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQuerySet`, `GpuQueryType`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(this: &GpuQuerySet) -> GpuQueryType;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUQuerySet" , js_name = count)]
@@ -37,7 +37,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQuerySet`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn count(this: &GpuQuerySet) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUQuerySet" , js_name = label)]
@@ -48,7 +48,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQuerySet`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(this: &GpuQuerySet) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "GPUQuerySet" , js_name = label)]
@@ -59,7 +59,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQuerySet`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_label(this: &GpuQuerySet, value: &str);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUQuerySet" , js_name = destroy)]
@@ -70,6 +70,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuQuerySet`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn destroy(this: &GpuQuerySet);
 }

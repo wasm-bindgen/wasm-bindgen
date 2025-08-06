@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type RtcRtpScriptTransformer;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ReadableStream")]
@@ -26,7 +26,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ReadableStream`, `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn readable(this: &RtcRtpScriptTransformer) -> ReadableStream;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WritableStream")]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`, `WritableStream`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn writable(this: &RtcRtpScriptTransformer) -> WritableStream;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "RTCRtpScriptTransformer" , js_name = onkeyframerequest)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn onkeyframerequest(this: &RtcRtpScriptTransformer) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "RTCRtpScriptTransformer" , js_name = onkeyframerequest)]
@@ -60,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_onkeyframerequest(
         this: &RtcRtpScriptTransformer,
         value: Option<&::js_sys::Function>,
@@ -74,7 +74,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn options(this: &RtcRtpScriptTransformer) -> ::wasm_bindgen::JsValue;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "RTCRtpScriptTransformer" , js_name = generateKeyFrame)]
@@ -85,7 +85,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn generate_key_frame(this: &RtcRtpScriptTransformer) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "RTCRtpScriptTransformer" , js_name = generateKeyFrame)]
@@ -96,7 +96,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn generate_key_frame_with_rid(
         this: &RtcRtpScriptTransformer,
         rid: &str,
@@ -110,6 +110,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn send_key_frame_request(this: &RtcRtpScriptTransformer) -> ::js_sys::Promise;
 }

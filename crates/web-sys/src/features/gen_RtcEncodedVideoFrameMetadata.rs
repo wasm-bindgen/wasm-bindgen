@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type RtcEncodedVideoFrameMetadata;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `contributingSources` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "contributingSources")]
     pub fn get_contributing_sources(this: &RtcEncodedVideoFrameMetadata)
         -> Option<::js_sys::Array>;
@@ -30,7 +30,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "contributingSources")]
     pub fn set_contributing_sources(
         this: &RtcEncodedVideoFrameMetadata,
@@ -42,7 +42,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "dependencies")]
     pub fn get_dependencies(this: &RtcEncodedVideoFrameMetadata) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -51,7 +51,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "dependencies")]
     pub fn set_dependencies(this: &RtcEncodedVideoFrameMetadata, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
@@ -60,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "frameId")]
     pub fn get_frame_id(this: &RtcEncodedVideoFrameMetadata) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
@@ -69,7 +69,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "frameId")]
     pub fn set_frame_id(this: &RtcEncodedVideoFrameMetadata, val: f64);
     #[cfg(web_sys_unstable_apis)]
@@ -78,7 +78,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "height")]
     pub fn get_height(this: &RtcEncodedVideoFrameMetadata) -> Option<u16>;
     #[cfg(web_sys_unstable_apis)]
@@ -87,7 +87,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "height")]
     pub fn set_height(this: &RtcEncodedVideoFrameMetadata, val: u16);
     #[cfg(web_sys_unstable_apis)]
@@ -96,7 +96,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "mimeType")]
     pub fn get_mime_type(this: &RtcEncodedVideoFrameMetadata) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
@@ -105,7 +105,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "mimeType")]
     pub fn set_mime_type(this: &RtcEncodedVideoFrameMetadata, val: &str);
     #[cfg(web_sys_unstable_apis)]
@@ -114,7 +114,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "payloadType")]
     pub fn get_payload_type(this: &RtcEncodedVideoFrameMetadata) -> Option<u8>;
     #[cfg(web_sys_unstable_apis)]
@@ -123,7 +123,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "payloadType")]
     pub fn set_payload_type(this: &RtcEncodedVideoFrameMetadata, val: u8);
     #[cfg(web_sys_unstable_apis)]
@@ -132,7 +132,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "rtpTimestamp")]
     pub fn get_rtp_timestamp(this: &RtcEncodedVideoFrameMetadata) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -141,7 +141,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "rtpTimestamp")]
     pub fn set_rtp_timestamp(this: &RtcEncodedVideoFrameMetadata, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -150,7 +150,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "spatialIndex")]
     pub fn get_spatial_index(this: &RtcEncodedVideoFrameMetadata) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -159,7 +159,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "spatialIndex")]
     pub fn set_spatial_index(this: &RtcEncodedVideoFrameMetadata, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -168,7 +168,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "synchronizationSource")]
     pub fn get_synchronization_source(this: &RtcEncodedVideoFrameMetadata) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -177,7 +177,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "synchronizationSource")]
     pub fn set_synchronization_source(this: &RtcEncodedVideoFrameMetadata, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -186,7 +186,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "temporalIndex")]
     pub fn get_temporal_index(this: &RtcEncodedVideoFrameMetadata) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -195,7 +195,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "temporalIndex")]
     pub fn set_temporal_index(this: &RtcEncodedVideoFrameMetadata, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -204,7 +204,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "timestamp")]
     pub fn get_timestamp(this: &RtcEncodedVideoFrameMetadata) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
@@ -213,7 +213,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "timestamp")]
     pub fn set_timestamp(this: &RtcEncodedVideoFrameMetadata, val: f64);
     #[cfg(web_sys_unstable_apis)]
@@ -222,7 +222,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "width")]
     pub fn get_width(this: &RtcEncodedVideoFrameMetadata) -> Option<u16>;
     #[cfg(web_sys_unstable_apis)]
@@ -231,7 +231,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "width")]
     pub fn set_width(this: &RtcEncodedVideoFrameMetadata, val: u16);
 }
@@ -242,7 +242,7 @@ impl RtcEncodedVideoFrameMetadata {
     #[doc = "*This API requires the following crate features to be activated: `RtcEncodedVideoFrameMetadata`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

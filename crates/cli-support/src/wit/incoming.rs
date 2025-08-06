@@ -31,13 +31,11 @@ impl InstructionBuilder<'_, '_> {
         assert_eq!(
             input_before + 1,
             self.input.len(),
-            "didn't push an input {:?}",
-            arg
+            "didn't push an input {arg:?}"
         );
         assert!(
             output_before < self.output.len(),
-            "didn't push more outputs {:?}",
-            arg
+            "didn't push more outputs {arg:?}"
         );
         Ok(())
     }

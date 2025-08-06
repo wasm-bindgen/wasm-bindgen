@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type BluetoothPermissionDescriptor;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PermissionName")]
@@ -21,7 +21,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`, `PermissionName`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &BluetoothPermissionDescriptor) -> PermissionName;
     #[cfg(web_sys_unstable_apis)]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`, `PermissionName`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &BluetoothPermissionDescriptor, val: PermissionName);
     #[cfg(web_sys_unstable_apis)]
@@ -40,7 +40,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "acceptAllDevices")]
     pub fn get_accept_all_devices(this: &BluetoothPermissionDescriptor) -> Option<bool>;
     #[cfg(web_sys_unstable_apis)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "acceptAllDevices")]
     pub fn set_accept_all_devices(this: &BluetoothPermissionDescriptor, val: bool);
     #[cfg(web_sys_unstable_apis)]
@@ -58,7 +58,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "deviceId")]
     pub fn get_device_id(this: &BluetoothPermissionDescriptor) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
@@ -67,7 +67,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "deviceId")]
     pub fn set_device_id(this: &BluetoothPermissionDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
@@ -76,7 +76,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "filters")]
     pub fn get_filters(this: &BluetoothPermissionDescriptor) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -85,7 +85,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "filters")]
     pub fn set_filters(this: &BluetoothPermissionDescriptor, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
@@ -94,7 +94,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "optionalServices")]
     pub fn get_optional_services(this: &BluetoothPermissionDescriptor) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -103,7 +103,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "optionalServices")]
     pub fn set_optional_services(
         this: &BluetoothPermissionDescriptor,
@@ -118,7 +118,7 @@ impl BluetoothPermissionDescriptor {
     #[doc = "*This API requires the following crate features to be activated: `BluetoothPermissionDescriptor`, `PermissionName`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(name: PermissionName) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

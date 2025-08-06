@@ -356,7 +356,7 @@ impl<'a> Context<'a> {
         let id = self.import_adapter(id, descriptor, AdapterJsImportKind::Normal)?;
         let (path, content) = match module {
             decode::ImportModule::Named(n) => (
-                format!("snippets/{}", n),
+                format!("snippets/{n}"),
                 local_modules
                     .iter()
                     .find(|m| m.identifier == *n)
@@ -1404,7 +1404,7 @@ impl<'a> Context<'a> {
                     AdapterType::I64 => 8,
                     AdapterType::F32 => 4,
                     AdapterType::F64 => 8,
-                    _ => panic!("unsupported type in retptr {:?}", ty),
+                    _ => panic!("unsupported type in retptr {ty:?}"),
                 };
                 let sum_rounded_up = (sum + (size - 1)) & (!(size - 1));
                 sum_rounded_up + size
@@ -1627,7 +1627,7 @@ binary with:
     cargo install -f wasm-bindgen-cli --version {their_version}
 
 if this warning fails to go away though and you're not sure what to do feel free
-to open an issue at https://github.com/rustwasm/wasm-bindgen/issues!
+to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
 "
                 );
             }
@@ -1659,7 +1659,7 @@ fn verify_schema_matches(data: &[u8]) -> Result<Option<&str>, Error> {
         Ok(s) => s,
         Err(_) => bad!(),
     };
-    log::debug!("found version specifier {}", data);
+    log::debug!("found version specifier {data}");
     if !data.starts_with('{') || !data.ends_with('}') {
         bad!()
     }

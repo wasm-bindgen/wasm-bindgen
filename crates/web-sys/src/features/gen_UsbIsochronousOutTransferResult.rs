@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousOutTransferResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type UsbIsochronousOutTransferResult;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "USBIsochronousOutTransferResult" , js_name = packets)]
@@ -25,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousOutTransferResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn packets(this: &UsbIsochronousOutTransferResult) -> ::js_sys::Array;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(catch, constructor, js_class = "USBIsochronousOutTransferResult")]
@@ -36,7 +36,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousOutTransferResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(
         packets: &::wasm_bindgen::JsValue,
     ) -> Result<UsbIsochronousOutTransferResult, JsValue>;

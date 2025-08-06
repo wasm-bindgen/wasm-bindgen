@@ -1,7 +1,7 @@
 #[cfg(web_sys_unstable_apis)]
 #[doc = ""]
 #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-#[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+#[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
 pub mod gpu_buffer_usage {
     #![allow(unused_imports)]
     #![allow(clippy::all)]
@@ -13,7 +13,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const MAP_READ: u32 = 1u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.MAP_WRITE` const."]
@@ -21,7 +21,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const MAP_WRITE: u32 = 2u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.COPY_SRC` const."]
@@ -29,7 +29,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const COPY_SRC: u32 = 4u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.COPY_DST` const."]
@@ -37,7 +37,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const COPY_DST: u32 = 8u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.INDEX` const."]
@@ -45,7 +45,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const INDEX: u32 = 16u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.VERTEX` const."]
@@ -53,7 +53,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const VERTEX: u32 = 32u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.UNIFORM` const."]
@@ -61,7 +61,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const UNIFORM: u32 = 64u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.STORAGE` const."]
@@ -69,7 +69,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const STORAGE: u32 = 128u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.INDIRECT` const."]
@@ -77,7 +77,7 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const INDIRECT: u32 = 256u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUBufferUsage.QUERY_RESOLVE` const."]
@@ -85,6 +85,6 @@ pub mod gpu_buffer_usage {
     #[doc = "*This API requires the following crate features to be activated: `gpu_buffer_usage`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const QUERY_RESOLVE: u32 = 512u64 as u32;
 }

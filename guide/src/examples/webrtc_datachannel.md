@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/webrtc_datachannel/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/webrtc_datachannel/
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/webrtc_datachannel/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/webrtc_datachannel/
 
 This example creates 2 peer connections and 2 data channels in single browser tab.
 Send ping/pong between `peer1.dc` and `peer2.dc`.

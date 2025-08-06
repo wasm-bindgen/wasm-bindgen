@@ -555,7 +555,7 @@ impl<'src> FirstPassRecord<'src> {
             | OperationId::IndexingGetter
             | OperationId::IndexingSetter
             | OperationId::IndexingDeleter => {
-                log::warn!("Unsupported unnamed operation: on {:?}", js_name);
+                log::warn!("Unsupported unnamed operation: on {js_name:?}");
                 return;
             }
         }
@@ -938,16 +938,16 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
     fs::create_dir_all(to).context("Creating features directory")?;
 
     for (name, feature) in features.iter() {
-        let out_file_path = to.join(format!("gen_{}.rs", name));
+        let out_file_path = to.join(format!("gen_{name}.rs"));
 
         fs::write(&out_file_path, &feature.code)?;
     }
 
     let binding_file = features.keys().map(|name| {
         if generate_features {
-            format!("#[cfg(feature = \"{name}\")] #[allow(non_snake_case)] mod gen_{name};\n#[cfg(feature = \"{name}\")] #[allow(unused_imports)] pub use gen_{name}::*;", name = name)
+            format!("#[cfg(feature = \"{name}\")] #[allow(non_snake_case)] mod gen_{name};\n#[cfg(feature = \"{name}\")] #[allow(unused_imports)] pub use gen_{name}::*;")
         } else {
-            format!("#[allow(non_snake_case)] mod gen_{name};\n#[allow(unused_imports)] pub use gen_{name}::*;", name = name)
+            format!("#[allow(non_snake_case)] mod gen_{name};\n#[allow(unused_imports)] pub use gen_{name}::*;")
         }
     }).collect::<Vec<_>>().join("\n\n");
 
@@ -955,7 +955,7 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
 
     let to_format = features
         .keys()
-        .map(|name| to.join(format!("gen_{}.rs", name)))
+        .map(|name| to.join(format!("gen_{name}.rs")))
         .chain([to.join("mod.rs")]);
 
     rustfmt(to_format)?;
@@ -967,10 +967,10 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
                 let features = feature
                     .required_features
                     .iter()
-                    .map(|x| format!("\"{}\"", x))
+                    .map(|x| format!("\"{x}\""))
                     .collect::<Vec<_>>()
                     .join(", ");
-                format!("{} = [{}]", name, features)
+                format!("{name} = [{features}]")
             })
             .collect::<Vec<_>>()
             .join("\n");

@@ -83,7 +83,7 @@ fn run(dir: &Path, run: fn(&Test) -> Result<String>) {
 
     if !errors.is_empty() {
         for msg in errors.iter() {
-            eprintln!("error: {:?}", msg);
+            eprintln!("error: {msg:?}");
         }
 
         panic!("{} tests failed", errors.len())

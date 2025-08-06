@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsPrfInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type AuthenticationExtensionsPrfInputs;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsPrfValues")]
@@ -21,7 +21,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsPrfInputs`, `AuthenticationExtensionsPrfValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "eval")]
     pub fn get_eval(
         this: &AuthenticationExtensionsPrfInputs,
@@ -33,7 +33,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsPrfInputs`, `AuthenticationExtensionsPrfValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "eval")]
     pub fn set_eval(
         this: &AuthenticationExtensionsPrfInputs,
@@ -45,7 +45,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsPrfInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "evalByCredential")]
     pub fn get_eval_by_credential(
         this: &AuthenticationExtensionsPrfInputs,
@@ -56,7 +56,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsPrfInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "evalByCredential")]
     pub fn set_eval_by_credential(this: &AuthenticationExtensionsPrfInputs, val: &::js_sys::Object);
 }
@@ -67,7 +67,7 @@ impl AuthenticationExtensionsPrfInputs {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsPrfInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

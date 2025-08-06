@@ -19,6 +19,6 @@ standards-compliant ECMAScript environments, such as `Array`, `Date`, and
 
 [**Read the `web-sys` API documentation here!**][api]
 
-[api]: https://rustwasm.github.io/wasm-bindgen/api/web_sys/
+[api]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/
 [js-sys]: https://crates.io/crates/js-sys
 [web-sys]: https://crates.io/crates/web-sys

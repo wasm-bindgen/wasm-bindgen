@@ -91,7 +91,7 @@ impl Interner {
         id: &str,
         span: Span,
         linked_module: bool,
-    ) -> Result<ImportModule, Diagnostic> {
+    ) -> Result<ImportModule<'_>, Diagnostic> {
         let mut files = self.files.borrow_mut();
         if let Some(file) = files.get(id) {
             return Ok(ImportModule::Named(self.intern_str(&file.new_identifier)));

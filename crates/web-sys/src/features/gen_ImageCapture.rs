@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type ImageCapture;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaStreamTrack")]
@@ -26,7 +26,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`, `MediaStreamTrack`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn track(this: &ImageCapture) -> MediaStreamTrack;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaStreamTrack")]
@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`, `MediaStreamTrack`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(video_track: &MediaStreamTrack) -> Result<ImageCapture, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = getPhotoCapabilities)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_photo_capabilities(this: &ImageCapture) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = getPhotoSettings)]
@@ -60,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_photo_settings(this: &ImageCapture) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = grabFrame)]
@@ -71,7 +71,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn grab_frame(this: &ImageCapture) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = takePhoto)]
@@ -82,6 +82,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn take_photo(this: &ImageCapture) -> ::js_sys::Promise;
 }

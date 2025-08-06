@@ -30,6 +30,6 @@ well!
 
 * [ ] Send a pull request!
 
-[issue]: https://github.com/rustwasm/wasm-bindgen/issues/275
+[issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/275
 [tc39]: https://tc39.github.io/process-document/
 [test]: testing.html

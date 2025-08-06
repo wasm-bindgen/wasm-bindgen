@@ -23,7 +23,7 @@ extern "C" {
     static TRUE: JsValue;
 }
 
-// https://github.com/rustwasm/wasm-bindgen/issues/4317
+// https://github.com/wasm-bindgen/wasm-bindgen/issues/4317
 #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "menu"])]
 extern "C" {
     #[wasm_bindgen]

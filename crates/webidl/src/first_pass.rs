@@ -380,21 +380,21 @@ fn first_pass_operation<'src, A: Into<Arg<'src>> + 'src>(
             let x = record
                 .interfaces
                 .get_mut(self_name)
-                .unwrap_or_else(|| panic!("not found {} interface", self_name));
+                .unwrap_or_else(|| panic!("not found {self_name} interface"));
             &mut x.operations
         }
         FirstPassOperationType::Mixin => {
             let x = record
                 .mixins
                 .get_mut(self_name)
-                .unwrap_or_else(|| panic!("not found {} mixin", self_name));
+                .unwrap_or_else(|| panic!("not found {self_name} mixin"));
             &mut x.operations
         }
         FirstPassOperationType::Namespace => {
             let x = record
                 .namespaces
                 .get_mut(self_name)
-                .unwrap_or_else(|| panic!("not found {} namespace", self_name));
+                .unwrap_or_else(|| panic!("not found {self_name} namespace"));
             &mut x.operations
         }
     };
@@ -558,10 +558,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)> for weedle::interface::Int
             InterfaceMember::Iterable(iterable) => iterable.first_pass(record, ctx),
             InterfaceMember::AsyncIterable(iterable) => iterable.first_pass(record, ctx),
             InterfaceMember::Stringifier(_) => {
-                log::warn!(
-                    "Unsupported WebIDL Stringifier interface member: {:?}",
-                    self
-                );
+                log::warn!("Unsupported WebIDL Stringifier interface member: {self:?}");
                 Ok(())
             }
         }
@@ -578,7 +575,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
     ) -> Result<()> {
         let is_static = match self.modifier {
             Some(StringifierOrStatic::Stringifier(_)) => {
-                log::warn!("Unsupported webidl stringifier: {:?}", self);
+                log::warn!("Unsupported webidl stringifier: {self:?}");
                 return Ok(());
             }
             Some(StringifierOrStatic::Static(_)) => true,
@@ -1338,7 +1335,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)> for weedle::mixin::MixinMe
                 Ok(())
             }
             MixinMember::Stringifier(_) => {
-                log::warn!("Unsupported WebIDL stringifier mixin member: {:?}", self);
+                log::warn!("Unsupported WebIDL stringifier mixin member: {self:?}");
                 Ok(())
             }
         }
@@ -1354,7 +1351,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         ctx: (&'src str, ApiStability),
     ) -> Result<()> {
         if self.stringifier.is_some() {
-            log::warn!("Unsupported webidl stringifier: {:?}", self);
+            log::warn!("Unsupported webidl stringifier: {self:?}");
             return Ok(());
         }
 

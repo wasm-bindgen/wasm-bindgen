@@ -12,7 +12,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type PublicKeyCredentialCreationOptionsJson;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `attestation` field of this object."]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "attestation")]
     pub fn get_attestation(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attestation")]
     pub fn set_attestation(this: &PublicKeyCredentialCreationOptionsJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
@@ -40,7 +40,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "attestationFormats")]
     pub fn get_attestation_formats(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -51,7 +51,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attestationFormats")]
     pub fn set_attestation_formats(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -64,7 +64,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorSelectionCriteria`, `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "authenticatorSelection")]
     pub fn get_authenticator_selection(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -76,7 +76,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorSelectionCriteria`, `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "authenticatorSelection")]
     pub fn set_authenticator_selection(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -88,7 +88,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "challenge")]
     pub fn get_challenge(this: &PublicKeyCredentialCreationOptionsJson) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
@@ -97,7 +97,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &PublicKeyCredentialCreationOptionsJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
@@ -106,7 +106,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "excludeCredentials")]
     pub fn get_exclude_credentials(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -117,7 +117,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "excludeCredentials")]
     pub fn set_exclude_credentials(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -130,7 +130,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputsJson`, `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "extensions")]
     pub fn get_extensions(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -142,7 +142,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputsJson`, `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "extensions")]
     pub fn set_extensions(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -154,7 +154,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "hints")]
     pub fn get_hints(this: &PublicKeyCredentialCreationOptionsJson) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -163,7 +163,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "hints")]
     pub fn set_hints(this: &PublicKeyCredentialCreationOptionsJson, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
@@ -172,7 +172,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "pubKeyCredParams")]
     pub fn get_pub_key_cred_params(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -183,7 +183,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "pubKeyCredParams")]
     pub fn set_pub_key_cred_params(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -196,7 +196,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialRpEntity`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "rp")]
     pub fn get_rp(this: &PublicKeyCredentialCreationOptionsJson) -> PublicKeyCredentialRpEntity;
     #[cfg(web_sys_unstable_apis)]
@@ -206,7 +206,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialRpEntity`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "rp")]
     pub fn set_rp(this: &PublicKeyCredentialCreationOptionsJson, val: &PublicKeyCredentialRpEntity);
     #[cfg(web_sys_unstable_apis)]
@@ -215,7 +215,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "timeout")]
     pub fn get_timeout(this: &PublicKeyCredentialCreationOptionsJson) -> Option<u32>;
     #[cfg(web_sys_unstable_apis)]
@@ -224,7 +224,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "timeout")]
     pub fn set_timeout(this: &PublicKeyCredentialCreationOptionsJson, val: u32);
     #[cfg(web_sys_unstable_apis)]
@@ -234,7 +234,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialUserEntityJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "user")]
     pub fn get_user(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -246,7 +246,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialUserEntityJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "user")]
     pub fn set_user(
         this: &PublicKeyCredentialCreationOptionsJson,
@@ -264,7 +264,7 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialRpEntity`, `PublicKeyCredentialUserEntityJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(
         challenge: &str,
         pub_key_cred_params: &::wasm_bindgen::JsValue,

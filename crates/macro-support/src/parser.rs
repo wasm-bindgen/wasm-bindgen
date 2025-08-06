@@ -1084,7 +1084,7 @@ fn function_from_decl(
     // A helper function to replace `Self` in the function signature of methods.
     // E.g. `fn get(&self) -> Option<Self>` to `fn get(&self) -> Option<MyType>`
     // The following comment explains why this is necessary:
-    // https://github.com/rustwasm/wasm-bindgen/issues/3105#issuecomment-1275160744
+    // https://github.com/wasm-bindgen/wasm-bindgen/issues/3105#issuecomment-1275160744
     let replace_self = |mut t: syn::Type| {
         if let FunctionPosition::Impl { self_ty } = position {
             // This uses a visitor to replace all occurrences of `Self` with
@@ -1147,7 +1147,7 @@ fn function_from_decl(
                             r.self_token,
                             "the `self` argument is not allowed for `extern` functions.\n\n\
                             Did you perhaps mean `this`? For more information on importing JavaScript functions, see:\n\
-                            https://rustwasm.github.io/docs/wasm-bindgen/examples/import-js.html"
+                            https://wasm-bindgen.github.io/wasm-bindgen/examples/import-js.html"
                         );
                     }
                     FunctionPosition::Impl { .. } => {}

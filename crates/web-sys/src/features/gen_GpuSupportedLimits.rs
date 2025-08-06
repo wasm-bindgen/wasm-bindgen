@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuSupportedLimits;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxTextureDimension1D)]
@@ -25,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_texture_dimension_1d(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxTextureDimension2D)]
@@ -36,7 +36,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_texture_dimension_2d(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxTextureDimension3D)]
@@ -47,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_texture_dimension_3d(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxTextureArrayLayers)]
@@ -58,7 +58,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_texture_array_layers(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxBindGroups)]
@@ -69,7 +69,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_bind_groups(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxBindGroupsPlusVertexBuffers)]
@@ -80,7 +80,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_bind_groups_plus_vertex_buffers(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxBindingsPerBindGroup)]
@@ -91,7 +91,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_bindings_per_bind_group(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxDynamicUniformBuffersPerPipelineLayout)]
@@ -102,7 +102,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_dynamic_uniform_buffers_per_pipeline_layout(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxDynamicStorageBuffersPerPipelineLayout)]
@@ -113,7 +113,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_dynamic_storage_buffers_per_pipeline_layout(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxSampledTexturesPerShaderStage)]
@@ -124,7 +124,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_sampled_textures_per_shader_stage(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxSamplersPerShaderStage)]
@@ -135,7 +135,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_samplers_per_shader_stage(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxStorageBuffersPerShaderStage)]
@@ -146,7 +146,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_storage_buffers_per_shader_stage(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxStorageTexturesPerShaderStage)]
@@ -157,7 +157,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_storage_textures_per_shader_stage(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxUniformBuffersPerShaderStage)]
@@ -168,7 +168,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_uniform_buffers_per_shader_stage(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxUniformBufferBindingSize)]
@@ -179,7 +179,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_uniform_buffer_binding_size(this: &GpuSupportedLimits) -> f64;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxStorageBufferBindingSize)]
@@ -190,7 +190,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_storage_buffer_binding_size(this: &GpuSupportedLimits) -> f64;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = minUniformBufferOffsetAlignment)]
@@ -201,7 +201,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn min_uniform_buffer_offset_alignment(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = minStorageBufferOffsetAlignment)]
@@ -212,7 +212,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn min_storage_buffer_offset_alignment(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxVertexBuffers)]
@@ -223,7 +223,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_vertex_buffers(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxBufferSize)]
@@ -234,7 +234,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_buffer_size(this: &GpuSupportedLimits) -> f64;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxVertexAttributes)]
@@ -245,7 +245,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_vertex_attributes(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxVertexBufferArrayStride)]
@@ -256,7 +256,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_vertex_buffer_array_stride(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxInterStageShaderVariables)]
@@ -267,7 +267,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_inter_stage_shader_variables(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxColorAttachments)]
@@ -278,7 +278,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_color_attachments(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxColorAttachmentBytesPerSample)]
@@ -289,7 +289,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_color_attachment_bytes_per_sample(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxComputeWorkgroupStorageSize)]
@@ -300,7 +300,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_compute_workgroup_storage_size(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxComputeInvocationsPerWorkgroup)]
@@ -311,7 +311,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_compute_invocations_per_workgroup(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxComputeWorkgroupSizeX)]
@@ -322,7 +322,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_compute_workgroup_size_x(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxComputeWorkgroupSizeY)]
@@ -333,7 +333,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_compute_workgroup_size_y(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxComputeWorkgroupSizeZ)]
@@ -344,7 +344,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_compute_workgroup_size_z(this: &GpuSupportedLimits) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUSupportedLimits" , js_name = maxComputeWorkgroupsPerDimension)]
@@ -355,6 +355,6 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuSupportedLimits`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_compute_workgroups_per_dimension(this: &GpuSupportedLimits) -> u32;
 }

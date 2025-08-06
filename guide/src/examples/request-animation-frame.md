@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/request-animation-frame/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/request-animation-frame
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/request-animation-frame/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/request-animation-frame
 
 This is an example of a `requestAnimationFrame` loop using the `web-sys` crate!
 It renders a count of how many times a `requestAnimationFrame` callback has been

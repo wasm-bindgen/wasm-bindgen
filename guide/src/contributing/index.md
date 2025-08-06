@@ -4,7 +4,7 @@ This section contains instructions on how to get this project up and running for
 development. You may want to browse the [unpublished guide documentation] for
 `wasm-bindgen` as well as it may have more up-to-date information.
 
-[unpublished documentation]: https://rustwasm.github.io/wasm-bindgen/
+[unpublished documentation]: https://wasm-bindgen.github.io/wasm-bindgen/
 
 ## Prerequisites
 

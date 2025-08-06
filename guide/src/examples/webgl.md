@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/webgl/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/webgl
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/webgl/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/webgl
 
 This example draws a triangle to the screen using the WebGL API.
 

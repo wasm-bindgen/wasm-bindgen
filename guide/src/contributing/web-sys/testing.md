@@ -10,5 +10,5 @@ cargo test --target wasm32-unknown-unknown --all-features
 
 The Wasm tests all run within a headless browser. See [the `wasm-bindgen-test`
 crate's
-`README.md`](https://github.com/rustwasm/wasm-bindgen/blob/master/crates/test/README.md)
+`README.md`](https://github.com/wasm-bindgen/wasm-bindgen/blob/master/crates/test/README.md)
 for details and configuring which headless browser is used.

@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/fetch/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/fetch
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/fetch/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/fetch
 
 This example uses the `fetch` API to make an HTTP request to the GitHub API and
 then parses the resulting JSON.

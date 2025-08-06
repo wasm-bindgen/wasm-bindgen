@@ -19,7 +19,7 @@ fn run() -> Result<(), JsValue> {
             first_item = obj.as_string();
         }
         1 => assert_eq!(obj, 1),
-        _ => panic!("unknown index: {}", idx),
+        _ => panic!("unknown index: {idx}"),
     });
     assert_eq!(first_item, Some("Hello".to_string()));
 

@@ -13,4 +13,4 @@ support for `AsyncIterator` to `Stream` conversion.
 
 See the [API documentation][docs] for more info.
 
-[docs]: https://rustwasm.github.io/wasm-bindgen/api/wasm_bindgen_futures/
+[docs]: https://wasm-bindgen.github.io/wasm-bindgen/api/wasm_bindgen_futures/

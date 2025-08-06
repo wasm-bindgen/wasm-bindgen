@@ -11,33 +11,33 @@ error: the start function cannot have generics
    |        ^^^
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, ()>: wasm_bindgen::__rt::Start` is not satisfied
-  --> ui-tests/start-function.rs:16:14
+  --> ui-tests/start-function.rs:18:14
    |
-16 | fn foo5() -> Result<JsValue, ()> { Err(()) }
+18 | fn foo5() -> Result<JsValue, ()> {
    |              ^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, ()>`
    |
    = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: wasm_bindgen::__rt::Start` is not satisfied
-  --> ui-tests/start-function.rs:19:14
+  --> ui-tests/start-function.rs:23:14
    |
-19 | fn foo6() -> Result<JsValue, JsValue> { Ok(JsValue::from(1u32)) }
+23 | fn foo6() -> Result<JsValue, JsValue> {
    |              ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
    |
    = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, ()>: wasm_bindgen::__rt::Start` is not satisfied
-  --> ui-tests/start-function.rs:28:26
+  --> ui-tests/start-function.rs:36:26
    |
-28 | async fn foo_async3() -> Result<JsValue, ()> { Err(()) }
+36 | async fn foo_async3() -> Result<JsValue, ()> {
    |                          ^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, ()>`
    |
    = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: wasm_bindgen::__rt::Start` is not satisfied
-  --> ui-tests/start-function.rs:31:26
+  --> ui-tests/start-function.rs:41:26
    |
-31 | async fn foo_async4() -> Result<JsValue, JsValue> { Ok(JsValue::from(1u32)) }
+41 | async fn foo_async4() -> Result<JsValue, JsValue> {
    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
    |
    = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`

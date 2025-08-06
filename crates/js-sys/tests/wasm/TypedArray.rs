@@ -203,3 +203,12 @@ fn to_vec() {
     array.fill(5, 0, 10);
     assert_eq!(array.to_vec(), vec![5, 5, 5, 5, 5, 5, 5, 5, 5, 5]);
 }
+
+#[wasm_bindgen_test]
+fn from_slice_heap_growth() {
+    let slice = std::slice::from_ref(&1);
+
+    _ = (0..10_000)
+        .map(|_i| Int32Array::from(slice))
+        .collect::<Vec<_>>();
+}

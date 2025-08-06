@@ -131,7 +131,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Bluetooth`, `Navigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bluetooth(this: &Navigator) -> Option<Bluetooth>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaSession")]
@@ -143,7 +143,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaSession`, `Navigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn media_session(this: &Navigator) -> MediaSession;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WakeLock")]
@@ -155,7 +155,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`, `WakeLock`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn wake_lock(this: &Navigator) -> WakeLock;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Hid")]
@@ -167,7 +167,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Hid`, `Navigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn hid(this: &Navigator) -> Hid;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Serial")]
@@ -179,7 +179,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`, `Serial`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn serial(this: &Navigator) -> Serial;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Usb")]
@@ -191,7 +191,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`, `Usb`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn usb(this: &Navigator) -> Usb;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrSystem")]
@@ -203,7 +203,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`, `XrSystem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn xr(this: &Navigator) -> XrSystem;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Scheduling")]
@@ -215,7 +215,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`, `Scheduling`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn scheduling(this: &Navigator) -> Scheduling;
     # [wasm_bindgen (structural , method , getter , js_class = "Navigator" , js_name = hardwareConcurrency)]
     #[doc = "Getter for the `hardwareConcurrency` field of this object."]
@@ -233,7 +233,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device_memory(this: &Navigator) -> f64;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Gpu")]
@@ -245,7 +245,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Gpu`, `Navigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn gpu(this: &Navigator) -> Gpu;
     #[cfg(feature = "Geolocation")]
     # [wasm_bindgen (structural , catch , method , getter , js_class = "Navigator" , js_name = geolocation)]
@@ -321,7 +321,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `LockManager`, `Navigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn locks(this: &Navigator) -> LockManager;
     # [wasm_bindgen (structural , method , getter , js_class = "Navigator" , js_name = onLine)]
     #[doc = "Getter for the `onLine` field of this object."]
@@ -348,7 +348,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Navigator`, `NavigatorUaData`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn user_agent_data(this: &Navigator) -> NavigatorUaData;
     # [wasm_bindgen (method , structural , js_class = "Navigator" , js_name = canShare)]
     #[doc = "The `canShare()` method."]

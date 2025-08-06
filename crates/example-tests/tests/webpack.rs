@@ -1,47 +1,29 @@
-use std::fs;
-use std::io::ErrorKind;
-use std::process::Command;
-use std::sync::Once;
-use std::{io, str};
+use std::str;
+use tokio::process::Command;
 
-use example_tests::{example_dir, manifest_dir, run, test_example};
+use example_tests::{example_dir, run, test_example};
+use tokio::sync::OnceCell;
+
+const PNPM: &str = if cfg!(windows) { "pnpm.cmd" } else { "pnpm" };
 
 async fn test_webpack_example(name: &str) -> anyhow::Result<()> {
-    test_example(name, || {
-        let manifest_dir = manifest_dir();
+    test_example(name, || async {
         let path = example_dir(name);
 
-        fn allow_already_exists(e: io::Error) -> io::Result<()> {
-            if e.kind() == ErrorKind::AlreadyExists {
-                Ok(())
-            } else {
-                Err(e)
-            }
-        }
+        static INSTALL_DEPS: OnceCell<()> = OnceCell::const_new();
 
-        // All of the examples have the same dependencies, so we can just install
-        // to the root `node_modules` once, since Node resolves packages from any
-        // outer directories as well as the one containing the `package.json`.
-        static INSTALL: Once = Once::new();
-        INSTALL.call_once(|| {
-            fs::copy(
-                manifest_dir.join("_package.json"),
-                manifest_dir.join("package.json"),
-            )
-            .map(|_| ())
-            .or_else(allow_already_exists)
-            .unwrap();
-
-            run(Command::new("npm").arg("install").current_dir(manifest_dir)).unwrap();
-
-            fs::remove_file(manifest_dir.join("package.json")).unwrap();
-        });
+        INSTALL_DEPS
+            .get_or_try_init(|| async {
+                // Install deps (use PNPM to install entire workspace at once).
+                run(Command::new(PNPM)
+                    .arg("install")
+                    .current_dir(example_dir(".")))
+                .await
+            })
+            .await?;
 
         // Build the example.
-        run(Command::new("npm")
-            .arg("run")
-            .arg("build")
-            .current_dir(&path))?;
+        run(Command::new(PNPM).arg("build").current_dir(&path)).await?;
 
         Ok(path.join("dist"))
     })

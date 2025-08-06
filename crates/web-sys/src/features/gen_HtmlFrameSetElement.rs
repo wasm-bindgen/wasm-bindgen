@@ -245,7 +245,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ongamepadconnected(this: &HtmlFrameSetElement) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "HTMLFrameSetElement" , js_name = ongamepadconnected)]
@@ -256,7 +256,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_ongamepadconnected(this: &HtmlFrameSetElement, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "HTMLFrameSetElement" , js_name = ongamepaddisconnected)]
@@ -267,7 +267,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ongamepaddisconnected(this: &HtmlFrameSetElement) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "HTMLFrameSetElement" , js_name = ongamepaddisconnected)]
@@ -278,7 +278,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_ongamepaddisconnected(
         this: &HtmlFrameSetElement,
         value: Option<&::js_sys::Function>,

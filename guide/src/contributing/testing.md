@@ -11,7 +11,7 @@ WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo test --target wasm32-unknown-unknown
 ```
 
 See [the `wasm-bindgen-test` crate's
-`README.md`](https://github.com/rustwasm/wasm-bindgen/blob/master/crates/test/README.md)
+`README.md`](https://github.com/wasm-bindgen/wasm-bindgen/blob/master/crates/test/README.md)
 for details and configuring which headless browser is used.
 
 ## Sanity Tests for `wasm-bindgen` on the Native Host Target

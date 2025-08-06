@@ -29,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpReceiver`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn jitter_buffer_target(this: &RtcRtpReceiver) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , catch , method , setter , js_class = "RTCRtpReceiver" , js_name = jitterBufferTarget)]
@@ -40,7 +40,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpReceiver`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_jitter_buffer_target(
         this: &RtcRtpReceiver,
         value: Option<f64>,
@@ -54,7 +54,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpReceiver`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn transform(this: &RtcRtpReceiver) -> Option<::js_sys::Object>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SFrameTransform")]
@@ -66,7 +66,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpReceiver`, `SFrameTransform`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_transform_opt_s_frame_transform(
         this: &RtcRtpReceiver,
         value: Option<&SFrameTransform>,
@@ -81,7 +81,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpReceiver`, `RtcRtpScriptTransform`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_transform_opt_rtc_rtp_script_transform(
         this: &RtcRtpReceiver,
         value: Option<&RtcRtpScriptTransform>,

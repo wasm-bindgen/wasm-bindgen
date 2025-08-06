@@ -35,7 +35,7 @@ console.log(f.get_contents());
 
 ## Caveats
 
-In versions `>=v0.2.48, <0.2.88` of `wasm-bindgen`, there is a bug which breaks inheritance of exported Rust structs from JavaScript side (see [#3213](https://github.com/rustwasm/wasm-bindgen/issues/3213)). If you want to inherit from a Rust struct such as:
+In versions `>=v0.2.48, <0.2.88` of `wasm-bindgen`, there is a bug which breaks inheritance of exported Rust structs from JavaScript side (see [#3213](https://github.com/wasm-bindgen/wasm-bindgen/issues/3213)). If you want to inherit from a Rust struct such as:
 
 ```rust
 use wasm_bindgen::prelude::*;

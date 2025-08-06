@@ -7,7 +7,8 @@ use wasm_bindgen::prelude::*;
 )]
 pub async fn fn_with_attr(
     #[wasm_bindgen(js_name = "firstArg", param_description = "some number")] arg1: u32,
-    #[wasm_bindgen(js_name = "secondArg", unchecked_param_type = "boolean | undefined")] arg2: JsValue,
+    #[wasm_bindgen(js_name = "secondArg", unchecked_param_type = "boolean | undefined")]
+    arg2: JsValue,
 ) -> Result<JsValue, JsValue> {
     if arg2.is_undefined() {
         Ok(arg1.into())
@@ -56,7 +57,8 @@ impl HoldsNumber {
     pub fn method_with_attr(
         &self,
         #[wasm_bindgen(js_name = "firstArg", param_description = "some number")] arg1: u32,
-        #[wasm_bindgen(js_name = "secondArg", unchecked_param_type = "boolean | undefined")] arg2: JsValue,
+        #[wasm_bindgen(js_name = "secondArg", unchecked_param_type = "boolean | undefined")]
+        arg2: JsValue,
     ) -> JsValue {
         if arg2.is_undefined() {
             self.inner.clone()

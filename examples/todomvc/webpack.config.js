@@ -16,7 +16,7 @@ module.exports = {
         }),
         new MiniCssExtractPlugin(),
         new WasmPackPlugin({
-            crateDirectory: path.resolve(__dirname, ".")
+            crateDirectory: __dirname
         }),
     ],
     mode: 'development',

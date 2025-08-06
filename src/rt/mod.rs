@@ -227,7 +227,7 @@ impl<T: ?Sized> WasmRefCell<T> {
         unsafe { &mut *self.value.get() }
     }
 
-    pub fn borrow(&self) -> Ref<T> {
+    pub fn borrow(&self) -> Ref<'_, T> {
         unsafe {
             if self.borrow.get() == usize::MAX {
                 borrow_fail();
@@ -240,7 +240,7 @@ impl<T: ?Sized> WasmRefCell<T> {
         }
     }
 
-    pub fn borrow_mut(&self) -> RefMut<T> {
+    pub fn borrow_mut(&self) -> RefMut<'_, T> {
         unsafe {
             if self.borrow.get() != 0 {
                 borrow_fail();

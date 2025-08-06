@@ -9,10 +9,10 @@ For example, [the `fetch` API][mdn-fetch] can be given a URL string, or a
 object. Therefore, we end up with these `web-sys` functions that all bind to the
 `window.fetch` function:
 
-* [`Window::fetch_with_str`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_str)
-* [`Window::fetch_with_request`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_request)
-* [`Window::fetch_with_str_and_init`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_str_and_init)
-* [`Window::fetch_with_request_and_init`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_request_and_init)
+* [`Window::fetch_with_str`](https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_str)
+* [`Window::fetch_with_request`](https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_request)
+* [`Window::fetch_with_str_and_init`](https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_str_and_init)
+* [`Window::fetch_with_request_and_init`](https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.fetch_with_request_and_init)
 
 Note that different overloads can use different interfaces, and therefore can
 require different sets of cargo features to be enabled.

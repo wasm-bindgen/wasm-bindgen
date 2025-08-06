@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/dom/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/dom
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/dom/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/dom
 
 Using `web-sys` we're able to interact with all the standard web platform
 methods, including those of the DOM! Here we take a look at a simple "Hello,

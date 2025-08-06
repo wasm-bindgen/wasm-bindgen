@@ -15,7 +15,7 @@ root_dir = os.path.dirname(__file__)
 #   shared memory, passive segments, etc.
 
 os.environ.update(
-    {"RUSTFLAGS": "-C target-feature=+atomics,+bulk-memory,+mutable-globals"}
+    {"RUSTFLAGS": "-C target-feature=+atomics"}
 )
 
 subprocess.run(

@@ -1,7 +1,7 @@
 #[cfg(web_sys_unstable_apis)]
 #[doc = ""]
 #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-#[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+#[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
 pub mod gpu_color_write {
     #![allow(unused_imports)]
     #![allow(clippy::all)]
@@ -13,7 +13,7 @@ pub mod gpu_color_write {
     #[doc = "*This API requires the following crate features to be activated: `gpu_color_write`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const RED: u32 = 1u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUColorWrite.GREEN` const."]
@@ -21,7 +21,7 @@ pub mod gpu_color_write {
     #[doc = "*This API requires the following crate features to be activated: `gpu_color_write`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const GREEN: u32 = 2u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUColorWrite.BLUE` const."]
@@ -29,7 +29,7 @@ pub mod gpu_color_write {
     #[doc = "*This API requires the following crate features to be activated: `gpu_color_write`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const BLUE: u32 = 4u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUColorWrite.ALPHA` const."]
@@ -37,7 +37,7 @@ pub mod gpu_color_write {
     #[doc = "*This API requires the following crate features to be activated: `gpu_color_write`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const ALPHA: u32 = 8u64 as u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "The `GPUColorWrite.ALL` const."]
@@ -45,6 +45,6 @@ pub mod gpu_color_write {
     #[doc = "*This API requires the following crate features to be activated: `gpu_color_write`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const ALL: u32 = 15u64 as u32;
 }

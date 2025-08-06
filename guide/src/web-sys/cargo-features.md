@@ -11,5 +11,5 @@ For example, [the `WebGlRenderingContext::compile_shader` function][compile_shad
 * `WebGlRenderingContext`, because that is the method's `self` type
 * `WebGlShader`, because it takes an argument of that type
 
-[API documentation]: https://rustwasm.github.io/wasm-bindgen/api/web_sys
-[compile_shader]: https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.WebGlRenderingContext.html#method.compile_shader
+[API documentation]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys
+[compile_shader]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/struct.WebGlRenderingContext.html#method.compile_shader

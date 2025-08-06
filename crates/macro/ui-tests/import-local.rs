@@ -1,12 +1,12 @@
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "./foo.js")]
-extern {
+extern "C" {
     fn wut();
 }
 
 #[wasm_bindgen(module = "../foo.js")]
-extern {
+extern "C" {
     fn wut2();
 }
 

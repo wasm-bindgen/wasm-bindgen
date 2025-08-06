@@ -20,11 +20,29 @@ extern "C" {
 
 #[wasm_bindgen_test]
 fn smoke() {
-    A::new().c(1).g(2).h(3).d(4);
-    B::new().c(1).g(2).h(3).d(4).a(5).b(6);
+    let a = A::new();
+    a.set_c(1);
+    a.set_g(2);
+    a.set_h(3);
+    a.set_d(4);
 
-    let mut c = C::new();
-    c.a(1).b(2).c(3).d(4).e(5).f(6).g(7).h(8);
+    let b = B::new();
+    b.set_c(1);
+    b.set_g(2);
+    b.set_h(3);
+    b.set_d(4);
+    b.set_a(5);
+    b.set_b(6);
+
+    let c = C::new();
+    c.set_a(1);
+    c.set_b(2);
+    c.set_c(3);
+    c.set_d(4);
+    c.set_e(5);
+    c.set_f(6);
+    c.set_g(7);
+    c.set_h(8);
     assert_dict_c(&c);
     assert_dict_c2(c.clone());
     assert_dict_c3(Some(&c));
@@ -39,20 +57,24 @@ fn get_dict() {
 
 #[wasm_bindgen_test]
 fn casing() {
-    CamelCaseMe::new().snake_case_me(3);
+    CamelCaseMe::new().set_snake_case_me(3);
 }
 
 #[wasm_bindgen_test]
 fn many_types() {
-    ManyTypes::new().a("a");
+    ManyTypes::new().set_a("a");
 }
 
 #[wasm_bindgen_test]
 fn required() {
-    assert_dict_required(Required::new(3, "a").c(4));
+    let dict = Required::new(3, "a");
+    dict.set_c(4);
+    assert_dict_required(&dict);
 }
 
 #[wasm_bindgen_test]
 fn correct_casing_in_js() {
-    assert_camel_case(PreserveNames::new().weird_field_name(1));
+    let dict = PreserveNames::new();
+    dict.set_weird_field_name(1);
+    assert_camel_case(&dict);
 }

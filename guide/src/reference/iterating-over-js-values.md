@@ -5,12 +5,12 @@
 Some JavaScript collections have methods for iterating over their values or
 keys:
 
-* [`Map::values`](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.Map.html#method.values)
-* [`Set::keys`](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.Set.html#method.keys)
+* [`Map::values`](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Map.html#method.values)
+* [`Set::keys`](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Set.html#method.keys)
 * etc...
 
 These methods return
-[`js_sys::Iterator`](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.Iterator.html),
+[`js_sys::Iterator`](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Iterator.html),
 which is the Rust representation of a JavaScript object that has a `next` method
 that either returns the next item in the iteration, notes that iteration has
 completed, or throws an error. That is, `js_sys::Iterator` represents an object
@@ -19,9 +19,9 @@ protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iter
 
 `js_sys::Iterator` can be converted into a Rust iterator either by reference
 (into
-[`js_sys::Iter<'a>`](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.Iter.html))
+[`js_sys::Iter<'a>`](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Iter.html))
 or by value (into
-[`js_sys::IntoIter`](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.IntoIter.html)). The
+[`js_sys::IntoIter`](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.IntoIter.html)). The
 Rust iterator will yield items of type `Result<JsValue>`. If it yields an
 `Ok(...)`, then the JS iterator protocol returned an element. If it yields an
 `Err(...)`, then the JS iterator protocol threw an exception.
@@ -59,7 +59,7 @@ You could manually test for whether an object implements JS's duck-typed
 iterator protocol, and if so, convert it into a `js_sys::Iterator` that you can
 finally iterate over. You don't need to do this by-hand, however, since we
 bundled this up as [the `js_sys::try_iter`
-function!](https://rustwasm.github.io/wasm-bindgen/api/js_sys/fn.try_iter.html)
+function!](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/fn.try_iter.html)
 
 For example, we can write a function that collects the numbers from any JS
 iterable and returns them as an `Array`:

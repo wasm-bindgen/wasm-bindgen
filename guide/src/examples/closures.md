@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/closures/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/closures
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/closures/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/closures
 
 One of the features of `#[wasm_bindgen]` is that you can pass closures defined
 in Rust off to JS. This can be a bit tricky at times, though, so the example

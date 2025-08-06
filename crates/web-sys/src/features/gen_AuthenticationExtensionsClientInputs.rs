@@ -51,7 +51,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`, `AuthenticationExtensionsDevicePublicKeyInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "devicePubKey")]
     pub fn get_device_pub_key(
         this: &AuthenticationExtensionsClientInputs,
@@ -63,7 +63,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`, `AuthenticationExtensionsDevicePublicKeyInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "devicePubKey")]
     pub fn set_device_pub_key(
         this: &AuthenticationExtensionsClientInputs,
@@ -93,7 +93,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`, `AuthenticationExtensionsPrfInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "prf")]
     pub fn get_prf(
         this: &AuthenticationExtensionsClientInputs,
@@ -105,7 +105,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`, `AuthenticationExtensionsPrfInputs`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "prf")]
     pub fn set_prf(
         this: &AuthenticationExtensionsClientInputs,

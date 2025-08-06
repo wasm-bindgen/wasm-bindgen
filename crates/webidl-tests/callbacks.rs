@@ -25,13 +25,13 @@ fn single_op_dict() {
 
 #[wasm_bindgen_test]
 fn dict_methods() {
-    let mut a = CallbackInterface1::new();
-    a.foo(&Function::new_no_args(""));
+    let a = CallbackInterface1::new();
+    a.set_foo(&Function::new_no_args(""));
 }
 
 #[wasm_bindgen_test]
 fn dict_methods1() {
-    let mut a = CallbackInterface2::new();
-    a.foo(&Function::new_no_args(""));
-    a.bar(&Function::new_no_args(""));
+    let a = CallbackInterface2::new();
+    a.set_foo(&Function::new_no_args(""));
+    a.set_bar(&Function::new_no_args(""));
 }

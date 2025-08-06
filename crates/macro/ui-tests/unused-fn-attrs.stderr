@@ -25,213 +25,213 @@ error: unused wasm_bindgen attribute
 error: unused wasm_bindgen attribute
   --> ui-tests/unused-fn-attrs.rs:39:24
    |
-39 |         #[wasm_bindgen(param_description = "some other description")] arg: u32,
+39 |         #[wasm_bindgen(param_description = "some other description")]
    |                        ^^^^^^^^^^^^^^^^^
 
 error: invalid attribute unchecked_return_type in this position
-  --> ui-tests/unused-fn-attrs.rs:45:1
+  --> ui-tests/unused-fn-attrs.rs:46:1
    |
-45 | / #[wasm_bindgen(
-46 | |     unchecked_return_type = "something",
-47 | |     return_description = "something",
-48 | |     unchecked_param_type = "something",
-49 | |     param_description = "somthing"
-50 | | )]
+46 | / #[wasm_bindgen(
+47 | |     unchecked_return_type = "something",
+48 | |     return_description = "something",
+49 | |     unchecked_param_type = "something",
+50 | |     param_description = "somthing"
+51 | | )]
    | |__^
    |
    = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute return_description in this position
-  --> ui-tests/unused-fn-attrs.rs:45:1
+  --> ui-tests/unused-fn-attrs.rs:46:1
    |
-45 | / #[wasm_bindgen(
-46 | |     unchecked_return_type = "something",
-47 | |     return_description = "something",
-48 | |     unchecked_param_type = "something",
-49 | |     param_description = "somthing"
-50 | | )]
+46 | / #[wasm_bindgen(
+47 | |     unchecked_return_type = "something",
+48 | |     return_description = "something",
+49 | |     unchecked_param_type = "something",
+50 | |     param_description = "somthing"
+51 | | )]
    | |__^
    |
    = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_param_type in this position
-  --> ui-tests/unused-fn-attrs.rs:45:1
+  --> ui-tests/unused-fn-attrs.rs:46:1
    |
-45 | / #[wasm_bindgen(
-46 | |     unchecked_return_type = "something",
-47 | |     return_description = "something",
-48 | |     unchecked_param_type = "something",
-49 | |     param_description = "somthing"
-50 | | )]
+46 | / #[wasm_bindgen(
+47 | |     unchecked_return_type = "something",
+48 | |     return_description = "something",
+49 | |     unchecked_param_type = "something",
+50 | |     param_description = "somthing"
+51 | | )]
    | |__^
    |
    = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute param_description in this position
-  --> ui-tests/unused-fn-attrs.rs:45:1
+  --> ui-tests/unused-fn-attrs.rs:46:1
    |
-45 | / #[wasm_bindgen(
-46 | |     unchecked_return_type = "something",
-47 | |     return_description = "something",
-48 | |     unchecked_param_type = "something",
-49 | |     param_description = "somthing"
-50 | | )]
+46 | / #[wasm_bindgen(
+47 | |     unchecked_return_type = "something",
+48 | |     return_description = "something",
+49 | |     unchecked_param_type = "something",
+50 | |     param_description = "somthing"
+51 | | )]
    | |__^
    |
    = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_return_type in this position
-  --> ui-tests/unused-fn-attrs.rs:53:1
+  --> ui-tests/unused-fn-attrs.rs:54:1
    |
-53 | / #[wasm_bindgen(
-54 | |     unchecked_return_type = "something",
-55 | |     return_description = "something",
-56 | |     unchecked_param_type = "something",
-57 | |     param_description = "somthing"
-58 | | )]
+54 | / #[wasm_bindgen(
+55 | |     unchecked_return_type = "something",
+56 | |     return_description = "something",
+57 | |     unchecked_param_type = "something",
+58 | |     param_description = "somthing"
+59 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute return_description in this position
-  --> ui-tests/unused-fn-attrs.rs:53:1
+  --> ui-tests/unused-fn-attrs.rs:54:1
    |
-53 | / #[wasm_bindgen(
-54 | |     unchecked_return_type = "something",
-55 | |     return_description = "something",
-56 | |     unchecked_param_type = "something",
-57 | |     param_description = "somthing"
-58 | | )]
+54 | / #[wasm_bindgen(
+55 | |     unchecked_return_type = "something",
+56 | |     return_description = "something",
+57 | |     unchecked_param_type = "something",
+58 | |     param_description = "somthing"
+59 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_param_type in this position
-  --> ui-tests/unused-fn-attrs.rs:53:1
+  --> ui-tests/unused-fn-attrs.rs:54:1
    |
-53 | / #[wasm_bindgen(
-54 | |     unchecked_return_type = "something",
-55 | |     return_description = "something",
-56 | |     unchecked_param_type = "something",
-57 | |     param_description = "somthing"
-58 | | )]
+54 | / #[wasm_bindgen(
+55 | |     unchecked_return_type = "something",
+56 | |     return_description = "something",
+57 | |     unchecked_param_type = "something",
+58 | |     param_description = "somthing"
+59 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute param_description in this position
-  --> ui-tests/unused-fn-attrs.rs:53:1
+  --> ui-tests/unused-fn-attrs.rs:54:1
    |
-53 | / #[wasm_bindgen(
-54 | |     unchecked_return_type = "something",
-55 | |     return_description = "something",
-56 | |     unchecked_param_type = "something",
-57 | |     param_description = "somthing"
-58 | | )]
+54 | / #[wasm_bindgen(
+55 | |     unchecked_return_type = "something",
+56 | |     return_description = "something",
+57 | |     unchecked_param_type = "something",
+58 | |     param_description = "somthing"
+59 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_return_type in this position
-  --> ui-tests/unused-fn-attrs.rs:64:1
+  --> ui-tests/unused-fn-attrs.rs:65:1
    |
-64 | / #[wasm_bindgen(
-65 | |     unchecked_return_type = "something",
-66 | |     return_description = "something",
-67 | |     unchecked_param_type = "something",
-68 | |     param_description = "somthing"
-69 | | )]
+65 | / #[wasm_bindgen(
+66 | |     unchecked_return_type = "something",
+67 | |     return_description = "something",
+68 | |     unchecked_param_type = "something",
+69 | |     param_description = "somthing"
+70 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute return_description in this position
-  --> ui-tests/unused-fn-attrs.rs:64:1
+  --> ui-tests/unused-fn-attrs.rs:65:1
    |
-64 | / #[wasm_bindgen(
-65 | |     unchecked_return_type = "something",
-66 | |     return_description = "something",
-67 | |     unchecked_param_type = "something",
-68 | |     param_description = "somthing"
-69 | | )]
+65 | / #[wasm_bindgen(
+66 | |     unchecked_return_type = "something",
+67 | |     return_description = "something",
+68 | |     unchecked_param_type = "something",
+69 | |     param_description = "somthing"
+70 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_param_type in this position
-  --> ui-tests/unused-fn-attrs.rs:64:1
+  --> ui-tests/unused-fn-attrs.rs:65:1
    |
-64 | / #[wasm_bindgen(
-65 | |     unchecked_return_type = "something",
-66 | |     return_description = "something",
-67 | |     unchecked_param_type = "something",
-68 | |     param_description = "somthing"
-69 | | )]
+65 | / #[wasm_bindgen(
+66 | |     unchecked_return_type = "something",
+67 | |     return_description = "something",
+68 | |     unchecked_param_type = "something",
+69 | |     param_description = "somthing"
+70 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute param_description in this position
-  --> ui-tests/unused-fn-attrs.rs:64:1
+  --> ui-tests/unused-fn-attrs.rs:65:1
    |
-64 | / #[wasm_bindgen(
-65 | |     unchecked_return_type = "something",
-66 | |     return_description = "something",
-67 | |     unchecked_param_type = "something",
-68 | |     param_description = "somthing"
-69 | | )]
+65 | / #[wasm_bindgen(
+66 | |     unchecked_return_type = "something",
+67 | |     return_description = "something",
+68 | |     unchecked_param_type = "something",
+69 | |     param_description = "somthing"
+70 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_return_type in this position
-  --> ui-tests/unused-fn-attrs.rs:74:1
+  --> ui-tests/unused-fn-attrs.rs:75:1
    |
-74 | / #[wasm_bindgen(
-75 | |     unchecked_return_type = "something",
-76 | |     return_description = "something",
-77 | |     unchecked_param_type = "something",
-78 | |     param_description = "somthing"
-79 | | )]
+75 | / #[wasm_bindgen(
+76 | |     unchecked_return_type = "something",
+77 | |     return_description = "something",
+78 | |     unchecked_param_type = "something",
+79 | |     param_description = "somthing"
+80 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute return_description in this position
-  --> ui-tests/unused-fn-attrs.rs:74:1
+  --> ui-tests/unused-fn-attrs.rs:75:1
    |
-74 | / #[wasm_bindgen(
-75 | |     unchecked_return_type = "something",
-76 | |     return_description = "something",
-77 | |     unchecked_param_type = "something",
-78 | |     param_description = "somthing"
-79 | | )]
+75 | / #[wasm_bindgen(
+76 | |     unchecked_return_type = "something",
+77 | |     return_description = "something",
+78 | |     unchecked_param_type = "something",
+79 | |     param_description = "somthing"
+80 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_param_type in this position
-  --> ui-tests/unused-fn-attrs.rs:74:1
+  --> ui-tests/unused-fn-attrs.rs:75:1
    |
-74 | / #[wasm_bindgen(
-75 | |     unchecked_return_type = "something",
-76 | |     return_description = "something",
-77 | |     unchecked_param_type = "something",
-78 | |     param_description = "somthing"
-79 | | )]
+75 | / #[wasm_bindgen(
+76 | |     unchecked_return_type = "something",
+77 | |     return_description = "something",
+78 | |     unchecked_param_type = "something",
+79 | |     param_description = "somthing"
+80 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute param_description in this position
-  --> ui-tests/unused-fn-attrs.rs:74:1
+  --> ui-tests/unused-fn-attrs.rs:75:1
    |
-74 | / #[wasm_bindgen(
-75 | |     unchecked_return_type = "something",
-76 | |     return_description = "something",
-77 | |     unchecked_param_type = "something",
-78 | |     param_description = "somthing"
-79 | | )]
+75 | / #[wasm_bindgen(
+76 | |     unchecked_return_type = "something",
+77 | |     return_description = "something",
+78 | |     unchecked_param_type = "something",
+79 | |     param_description = "somthing"
+80 | | )]
    | |__^
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

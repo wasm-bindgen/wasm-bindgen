@@ -1,7 +1,7 @@
 #![no_implicit_prelude]
 
-extern crate wasm_bindgen_test_macro;
 extern crate tokio;
+extern crate wasm_bindgen_test_macro;
 //
 use wasm_bindgen_test_macro::wasm_bindgen_test;
 

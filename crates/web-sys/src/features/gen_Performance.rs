@@ -162,7 +162,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn measure_user_agent_specific_memory(this: &Performance) -> ::js_sys::Promise;
     # [wasm_bindgen (method , structural , js_class = "Performance" , js_name = now)]
     #[doc = "The `now()` method."]

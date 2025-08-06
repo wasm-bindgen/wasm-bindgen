@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuRenderBundleEncoder;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPURenderBundleEncoder" , js_name = label)]
@@ -25,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(this: &GpuRenderBundleEncoder) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , setter , js_class = "GPURenderBundleEncoder" , js_name = label)]
@@ -36,7 +36,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_label(this: &GpuRenderBundleEncoder, value: &str);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuRenderBundle")]
@@ -48,7 +48,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundle`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn finish(this: &GpuRenderBundleEncoder) -> GpuRenderBundle;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "GpuRenderBundle", feature = "GpuRenderBundleDescriptor",))]
@@ -60,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundle`, `GpuRenderBundleDescriptor`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn finish_with_descriptor(
         this: &GpuRenderBundleEncoder,
         descriptor: &GpuRenderBundleDescriptor,
@@ -75,7 +75,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroup`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_bind_group(
         this: &GpuRenderBundleEncoder,
         index: u32,
@@ -91,7 +91,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroup`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_bind_group_with_u32_sequence(
         this: &GpuRenderBundleEncoder,
         index: u32,
@@ -108,7 +108,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroup`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_bind_group_with_u32_slice_and_u32_and_dynamic_offsets_data_length(
         this: &GpuRenderBundleEncoder,
         index: u32,
@@ -127,7 +127,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroup`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_bind_group_with_u32_array_and_u32_and_dynamic_offsets_data_length(
         this: &GpuRenderBundleEncoder,
         index: u32,
@@ -146,7 +146,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroup`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_bind_group_with_u32_slice_and_f64_and_dynamic_offsets_data_length(
         this: &GpuRenderBundleEncoder,
         index: u32,
@@ -165,7 +165,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroup`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_bind_group_with_u32_array_and_f64_and_dynamic_offsets_data_length(
         this: &GpuRenderBundleEncoder,
         index: u32,
@@ -183,7 +183,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn insert_debug_marker(this: &GpuRenderBundleEncoder, marker_label: &str);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPURenderBundleEncoder" , js_name = popDebugGroup)]
@@ -194,7 +194,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn pop_debug_group(this: &GpuRenderBundleEncoder);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPURenderBundleEncoder" , js_name = pushDebugGroup)]
@@ -205,7 +205,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn push_debug_group(this: &GpuRenderBundleEncoder, group_label: &str);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPURenderBundleEncoder" , js_name = draw)]
@@ -216,7 +216,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw(this: &GpuRenderBundleEncoder, vertex_count: u32);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPURenderBundleEncoder" , js_name = draw)]
@@ -227,7 +227,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_with_instance_count(
         this: &GpuRenderBundleEncoder,
         vertex_count: u32,
@@ -242,7 +242,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_with_instance_count_and_first_vertex(
         this: &GpuRenderBundleEncoder,
         vertex_count: u32,
@@ -258,7 +258,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_with_instance_count_and_first_vertex_and_first_instance(
         this: &GpuRenderBundleEncoder,
         vertex_count: u32,
@@ -275,7 +275,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed(this: &GpuRenderBundleEncoder, index_count: u32);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPURenderBundleEncoder" , js_name = drawIndexed)]
@@ -286,7 +286,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed_with_instance_count(
         this: &GpuRenderBundleEncoder,
         index_count: u32,
@@ -301,7 +301,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed_with_instance_count_and_first_index(
         this: &GpuRenderBundleEncoder,
         index_count: u32,
@@ -317,7 +317,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed_with_instance_count_and_first_index_and_base_vertex(
         this: &GpuRenderBundleEncoder,
         index_count: u32,
@@ -334,7 +334,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed_with_instance_count_and_first_index_and_base_vertex_and_first_instance(
         this: &GpuRenderBundleEncoder,
         index_count: u32,
@@ -353,7 +353,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed_indirect_with_u32(
         this: &GpuRenderBundleEncoder,
         indirect_buffer: &GpuBuffer,
@@ -369,7 +369,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indexed_indirect_with_f64(
         this: &GpuRenderBundleEncoder,
         indirect_buffer: &GpuBuffer,
@@ -385,7 +385,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indirect_with_u32(
         this: &GpuRenderBundleEncoder,
         indirect_buffer: &GpuBuffer,
@@ -401,7 +401,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn draw_indirect_with_f64(
         this: &GpuRenderBundleEncoder,
         indirect_buffer: &GpuBuffer,
@@ -417,7 +417,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -433,7 +433,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer_with_u32(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -450,7 +450,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer_with_f64(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -467,7 +467,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer_with_u32_and_u32(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -485,7 +485,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer_with_f64_and_u32(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -503,7 +503,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer_with_u32_and_f64(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -521,7 +521,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuIndexFormat`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_index_buffer_with_f64_and_f64(
         this: &GpuRenderBundleEncoder,
         buffer: &GpuBuffer,
@@ -539,7 +539,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundleEncoder`, `GpuRenderPipeline`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_pipeline(this: &GpuRenderBundleEncoder, pipeline: &GpuRenderPipeline);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBuffer")]
@@ -551,7 +551,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer(this: &GpuRenderBundleEncoder, slot: u32, buffer: Option<&GpuBuffer>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBuffer")]
@@ -563,7 +563,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer_with_u32(
         this: &GpuRenderBundleEncoder,
         slot: u32,
@@ -580,7 +580,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer_with_f64(
         this: &GpuRenderBundleEncoder,
         slot: u32,
@@ -597,7 +597,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer_with_u32_and_u32(
         this: &GpuRenderBundleEncoder,
         slot: u32,
@@ -615,7 +615,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer_with_f64_and_u32(
         this: &GpuRenderBundleEncoder,
         slot: u32,
@@ -633,7 +633,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer_with_u32_and_f64(
         this: &GpuRenderBundleEncoder,
         slot: u32,
@@ -651,7 +651,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuRenderBundleEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_vertex_buffer_with_f64_and_f64(
         this: &GpuRenderBundleEncoder,
         slot: u32,

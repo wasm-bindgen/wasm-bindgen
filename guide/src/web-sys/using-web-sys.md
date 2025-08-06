@@ -49,7 +49,7 @@ pub fn make_the_window_small() {
 }
 ```
 
-[api]: https://rustwasm.github.io/wasm-bindgen/api/web_sys/
+[api]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/
 [js-resize-to]: https://developer.mozilla.org/en-US/docs/Web/API/window/resizeTo
-[search-resize-to]: https://rustwasm.github.io/wasm-bindgen/api/web_sys/?search=resizeTo
-[rust-resize-to]: https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.resize_to
+[search-resize-to]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/?search=resizeTo
+[rust-resize-to]: https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/struct.Window.html#method.resize_to

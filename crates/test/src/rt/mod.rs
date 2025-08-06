@@ -600,7 +600,7 @@ impl Future for ExecuteTests {
 
         // Tests are still executing, we're registered to get a notification,
         // keep going.
-        if running.len() != 0 {
+        if !running.is_empty() {
             return Poll::Pending;
         }
 
@@ -609,7 +609,7 @@ impl Future for ExecuteTests {
         assert_eq!(remaining.len(), 0);
 
         self.0.print_results();
-        let all_passed = self.0.failures.borrow().len() == 0;
+        let all_passed = self.0.failures.borrow().is_empty();
         Poll::Ready(all_passed)
     }
 }
@@ -653,7 +653,7 @@ impl State {
 
     fn print_results(&self) {
         let failures = self.failures.borrow();
-        if failures.len() > 0 {
+        if !failures.is_empty() {
             self.formatter.writeln("\nfailures:\n");
             for (test, failure) in failures.iter() {
                 self.print_failure(test, failure);
@@ -676,7 +676,7 @@ impl State {
              {} ignored; \
              {} filtered out\
              {}\n",
-            if failures.len() == 0 { "ok" } else { "FAILED" },
+            if failures.is_empty() { "ok" } else { "FAILED" },
             self.succeeded_count.get(),
             failures.len(),
             self.ignored_count.get(),

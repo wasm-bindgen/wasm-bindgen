@@ -11,20 +11,20 @@ fn bool() {
 
 #[wasm_bindgen_test]
 fn ints() {
-    assert_eq!(ConstByte::IMIN, i8::min_value());
-    assert_eq!(ConstByte::IMAX, i8::max_value());
-    assert_eq!(ConstByte::UMIN, u8::min_value());
-    assert_eq!(ConstByte::UMAX, u8::max_value());
+    assert_eq!(ConstByte::IMIN, i8::MIN);
+    assert_eq!(ConstByte::IMAX, i8::MAX);
+    assert_eq!(ConstByte::UMIN, u8::MIN);
+    assert_eq!(ConstByte::UMAX, u8::MAX);
 
-    assert_eq!(ConstShort::IMIN, i16::min_value());
-    assert_eq!(ConstShort::IMAX, i16::max_value());
-    assert_eq!(ConstShort::UMIN, u16::min_value());
-    assert_eq!(ConstShort::UMAX, u16::max_value());
+    assert_eq!(ConstShort::IMIN, i16::MIN);
+    assert_eq!(ConstShort::IMAX, i16::MAX);
+    assert_eq!(ConstShort::UMIN, u16::MIN);
+    assert_eq!(ConstShort::UMAX, u16::MAX);
 
-    assert_eq!(ConstLong::IMIN, i32::min_value());
-    assert_eq!(ConstLong::IMAX, i32::max_value());
-    assert_eq!(ConstLong::UMIN, u32::min_value());
-    assert_eq!(ConstLong::UMAX, u32::max_value());
+    assert_eq!(ConstLong::IMIN, i32::MIN);
+    assert_eq!(ConstLong::IMAX, i32::MAX);
+    assert_eq!(ConstLong::UMIN, u32::MIN);
+    assert_eq!(ConstLong::UMAX, u32::MAX);
 }
 
 #[wasm_bindgen_test]

@@ -2,12 +2,12 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/todomvc/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/todomvc
-[element]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/todomvc/src/element.rs
-[scheduler]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/todomvc/src/scheduler.rs
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/todomvc/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/todomvc
+[element]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/todomvc/src/element.rs
+[scheduler]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/todomvc/src/scheduler.rs
 
-[wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) and [web-sys](https://rustwasm.github.io/wasm-bindgen/api/web_sys/) coded [TODO MVC](http://todomvc.com/)
+[wasm-bindgen](https://github.com/wasm-bindgen/wasm-bindgen) and [web-sys](https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/) coded [TODO MVC](http://todomvc.com/)
 
 The code was rewritten from the [ES6 version](http://todomvc.com/examples/vanilla-es6/).
 

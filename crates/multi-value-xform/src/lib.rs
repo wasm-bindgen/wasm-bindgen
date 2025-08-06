@@ -300,7 +300,7 @@ fn xform_one(
 
     let wrapper = wrapper.finish(params, &mut module.funcs);
     if let Some(name) = &module.funcs.get(func).name {
-        module.funcs.get_mut(wrapper).name = Some(format!("{} multivalue shim", name));
+        module.funcs.get_mut(wrapper).name = Some(format!("{name} multivalue shim"));
     }
 
     Ok(wrapper)
@@ -327,8 +327,7 @@ mod tests {
         ] {
             let actual = super::round_up_to_alignment(n, align);
             println!(
-                "round_up_to_alignment(n = {}, align = {}) = {} (expected {})",
-                n, align, actual, expected
+                "round_up_to_alignment(n = {n}, align = {align}) = {actual} (expected {expected})"
             );
             assert_eq!(actual, expected);
         }

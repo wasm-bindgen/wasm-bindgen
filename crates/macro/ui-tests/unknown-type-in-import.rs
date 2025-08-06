@@ -7,4 +7,3 @@ extern "C" {
 }
 
 fn main() {}
-

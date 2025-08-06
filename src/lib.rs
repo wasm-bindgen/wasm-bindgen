@@ -84,7 +84,7 @@ macro_rules! externs {
         $(
             #[cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))]
             #[allow(unused_variables)]
-            unsafe extern fn $name($($args)*) -> $ret {
+            unsafe extern "C" fn $name($($args)*) -> $ret {
                 panic!("function not implemented on non-wasm32 targets")
             }
         )*
@@ -241,7 +241,7 @@ impl JsValue {
     /// some circumstances][dep-cycle-issue]. Use [`serde-wasm-bindgen`] or
     /// [`gloo_utils::format::JsValueSerdeExt`] instead.
     ///
-    /// [dep-cycle-issue]: https://github.com/rustwasm/wasm-bindgen/issues/2770
+    /// [dep-cycle-issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/2770
     /// [`serde-wasm-bindgen`]: https://docs.rs/serde-wasm-bindgen
     /// [`gloo_utils::format::JsValueSerdeExt`]: https://docs.rs/gloo-utils/latest/gloo_utils/format/trait.JsValueSerdeExt.html
     ///
@@ -274,7 +274,7 @@ impl JsValue {
     /// some circumstances][dep-cycle-issue]. Use [`serde-wasm-bindgen`] or
     /// [`gloo_utils::format::JsValueSerdeExt`] instead.
     ///
-    /// [dep-cycle-issue]: https://github.com/rustwasm/wasm-bindgen/issues/2770
+    /// [dep-cycle-issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/2770
     /// [`serde-wasm-bindgen`]: https://docs.rs/serde-wasm-bindgen
     /// [`gloo_utils::format::JsValueSerdeExt`]: https://docs.rs/gloo-utils/latest/gloo_utils/format/trait.JsValueSerdeExt.html
     ///
@@ -336,7 +336,7 @@ impl JsValue {
     /// [documentation about the `str` type][caveats] which contains a few
     /// caveats about the encodings.
     ///
-    /// [caveats]: https://rustwasm.github.io/docs/wasm-bindgen/reference/types/str.html
+    /// [caveats]: https://wasm-bindgen.github.io/wasm-bindgen/reference/types/str.html
     #[inline]
     pub fn as_string(&self) -> Option<String> {
         unsafe { FromWasmAbi::from_abi(__wbindgen_string_get(self.idx)) }

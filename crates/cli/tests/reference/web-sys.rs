@@ -1,7 +1,7 @@
 // DEPENDENCY: web-sys = { path = '{root}/crates/web-sys', features = ['console', 'Url', 'MediaSourceEnum', 'MediaSourceReadyState'] }
 
 use wasm_bindgen::prelude::wasm_bindgen;
-use web_sys::{Url, MediaSourceEnum, MediaSourceReadyState};
+use web_sys::{MediaSourceEnum, MediaSourceReadyState, Url};
 
 #[wasm_bindgen]
 pub fn get_url() -> Url {
