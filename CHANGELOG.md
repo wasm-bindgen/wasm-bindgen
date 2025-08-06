@@ -10,6 +10,9 @@
 
 ### Fixed
 
+* Detect more failure scenarios when retrieving the Wasm module.
+  [#4556](https://github.com/wasm-bindgen/wasm-bindgen/pull/4556)
+
 * Add a workaround for `TextDecoder` failing in older version of Safari when too many bytes are decoded through it over its lifetime.
   [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
 
