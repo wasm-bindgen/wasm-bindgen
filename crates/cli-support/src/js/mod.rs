@@ -897,6 +897,8 @@ __wbg_set_wasm(wasm);"
 
         let js = format!(
             "\
+                const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
+
                 async function __wbg_load(module, imports) {{
                     if (typeof Response === 'function' && module instanceof Response) {{
                         if (typeof WebAssembly.instantiateStreaming === 'function') {{
@@ -904,7 +906,9 @@ __wbg_set_wasm(wasm);"
                                 return await WebAssembly.instantiateStreaming(module, imports);
 
                             }} catch (e) {{
-                                if (module.headers.get('Content-Type') != 'application/wasm') {{
+                                const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+
+                                if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {{
                                     console.warn(\"`WebAssembly.instantiateStreaming` failed \
                                                     because your server does not serve Wasm with \
                                                     `application/wasm` MIME type. Falling back to \
