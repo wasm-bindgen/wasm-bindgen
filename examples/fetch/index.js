@@ -2,7 +2,7 @@ const rust = import('./pkg');
 
 rust
   .then(m => {
-      return m.run("rustwasm/wasm-bindgen").then((data) => {
+      return m.run("wasm-bindgen/wasm-bindgen").then((data) => {
           console.log(data);
 
           console.log("The latest commit to the wasm-bindgen %s branch is:", data.name);

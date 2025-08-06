@@ -1,6 +1,6 @@
 //! # TODO MVC
 //!
-//! A [TODO MVC](http://todomvc.com/) implementation written using [web-sys](https://rustwasm.github.io/wasm-bindgen/web-sys/overview.html)
+//! A [TODO MVC](http://todomvc.com/) implementation written using [web-sys](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/overview.html)
 
 use wasm_bindgen::prelude::*;
 

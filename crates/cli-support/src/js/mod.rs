@@ -897,6 +897,8 @@ __wbg_set_wasm(wasm);"
 
         let js = format!(
             "\
+                const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
+
                 async function __wbg_load(module, imports) {{
                     if (typeof Response === 'function' && module instanceof Response) {{
                         if (typeof WebAssembly.instantiateStreaming === 'function') {{
@@ -904,7 +906,9 @@ __wbg_set_wasm(wasm);"
                                 return await WebAssembly.instantiateStreaming(module, imports);
 
                             }} catch (e) {{
-                                if (module.headers.get('Content-Type') != 'application/wasm') {{
+                                const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+
+                                if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {{
                                     console.warn(\"`WebAssembly.instantiateStreaming` failed \
                                                     because your server does not serve Wasm with \
                                                     `application/wasm` MIME type. Falling back to \
@@ -1685,47 +1689,96 @@ __wbg_set_wasm(wasm);"
         if !self.should_write_global("text_encoder") {
             return Ok(());
         }
-        self.expose_text_processor("TextEncoder", "encode", "('utf-8')", None)
+        self.expose_text_processor("const", "TextEncoder", "encode", "('utf-8')", None)
     }
 
-    fn expose_text_decoder(&mut self) -> Result<(), Error> {
+    fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) -> Result<(), Error> {
         if !self.should_write_global("text_decoder") {
             return Ok(());
         }
 
         // This is needed to workaround a bug in Safari
-        // See: https://github.com/rustwasm/wasm-bindgen/issues/1825
+        // See: https://github.com/wasm-bindgen/wasm-bindgen/issues/1825
         let init = Some("cachedTextDecoder.decode();");
 
         // `ignoreBOM` is needed so that the BOM will be preserved when sending a string from Rust to JS
         // `fatal` is needed to catch any weird encoding bugs when sending a string from Rust to JS
         self.expose_text_processor(
+            "let",
             "TextDecoder",
             "decode",
             "('utf-8', { ignoreBOM: true, fatal: true })",
             init,
         )?;
 
+        let text_decoder_decode = self.generate_text_decoder_decode(mem, memory)?;
+        match &self.config.mode {
+            OutputMode::Bundler { .. } | OutputMode::Web => {
+                // For targets that can run in a browser, we need a workaround for the fact that
+                // (at least) Safari 16 to 18 has a TextDecoder that can't decode anymore after
+                // processing 2GiB of data. The workaround is that we keep track of how much the
+                // decoder has decoded and just create a new decoder when we're getting close to
+                // the limit.
+                // See MAX_SAFARI_DECODE_BYTES below for link to bug report.
+
+                let cached_text_processor = self.generate_cached_text_processor_init(
+                    "TextDecoder",
+                    "decode",
+                    "('utf-8', { ignoreBOM: true, fatal: true })",
+                )?;
+
+                // Maximum number of bytes Safari can handle for one TextDecoder is 2GiB (0x80000000 bytes)
+                // but empirically it seems to crash a bit before the end, so we remove 1MiB (0x100000 bytes)
+                // of margin.
+                // Workaround for a bug in Safari.
+                // See https://github.com/rustwasm/wasm-bindgen/issues/4471
+                const MAX_SAFARI_DECODE_BYTES: u32 = 0x80000000 - 0x100000;
+                self.global(&format!(
+                    "
+                    const MAX_SAFARI_DECODE_BYTES = {MAX_SAFARI_DECODE_BYTES};
+                    let numBytesDecoded = 0;
+                    function decodeText(ptr, len) {{
+                        numBytesDecoded += len;
+                        if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {{
+                            {cached_text_processor}
+                            cachedTextDecoder.decode();
+                            numBytesDecoded = len;
+                        }}
+                        return {text_decoder_decode};
+                    }}
+                    ",
+                ));
+            }
+            _ => {
+                // For any non-browser target, we can just use the TextDecoder without any workarounds.
+                // For browser-targets, see the workaround for Safari above.
+                self.global(&format!(
+                    "
+                    function decodeText(ptr, len) {{
+                        return {text_decoder_decode};
+                    }}
+                    ",
+                ));
+            }
+        }
+
         Ok(())
     }
 
     fn expose_text_processor(
         &mut self,
+        decl_kind: &str,
         s: &str,
         op: &str,
         args: &str,
         init: Option<&str>,
     ) -> Result<(), Error> {
+        let cached_text_processor_init = self.generate_cached_text_processor_init(s, op, args)?;
         match &self.config.mode {
             OutputMode::Node { .. } => {
-                let name = self.import_name(&JsImport {
-                    name: JsImportName::Module {
-                        module: "util".to_string(),
-                        name: s.to_string(),
-                    },
-                    fields: Vec::new(),
-                })?;
-                self.global(&format!("let cached{s} = new {name}{args};"));
+                // decl_kind is the kind of the kind of the declaration: let or const
+                // cached_text_processor_init is the rest of the statement for initializing a cached text processor
+                self.global(&format!("{decl_kind} {cached_text_processor_init}"));
             }
             OutputMode::Bundler {
                 browser_only: false,
@@ -1736,13 +1789,15 @@ __wbg_set_wasm(wasm);"
                         (0, module.require)('util').{s} : {s};\
                 "
                 ));
-                self.global(&format!("let cached{s} = new l{s}{args};"));
+                self.global(&format!("{decl_kind} {cached_text_processor_init}"));
             }
             OutputMode::Deno
             | OutputMode::Web
             | OutputMode::NoModules { .. }
             | OutputMode::Bundler { browser_only: true } => {
-                self.global(&format!("const cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : {{ {op}: () => {{ throw Error('{s} not available') }} }} );"))
+                // decl_kind is the kind of the kind of the declaration: let or const
+                // cached_text_processor_init is the rest of the statement for initializing a cached text processor
+                self.global(&format!("{decl_kind} {cached_text_processor_init}"))
             }
         };
 
@@ -1764,9 +1819,43 @@ __wbg_set_wasm(wasm);"
         Ok(())
     }
 
+    /// Generates a partial text processor statement, everything except the declaration kind,
+    /// i.e. everything except for `const` or `let` which the caller needs to handle itself.
+    fn generate_cached_text_processor_init(
+        &mut self,
+        s: &str,
+        op: &str,
+        args: &str,
+    ) -> Result<String, Error> {
+        let new_cached_text_procesor = match &self.config.mode {
+            OutputMode::Node { .. } => {
+                let name = self.import_name(&JsImport {
+                    name: JsImportName::Module {
+                        module: "util".to_string(),
+                        name: s.to_string(),
+                    },
+                    fields: Vec::new(),
+                })?;
+                format!("cached{s} = new {name}{args};")
+            }
+            OutputMode::Bundler {
+                browser_only: false,
+            } => {
+                format!("cached{s} = new l{s}{args};")
+            }
+            OutputMode::Deno
+            | OutputMode::Web
+            | OutputMode::NoModules { .. }
+            | OutputMode::Bundler { browser_only: true } => {
+                format!("cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : {{ {op}: () => {{ throw Error('{s} not available') }} }} );")
+            }
+        };
+        Ok(new_cached_text_procesor)
+    }
+
     fn expose_get_string_from_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
-        self.expose_text_decoder()?;
         let mem = self.expose_uint8_memory(memory);
+        self.expose_text_decoder(&mem, memory)?;
         let ret = MemView {
             name: "getStringFromWasm".into(),
             num: mem.num,
@@ -1776,6 +1865,22 @@ __wbg_set_wasm(wasm);"
             return Ok(ret);
         }
 
+        self.global(&format!(
+            "
+            function {ret}(ptr, len) {{
+                ptr = ptr >>> 0;
+                return decodeText(ptr, len);
+            }}
+            ",
+        ));
+        Ok(ret)
+    }
+
+    fn generate_text_decoder_decode(
+        &self,
+        mem: &MemView,
+        memory: MemoryId,
+    ) -> Result<String, Error> {
         // Typically we try to give a raw view of memory out to `TextDecoder` to
         // avoid copying too much data. If, however, a `SharedArrayBuffer` is
         // being used it looks like that is rejected by `TextDecoder` or
@@ -1787,15 +1892,9 @@ __wbg_set_wasm(wasm);"
         let is_shared = self.module.memories.get(memory).shared;
         let method = if is_shared { "slice" } else { "subarray" };
 
-        self.global(&format!(
-            "
-            function {ret}(ptr, len) {{
-                ptr = ptr >>> 0;
-                return cachedTextDecoder.decode({mem}().{method}(ptr, ptr + len));
-            }}
-            "
-        ));
-        Ok(ret)
+        Ok(format!(
+            "cachedTextDecoder.decode({mem}().{method}(ptr, ptr + len))",
+        ))
     }
 
     fn expose_get_cached_string_from_wasm(
@@ -3486,7 +3585,7 @@ __wbg_set_wasm(wasm);"
                         .to_owned())
                 } else {
                     Err(anyhow!("wasm-bindgen needs to be invoked with `--split-linked-modules`, because \"{}\" cannot be embedded.\n\
-                        See https://rustwasm.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details.", path))
+                        See https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details.", path))
                 }
             }
 
@@ -4221,7 +4320,7 @@ __wbg_set_wasm(wasm);"
                     let mut name = to_js_identifier(s);
 
                     // Account for duplicate export names.
-                    // See https://github.com/rustwasm/wasm-bindgen/issues/4371.
+                    // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4371.
                     if self.module.exports.get_func(&name).is_ok() {
                         name.push_str(&self.next_export_idx.to_string());
                     }

@@ -5,7 +5,7 @@ edition = "2021"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-test"
-repository = "https://github.com/rustwasm/wasm-bindgen"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.57"
 version = "0.3.50"
 

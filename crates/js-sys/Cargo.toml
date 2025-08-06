@@ -7,12 +7,12 @@ Node.js and browsers, built on `#[wasm_bindgen]` using the `wasm-bindgen` crate.
 """
 documentation = "https://docs.rs/js-sys"
 edition = "2021"
-homepage = "https://rustwasm.github.io/wasm-bindgen/"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen/"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "js-sys"
 readme = "./README.md"
-repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/js-sys"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys"
 rust-version = "1.57"
 version = "0.3.77"
 

@@ -166,13 +166,16 @@ impl WebDriver {
 
         // Connect to the Firefox instance.
         let start = Instant::now();
+        let wait_sec = 60;
         let ws = loop {
             match tokio_tungstenite::connect_async(format!("ws://{driver_addr}/session")).await {
                 Ok((ws, _)) => break ws,
                 Err(e) => {
-                    if start.elapsed() > Duration::from_secs(20) {
-                        return Err(e).context("failed to connect to Firefox (after 20s)");
+                    if start.elapsed().as_secs() > wait_sec {
+                        return Err(e)
+                            .context(format!("failed to connect to Firefox (after {wait_sec}s)"));
                     }
+                    eprintln!("Failed to connect to Firefox: {e}, retrying...");
                 }
             }
         };

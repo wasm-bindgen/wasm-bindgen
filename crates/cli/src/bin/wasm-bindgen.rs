@@ -10,7 +10,7 @@ use wasm_bindgen_cli_support::{Bindgen, EncodeInto};
     version,
     about,
     long_about = None,
-    after_help = "Additional documentation: https://rustwasm.github.io/wasm-bindgen/reference/cli.html",
+    after_help = "Additional documentation: https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html",
 )]
 struct Args {
     #[arg(long, help = "Deprecated, use `--target nodejs`")]
