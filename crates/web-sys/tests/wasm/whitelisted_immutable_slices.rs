@@ -8,7 +8,7 @@
 //! Especially important since this whitelist is stringly typed and currently
 //! maintained by hand.
 //!
-//! @see https://github.com/rustwasm/wasm-bindgen/issues/1005
+//! @see https://github.com/wasm-bindgen/wasm-bindgen/issues/1005
 
 use wasm_bindgen::{JsCast, JsValue};
 #[cfg(web_sys_unstable_apis)]

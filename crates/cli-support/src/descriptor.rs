@@ -128,7 +128,7 @@ pub enum VectorKind {
 impl Descriptor {
     pub fn decode(mut data: &[u32]) -> Descriptor {
         let descriptor = Descriptor::_decode(&mut data, false);
-        assert!(data.is_empty(), "remaining data {:?}", data);
+        assert!(data.is_empty(), "remaining data {data:?}");
         descriptor
     }
 
@@ -196,7 +196,7 @@ impl Descriptor {
             UNIT => Descriptor::Unit,
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
-            other => panic!("unknown descriptor: {}", other),
+            other => panic!("unknown descriptor: {other}"),
         }
     }
 
@@ -309,9 +309,9 @@ impl VectorKind {
             VectorKind::Externref => "any[]".to_string(),
             VectorKind::NamedExternref(ref name) => {
                 if is_valid_ident(name.as_str()) {
-                    format!("{}[]", name)
+                    format!("{name}[]")
                 } else {
-                    format!("({})[]", name)
+                    format!("({name})[]")
                 }
             }
         }

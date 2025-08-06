@@ -75,7 +75,7 @@ pub fn interface(module: &Module) -> Result<String, Error> {
 pub fn typescript(module: &Module) -> Result<String, Error> {
     let mut exports = "/* tslint:disable */\n/* eslint-disable */\n".to_string();
     module_export_types(module, |name, ty| {
-        writeln!(exports, "export const {}: {};", name, ty).unwrap();
+        writeln!(exports, "export const {name}: {ty};").unwrap();
     });
     Ok(exports)
 }
@@ -227,8 +227,6 @@ impl Output {
                     {set_exports}
                 }})
             ",
-            imports = imports,
-            set_exports = set_exports,
         );
         let wasm = self.module.emit_wasm();
         let (bytes, booted) = if self.base64 {
@@ -255,9 +253,7 @@ impl Output {
                     fetch('{path}')
                         .then(res => res.arrayBuffer())
                         .then(bytes => {inst})
-                    ",
-                    path = path,
-                    inst = inst
+                    "
                 ),
             )
         } else {
@@ -270,10 +266,6 @@ impl Output {
             export const booted = {booted};
             {exports}
             ",
-            bytes = bytes,
-            booted = booted,
-            js_imports = js_imports,
-            exports = exports,
         );
         let wasm = if self.base64 { None } else { Some(wasm) };
         Ok((js, wasm))

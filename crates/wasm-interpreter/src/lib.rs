@@ -218,7 +218,7 @@ impl Interpreter {
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) -> Option<i32> {
         let func = module.funcs.get(id);
         log::debug!("starting a call of {:?} {:?}", id, func.name);
-        log::debug!("arguments {:?}", args);
+        log::debug!("arguments {args:?}");
         let local = match &func.kind {
             walrus::FunctionKind::Local(l) => l,
             _ => panic!("can only call locally defined functions"),
@@ -347,7 +347,7 @@ impl Frame<'_> {
                 // here by directly inlining it.
                 if Some(func) == self.interp.describe_id {
                     let val = stack.pop().unwrap();
-                    log::debug!("__wbindgen_describe({})", val);
+                    log::debug!("__wbindgen_describe({val})");
                     self.interp.descriptor.push(val as u32);
 
                 // If this function is calling the `__wbindgen_describe_closure`
@@ -359,7 +359,7 @@ impl Frame<'_> {
                     let val = stack.pop().unwrap();
                     stack.pop();
                     stack.pop();
-                    log::debug!("__wbindgen_describe_closure({})", val);
+                    log::debug!("__wbindgen_describe_closure({val})");
                     self.interp.descriptor_table_idx = Some(val as u32);
                     stack.push(0)
 

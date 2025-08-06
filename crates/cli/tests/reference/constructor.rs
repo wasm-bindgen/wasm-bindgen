@@ -5,7 +5,6 @@ pub struct ClassConstructor(());
 
 #[wasm_bindgen]
 impl ClassConstructor {
-
     #[wasm_bindgen(constructor)]
     pub fn new() -> ClassConstructor {
         ClassConstructor(())
