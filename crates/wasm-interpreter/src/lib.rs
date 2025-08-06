@@ -308,22 +308,22 @@ impl Frame<'_> {
             // theory there doesn't need to be.
             Instr::Load(e) => {
                 let address = stack.pop().unwrap();
+                let address = address as u32 + e.arg.offset;
                 ensure!(
                     address > 0,
-                    "Read a negative address value from the stack. Did we run out of memory?"
+                    "Read a negative or zero address value from the stack. Did we run out of memory?"
                 );
-                let address = address as u32 + e.arg.offset;
                 ensure!(address % 4 == 0);
                 stack.push(self.interp.mem[address as usize / 4])
             }
             Instr::Store(e) => {
                 let value = stack.pop().unwrap();
                 let address = stack.pop().unwrap();
+                let address = address as u32 + e.arg.offset;
                 ensure!(
                     address > 0,
-                    "Read a negative address value from the stack. Did we run out of memory?"
+                    "Read a negative or zero address value from the stack. Did we run out of memory?"
                 );
-                let address = address as u32 + e.arg.offset;
                 ensure!(address % 4 == 0);
                 self.interp.mem[address as usize / 4] = value;
             }
