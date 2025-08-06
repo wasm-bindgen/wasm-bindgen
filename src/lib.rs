@@ -386,6 +386,38 @@ impl JsValue {
     pub fn is_undefined(&self) -> bool {
         unsafe { __wbindgen_is_undefined(self.idx) == 1 }
     }
+    /// Tests whether this JS value is `null` or `undefined`
+    #[inline]
+    pub fn is_null_or_undefined(&self) -> bool {
+        unsafe { __wbindgen_is_null_or_undefined(self.idx) == 1 }
+    }
+
+    /// Returns `Some(self)` if this `JsValue` is not `null` or `undefined`, otherwise returns `None`.
+    ///
+    /// This method works similar to filtering an `Option` - it converts a `JsValue` to an
+    /// `Option<JsValue>` based on whether it's defined.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use wasm_bindgen::prelude::*;
+    ///
+    /// let value = JsValue::from_str("hello");
+    /// let result = value.if_defined();
+    /// assert_eq!(result, Some(value));
+    ///
+    /// let null_value = JsValue::NULL;
+    /// let result = null_value.if_defined();
+    /// assert_eq!(result, None);
+    /// ```
+    #[inline]
+    pub fn if_defined(&self) -> Option<JsValue> {
+        if self.is_null_or_undefined() {
+            None
+        } else {
+            Some(self.clone())
+        }
+    }
 
     /// Tests whether the type of this JS value is `symbol`
     #[inline]
@@ -1096,6 +1128,7 @@ externs! {
 
         fn __wbindgen_is_null(idx: u32) -> u32;
         fn __wbindgen_is_undefined(idx: u32) -> u32;
+        fn __wbindgen_is_null_or_undefined(idx: u32) -> u32;
         fn __wbindgen_is_symbol(idx: u32) -> u32;
         fn __wbindgen_is_object(idx: u32) -> u32;
         fn __wbindgen_is_array(idx: u32) -> u32;

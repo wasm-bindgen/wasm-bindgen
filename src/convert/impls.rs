@@ -624,3 +624,163 @@ where
     }
     result.into_boxed_slice()
 }
+
+// WebAssembly ToWebAssemblyValue implementations for primitive types
+// These implement the exact WebAssembly specification algorithms
+
+impl TryFromJsValue for i32 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToInt32(v) algorithm
+        let number = unsafe { crate::__wbindgen_as_number(js_value.idx) };
+        let result = if !number.is_finite() || number == 0.0 || number == -0.0 {
+            0i32
+        } else {
+            let int = number as i64;
+            let int32bit = (int as u32) as i64;
+            if int32bit >= 1_i64 << 31 {
+                (int32bit - (1_i64 << 32)) as i32
+            } else {
+                int32bit as i32
+            }
+        };
+        Ok(result)
+    }
+}
+
+impl TryFromJsValue for u32 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToUint32(v) algorithm
+        let number = unsafe { crate::__wbindgen_as_number(js_value.idx) };
+        let result = if !number.is_finite() || number == 0.0 || number == -0.0 {
+            0u32
+        } else {
+            let int = number as i64;
+            int as u32
+        };
+        Ok(result)
+    }
+}
+
+impl TryFromJsValue for i64 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToBigInt64(v) algorithm
+        crate::bigint_get_as_i64(&js_value)
+            .ok_or_else(|| JsError::new("Failed to convert to BigInt64"))
+    }
+}
+
+impl TryFromJsValue for u64 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToBigUint64(v) algorithm
+        crate::bigint_get_as_i64(&js_value)
+            .map(|i64_val| i64_val as u64)
+            .ok_or_else(|| JsError::new("Failed to convert to BigUint64"))
+    }
+}
+
+impl TryFromJsValue for f32 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToNumber(v) algorithm with f32 conversion
+        let number = unsafe { crate::__wbindgen_as_number(js_value.idx) };
+        let result = if number.is_nan() {
+            f32::NAN
+        } else {
+            number as f32
+        };
+        Ok(result)
+    }
+}
+
+impl TryFromJsValue for f64 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToNumber(v) algorithm
+        let number = unsafe { crate::__wbindgen_as_number(js_value.idx) };
+        let result = if number.is_nan() { f64::NAN } else { number };
+        Ok(result)
+    }
+}
+
+impl TryFromJsValue for bool {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // WebAssembly ToBoolean(v) algorithm
+        Ok(js_value.is_truthy())
+    }
+}
+
+impl TryFromJsValue for char {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        // Convert to string first, then get first character
+        let s = js_value
+            .as_string()
+            .ok_or_else(|| JsError::new("Value is not a string"))?;
+        s.chars()
+            .next()
+            .ok_or_else(|| JsError::new("String is empty"))
+    }
+}
+
+// Smaller integer types - use i32/u32 conversion then cast
+impl TryFromJsValue for i8 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        i32::try_from_js_value(js_value).map(|v| v as i8)
+    }
+}
+
+impl TryFromJsValue for u8 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        u32::try_from_js_value(js_value).map(|v| v as u8)
+    }
+}
+
+impl TryFromJsValue for i16 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        i32::try_from_js_value(js_value).map(|v| v as i16)
+    }
+}
+
+impl TryFromJsValue for u16 {
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        u32::try_from_js_value(js_value).map(|v| v as u16)
+    }
+}
+
+// Blanket implementation for Option<T> where T implements TryFromJsValue
+// Handles null/undefined first, then applies inner type conversion
+impl<T> TryFromJsValue for Option<T>
+where
+    T: TryFromJsValue<Error = JsError>,
+{
+    type Error = JsError;
+
+    fn try_from_js_value(js_value: JsValue) -> Result<Self, Self::Error> {
+        if js_value.is_null() || js_value.is_undefined() {
+            Ok(None)
+        } else {
+            T::try_from_js_value(js_value).map(Some)
+        }
+    }
+}

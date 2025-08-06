@@ -15,6 +15,8 @@ exports.js_works = () => {
     assert.strictEqual(wasm.api_js_undefined(), undefined);
 
     wasm.api_test_is_null_undefined(null, undefined, 1.0);
+    wasm.api_test_is_null_or_undefined(null, undefined, 1.0);
+    assert.strictEqual(wasm.api_test_if_defined(null, undefined, "hello"), "hello");
 
     assert.strictEqual(wasm.api_get_true(), true);
     assert.strictEqual(wasm.api_get_false(), false);

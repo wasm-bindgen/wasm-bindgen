@@ -1388,30 +1388,64 @@ impl TryToTokens for ast::ImportFunction {
         }
         let abi_ret;
         let mut convert_ret;
-        match &self.js_ret {
-            Some(syn::Type::Reference(_)) => {
-                bail_span!(
-                    self.js_ret,
-                    "cannot return references in #[wasm_bindgen] imports yet"
-                );
-            }
-            Some(ref ty) => {
-                if self.function.r#async {
-                    abi_ret = quote! {
-                        #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
-                    };
-                    let future = quote! {
-                        #wasm_bindgen_futures::JsFuture::from(
-                            <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
-                                ::from_abi(#ret_ident.join())
-                        ).await
-                    };
-                    convert_ret = if self.catch {
-                        quote! { Ok(#wasm_bindgen::JsCast::unchecked_from_js(#future?)) }
+        if self.function.r#async {
+            abi_ret = quote! {
+                #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+            };
+            let mut future = quote! {
+                #wasm_bindgen_futures::JsFuture::from(
+                    <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
+                        ::from_abi(#ret_ident.join())
+                ).await
+            };
+            future = if self.catch {
+                quote! { #future? }
+            } else {
+                quote! { #future.expect("uncaught exception") }
+            };
+            match &self.js_ret {
+                Some(syn::Type::Reference(_)) => {
+                    bail_span!(
+                        self.js_ret,
+                        "cannot return references in #[wasm_bindgen] imports yet"
+                    );
+                }
+                Some(ref ty) => {
+                    convert_ret = if let Some(()) = is_abi_primitive(ty) {
+                        quote! {
+                            <#ty as #wasm_bindgen::convert::TryFromJsValue>::try_from_js_value(#future)
+                                .expect(&format!("Failed dynamic conversion of async return value into {}", stringify!(#ty)))
+                        }
+                    } else if let Some(inner_ty) = extract_option_inner_type(ty) {
+                        quote! {
+                            #future.if_defined().map(#wasm_bindgen::JsCast::unchecked_into::<#inner_ty>)
+                        }
                     } else {
-                        quote! { #wasm_bindgen::JsCast::unchecked_from_js(#future.expect("unexpected exception")) }
+                        quote! {
+                            #wasm_bindgen::JsCast::unchecked_into::<#ty>(#future)
+                        }
                     };
-                } else {
+                    if self.catch {
+                        convert_ret = quote! { Ok(#convert_ret) };
+                    }
+                }
+                None => {
+                    convert_ret = if self.catch {
+                        quote! { #future; Ok(()) }
+                    } else {
+                        quote! { #future; }
+                    };
+                }
+            }
+        } else {
+            match &self.js_ret {
+                Some(syn::Type::Reference(_)) => {
+                    bail_span!(
+                        self.js_ret,
+                        "cannot return references in #[wasm_bindgen] imports yet"
+                    );
+                }
+                Some(ref ty) => {
                     abi_ret = quote! {
                         #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
                     };
@@ -1420,24 +1454,7 @@ impl TryToTokens for ast::ImportFunction {
                             ::from_abi(#ret_ident.join())
                     };
                 }
-            }
-            None => {
-                if self.function.r#async {
-                    abi_ret = quote! {
-                        #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
-                    };
-                    let future = quote! {
-                        #wasm_bindgen_futures::JsFuture::from(
-                            <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
-                                ::from_abi(#ret_ident.join())
-                        ).await
-                    };
-                    convert_ret = if self.catch {
-                        quote! { #future?; Ok(()) }
-                    } else {
-                        quote! { #future.expect("uncaught exception"); }
-                    };
-                } else {
+                None => {
                     abi_ret = quote! { () };
                     convert_ret = quote! { () };
                 }
@@ -1561,11 +1578,14 @@ impl ToTokens for DescribeImport<'_> {
         };
         let argtys = f.function.arguments.iter().map(|arg| &arg.pat_type.ty);
         let nargs = f.function.arguments.len() as u32;
-        let inform_ret = match &f.js_ret {
-            Some(ref t) => quote! { <#t as WasmDescribe>::describe(); },
-            // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => quote! { <JsValue as WasmDescribe>::describe(); },
-            None => quote! { <() as WasmDescribe>::describe(); },
+        let inform_ret = if f.function.r#async {
+            // async functions always return a Promise (JsValue), regardless of their declared return type
+            quote! { <JsValue as WasmDescribe>::describe(); }
+        } else {
+            match &f.js_ret {
+                Some(ref t) => quote! { <#t as WasmDescribe>::describe(); },
+                None => quote! { <() as WasmDescribe>::describe(); },
+            }
         };
 
         Descriptor {
@@ -1985,4 +2005,53 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
         new_tokens.push(token);
     }
     new_tokens.into_iter().collect()
+}
+
+fn extract_option_inner_type(ty: &syn::Type) -> Option<&syn::Type> {
+    match ty {
+        syn::Type::Path(type_path) => {
+            if type_path.path.segments.len() == 1 {
+                let segment = &type_path.path.segments[0];
+                if segment.ident == "Option" {
+                    if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                        if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
+                            return Some(inner_ty);
+                        }
+                    }
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
+fn is_abi_primitive(ty: &syn::Type) -> Option<()> {
+    match ty {
+        syn::Type::Path(type_path) => {
+            // Check if it's a single segment path like "i32" or "u32"
+            if let Some(ident) = type_path.path.get_ident() {
+                match ident.to_string().as_str() {
+                    // WebAssembly primitive types that use ToWebAssemblyValue conversion
+                    "u8" | "u16" | "u32" | "i8" | "i16" | "i32" | "f32" | "f64" | "bool"
+                    | "char" | "i64" | "u64" => Some(()),
+                    _ => None,
+                }
+            } else if type_path.path.segments.len() == 1 {
+                // Check if it's "Option<T>" where T is primitive
+                let segment = &type_path.path.segments[0];
+                if segment.ident == "Option" {
+                    if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                        if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
+                            return is_abi_primitive(inner_ty);
+                        }
+                    }
+                }
+                None
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
 }

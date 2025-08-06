@@ -103,6 +103,9 @@ intrinsics! {
         #[symbol = "__wbindgen_is_null"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsNull,
+        #[symbol = "__wbindgen_is_null_or_undefined"]
+        #[signature = fn(ref_externref()) -> Boolean]
+        IsNullOrUndefined,
         #[symbol = "__wbindgen_is_object"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsObject,
