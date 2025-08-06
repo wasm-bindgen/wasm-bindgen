@@ -3,6 +3,12 @@
 
 ## Unreleased
 
+### Added
+
+* `TypedArray::new_from_slice(&[T])` constructor that allows to create a
+  JS-owned `TypedArray` from a Rust slice.
+  [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
 ### Changed
 
 * Deprecate async constructors.
@@ -16,9 +22,12 @@
 * Add a workaround for `TextDecoder` failing in older version of Safari when too many bytes are decoded through it over its lifetime.
   [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
 
+* `TypedArray::from(&[T])` now works reliably across memory reallocations.
+  [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
 --------------------------------------------------------------------------------
 
-## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
+## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
 
 Released 2025-01-12
 
