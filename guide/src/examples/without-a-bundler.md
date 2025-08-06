@@ -2,7 +2,7 @@
 
 [View full source code][code]
 
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/without-a-bundler
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/without-a-bundler
 
 This example shows how the `--target web` flag can be used load code in a
 browser directly. For this deployment strategy bundlers like Webpack are not
@@ -60,7 +60,7 @@ what it means to deploy without a bundler.
 
 [View full source code][code-no-modules]
 
-[code-no-modules]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/without-a-bundler-no-modules
+[code-no-modules]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/without-a-bundler-no-modules
 
 The older version of using `wasm-bindgen` without a bundler is to use the
 `--target no-modules` flag to the `wasm-bindgen` CLI.

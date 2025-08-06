@@ -98,10 +98,10 @@ impl Slab {
     }
 }
 
-fn internal_error(msg: &str) -> ! {
+fn internal_error(_msg: &str) -> ! {
     cfg_if::cfg_if! {
         if #[cfg(debug_assertions)] {
-            super::throw_str(msg)
+            super::throw_str(_msg)
         } else if #[cfg(feature = "std")] {
             std::process::abort();
         } else if #[cfg(all(

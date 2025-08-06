@@ -673,7 +673,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Animation`, `Element`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn animate(this: &Element, keyframes: Option<&::js_sys::Object>) -> Animation;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Animation")]
@@ -685,7 +685,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Animation`, `Element`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn animate_with_f64(
         this: &Element,
         keyframes: Option<&::js_sys::Object>,
@@ -701,7 +701,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Animation`, `Element`, `KeyframeAnimationOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn animate_with_keyframe_animation_options(
         this: &Element,
         keyframes: Option<&::js_sys::Object>,
@@ -716,7 +716,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_animations(this: &Element) -> ::js_sys::Array;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GetAnimationsOptions")]
@@ -728,7 +728,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Element`, `GetAnimationsOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_animations_with_options(
         this: &Element,
         options: &GetAnimationsOptions,

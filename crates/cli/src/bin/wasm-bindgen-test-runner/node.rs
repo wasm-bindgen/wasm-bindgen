@@ -80,9 +80,9 @@ pub fn execute(
         const tests = [];
     "#,
         wasm = if !module_format {
-            format!(r"const wasm = require('./{0}.js')", module)
+            format!(r"const wasm = require('./{module}.js')")
         } else {
-            format!(r"import * as wasm from './{0}.js'", module)
+            format!(r"import * as wasm from './{module}.js'")
         },
         exit = if !module_format {
             r"const { exit } = require('node:process')".to_string()

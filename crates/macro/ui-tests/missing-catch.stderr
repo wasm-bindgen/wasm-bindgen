@@ -1,5 +1,5 @@
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: FromWasmAbi` is not satisfied
- --> ui-tests/missing-catch.rs:6:9
+ --> ui-tests/missing-catch.rs:6:12
   |
 3 | #[wasm_bindgen]
   | --------------- in this procedural macro expansion
@@ -8,14 +8,14 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
-            bool
-            char
-            isize
-            i8
-            i16
-            i32
-            i64
-            i128
+            *const T
+            *mut T
+            Box<[T]>
+            Clamped<T>
+            NonNull<T>
+            Option<*const T>
+            Option<*mut T>
+            Option<T>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -26,30 +26,30 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   | ^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
-            bool
-            char
-            isize
-            i8
-            i16
-            i32
-            i64
-            i128
+            *const T
+            *mut T
+            Box<[T]>
+            Clamped<T>
+            NonNull<T>
+            Option<*const T>
+            Option<*mut T>
+            Option<T>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: FromWasmAbi` is not satisfied
- --> ui-tests/missing-catch.rs:6:18
+ --> ui-tests/missing-catch.rs:6:21
   |
 6 |     pub fn foo() -> Result<JsValue, JsValue>;
   |                     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
-            bool
-            char
-            isize
-            i8
-            i16
-            i32
-            i64
-            i128
+            *const T
+            *mut T
+            Box<[T]>
+            Clamped<T>
+            NonNull<T>
+            Option<*const T>
+            Option<*mut T>
+            Option<T>
           and $N others

@@ -468,7 +468,7 @@ impl Bindgen {
     }
 
     fn local_module_name(&self, module: &str) -> String {
-        format!("./snippets/{}", module)
+        format!("./snippets/{module}")
     }
 
     fn inline_js_module_name(
@@ -476,10 +476,7 @@ impl Bindgen {
         unique_crate_identifier: &str,
         snippet_idx_in_crate: usize,
     ) -> String {
-        format!(
-            "./snippets/{}/inline{}.js",
-            unique_crate_identifier, snippet_idx_in_crate,
-        )
+        format!("./snippets/{unique_crate_identifier}/inline{snippet_idx_in_crate}.js",)
     }
 }
 
@@ -641,7 +638,7 @@ impl Output {
         // we've collected them from all the programs.
         for (identifier, list) in gen.snippets.iter() {
             for (i, js) in list.iter().enumerate() {
-                let name = format!("inline{}.js", i);
+                let name = format!("inline{i}.js");
                 let path = out_dir.join("snippets").join(identifier).join(name);
                 fs::create_dir_all(path.parent().unwrap())?;
                 fs::write(&path, js)

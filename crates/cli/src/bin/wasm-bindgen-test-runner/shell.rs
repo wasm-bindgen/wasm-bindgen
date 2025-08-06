@@ -11,7 +11,7 @@ impl Shell {
 
     pub fn status(&self, s: &str) {
         let s = if s.len() > WIDTH { &s[..WIDTH] } else { s };
-        print!("{:<1$}\r", s, WIDTH);
+        print!("{s:<WIDTH$}\r");
         io::stdout().flush().unwrap();
     }
 

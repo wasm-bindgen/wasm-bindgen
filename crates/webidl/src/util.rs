@@ -107,11 +107,11 @@ pub fn optional_return_ty(ty: syn::Type) -> syn::Type {
 
 // Returns a link to MDN
 pub fn mdn_doc(class: &str, method: Option<&str>) -> String {
-    let mut link = format!("https://developer.mozilla.org/en-US/docs/Web/API/{}", class);
+    let mut link = format!("https://developer.mozilla.org/en-US/docs/Web/API/{class}");
     if let Some(method) = method {
-        link.push_str(&format!("/{}", method));
+        link.push_str(&format!("/{method}"));
     }
-    format!("[MDN Documentation]({})", link)
+    format!("[MDN Documentation]({link})")
 }
 
 // Array type is borrowed for arguments (`&mut [T]` or `&[T]`) and owned for return value (`Vec<T>`).
@@ -147,10 +147,10 @@ pub fn webidl_const_v_to_backend_const_v(v: &ConstValueLit) -> ConstValue {
                 }
                 let text = &text[offset..];
                 let n = u64::from_str_radix(text, base)
-                    .unwrap_or_else(|_| panic!("literal too big: {}", orig_text));
+                    .unwrap_or_else(|_| panic!("literal too big: {orig_text}"));
                 if negative {
                     let n = if n > (i64::MIN as u64).wrapping_neg() {
-                        panic!("literal too big: {}", orig_text)
+                        panic!("literal too big: {orig_text}")
                     } else {
                         n.wrapping_neg() as i64
                     };
@@ -561,7 +561,7 @@ impl<'src> FirstPassRecord<'src> {
                                 .as_ref()
                                 .map(|idl_type| (orig_arg.name.to_string(), idl_type))
                         })
-                        .chain((1..=i).map(|j| (format!("{}_{}", last_name, j), last_idl_type))),
+                        .chain((1..=i).map(|j| (format!("{last_name}_{j}"), last_idl_type))),
                 );
 
                 if let Some(arguments) = arguments {
@@ -857,13 +857,12 @@ pub fn required_doc_string(options: &Options, features: &BTreeSet<String>) -> Op
     }
     let list = features
         .iter()
-        .map(|ident| format!("`{}`", ident))
+        .map(|ident| format!("`{ident}`"))
         .collect::<Vec<_>>()
         .join(", ");
     Some(format!(
         "\n\n*This API requires the following crate features \
-         to be activated: {}*",
-        list,
+         to be activated: {list}*",
     ))
 }
 
