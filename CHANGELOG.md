@@ -17,6 +17,7 @@
   [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
 
 * Fix incorrect assertion when load and store memory
+
   [#4554](https://github.com/wasm-bindgen/wasm-bindgen/pull/4554)
 --------------------------------------------------------------------------------
 
