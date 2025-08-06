@@ -100,6 +100,9 @@ intrinsics! {
         #[symbol = "__wbindgen_is_null"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsNull,
+        #[symbol = "__wbindgen_is_null_or_undefined"]
+        #[signature = fn(ref_externref()) -> Boolean]
+        IsNullOrUndefined,
         #[symbol = "__wbindgen_is_object"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsObject,
@@ -208,6 +211,18 @@ intrinsics! {
         #[symbol = "__wbindgen_bigint_from_u128"]
         #[signature = fn(U64, U64) -> Externref]
         BigIntFromU128,
+        #[symbol = "__wbindgen_number_new_into_slot"]
+        #[signature = fn(F64) -> I32]
+        NumberNewIntoSlot,
+        #[symbol = "__wbindgen_reset_slots"]
+        #[signature = fn() -> Unit]
+        ResetSlots,
+        #[symbol = "__wbindgen_char_new_into_slot"]
+        #[signature = fn(I32) -> I32]
+        CharNewIntoSlot,
+        #[symbol = "__wbindgen_bigint_new_into_slot"]
+        #[signature = fn(I64) -> I32]
+        BigintNewIntoSlot,
         #[symbol = "__wbindgen_bigint_get_as_i64"]
         #[signature = fn(ref_externref()) -> opt_i64()]
         BigIntGetAsI64,

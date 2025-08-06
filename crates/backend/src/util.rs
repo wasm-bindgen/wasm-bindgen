@@ -9,6 +9,7 @@ use std::iter::FromIterator;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
+use syn::visit::Visit;
 
 use crate::ast;
 use proc_macro2::{self, Ident};
@@ -157,5 +158,125 @@ impl<T: Hash> fmt::Display for ShortHash<T> {
         HASH.load(SeqCst).hash(&mut h);
         self.0.hash(&mut h);
         write!(f, "{:016x}", h.finish())
+    }
+}
+
+/// Helper visitor for generic parameter usage
+#[derive(Debug)]
+pub struct GenericNameVisitor<'a> {
+    name_set_a: &'a Vec<&'a syn::Ident>,
+    name_set_b: Option<&'a Vec<&'a syn::Ident>>,
+    /// Was a generic parameter in name set A found?
+    pub found_a: bool,
+    /// Were all generic parameters in name set A reference usage?
+    pub a_ref_only: bool,
+    /// Was a generic parameter in name set B found?
+    pub found_b: bool,
+    /// Were all generic parameters in name set B reference usage?
+    pub b_ref_only: bool,
+}
+
+/// Helper visitor for generic parameter usage
+impl<'a> GenericNameVisitor<'a> {
+    /// Construct a new generic name visitors with a param search set,
+    /// and optionally a second parameter search set.
+    pub fn new(
+        name_set_a: &'a Vec<&'a syn::Ident>,
+        name_set_b: Option<&'a Vec<&'a syn::Ident>>,
+    ) -> Self {
+        Self {
+            name_set_a,
+            name_set_b,
+            found_a: false,
+            a_ref_only: true,
+            found_b: false,
+            b_ref_only: true,
+        }
+    }
+}
+
+impl<'a> Visit<'_> for GenericNameVisitor<'a> {
+    fn visit_type_reference(&mut self, type_ref: &syn::TypeReference) {
+        if let syn::Type::Path(type_path) = &*type_ref.elem {
+            if let Some(first_segment) = type_path.path.segments.first() {
+                if type_path.path.segments.len() == 1 && first_segment.arguments.is_empty() {
+                    if self.name_set_a.contains(&&first_segment.ident) {
+                        self.found_a = true;
+                        return;
+                    }
+                    if let Some(name_set_b) = self.name_set_b {
+                        if name_set_b.contains(&&first_segment.ident) {
+                            self.found_b = true;
+                            return;
+                        }
+                    }
+                } else {
+                    if self.name_set_a.contains(&&first_segment.ident) {
+                        self.found_a = true;
+                    }
+                    if let Some(name_set_b) = self.name_set_b {
+                        if name_set_b.contains(&&first_segment.ident) {
+                            self.found_b = true;
+                        }
+                    }
+
+                    syn::visit::visit_path_arguments(self, &first_segment.arguments);
+
+                    for segment in type_path.path.segments.iter().skip(1) {
+                        syn::visit::visit_path_segment(self, segment);
+                    }
+                    return;
+                }
+            }
+        }
+
+        // For other cases, continue normal visiting
+        syn::visit::visit_type_reference(self, type_ref);
+    }
+
+    fn visit_path(&mut self, path: &syn::Path) {
+        if let Some(first_segment) = path.segments.first() {
+            if self.name_set_a.contains(&&first_segment.ident) {
+                self.found_a = true;
+                self.a_ref_only = false; // This is value usage
+            }
+            if let Some(name_set_b) = self.name_set_b {
+                if name_set_b.contains(&&first_segment.ident) {
+                    self.found_b = true;
+                    self.b_ref_only = false;
+                }
+            }
+        }
+
+        for segment in &path.segments {
+            match &segment.arguments {
+                syn::PathArguments::AngleBracketed(args) => {
+                    for arg in &args.args {
+                        match arg {
+                            syn::GenericArgument::Type(ty) => {
+                                syn::visit::visit_type(self, ty);
+                            }
+                            syn::GenericArgument::AssocType(binding) => {
+                                // Don't visit binding.ident, only visit binding.ty
+                                syn::visit::visit_type(self, &binding.ty);
+                            }
+                            _ => {
+                                syn::visit::visit_generic_argument(self, arg);
+                            }
+                        }
+                    }
+                }
+                syn::PathArguments::Parenthesized(args) => {
+                    // Handle function syntax like FnMut(T) -> Result<R, JsValue>
+                    for input in &args.inputs {
+                        syn::visit::visit_type(self, input);
+                    }
+                    if let syn::ReturnType::Type(_, return_type) = &args.output {
+                        syn::visit::visit_type(self, return_type);
+                    }
+                }
+                syn::PathArguments::None => {}
+            }
+        }
     }
 }

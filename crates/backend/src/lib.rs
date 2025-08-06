@@ -37,4 +37,5 @@ mod error;
 pub mod ast;
 mod codegen;
 mod encode;
+mod generics;
 pub mod util;

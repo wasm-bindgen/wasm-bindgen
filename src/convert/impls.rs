@@ -5,11 +5,13 @@ use core::fmt::Debug;
 use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
+use crate::cast::JsValueCast;
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{Clamped, JsError, JsValue, UnwrapThrowExt, __wbindgen_is_null_or_undefined};
+use crate::{JsUpcastRef, __rt};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -466,6 +468,20 @@ impl LongRefFromWasmAbi for JsValue {
     }
 }
 
+impl OptionIntoWasmAbi for JsValue {
+    #[inline]
+    fn none() -> u32 {
+        crate::__rt::JSIDX_NULL
+    }
+}
+
+impl OptionFromWasmAbi for JsValue {
+    #[inline]
+    fn is_none(js: &u32) -> bool {
+        unsafe { __wbindgen_is_null_or_undefined(*js) == 1 }
+    }
+}
+
 impl<T: OptionIntoWasmAbi> IntoWasmAbi for Option<T> {
     type Abi = T::Abi;
 
@@ -516,6 +532,15 @@ impl IntoWasmAbi for () {
     fn into_abi(self) {
         self
     }
+}
+
+impl JsUpcastRef for () {
+    fn upcast_ref(&self) -> &JsValue {
+        unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_UNDEFINED).as_ptr()) }
+    }
+}
+impl JsValueCast for () {
+    fn unchecked_from_js_value(_: JsValue) -> Self {}
 }
 
 impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
@@ -623,4 +648,261 @@ where
         );
     }
     result.into_boxed_slice()
+}
+
+// WebAssembly ToWebAssemblyValue implementations for primitive types
+// These implement the exact WebAssembly specification algorithms
+
+impl JsValueCast for i32 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToInt32(v) algorithm
+        let number = js_value.unchecked_into_f64();
+        if !number.is_finite() || number == 0.0 {
+            0i32
+        } else {
+            let int = number as i64;
+            let int32bit = (int as u32) as i64;
+            if int32bit >= 1_i64 << 31 {
+                (int32bit - (1_i64 << 32)) as i32
+            } else {
+                int32bit as i32
+            }
+        }
+    }
+}
+
+impl JsValueCast for u32 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToUint32(v) algorithm
+        let number = js_value.unchecked_into_f64();
+        if !number.is_finite() || number == 0.0 || number == -0.0 {
+            0u32
+        } else {
+            let int = number as i64;
+            int as u32
+        }
+    }
+}
+
+impl JsValueCast for i64 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToBigInt64(v) algorithm
+        crate::bigint_get_as_i64(&js_value).expect_throw("Failed to convert to BigInt64")
+    }
+}
+
+impl JsValueCast for u64 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToBigUint64(v) algorithm
+        crate::bigint_get_as_i64(&js_value)
+            .map(|i64_val| i64_val as u64)
+            .expect_throw("Failed to convert to BigUint64")
+    }
+}
+
+impl JsValueCast for f32 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToNumber(v) algorithm with f32 conversion
+        let number = js_value.unchecked_into_f64();
+        number as f32
+    }
+}
+
+impl JsValueCast for f64 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToNumber(v) algorithm
+        js_value.unchecked_into_f64()
+    }
+}
+
+impl JsValueCast for bool {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // WebAssembly ToBoolean(v) algorithm
+        js_value.is_truthy()
+    }
+}
+
+impl JsValueCast for char {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        // Convert to string first, then get first character
+        let s = js_value.as_string().expect_throw("Value is not a string");
+        s.chars().next().expect_throw("String is empty")
+    }
+}
+
+// Smaller integer types - use i32/u32 conversion then cast
+impl JsValueCast for i8 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        <i32 as JsValueCast>::unchecked_from_js_value(js_value) as i8
+    }
+}
+
+impl JsValueCast for u8 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        <u32 as JsValueCast>::unchecked_from_js_value(js_value) as u8
+    }
+}
+
+impl JsValueCast for i16 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        <i32 as JsValueCast>::unchecked_from_js_value(js_value) as i16
+    }
+}
+
+impl JsValueCast for u16 {
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        <u32 as JsValueCast>::unchecked_from_js_value(js_value) as u16
+    }
+}
+
+// Blanket implementation for Option<T> where T implements JsValueCast
+// Handles null/undefined first, then applies inner type conversion
+impl<T> JsValueCast for Option<T>
+where
+    T: JsValueCast,
+{
+    fn unchecked_from_js_value(js_value: JsValue) -> Self {
+        if js_value.is_null_or_undefined() {
+            None
+        } else {
+            Some(T::unchecked_from_js_value(js_value))
+        }
+    }
+}
+
+impl<T> JsUpcastRef for Option<T>
+where
+    T: JsUpcastRef,
+{
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        match self {
+            Some(val) => val.upcast_ref(),
+            None => unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_UNDEFINED).as_ptr()) },
+        }
+    }
+}
+
+// `JsUpcastRef`` converts primitive references into JsValue
+// storing values into call-local fixed externref slots
+
+impl JsUpcastRef for i32 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u32 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for i64 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_bigint_new_into_slot(*self) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u64 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_bigint_new_into_slot(*self as i64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for f32 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for f64 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for bool {
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        if *self {
+            unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_TRUE).as_ptr()) }
+        } else {
+            unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_FALSE).as_ptr()) }
+        }
+    }
+}
+
+impl JsUpcastRef for char {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_char_new_into_slot(*self as u32) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for i8 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u8 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for i16 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u16 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = unsafe { crate::__wbindgen_number_new_into_slot(*self as f64) };
+        __rt::get_value_slot(slot_idx)
+    }
 }
