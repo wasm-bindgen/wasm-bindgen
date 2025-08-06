@@ -135,21 +135,49 @@ jobs:
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown --tests -- -D warnings
     - run: for i in examples/*/; do cd "$i"; cargo +stable clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings || exit 1; cd ../..; done
 
-  test_wasm_bindgen:
+  test_wasm:
     strategy:
       matrix:
         runs:
-          - name: "wasm-bindgen"
-          - name: "wasm-bindgen-futures"
-            cargo_flags: -p wasm-bindgen-futures
+          - name: wasm-bindgen
           - name: "wasm-bindgen (serde-serialize)"
-            cargo_flags: --features serde-serialize
+            cargo_flags:
+              --features serde-serialize
           - name: "wasm-bindgen (enable-interning)"
-            cargo_flags: --features enable-interning
+            cargo_flags:
+              --features enable-interning
           - name: "wasm-bindgen (externref)"
-            cargo_flags: --config 'env.WASM_BINDGEN_EXTERNREF="1"'
+            cargo_flags:
+              --config 'env.WASM_BINDGEN_EXTERNREF="1"'
           - name: "wasm-bindgen (multi-value)"
-            cargo_flags: --config 'env.WASM_BINDGEN_MULTI_VALUE="1"'
+            cargo_flags:
+              --config 'env.WASM_BINDGEN_MULTI_VALUE="1"'
+          - name: wasm-bindgen-futures
+            cargo_flags:
+              -p wasm-bindgen-futures
+          - name: "web-sys (all features)"
+            cargo_flags:
+              -p web-sys
+              --all-features
+          - name: "web-sys (unstable, all features)"
+            cargo_flags:
+              -p web-sys
+              --all-features
+              --config 'build.rustflags="--cfg=web_sys_unstable_apis"'
+          - name: js-sys
+            cargo_flags:
+              -p js-sys
+          - name: "js-sys (unstable)"
+            cargo_flags:
+              -p js-sys
+              --config 'build.rustflags="--cfg=js_sys_unstable_apis"'
+          - name: webidl-tests
+            cargo_flags:
+              -p webidl-tests
+          - name: "webidl-tests (unstable)"
+            cargo_flags:
+              -p webidl-tests
+              --config 'build.rustflags="--cfg=web_sys_unstable_apis"'
     name: "Run ${{ matrix.runs.name }} tests"
     runs-on: ubuntu-latest
     env:
@@ -236,6 +264,7 @@ jobs:
     - run: cargo test -p wasm-bindgen-wasm-interpreter
     - run: cargo test -p wasm-bindgen-futures
     - run: cargo test -p wasm-bindgen-shared
+    - run: cargo test -p wasm-bindgen-webidl
 
   test_with_geckodriver:
     strategy:
@@ -247,34 +276,11 @@ jobs:
               cargo build --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --features Node
               cargo build --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --features Element
               cargo build --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --features Window
-          - name: "web-sys (all features)"
-            run: cargo test --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --all-features
-          - name: "web-sys (unstable, all features)"
-            run: cargo test --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --all-features
-            env:
-              RUSTFLAGS: --cfg=web_sys_unstable_apis
-          - name: "js-sys"
-            run: cargo test -p js-sys --target wasm32-unknown-unknown
-          - name: "js-sys (unstable)"
-            run: cargo test -p js-sys --target wasm32-unknown-unknown
-            env:
-              RUSTFLAGS: --cfg=js_sys_unstable_apis
-          - name: "wasm-bindgen-webidl"
-            run: cargo test -p wasm-bindgen-webidl
-          - name: "webidl-tests"
-            run: cargo test -p webidl-tests --target wasm32-unknown-unknown
-            env:
-              WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE: 1
-          - name: "webidl-tests (unstable)"
-            run: cargo test -p webidl-tests --target wasm32-unknown-unknown
-            env:
-              RUSTFLAGS: --cfg=web_sys_unstable_apis
           - name: "typescript-tests"
             run: cd crates/typescript-tests && ./run.sh
     name: "Run ${{ matrix.runs.name }} tests (with geckodriver)"
     env:
       RUSTFLAGS: ${{ matrix.runs.env.RUSTFLAGS }}
-      WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE: ${{ matrix.runs.env.WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
