@@ -2,8 +2,8 @@
 
 [View full source code][code]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/weather_report/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/weather_report
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/weather_report/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/weather_report
 
 This example makes an HTTP request to [OpenWeather API](https://openweathermap.org/),
 parses response in JSON and render UI from that JSON. It also shows the usage of

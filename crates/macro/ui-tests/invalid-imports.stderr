@@ -58,11 +58,11 @@ error: must be Result<...>
 34 |     fn f() -> &u32;
    |               ^^^^
 
-error: must have at least one generic parameter
+error: must be Result<...>
   --> ui-tests/invalid-imports.rs:36:15
    |
-36 |     fn f() -> Result<>;
-   |               ^^^^^^^^
+36 |     fn f() -> Result;
+   |               ^^^^^^
 
 error: it is currently not sound to use lifetimes in function signatures
   --> ui-tests/invalid-imports.rs:38:22

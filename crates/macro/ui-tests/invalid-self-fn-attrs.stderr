@@ -1,11 +1,11 @@
 error: expected non-macro attribute, found attribute macro `wasm_bindgen`
   --> ui-tests/invalid-self-fn-attrs.rs:12:11
    |
-12 |         #[wasm_bindgen(unchecked_param_type = "number")]
+12 |         #[wasm_bindgen(unchecked_param_type = "number")] &self,
    |           ^^^^^^^^^^^^ not a non-macro attribute
 
 error: expected non-macro attribute, found attribute macro `wasm_bindgen`
-  --> ui-tests/invalid-self-fn-attrs.rs:21:11
+  --> ui-tests/invalid-self-fn-attrs.rs:20:11
    |
-21 |         #[wasm_bindgen(param_description = "some description")]
+20 |         #[wasm_bindgen(param_description = "some description")] &self,
    |           ^^^^^^^^^^^^ not a non-macro attribute

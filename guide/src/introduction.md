@@ -34,9 +34,9 @@ the web locally, publishing it as part of a larger application, or even
 publishing Rust-compiled-to-WebAssembly on NPM!
 
 [component-model]: https://github.com/WebAssembly/component-model
-[dom-ex]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/dom
-[console-log]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/console_log
-[perf-ex]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/performance
+[dom-ex]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/dom
+[console-log]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/console_log
+[perf-ex]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/performance
 [hello-online]: https://webassembly.studio/?f=gzubao6tg3
 [rustwasm]: https://rustwasm.github.io/
 [gol]: https://rustwasm.github.io/docs/book/
