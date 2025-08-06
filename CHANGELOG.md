@@ -3,14 +3,39 @@
 
 ## Unreleased
 
+### Added
+
+* Added format and colorSpace support to VideoFrameCopyToOptions
+  [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
+* `TypedArray::new_from_slice(&[T])` constructor that allows to create a
+  JS-owned `TypedArray` from a Rust slice.
+  [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
 ### Changed
 
 * Deprecate async constructors.
   [#4402](https://github.com/rustwasm/wasm-bindgen/pull/4402)
 
+### Fixed
+
+* Detect more failure scenarios when retrieving the Wasm module.
+  [#4556](https://github.com/wasm-bindgen/wasm-bindgen/pull/4556)
+
+* Add a workaround for `TextDecoder` failing in older version of Safari when too many bytes are decoded through it over its lifetime.
+  [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
+
+* `TypedArray::from(&[T])` now works reliably across memory reallocations.
+  [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
+* Fix incorrect memory loading and storing assertions during post-processing.
+  [#4554](https://github.com/wasm-bindgen/wasm-bindgen/pull/4554)
+
+* Fix test `--exact` option not working as expected
+  [#4549](https://github.com/wasm-bindgen/wasm-bindgen/pull/4549)
+
 --------------------------------------------------------------------------------
 
-## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
+## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
 
 Released 2025-01-12
 
