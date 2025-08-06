@@ -136,6 +136,8 @@ enum ExportJs<'a> {
 const INITIAL_HEAP_VALUES: &[&str] = &["undefined", "null", "true", "false"];
 // Must be kept in sync with `src/lib.rs` of the `wasm-bindgen` crate
 const INITIAL_HEAP_OFFSET: usize = 128;
+const VALUE_SLOT_OFFSET: usize = INITIAL_HEAP_VALUES.len() + INITIAL_HEAP_OFFSET;
+const VALUE_SLOT_CNT: usize = 8;
 
 impl<'a> Context<'a> {
     pub fn new(
@@ -2762,6 +2764,60 @@ __wbg_set_wasm(wasm);"
         Ok(view)
     }
 
+    fn expose_value_slot_functions(&mut self) -> Result<(), Error> {
+        if !self.should_write_global("value_slot_functions") {
+            return Ok(());
+        }
+
+        let value_slot_last = VALUE_SLOT_OFFSET + VALUE_SLOT_CNT;
+        self.global(&format!("let cur_value_slot = {VALUE_SLOT_OFFSET};"));
+
+        if self.config.externref {
+            let table = self
+                .aux
+                .externref_table
+                .ok_or_else(|| anyhow!("externref table required for value slot functions"))?;
+            let table_name = self.export_name_of(table);
+            self.global(&format!(
+                "
+                function toValueSlot(val) {{
+                    if (cur_value_slot >= {value_slot_last})
+                        throw new Error('Too many generic parameters - all value slots are in use');
+                    wasm.{table_name}.set(cur_value_slot, val);
+                    return cur_value_slot++ - {VALUE_SLOT_OFFSET};
+                }}
+                
+                function clearValueSlots() {{
+                    const table = wasm.{table_name};
+                    while (cur_value_slot > {VALUE_SLOT_OFFSET})
+                        table.set(--cur_value_slot, null);
+                }}
+            "
+            ));
+        } else {
+            // Fallback to JS heap when externref is not enabled
+            self.expose_global_heap();
+
+            self.global(&format!(
+                "
+                function toValueSlot(val) {{
+                    if (cur_value_slot >= {value_slot_last})
+                        throw new Error('Too many generic parameters - all value slots are in use');
+                    heap[cur_value_slot] = val;
+                    return cur_value_slot++ - {VALUE_SLOT_OFFSET};
+                }}
+                
+                function clearValueSlots() {{
+                    while (cur_value_slot > {VALUE_SLOT_OFFSET})
+                        heap[--cur_value_slot] = undefined;
+                }}
+            "
+            ));
+        }
+
+        Ok(())
+    }
+
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
         // conditionally override Symbol.dispose
@@ -3633,6 +3689,11 @@ __wbg_set_wasm(wasm);"
                 format!("{} === null", args[0])
             }
 
+            Intrinsic::IsNullOrUndefined => {
+                assert_eq!(args.len(), 1);
+                format!("{} == null", args[0])
+            }
+
             Intrinsic::IsObject => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const val = {};\n", args[0]));
@@ -3809,6 +3870,30 @@ __wbg_set_wasm(wasm);"
                 prelude.push_str("return true;\n");
                 prelude.push_str("}\n");
                 "false".to_string()
+            }
+
+            Intrinsic::NumberNewIntoSlot => {
+                assert_eq!(args.len(), 1);
+                self.expose_value_slot_functions()?;
+                format!("toValueSlot({})", args[0])
+            }
+
+            Intrinsic::ResetSlots => {
+                assert_eq!(args.len(), 0);
+                self.expose_value_slot_functions()?;
+                "clearValueSlots()".to_owned()
+            }
+
+            Intrinsic::CharNewIntoSlot => {
+                assert_eq!(args.len(), 1);
+                self.expose_value_slot_functions()?;
+                format!("toValueSlot(String.fromCharCode({}))", args[0])
+            }
+
+            Intrinsic::BigintNewIntoSlot => {
+                assert_eq!(args.len(), 1);
+                self.expose_value_slot_functions()?;
+                format!("toValueSlot(BigInt({}))", args[0])
             }
 
             Intrinsic::NumberGet => {
