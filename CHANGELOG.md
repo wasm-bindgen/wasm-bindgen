@@ -25,7 +25,7 @@
 * `TypedArray::from(&[T])` now works reliably across memory reallocations.
   [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
 
-* Fix incorrect assertion when loading and storing memory
+* Fix incorrect memory loading and storing assertions during post-processing.
   [#4554](https://github.com/wasm-bindgen/wasm-bindgen/pull/4554)
 
 --------------------------------------------------------------------------------
