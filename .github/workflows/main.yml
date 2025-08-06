@@ -140,14 +140,17 @@ jobs:
       matrix:
         runs:
           - name: "wasm-bindgen"
-            run: |
-              cargo test --target wasm32-unknown-unknown
-              cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures
+          - name: "wasm-bindgen-futures"
+            cargo_flags: -p wasm-bindgen-futures
           - name: "wasm-bindgen (serde-serialize)"
-            run: cargo test --target wasm32-unknown-unknown --features serde-serialize
+            cargo_flags: --features serde-serialize
           - name: "wasm-bindgen (enable-interning)"
-            run: cargo test --target wasm32-unknown-unknown --features enable-interning
-    name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
+            cargo_flags: --features enable-interning
+          - name: "wasm-bindgen (externref)"
+            cargo_flags: --config 'env.WASM_BINDGEN_EXTERNREF="1"'
+          - name: "wasm-bindgen (multi-value)"
+            cargo_flags: --config 'env.WASM_BINDGEN_MULTI_VALUE="1"'
+    name: "Run ${{ matrix.runs.name }} tests"
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
@@ -159,32 +162,7 @@ jobs:
       with:
         node-version: '20'
     - uses: ./.github/actions/setup-geckodriver
-    - run: ${{ matrix.runs.run }}
-
-  test_wasm_bindgen_envs:
-    strategy:
-      matrix:
-        envs:
-          - name: "externref"
-            env:
-              WASM_BINDGEN_EXTERNREF: 1
-          - name: "multi-value"
-            env:
-              WASM_BINDGEN_MULTI_VALUE: 1
-    name: "Run wasm-bindgen crate tests with ${{ matrix.envs.name }} feature"
-    runs-on: ubuntu-latest
-    env:
-      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      WASM_BINDGEN_EXTERNREF: ${{ matrix.envs.WASM_BINDGEN_EXTERNREF }}
-      WASM_BINDGEN_MULTI_VALUE: ${{ matrix.envs.WASM_BINDGEN_MULTI_VALUE }}
-    steps:
-    - uses: actions/checkout@v4
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - run: cargo test --target wasm32-unknown-unknown
+    - run: cargo test --target wasm32-unknown-unknown ${{ matrix.runs.cargo_flags }}
 
   test_threads:
     name: "Run wasm-bindgen crate tests with multithreading"
