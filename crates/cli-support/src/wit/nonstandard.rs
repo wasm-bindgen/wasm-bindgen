@@ -445,7 +445,7 @@ impl walrus::CustomSection for WasmBindgenAux {
         "wasm-bindgen custom section"
     }
 
-    fn data(&self, _: &walrus::IdsToIndices) -> Cow<[u8]> {
+    fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
 
