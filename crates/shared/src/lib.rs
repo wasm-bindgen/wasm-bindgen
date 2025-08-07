@@ -3,6 +3,7 @@
 pub mod identifier;
 #[cfg(test)]
 mod schema_hash_approval;
+pub mod tys;
 
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same

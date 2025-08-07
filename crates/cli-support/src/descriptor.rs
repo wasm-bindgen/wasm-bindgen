@@ -1,52 +1,7 @@
 use std::char;
 
 use wasm_bindgen_shared::identifier::is_valid_ident;
-
-macro_rules! tys {
-    ($($a:ident)*) => (tys! { @ ($($a)*) 0 });
-    (@ () $v:expr) => {};
-    (@ ($a:ident $($b:ident)*) $v:expr) => {
-        const $a: u32 = $v;
-        tys!(@ ($($b)*) $v+1);
-    }
-}
-
-// NB: this list must be kept in sync with `src/describe.rs`
-tys! {
-    I8
-    U8
-    I16
-    U16
-    I32
-    U32
-    I64
-    U64
-    I128
-    U128
-    F32
-    F64
-    BOOLEAN
-    FUNCTION
-    CLOSURE
-    CACHED_STRING
-    STRING
-    REF
-    REFMUT
-    LONGREF
-    SLICE
-    VECTOR
-    EXTERNREF
-    NAMED_EXTERNREF
-    ENUM
-    STRING_ENUM
-    RUST_STRUCT
-    CHAR
-    OPTIONAL
-    RESULT
-    UNIT
-    CLAMPED
-    NONNULL
-}
+use wasm_bindgen_shared::tys::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Descriptor {
