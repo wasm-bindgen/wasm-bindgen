@@ -19,9 +19,9 @@
 #![deny(missing_docs)]
 
 use anyhow::{bail, ensure};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use walrus::ir::Instr;
-use walrus::{ElementId, FunctionId, LocalId, Module, TableId};
+use walrus::{ElementId, ExportId, FunctionId, LocalId, Module, TableId};
 
 /// A ready-to-go interpreter of a Wasm module.
 ///
@@ -54,6 +54,36 @@ pub struct Interpreter {
     // stores the last table index argument, used for finding a different
     // descriptor.
     descriptor_table_idx: Option<u32>,
+
+    /// The `__wbindgen_skip_interpret_calls`'s id.
+    skip_interpret: Option<ExportId>,
+
+    /// Some functions that need to skip interpret, such as `__wasm_call_ctors`
+    /// and `__wasm_call_dtors`.
+    skip_calls: HashSet<FunctionId>,
+}
+
+fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
+    use walrus::ir::*;
+
+    let func = module.funcs.get(id);
+
+    let local = match &func.kind {
+        walrus::FunctionKind::Local(l) => l,
+        _ => panic!("can only call locally defined functions"),
+    };
+
+    let entry = local.entry_block();
+    let block = local.block(entry);
+
+    block
+        .instrs
+        .iter()
+        .filter_map(|(instr, _)| match instr {
+            Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => Some(*func),
+            _ => None,
+        })
+        .collect()
 }
 
 impl Interpreter {
@@ -87,6 +117,20 @@ impl Interpreter {
             } else if import.name == "__wbindgen_describe_closure" {
                 ret.describe_closure_id = Some(id);
             }
+        }
+
+        // Setup skip_interpret id and skip_calls
+        if let Some(export) = module
+            .exports
+            .iter()
+            .find(|export| export.name == "__wbindgen_skip_interpret_calls")
+        {
+            let id = match export.item {
+                walrus::ExportItem::Function(id) => id,
+                _ => panic!("__wbindgen_skip_interpret_calls must be an export function"),
+            };
+            ret.skip_interpret = Some(export.id());
+            ret.skip_calls = skip_calls(module, id);
         }
 
         ret.functions = module.tables.main_function_table()?;
@@ -200,6 +244,11 @@ impl Interpreter {
     /// Returns the detected id of the function table.
     pub fn function_table_id(&self) -> Option<TableId> {
         self.functions
+    }
+
+    /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
+    pub fn skip_interpret(&self) -> Option<ExportId> {
+        self.skip_interpret
     }
 
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) -> Option<i32> {
@@ -352,6 +401,20 @@ impl Frame<'_> {
 
                 // ... otherwise this is a normal call so we recurse.
                 } else {
+                    // Skip the constructor function.
+                    //
+                    // Complex logic can be implemented in the ctor, our simple interpreter will fail
+                    // to execute due to missing instructions.
+                    //
+                    // For example, executing `1 + 1` fails due to the lack of `I32.And` instruction.
+                    //
+                    // Because `wasm-ld` may insert a call to ctor from the beginning of every function that
+                    // your module exports, the interpreter will enter the ctor logic when parsing the
+                    // `wasm-bindgen` function, causing failure.
+                    if self.interp.skip_calls.contains(&func) {
+                        return Ok(());
+                    }
+
                     // Skip profiling related functions which we don't want to interpret.
                     if self
                         .module

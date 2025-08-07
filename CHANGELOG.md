@@ -38,6 +38,9 @@
 * Fix tables being removed even though they are used by stack closures.
   [#4119](https://github.com/wasm-bindgen/wasm-bindgen/pull/4564)
 
+* Skip `__wasm_call_ctors` which we don't want to interpret.
+  [#4562](https://github.com/wasm-bindgen/wasm-bindgen/pull/4562)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
