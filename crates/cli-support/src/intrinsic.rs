@@ -79,10 +79,6 @@ fn slice(contents: Descriptor) -> Descriptor {
     Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(contents))))
 }
 
-fn vector(contents: Descriptor) -> Descriptor {
-    Descriptor::Vector(Box::new(contents))
-}
-
 intrinsics! {
     pub enum Intrinsic {
         #[symbol = "__wbindgen_jsval_eq"]
