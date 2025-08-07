@@ -233,7 +233,7 @@ impl CustomSection for WasmBindgenDescriptorsSection {
         "wasm-bindgen descriptors"
     }
 
-    fn data(&self, _: &walrus::IdsToIndices) -> Cow<[u8]> {
+    fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
 }
