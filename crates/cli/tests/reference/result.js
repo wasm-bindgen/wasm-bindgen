@@ -81,6 +81,11 @@ export function result_i32() {
     return ret[0];
 }
 
+export function __wbg_cast_55f8fbc0872e729e(arg0) {
+    const ret = /* cast */(arg0);
+    return ret;
+};
+
 export function __wbindgen_error_new(arg0, arg1) {
     const ret = new Error(getStringFromWasm0(arg0, arg1));
     return ret;
@@ -95,11 +100,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_number_new(arg0) {
-    const ret = arg0;
-    return ret;
 };
 
 export function __wbindgen_throw(arg0, arg1) {

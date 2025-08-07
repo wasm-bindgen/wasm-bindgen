@@ -153,6 +153,7 @@ macro_rules! wbg_cast {
     ($value:expr, $from:ty, $to:ty) => {{
         #[wasm_bindgen::prelude::wasm_bindgen]
         extern "C" {
+            #[wasm_bindgen::prelude::wasm_bindgen(js_name = "/* cast */")]
             fn __wbindgen_cast(value: $from) -> $to;
         }
 
