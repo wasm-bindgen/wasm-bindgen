@@ -144,6 +144,22 @@ const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
 const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
 const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 4;
 
+// For the wbg_cast macro to work both inside and outside this crate.
+use crate as wasm_bindgen;
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! wbg_cast {
+    ($value:expr, $from:ty, $to:ty) => {{
+        #[wasm_bindgen::prelude::wasm_bindgen]
+        extern "C" {
+            fn __wbindgen_cast(value: $from) -> $to;
+        }
+
+        __wbindgen_cast($value)
+    }};
+}
+
 impl JsValue {
     /// The `null` JS value constant.
     pub const NULL: JsValue = JsValue::_new(JSIDX_NULL);
@@ -172,7 +188,7 @@ impl JsValue {
     #[allow(clippy::should_implement_trait)] // cannot fix without breaking change
     #[inline]
     pub fn from_str(s: &str) -> JsValue {
-        unsafe { JsValue::_new(__wbindgen_string_new(s.as_ptr(), s.len())) }
+        wbg_cast!(s, &str, JsValue)
     }
 
     /// Creates a new JS value which is a number.
@@ -181,7 +197,7 @@ impl JsValue {
     /// allocated number) and returns a handle to the JS version of it.
     #[inline]
     pub fn from_f64(n: f64) -> JsValue {
-        unsafe { JsValue::_new(__wbindgen_number_new(n)) }
+        wbg_cast!(n, f64, JsValue)
     }
 
     /// Creates a new JS value which is a bigint from a string representing a number.
@@ -349,12 +365,10 @@ impl JsValue {
     /// `None`.
     #[inline]
     pub fn as_bool(&self) -> Option<bool> {
-        unsafe {
-            match __wbindgen_boolean_get(self.idx) {
-                0 => Some(false),
-                1 => Some(true),
-                _ => None,
-            }
+        match self.idx {
+            JSIDX_FALSE => Some(false),
+            JSIDX_TRUE => Some(true),
+            _ => None,
         }
     }
 
@@ -519,7 +533,7 @@ impl JsValue {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Unary_plus)
     #[inline]
     pub fn unchecked_into_f64(&self) -> f64 {
-        unsafe { __wbindgen_as_number(self.idx) }
+        wbg_cast!(self, &JsValue, f64)
     }
 }
 
@@ -947,7 +961,7 @@ macro_rules! numbers {
 numbers! { i8 u8 i16 u16 i32 u32 f32 f64 }
 
 macro_rules! big_numbers {
-    (|$arg:ident|, $($n:ident = $handle:expr,)*) => ($(
+    (|$arg:ident|, $($n:ident = $from:expr,)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
             fn eq(&self, other: &$n) -> bool {
@@ -958,7 +972,7 @@ macro_rules! big_numbers {
         impl From<$n> for JsValue {
             #[inline]
             fn from($arg: $n) -> JsValue {
-                unsafe { JsValue::_new($handle) }
+                $from
             }
         }
     )*)
@@ -1022,10 +1036,10 @@ try_from_for_num128!(u128, u64);
 
 big_numbers! {
     |n|,
-    i64 = __wbindgen_bigint_from_i64(n),
-    u64 = __wbindgen_bigint_from_u64(n),
-    i128 = __wbindgen_bigint_from_i128((n >> 64) as i64, n as u64),
-    u128 = __wbindgen_bigint_from_u128((n >> 64) as u64, n as u64),
+    i64 = wbg_cast!(n, i64, JsValue),
+    u64 = wbg_cast!(n, u64, JsValue),
+    i128 = unsafe { JsValue::_new(__wbindgen_bigint_from_i128((n >> 64) as i64, n as u64)) },
+    u128 = unsafe { JsValue::_new(__wbindgen_bigint_from_u128((n >> 64) as u64, n as u64)) },
 }
 
 // `usize` and `isize` have to be treated a bit specially, because we know that
@@ -1065,11 +1079,7 @@ externs! {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
-        fn __wbindgen_string_new(ptr: *const u8, len: usize) -> u32;
-        fn __wbindgen_number_new(f: f64) -> u32;
         fn __wbindgen_bigint_from_str(ptr: *const u8, len: usize) -> u32;
-        fn __wbindgen_bigint_from_i64(n: i64) -> u32;
-        fn __wbindgen_bigint_from_u64(n: u64) -> u32;
         fn __wbindgen_bigint_from_i128(hi: i64, lo: u64) -> u32;
         fn __wbindgen_bigint_from_u128(hi: u64, lo: u64) -> u32;
         fn __wbindgen_symbol_named_new(ptr: *const u8, len: usize) -> u32;
@@ -1090,7 +1100,6 @@ externs! {
         fn __wbindgen_in(prop: u32, obj: u32) -> u32;
 
         fn __wbindgen_is_falsy(idx: u32) -> u32;
-        fn __wbindgen_as_number(idx: u32) -> f64;
         fn __wbindgen_try_into_number(idx: u32) -> u32;
         fn __wbindgen_neg(idx: u32) -> u32;
         fn __wbindgen_bit_and(a: u32, b: u32) -> u32;
@@ -1113,7 +1122,6 @@ externs! {
         fn __wbindgen_gt(a: u32, b: u32) -> u32;
 
         fn __wbindgen_number_get(idx: u32) -> WasmRet<Option<f64>>;
-        fn __wbindgen_boolean_get(idx: u32) -> u32;
         fn __wbindgen_string_get(idx: u32) -> WasmSlice;
         fn __wbindgen_bigint_get_as_i64(idx: u32) -> WasmRet<Option<i64>>;
 
@@ -1134,21 +1142,6 @@ externs! {
         fn __wbindgen_jsval_loose_eq(a: u32, b: u32) -> u32;
 
         fn __wbindgen_copy_to_typed_array(ptr: *const u8, len: usize, idx: u32) -> ();
-
-        fn __wbindgen_uint8_array_new(ptr: *mut u8, len: usize) -> u32;
-        fn __wbindgen_uint8_clamped_array_new(ptr: *mut u8, len: usize) -> u32;
-        fn __wbindgen_uint16_array_new(ptr: *mut u16, len: usize) -> u32;
-        fn __wbindgen_uint32_array_new(ptr: *mut u32, len: usize) -> u32;
-        fn __wbindgen_biguint64_array_new(ptr: *mut u64, len: usize) -> u32;
-        fn __wbindgen_int8_array_new(ptr: *mut i8, len: usize) -> u32;
-        fn __wbindgen_int16_array_new(ptr: *mut i16, len: usize) -> u32;
-        fn __wbindgen_int32_array_new(ptr: *mut i32, len: usize) -> u32;
-        fn __wbindgen_bigint64_array_new(ptr: *mut i64, len: usize) -> u32;
-        fn __wbindgen_float32_array_new(ptr: *mut f32, len: usize) -> u32;
-        fn __wbindgen_float64_array_new(ptr: *mut f64, len: usize) -> u32;
-
-        fn __wbindgen_array_new() -> u32;
-        fn __wbindgen_array_push(array: u32, value: u32) -> ();
 
         fn __wbindgen_not(idx: u32) -> u32;
 
@@ -1707,55 +1700,45 @@ impl From<JsError> for JsValue {
 }
 
 macro_rules! typed_arrays {
-        ($($ty:ident $ctor:ident $clamped_ctor:ident,)*) => {
-            $(
-                impl From<Box<[$ty]>> for JsValue {
-                    fn from(mut vector: Box<[$ty]>) -> Self {
-                        let result = unsafe { JsValue::_new($ctor(vector.as_mut_ptr(), vector.len())) };
-                        mem::forget(vector);
-                        result
-                    }
+    ($($ty:ident,)*) => {
+        $(
+            impl From<Box<[$ty]>> for JsValue {
+                fn from(vector: Box<[$ty]>) -> Self {
+                    wbg_cast!(vector, Box<[$ty]>, JsValue)
                 }
+            }
 
-                impl From<Clamped<Box<[$ty]>>> for JsValue {
-                    fn from(mut vector: Clamped<Box<[$ty]>>) -> Self {
-                        let result = unsafe { JsValue::_new($clamped_ctor(vector.as_mut_ptr(), vector.len())) };
-                        mem::forget(vector);
-                        result
-                    }
+            impl From<Clamped<Box<[$ty]>>> for JsValue {
+                fn from(vector: Clamped<Box<[$ty]>>) -> Self {
+                    wbg_cast!(vector, Clamped<Box<[$ty]>>, JsValue)
                 }
-            )*
-        };
-    }
+            }
+        )*
+    };
+}
 
 typed_arrays! {
-    u8 __wbindgen_uint8_array_new __wbindgen_uint8_clamped_array_new,
-    u16 __wbindgen_uint16_array_new __wbindgen_uint16_array_new,
-    u32 __wbindgen_uint32_array_new __wbindgen_uint32_array_new,
-    u64 __wbindgen_biguint64_array_new __wbindgen_biguint64_array_new,
-    i8 __wbindgen_int8_array_new __wbindgen_int8_array_new,
-    i16 __wbindgen_int16_array_new __wbindgen_int16_array_new,
-    i32 __wbindgen_int32_array_new __wbindgen_int32_array_new,
-    i64 __wbindgen_bigint64_array_new __wbindgen_bigint64_array_new,
-    f32 __wbindgen_float32_array_new __wbindgen_float32_array_new,
-    f64 __wbindgen_float64_array_new __wbindgen_float64_array_new,
+    u8,
+    u16,
+    u32,
+    u64,
+    i8,
+    i16,
+    i32,
+    i64,
+    f32,
+    f64,
 }
 
 impl __rt::VectorIntoJsValue for JsValue {
     fn vector_into_jsvalue(vector: Box<[JsValue]>) -> JsValue {
-        __rt::js_value_vector_into_jsvalue::<JsValue>(vector)
-    }
-}
-
-impl<T: JsObject> __rt::VectorIntoJsValue for T {
-    fn vector_into_jsvalue(vector: Box<[T]>) -> JsValue {
-        __rt::js_value_vector_into_jsvalue::<T>(vector)
+        wbg_cast!(vector, Box<[JsValue]>, JsValue)
     }
 }
 
 impl __rt::VectorIntoJsValue for String {
     fn vector_into_jsvalue(vector: Box<[String]>) -> JsValue {
-        __rt::js_value_vector_into_jsvalue::<String>(vector)
+        wbg_cast!(vector, Box<[String]>, JsValue)
     }
 }
 
