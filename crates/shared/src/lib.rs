@@ -1,4 +1,9 @@
 #![doc(html_root_url = "https://docs.rs/wasm-bindgen-shared/0.2")]
+#![no_std]
+
+extern crate alloc;
+
+use alloc::string::{String, ToString};
 
 pub mod identifier;
 #[cfg(test)]
