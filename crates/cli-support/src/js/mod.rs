@@ -3821,11 +3821,6 @@ __wbg_set_wasm(wasm);"
                 format!("BigInt({})", args[0])
             }
 
-            Intrinsic::BigIntFromI128 | Intrinsic::BigIntFromU128 => {
-                assert_eq!(args.len(), 2);
-                format!("{} << BigInt(64) | {}", args[0], args[1])
-            }
-
             Intrinsic::SymbolNamedNew => {
                 assert_eq!(args.len(), 1);
                 format!("Symbol({})", args[0])

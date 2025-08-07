@@ -192,12 +192,6 @@ intrinsics! {
         #[symbol = "__wbindgen_bigint_from_str"]
         #[signature = fn(ref_string()) -> Externref]
         BigIntFromStr,
-        #[symbol = "__wbindgen_bigint_from_i128"]
-        #[signature = fn(I64, U64) -> Externref]
-        BigIntFromI128,
-        #[symbol = "__wbindgen_bigint_from_u128"]
-        #[signature = fn(U64, U64) -> Externref]
-        BigIntFromU128,
         #[symbol = "__wbindgen_bigint_get_as_i64"]
         #[signature = fn(ref_externref()) -> opt_i64()]
         BigIntGetAsI64,

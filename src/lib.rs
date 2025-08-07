@@ -962,7 +962,7 @@ macro_rules! numbers {
 numbers! { i8 u8 i16 u16 i32 u32 f32 f64 }
 
 macro_rules! big_numbers {
-    (|$arg:ident|, $($n:ident = $from:expr,)*) => ($(
+    ($($n:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
             fn eq(&self, other: &$n) -> bool {
@@ -972,8 +972,8 @@ macro_rules! big_numbers {
 
         impl From<$n> for JsValue {
             #[inline]
-            fn from($arg: $n) -> JsValue {
-                $from
+            fn from(arg: $n) -> JsValue {
+                wbg_cast!(arg, $n, JsValue)
             }
         }
     )*)
@@ -1035,13 +1035,7 @@ macro_rules! try_from_for_num128 {
 try_from_for_num128!(i128, i64);
 try_from_for_num128!(u128, u64);
 
-big_numbers! {
-    |n|,
-    i64 = wbg_cast!(n, i64, JsValue),
-    u64 = wbg_cast!(n, u64, JsValue),
-    i128 = unsafe { JsValue::_new(__wbindgen_bigint_from_i128((n >> 64) as i64, n as u64)) },
-    u128 = unsafe { JsValue::_new(__wbindgen_bigint_from_u128((n >> 64) as u64, n as u64)) },
-}
+big_numbers! { i64 u64 i128 u128 }
 
 // `usize` and `isize` have to be treated a bit specially, because we know that
 // they're 32-bit but the compiler conservatively assumes they might be bigger.
@@ -1081,8 +1075,6 @@ externs! {
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
         fn __wbindgen_bigint_from_str(ptr: *const u8, len: usize) -> u32;
-        fn __wbindgen_bigint_from_i128(hi: i64, lo: u64) -> u32;
-        fn __wbindgen_bigint_from_u128(hi: u64, lo: u64) -> u32;
         fn __wbindgen_symbol_named_new(ptr: *const u8, len: usize) -> u32;
         fn __wbindgen_symbol_anonymous_new() -> u32;
 
