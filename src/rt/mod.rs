@@ -2,7 +2,6 @@ use crate::JsValue;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::{Cell, UnsafeCell};
 use core::convert::Infallible;
-use core::mem;
 use core::ops::{Deref, DerefMut};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
