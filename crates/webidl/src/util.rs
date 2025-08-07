@@ -233,7 +233,7 @@ impl<'src> FirstPassRecord<'src> {
         data: &'src OperationData<'src>,
         unstable: bool,
         unstable_types: &HashSet<Identifier>,
-    ) -> Vec<InterfaceMethod> {
+    ) -> Vec<InterfaceMethod<'_>> {
         let is_static = data.is_static;
 
         // First up, prune all signatures that reference unsupported arguments.
