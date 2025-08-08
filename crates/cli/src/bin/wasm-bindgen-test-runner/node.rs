@@ -147,7 +147,7 @@ pub fn execute(
         .args(&extra_node_args)
         .arg(&js_path)
         .status()
-        .context("failed to find or execute node")?;
+        .context("failed to find or execute Node.js")?;
 
     if !status.success() {
         process::exit(status.code().unwrap_or(1))
