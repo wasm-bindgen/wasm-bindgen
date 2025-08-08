@@ -64,9 +64,8 @@ pub(crate) fn spawn(
                 __wbgtest_console_error,
                 {cov_import}
                 default as init,
-            }} from './{}';
+            }} from './{module}';
             "#,
-            module,
         )
     };
 
@@ -75,7 +74,7 @@ pub(crate) fn spawn(
 
     if test_mode.is_worker() {
         let mut worker_script = if test_mode.no_modules() {
-            format!(r#"importScripts("{0}.js");"#, module)
+            format!(r#"importScripts("{module}.js");"#)
         } else {
             String::new()
         };
@@ -282,7 +281,7 @@ pub(crate) fn spawn(
         ));
     }
     for test in tests.tests {
-        js_to_execute.push_str(&format!("tests.push('{}');\n", test.name));
+        js_to_execute.push_str(&format!("tests.push('{}');\n", test.export));
     }
     js_to_execute.push_str("main(tests);\n");
 
@@ -306,10 +305,7 @@ pub(crate) fn spawn(
             let s = if !test_mode.is_worker() && test_mode.no_modules() {
                 s.replace(
                     "<!-- {IMPORT_SCRIPTS} -->",
-                    &format!(
-                        "<script src='{}.js'></script>\n<script src='run.js'></script>",
-                        module
-                    ),
+                    &format!("<script src='{module}.js'></script>\n<script src='run.js'></script>"),
                 )
             } else {
                 s.replace(
@@ -365,7 +361,7 @@ pub(crate) fn spawn(
         // write in the code that *don't* have file extensions (aka we say `from
         // 'foo'` instead of `from 'foo.js'`. Fixup those paths here to see if a
         // `js` file exists.
-        if let Some(part) = request.url().split('/').last() {
+        if let Some(part) = request.url().split('/').next_back() {
             if !part.contains('.') {
                 let new_request = Request::fake_http(
                     request.method(),

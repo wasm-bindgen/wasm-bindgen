@@ -2,7 +2,7 @@
 
 [View documentation for this example online][dox]
 
-[dox]: https://rustwasm.github.io/docs/wasm-bindgen/examples/without-a-bundler.html#using-the-older---target-no-modules
+[dox]: https://wasm-bindgen.github.io/wasm-bindgen/examples/without-a-bundler.html#using-the-older---target-no-modules
 
 You can build the example locally with:
 
@@ -18,4 +18,4 @@ which performs a similar purpose except it uses `--target no-modules` instead of
 loaded, where this example uses old-school `script` tags while `--target web`
 uses ES modules.
 
-[wab]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/without-a-bundler
+[wab]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/without-a-bundler

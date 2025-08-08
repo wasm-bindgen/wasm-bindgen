@@ -13,7 +13,6 @@ use core::mem::{self, ManuallyDrop};
 
 use crate::convert::*;
 use crate::describe::*;
-use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
 
@@ -334,7 +333,22 @@ where
         #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
         extern "C" fn describe<T: WasmClosure + ?Sized>() {
             inform(CLOSURE);
-            T::describe()
+
+            unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
+                // This can be called by the JS glue in erroneous situations
+                // such as when the closure has already been destroyed. If
+                // that's the case let's not make things worse by
+                // segfaulting and/or asserting, so just ignore null
+                // pointers.
+                if a == 0 {
+                    return;
+                }
+                drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
+            }
+            inform(destroy::<T> as usize as u32);
+
+            inform(T::IS_MUT as u32);
+            T::describe();
         }
 
         #[inline(never)]
@@ -530,8 +544,8 @@ where
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub unsafe trait WasmClosure {
-    fn describe();
+pub unsafe trait WasmClosure: WasmDescribe {
+    const IS_MUT: bool;
 }
 
 /// An internal trait for the `Closure` type.
@@ -566,59 +580,7 @@ macro_rules! doit {
             where $($var: FromWasmAbi + 'static,)*
                   R: ReturnWasmAbi + 'static,
         {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                #[allow(non_snake_case)]
-                #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-                unsafe extern "C" fn invoke<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
-                    a: usize,
-                    b: usize,
-                    $(
-                    $arg1: <$var::Abi as WasmAbi>::Prim1,
-                    $arg2: <$var::Abi as WasmAbi>::Prim2,
-                    $arg3: <$var::Abi as WasmAbi>::Prim3,
-                    $arg4: <$var::Abi as WasmAbi>::Prim4,
-                    )*
-                ) -> WasmRet<R::Abi> {
-                    if a == 0 {
-                        throw_str("closure invoked after being dropped");
-                    }
-                    // Make sure all stack variables are converted before we
-                    // convert `ret` as it may throw (for `Result`, for
-                    // example)
-                    let ret = {
-                        let f: *const dyn Fn($($var),*) -> R =
-                            FatPtr { fields: (a, b) }.ptr;
-                        $(
-                            let $var = <$var as FromWasmAbi>::from_abi($var::Abi::join($arg1, $arg2, $arg3, $arg4));
-                        )*
-                        (*f)($($var),*)
-                    };
-                    ret.return_abi().into()
-                }
-
-                inform(invoke::<$($var,)* R> as usize as u32);
-
-                unsafe extern fn destroy<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
-                    a: usize,
-                    b: usize,
-                ) {
-                    // This can be called by the JS glue in erroneous situations
-                    // such as when the closure has already been destroyed. If
-                    // that's the case let's not make things worse by
-                    // segfaulting and/or asserting, so just ignore null
-                    // pointers.
-                    if a == 0 {
-                        return;
-                    }
-                    drop(Box::from_raw(FatPtr::<dyn Fn($($var,)*) -> R> {
-                        fields: (a, b)
-                    }.ptr));
-                }
-                inform(destroy::<$($var,)* R> as usize as u32);
-
-                <&Self>::describe();
-            }
+            const IS_MUT: bool = false;
         }
 
         #[allow(coherence_leak_check)]
@@ -626,56 +588,7 @@ macro_rules! doit {
             where $($var: FromWasmAbi + 'static,)*
                   R: ReturnWasmAbi + 'static,
         {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                #[allow(non_snake_case)]
-                #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-                unsafe extern "C" fn invoke<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
-                    a: usize,
-                    b: usize,
-                    $(
-                    $arg1: <$var::Abi as WasmAbi>::Prim1,
-                    $arg2: <$var::Abi as WasmAbi>::Prim2,
-                    $arg3: <$var::Abi as WasmAbi>::Prim3,
-                    $arg4: <$var::Abi as WasmAbi>::Prim4,
-                    )*
-                ) -> WasmRet<R::Abi> {
-                    if a == 0 {
-                        throw_str("closure invoked recursively or after being dropped");
-                    }
-                    // Make sure all stack variables are converted before we
-                    // convert `ret` as it may throw (for `Result`, for
-                    // example)
-                    let ret = {
-                        let f: *const dyn FnMut($($var),*) -> R =
-                            FatPtr { fields: (a, b) }.ptr;
-                        let f = f as *mut dyn FnMut($($var),*) -> R;
-                        $(
-                            let $var = <$var as FromWasmAbi>::from_abi($var::Abi::join($arg1, $arg2, $arg3, $arg4));
-                        )*
-                        (*f)($($var),*)
-                    };
-                    ret.return_abi().into()
-                }
-
-                inform(invoke::<$($var,)* R> as usize as u32);
-
-                unsafe extern fn destroy<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
-                    a: usize,
-                    b: usize,
-                ) {
-                    // See `Fn()` above for why we simply return
-                    if a == 0 {
-                        return;
-                    }
-                    drop(Box::from_raw(FatPtr::<dyn FnMut($($var,)*) -> R> {
-                        fields: (a, b)
-                    }.ptr));
-                }
-                inform(destroy::<$($var,)* R> as usize as u32);
-
-                <&mut Self>::describe();
-            }
+            const IS_MUT: bool = true;
         }
 
         #[allow(non_snake_case, unused_parens)]
@@ -769,48 +682,7 @@ where
     A: RefFromWasmAbi,
     R: ReturnWasmAbi + 'static,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        #[allow(non_snake_case)]
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe extern "C" fn invoke<A: RefFromWasmAbi, R: ReturnWasmAbi>(
-            a: usize,
-            b: usize,
-            arg1: <A::Abi as WasmAbi>::Prim1,
-            arg2: <A::Abi as WasmAbi>::Prim2,
-            arg3: <A::Abi as WasmAbi>::Prim3,
-            arg4: <A::Abi as WasmAbi>::Prim4,
-        ) -> WasmRet<R::Abi> {
-            if a == 0 {
-                throw_str("closure invoked after being dropped");
-            }
-            // Make sure all stack variables are converted before we
-            // convert `ret` as it may throw (for `Result`, for
-            // example)
-            let ret = {
-                let f: *const dyn Fn(&A) -> R = FatPtr { fields: (a, b) }.ptr;
-                let arg = <A as RefFromWasmAbi>::ref_from_abi(A::Abi::join(arg1, arg2, arg3, arg4));
-                (*f)(&*arg)
-            };
-            ret.return_abi().into()
-        }
-
-        inform(invoke::<A, R> as usize as u32);
-
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe extern "C" fn destroy<A: RefFromWasmAbi, R: ReturnWasmAbi>(a: usize, b: usize) {
-            // See `Fn()` above for why we simply return
-            if a == 0 {
-                return;
-            }
-            drop(Box::from_raw(
-                FatPtr::<dyn Fn(&A) -> R> { fields: (a, b) }.ptr,
-            ));
-        }
-        inform(destroy::<A, R> as usize as u32);
-
-        <&Self>::describe();
-    }
+    const IS_MUT: bool = false;
 }
 
 unsafe impl<A, R> WasmClosure for dyn FnMut(&A) -> R
@@ -818,49 +690,7 @@ where
     A: RefFromWasmAbi,
     R: ReturnWasmAbi + 'static,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        #[allow(non_snake_case)]
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe extern "C" fn invoke<A: RefFromWasmAbi, R: ReturnWasmAbi>(
-            a: usize,
-            b: usize,
-            arg1: <A::Abi as WasmAbi>::Prim1,
-            arg2: <A::Abi as WasmAbi>::Prim2,
-            arg3: <A::Abi as WasmAbi>::Prim3,
-            arg4: <A::Abi as WasmAbi>::Prim4,
-        ) -> WasmRet<R::Abi> {
-            if a == 0 {
-                throw_str("closure invoked recursively or after being dropped");
-            }
-            // Make sure all stack variables are converted before we
-            // convert `ret` as it may throw (for `Result`, for
-            // example)
-            let ret = {
-                let f: *const dyn FnMut(&A) -> R = FatPtr { fields: (a, b) }.ptr;
-                let f = f as *mut dyn FnMut(&A) -> R;
-                let arg = <A as RefFromWasmAbi>::ref_from_abi(A::Abi::join(arg1, arg2, arg3, arg4));
-                (*f)(&*arg)
-            };
-            ret.return_abi().into()
-        }
-
-        inform(invoke::<A, R> as usize as u32);
-
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe extern "C" fn destroy<A: RefFromWasmAbi, R: ReturnWasmAbi>(a: usize, b: usize) {
-            // See `Fn()` above for why we simply return
-            if a == 0 {
-                return;
-            }
-            drop(Box::from_raw(
-                FatPtr::<dyn FnMut(&A) -> R> { fields: (a, b) }.ptr,
-            ));
-        }
-        inform(destroy::<A, R> as usize as u32);
-
-        <&mut Self>::describe();
-    }
+    const IS_MUT: bool = true;
 }
 
 #[allow(non_snake_case)]

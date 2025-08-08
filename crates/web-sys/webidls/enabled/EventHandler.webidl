@@ -53,6 +53,8 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onemptied;
            attribute EventHandler onended;
            attribute EventHandler oninput;
+  [Pref="dom.input_events.beforeinput.enabled"]
+           attribute EventHandler onbeforeinput;
            attribute EventHandler oninvalid;
            attribute EventHandler onkeydown;
            attribute EventHandler onkeypress;

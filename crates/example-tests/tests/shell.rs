@@ -1,17 +1,15 @@
-// Since these run on shell scripts, they won't work outside Unix-based OSes.
-#![cfg(unix)]
-
-use std::process::Command;
 use std::str;
+use tokio::process::Command;
 
 use example_tests::{example_dir, run, test_example};
 
 async fn test_shell_example(name: &str, envs: &[(&str, &str)]) -> anyhow::Result<()> {
-    test_example(name, || {
+    test_example(name, || async {
         let path = example_dir(name);
         run(Command::new(path.join("build.sh"))
             .current_dir(&path)
-            .envs(envs.iter().copied()))?;
+            .envs(envs.iter().copied()))
+        .await?;
         Ok(path)
     })
     .await
@@ -24,6 +22,7 @@ macro_rules! shell_tests {
         $test:ident = $name:literal,
     )*) => {
         $(
+            #[cfg_attr(not(unix), ignore = "shell scripts are not supported on non-Unix OSes")]
             $(#[$attr])*
             #[tokio::test]
             async fn $test() -> anyhow::Result<()> {

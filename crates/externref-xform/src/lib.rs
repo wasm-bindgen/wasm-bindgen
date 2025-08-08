@@ -450,7 +450,7 @@ impl Transform<'_> {
 
             let (shim, _externref_ty) = self.append_shim(
                 target,
-                &format!("closure{}", idx),
+                &format!("closure{idx}"),
                 function,
                 &mut module.types,
                 &mut module.funcs,
@@ -699,7 +699,7 @@ impl Transform<'_> {
         // with a fresh type we've been calculating so far. Give the function a
         // nice name for debugging and then we're good to go!
         let id = builder.finish(params, funcs);
-        let name = format!("{} externref shim", name);
+        let name = format!("{name} externref shim");
         funcs.get_mut(id).name = Some(name);
         self.shims.insert(id);
         Ok((id, externref_ty))

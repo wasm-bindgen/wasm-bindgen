@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/canvas/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/canvas
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/canvas/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/canvas
 
 Drawing a smiley face with the 2D canvas API. This is a port of part of [this
 MDN
