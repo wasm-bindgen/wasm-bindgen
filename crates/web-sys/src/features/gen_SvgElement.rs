@@ -435,6 +435,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
     pub fn set_oninput(this: &SvgElement, value: Option<&::js_sys::Function>);
+    # [wasm_bindgen (structural , method , getter , js_class = "SVGElement" , js_name = onbeforeinput)]
+    #[doc = "Getter for the `onbeforeinput` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/onbeforeinput)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn onbeforeinput(this: &SvgElement) -> Option<::js_sys::Function>;
+    # [wasm_bindgen (structural , method , setter , js_class = "SVGElement" , js_name = onbeforeinput)]
+    #[doc = "Setter for the `onbeforeinput` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/onbeforeinput)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn set_onbeforeinput(this: &SvgElement, value: Option<&::js_sys::Function>);
     # [wasm_bindgen (structural , method , getter , js_class = "SVGElement" , js_name = oninvalid)]
     #[doc = "Getter for the `oninvalid` field of this object."]
     #[doc = ""]

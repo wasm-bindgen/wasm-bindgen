@@ -7,6 +7,8 @@
 
 * Added format and colorSpace support to VideoFrameCopyToOptions
   [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
+* Added support for the [`onbeforeinput`](https://developer.mozilla.org/en-US/docs/Web/API/Element/beforeinput_event) attribute.
+  [#4544](https://github.com/wasm-bindgen/wasm-bindgen/pull/4544)
 * `TypedArray::new_from_slice(&[T])` constructor that allows to create a
   JS-owned `TypedArray` from a Rust slice.
   [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
