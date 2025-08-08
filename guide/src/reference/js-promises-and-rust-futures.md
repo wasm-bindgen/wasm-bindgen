@@ -113,7 +113,7 @@ Learn more:
 * [`wasm-bindgen-futures` API documentation and example usage][docs]
 
 [crate]: https://crates.io/crates/wasm-bindgen-futures
-[docs]: https://rustwasm.github.io/wasm-bindgen/api/wasm_bindgen_futures/
+[docs]: https://wasm-bindgen.github.io/wasm-bindgen/api/wasm_bindgen_futures/
 
 ## Compatibility with versions of `Future`
 

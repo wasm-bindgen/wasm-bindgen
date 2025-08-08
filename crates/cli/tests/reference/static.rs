@@ -1,7 +1,7 @@
 // DEPENDENCY: js-sys = { path = '{root}/crates/js-sys' }
 
-use wasm_bindgen::prelude::*;
 use js_sys::Number;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {

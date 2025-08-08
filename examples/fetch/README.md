@@ -3,8 +3,8 @@
 [View documentation for this example online][dox] or [View compiled example
 online][compiled]
 
-[compiled]: https://rustwasm.github.io/wasm-bindgen/exbuild/fetch/
-[dox]: https://rustwasm.github.io/docs/wasm-bindgen/examples/fetch.html
+[compiled]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/fetch/
+[dox]: https://wasm-bindgen.github.io/wasm-bindgen/examples/fetch.html
 
 You have to use: 
 
