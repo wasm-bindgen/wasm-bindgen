@@ -18,6 +18,9 @@
 * Deprecate async constructors.
   [#4402](https://github.com/rustwasm/wasm-bindgen/pull/4402)
 
+* The `size` argument to `GPUCommandEncoder.copyBufferToBuffer` is now optional.
+  [#4508](https://github.com/wasm-bindgen/wasm-bindgen/pull/4508)
+
 ### Fixed
 
 * Detect more failure scenarios when retrieving the Wasm module.
