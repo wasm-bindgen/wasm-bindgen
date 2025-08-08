@@ -115,7 +115,7 @@ jobs:
       RUSTFLAGS: -Ctarget-feature=+atomics
     steps:
     - uses: actions/checkout@v4
-    - run: rustup toolchain install nightly-2025-08-04 && rustup default nightly-2025-08-04
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add clippy rust-src
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -Zbuild-std=core,alloc -- -D warnings
@@ -194,7 +194,7 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v4
-    - run: rustup toolchain install nightly-2025-08-04 && rustup default nightly-2025-08-04
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add rust-src
     - run: |
@@ -378,7 +378,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: rustup toolchain install nightly-2025-08-04 && rustup default nightly-2025-08-04
+    - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add rust-src
     - run: |
