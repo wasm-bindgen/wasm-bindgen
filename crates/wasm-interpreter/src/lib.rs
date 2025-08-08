@@ -80,7 +80,15 @@ fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
         .instrs
         .iter()
         .filter_map(|(instr, _)| match instr {
+            // There are only up to three calls for now:
+            //   1. __wasm_call_ctors (`#[link_section = ".init_array"]`)
+            //   2. __wbindgen_skip_interpret_calls (The original symbol, we don't care about it)
+            //   3. __wasm_call_dtors (This symbol may not be present in Rust program, but may be present if C program is linked)
             Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => Some(*func),
+            // Typically, there are no other instructions, or only a return instruction.
+            //
+            // When coverage is turned on, there may be llvm coverage instrumentation
+            // instructions.
             _ => None,
         })
         .collect()
