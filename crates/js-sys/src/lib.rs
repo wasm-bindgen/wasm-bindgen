@@ -2009,6 +2009,105 @@ extern "C" {
         arg3: &JsValue,
     ) -> Result<JsValue, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call4(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call5(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call6(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call7(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call8(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call9(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+        arg9: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
@@ -2048,6 +2147,105 @@ extern "C" {
         arg1: &JsValue,
         arg2: &JsValue,
         arg3: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind4(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind5(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind6(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind7(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind8(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind9(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+        arg9: &JsValue,
     ) -> Function;
 
     /// The length property indicates the number of arguments expected by the function.

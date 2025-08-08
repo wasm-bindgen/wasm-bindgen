@@ -13,6 +13,9 @@
   JS-owned `TypedArray` from a Rust slice.
   [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
 
+* Added `Function::call4` and `Function::bind4` through `Function::call9` `Function::bind9` methods for calling  and binding JavaScript functions with 4-9 arguments.
+  [#4572](https://github.com/wasm-bindgen/wasm-bindgen/pull/4572)
+
 ### Changed
 
 * Deprecate async constructors.
