@@ -879,6 +879,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Document`*"]
     pub fn set_oninput(this: &Document, value: Option<&::js_sys::Function>);
+    # [wasm_bindgen (structural , method , getter , js_class = "Document" , js_name = onbeforeinput)]
+    #[doc = "Getter for the `onbeforeinput` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Document/onbeforeinput)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Document`*"]
+    pub fn onbeforeinput(this: &Document) -> Option<::js_sys::Function>;
+    # [wasm_bindgen (structural , method , setter , js_class = "Document" , js_name = onbeforeinput)]
+    #[doc = "Setter for the `onbeforeinput` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Document/onbeforeinput)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Document`*"]
+    pub fn set_onbeforeinput(this: &Document, value: Option<&::js_sys::Function>);
     # [wasm_bindgen (structural , method , getter , js_class = "Document" , js_name = oninvalid)]
     #[doc = "Getter for the `oninvalid` field of this object."]
     #[doc = ""]
@@ -2179,7 +2193,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Document`, `ViewTransition`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn start_view_transition(this: &Document) -> Result<ViewTransition, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ViewTransition")]
@@ -2191,7 +2205,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Document`, `ViewTransition`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn start_view_transition_with_update_callback(
         this: &Document,
         update_callback: Option<&::js_sys::Function>,

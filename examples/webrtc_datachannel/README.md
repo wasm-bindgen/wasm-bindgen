@@ -3,8 +3,8 @@
 [View documentation for this example online][dox] or [View compiled example
 online][compiled]
 
-[compiled]: https://rustwasm.github.io/wasm-bindgen/exbuild/webrtc_datachannel/
-[dox]: https://rustwasm.github.io/wasm-bindgen/examples/webrtc_datachannel.html
+[compiled]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/webrtc_datachannel/
+[dox]: https://wasm-bindgen.github.io/wasm-bindgen/examples/webrtc_datachannel.html
 
 You can build the example locally with:
 

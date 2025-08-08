@@ -33,7 +33,7 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn greet(name: String) {
-    log(&format!("Hello from {}!", name)); // should output "Hello from Rust!"
+    log(&format!("Hello from {name}!")); // should output "Hello from Rust!"
 
     let x = MyClass::new();
     assert_eq!(x.number(), add(40, 2));
