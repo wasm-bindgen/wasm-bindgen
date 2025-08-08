@@ -59,6 +59,7 @@ pub mod string_vecs;
 pub mod struct_vecs;
 pub mod structural;
 pub mod truthy_falsy;
+pub mod typed_promise;
 pub mod usize;
 pub mod validate_prt;
 pub mod variadic;

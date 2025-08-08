@@ -198,6 +198,64 @@ impl Future for JsFuture {
     }
 }
 
+/// A Rust `Future` backed by a JavaScript `Promise` with typed result.
+///
+/// This type is similar to `JsFuture` but provides typed conversion of the
+/// resolved value using the `JsValueCast` trait. It implements the `Future`
+/// trait and will either succeed with a typed value or fail with a `JsValue`
+/// error depending on what happens with the JavaScript `Promise`.
+pub struct TypedJsFuture<T> {
+    inner: JsFuture,
+    _phantom: core::marker::PhantomData<T>,
+}
+
+impl<T> fmt::Debug for TypedJsFuture<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "TypedJsFuture {{ ... }}")
+    }
+}
+
+impl<T> From<Promise> for TypedJsFuture<T>
+where
+    T: wasm_bindgen::JsValueCast,
+{
+    fn from(js: Promise) -> TypedJsFuture<T> {
+        TypedJsFuture {
+            inner: JsFuture::from(js),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<T> From<js_sys::TypedPromise<T>> for TypedJsFuture<T>
+where
+    T: wasm_bindgen::JsValueCast,
+{
+    fn from(typed_promise: js_sys::TypedPromise<T>) -> TypedJsFuture<T> {
+        TypedJsFuture {
+            inner: JsFuture::from(typed_promise.into_generic()),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<T> Future for TypedJsFuture<T>
+where
+    T: wasm_bindgen::JsValueCast,
+{
+    type Output = Result<T, JsValue>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+        let inner_future = unsafe { self.map_unchecked_mut(|s| &mut s.inner) };
+
+        match inner_future.poll(cx) {
+            Poll::Ready(Ok(js_value)) => Poll::Ready(Ok(T::unchecked_from_js_value(js_value))),
+            Poll::Ready(Err(js_error)) => Poll::Ready(Err(js_error)),
+            Poll::Pending => Poll::Pending,
+        }
+    }
+}
+
 /// Converts a Rust `Future` into a JavaScript `Promise`.
 ///
 /// This function will take any future in Rust and schedule it to be executed,
@@ -238,4 +296,56 @@ where
             }
         });
     })
+}
+
+/// Converts a Rust `Future` into a JavaScript `TypedPromise`.
+///
+/// This function is similar to `future_to_promise` but returns a `TypedPromise<T>`
+/// instead of an untyped `Promise`. The future's success value is converted to
+/// `JsValue` using `Into<JsValue>` before being passed to JavaScript.
+///
+/// The `future` must be `'static` because it will be scheduled to run in the
+/// background and cannot contain any stack references.
+///
+/// The returned `TypedPromise<T>` will be resolved or rejected when the future completes,
+/// depending on whether it finishes with `Ok` or `Err`.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use wasm_bindgen_futures::typed_future_to_promise;
+/// use js_sys::TypedPromise;
+///
+/// let future = async { Ok(42i32) };
+/// let typed_promise: TypedPromise<i32> = typed_future_to_promise(future);
+/// ```
+///
+/// # Panics
+///
+/// Same panic behavior as `future_to_promise`. If the `future` provided panics
+/// then the returned `TypedPromise` **will not resolve**.
+pub fn typed_future_to_promise<F, T>(future: F) -> js_sys::TypedPromise<T>
+where
+    F: Future<Output = Result<T, JsValue>> + 'static,
+    T: Into<JsValue> + wasm_bindgen::JsValueCast,
+{
+    let mut future = Some(future);
+
+    let promise = Promise::new(&mut |resolve, reject| {
+        let future = future.take().unwrap_throw();
+
+        spawn_local(async move {
+            match future.await {
+                Ok(val) => {
+                    let js_val = val.into();
+                    resolve.call1(&JsValue::undefined(), &js_val).unwrap_throw();
+                }
+                Err(val) => {
+                    reject.call1(&JsValue::undefined(), &val).unwrap_throw();
+                }
+            }
+        });
+    });
+
+    promise.typed_unchecked::<T>()
 }

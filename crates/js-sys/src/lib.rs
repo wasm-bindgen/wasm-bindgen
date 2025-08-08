@@ -2009,105 +2009,6 @@ extern "C" {
         arg3: &JsValue,
     ) -> Result<JsValue, JsValue>;
 
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call4(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-    ) -> Result<JsValue, JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call5(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-    ) -> Result<JsValue, JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call6(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-    ) -> Result<JsValue, JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call7(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-    ) -> Result<JsValue, JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call8(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-    ) -> Result<JsValue, JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call9(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-        arg9: &JsValue,
-    ) -> Result<JsValue, JsValue>;
-
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
@@ -2147,105 +2048,6 @@ extern "C" {
         arg1: &JsValue,
         arg2: &JsValue,
         arg3: &JsValue,
-    ) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind4(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-    ) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind5(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-    ) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind6(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-    ) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind7(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-    ) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind8(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-    ) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind9(
-        this: &Function,
-        context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-        arg9: &JsValue,
     ) -> Function;
 
     /// The length property indicates the number of arguments expected by the function.
@@ -6226,6 +6028,224 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally)
     #[wasm_bindgen(method)]
     pub fn finally(this: &Promise, cb: &Closure<dyn FnMut()>) -> Promise;
+
+    // Internal bindings for TypedPromise that support returning callbacks
+    #[wasm_bindgen(method, js_name = then)]
+    fn then_returning(this: &Promise, cb: &Closure<dyn FnMut(JsValue) -> JsValue>) -> Promise;
+
+    #[wasm_bindgen(method, js_name = catch)]
+    fn catch_returning(this: &Promise, cb: &Closure<dyn FnMut(JsValue) -> JsValue>) -> Promise;
+}
+
+/// A wrapper around `Promise` that provides typed methods for working with Promise values.
+///
+/// This type enables Promise methods like `.then()`, `.catch()`, and `.finally()` to work
+/// with strongly-typed values, automatically converting JavaScript values using `JsValueCast`.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use js_sys::{Promise, TypedPromise};
+/// use wasm_bindgen::prelude::*;
+///
+/// let promise: Promise = fetch_number();
+/// let typed: TypedPromise<i32> = promise.typed();
+///
+/// let result: TypedPromise<String> = typed
+///     .then(|num: i32| format!("Number: {}", num))
+///     .catch(|_| "Error occurred".to_string());
+/// ```
+pub struct TypedPromise<T> {
+    inner: Promise,
+    _phantom: core::marker::PhantomData<T>,
+}
+
+impl<T> TypedPromise<T>
+where
+    T: JsValueCast,
+{
+    /// Creates a new TypedPromise wrapping the given Promise.
+    fn new(promise: Promise) -> Self {
+        Self {
+            inner: promise,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    /// Convert back to an untyped Promise.
+    pub fn into_generic(self) -> Promise {
+        self.inner
+    }
+
+    /// The typed version of `Promise.then()` that converts resolved values to type `T`,
+    /// calls the user function, and returns a new TypedPromise with the result type.
+    ///
+    /// The callback function receives a strongly-typed value of type `T` instead of `JsValue`,
+    /// and can return any type `R` that implements `JsValueCast`.
+    pub fn then<F, R>(self, f: F) -> TypedPromise<R>
+    where
+        F: FnOnce(T) -> R + 'static,
+        R: JsValueCast + Into<JsValue>,
+    {
+        let mut f = Some(f);
+        let callback =
+            wasm_bindgen::prelude::Closure::wrap(Box::new(move |js_val: JsValue| -> JsValue {
+                if let Some(f) = f.take() {
+                    let typed_val = T::unchecked_from_js_value(js_val);
+                    let result = f(typed_val);
+                    result.into() // Convert to JsValue and return it
+                } else {
+                    JsValue::undefined()
+                }
+            })
+                as Box<dyn FnMut(JsValue) -> JsValue>);
+        let new_promise = self.inner.then_returning(&callback);
+        callback.forget(); // Transfer ownership to JavaScript
+        TypedPromise::new(new_promise)
+    }
+
+    /// The typed version of `Promise.catch()` that allows recovery from errors
+    /// with a strongly-typed result.
+    pub fn catch<F>(self, f: F) -> TypedPromise<T>
+    where
+        F: FnOnce(JsValue) -> T + 'static,
+        T: Into<JsValue>,
+    {
+        // For catch, we handle the error as JsValue directly
+        let mut f = Some(f);
+        let callback =
+            wasm_bindgen::prelude::Closure::wrap(Box::new(move |js_val: JsValue| -> JsValue {
+                if let Some(f) = f.take() {
+                    let result = f(js_val);
+                    result.into() // Convert to JsValue and return it
+                } else {
+                    JsValue::undefined()
+                }
+            })
+                as Box<dyn FnMut(JsValue) -> JsValue>);
+
+        let new_promise = self.inner.catch_returning(&callback);
+        callback.forget();
+        TypedPromise::new(new_promise)
+    }
+
+    /// The typed version of `Promise.finally()` that runs cleanup code
+    /// regardless of whether the Promise was fulfilled or rejected.
+    pub fn finally<F>(self, f: F) -> TypedPromise<T>
+    where
+        F: FnOnce() + 'static,
+    {
+        use wasm_bindgen::prelude::*;
+
+        let callback = Closure::once(move || {
+            f();
+        });
+
+        let new_promise = self.inner.finally(&callback);
+        callback.forget();
+        TypedPromise::new(new_promise)
+    }
+}
+
+impl TypedPromise<()> {
+    /// Creates a new TypedPromise that resolves to the given value.
+    ///
+    /// This accepts any type that implements `JsValueCast` and `Into<JsValue>`,
+    /// converts it to a `JsValue`, and returns a `TypedPromise<T>` where `T`
+    /// is automatically inferred from the input type.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use js_sys::{TypedPromise, JsString};
+    ///
+    /// let promise = TypedPromise::resolve(42i32);                    // TypedPromise<i32>
+    /// let string_promise = TypedPromise::resolve(JsString::from("hello")); // TypedPromise<JsString>
+    /// ```
+    pub fn resolve<T>(value: T) -> TypedPromise<T>
+    where
+        T: JsValueCast + Into<JsValue>,
+    {
+        let js_value = value.into();
+        let promise = Promise::resolve(&js_value);
+        TypedPromise {
+            inner: promise,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl Promise {
+    /// Convert this untyped Promise to a TypedPromise<T> for type-safe Promise operations.
+    ///
+    /// This method enables you to work with Promises using strongly-typed values,
+    /// automatically converting JavaScript values using `JsValueCast`.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use js_sys::Promise;
+    /// use wasm_bindgen::prelude::*;
+    ///
+    /// let promise: Promise = fetch_data();
+    /// let typed = promise.typed::<i32>();
+    ///
+    /// let result = typed.then(|num: i32| num * 2);
+    /// ```
+    pub fn typed_unchecked<T>(self) -> TypedPromise<T>
+    where
+        T: JsValueCast,
+    {
+        TypedPromise::new(self)
+    }
+}
+
+impl<T> From<TypedPromise<T>> for Promise {
+    fn from(typed_promise: TypedPromise<T>) -> Promise {
+        typed_promise.inner
+    }
+}
+
+// Implement wasm-bindgen traits for TypedPromise<T> to enable use in function signatures
+impl<T> wasm_bindgen::describe::WasmDescribe for TypedPromise<T> {
+    fn describe() {
+        // TypedPromise<T> is represented as a Promise in JavaScript
+        Promise::describe()
+    }
+}
+
+impl<T> wasm_bindgen::convert::IntoWasmAbi for TypedPromise<T>
+where
+    T: JsValueCast,
+{
+    type Abi = <Promise as wasm_bindgen::convert::IntoWasmAbi>::Abi;
+
+    fn into_abi(self) -> Self::Abi {
+        // Convert TypedPromise<T> to Promise for JavaScript interop
+        self.inner.into_abi()
+    }
+}
+
+impl<T> wasm_bindgen::convert::FromWasmAbi for TypedPromise<T>
+where
+    T: JsValueCast,
+{
+    type Abi = <Promise as wasm_bindgen::convert::FromWasmAbi>::Abi;
+
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        // Convert Promise from JavaScript to TypedPromise<T>
+        let promise = Promise::from_abi(js);
+        TypedPromise::new(promise)
+    }
+}
+
+// Implement Deref to allow TypedPromise<T> -> Promise conversion when needed
+impl<T> core::ops::Deref for TypedPromise<T> {
+    type Target = Promise;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
 }
 
 /// Returns a handle to the global scope object.
