@@ -738,7 +738,10 @@ where
     T: JsValueCast,
 {
     fn unchecked_from_js_value(js_value: JsValue) -> Self {
-        // Use if_defined() which already handles null/undefined checking
-        js_value.if_defined().map(T::unchecked_from_js_value)
+        if js_value.is_null_or_undefined() {
+            None
+        } else {
+            Some(T::unchecked_from_js_value(js_value))
+        }
     }
 }
