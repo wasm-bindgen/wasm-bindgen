@@ -26,10 +26,12 @@ fn set_schema_version_env_var() {
         "The `CARGO_MANIFEST_DIR` environment variable is needed to locate the schema file",
     );
     let schema_file = PathBuf::from(cargo_manifest_dir).join("src/lib.rs");
-    let schema_file = std::fs::read(schema_file).unwrap();
+    let schema_file = std::fs::read_to_string(schema_file).unwrap();
+    #[cfg(windows)]
+    let schema_file = schema_file.replace("\r\n", "\n");
 
     let mut hasher = DefaultHasher::new();
-    hasher.write(&schema_file);
+    hasher.write(schema_file.as_bytes());
 
     println!("cargo:rustc-env=SCHEMA_FILE_HASH={}", hasher.finish());
 }

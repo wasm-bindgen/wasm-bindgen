@@ -57,7 +57,7 @@ fn maybe_unstable_docs(unstable: bool) -> Option<proc_macro2::TokenStream> {
         Some(quote! {
             #[doc = ""]
             #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-            #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+            #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
         })
     } else {
         None
@@ -120,7 +120,7 @@ impl Enum {
         let unstable_docs = maybe_unstable_docs(*unstable);
 
         let doc_comment = comment(
-            format!("The `{}` enum.", name),
+            format!("The `{name}` enum."),
             &get_features_doc(options, name.to_string()),
         );
 
@@ -210,7 +210,7 @@ impl Const {
         let unstable_docs = maybe_unstable_docs(unstable);
 
         let doc_comment = comment(
-            format!("The `{}.{}` const.", parent_js_name, js_name),
+            format!("The `{parent_js_name}.{js_name}` const."),
             &get_features_doc(options, parent_name.to_string()),
         );
 
@@ -344,10 +344,7 @@ impl InterfaceAttribute {
             });
 
         let doc_comment = comment(
-            format!(
-                "{} for the `{}` field of this object.\n\n{}",
-                prefix, js_name, mdn_docs
-            ),
+            format!("{prefix} for the `{js_name}` field of this object.\n\n{mdn_docs}"),
             &doc_comment,
         );
 
@@ -712,12 +709,12 @@ impl DictionaryField {
         });
 
         let getter_doc_comment = comment(
-            format!("Get the `{}` field of this object.", js_name),
+            format!("Get the `{js_name}` field of this object."),
             &required_doc_string(options, features),
         );
 
         let setter_doc_comment = comment(
-            format!("Change the `{}` field of this object.", js_name),
+            format!("Change the `{js_name}` field of this object."),
             &required_doc_string(options, features),
         );
 
@@ -756,7 +753,7 @@ impl DictionaryField {
         let unstable_attr = maybe_unstable_attr(*unstable);
 
         let setter_name = self.setter_name();
-        let deprecated = format!("Use `{}()` instead.", setter_name);
+        let deprecated = format!("Use `{setter_name}()` instead.");
 
         let shim_args = if self.is_js_value_ref_option_type {
             quote! { val.unwrap_or(&::wasm_bindgen::JsValue::NULL) }
@@ -847,11 +844,11 @@ impl Dictionary {
         required_features.insert(name.to_string());
 
         let doc_comment = comment(
-            format!("The `{}` dictionary.", name),
+            format!("The `{name}` dictionary."),
             &get_features_doc(options, name.to_string()),
         );
         let ctor_doc_comment = comment(
-            format!("Construct a new `{}`.", name),
+            format!("Construct a new `{name}`."),
             &required_doc_string(options, &required_features),
         );
 

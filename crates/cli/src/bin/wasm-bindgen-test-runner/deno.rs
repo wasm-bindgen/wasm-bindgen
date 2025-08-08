@@ -26,7 +26,7 @@ pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<()
     );
 
     for test in tests.tests {
-        js_to_execute.push_str(&format!("tests.push('{}')\n", test.name));
+        js_to_execute.push_str(&format!("tests.push('{}')\n", test.export));
     }
 
     js_to_execute.push_str(

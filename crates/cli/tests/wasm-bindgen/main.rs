@@ -469,6 +469,32 @@ fn function_table_preserved() {
 }
 
 #[test]
+fn function_table_preserved_for_stack_closures() {
+    let (mut cmd, _out_dir) = Project::new("function_table_preserved_for_stack_closures")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    fn take_closure(closure: &dyn Fn());
+                }
+
+                #[wasm_bindgen]
+                pub extern fn pass_closure() {
+                    take_closure(&|| {
+                        // Noop, just ensure that the compilation succeeds.
+                        // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4119.
+                    });
+                }
+            "#,
+        )
+        .wasm_bindgen("");
+    cmd.assert().success();
+}
+
+#[test]
 fn constructor_cannot_return_option_struct() {
     let (mut cmd, _out_dir) = Project::new("constructor_cannot_return_option_struct")
         .file(
@@ -478,7 +504,7 @@ fn constructor_cannot_return_option_struct() {
 
                 #[wasm_bindgen]
                 pub struct Foo(());
-                
+
                 #[wasm_bindgen]
                 impl Foo {
                     #[wasm_bindgen(constructor)]

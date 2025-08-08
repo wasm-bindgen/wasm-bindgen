@@ -28,7 +28,7 @@ extern "C" {
 }
 
 // Each getter/setter combination is derived
-// from https://github.com/rustwasm/wasm-bindgen/pull/1440#issuecomment-487113564
+// from https://github.com/wasm-bindgen/wasm-bindgen/pull/1440#issuecomment-487113564
 #[wasm_bindgen]
 pub struct Rules {
     pub field: i32,
