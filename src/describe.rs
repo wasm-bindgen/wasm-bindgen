@@ -9,31 +9,47 @@ use alloc::vec::Vec;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
 use crate::{Clamped, JsError, JsObject, JsValue};
-use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
 
-#[inline(always)] // see the wasm-interpreter crate
-#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-pub fn inform(a: u32) {
-    unsafe { super::__wbindgen_describe(a) }
-}
+const MAYBE_CACHED_STRING: u32 = if cfg!(feature = "enable-interning") {
+    CACHED_STRING
+} else {
+    STRING
+};
+
+/// # Safety
+///
+/// Implementors of this trait must have a memory layout that is compatible
+/// with `[u32; N]` for some value of N. This means the type must be
+/// representable as a contiguous array of `u32` values with no padding
+/// or other layout differences.
+pub unsafe trait SerializedDescriptor {}
+
+unsafe impl SerializedDescriptor for u32 {}
+
+unsafe impl<const N: usize> SerializedDescriptor for [u32; N] {}
 
 pub trait WasmDescribe {
-    fn describe();
+    type Descriptor: SerializedDescriptor;
+
+    const DESCRIPTOR: Self::Descriptor;
 }
 
 /// Trait for element types to implement WasmDescribe for vectors of
 /// themselves.
 pub trait WasmDescribeVector {
-    fn describe_vector();
+    type VectorDescriptor: SerializedDescriptor;
+
+    const VECTOR_DESCRIPTOR: Self::VectorDescriptor;
 }
 
 macro_rules! simple {
-    ($($t:ident => $d:ident)*) => ($(
+    ($($t:ty => $d:ident)*) => ($(
         impl WasmDescribe for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() { inform($d) }
+            type Descriptor = u32;
+
+            const DESCRIPTOR: Self::Descriptor = $d;
         }
     )*)
 }
@@ -56,153 +72,117 @@ simple! {
     bool => BOOLEAN
     char => CHAR
     JsValue => EXTERNREF
-}
-
-cfg_if! {
-    if #[cfg(feature = "enable-interning")] {
-        simple! {
-            str => CACHED_STRING
-        }
-
-    } else {
-        simple! {
-            str => STRING
-        }
-    }
+    () => UNIT
+    str => MAYBE_CACHED_STRING
+    String => MAYBE_CACHED_STRING
 }
 
 impl<T> WasmDescribe for *const T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(U32)
-    }
+    type Descriptor = u32;
+
+    const DESCRIPTOR: Self::Descriptor = U32;
 }
 
 impl<T> WasmDescribe for *mut T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(U32)
-    }
+    type Descriptor = u32;
+
+    const DESCRIPTOR: Self::Descriptor = U32;
 }
 
 impl<T> WasmDescribe for NonNull<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(NONNULL)
+    type Descriptor = u32;
+
+    const DESCRIPTOR: Self::Descriptor = U32;
+}
+
+#[repr(C)]
+pub struct TaggedDescriptor<T: ?Sized + WasmDescribe> {
+    pub tag: u32,
+    pub inner: T::Descriptor,
+}
+
+impl<T: ?Sized + WasmDescribe> TaggedDescriptor<T> {
+    pub const fn new(tag: u32) -> Self {
+        Self {
+            tag,
+            inner: T::DESCRIPTOR,
+        }
     }
 }
 
+unsafe impl<T: ?Sized + WasmDescribe> SerializedDescriptor for TaggedDescriptor<T> {}
+
 impl<T: WasmDescribe> WasmDescribe for [T] {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(SLICE);
-        T::describe();
-    }
+    type Descriptor = TaggedDescriptor<T>;
+
+    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(SLICE);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(REF);
-        T::describe();
-    }
+    type Descriptor = TaggedDescriptor<T>;
+
+    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(REF);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &mut T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(REFMUT);
-        T::describe();
-    }
-}
+    type Descriptor = TaggedDescriptor<T>;
 
-cfg_if! {
-    if #[cfg(feature = "enable-interning")] {
-        simple! {
-            String => CACHED_STRING
-        }
-
-    } else {
-        simple! {
-            String => STRING
-        }
-    }
+    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(REFMUT);
 }
 
 impl WasmDescribeVector for JsValue {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        JsValue::describe();
-    }
+    type VectorDescriptor = TaggedDescriptor<JsValue>;
+
+    const VECTOR_DESCRIPTOR: Self::VectorDescriptor = TaggedDescriptor::new(VECTOR);
 }
 
 impl<T: JsObject> WasmDescribeVector for T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        T::describe();
-    }
+    type VectorDescriptor = TaggedDescriptor<T>;
+
+    const VECTOR_DESCRIPTOR: Self::VectorDescriptor = TaggedDescriptor::new(VECTOR);
 }
 
 impl<T: WasmDescribeVector> WasmDescribe for Box<[T]> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        T::describe_vector();
-    }
+    type Descriptor = T::VectorDescriptor;
+
+    const DESCRIPTOR: Self::Descriptor = T::VECTOR_DESCRIPTOR;
 }
 
 impl<T> WasmDescribe for Vec<T>
 where
     Box<[T]>: WasmDescribe,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        <Box<[T]>>::describe();
-    }
+    type Descriptor = <Box<[T]> as WasmDescribe>::Descriptor;
+
+    const DESCRIPTOR: Self::Descriptor = <Box<[T]> as WasmDescribe>::DESCRIPTOR;
 }
 
 impl<T: WasmDescribe> WasmDescribe for Option<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(OPTIONAL);
-        T::describe();
-    }
-}
+    type Descriptor = TaggedDescriptor<T>;
 
-impl WasmDescribe for () {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(UNIT)
-    }
+    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(OPTIONAL);
 }
 
 impl<T: WasmDescribe, E: Into<JsValue>> WasmDescribe for Result<T, E> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(RESULT);
-        T::describe();
-    }
+    type Descriptor = TaggedDescriptor<T>;
+
+    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(RESULT);
 }
 
 impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        T::describe();
-    }
+    type Descriptor = T::Descriptor;
+
+    const DESCRIPTOR: Self::Descriptor = T::DESCRIPTOR;
 }
 
 impl<T: WasmDescribe> WasmDescribe for Clamped<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(CLAMPED);
-        T::describe();
-    }
+    type Descriptor = TaggedDescriptor<T>;
+
+    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(CLAMPED);
 }
 
 impl WasmDescribe for JsError {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        JsValue::describe();
-    }
+    type Descriptor = <JsValue as WasmDescribe>::Descriptor;
+
+    const DESCRIPTOR: Self::Descriptor = <JsValue as WasmDescribe>::DESCRIPTOR;
 }

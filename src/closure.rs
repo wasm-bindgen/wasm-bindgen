@@ -332,23 +332,24 @@ where
 
         #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
         extern "C" fn describe<T: WasmClosure + ?Sized>() {
-            inform(CLOSURE);
+            // inform(CLOSURE);
 
-            unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
-                // This can be called by the JS glue in erroneous situations
-                // such as when the closure has already been destroyed. If
-                // that's the case let's not make things worse by
-                // segfaulting and/or asserting, so just ignore null
-                // pointers.
-                if a == 0 {
-                    return;
-                }
-                drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
-            }
-            inform(destroy::<T> as usize as u32);
+            // unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
+            //     // This can be called by the JS glue in erroneous situations
+            //     // such as when the closure has already been destroyed. If
+            //     // that's the case let's not make things worse by
+            //     // segfaulting and/or asserting, so just ignore null
+            //     // pointers.
+            //     if a == 0 {
+            //         return;
+            //     }
+            //     drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
+            // }
+            // inform(destroy::<T> as usize as u32);
 
-            inform(T::IS_MUT as u32);
-            T::describe();
+            // inform(T::IS_MUT as u32);
+            // T::describe();
+            todo!()
         }
 
         #[inline(never)]
@@ -478,10 +479,9 @@ impl<T> WasmDescribe for Closure<T>
 where
     T: WasmClosure + ?Sized,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(EXTERNREF);
-    }
+    type Descriptor = u32;
+
+    const DESCRIPTOR: Self::Descriptor = EXTERNREF;
 }
 
 // `Closure` can only be passed by reference to imports.
