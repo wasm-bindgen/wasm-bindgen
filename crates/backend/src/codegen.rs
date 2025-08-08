@@ -1411,19 +1411,8 @@ impl TryToTokens for ast::ImportFunction {
                     );
                 }
                 Some(ref ty) => {
-                    convert_ret = if let Some(()) = is_abi_primitive(ty) {
-                        quote! {
-                            <#ty as #wasm_bindgen::convert::TryFromJsValue>::try_from_js_value(#future)
-                                .expect(&format!("Failed dynamic conversion of async return value into {}", stringify!(#ty)))
-                        }
-                    } else if let Some(inner_ty) = extract_option_inner_type(ty) {
-                        quote! {
-                            #future.if_defined().map(#wasm_bindgen::JsCast::unchecked_into::<#inner_ty>)
-                        }
-                    } else {
-                        quote! {
-                            #wasm_bindgen::JsCast::unchecked_into::<#ty>(#future)
-                        }
+                    convert_ret = quote! {
+                        <#ty as #wasm_bindgen::JsValueCast>::unchecked_from_js_value(#future)
                     };
                     if self.catch {
                         convert_ret = quote! { Ok(#convert_ret) };
@@ -2005,53 +1994,4 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
         new_tokens.push(token);
     }
     new_tokens.into_iter().collect()
-}
-
-fn extract_option_inner_type(ty: &syn::Type) -> Option<&syn::Type> {
-    match ty {
-        syn::Type::Path(type_path) => {
-            if type_path.path.segments.len() == 1 {
-                let segment = &type_path.path.segments[0];
-                if segment.ident == "Option" {
-                    if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
-                        if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
-                            return Some(inner_ty);
-                        }
-                    }
-                }
-            }
-            None
-        }
-        _ => None,
-    }
-}
-
-fn is_abi_primitive(ty: &syn::Type) -> Option<()> {
-    match ty {
-        syn::Type::Path(type_path) => {
-            // Check if it's a single segment path like "i32" or "u32"
-            if let Some(ident) = type_path.path.get_ident() {
-                match ident.to_string().as_str() {
-                    // WebAssembly primitive types that use ToWebAssemblyValue conversion
-                    "u8" | "u16" | "u32" | "i8" | "i16" | "i32" | "f32" | "f64" | "bool"
-                    | "char" | "i64" | "u64" => Some(()),
-                    _ => None,
-                }
-            } else if type_path.path.segments.len() == 1 {
-                // Check if it's "Option<T>" where T is primitive
-                let segment = &type_path.path.segments[0];
-                if segment.ident == "Option" {
-                    if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
-                        if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
-                            return is_abi_primitive(inner_ty);
-                        }
-                    }
-                }
-                None
-            } else {
-                None
-            }
-        }
-        _ => None,
-    }
 }
