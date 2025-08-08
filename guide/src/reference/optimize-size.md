@@ -45,5 +45,5 @@ file for adding two numbers.
 
 [gol]: https://rustwasm.github.io/book/game-of-life/introduction.html
 [size]: https://rustwasm.github.io/book/game-of-life/code-size.html
-[issue]: https://github.com/rustwasm/wasm-bindgen/issues/new
-[example]: https://rustwasm.github.io/docs/wasm-bindgen/examples/add.html
+[issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/new
+[example]: https://wasm-bindgen.github.io/wasm-bindgen/examples/add.html

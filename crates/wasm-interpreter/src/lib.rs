@@ -39,10 +39,6 @@ pub struct Interpreter {
     // Id of the function table
     functions: Option<TableId>,
 
-    // A mapping of string names to the function index, filled with all exported
-    // functions.
-    name_map: HashMap<String, FunctionId>,
-
     // The current stack pointer (global 0) and Wasm memory (the stack). Only
     // used in a limited capacity.
     sp: i32,
@@ -91,15 +87,6 @@ impl Interpreter {
             } else if import.name == "__wbindgen_describe_closure" {
                 ret.describe_closure_id = Some(id);
             }
-        }
-
-        // Build up the mapping of exported functions to function ids.
-        for export in module.exports.iter() {
-            let id = match export.item {
-                walrus::ExportItem::Function(id) => id,
-                _ => continue,
-            };
-            ret.name_map.insert(export.name.to_string(), id);
         }
 
         ret.functions = module.tables.main_function_table()?;
@@ -308,22 +295,22 @@ impl Frame<'_> {
             // theory there doesn't need to be.
             Instr::Load(e) => {
                 let address = stack.pop().unwrap();
+                let address = address as u32 + e.arg.offset;
                 ensure!(
                     address > 0,
-                    "Read a negative address value from the stack. Did we run out of memory?"
+                    "Read a negative or zero address value from the stack. Did we run out of memory?"
                 );
-                let address = address as u32 + e.arg.offset;
                 ensure!(address % 4 == 0);
                 stack.push(self.interp.mem[address as usize / 4])
             }
             Instr::Store(e) => {
                 let value = stack.pop().unwrap();
                 let address = stack.pop().unwrap();
+                let address = address as u32 + e.arg.offset;
                 ensure!(
                     address > 0,
-                    "Read a negative address value from the stack. Did we run out of memory?"
+                    "Read a negative or zero address value from the stack. Did we run out of memory?"
                 );
-                let address = address as u32 + e.arg.offset;
                 ensure!(address % 4 == 0);
                 self.interp.mem[address as usize / 4] = value;
             }

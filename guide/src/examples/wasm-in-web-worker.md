@@ -2,7 +2,7 @@
 
 [View full source code][code]
 
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/wasm-in-web-worker
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/wasm-in-web-worker
 
 A simple example of parallel execution by spawning a web worker with `web_sys`,
 loading Wasm code in the web worker and interacting between the main thread and

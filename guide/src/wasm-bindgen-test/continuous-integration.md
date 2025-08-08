@@ -4,7 +4,7 @@ This page contains example configurations for running `wasm-bindgen-test`-based
 tests in various CI services.
 
 Is your favorite CI service missing? [Send us a pull
-request!](https://github.com/rustwasm/wasm-bindgen)
+request!](https://github.com/wasm-bindgen/wasm-bindgen)
 
 ## Travis CI
 

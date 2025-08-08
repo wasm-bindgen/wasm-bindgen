@@ -1152,7 +1152,7 @@ fn instruction(
                 "isLikeNone({val}) ? {zero} : {val}",
                 zero = if *ty == ValType::I64 {
                     // We can't use bigint literals for now. See:
-                    // https://github.com/rustwasm/wasm-bindgen/issues/4246
+                    // https://github.com/wasm-bindgen/wasm-bindgen/issues/4246
                     "BigInt(0)"
                 } else {
                     "0"

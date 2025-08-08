@@ -57,7 +57,7 @@ fn maybe_unstable_docs(unstable: bool) -> Option<proc_macro2::TokenStream> {
         Some(quote! {
             #[doc = ""]
             #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-            #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+            #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
         })
     } else {
         None

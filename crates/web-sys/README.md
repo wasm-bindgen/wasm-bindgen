@@ -3,8 +3,8 @@
 Raw bindings to Web APIs for projects using `wasm-bindgen`.
 
 - [The `web-sys` section of the `wasm-bindgen`
-  guide](https://rustwasm.github.io/wasm-bindgen/web-sys/index.html)
-- [API Documentation](https://rustwasm.github.io/wasm-bindgen/api/web_sys/)
+  guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/index.html)
+- [API Documentation](https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/)
 
 ## Crate features
 
@@ -45,5 +45,5 @@ If you don't see a particular web API in `web-sys`, here is how to add it.
    ...
 
    * Added <your addition>
-     [#1234](https://github.com/rustwasm/wasm-bindgen/pull/1234) # <- link to your PR
+     [#1234](https://github.com/wasm-bindgen/wasm-bindgen/pull/1234) # <- link to your PR
    ```
