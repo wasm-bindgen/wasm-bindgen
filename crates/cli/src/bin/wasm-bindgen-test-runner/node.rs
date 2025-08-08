@@ -80,9 +80,9 @@ pub fn execute(
         const tests = [];
     "#,
         wasm = if !module_format {
-            format!(r"const wasm = require('./{0}.js')", module)
+            format!(r"const wasm = require('./{module}.js')")
         } else {
-            format!(r"import * as wasm from './{0}.js'", module)
+            format!(r"import * as wasm from './{module}.js'")
         },
         exit = if !module_format {
             r"const { exit } = require('node:process')".to_string()
@@ -104,7 +104,7 @@ pub fn execute(
     // execute, and then those objects are passed into Wasm for it to execute
     // when it sees fit.
     for test in tests.tests {
-        js_to_execute.push_str(&format!("tests.push('{}')\n", test.name));
+        js_to_execute.push_str(&format!("tests.push('{}')\n", test.export));
     }
     // And as a final addendum, exit with a nonzero code if any tests fail.
     js_to_execute.push_str(
@@ -146,7 +146,8 @@ pub fn execute(
         .arg("--expose-gc")
         .args(&extra_node_args)
         .arg(&js_path)
-        .status()?;
+        .status()
+        .context("failed to find or execute Node.js")?;
 
     if !status.success() {
         process::exit(status.code().unwrap_or(1))

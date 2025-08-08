@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/websockets/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/websockets/
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/websockets/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/websockets/
 
 This example connects to an echo server on `wss://echo.websocket.org`,
 sends a `ping` message, and receives the response.

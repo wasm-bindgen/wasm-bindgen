@@ -73,6 +73,23 @@ use core::ptr::NonNull;
 
 use crate::convert::{FromWasmAbi, TryFromJsValue, WasmRet, WasmSlice};
 
+const _: () = {
+    /// The Wasm linker may or may not insert a call to this function from the beginning
+    /// of every function that your module exports. Specifically, it regards a module as
+    /// having "command-style linkage" if:
+    ///
+    /// * it is not relocatable;
+    /// * it is not a position-independent executable;
+    /// * and it does not call `__wasm_call_ctors` or , directly or indirectly, from any
+    ///   exported function.
+    ///
+    /// If treated as "command-style linkage", we calculate the function address of
+    /// `__wasm_call_ctors` and `__wasm_call_dtors` based on this export, used to skip
+    /// interpret.
+    #[no_mangle]
+    pub extern "C" fn __wbindgen_skip_interpret_calls() {}
+};
+
 macro_rules! externs {
     ($(#[$attr:meta])* extern "C" { $(fn $name:ident($($args:tt)*) -> $ret:ty;)* }) => (
         #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
@@ -84,7 +101,7 @@ macro_rules! externs {
         $(
             #[cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))]
             #[allow(unused_variables)]
-            unsafe extern fn $name($($args)*) -> $ret {
+            unsafe extern "C" fn $name($($args)*) -> $ret {
                 panic!("function not implemented on non-wasm32 targets")
             }
         )*
@@ -241,7 +258,7 @@ impl JsValue {
     /// some circumstances][dep-cycle-issue]. Use [`serde-wasm-bindgen`] or
     /// [`gloo_utils::format::JsValueSerdeExt`] instead.
     ///
-    /// [dep-cycle-issue]: https://github.com/rustwasm/wasm-bindgen/issues/2770
+    /// [dep-cycle-issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/2770
     /// [`serde-wasm-bindgen`]: https://docs.rs/serde-wasm-bindgen
     /// [`gloo_utils::format::JsValueSerdeExt`]: https://docs.rs/gloo-utils/latest/gloo_utils/format/trait.JsValueSerdeExt.html
     ///
@@ -274,7 +291,7 @@ impl JsValue {
     /// some circumstances][dep-cycle-issue]. Use [`serde-wasm-bindgen`] or
     /// [`gloo_utils::format::JsValueSerdeExt`] instead.
     ///
-    /// [dep-cycle-issue]: https://github.com/rustwasm/wasm-bindgen/issues/2770
+    /// [dep-cycle-issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/2770
     /// [`serde-wasm-bindgen`]: https://docs.rs/serde-wasm-bindgen
     /// [`gloo_utils::format::JsValueSerdeExt`]: https://docs.rs/gloo-utils/latest/gloo_utils/format/trait.JsValueSerdeExt.html
     ///
@@ -336,7 +353,7 @@ impl JsValue {
     /// [documentation about the `str` type][caveats] which contains a few
     /// caveats about the encodings.
     ///
-    /// [caveats]: https://rustwasm.github.io/docs/wasm-bindgen/reference/types/str.html
+    /// [caveats]: https://wasm-bindgen.github.io/wasm-bindgen/reference/types/str.html
     #[inline]
     pub fn as_string(&self) -> Option<String> {
         unsafe { FromWasmAbi::from_abi(__wbindgen_string_get(self.idx)) }

@@ -19,9 +19,9 @@
 #![deny(missing_docs)]
 
 use anyhow::{bail, ensure};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use walrus::ir::Instr;
-use walrus::{ElementId, FunctionId, LocalId, Module, TableId};
+use walrus::{ElementId, ExportId, FunctionId, LocalId, Module, TableId};
 
 /// A ready-to-go interpreter of a Wasm module.
 ///
@@ -39,10 +39,6 @@ pub struct Interpreter {
     // Id of the function table
     functions: Option<TableId>,
 
-    // A mapping of string names to the function index, filled with all exported
-    // functions.
-    name_map: HashMap<String, FunctionId>,
-
     // The current stack pointer (global 0) and Wasm memory (the stack). Only
     // used in a limited capacity.
     sp: i32,
@@ -58,6 +54,44 @@ pub struct Interpreter {
     // stores the last table index argument, used for finding a different
     // descriptor.
     descriptor_table_idx: Option<u32>,
+
+    /// The `__wbindgen_skip_interpret_calls`'s id.
+    skip_interpret: Option<ExportId>,
+
+    /// Some functions that need to skip interpret, such as `__wasm_call_ctors`
+    /// and `__wasm_call_dtors`.
+    skip_calls: HashSet<FunctionId>,
+}
+
+fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
+    use walrus::ir::*;
+
+    let func = module.funcs.get(id);
+
+    let local = match &func.kind {
+        walrus::FunctionKind::Local(l) => l,
+        _ => panic!("can only call locally defined functions"),
+    };
+
+    let entry = local.entry_block();
+    let block = local.block(entry);
+
+    block
+        .instrs
+        .iter()
+        .filter_map(|(instr, _)| match instr {
+            // There are only up to three calls for now:
+            //   1. __wasm_call_ctors (`#[link_section = ".init_array"]`)
+            //   2. __wbindgen_skip_interpret_calls (The original symbol, we don't care about it)
+            //   3. __wasm_call_dtors (This symbol may not be present in Rust program, but may be present if C program is linked)
+            Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => Some(*func),
+            // Typically, there are no other instructions, or only a return instruction.
+            //
+            // When coverage is turned on, there may be llvm coverage instrumentation
+            // instructions.
+            _ => None,
+        })
+        .collect()
 }
 
 impl Interpreter {
@@ -93,13 +127,18 @@ impl Interpreter {
             }
         }
 
-        // Build up the mapping of exported functions to function ids.
-        for export in module.exports.iter() {
+        // Setup skip_interpret id and skip_calls
+        if let Some(export) = module
+            .exports
+            .iter()
+            .find(|export| export.name == "__wbindgen_skip_interpret_calls")
+        {
             let id = match export.item {
                 walrus::ExportItem::Function(id) => id,
-                _ => continue,
+                _ => panic!("__wbindgen_skip_interpret_calls must be an export function"),
             };
-            ret.name_map.insert(export.name.to_string(), id);
+            ret.skip_interpret = Some(export.id());
+            ret.skip_calls = skip_calls(module, id);
         }
 
         ret.functions = module.tables.main_function_table()?;
@@ -215,10 +254,15 @@ impl Interpreter {
         self.functions
     }
 
+    /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
+    pub fn skip_interpret(&self) -> Option<ExportId> {
+        self.skip_interpret
+    }
+
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) -> Option<i32> {
         let func = module.funcs.get(id);
         log::debug!("starting a call of {:?} {:?}", id, func.name);
-        log::debug!("arguments {:?}", args);
+        log::debug!("arguments {args:?}");
         let local = match &func.kind {
             walrus::FunctionKind::Local(l) => l,
             _ => panic!("can only call locally defined functions"),
@@ -308,22 +352,22 @@ impl Frame<'_> {
             // theory there doesn't need to be.
             Instr::Load(e) => {
                 let address = stack.pop().unwrap();
+                let address = address as u32 + e.arg.offset;
                 ensure!(
                     address > 0,
-                    "Read a negative address value from the stack. Did we run out of memory?"
+                    "Read a negative or zero address value from the stack. Did we run out of memory?"
                 );
-                let address = address as u32 + e.arg.offset;
                 ensure!(address % 4 == 0);
                 stack.push(self.interp.mem[address as usize / 4])
             }
             Instr::Store(e) => {
                 let value = stack.pop().unwrap();
                 let address = stack.pop().unwrap();
+                let address = address as u32 + e.arg.offset;
                 ensure!(
                     address > 0,
-                    "Read a negative address value from the stack. Did we run out of memory?"
+                    "Read a negative or zero address value from the stack. Did we run out of memory?"
                 );
-                let address = address as u32 + e.arg.offset;
                 ensure!(address % 4 == 0);
                 self.interp.mem[address as usize / 4] = value;
             }
@@ -347,7 +391,7 @@ impl Frame<'_> {
                 // here by directly inlining it.
                 if Some(func) == self.interp.describe_id {
                     let val = stack.pop().unwrap();
-                    log::debug!("__wbindgen_describe({})", val);
+                    log::debug!("__wbindgen_describe({val})");
                     self.interp.descriptor.push(val as u32);
 
                 // If this function is calling the `__wbindgen_describe_closure`
@@ -359,12 +403,26 @@ impl Frame<'_> {
                     let val = stack.pop().unwrap();
                     stack.pop();
                     stack.pop();
-                    log::debug!("__wbindgen_describe_closure({})", val);
+                    log::debug!("__wbindgen_describe_closure({val})");
                     self.interp.descriptor_table_idx = Some(val as u32);
                     stack.push(0)
 
                 // ... otherwise this is a normal call so we recurse.
                 } else {
+                    // Skip the constructor function.
+                    //
+                    // Complex logic can be implemented in the ctor, our simple interpreter will fail
+                    // to execute due to missing instructions.
+                    //
+                    // For example, executing `1 + 1` fails due to the lack of `I32.And` instruction.
+                    //
+                    // Because `wasm-ld` may insert a call to ctor from the beginning of every function that
+                    // your module exports, the interpreter will enter the ctor logic when parsing the
+                    // `wasm-bindgen` function, causing failure.
+                    if self.interp.skip_calls.contains(&func) {
+                        return Ok(());
+                    }
+
                     // Skip profiling related functions which we don't want to interpret.
                     if self
                         .module

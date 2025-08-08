@@ -2009,6 +2009,105 @@ extern "C" {
         arg3: &JsValue,
     ) -> Result<JsValue, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call4(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call5(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call6(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call7(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call8(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call9(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+        arg9: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
@@ -2048,6 +2147,105 @@ extern "C" {
         arg1: &JsValue,
         arg2: &JsValue,
         arg3: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind4(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind5(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind6(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind7(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind8(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind9(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+        arg9: &JsValue,
     ) -> Function;
 
     /// The length property indicates the number of arguments expected by the function.
@@ -4891,7 +5089,7 @@ extern "C" {
     ///
     /// Additionally, this function accepts `u16` for character codes, but
     /// fixing others requires a breaking change release
-    /// (see https://github.com/rustwasm/wasm-bindgen/issues/1460 for details).
+    /// (see https://github.com/wasm-bindgen/wasm-bindgen/issues/1460 for details).
     #[wasm_bindgen(static_method_of = JsString, js_class = "String", js_name = fromCharCode, variadic)]
     pub fn from_char_code(char_codes: &[u16]) -> JsString;
 
@@ -5352,7 +5550,7 @@ impl JsString {
     /// For more information, see the documentation on [JS strings vs Rust
     /// strings][docs]
     ///
-    /// [docs]: https://rustwasm.github.io/docs/wasm-bindgen/reference/types/str.html
+    /// [docs]: https://wasm-bindgen.github.io/wasm-bindgen/reference/types/str.html
     pub fn is_valid_utf16(&self) -> bool {
         core::char::decode_utf16(self.iter()).all(|i| i.is_ok())
     }
@@ -5386,7 +5584,7 @@ impl JsString {
         }
 
         // This will be simplified when definitions are fixed:
-        // https://github.com/rustwasm/wasm-bindgen/issues/1362
+        // https://github.com/wasm-bindgen/wasm-bindgen/issues/1362
         let cp = self.code_point_at(0).as_f64().unwrap_throw() as u32;
 
         let c = core::char::from_u32(cp)?;
@@ -6146,6 +6344,16 @@ macro_rules! arrays {
 
             /// An
             #[doc = $ctor]
+            /// which creates an array from a Rust slice.
+            ///
+            /// [MDN documentation](
+            #[doc = $mdn]
+            /// )
+            #[wasm_bindgen(constructor)]
+            pub fn new_from_slice(slice: &[$ty]) -> $name;
+
+            /// An
+            #[doc = $ctor]
             /// which creates an array with the given buffer but is a
             /// view starting at `byte_offset`.
             ///
@@ -6380,7 +6588,7 @@ macro_rules! arrays {
             #[inline]
             fn from(slice: &'a [$ty]) -> $name {
                 // This is safe because the `new` function makes a copy if its argument is a TypedArray
-                unsafe { $name::new(&$name::view(slice)) }
+                $name::new_from_slice(slice)
             }
         }
 

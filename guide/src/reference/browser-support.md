@@ -22,5 +22,5 @@ also like to be aware of it!
 If you find other incompatibilities please report them to us! We'd love to
 either keep this list up-to-date or fix the underlying bugs :)
 
-[report it]: https://github.com/rustwasm/wasm-bindgen/issues/new
+[report it]: https://github.com/wasm-bindgen/wasm-bindgen/issues/new
 [w2js]: https://github.com/WebAssembly/binaryen

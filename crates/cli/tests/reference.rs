@@ -108,7 +108,7 @@ fn main() -> Result<()> {
 
     eprintln!("failed tests:\n");
     for (test, err) in errs {
-        eprintln!("{} failure\n{}", test.display(), tab(&format!("{:?}", err)));
+        eprintln!("{} failure\n{}", test.display(), tab(&format!("{err:?}")));
     }
     bail!("tests failed");
 }
@@ -324,7 +324,7 @@ fn exec(cmd: &mut Command) -> Result<()> {
     if output.status.success() {
         return Ok(());
     }
-    let mut err = format!("command failed {:?}", cmd);
+    let mut err = format!("command failed {cmd:?}");
     err.push_str(&format!("\nstatus: {}", output.status));
     err.push_str(&format!(
         "\nstderr:\n{}",

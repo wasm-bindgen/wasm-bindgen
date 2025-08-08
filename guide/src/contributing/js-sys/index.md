@@ -11,8 +11,8 @@ Documentation for the published version of this crate is available on
 documentation][masterdoc] for the crate.
 
 [docsrs]: https://docs.rs/js-sys
-[masterdoc]: https://rustwasm.github.io/wasm-bindgen/api/js_sys/
-[src]: https://github.com/rustwasm/wasm-bindgen/tree/master/crates/js-sys
+[masterdoc]: https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/
+[src]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys
 
 For example, we can invoke JavaScript [`Function`][mdn-function] callbacks and
 time how long they take to execute with [`Date.now()`][mdn-date-now], and we
@@ -24,7 +24,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub fn timed(callback: &js_sys::Function) -> f64 {
     let then = js_sys::Date::now();
-    callback.apply(JsValue::null(), &js_sys::Array::new()).unwrap();
+    callback.apply(&JsValue::null(), &js_sys::Array::new()).unwrap();
     let now = js_sys::Date::now();
     now - then
 }
@@ -36,10 +36,10 @@ The `js-sys` crate doesn't contain bindings to any Web APIs like
 
 [MDN]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
 [js-sys]: https://crates.io/crates/js-sys
-[issue]: https://github.com/rustwasm/wasm-bindgen/issues/275
+[issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/275
 [mdn-function]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
 [mdn-qsa]: https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll
 [web-sys]: https://crates.io/crates/web-sys
-[web-sys-contributing]: https://rustwasm.github.io/wasm-bindgen/web-sys.html
-[web-sys-issues]: https://github.com/rustwasm/wasm-bindgen/issues?q=is%3Aissue+is%3Aopen+label%3Aweb-sys
+[web-sys-contributing]: https://wasm-bindgen.github.io/wasm-bindgen/web-sys.html
+[web-sys-issues]: https://github.com/wasm-bindgen/wasm-bindgen/issues?q=is%3Aissue+is%3Aopen+label%3Aweb-sys
 [mdn-date-now]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now

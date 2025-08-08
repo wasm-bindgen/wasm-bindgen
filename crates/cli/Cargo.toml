@@ -4,21 +4,21 @@ categories = ["wasm"]
 default-run = 'wasm-bindgen'
 description = """
 Command line interface of the `#[wasm_bindgen]` attribute and project. For more
-information see https://github.com/rustwasm/wasm-bindgen.
+information see https://github.com/wasm-bindgen/wasm-bindgen.
 """
-documentation = "https://rustwasm.github.io/wasm-bindgen/"
+documentation = "https://wasm-bindgen.github.io/wasm-bindgen/"
 edition = "2021"
-homepage = "https://rustwasm.github.io/wasm-bindgen/"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen/"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-cli"
-repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/cli"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/cli"
 rust-version = "1.76"
 version = "0.2.100"
 
 [package.metadata.binstall]
 bin-dir = "wasm-bindgen-{ version }-{ target }/{ bin }{ binary-ext }"
-pkg-url = "https://github.com/rustwasm/wasm-bindgen/releases/download/{ version }/wasm-bindgen-{ version }-{ target }{ archive-suffix }"
+pkg-url = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/{ version }/wasm-bindgen-{ version }-{ target }{ archive-suffix }"
 
 [dependencies]
 anyhow = "1.0"

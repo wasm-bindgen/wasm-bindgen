@@ -946,7 +946,7 @@ interface GPUCommandEncoder {
         GPUSize64 sourceOffset,
         GPUBuffer destination,
         GPUSize64 destinationOffset,
-        GPUSize64 size);
+        optional GPUSize64 size);
 
     [Throws]
     undefined copyBufferToTexture(

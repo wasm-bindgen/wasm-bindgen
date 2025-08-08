@@ -9,7 +9,7 @@ error: the `self` argument is only allowed for functions in `impl` blocks.
 error: the `self` argument is not allowed for `extern` functions.
 
        Did you perhaps mean `this`? For more information on importing JavaScript functions, see:
-       https://rustwasm.github.io/docs/wasm-bindgen/examples/import-js.html
+       https://wasm-bindgen.github.io/wasm-bindgen/examples/import-js.html
   --> ui-tests/invalid-self.rs:20:15
    |
 20 |     fn render(self: &MyClass) -> String;

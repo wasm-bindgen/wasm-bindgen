@@ -3,14 +3,53 @@
 
 ## Unreleased
 
+### Added
+
+* Added format and colorSpace support to VideoFrameCopyToOptions
+  [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
+* Added support for the [`onbeforeinput`](https://developer.mozilla.org/en-US/docs/Web/API/Element/beforeinput_event) attribute.
+  [#4544](https://github.com/wasm-bindgen/wasm-bindgen/pull/4544)
+* `TypedArray::new_from_slice(&[T])` constructor that allows to create a
+  JS-owned `TypedArray` from a Rust slice.
+  [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
+* Added `Function::call4` and `Function::bind4` through `Function::call9` `Function::bind9` methods for calling  and binding JavaScript functions with 4-9 arguments.
+  [#4572](https://github.com/wasm-bindgen/wasm-bindgen/pull/4572)
+
 ### Changed
 
 * Deprecate async constructors.
   [#4402](https://github.com/rustwasm/wasm-bindgen/pull/4402)
 
+* The `size` argument to `GPUCommandEncoder.copyBufferToBuffer` is now optional.
+  [#4508](https://github.com/wasm-bindgen/wasm-bindgen/pull/4508)
+
+### Fixed
+
+* Detect more failure scenarios when retrieving the Wasm module.
+  [#4556](https://github.com/wasm-bindgen/wasm-bindgen/pull/4556)
+
+* Add a workaround for `TextDecoder` failing in older version of Safari when too many bytes are decoded through it over its lifetime.
+  [#4472](https://github.com/wasm-bindgen/wasm-bindgen/pull/4472)
+
+* `TypedArray::from(&[T])` now works reliably across memory reallocations.
+  [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
+* Fix incorrect memory loading and storing assertions during post-processing.
+  [#4554](https://github.com/wasm-bindgen/wasm-bindgen/pull/4554)
+
+* Fix test `--exact` option not working as expected.
+  [#4549](https://github.com/wasm-bindgen/wasm-bindgen/pull/4549)
+
+* Fix tables being removed even though they are used by stack closures.
+  [#4119](https://github.com/wasm-bindgen/wasm-bindgen/pull/4564)
+
+* Skip `__wasm_call_ctors` which we don't want to interpret.
+  [#4562](https://github.com/wasm-bindgen/wasm-bindgen/pull/4562)
+
 --------------------------------------------------------------------------------
 
-## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
+## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
 
 Released 2025-01-12
 
@@ -2389,7 +2428,7 @@ Released 2018-11-12.
   added since `structural` is now the default
   [#1019](https://github.com/rustwasm/wasm-bindgen/pull/1019)
 
-[final-dox]: https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-js-imports/final.html
+[final-dox]: https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/final.html
 
 * A new CLI flag, `--remove-name-section`, can be passed to remove the wasm
   `name` section which contains the names of functions for debugging (typically
@@ -2742,7 +2781,7 @@ Released 2018-08-13.
   renamed imported JS classes now properly works with constructors.
 
 [rfc-2]: https://rustwasm.github.io/rfcs/002-wasm-bindgen-inheritance-casting.html
-[extends-attr]: https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-js-imports/extends.html
+[extends-attr]: https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/extends.html
 [#662]: https://github.com/rustwasm/wasm-bindgen/pull/662
 
 --------------------------------------------------------------------------------
@@ -2810,7 +2849,7 @@ expose all APIs browsers have. More info on this soon!
 * A `--keep-debug` flag has been added to the CLI to retain debug sections by
   default. This happens by default when `--debug` is passed.
 
-[book]: https://rustwasm.github.io/wasm-bindgen/
+[book]: https://wasm-bindgen.github.io/wasm-bindgen/
 
 ### Fixed
 
