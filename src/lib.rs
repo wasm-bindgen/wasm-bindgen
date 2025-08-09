@@ -74,18 +74,23 @@ use core::ptr::NonNull;
 use crate::convert::{FromWasmAbi, TryFromJsValue, WasmRet, WasmSlice};
 
 const _: () = {
-    /// The Wasm linker may or may not insert a call to this function from the beginning
-    /// of every function that your module exports. Specifically, it regards a module as
-    /// having "command-style linkage" if:
+    /// Used to get `__wasm_call_ctors` and other implicitly added functions that need to skip interpret.
+    ///
+    /// ## About `__wasm_call_ctors`
+    ///
+    /// Several ways to introduce `__wasm_call_ctors`:
+    ///
+    /// * Using `#[link_section = ".init_array"]`;
+    /// * Linking with a C library that uses `__attribute__((constructor))`.
+    ///
+    /// The Wasm linker will insert a call to `__wasm_call_ctors` function from the beginning of every
+    /// function that your module exports if it regards a module as having "command-style linkage".
+    /// Specifically, it regards a module as having "command-style linkage" if:
     ///
     /// * it is not relocatable;
     /// * it is not a position-independent executable;
-    /// * and it does not call `__wasm_call_ctors` or , directly or indirectly, from any
+    /// * and it does not call `__wasm_call_ctors`, directly or indirectly, from any
     ///   exported function.
-    ///
-    /// If treated as "command-style linkage", we calculate the function address of
-    /// `__wasm_call_ctors` and `__wasm_call_dtors` based on this export, used to skip
-    /// interpret.
     #[no_mangle]
     pub extern "C" fn __wbindgen_skip_interpret_calls() {}
 };
