@@ -2081,11 +2081,502 @@ impl Function {
     pub fn try_from(val: &JsValue) -> Option<&Function> {
         val.dyn_ref()
     }
+
+    /// Create a typed version of this function without runtime type checking.
+    ///
+    /// This method converts an existing `Function` into a `TypedFunction<Args, Return, This>`
+    /// without performing any runtime validation. The caller must ensure that the function
+    /// signature matches the provided type parameters.
+    ///
+    /// # Safety
+    ///
+    /// This method is "unsafe" in the sense that it performs no runtime validation
+    /// of the function's actual signature. If the function's actual signature doesn't
+    /// match the type parameters, calling methods on the resulting `TypedFunction`
+    /// may cause runtime errors.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use js_sys::{Function, TypedFunction};
+    ///
+    /// let js_fn = Function::new_with_args("a, b", "return a + b;");
+    /// let typed_fn: TypedFunction<(i32, i32), i32> = js_fn.typed_unchecked();
+    /// let result: i32 = typed_fn.call(10, 20);
+    /// ```
+    pub fn typed_unchecked<Args, Return, This>(self) -> TypedFunction<Args, Return, This> {
+        TypedFunction {
+            inner: self,
+            _phantom: core::marker::PhantomData,
+        }
+    }
 }
 
 impl Default for Function {
     fn default() -> Self {
         Self::new_no_args("")
+    }
+}
+
+/// Marker type for TypedFunction to indicate default (undefined) `this` context.
+/// This type does not implement `Into<JsValue>` to avoid coherence conflicts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DefaultThis;
+
+/// A type-safe wrapper around JavaScript `Function` that provides compile-time
+/// type checking for arguments and return values using the `JsValueCast` trait.
+///
+/// This wrapper allows you to call JavaScript functions with strong typing,
+/// ensuring argument and return type safety at compile time.
+///
+/// # Type Parameters
+///
+/// - `Args`: A tuple representing the argument types
+/// - `Return`: The return type, which must implement `JsValueCast`  
+/// - `This`: The type of the JavaScript `this` context (defaults to `DefaultThis`)
+///
+/// # Examples
+///
+/// ```no_run
+/// use js_sys::{Function, TypedFunction};
+/// use wasm_bindgen::JsValue;
+///
+/// // Create a simple JS function
+/// let js_func = Function::new_with_args("a, b", "return a + b;");
+///
+/// // Wrap it with type safety - This defaults to DefaultThis for ergonomic usage
+/// let typed_func: TypedFunction<(i32, i32), i32> = TypedFunction::new(js_func);
+///
+/// // Call with compile-time type checking - no context parameter needed
+/// let result: i32 = typed_func.call(10, 20); // result = 30
+/// ```
+pub struct TypedFunction<Args, Return, This = DefaultThis> {
+    inner: Function,
+    _phantom: core::marker::PhantomData<fn(Args, Return, This)>,
+}
+
+// Implement call methods for different arities
+
+// 0 arguments
+impl<Return, This> TypedFunction<(), Return, This>
+where
+    This: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with no arguments.
+    pub fn call(&self, this: This) -> Return {
+        let result = self.inner.call0(&this.into()).unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+// 1 argument
+impl<A1, Return, This> TypedFunction<(A1,), Return, This>
+where
+    This: Into<JsValue>,
+    A1: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with one argument.
+    pub fn call(&self, this: This, arg1: A1) -> Return {
+        let result = self.inner.call1(&this.into(), &arg1.into()).unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+// 2 arguments
+impl<A1, A2, Return, This> TypedFunction<(A1, A2), Return, This>
+where
+    This: Into<JsValue>,
+    A1: Into<JsValue>,
+    A2: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with two arguments.
+    pub fn call(&self, this: This, arg1: A1, arg2: A2) -> Return {
+        let result = self
+            .inner
+            .call2(&this.into(), &arg1.into(), &arg2.into())
+            .unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+// 3 arguments
+impl<A1, A2, A3, Return, This> TypedFunction<(A1, A2, A3), Return, This>
+where
+    This: Into<JsValue>,
+    A1: Into<JsValue>,
+    A2: Into<JsValue>,
+    A3: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with three arguments.
+    pub fn call(&self, this: This, arg1: A1, arg2: A2, arg3: A3) -> Return {
+        let result = self
+            .inner
+            .call3(&this.into(), &arg1.into(), &arg2.into(), &arg3.into())
+            .unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+impl<Return, This> TypedFunction<(), Return, This> {
+    /// Creates a new `TypedFunction` with no arguments using the JavaScript `Function` constructor.
+    ///
+    /// This is equivalent to `new Function(body)` but with compile-time type safety.
+    ///
+    /// # Arguments
+    /// * `body` - The JavaScript function body as a string
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use js_sys::TypedFunction;
+    ///
+    /// let typed_fn: TypedFunction<(), i32> = TypedFunction::new("return 42;");
+    /// let result: i32 = typed_fn.call();
+    /// assert_eq!(result, 42);
+    /// ```
+    pub fn new(body: &str) -> Self {
+        Self {
+            inner: Function::new_no_args(body),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<A1, Return, This> TypedFunction<(A1,), Return, This> {
+    /// Creates a new `TypedFunction` with one argument.
+    pub fn new(param1: &str, body: &str) -> Self {
+        Self {
+            inner: Function::new_with_args(param1, body),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<A1, A2, Return, This> TypedFunction<(A1, A2), Return, This> {
+    /// Creates a new `TypedFunction` with two arguments.
+    pub fn new(param1: &str, param2: &str, body: &str) -> Self {
+        let args = format!("{}, {}", param1, param2);
+        Self {
+            inner: Function::new_with_args(&args, body),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<A1, A2, A3, Return, This> TypedFunction<(A1, A2, A3), Return, This> {
+    /// Creates a new `TypedFunction` with three arguments.
+    pub fn new(param1: &str, param2: &str, param3: &str, body: &str) -> Self {
+        let args = format!("{}, {}, {}", param1, param2, param3);
+        Self {
+            inner: Function::new_with_args(&args, body),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+// Bind methods for partial application
+impl<Return, This> TypedFunction<(), Return, This> {
+    /// Binds 0 arguments (returns self, no-op for consistency)
+    pub fn bind0(self) -> TypedFunction<(), Return, This> {
+        self
+    }
+}
+
+impl<A1, Return, This> TypedFunction<(A1,), Return, This>
+where
+    A1: Into<JsValue>,
+{
+    /// Binds 0 arguments (returns self)
+    pub fn bind0(self) -> TypedFunction<(A1,), Return, This> {
+        self
+    }
+
+    /// Binds 1 argument, returning a no-argument function
+    pub fn bind1(self, arg1: A1) -> TypedFunction<(), Return, This> {
+        let bound_fn = self.inner.bind1(&JsValue::undefined(), &arg1.into());
+        TypedFunction {
+            inner: bound_fn,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<A1, A2, Return, This> TypedFunction<(A1, A2), Return, This>
+where
+    A1: Into<JsValue>,
+    A2: Into<JsValue>,
+{
+    /// Binds 0 arguments (returns self)
+    pub fn bind0(self) -> TypedFunction<(A1, A2), Return, This> {
+        self
+    }
+
+    /// Binds 1 argument, returning a 1-argument function
+    pub fn bind1(self, arg1: A1) -> TypedFunction<(A2,), Return, This> {
+        let bound_fn = self.inner.bind1(&JsValue::undefined(), &arg1.into());
+        TypedFunction {
+            inner: bound_fn,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    /// Binds 2 arguments, returning a no-argument function
+    pub fn bind2(self, arg1: A1, arg2: A2) -> TypedFunction<(), Return, This> {
+        let bound_fn = self
+            .inner
+            .bind2(&JsValue::undefined(), &arg1.into(), &arg2.into());
+        TypedFunction {
+            inner: bound_fn,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<A1, A2, A3, Return, This> TypedFunction<(A1, A2, A3), Return, This>
+where
+    A1: Into<JsValue>,
+    A2: Into<JsValue>,
+    A3: Into<JsValue>,
+{
+    /// Binds 0 arguments (returns self)
+    pub fn bind0(self) -> TypedFunction<(A1, A2, A3), Return, This> {
+        self
+    }
+
+    /// Binds 1 argument, returning a 2-argument function
+    pub fn bind1(self, arg1: A1) -> TypedFunction<(A2, A3), Return, This> {
+        let bound_fn = self.inner.bind1(&JsValue::undefined(), &arg1.into());
+        TypedFunction {
+            inner: bound_fn,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    /// Binds 2 arguments, returning a 1-argument function
+    pub fn bind2(self, arg1: A1, arg2: A2) -> TypedFunction<(A3,), Return, This> {
+        let bound_fn = self
+            .inner
+            .bind2(&JsValue::undefined(), &arg1.into(), &arg2.into());
+        TypedFunction {
+            inner: bound_fn,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    /// Binds 3 arguments, returning a no-argument function
+    pub fn bind3(self, arg1: A1, arg2: A2, arg3: A3) -> TypedFunction<(), Return, This> {
+        let bound_fn = self.inner.bind3(
+            &JsValue::undefined(),
+            &arg1.into(),
+            &arg2.into(),
+            &arg3.into(),
+        );
+        TypedFunction {
+            inner: bound_fn,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+// General methods available on all TypedFunction instances
+impl<Args, Return, This> TypedFunction<Args, Return, This> {
+    /// The length property indicates the number of arguments expected by the function.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length)
+    pub fn length(&self) -> u32 {
+        self.inner.length()
+    }
+
+    /// A Function object's read-only name property indicates the function's
+    /// name as specified when it was created or "anonymous" for functions
+    /// created anonymously.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
+    pub fn name(&self) -> JsString {
+        self.inner.name()
+    }
+
+    /// The `toString()` method returns a string representing the source code of the function.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString)
+    pub fn to_string(&self) -> JsString {
+        self.inner.to_string()
+    }
+
+    /// The `apply()` method calls the function with a given `this` value and arguments provided as an array.
+    ///
+    /// While this loses argument type safety, it maintains return type safety and allows for dynamic argument lists.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    pub fn apply(&self, this: &JsValue, args: &Array) -> Return
+    where
+        Return: JsValueCast,
+    {
+        let result = self.inner.apply(this, args).unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+
+    /// The `apply()` method calls the function with `undefined` as `this` and arguments provided as an array.
+    ///
+    /// This is a convenience method for when you don't need a specific `this` context.
+    /// While this loses argument type safety, it maintains return type safety.
+    pub fn apply_with_undefined(&self, args: &Array) -> Return
+    where
+        Return: JsValueCast,
+    {
+        self.apply(&JsValue::undefined(), args)
+    }
+}
+
+impl<Args, Return, This> Clone for TypedFunction<Args, Return, This> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+            _phantom: self._phantom,
+        }
+    }
+}
+
+impl<Args, Return, This> core::fmt::Debug for TypedFunction<Args, Return, This> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("TypedFunction")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+// Implement the required traits for wasm-bindgen integration
+impl<Args, Return, This> crate::JsCast for TypedFunction<Args, Return, This> {
+    fn instanceof(val: &wasm_bindgen::JsValue) -> bool {
+        Function::instanceof(val)
+    }
+
+    fn unchecked_from_js(val: wasm_bindgen::JsValue) -> Self {
+        Self {
+            inner: Function::unchecked_from_js(val),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    fn unchecked_from_js_ref(val: &wasm_bindgen::JsValue) -> &Self {
+        // Safety: TypedFunction has the same layout as Function
+        unsafe { &*(val as *const wasm_bindgen::JsValue as *const Self) }
+    }
+}
+
+impl<Args, Return, This> AsRef<wasm_bindgen::JsValue> for TypedFunction<Args, Return, This> {
+    fn as_ref(&self) -> &wasm_bindgen::JsValue {
+        self.inner.as_ref()
+    }
+}
+
+impl<Args, Return, This> AsRef<Function> for TypedFunction<Args, Return, This> {
+    fn as_ref(&self) -> &Function {
+        &self.inner
+    }
+}
+
+impl<Args, Return, This> From<TypedFunction<Args, Return, This>> for wasm_bindgen::JsValue {
+    fn from(val: TypedFunction<Args, Return, This>) -> Self {
+        val.inner.into()
+    }
+}
+
+impl<Args, Return, This> From<TypedFunction<Args, Return, This>> for Function {
+    fn from(val: TypedFunction<Args, Return, This>) -> Self {
+        val.inner
+    }
+}
+
+impl<Args, Return, This> wasm_bindgen::describe::WasmDescribe
+    for TypedFunction<Args, Return, This>
+{
+    fn describe() {
+        Function::describe()
+    }
+}
+
+impl<Args, Return, This> wasm_bindgen::convert::FromWasmAbi for TypedFunction<Args, Return, This> {
+    type Abi = <Function as wasm_bindgen::convert::FromWasmAbi>::Abi;
+
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        Self {
+            inner: Function::from_abi(js),
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+// Ergonomic implementations for This = DefaultThis - use undefined context and omit context parameter
+
+// 0 arguments with DefaultThis context - TypedFunction<(), Return, DefaultThis>
+impl<Return> TypedFunction<(), Return, DefaultThis>
+where
+    Return: JsValueCast,
+{
+    /// Calls the function with no arguments and undefined JavaScript `this` context.
+    pub fn call(&self) -> Return {
+        let result = self.inner.call0(&JsValue::undefined()).unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+// 1 argument with DefaultThis context - TypedFunction<(A1,), Return, DefaultThis>
+impl<A1, Return> TypedFunction<(A1,), Return, DefaultThis>
+where
+    A1: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with one argument and undefined JavaScript `this` context.
+    pub fn call(&self, arg1: A1) -> Return {
+        let result = self
+            .inner
+            .call1(&JsValue::undefined(), &arg1.into())
+            .unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+// 2 arguments with DefaultThis context - TypedFunction<(A1, A2), Return, DefaultThis>
+impl<A1, A2, Return> TypedFunction<(A1, A2), Return, DefaultThis>
+where
+    A1: Into<JsValue>,
+    A2: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with two arguments and undefined JavaScript `this` context.
+    pub fn call(&self, arg1: A1, arg2: A2) -> Return {
+        let result = self
+            .inner
+            .call2(&JsValue::undefined(), &arg1.into(), &arg2.into())
+            .unwrap_throw();
+        Return::unchecked_from_js_value(result)
+    }
+}
+
+// 3 arguments with DefaultThis context - TypedFunction<(A1, A2, A3), Return, DefaultThis>
+impl<A1, A2, A3, Return> TypedFunction<(A1, A2, A3), Return, DefaultThis>
+where
+    A1: Into<JsValue>,
+    A2: Into<JsValue>,
+    A3: Into<JsValue>,
+    Return: JsValueCast,
+{
+    /// Calls the function with three arguments and undefined JavaScript `this` context.
+    pub fn call(&self, arg1: A1, arg2: A2, arg3: A3) -> Return {
+        let result = self
+            .inner
+            .call3(
+                &JsValue::undefined(),
+                &arg1.into(),
+                &arg2.into(),
+                &arg3.into(),
+            )
+            .unwrap_throw();
+        Return::unchecked_from_js_value(result)
     }
 }
 
