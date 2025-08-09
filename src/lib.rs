@@ -74,16 +74,16 @@ use core::ptr::NonNull;
 use crate::convert::{FromWasmAbi, TryFromJsValue, WasmRet, WasmSlice};
 
 const _: () = {
-    ///  Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
+    /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
     ///
     /// ## About `__wasm_call_ctors`
     ///
-    /// Several ways to introduce `__wasm_call_ctors`:
+    /// There are several ways `__wasm_call_ctors` is introduced by the linker:
     ///
     /// * Using `#[link_section = ".init_array"]`;
     /// * Linking with a C library that uses `__attribute__((constructor))`.
     ///
-    /// The Wasm linker will insert a call to `__wasm_call_ctors` function from the beginning of every
+    /// The Wasm linker will insert a call to the `__wasm_call_ctors` function at the beginning of every
     /// function that your module exports if it regards a module as having "command-style linkage".
     /// Specifically, it regards a module as having "command-style linkage" if:
     ///
