@@ -6,7 +6,7 @@
 ### Added
 
 * Allow richer runtime casts for imported async function return types (e.g., `JsString`, `Uint8Array`, `Object`, etc.) instead of being limited to only `JsValue`.
-  [#????](https://github.com/rustwasm/wasm-bindgen/pull/????)
+  [#4570](https://github.com/wasm-bindgen/wasm-bindgen/pull/4570)
 
 * Added format and colorSpace support to VideoFrameCopyToOptions
   [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
