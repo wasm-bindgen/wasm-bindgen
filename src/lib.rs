@@ -74,7 +74,7 @@ use core::ptr::NonNull;
 use crate::convert::{FromWasmAbi, TryFromJsValue, WasmRet, WasmSlice};
 
 const _: () = {
-    /// Used to get `__wasm_call_ctors` and other implicitly added functions that need to skip interpret.
+    ///  Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
     ///
     /// ## About `__wasm_call_ctors`
     ///
