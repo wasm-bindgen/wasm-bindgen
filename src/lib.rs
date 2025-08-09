@@ -120,9 +120,7 @@ macro_rules! externs {
 /// ```
 pub mod prelude {
     pub use crate::closure::Closure;
-    pub use crate::JsCast;
-    pub use crate::JsValue;
-    pub use crate::UnwrapThrowExt;
+    pub use crate::{JsCast, JsValue, JsValueCast, UnwrapThrowExt};
     #[doc(hidden)]
     pub use wasm_bindgen_macro::__wasm_bindgen_class_marker;
     pub use wasm_bindgen_macro::wasm_bindgen;
@@ -139,7 +137,7 @@ mod externref;
 mod link;
 
 mod cast;
-pub use crate::cast::{JsCast, JsObject};
+pub use crate::cast::{JsCast, JsObject, JsValueCast};
 
 mod cache;
 pub use cache::intern::{intern, unintern};
@@ -390,6 +388,11 @@ impl JsValue {
     #[inline]
     pub fn is_undefined(&self) -> bool {
         unsafe { __wbindgen_is_undefined(self.idx) == 1 }
+    }
+    /// Tests whether this JS value is `null` or `undefined`
+    #[inline]
+    pub fn is_null_or_undefined(&self) -> bool {
+        unsafe { __wbindgen_is_null_or_undefined(self.idx) == 1 }
     }
 
     /// Tests whether the type of this JS value is `symbol`
@@ -1101,6 +1104,7 @@ externs! {
 
         fn __wbindgen_is_null(idx: u32) -> u32;
         fn __wbindgen_is_undefined(idx: u32) -> u32;
+        fn __wbindgen_is_null_or_undefined(idx: u32) -> u32;
         fn __wbindgen_is_symbol(idx: u32) -> u32;
         fn __wbindgen_is_object(idx: u32) -> u32;
         fn __wbindgen_is_array(idx: u32) -> u32;
