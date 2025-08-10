@@ -21,7 +21,6 @@ os.environ.update(
 subprocess.run(
     [
         "cargo",
-        "+nightly-2025-08-04",
         "build",
         "--target",
         "wasm32-unknown-unknown",
