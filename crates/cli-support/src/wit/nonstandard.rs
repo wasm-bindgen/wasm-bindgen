@@ -78,6 +78,8 @@ pub struct AuxExport {
     pub args: Option<Vec<AuxFunctionArgumentData>>,
     /// Whether this is an async function, to configure the TypeScript return value.
     pub asyncness: bool,
+    /// Whether this is a function with jspi call
+    pub jspi: bool,
     /// What kind of function this is and where it shows up
     pub kind: AuxExportKind,
     /// Whether typescript bindings should be generated for this export.

@@ -113,6 +113,11 @@ macro_rules! externs {
     )
 }
 
+/// WebAssembly JavaScript Promise Integration API
+pub fn jspi_call(promise: JsValue) -> JsValue {
+    JsValue::_new(unsafe { __wbindgen_jspi_call(promise.idx) })
+}
+
 /// A module which is typically glob imported.
 ///
 /// ```
@@ -1178,6 +1183,8 @@ externs! {
         fn __wbindgen_memory() -> u32;
         fn __wbindgen_module() -> u32;
         fn __wbindgen_function_table() -> u32;
+
+        fn __wbindgen_jspi_call(idx: u32) -> u32;
     }
 }
 

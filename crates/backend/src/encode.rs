@@ -238,6 +238,7 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
         args,
         asyncness: func.r#async,
         name: &func.name,
+        jspi: func.jspi,
         generate_typescript: func.generate_typescript,
         generate_jsdoc: func.generate_jsdoc,
         variadic: func.variadic,

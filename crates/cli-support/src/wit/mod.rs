@@ -539,6 +539,7 @@ impl<'a> Context<'a> {
                 comments: concatenate_comments(&export.comments),
                 args,
                 asyncness: export.function.asyncness,
+                jspi: export.function.jspi,
                 kind,
                 generate_typescript: export.function.generate_typescript,
                 generate_jsdoc: export.function.generate_jsdoc,
@@ -960,6 +961,7 @@ impl<'a> Context<'a> {
                     debug_name: format!("getter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: struct_.name.to_string(),
@@ -994,6 +996,7 @@ impl<'a> Context<'a> {
                     debug_name: format!("setter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: struct_.name.to_string(),

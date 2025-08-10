@@ -41,6 +41,9 @@ pub struct Context<'a> {
     /// A map of each Wasm import and what JS to hook up to it.
     wasm_import_definitions: HashMap<ImportId, String>,
 
+    jspi_call_instr: Option<AdapterId>,
+    jspi_call_exports: HashSet<AdapterId>,
+
     /// A map from an import to the name we've locally imported it as.
     imported_names: HashMap<JsImportName, String>,
 
@@ -153,6 +156,8 @@ impl<'a> Context<'a> {
             js_imports: Default::default(),
             defined_identifiers: Default::default(),
             wasm_import_definitions: Default::default(),
+            jspi_call_instr: Default::default(),
+            jspi_call_exports: Default::default(),
             typescript_refs: Default::default(),
             used_string_enums: Default::default(),
             exported_classes: Some(Default::default()),
@@ -2877,6 +2882,9 @@ __wbg_set_wasm(wasm);"
         let mut ret_desc = &None;
         match kind {
             ContextAdapterKind::Export(export) => {
+                if export.jspi {
+                    builder.cx.jspi_call_exports.insert(id);
+                }
                 args = &export.args;
                 asyncness = export.asyncness;
                 variadic = export.variadic;
@@ -3049,6 +3057,12 @@ __wbg_set_wasm(wasm);"
                     format!("function() {{ return logError(function {code}, arguments) }}")
                 } else {
                     format!("function{code}")
+                };
+
+                let code = if self.jspi_call_instr == Some(id) {
+                    format!("new WebAssembly.Suspending({code})")
+                } else {
+                    code
                 };
 
                 self.wasm_import_definitions.insert(core, code);
@@ -4036,6 +4050,10 @@ __wbg_set_wasm(wasm);"
                     base.push_str(&format!("table.set(offset + {i}, {value});\n"));
                 }
                 base
+            }
+            Intrinsic::JspiCall => {
+                assert_eq!(args.len(), 1);
+                args[0].to_string()
             }
         };
         Ok(expr)

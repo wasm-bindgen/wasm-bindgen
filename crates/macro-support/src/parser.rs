@@ -198,6 +198,8 @@ macro_rules! attrgen {
             (unchecked_param_type, true, ParamType(Span, String, Span)),
             (param_description, true, ParamDesc(Span, String, Span)),
 
+            (jspi, false, JavaScriptPromiseIntegration(Span)),
+
             // For testing purposes only.
             (assert_no_shim, false, AssertNoShim(Span)),
         }
@@ -1240,6 +1242,7 @@ fn function_from_decl(
                     desc: attrs.desc,
                 })
                 .collect(),
+            jspi: opts.jspi().is_some(),
         },
         method_self,
     ))

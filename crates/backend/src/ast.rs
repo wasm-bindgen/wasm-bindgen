@@ -392,6 +392,8 @@ pub struct Function {
     pub generate_jsdoc: bool,
     /// Whether this is a function with a variadict parameter
     pub variadic: bool,
+    /// Whether this is a function with jspi call
+    pub jspi: bool,
 }
 
 /// Information about a function's return

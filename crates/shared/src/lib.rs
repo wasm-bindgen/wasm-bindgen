@@ -144,6 +144,7 @@ macro_rules! shared_api {
         struct Function<'a> {
             args: Vec<FunctionArgumentData<'a>>,
             asyncness: bool,
+            jspi: bool,
             name: &'a str,
             generate_typescript: bool,
             generate_jsdoc: bool,

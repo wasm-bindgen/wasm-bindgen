@@ -313,5 +313,8 @@ intrinsics! {
         #[symbol = "__wbindgen_init_externref_table"]
         #[signature = fn() -> Unit]
         InitExternrefTable,
+        #[symbol = "__wbindgen_jspi_call"]
+        #[signature = fn(ref_externref()) -> Externref]
+        JspiCall,
     }
 }
