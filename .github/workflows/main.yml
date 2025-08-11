@@ -189,7 +189,6 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - uses: ./.github/actions/setup-geckodriver
     - run: cargo test --target wasm32-unknown-unknown ${{ matrix.runs.cargo_flags }}
 
   test_threads:
@@ -218,7 +217,6 @@ jobs:
   #   - uses: actions/setup-node@v4
   #     with:
   #       node-version: '20'
-  #   - uses: ./.github/actions/setup-geckodriver
   #   - run: cargo test --target wasm32-unknown-unknown
   #     env:
   #       RUST_LOG: wasm_bindgen_test_runner
@@ -289,7 +287,6 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - uses: ./.github/actions/setup-geckodriver
     - run: ${{ matrix.runs.run }}
 
   test_deno:
