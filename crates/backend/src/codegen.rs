@@ -456,7 +456,7 @@ impl ToTokens for ast::Struct {
             #[automatically_derived]
             impl #wasm_bindgen::__rt::VectorIntoJsValue for #name {
                 fn vector_into_jsvalue(vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>) -> #wasm_bindgen::JsValue {
-                    #wasm_bindgen::__rt::js_value_vector_into_jsvalue(vector)
+                    #wasm_bindgen::wbg_cast!(vector, #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>, #wasm_bindgen::JsValue)
                 }
             }
         })
@@ -1154,6 +1154,13 @@ impl ToTokens for ast::ImportType {
                 }
 
                 impl JsObject for #rust_name {}
+
+                #[automatically_derived]
+                impl #wasm_bindgen::__rt::VectorIntoJsValue for #rust_name {
+                    fn vector_into_jsvalue(vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#rust_name]>) -> #wasm_bindgen::JsValue {
+                        #wasm_bindgen::wbg_cast!(vector, #wasm_bindgen::__rt::alloc::boxed::Box<[#rust_name]>, #wasm_bindgen::JsValue)
+                    }
+                }
             };
         })
         .to_tokens(tokens);
@@ -1719,7 +1726,7 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl #wasm_bindgen::__rt::VectorIntoJsValue for #enum_name {
                 fn vector_into_jsvalue(vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]>) -> #wasm_bindgen::JsValue {
-                    #wasm_bindgen::__rt::js_value_vector_into_jsvalue(vector)
+                    #wasm_bindgen::wbg_cast!(vector, #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]>, #wasm_bindgen::JsValue)
                 }
             }
         })
