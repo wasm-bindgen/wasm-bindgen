@@ -45,6 +45,9 @@ extern "C" {
     fn add_arguments() -> Function;
     fn call_function(f: &Function) -> JsValue;
     fn call_function_arg(f: &Function, arg0: JsValue) -> JsValue;
+    fn sum_many_arguments() -> Function;
+    fn test_context() -> JsValue;
+    fn multiply_sum() -> Function;
 
 }
 
@@ -143,4 +146,202 @@ fn function_inheritance() {
     MAX.with(|max| {
         let _: &Object = max.as_ref();
     });
+}
+
+#[wasm_bindgen_test]
+fn bind4() {
+    let adder = sum_many_arguments();
+    let add_fixed = adder.bind4(
+        &JsValue::NULL,
+        &JsValue::from(1),
+        &JsValue::from(2),
+        &JsValue::from(3),
+        &JsValue::from(4),
+    );
+    assert_eq!(call_function(&add_fixed), 10);
+}
+
+#[wasm_bindgen_test]
+fn bind5() {
+    let adder = sum_many_arguments();
+    let add_fixed = adder.bind5(
+        &JsValue::NULL,
+        &JsValue::from(1),
+        &JsValue::from(2),
+        &JsValue::from(3),
+        &JsValue::from(4),
+        &JsValue::from(5),
+    );
+    assert_eq!(call_function(&add_fixed), 15);
+}
+
+#[wasm_bindgen_test]
+fn bind6() {
+    let adder = sum_many_arguments();
+    let add_fixed = adder.bind6(
+        &JsValue::NULL,
+        &JsValue::from(1),
+        &JsValue::from(2),
+        &JsValue::from(3),
+        &JsValue::from(4),
+        &JsValue::from(5),
+        &JsValue::from(6),
+    );
+    assert_eq!(call_function(&add_fixed), 21);
+}
+
+#[wasm_bindgen_test]
+fn bind7() {
+    let adder = sum_many_arguments();
+    let add_fixed = adder.bind7(
+        &JsValue::NULL,
+        &JsValue::from(1),
+        &JsValue::from(2),
+        &JsValue::from(3),
+        &JsValue::from(4),
+        &JsValue::from(5),
+        &JsValue::from(6),
+        &JsValue::from(7),
+    );
+    assert_eq!(call_function(&add_fixed), 28);
+}
+
+#[wasm_bindgen_test]
+fn bind8() {
+    let adder = sum_many_arguments();
+    let add_fixed = adder.bind8(
+        &JsValue::NULL,
+        &JsValue::from(1),
+        &JsValue::from(2),
+        &JsValue::from(3),
+        &JsValue::from(4),
+        &JsValue::from(5),
+        &JsValue::from(6),
+        &JsValue::from(7),
+        &JsValue::from(8),
+    );
+    assert_eq!(call_function(&add_fixed), 36);
+}
+
+#[wasm_bindgen_test]
+fn call4() {
+    let multiply = multiply_sum();
+    let result = multiply
+        .call4(
+            &test_context(),
+            &JsValue::from(1),
+            &JsValue::from(2),
+            &JsValue::from(3),
+            &JsValue::from(4),
+        )
+        .unwrap();
+    assert_eq!(result, 100);
+}
+
+#[wasm_bindgen_test]
+fn call5() {
+    let multiply = multiply_sum();
+    let result = multiply
+        .call5(
+            &test_context(),
+            &JsValue::from(1),
+            &JsValue::from(2),
+            &JsValue::from(3),
+            &JsValue::from(4),
+            &JsValue::from(5),
+        )
+        .unwrap();
+    assert_eq!(result, 150);
+}
+
+#[wasm_bindgen_test]
+fn call6() {
+    let multiply = multiply_sum();
+    let result = multiply
+        .call6(
+            &test_context(),
+            &JsValue::from(1),
+            &JsValue::from(2),
+            &JsValue::from(3),
+            &JsValue::from(4),
+            &JsValue::from(5),
+            &JsValue::from(6),
+        )
+        .unwrap();
+    assert_eq!(result, 210);
+}
+
+#[wasm_bindgen_test]
+fn call7() {
+    let multiply = multiply_sum();
+    let result = multiply
+        .call7(
+            &test_context(),
+            &JsValue::from(1),
+            &JsValue::from(2),
+            &JsValue::from(3),
+            &JsValue::from(4),
+            &JsValue::from(5),
+            &JsValue::from(6),
+            &JsValue::from(7),
+        )
+        .unwrap();
+    assert_eq!(result, 280);
+}
+
+#[wasm_bindgen_test]
+fn call8() {
+    let multiply = multiply_sum();
+    let result = multiply
+        .call8(
+            &test_context(),
+            &JsValue::from(1),
+            &JsValue::from(2),
+            &JsValue::from(3),
+            &JsValue::from(4),
+            &JsValue::from(5),
+            &JsValue::from(6),
+            &JsValue::from(7),
+            &JsValue::from(8),
+        )
+        .unwrap();
+    assert_eq!(result, 360);
+}
+
+#[wasm_bindgen_test]
+fn bind9() {
+    let adder = sum_many_arguments();
+    let add_fixed = adder.bind9(
+        &JsValue::NULL,
+        &JsValue::from(1),
+        &JsValue::from(2),
+        &JsValue::from(3),
+        &JsValue::from(4),
+        &JsValue::from(5),
+        &JsValue::from(6),
+        &JsValue::from(7),
+        &JsValue::from(8),
+        &JsValue::from(9),
+    );
+    assert_eq!(call_function(&add_fixed), 45);
+}
+
+#[wasm_bindgen_test]
+fn call9() {
+    let multiply = multiply_sum();
+    let result = multiply
+        .call9(
+            &test_context(),
+            &JsValue::from(1),
+            &JsValue::from(2),
+            &JsValue::from(3),
+            &JsValue::from(4),
+            &JsValue::from(5),
+            &JsValue::from(6),
+            &JsValue::from(7),
+            &JsValue::from(8),
+            &JsValue::from(9),
+        )
+        .unwrap();
+    assert_eq!(result, 450);
 }

@@ -94,9 +94,6 @@ intrinsics! {
         #[symbol = "__wbindgen_is_function"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsFunction,
-        #[symbol = "__wbindgen_is_array"]
-        #[signature = fn(ref_externref()) -> Boolean]
-        IsArray,
         #[symbol = "__wbindgen_is_undefined"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsUndefined,
@@ -199,9 +196,6 @@ intrinsics! {
         #[symbol = "__wbindgen_number_new"]
         #[signature = fn(F64) -> Externref]
         NumberNew,
-        #[symbol = "__wbindgen_bigint_from_str"]
-        #[signature = fn(ref_string()) -> Externref]
-        BigIntFromStr,
         #[symbol = "__wbindgen_bigint_from_i64"]
         #[signature = fn(I64) -> Externref]
         BigIntFromI64,
@@ -220,12 +214,6 @@ intrinsics! {
         #[symbol = "__wbindgen_string_new"]
         #[signature = fn(ref_string()) -> Externref]
         StringNew,
-        #[symbol = "__wbindgen_symbol_anonymous_new"]
-        #[signature = fn() -> Externref]
-        SymbolAnonymousNew,
-        #[symbol = "__wbindgen_symbol_named_new"]
-        #[signature = fn(ref_string()) -> Externref]
-        SymbolNamedNew,
         #[symbol = "__wbindgen_number_get"]
         #[signature = fn(ref_externref()) -> opt_f64()]
         NumberGet,
@@ -241,9 +229,6 @@ intrinsics! {
         #[symbol = "__wbindgen_rethrow"]
         #[signature = fn(Externref) -> Unit]
         Rethrow,
-        #[symbol = "__wbindgen_error_new"]
-        #[signature = fn(ref_string()) -> Externref]
-        ErrorNew,
         #[symbol = "__wbindgen_memory"]
         #[signature = fn() -> Externref]
         Memory,
@@ -259,12 +244,6 @@ intrinsics! {
         #[symbol = "__wbindgen_debug_string"]
         #[signature = fn(ref_externref()) -> String]
         DebugString,
-        #[symbol = "__wbindgen_json_parse"]
-        #[signature = fn(ref_string()) -> Externref]
-        JsonParse,
-        #[symbol = "__wbindgen_json_serialize"]
-        #[signature = fn(ref_externref()) -> String]
-        JsonSerialize,
         #[symbol = "__wbindgen_copy_to_typed_array"]
         #[signature = fn(slice(U8), ref_externref()) -> Unit]
         CopyToTypedArray,

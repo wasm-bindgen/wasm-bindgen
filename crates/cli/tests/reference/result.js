@@ -81,8 +81,8 @@ export function result_i32() {
     return ret[0];
 }
 
-export function __wbindgen_error_new(arg0, arg1) {
-    const ret = new Error(getStringFromWasm0(arg0, arg1));
+export function __wbg_Error_fcfdb1a705a32d74(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 

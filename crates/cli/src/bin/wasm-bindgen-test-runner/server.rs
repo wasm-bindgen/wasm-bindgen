@@ -281,7 +281,7 @@ pub(crate) fn spawn(
         ));
     }
     for test in tests.tests {
-        js_to_execute.push_str(&format!("tests.push('{}');\n", test.name));
+        js_to_execute.push_str(&format!("tests.push('{}');\n", test.export));
     }
     js_to_execute.push_str("main(tests);\n");
 

@@ -47,6 +47,11 @@ impl WasmBindgenDescriptorsSection {
         interpreter: &mut Interpreter,
     ) -> Result<(), Error> {
         let mut to_remove = Vec::new();
+
+        if let Some(id) = interpreter.skip_interpret() {
+            to_remove.push(id);
+        }
+
         for export in module.exports.iter() {
             let prefix = "__wbindgen_describe_";
             if !export.name.starts_with(prefix) {
@@ -233,7 +238,7 @@ impl CustomSection for WasmBindgenDescriptorsSection {
         "wasm-bindgen descriptors"
     }
 
-    fn data(&self, _: &walrus::IdsToIndices) -> Cow<[u8]> {
+    fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
 }
