@@ -3623,11 +3623,6 @@ __wbg_set_wasm(wasm);"
                 format!("typeof({}) === 'function'", args[0])
             }
 
-            Intrinsic::IsArray => {
-                assert_eq!(args.len(), 1);
-                format!("Array.isArray({})", args[0])
-            }
-
             Intrinsic::IsUndefined => {
                 assert_eq!(args.len(), 1);
                 format!("{} === undefined", args[0])
@@ -3826,11 +3821,6 @@ __wbg_set_wasm(wasm);"
                 args[0].clone()
             }
 
-            Intrinsic::BigIntFromStr => {
-                assert_eq!(args.len(), 1);
-                format!("BigInt({})", args[0])
-            }
-
             Intrinsic::BigIntFromI64 | Intrinsic::BigIntFromU64 => {
                 assert_eq!(args.len(), 1);
                 args[0].clone()
@@ -3844,16 +3834,6 @@ __wbg_set_wasm(wasm);"
             Intrinsic::StringNew => {
                 assert_eq!(args.len(), 1);
                 args[0].clone()
-            }
-
-            Intrinsic::SymbolNamedNew => {
-                assert_eq!(args.len(), 1);
-                format!("Symbol({})", args[0])
-            }
-
-            Intrinsic::SymbolAnonymousNew => {
-                assert_eq!(args.len(), 0);
-                "Symbol()".to_string()
             }
 
             Intrinsic::NumberGet => {
@@ -3888,11 +3868,6 @@ __wbg_set_wasm(wasm);"
             Intrinsic::Rethrow => {
                 assert_eq!(args.len(), 1);
                 format!("throw {}", args[0])
-            }
-
-            Intrinsic::ErrorNew => {
-                assert_eq!(args.len(), 1);
-                format!("new Error({})", args[0])
             }
 
             Intrinsic::Module => {
@@ -3943,20 +3918,6 @@ __wbg_set_wasm(wasm);"
                 assert_eq!(args.len(), 1);
                 self.expose_debug_string();
                 format!("debugString({})", args[0])
-            }
-
-            Intrinsic::JsonParse => {
-                assert_eq!(args.len(), 1);
-                format!("JSON.parse({})", args[0])
-            }
-
-            Intrinsic::JsonSerialize => {
-                assert_eq!(args.len(), 1);
-                // Turns out `JSON.stringify(undefined) === undefined`, so if
-                // we're passed `undefined` reinterpret it as `null` for JSON
-                // purposes.
-                prelude.push_str(&format!("const obj = {};\n", args[0]));
-                "JSON.stringify(obj === undefined ? null : obj)".to_string()
             }
 
             Intrinsic::CopyToTypedArray => {
