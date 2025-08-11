@@ -26,20 +26,25 @@ Here we can see how converting a `Promise` to Rust creates a `impl Future<Output
 a successful promise becomes `Ok` and an erroneous promise becomes `Err`.
 
 You can also import a JS async function directly with a `extern "C"` block, and
-the promise will be converted to a future automatically. For now the return type
-must be `JsValue` or no return at all:
+the promise will be converted to a future automatically. The return type can be 
+`JsValue`, no return at all, or `Result` and `Option` types to primitives or
+types supporting [JsCast] conversions:
 
 ```rust
 #[wasm_bindgen]
 extern "C" {
     async fn async_func_1_ret_number() -> JsValue;
     async fn async_func_2();
+    async fn async_func_3_ret_string() -> JsString;
+    async fn async_func_4_ret_array() -> Uint8Array;
 }
 
 async fn get_from_js() -> f64 {
     async_func_1_ret_number().await.as_f64().unwrap_or(0.0)
 }
 ```
+
+[JsCast]: https://docs.rs/wasm-bindgen/*/wasm_bindgen/trait.JsCast.html
 
 The `async` can be combined with the `catch` attribute to manage errors from the
 JS promise:

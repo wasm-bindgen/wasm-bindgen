@@ -1388,30 +1388,53 @@ impl TryToTokens for ast::ImportFunction {
         }
         let abi_ret;
         let mut convert_ret;
-        match &self.js_ret {
-            Some(syn::Type::Reference(_)) => {
-                bail_span!(
-                    self.js_ret,
-                    "cannot return references in #[wasm_bindgen] imports yet"
-                );
-            }
-            Some(ref ty) => {
-                if self.function.r#async {
-                    abi_ret = quote! {
-                        #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+        if self.function.r#async {
+            abi_ret = quote! {
+                #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+            };
+            let mut future = quote! {
+                #wasm_bindgen_futures::JsFuture::from(
+                    <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
+                        ::from_abi(#ret_ident.join())
+                ).await
+            };
+            future = if self.catch {
+                quote! { #future? }
+            } else {
+                quote! { #future.expect("uncaught exception") }
+            };
+            match &self.js_ret {
+                Some(syn::Type::Reference(_)) => {
+                    bail_span!(
+                        self.js_ret,
+                        "cannot return references in #[wasm_bindgen] imports yet"
+                    );
+                }
+                Some(ref ty) => {
+                    convert_ret = quote! {
+                        <#ty as #wasm_bindgen::JsValueCast>::unchecked_from_js_value(#future)
                     };
-                    let future = quote! {
-                        #wasm_bindgen_futures::JsFuture::from(
-                            <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
-                                ::from_abi(#ret_ident.join())
-                        ).await
-                    };
+                    if self.catch {
+                        convert_ret = quote! { Ok(#convert_ret) };
+                    }
+                }
+                None => {
                     convert_ret = if self.catch {
-                        quote! { Ok(#wasm_bindgen::JsCast::unchecked_from_js(#future?)) }
+                        quote! { #future; Ok(()) }
                     } else {
-                        quote! { #wasm_bindgen::JsCast::unchecked_from_js(#future.expect("unexpected exception")) }
+                        quote! { #future; }
                     };
-                } else {
+                }
+            }
+        } else {
+            match &self.js_ret {
+                Some(syn::Type::Reference(_)) => {
+                    bail_span!(
+                        self.js_ret,
+                        "cannot return references in #[wasm_bindgen] imports yet"
+                    );
+                }
+                Some(ref ty) => {
                     abi_ret = quote! {
                         #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
                     };
@@ -1420,24 +1443,7 @@ impl TryToTokens for ast::ImportFunction {
                             ::from_abi(#ret_ident.join())
                     };
                 }
-            }
-            None => {
-                if self.function.r#async {
-                    abi_ret = quote! {
-                        #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
-                    };
-                    let future = quote! {
-                        #wasm_bindgen_futures::JsFuture::from(
-                            <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
-                                ::from_abi(#ret_ident.join())
-                        ).await
-                    };
-                    convert_ret = if self.catch {
-                        quote! { #future?; Ok(()) }
-                    } else {
-                        quote! { #future.expect("uncaught exception"); }
-                    };
-                } else {
+                None => {
                     abi_ret = quote! { () };
                     convert_ret = quote! { () };
                 }
@@ -1561,11 +1567,14 @@ impl ToTokens for DescribeImport<'_> {
         };
         let argtys = f.function.arguments.iter().map(|arg| &arg.pat_type.ty);
         let nargs = f.function.arguments.len() as u32;
-        let inform_ret = match &f.js_ret {
-            Some(ref t) => quote! { <#t as WasmDescribe>::describe(); },
-            // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => quote! { <JsValue as WasmDescribe>::describe(); },
-            None => quote! { <() as WasmDescribe>::describe(); },
+        let inform_ret = if f.function.r#async {
+            // async functions always return a Promise (JsValue), regardless of their declared return type
+            quote! { <JsValue as WasmDescribe>::describe(); }
+        } else {
+            match &f.js_ret {
+                Some(ref t) => quote! { <#t as WasmDescribe>::describe(); },
+                None => quote! { <() as WasmDescribe>::describe(); },
+            }
         };
 
         Descriptor {
