@@ -166,35 +166,6 @@ const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
 const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
 const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 4;
 
-// This macro is a hack to implement "generic" casts and reduce number of
-// boilerplate intrinsics. The implementation generates a no-op JS adapter that
-// simply takes an argument in one type, decodes it from the ABI, does nothing
-// with it on the JS side (by declaring function name as empty, so instead of
-// generating typical JS call that does `ret = foo(arg);` we end up with
-// just `ret = (arg);` and then encoding same value back with a different type.
-//
-// Note that we intentionally keep this macro undocumented as it's not meant
-// for public consumption - it relies on our implementation details, and
-// is intended only for simplifying our own implementation details as well.
-//
-// Someday we'll support generics in #[wasm_bindgen] macro, in which case
-// this can be replaced with a proper generic intrinsic.
-#[macro_export]
-#[doc(hidden)]
-macro_rules! wbg_cast {
-    ($value:expr, $from:ty, $to:ty) => {{
-        use $crate::prelude::wasm_bindgen;
-
-        #[wasm_bindgen(wasm_bindgen = $crate)]
-        extern "C" {
-            #[wasm_bindgen(js_name = "/* cast */")]
-            fn __wbindgen_cast(value: $from) -> $to;
-        }
-
-        __wbindgen_cast($value)
-    }};
-}
-
 impl JsValue {
     /// The `null` JS value constant.
     pub const NULL: JsValue = JsValue::_new(JSIDX_NULL);

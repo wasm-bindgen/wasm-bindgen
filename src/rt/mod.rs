@@ -20,6 +20,34 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
+// This macro is a hack to implement "generic" casts and reduce number of
+// boilerplate intrinsics. The implementation generates a no-op JS adapter that
+// simply takes an argument in one type, decodes it from the ABI, does nothing
+// with it on the JS side (by declaring function name as empty, so instead of
+// generating typical JS call that does `ret = foo(arg);` we end up with
+// just `ret = (arg);` and then encoding same value back with a different type.
+//
+// Note that we intentionally keep this macro undocumented as it's not meant
+// for public consumption - it relies on our implementation details, and
+// is intended only for simplifying our own implementation details as well.
+//
+// Someday we'll support generics in #[wasm_bindgen] macro, in which case
+// this can be replaced with a proper generic intrinsic.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! wbg_cast {
+    ($value:expr, $from:ty, $to:ty) => {{
+        #[$crate::prelude::wasm_bindgen(wasm_bindgen = $crate)]
+        extern "C" {
+            /// Foobar.
+            #[wasm_bindgen(js_name = "/* cast */")]
+            fn __wbindgen_cast(value: $from) -> $to;
+        }
+
+        __wbindgen_cast($value)
+    }};
+}
+
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.
 pub struct LazyCell<T, F = fn() -> T>(Wrapper<Lazy<T, F>>);
 
