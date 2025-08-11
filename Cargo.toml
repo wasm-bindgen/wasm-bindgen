@@ -43,10 +43,6 @@ strict-macro = ["wasm-bindgen-macro/strict-macro"]
 # are handled correctly
 gg-alloc = ["wasm-bindgen-test/gg-alloc"]
 
-# INTERNAL ONLY: This is only for debugging wasm-bindgen! No stability guarantees, so enable
-# this at your own peril!
-xxx_debug_only_print_generated_code = ["wasm-bindgen-macro/xxx_debug_only_print_generated_code"]
-
 [dependencies]
 cfg-if = "1.0.0"
 once_cell = { version = "1.12", default-features = false }
@@ -68,22 +64,18 @@ wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
 wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
-
-[lints.clippy]
-large_enum_variant = "allow"
-new_without_default = "allow"
-overly_complex_bool_expr = "allow"
-too_many_arguments = "allow"
-type_complexity = "allow"
-
 [workspace.lints.clippy]
 large_enum_variant = "allow"
 new_without_default = "allow"
 overly_complex_bool_expr = "allow"
 too_many_arguments = "allow"
 type_complexity = "allow"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)', 'cfg(xxx_debug_only_print_generated_code)'] }
+
+[lints]
+workspace = true
 
 [workspace]
 exclude = ["crates/msrv/resolver", "crates/msrv/lib", "crates/msrv/cli"]
