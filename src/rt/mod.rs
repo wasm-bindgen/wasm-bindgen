@@ -27,10 +27,6 @@ pub use wasm_bindgen_macro::BindgenedStruct;
 // generating typical JS call that does `ret = foo(arg);` we end up with
 // just `ret = (arg);` and then encoding same value back with a different type.
 //
-// Note that we intentionally keep this macro undocumented as it's not meant
-// for public consumption - it relies on our implementation details, and
-// is intended only for simplifying our own implementation details as well.
-//
 // Someday we'll support generics in #[wasm_bindgen] macro, in which case
 // this can be replaced with a proper generic intrinsic.
 #[doc(hidden)]
