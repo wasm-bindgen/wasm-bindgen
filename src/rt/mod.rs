@@ -2,7 +2,6 @@ use crate::JsValue;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::{Cell, UnsafeCell};
 use core::convert::Infallible;
-use core::mem;
 use core::ops::{Deref, DerefMut};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
@@ -696,16 +695,4 @@ impl<T: VectorIntoJsValue> From<Box<[T]>> for JsValue {
     fn from(vector: Box<[T]>) -> Self {
         T::vector_into_jsvalue(vector)
     }
-}
-
-pub fn js_value_vector_into_jsvalue<T: Into<JsValue>>(vector: Box<[T]>) -> JsValue {
-    let result = unsafe { JsValue::_new(super::__wbindgen_array_new()) };
-    for value in vector.into_vec() {
-        let js: JsValue = value.into();
-        unsafe { super::__wbindgen_array_push(result.idx, js.idx) }
-        // `__wbindgen_array_push` takes ownership over `js` and has already dropped it,
-        // so don't drop it again.
-        mem::forget(js);
-    }
-    result
 }
