@@ -3,6 +3,10 @@
 
 ## Unreleased
 
+### Added 
+* Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
+  [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
+
 ### Changed
 
 * Deprecate async constructors.
