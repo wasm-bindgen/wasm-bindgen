@@ -282,6 +282,17 @@ impl<T: ?Sized> WasmRefCell<T> {
     {
         self.value.into_inner()
     }
+
+    unsafe fn rc_from_abi(js: u32) -> Rc<Self>
+    where
+        T: Sized,
+    {
+        let js = js as *mut Self;
+        assert_not_null(js);
+
+        Rc::increment_strong_count(js);
+        Rc::from_raw(js)
+    }
 }
 
 pub struct Ref<'b, T: ?Sized + 'b> {
@@ -377,8 +388,10 @@ pub struct RcRef<T: ?Sized + 'static> {
     _rc: Rc<WasmRefCell<T>>,
 }
 
-impl<T: ?Sized> RcRef<T> {
-    pub fn new(rc: Rc<WasmRefCell<T>>) -> Self {
+impl<T> RcRef<T> {
+    pub unsafe fn from_abi(js: u32) -> Self {
+        let rc = WasmRefCell::rc_from_abi(js);
+
         let ref_ = unsafe { (*Rc::as_ptr(&rc)).borrow() };
         Self { _rc: rc, ref_ }
     }
@@ -410,8 +423,10 @@ pub struct RcRefMut<T: ?Sized + 'static> {
     _rc: Rc<WasmRefCell<T>>,
 }
 
-impl<T: ?Sized> RcRefMut<T> {
-    pub fn new(rc: Rc<WasmRefCell<T>>) -> Self {
+impl<T> RcRefMut<T> {
+    pub unsafe fn from_abi(js: u32) -> Self {
+        let rc = WasmRefCell::rc_from_abi(js);
+
         let ref_ = unsafe { (*Rc::as_ptr(&rc)).borrow_mut() };
         Self { _rc: rc, ref_ }
     }

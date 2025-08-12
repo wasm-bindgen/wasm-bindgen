@@ -324,19 +324,14 @@ impl ToTokens for ast::Struct {
             };
 
             #[automatically_derived]
-            impl #wasm_bindgen::convert::RefFromWasmAbi for #name {
+            impl #wasm_bindgen::convert::ArgFromWasmAbi for &#name {
                 type Abi = u32;
-                type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
+                type Anchor = Option<#wasm_bindgen::__rt::RcRef<#name>>;
 
-                unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
-                    use #wasm_bindgen::__rt::alloc::rc::Rc;
+                type SameButOver<'a> = &'a #name;
 
-                    let js = js as *mut #wasm_bindgen::__rt::WasmRefCell<#name>;
-                    #wasm_bindgen::__rt::assert_not_null(js);
-
-                    Rc::increment_strong_count(js);
-                    let rc = Rc::from_raw(js);
-                    #wasm_bindgen::__rt::RcRef::new(rc)
+                unsafe fn arg_from_abi(js: Self::Abi, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                    anchor.insert(#wasm_bindgen::__rt::RcRef::from_abi(js))
                 }
             }
 
@@ -346,14 +341,7 @@ impl ToTokens for ast::Struct {
                 type Anchor = #wasm_bindgen::__rt::RcRefMut<#name>;
 
                 unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor {
-                    use #wasm_bindgen::__rt::alloc::rc::Rc;
-
-                    let js = js as *mut #wasm_bindgen::__rt::WasmRefCell<#name>;
-                    #wasm_bindgen::__rt::assert_not_null(js);
-
-                    Rc::increment_strong_count(js);
-                    let rc = Rc::from_raw(js);
-                    #wasm_bindgen::__rt::RcRefMut::new(rc)
+                    #wasm_bindgen::__rt::RcRefMut::from_abi(js)
                 }
             }
 
@@ -363,7 +351,7 @@ impl ToTokens for ast::Struct {
                 type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
 
                 unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-                    <Self as #wasm_bindgen::convert::RefFromWasmAbi>::ref_from_abi(js)
+                    #wasm_bindgen::__rt::RcRef::from_abi(js)
                 }
             }
 
@@ -619,7 +607,7 @@ impl TryToTokens for ast::Export {
                         ),
                     )
                 } else {
-                    (quote!(RefFromWasmAbi), quote!(ref_from_abi), quote!(&*me))
+                    (quote!(ArgFromWasmAbi), quote!(arg_from_abi), quote!(&*me))
                 };
                 arg_conversions.push(quote! {
                     let me = unsafe {
@@ -686,17 +674,20 @@ impl TryToTokens for ast::Export {
                                 ::borrow(&#ident);
                         });
                     } else {
-                        let abi = quote! { <#elem as #wasm_bindgen::convert::RefFromWasmAbi>::Abi };
+                        let abi =
+                            quote! { <&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>::Abi };
                         let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
                         args.extend(prim_args);
+                        let anchor = Ident::new(&format!("{ident}_anchor"), ident.span());
                         arg_conversions.push(quote! {
+                            let mut #anchor = Default::default();
                             let #ident = unsafe {
-                                <#elem as #wasm_bindgen::convert::RefFromWasmAbi>
-                                    ::ref_from_abi(
-                                        <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*)
+                                <&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>
+                                    ::arg_from_abi(
+                                        <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*),
+                                        &mut #anchor
                                     )
                             };
-                            let #ident = &*#ident;
                         });
                     }
                 }
@@ -998,7 +989,7 @@ impl ToTokens for ast::ImportType {
                 use #wasm_bindgen::convert::TryFromJsValue;
                 use #wasm_bindgen::convert::{IntoWasmAbi, FromWasmAbi};
                 use #wasm_bindgen::convert::{OptionIntoWasmAbi, OptionFromWasmAbi};
-                use #wasm_bindgen::convert::{RefFromWasmAbi, LongRefFromWasmAbi};
+                use #wasm_bindgen::convert::{ArgFromWasmAbi, LongRefFromWasmAbi};
                 use #wasm_bindgen::describe::WasmDescribe;
                 use #wasm_bindgen::{JsValue, JsCast, JsObject};
                 use #wasm_bindgen::__rt::core;
@@ -1065,16 +1056,15 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl RefFromWasmAbi for #rust_name {
-                    type Abi = <JsValue as RefFromWasmAbi>::Abi;
-                    type Anchor = core::mem::ManuallyDrop<#rust_name>;
+                impl ArgFromWasmAbi for &#rust_name {
+                    type Abi = <&'static JsValue as ArgFromWasmAbi>::Abi;
+                    type Anchor = <&'static JsValue as ArgFromWasmAbi>::Anchor;
+
+                    type SameButOver<'a> = &'a #rust_name;
 
                     #[inline]
-                    unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
-                        let tmp = <JsValue as RefFromWasmAbi>::ref_from_abi(js);
-                        core::mem::ManuallyDrop::new(#rust_name {
-                            obj: core::mem::ManuallyDrop::into_inner(tmp).into(),
-                        })
+                    unsafe fn arg_from_abi(js: Self::Abi, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                        <&JsValue as ArgFromWasmAbi>::arg_from_abi(js, anchor).unchecked_ref()
                     }
                 }
 

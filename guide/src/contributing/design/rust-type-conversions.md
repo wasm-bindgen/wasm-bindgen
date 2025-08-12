@@ -79,10 +79,10 @@ pub trait FromWasmAbi: WasmDescribe {
     unsafe fn from_abi(js: Self::Abi) -> Self;
 }
 
-pub trait RefFromWasmAbi: WasmDescribe {
+pub trait ArgFromWasmAbi: WasmDescribe {
     type Abi: WasmAbi;
     type Anchor: Deref<Target=Self>;
-    unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor;
+    unsafe fn arg_from_abi(js: Self::Abi) -> Self::Anchor;
 }
 
 pub trait RefMutFromWasmAbi: WasmDescribe {

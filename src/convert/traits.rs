@@ -60,28 +60,46 @@ pub trait FromWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait RefFromWasmAbi: WasmDescribe {
-    /// The Wasm ABI type references to `Self` are recovered from.
+pub trait ArgFromWasmAbi: WasmDescribe {
     type Abi: WasmAbi;
 
     /// The type that holds the reference to `Self` for the duration of the
     /// invocation of the function that has an `&Self` parameter. This is
     /// required to ensure that the lifetimes don't persist beyond one function
     /// call, and so that they remain anonymous.
-    type Anchor: Deref<Target = Self>;
+    type Anchor: Default;
+
+    type SameButOver<'a>;
 
     /// Recover a `Self::Anchor` from `Self::Abi`.
     ///
     /// # Safety
     ///
     /// Same as `FromWasmAbi::from_abi`.
-    unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor;
+    unsafe fn arg_from_abi<'a>(
+        js: Self::Abi,
+        anchor: &'a mut Self::Anchor,
+    ) -> Self::SameButOver<'a>;
 }
 
-/// A version of the `RefFromWasmAbi` trait with the additional requirement
+impl<T: FromWasmAbi> ArgFromWasmAbi for T {
+    type Abi = T::Abi;
+    type Anchor = ();
+    type SameButOver<'a> = T;
+
+    #[inline]
+    unsafe fn arg_from_abi<'a>(
+        js: Self::Abi,
+        _anchor: &'a mut Self::Anchor,
+    ) -> Self::SameButOver<'a> {
+        T::from_abi(js)
+    }
+}
+
+/// A version of the `ArgFromWasmAbi` trait with the additional requirement
 /// that the reference must remain valid as long as the anchor isn't dropped.
 ///
-/// This isn't the case for `JsValue`'s `RefFromWasmAbi` implementation. To
+/// This isn't the case for `JsValue`'s `ArgFromWasmAbi` implementation. To
 /// avoid having to allocate a spot for the `JsValue` on the `JsValue` heap,
 /// the `JsValue` is instead pushed onto the `JsValue` stack, and popped off
 /// again after the function that the reference was passed to returns. So,
@@ -100,17 +118,17 @@ pub trait RefFromWasmAbi: WasmDescribe {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait LongRefFromWasmAbi: WasmDescribe {
-    /// Same as `RefFromWasmAbi::Abi`
+    /// Same as `ArgFromWasmAbi::Abi`
     type Abi: WasmAbi;
 
-    /// Same as `RefFromWasmAbi::Anchor`
+    /// Same as `ArgFromWasmAbi::Anchor`
     type Anchor: Borrow<Self>;
 
-    /// Same as `RefFromWasmAbi::ref_from_abi`
+    /// Same as `ArgFromWasmAbi::arg_from_abi`
     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor;
 }
 
-/// Dual of the `RefFromWasmAbi` trait, except for mutable references.
+/// Dual of the `ArgFromWasmAbi` trait, except for mutable references.
 ///
 /// # ⚠️ Unstable
 ///
@@ -118,11 +136,11 @@ pub trait LongRefFromWasmAbi: WasmDescribe {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait RefMutFromWasmAbi: WasmDescribe {
-    /// Same as `RefFromWasmAbi::Abi`
+    /// Same as `ArgFromWasmAbi::Abi`
     type Abi: WasmAbi;
-    /// Same as `RefFromWasmAbi::Anchor`
+    /// Same as `ArgFromWasmAbi::Anchor`
     type Anchor: DerefMut<Target = Self>;
-    /// Same as `RefFromWasmAbi::ref_from_abi`
+    /// Same as `ArgFromWasmAbi::arg_from_abi`
     unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor;
 }
 

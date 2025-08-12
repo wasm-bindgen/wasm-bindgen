@@ -2,12 +2,13 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::char;
 use core::fmt::Debug;
-use core::mem::{self, ManuallyDrop};
+use core::mem::{self, ManuallyDrop, MaybeUninit};
 use core::ptr::NonNull;
 
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
-use crate::convert::TryFromJsValue;
-use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
+use crate::convert::{
+    ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, TryFromJsValue,
+};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
 
@@ -446,13 +447,16 @@ impl IntoWasmAbi for &JsValue {
     }
 }
 
-impl RefFromWasmAbi for JsValue {
+impl ArgFromWasmAbi for &'_ JsValue {
     type Abi = u32;
     type Anchor = ManuallyDrop<JsValue>;
 
+    type SameButOver<'a> = &'a JsValue;
+
     #[inline]
-    unsafe fn ref_from_abi(js: u32) -> Self::Anchor {
-        ManuallyDrop::new(JsValue::_new(js))
+    unsafe fn arg_from_abi(js: u32, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+        **anchor = JsValue::_new(js);
+        anchor
     }
 }
 

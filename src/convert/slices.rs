@@ -9,8 +9,8 @@ use crate::__wbindgen_copy_to_typed_array;
 use crate::cast::JsObject;
 use crate::convert::{js_value_vector_from_abi, js_value_vector_into_abi};
 use crate::convert::{
-    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
-    RefFromWasmAbi, RefMutFromWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi,
+    OptionIntoWasmAbi, RefMutFromWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::JsValue;
@@ -195,13 +195,19 @@ macro_rules! vectors_internal {
             }
         }
 
-        impl RefFromWasmAbi for [$t] {
+        impl ArgFromWasmAbi for &'_ [$t] {
             type Abi = WasmSlice;
             type Anchor = Box<[$t]>;
 
+            type SameButOver<'a> = &'a [$t];
+
             #[inline]
-            unsafe fn ref_from_abi(js: WasmSlice) -> Box<[$t]> {
-                <Box<[$t]>>::from_abi(js)
+            unsafe fn arg_from_abi(
+                js: Self::Abi,
+                anchor: &mut Self::Anchor,
+            ) -> Self::SameButOver<'_> {
+                *anchor = <Box<[$t]>>::from_abi(js);
+                anchor
             }
         }
 
@@ -223,7 +229,7 @@ macro_rules! vectors_internal {
 
             #[inline]
             unsafe fn long_ref_from_abi(js: WasmSlice) -> Box<[$t]> {
-                Self::ref_from_abi(js)
+                <Box<[$t]>>::from_abi(js)
             }
         }
     };
@@ -377,23 +383,25 @@ impl OptionIntoWasmAbi for &str {
     }
 }
 
-impl RefFromWasmAbi for str {
-    type Abi = <[u8] as RefFromWasmAbi>::Abi;
-    type Anchor = Box<str>;
+impl ArgFromWasmAbi for &'_ str {
+    type Abi = <&'static [u8] as ArgFromWasmAbi>::Abi;
+    type Anchor = <&'static [u8] as ArgFromWasmAbi>::Anchor;
+
+    type SameButOver<'a> = &'a str;
 
     #[inline]
-    unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
-        mem::transmute::<Box<[u8]>, Box<str>>(<Box<[u8]>>::from_abi(js))
+    unsafe fn arg_from_abi(js: Self::Abi, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+        str::from_utf8_unchecked(<&[u8]>::arg_from_abi(js, anchor))
     }
 }
 
 impl LongRefFromWasmAbi for str {
-    type Abi = <[u8] as RefFromWasmAbi>::Abi;
-    type Anchor = Box<str>;
+    type Abi = WasmSlice;
+    type Anchor = String;
 
     #[inline]
     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-        Self::ref_from_abi(js)
+        String::from_abi(js)
     }
 }
 
