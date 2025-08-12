@@ -14,7 +14,6 @@ use core::mem::{self, ManuallyDrop};
 use crate::convert::*;
 use crate::describe::*;
 use crate::JsValue;
-use crate::UnwrapThrowExt;
 
 /// A handle to both a closure in Rust as well as JS closure which will invoke
 /// the Rust closure.

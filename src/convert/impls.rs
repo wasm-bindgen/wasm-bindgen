@@ -2,13 +2,11 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::char;
 use core::fmt::Debug;
-use core::mem::{self, ManuallyDrop, MaybeUninit};
+use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
-use crate::convert::{
-    ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, TryFromJsValue,
-};
+use crate::convert::{ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, TryFromJsValue};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
 use crate::describe::WasmDescribe;
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
@@ -577,8 +575,8 @@ impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
 
 impl<T, E> ReturnWasmAbi for Result<T, E>
 where
-    T: IntoWasmAbi,
-    E: Into<JsValue>,
+    T: ReturnWasmAbi,
+    E: 'static + Into<JsValue>,
     T::Abi: WasmAbi<Prim3 = (), Prim4 = ()>,
 {
     type Abi = Result<T::Abi, u32>;
@@ -586,10 +584,10 @@ where
     #[inline]
     fn return_abi(self) -> Self::Abi {
         match self {
-            Ok(v) => Ok(v.into_abi()),
+            Ok(v) => Ok(v.return_abi()),
             Err(e) => {
                 let jsval = e.into();
-                Err(jsval.into_abi())
+                Err(jsval.return_abi())
             }
         }
     }

@@ -9,8 +9,8 @@ use crate::__wbindgen_copy_to_typed_array;
 use crate::cast::JsObject;
 use crate::convert::{js_value_vector_from_abi, js_value_vector_into_abi};
 use crate::convert::{
-    ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi,
-    OptionIntoWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
+    VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::JsValue;

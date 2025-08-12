@@ -563,7 +563,7 @@ impl TryToTokens for ast::Export {
                     let mut me_anchor = unsafe {
                         #wasm_bindgen::convert::FromWasmAbi::from_abi(me)
                     };
-                    let me = <#class as #wasm_bindgen::convert::ArgFromWasmAbi<#long_lived>>::from_anchor(&mut me_anchor);
+                    let me = <#class as #wasm_bindgen::convert::ArgFromWasmAbi<#long_lived>>::arg_from_anchor(&mut me_anchor);
                 });
                 quote! { me.#name }
             }
@@ -586,7 +586,7 @@ impl TryToTokens for ast::Export {
             let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
             args.extend(prim_args);
             arg_conversions.push(quote! {
-                let mut #ident_anchor = unsafe { #anchor_ty::from_abi(#ident) };
+                let mut #ident_anchor = unsafe { #anchor_ty::from_abi_prims(#(#prim_names),*) };
                 let #ident = #ty_as_arg::arg_from_anchor(&mut #ident_anchor);
             });
 
@@ -941,13 +941,19 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &#rust_name {
-                    type Anchor = <&'static JsValue as ArgFromWasmAbi<LONG_LIVED>>::Anchor;
-                    type SameButOver<'a> = &'a #rust_name;
+                impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &'a #rust_name
+                // Technically this is always true, but Rust trait resolver doesn't yet understand
+                // that having an implementation for both `ArgFromWasmAbi<false>` and `ArgFromWasmAbi<true>`
+                // is the same as having an implementation for arbitrary `ArgFromWasmAbi<const bool>`.
+                where
+                    for<'b> &'a JsValue: ArgFromWasmAbi<LONG_LIVED, Anchor: core::ops::Deref<Target = JsValue>>,
+                {
+                    type Anchor = <&'a JsValue as ArgFromWasmAbi<LONG_LIVED>>::Anchor;
+                    type SameButOver<'b> = &'b #rust_name;
 
                     #[inline]
                     fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
-                        anchor.unchecked_ref()
+                        (&**anchor).unchecked_ref()
                     }
                 }
 

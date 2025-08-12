@@ -224,7 +224,7 @@ pub trait WasmAbi {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait ReturnWasmAbi: WasmDescribe {
+pub trait ReturnWasmAbi: 'static + WasmDescribe {
     /// Same as `IntoWasmAbi::Abi`
     type Abi: WasmAbi;
 
@@ -233,7 +233,7 @@ pub trait ReturnWasmAbi: WasmDescribe {
     fn return_abi(self) -> Self::Abi;
 }
 
-impl<T: IntoWasmAbi> ReturnWasmAbi for T {
+impl<T: 'static + IntoWasmAbi> ReturnWasmAbi for T {
     type Abi = T::Abi;
 
     #[inline]
@@ -351,15 +351,15 @@ pub trait RefFromWasmAbi: WasmDescribe {
 }
 
 #[allow(deprecated)]
-impl<T: ?Sized + WasmDescribe + 'static> RefFromWasmAbi for T
+impl<T: ?Sized + WasmDescribe, Anchor: FromWasmAbi + Deref<Target = Self>> RefFromWasmAbi for T
 where
-    for<'a> &'a T: ArgFromWasmAbi<false, Anchor: Deref<Target = Self>>,
+    for<'a> &'a T: ArgFromWasmAbi<false, Anchor = Anchor>,
 {
-    type Abi = <<&'static T as ArgFromWasmAbi<false>>::Anchor as FromWasmAbi>::Abi;
-    type Anchor = <&'static T as ArgFromWasmAbi<false>>::Anchor;
+    type Abi = Anchor::Abi;
+    type Anchor = Anchor;
 
-    unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
-        Self::Anchor::from_abi(js)
+    unsafe fn ref_from_abi(js: Self::Abi) -> Anchor {
+        Anchor::from_abi(js)
     }
 }
 
@@ -374,15 +374,16 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 }
 
 #[allow(deprecated)]
-impl<T: ?Sized + WasmDescribe + 'static> RefMutFromWasmAbi for T
+impl<T: ?Sized + WasmDescribe, Anchor: FromWasmAbi + DerefMut<Target = Self>> RefMutFromWasmAbi
+    for T
 where
-    for<'a> &'a mut T: ArgFromWasmAbi<false, Anchor: DerefMut<Target = Self>>,
+    for<'a> &'a mut T: ArgFromWasmAbi<false, Anchor = Anchor>,
 {
-    type Abi = <<&'static mut T as ArgFromWasmAbi<false>>::Anchor as FromWasmAbi>::Abi;
-    type Anchor = <&'static mut T as ArgFromWasmAbi<false>>::Anchor;
+    type Abi = Anchor::Abi;
+    type Anchor = Anchor;
 
     unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor {
-        Self::Anchor::from_abi(js)
+        Anchor::from_abi(js)
     }
 }
 
@@ -397,14 +398,14 @@ pub trait LongRefFromWasmAbi: WasmDescribe {
 }
 
 #[allow(deprecated)]
-impl<T: ?Sized + WasmDescribe + 'static> LongRefFromWasmAbi for T
+impl<T: ?Sized + WasmDescribe, Anchor: FromWasmAbi + Borrow<Self>> LongRefFromWasmAbi for T
 where
-    for<'a> &'a mut T: ArgFromWasmAbi<true, Anchor: Deref<Target = Self>>,
+    for<'a> &'a mut T: ArgFromWasmAbi<true, Anchor = Anchor>,
 {
-    type Abi = <<&'static mut T as ArgFromWasmAbi<true>>::Anchor as FromWasmAbi>::Abi;
-    type Anchor = <&'static mut T as ArgFromWasmAbi<true>>::Anchor;
+    type Abi = Anchor::Abi;
+    type Anchor = Anchor;
 
     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-        Self::Anchor::from_abi(js)
+        Anchor::from_abi(js)
     }
 }

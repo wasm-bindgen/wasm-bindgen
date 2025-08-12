@@ -18,24 +18,24 @@ macro_rules! stack_closures {
         #[allow(coherence_leak_check)]
         impl<$($var,)* R> WasmDescribe for dyn $Fn($($var),*) -> R + '_
         where
-            $($var: ArgFromWasmAbi,)*
-            R: ReturnWasmAbi + 'static,
+            $($var: ArgFromWasmAbi<false>,)*
+            R: ReturnWasmAbi,
         {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() {
                 inform(FUNCTION);
                 inform(invoke::<$($var,)* R> as usize as u32);
                 inform($cnt);
-                $(<$var as WasmDescribe>::describe();)*
-                <R as WasmDescribe>::describe();
-                <R as WasmDescribe>::describe();
+                $($var::describe();)*
+                R::describe();
+                R::describe();
             }
         }
 
         impl<$($var,)* R> WasmClosure for dyn $Fn($($var),*) -> R + '_
         where
-            $($var: ArgFromWasmAbi,)*
-            R: ReturnWasmAbi + 'static,
+            $($var: ArgFromWasmAbi<false>,)*
+            R: ReturnWasmAbi,
         {
             const IS_MUT: bool = false;
         }
@@ -43,8 +43,8 @@ macro_rules! stack_closures {
         #[allow(coherence_leak_check)]
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn($($var),*) -> R + '_)
         where
-            $($var: ArgFromWasmAbi,)*
-            R: ReturnWasmAbi + 'static,
+            $($var: ArgFromWasmAbi<false>,)*
+            R: ReturnWasmAbi,
         {
             type Abi = WasmSlice;
 
@@ -57,7 +57,7 @@ macro_rules! stack_closures {
         }
 
         #[allow(non_snake_case)]
-        unsafe extern "C" fn invoke<'a, $($var: ArgFromWasmAbi,)* R: ReturnWasmAbi + 'static>(
+        unsafe extern "C" fn invoke<'a, $($var: ArgFromWasmAbi<false>,)* R: ReturnWasmAbi>(
             a: usize,
             b: usize,
             $(
@@ -108,7 +108,7 @@ macro_rules! stack_closures {
         #[allow(non_snake_case, unused_parens)]
         impl<T, $($var,)* R> WasmClosureFnOnce<($($var,)*), R> for T
         where T: 'static + FnOnce($($var),*) -> R,
-                $($var: 'static + ArgFromWasmAbi,)*
+                $($var: 'static + ArgFromWasmAbi<false>,)*
                 R: ReturnWasmAbi + 'static,
         {
             type FnMut = dyn FnMut($($var),*) -> R + 'static;
