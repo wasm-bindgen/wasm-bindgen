@@ -324,18 +324,24 @@ impl ToTokens for ast::Struct {
             };
 
             #[automatically_derived]
-            impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a #name {
+            impl<const LONG_LIVED: bool> #wasm_bindgen::convert::AnchoredArg<LONG_LIVED> for &'_ #name {
                 type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
+            }
 
+            #[automatically_derived]
+            impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a #name {
                 fn arg_from_anchor(anchor: &'a mut <Self as #wasm_bindgen::convert::AnchoredArg<LONG_LIVED>>::Anchor) -> Self {
                     anchor
                 }
             }
 
             #[automatically_derived]
-            impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a mut #name {
+            impl<const LONG_LIVED: bool> #wasm_bindgen::convert::AnchoredArg<LONG_LIVED> for &'_ mut #name {
                 type Anchor = #wasm_bindgen::__rt::RcRefMut<#name>;
+            }
 
+            #[automatically_derived]
+            impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a mut #name {
                 fn arg_from_anchor(anchor: &'a mut <Self as #wasm_bindgen::convert::AnchoredArg<LONG_LIVED>>::Anchor) -> Self {
                     anchor
                 }
@@ -934,6 +940,7 @@ impl ToTokens for ast::ImportType {
                 #[automatically_derived]
                 impl<'a, const LONG_LIVED: bool> AnchoredArg<LONG_LIVED> for &'a #rust_name
                 where
+                    // This is always true, but trait solver is currently too dumb to figure it out.
                     &'a JsValue: AnchoredArg<LONG_LIVED>,
                 {
                     type Anchor = <&'a JsValue as AnchoredArg<LONG_LIVED>>::Anchor;
@@ -941,10 +948,8 @@ impl ToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<'a, LONG_LIVED> for &'a #rust_name
-                // Technically this is always true, but Rust trait resolver doesn't yet understand
-                // that having an implementation for both `ArgFromWasmAbi<false>` and `ArgFromWasmAbi<true>`
-                // is the same as having an implementation for arbitrary `ArgFromWasmAbi<const bool>`.
                 where
+                    // This is always true, but trait solver is currently too dumb to figure it out.
                     &'a JsValue: ArgFromWasmAbi<'a, LONG_LIVED>,
                 {
                     #[inline]
