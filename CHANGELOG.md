@@ -8,6 +8,9 @@
 * Deprecate async constructors.
   [#4402](https://github.com/rustwasm/wasm-bindgen/pull/4402)
 
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/rustwasm/wasm-bindgen/compare/0.2.99...0.2.100)
