@@ -448,7 +448,7 @@ impl IntoWasmAbi for &JsValue {
     }
 }
 
-impl ArgFromWasmAbi for &'_ JsValue {
+impl ArgFromWasmAbi<false> for &'_ JsValue {
     type Anchor = ManuallyDrop<JsValue>;
     type SameButOver<'a> = &'a JsValue;
 
@@ -458,13 +458,13 @@ impl ArgFromWasmAbi for &'_ JsValue {
     }
 }
 
-impl LongRefFromWasmAbi for JsValue {
-    type Abi = u32;
+impl ArgFromWasmAbi<true> for &'_ JsValue {
     type Anchor = JsValue;
+    type SameButOver<'a> = &'a JsValue;
 
     #[inline]
-    unsafe fn long_ref_from_abi(js: u32) -> Self::Anchor {
-        Self::from_abi(js)
+    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+        anchor
     }
 }
 

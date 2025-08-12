@@ -324,7 +324,7 @@ impl ToTokens for ast::Struct {
             };
 
             #[automatically_derived]
-            impl #wasm_bindgen::convert::ArgFromWasmAbi for &#name {
+            impl<const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<LONG_LIVED> for &#name {
                 type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
                 type SameButOver<'a> = &'a #name;
 
@@ -334,22 +334,12 @@ impl ToTokens for ast::Struct {
             }
 
             #[automatically_derived]
-            impl #wasm_bindgen::convert::RefMutFromWasmAbi for #name {
-                type Abi = u32;
+            impl<const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<LONG_LIVED> for &mut #name {
                 type Anchor = #wasm_bindgen::__rt::RcRefMut<#name>;
+                type SameButOver<'a> = &'a mut #name;
 
-                unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor {
-                    #wasm_bindgen::convert::FromWasmAbi::from_abi(js)
-                }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::LongRefFromWasmAbi for #name {
-                type Abi = u32;
-                type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
-
-                unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-                    #wasm_bindgen::convert::FromWasmAbi::from_abi(js)
+                fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                    anchor
                 }
             }
 
@@ -561,61 +551,19 @@ impl TryToTokens for ast::Export {
         let mut converted_arguments = vec![];
         let ret = Ident::new("_ret", Span::call_site());
 
-        let offset = if self.method_self.is_some() {
-            args.push(quote! { me: u32 });
-            1
-        } else {
-            0
-        };
-
         let name = &self.rust_name;
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
+        let long_lived = self.function.r#async;
         let receiver = match self.method_self {
-            Some(ast::MethodSelf::ByValue) => {
+            Some(_) => {
+                args.push(quote! { me: u32 });
                 let class = self.rust_class.as_ref().unwrap();
                 arg_conversions.push(quote! {
-                    let me = unsafe {
-                        <#class as #wasm_bindgen::convert::FromWasmAbi>::from_abi(me)
+                    let mut me_anchor = unsafe {
+                        #wasm_bindgen::convert::FromWasmAbi::from_abi(me)
                     };
-                });
-                quote! { me.#name }
-            }
-            Some(ast::MethodSelf::RefMutable) => {
-                let class = self.rust_class.as_ref().unwrap();
-                arg_conversions.push(quote! {
-                    let mut me = unsafe {
-                        <#class as #wasm_bindgen::convert::RefMutFromWasmAbi>
-                            ::ref_mut_from_abi(me)
-                    };
-                    let me = &mut *me;
-                });
-                quote! { me.#name }
-            }
-            Some(ast::MethodSelf::RefShared) => {
-                let class = self.rust_class.as_ref().unwrap();
-                let (trait_, func, borrow) = if self.function.r#async {
-                    (
-                        quote!(LongRefFromWasmAbi),
-                        quote!(long_ref_from_abi),
-                        quote!(
-                            <<#class as #wasm_bindgen::convert::LongRefFromWasmAbi>
-                                ::Anchor as #wasm_bindgen::__rt::core::borrow::Borrow<#class>>
-                                ::borrow(&me)
-                        ),
-                    )
-                } else {
-                    (
-                        quote!(ArgFromWasmAbi),
-                        quote!(arg_from_anchor),
-                        quote!(&*me),
-                    )
-                };
-                arg_conversions.push(quote! {
-                    let me = unsafe {
-                        <#class as #wasm_bindgen::convert::#trait_>::#func(me)
-                    };
-                    let me = #borrow;
+                    let me = <#class as #wasm_bindgen::convert::ArgFromWasmAbi<#long_lived>>::from_anchor(&mut me_anchor);
                 });
                 quote! { me.#name }
             }
@@ -627,81 +575,21 @@ impl TryToTokens for ast::Export {
 
         let mut argtys = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
-            argtys.push(&*arg.pat_type.ty);
-            let i = i + offset;
-            let ident = Ident::new(&format!("arg{}", i), Span::call_site());
-            fn unwrap_nested_types(ty: &syn::Type) -> &syn::Type {
-                match &ty {
-                    syn::Type::Group(syn::TypeGroup { ref elem, .. }) => unwrap_nested_types(elem),
-                    syn::Type::Paren(syn::TypeParen { ref elem, .. }) => unwrap_nested_types(elem),
-                    _ => ty,
-                }
-            }
-            let ty = unwrap_nested_types(&arg.pat_type.ty);
+            let ident = Ident::new(&format!("arg{i}"), Span::call_site());
+            let ident_anchor = Ident::new(&format!("{ident}_anchor"), ident.span());
+            let ty = &*arg.pat_type.ty;
 
-            match &ty {
-                syn::Type::Reference(syn::TypeReference {
-                    mutability: Some(_),
-                    elem,
-                    ..
-                }) => {
-                    let abi = quote! { <#elem as #wasm_bindgen::convert::RefMutFromWasmAbi>::Abi };
-                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
-                    args.extend(prim_args);
-                    arg_conversions.push(quote! {
-                        let mut #ident = unsafe {
-                            <#elem as #wasm_bindgen::convert::RefMutFromWasmAbi>
-                                ::ref_mut_from_abi(
-                                    <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*)
-                                )
-                        };
-                        let #ident = &mut *#ident;
-                    });
-                }
-                syn::Type::Reference(syn::TypeReference { elem, .. }) => {
-                    if self.function.r#async {
-                        let abi =
-                            quote! { <#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>::Abi };
-                        let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
-                        args.extend(prim_args);
-                        arg_conversions.push(quote! {
-                            let #ident = unsafe {
-                                <#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>
-                                    ::long_ref_from_abi(
-                                        <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*)
-                                    )
-                            };
-                            let #ident = <<#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>
-                                ::Anchor as core::borrow::Borrow<#elem>>
-                                ::borrow(&#ident);
-                        });
-                    } else {
-                        let abi = quote! { <<&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>::Anchor as #wasm_bindgen::convert::FromWasmAbi>::Abi };
-                        let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
-                        args.extend(prim_args);
-                        let anchor = Ident::new(&format!("{ident}_anchor"), ident.span());
-                        arg_conversions.push(quote! {
-                            let mut #anchor = unsafe {
-                                #wasm_bindgen::convert::FromWasmAbi::from_abi_prims(#(#prim_names),*)
-                            };
-                            let #ident = <&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>::arg_from_anchor(&mut #anchor);
-                        });
-                    }
-                }
-                _ => {
-                    let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
-                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
-                    args.extend(prim_args);
-                    arg_conversions.push(quote! {
-                        let #ident = unsafe {
-                            <#ty as #wasm_bindgen::convert::FromWasmAbi>
-                                ::from_abi(
-                                    <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*)
-                                )
-                        };
-                    });
-                }
-            }
+            argtys.push(ty);
+            let ty_as_arg = quote! { <#ty as #wasm_bindgen::convert::ArgFromWasmAbi<#long_lived>> };
+            let anchor_ty = quote! { <#ty_as_arg::Anchor as #wasm_bindgen::convert::FromWasmAbi> };
+            let abi = quote! { #anchor_ty::Abi };
+            let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+            args.extend(prim_args);
+            arg_conversions.push(quote! {
+                let mut #ident_anchor = unsafe { #anchor_ty::from_abi(#ident) };
+                let #ident = #ty_as_arg::arg_from_anchor(&mut #ident_anchor);
+            });
+
             converted_arguments.push(quote! { #ident });
         }
         let syn_unit = syn::Type::Tuple(syn::TypeTuple {
@@ -986,7 +874,7 @@ impl ToTokens for ast::ImportType {
                 use #wasm_bindgen::convert::TryFromJsValue;
                 use #wasm_bindgen::convert::{IntoWasmAbi, FromWasmAbi};
                 use #wasm_bindgen::convert::{OptionIntoWasmAbi, OptionFromWasmAbi};
-                use #wasm_bindgen::convert::{ArgFromWasmAbi, LongRefFromWasmAbi};
+                use #wasm_bindgen::convert::ArgFromWasmAbi;
                 use #wasm_bindgen::describe::WasmDescribe;
                 use #wasm_bindgen::{JsValue, JsCast, JsObject};
                 use #wasm_bindgen::__rt::core;
@@ -1053,25 +941,13 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl ArgFromWasmAbi for &#rust_name {
-                    type Anchor = <&'static JsValue as ArgFromWasmAbi>::Anchor;
+                impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &#rust_name {
+                    type Anchor = <&'static JsValue as ArgFromWasmAbi<LONG_LIVED>>::Anchor;
                     type SameButOver<'a> = &'a #rust_name;
 
                     #[inline]
                     fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
                         anchor.unchecked_ref()
-                    }
-                }
-
-                #[automatically_derived]
-                impl LongRefFromWasmAbi for #rust_name {
-                    type Abi = <JsValue as LongRefFromWasmAbi>::Abi;
-                    type Anchor = #rust_name;
-
-                    #[inline]
-                    unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-                        let tmp = <JsValue as LongRefFromWasmAbi>::long_ref_from_abi(js);
-                        #rust_name { obj: tmp.into() }
                     }
                 }
 

@@ -67,12 +67,30 @@ pub trait FromWasmAbi: WasmDescribe {
 /// This is the shared reference variant of the opposite operation as
 /// `IntoWasmAbi`.
 ///
+/// `LONG_LIVED` parameter indicates whether the reference should be preserved
+/// beyond the duration of the function call.
+///
+/// This is necessary for async functions which return a `Future` which can
+/// still contain references to the arguments even though the function that
+/// created it has already returned.
+///
+/// For most types, including references, the implementations for short- and
+/// long-lived references should be equivalent.
+///
+/// This isn't the case for the `&JsValue` implementation. To avoid having to
+/// allocate a spot for the `JsValue` on the `JsValue` heap, the `JsValue` is
+/// instead pushed onto the `JsValue` stack, wrapped into a `ManuallyDrop` to
+/// avoid dropping the owner we're borrowing from, and popped off again after
+/// the function that the reference was passed to returns.
+///
+/// 'long ref' is short for 'long-lived reference'.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait ArgFromWasmAbi: WasmDescribe {
+pub trait ArgFromWasmAbi<const LONG_LIVED: bool>: WasmDescribe {
     /// The type that holds the reference to `Self` for the duration of the
     /// invocation of the function that has an `&Self` parameter. This is
     /// required to ensure that the lifetimes don't persist beyond one function
@@ -88,7 +106,7 @@ pub trait ArgFromWasmAbi: WasmDescribe {
     fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_>;
 }
 
-impl<T: FromWasmAbi> ArgFromWasmAbi for T {
+impl<const LONG_LIVED: bool, T: FromWasmAbi> ArgFromWasmAbi<LONG_LIVED> for T {
     type Anchor = ManuallyDrop<T>;
     type SameButOver<'a> = T;
 
@@ -96,54 +114,6 @@ impl<T: FromWasmAbi> ArgFromWasmAbi for T {
     fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
         unsafe { ManuallyDrop::take(anchor) }
     }
-}
-
-/// A version of the `ArgFromWasmAbi` trait with the additional requirement
-/// that the reference must remain valid as long as the anchor isn't dropped.
-///
-/// This isn't the case for `JsValue`'s `ArgFromWasmAbi` implementation. To
-/// avoid having to allocate a spot for the `JsValue` on the `JsValue` heap,
-/// the `JsValue` is instead pushed onto the `JsValue` stack, and popped off
-/// again after the function that the reference was passed to returns. So,
-/// `JsValue` has a different `LongRefFromWasmAbi` implementation that behaves
-/// the same as `FromWasmAbi`, putting the value on the heap.
-///
-/// This is needed for async functions, where the reference needs to be valid
-/// for the whole length of the `Future`, rather than the initial synchronous
-/// call.
-///
-/// 'long ref' is short for 'long-lived reference'.
-///
-/// # ⚠️ Unstable
-///
-/// This is part of the internal [`convert`](crate::convert) module, **no
-/// stability guarantees** are provided. Use at your own risk. See its
-/// documentation for more details.
-pub trait LongRefFromWasmAbi: WasmDescribe {
-    /// Same as `ArgFromWasmAbi::Abi`
-    type Abi: WasmAbi;
-
-    /// Same as `ArgFromWasmAbi::Anchor`
-    type Anchor: Borrow<Self>;
-
-    /// Same as `ArgFromWasmAbi::arg_from_abi`
-    unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor;
-}
-
-/// Dual of the `ArgFromWasmAbi` trait, except for mutable references.
-///
-/// # ⚠️ Unstable
-///
-/// This is part of the internal [`convert`](crate::convert) module, **no
-/// stability guarantees** are provided. Use at your own risk. See its
-/// documentation for more details.
-pub trait RefMutFromWasmAbi: WasmDescribe {
-    /// Same as `ArgFromWasmAbi::Abi`
-    type Abi: WasmAbi;
-    /// Same as `ArgFromWasmAbi::Anchor`
-    type Anchor: DerefMut<Target = Self>;
-    /// Same as `ArgFromWasmAbi::arg_from_abi`
-    unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor;
 }
 
 /// Indicates that this type can be passed to JS as `Option<Self>`.
@@ -383,12 +353,58 @@ pub trait RefFromWasmAbi: WasmDescribe {
 #[allow(deprecated)]
 impl<T: ?Sized + WasmDescribe + 'static> RefFromWasmAbi for T
 where
-    for<'a> &'a T: ArgFromWasmAbi<Anchor: Deref<Target = Self>>,
+    for<'a> &'a T: ArgFromWasmAbi<false, Anchor: Deref<Target = Self>>,
 {
-    type Abi = <<&'static T as ArgFromWasmAbi>::Anchor as FromWasmAbi>::Abi;
-    type Anchor = <&'static T as ArgFromWasmAbi>::Anchor;
+    type Abi = <<&'static T as ArgFromWasmAbi<false>>::Anchor as FromWasmAbi>::Abi;
+    type Anchor = <&'static T as ArgFromWasmAbi<false>>::Anchor;
 
     unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
+        Self::Anchor::from_abi(js)
+    }
+}
+
+#[deprecated(
+    note = "This internal trait is now just a backward-compatible shim implemented via ArgFromWasmAbi."
+)]
+pub trait RefMutFromWasmAbi: WasmDescribe {
+    type Abi: WasmAbi;
+    type Anchor: DerefMut<Target = Self>;
+
+    unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor;
+}
+
+#[allow(deprecated)]
+impl<T: ?Sized + WasmDescribe + 'static> RefMutFromWasmAbi for T
+where
+    for<'a> &'a mut T: ArgFromWasmAbi<false, Anchor: DerefMut<Target = Self>>,
+{
+    type Abi = <<&'static mut T as ArgFromWasmAbi<false>>::Anchor as FromWasmAbi>::Abi;
+    type Anchor = <&'static mut T as ArgFromWasmAbi<false>>::Anchor;
+
+    unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor {
+        Self::Anchor::from_abi(js)
+    }
+}
+
+#[deprecated(
+    note = "This internal trait is now just a backward-compatible shim implemented via ArgFromWasmAbi."
+)]
+pub trait LongRefFromWasmAbi: WasmDescribe {
+    type Abi: WasmAbi;
+    type Anchor: Borrow<Self>;
+
+    unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor;
+}
+
+#[allow(deprecated)]
+impl<T: ?Sized + WasmDescribe + 'static> LongRefFromWasmAbi for T
+where
+    for<'a> &'a mut T: ArgFromWasmAbi<true, Anchor: Deref<Target = Self>>,
+{
+    type Abi = <<&'static mut T as ArgFromWasmAbi<true>>::Anchor as FromWasmAbi>::Abi;
+    type Anchor = <&'static mut T as ArgFromWasmAbi<true>>::Anchor;
+
+    unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
         Self::Anchor::from_abi(js)
     }
 }

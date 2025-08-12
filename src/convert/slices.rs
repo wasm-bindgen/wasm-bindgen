@@ -10,7 +10,7 @@ use crate::cast::JsObject;
 use crate::convert::{js_value_vector_from_abi, js_value_vector_into_abi};
 use crate::convert::{
     ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi,
-    OptionIntoWasmAbi, RefMutFromWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    OptionIntoWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::JsValue;
@@ -89,6 +89,25 @@ pub struct MutSlice<T> {
     contents: Box<[T]>,
     /// A reference to the original JS typed array.
     js: JsValue,
+}
+
+impl<T: WasmDescribe> WasmDescribe for MutSlice<T> {
+    fn describe() {
+        <&mut T>::describe();
+    }
+}
+
+impl<T: WasmDescribe> FromWasmAbi for MutSlice<T>
+where
+    Box<[T]>: FromWasmAbi<Abi = WasmSlice>,
+{
+    type Abi = WasmMutSlice;
+
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        let contents = <Box<[T]>>::from_abi(js.slice);
+        let js = JsValue::from_abi(js.idx);
+        MutSlice { contents, js }
+    }
 }
 
 impl<T> Drop for MutSlice<T> {
@@ -195,7 +214,7 @@ macro_rules! vectors_internal {
             }
         }
 
-        impl ArgFromWasmAbi for &'_ [$t] {
+        impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &[$t] {
             type Anchor = Box<[$t]>;
             type SameButOver<'a> = &'a [$t];
 
@@ -205,25 +224,13 @@ macro_rules! vectors_internal {
             }
         }
 
-        impl RefMutFromWasmAbi for [$t] {
-            type Abi = WasmMutSlice;
+        impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &mut [$t] {
             type Anchor = MutSlice<$t>;
+            type SameButOver<'a> = &'a mut [$t];
 
             #[inline]
-            unsafe fn ref_mut_from_abi(js: WasmMutSlice) -> MutSlice<$t> {
-                let contents = <Box<[$t]>>::from_abi(js.slice);
-                let js = JsValue::from_abi(js.idx);
-                MutSlice { contents, js }
-            }
-        }
-
-        impl LongRefFromWasmAbi for [$t] {
-            type Abi = WasmSlice;
-            type Anchor = Box<[$t]>;
-
-            #[inline]
-            unsafe fn long_ref_from_abi(js: WasmSlice) -> Box<[$t]> {
-                <Box<[$t]>>::from_abi(js)
+            fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                anchor
             }
         }
     };
@@ -377,23 +384,13 @@ impl OptionIntoWasmAbi for &str {
     }
 }
 
-impl ArgFromWasmAbi for &'_ str {
+impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &str {
     type Anchor = String;
     type SameButOver<'a> = &'a str;
 
     #[inline]
     fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
         anchor
-    }
-}
-
-impl LongRefFromWasmAbi for str {
-    type Abi = WasmSlice;
-    type Anchor = String;
-
-    #[inline]
-    unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-        String::from_abi(js)
     }
 }
 
