@@ -327,7 +327,7 @@ impl ToTokens for ast::Struct {
             impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a #name {
                 type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
 
-                fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
+                fn arg_from_anchor(anchor: &'a mut <Self as #wasm_bindgen::convert::AnchoredArg<LONG_LIVED>>::Anchor) -> Self {
                     anchor
                 }
             }
@@ -336,7 +336,7 @@ impl ToTokens for ast::Struct {
             impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a mut #name {
                 type Anchor = #wasm_bindgen::__rt::RcRefMut<#name>;
 
-                fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
+                fn arg_from_anchor(anchor: &'a mut <Self as #wasm_bindgen::convert::AnchoredArg<LONG_LIVED>>::Anchor) -> Self {
                     anchor
                 }
             }
