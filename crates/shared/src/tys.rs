@@ -41,3 +41,11 @@ tys! {
     CLAMPED
     NONNULL
 }
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[repr(u32)]
+pub enum ClosureKind {
+    Ref,
+    RefMut,
+    BoxOnce,
+}

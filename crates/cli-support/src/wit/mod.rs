@@ -17,6 +17,7 @@ mod outgoing;
 mod standard;
 pub use self::nonstandard::*;
 pub use self::standard::*;
+use wasm_bindgen_shared::tys::ClosureKind;
 
 struct Context<'a> {
     start_found: bool,
@@ -202,7 +203,7 @@ impl<'a> Context<'a> {
                     id,
                     AuxImport::Closure {
                         dtor: descriptor.dtor_idx,
-                        mutable: descriptor.mutable,
+                        mutable: descriptor.kind != ClosureKind::Ref,
                         adapter,
                     },
                 );

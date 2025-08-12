@@ -346,7 +346,7 @@ where
             }
             inform(destroy::<T> as usize as u32);
 
-            inform(T::IS_MUT as u32);
+            inform(T::KIND as u32);
             T::describe();
         }
 
@@ -388,13 +388,7 @@ where
     pub fn forget(self) {
         drop(self.into_js_value());
     }
-}
 
-#[cfg(any())]
-// NB: we use a specific `T` for this `Closure<T>` impl block to avoid every
-// call site having to provide an explicit, turbo-fished type like
-// `Closure::<dyn FnOnce()>::once(...)`.
-impl Closure<dyn FnOnce()> {
     /// Create a `Closure` from a function that can only be called once.
     ///
     /// Since we have no way of enforcing that JS cannot attempt to call this
@@ -422,11 +416,8 @@ impl Closure<dyn FnOnce()> {
     /// // is `FnMut`, even though `f` is `FnOnce`.
     /// let closure: Closure<dyn FnMut() -> String> = Closure::once(f);
     /// ```
-    pub fn once<F, A, R>(fn_once: F) -> Closure<F::FnMut>
-    where
-        F: 'static + WasmClosureFnOnce<A, R>,
-    {
-        Closure::wrap(fn_once.into_fn_mut())
+    pub fn once<F: WasmClosureFnOnce<T>>(fn_once: F) -> Self {
+        Closure::wrap(fn_once.box_once())
     }
 
     /// Convert a `FnOnce(A...) -> R` into a JavaScript `Function` object.
@@ -449,20 +440,14 @@ impl Closure<dyn FnOnce()> {
     ///
     /// assert!(f.is_instance_of::<js_sys::Function>());
     /// ```
-    pub fn once_into_js<F, A, R>(fn_once: F) -> JsValue
-    where
-        F: 'static + WasmClosureFnOnce<A, R>,
-    {
-        fn_once.into_js_function()
+    pub fn once_into_js<F: WasmClosureFnOnce<T>>(fn_once: F) -> JsValue {
+        Self::once(fn_once).into_js_value()
     }
 }
 
-/// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
-/// will throw if ever called more than once.
 #[doc(hidden)]
-pub trait WasmClosureFnOnce<FnMut: ?Sized + 'static + WasmClosure>: 'static {
-    fn into_fn_mut(self) -> Box<FnMut>;
-    fn into_js_function(self) -> JsValue;
+pub trait WasmClosureFnOnce<F: ?Sized + WasmClosure> {
+    fn box_once(self) -> Box<F>;
 }
 
 impl<T: ?Sized> AsRef<JsValue> for Closure<T> {
@@ -542,7 +527,7 @@ where
 /// implement yourself.
 #[doc(hidden)]
 pub trait WasmClosure: WasmDescribe {
-    const IS_MUT: bool;
+    const KIND: ClosureKind;
 }
 
 /// An internal trait for the `Closure` type.
@@ -550,6 +535,6 @@ pub trait WasmClosure: WasmDescribe {
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub trait IntoWasmClosure<T: ?Sized> {
+pub trait IntoWasmClosure<T: ?Sized + WasmClosure> {
     fn unsize(self: Box<Self>) -> Box<T>;
 }

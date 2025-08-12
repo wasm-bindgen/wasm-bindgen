@@ -17,11 +17,11 @@ pub fn foo(_a: u32) {}
 
 #[wasm_bindgen]
 extern "C" {
-    fn test(a: &str);
+    // fn test(a: &str);
 
     type Js;
-    #[wasm_bindgen(constructor)]
-    fn new() -> Js;
-    #[wasm_bindgen(method, structural)]
-    fn init(this: &Js);
+    // #[wasm_bindgen(constructor)]
+    // fn new() -> Js;
+    // #[wasm_bindgen(method, structural)]
+    // fn init(this: &Js);
 }

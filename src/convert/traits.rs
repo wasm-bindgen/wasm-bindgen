@@ -90,28 +90,26 @@ pub trait FromWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait ArgFromWasmAbi<const LONG_LIVED: bool>: Sized + WasmDescribe {
-    /// The type that holds the reference to `Self` for the duration of the
-    /// invocation of the function that has an `&Self` parameter. This is
-    /// required to ensure that the lifetimes don't persist beyond one function
-    /// call, and so that they remain anonymous.
+pub trait AnchoredArg<const LONG_LIVED: bool>: Sized + WasmDescribe {
     type Anchor: FromWasmAbi;
-    type SameButOver<'a>;
+}
 
+pub trait ArgFromWasmAbi<'a, const LONG_LIVED: bool>: AnchoredArg<LONG_LIVED> {
     /// Recover a `Self::Anchor` from `Self::Abi`.
     ///
     /// # Safety
     ///
     /// Same as `FromWasmAbi::from_abi`.
-    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_>;
+    fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self;
 }
 
-impl<const LONG_LIVED: bool, T: FromWasmAbi> ArgFromWasmAbi<LONG_LIVED> for T {
+impl<const LONG_LIVED: bool, T: FromWasmAbi> AnchoredArg<LONG_LIVED> for T {
     type Anchor = ManuallyDrop<T>;
-    type SameButOver<'a> = T;
+}
 
+impl<const LONG_LIVED: bool, T: FromWasmAbi> ArgFromWasmAbi<'_, LONG_LIVED> for T {
     #[inline]
-    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self {
         unsafe { ManuallyDrop::take(anchor) }
     }
 }
@@ -353,7 +351,7 @@ pub trait RefFromWasmAbi: WasmDescribe {
 #[allow(deprecated)]
 impl<T: ?Sized + WasmDescribe, Anchor: FromWasmAbi + Deref<Target = Self>> RefFromWasmAbi for T
 where
-    for<'a> &'a T: ArgFromWasmAbi<false, Anchor = Anchor>,
+    for<'a> &'a T: AnchoredArg<false, Anchor = Anchor>,
 {
     type Abi = Anchor::Abi;
     type Anchor = Anchor;
@@ -377,7 +375,7 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 impl<T: ?Sized + WasmDescribe, Anchor: FromWasmAbi + DerefMut<Target = Self>> RefMutFromWasmAbi
     for T
 where
-    for<'a> &'a mut T: ArgFromWasmAbi<false, Anchor = Anchor>,
+    for<'a> &'a mut T: ArgFromWasmAbi<'a, false, Anchor = Anchor>,
 {
     type Abi = Anchor::Abi;
     type Anchor = Anchor;
@@ -400,7 +398,7 @@ pub trait LongRefFromWasmAbi: WasmDescribe {
 #[allow(deprecated)]
 impl<T: ?Sized + WasmDescribe, Anchor: FromWasmAbi + Borrow<Self>> LongRefFromWasmAbi for T
 where
-    for<'a> &'a mut T: ArgFromWasmAbi<true, Anchor = Anchor>,
+    for<'a> &'a mut T: ArgFromWasmAbi<'a, true, Anchor = Anchor>,
 {
     type Abi = Anchor::Abi;
     type Anchor = Anchor;

@@ -6,7 +6,7 @@ use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
-use crate::convert::{ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, TryFromJsValue};
+use crate::convert::{AnchoredArg, ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, TryFromJsValue};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
 use crate::describe::WasmDescribe;
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
@@ -446,22 +446,24 @@ impl IntoWasmAbi for &JsValue {
     }
 }
 
-impl ArgFromWasmAbi<false> for &'_ JsValue {
+impl AnchoredArg<false> for &'_ JsValue {
     type Anchor = ManuallyDrop<JsValue>;
-    type SameButOver<'a> = &'a JsValue;
+}
 
+impl<'a> ArgFromWasmAbi<'a, false> for &'a JsValue {
     #[inline]
-    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+    fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
         anchor
     }
 }
 
-impl ArgFromWasmAbi<true> for &'_ JsValue {
+impl AnchoredArg<true> for &'_ JsValue {
     type Anchor = JsValue;
-    type SameButOver<'a> = &'a JsValue;
+}
 
+impl<'a> ArgFromWasmAbi<'a, true> for &'a JsValue {
     #[inline]
-    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+    fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
         anchor
     }
 }

@@ -58,7 +58,7 @@ pub struct Function {
 pub struct Closure {
     pub dtor_idx: u32,
     pub function: Function,
-    pub mutable: bool,
+    pub kind: ClosureKind,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -115,7 +115,6 @@ impl Descriptor {
                     _ => Descriptor::Ref(Box::new(contents)),
                 }
             }
-            SLICE => Descriptor::Slice(Box::new(Descriptor::_decode(data, clamped))),
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
             OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
@@ -218,15 +217,21 @@ fn get_string(data: &mut &[u32]) -> String {
 impl Closure {
     fn decode(data: &mut &[u32]) -> Closure {
         let dtor_idx = get(data);
-        let mutable = match get(data) {
-            0 => false,
-            1 => true,
-            other => panic!("expected bool value, got {other}"),
+
+        const REF: u32 = ClosureKind::Ref as u32;
+        const REF_MUT: u32 = ClosureKind::RefMut as u32;
+        const BOX_ONCE: u32 = ClosureKind::BoxOnce as u32;
+
+        let kind = match get(data) {
+            REF => ClosureKind::Ref,
+            REF_MUT => ClosureKind::RefMut,
+            BOX_ONCE => ClosureKind::BoxOnce,
+            other => panic!("invalid closure kind {other}"),
         };
         assert_eq!(get(data), FUNCTION);
         Closure {
             dtor_idx,
-            mutable,
+            kind,
             function: Function::decode(data),
         }
     }

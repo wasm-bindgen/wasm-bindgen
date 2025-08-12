@@ -324,21 +324,19 @@ impl ToTokens for ast::Struct {
             };
 
             #[automatically_derived]
-            impl<const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<LONG_LIVED> for &#name {
+            impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a #name {
                 type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
-                type SameButOver<'a> = &'a #name;
 
-                fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
                     anchor
                 }
             }
 
             #[automatically_derived]
-            impl<const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<LONG_LIVED> for &mut #name {
+            impl<'a, const LONG_LIVED: bool> #wasm_bindgen::convert::ArgFromWasmAbi<'a, LONG_LIVED> for &'a mut #name {
                 type Anchor = #wasm_bindgen::__rt::RcRefMut<#name>;
-                type SameButOver<'a> = &'a mut #name;
 
-                fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
                     anchor
                 }
             }
@@ -566,7 +564,7 @@ impl TryToTokens for ast::Export {
                 let mut me = unsafe { #wasm_bindgen::convert::FromWasmAbi::from_abi(me) };
             });
             converted_arguments.push(quote! {
-                #wasm_bindgen::convert::ArgFromWasmAbi::<#long_lived>::arg_from_anchor(&mut me)
+                #wasm_bindgen::convert::ArgFromWasmAbi::<'_, #long_lived>::arg_from_anchor(&mut me)
             });
         }
 
@@ -576,15 +574,14 @@ impl TryToTokens for ast::Export {
             let ty = &*arg.pat_type.ty;
 
             argtys.push(ty);
-            let ty_as_arg = quote! { <#ty as #wasm_bindgen::convert::ArgFromWasmAbi<#long_lived>> };
-            let anchor_ty = quote! { <#ty_as_arg::Anchor as #wasm_bindgen::convert::FromWasmAbi> };
+            let anchor_ty = quote! { <<#ty as #wasm_bindgen::convert::AnchoredArg<#long_lived>>::Anchor as #wasm_bindgen::convert::FromWasmAbi> };
             let abi = quote! { #anchor_ty::Abi };
             let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
             args.extend(prim_args);
             arg_conversions.push(quote! {
                 let mut #ident = unsafe { #anchor_ty::from_abi_prims(#(#prim_names),*) };
             });
-            converted_arguments.push(quote! { #ty_as_arg::arg_from_anchor(&mut #ident) });
+            converted_arguments.push(quote! { <#ty as #wasm_bindgen::convert::ArgFromWasmAbi<'_, #long_lived>>::arg_from_anchor(&mut #ident) });
         }
         let syn_unit = syn::Type::Tuple(syn::TypeTuple {
             elems: Default::default(),
@@ -868,7 +865,7 @@ impl ToTokens for ast::ImportType {
                 use #wasm_bindgen::convert::TryFromJsValue;
                 use #wasm_bindgen::convert::{IntoWasmAbi, FromWasmAbi};
                 use #wasm_bindgen::convert::{OptionIntoWasmAbi, OptionFromWasmAbi};
-                use #wasm_bindgen::convert::ArgFromWasmAbi;
+                use #wasm_bindgen::convert::{AnchoredArg, ArgFromWasmAbi};
                 use #wasm_bindgen::describe::WasmDescribe;
                 use #wasm_bindgen::{JsValue, JsCast, JsObject};
                 use #wasm_bindgen::__rt::core;
@@ -935,19 +932,24 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &'a #rust_name
+                impl<'a, const LONG_LIVED: bool> AnchoredArg<LONG_LIVED> for &'a #rust_name
+                where
+                    &'a JsValue: AnchoredArg<LONG_LIVED>,
+                {
+                    type Anchor = <&'a JsValue as AnchoredArg<LONG_LIVED>>::Anchor;
+                }
+
+                #[automatically_derived]
+                impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<'a, LONG_LIVED> for &'a #rust_name
                 // Technically this is always true, but Rust trait resolver doesn't yet understand
                 // that having an implementation for both `ArgFromWasmAbi<false>` and `ArgFromWasmAbi<true>`
                 // is the same as having an implementation for arbitrary `ArgFromWasmAbi<const bool>`.
                 where
-                    for<'b> &'a JsValue: ArgFromWasmAbi<LONG_LIVED, Anchor: core::ops::Deref<Target = JsValue>>,
+                    &'a JsValue: ArgFromWasmAbi<'a, LONG_LIVED>,
                 {
-                    type Anchor = <&'a JsValue as ArgFromWasmAbi<LONG_LIVED>>::Anchor;
-                    type SameButOver<'b> = &'b #rust_name;
-
                     #[inline]
-                    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
-                        (&**anchor).unchecked_ref()
+                    fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
+                        <&'a JsValue as ArgFromWasmAbi<'a, LONG_LIVED>>::arg_from_anchor(anchor).unchecked_ref()
                     }
                 }
 

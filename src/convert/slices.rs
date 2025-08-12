@@ -9,7 +9,7 @@ use crate::__wbindgen_copy_to_typed_array;
 use crate::cast::JsObject;
 use crate::convert::{js_value_vector_from_abi, js_value_vector_into_abi};
 use crate::convert::{
-    ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
+    AnchoredArg, ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
     VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
@@ -214,22 +214,24 @@ macro_rules! vectors_internal {
             }
         }
 
-        impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &[$t] {
+        impl<const LONG_LIVED: bool> AnchoredArg<LONG_LIVED> for &'_ [$t] {
             type Anchor = Box<[$t]>;
-            type SameButOver<'a> = &'a [$t];
+        }
 
+        impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<'a, LONG_LIVED> for &'a [$t] {
             #[inline]
-            fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+            fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
                 anchor
             }
         }
 
-        impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &mut [$t] {
+        impl<const LONG_LIVED: bool> AnchoredArg<LONG_LIVED> for &'_ mut [$t] {
             type Anchor = MutSlice<$t>;
-            type SameButOver<'a> = &'a mut [$t];
+        }
 
+        impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<'a, LONG_LIVED> for &'a mut [$t] {
             #[inline]
-            fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+            fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
                 anchor
             }
         }
@@ -384,12 +386,13 @@ impl OptionIntoWasmAbi for &str {
     }
 }
 
-impl<const LONG_LIVED: bool> ArgFromWasmAbi<LONG_LIVED> for &str {
+impl<const LONG_LIVED: bool> AnchoredArg<LONG_LIVED> for &'_ str {
     type Anchor = String;
-    type SameButOver<'a> = &'a str;
+}
 
+impl<'a, const LONG_LIVED: bool> ArgFromWasmAbi<'a, LONG_LIVED> for &'a str {
     #[inline]
-    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+    fn arg_from_anchor(anchor: &'a mut Self::Anchor) -> Self {
         anchor
     }
 }

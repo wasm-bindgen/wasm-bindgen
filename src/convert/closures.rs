@@ -1,28 +1,31 @@
 #![allow(clippy::fn_to_numeric_cast)]
+#![allow(non_snake_case)]
+#![allow(non_camel_case_types)]
 
 use alloc::boxed::Box;
 use core::mem;
 
 use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
-use crate::convert::ArgFromWasmAbi;
+use crate::convert::{AnchoredArg, ArgFromWasmAbi};
 use crate::convert::{IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::throw_str;
 use crate::FromWasmAbi;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
+use wasm_bindgen_shared::tys::ClosureKind;
 
 type Ref<'f, F> = &'f F;
 type RefMut<'f, F> = &'f mut F;
-type RefOnce<'f, F> = Box<F>;
+type BoxOnce<'f, F> = Box<F>;
 
 macro_rules! stack_closures {
     (@ $ref:ident $Fn:ident $cnt:tt $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {const _: () = {
         #[allow(coherence_leak_check)]
         impl<$($var,)* R> WasmDescribe for dyn for<'a> $Fn($($var),*) -> R + '_
         where
-            $($var: ArgFromWasmAbi<false>,)*
+            $($var: AnchoredArg<false> + for<'a> ArgFromWasmAbi<'a, false>,)*
             R: ReturnWasmAbi,
         {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
@@ -38,16 +41,16 @@ macro_rules! stack_closures {
 
         impl<$($var,)* R> WasmClosure for dyn for<'a> $Fn($($var),*) -> R + '_
         where
-            $($var: ArgFromWasmAbi<false>,)*
+            $($var: AnchoredArg<false> + for<'a> ArgFromWasmAbi<'a, false>,)*
             R: ReturnWasmAbi,
         {
-            const IS_MUT: bool = false;
+            const KIND: ClosureKind = ClosureKind::$ref;
         }
 
         #[allow(coherence_leak_check)]
         impl<'f, $($var,)* R> IntoWasmAbi for $ref<'f, dyn for<'a> $Fn($($var),*) -> R + '_>
         where
-            $($var: 'f + ArgFromWasmAbi<false>,)*
+            $($var: for<'a> ArgFromWasmAbi<'a, false>,)*
             R: ReturnWasmAbi,
         {
             type Abi = WasmSlice;
@@ -61,7 +64,7 @@ macro_rules! stack_closures {
         }
 
         #[allow(non_snake_case)]
-        unsafe extern "C" fn invoke<$($var: ArgFromWasmAbi<false>,)* R: ReturnWasmAbi>(
+        unsafe extern "C" fn invoke<$($var: AnchoredArg<false> + for<'a> ArgFromWasmAbi<'a, false>,)* R: ReturnWasmAbi>(
             a: usize,
             b: usize,
             $(
@@ -74,7 +77,7 @@ macro_rules! stack_closures {
             if a == 0 {
                 throw_str("closure invoked after being dropped");
             }
-            let f: $ref<'_, dyn $Fn($($var::SameButOver<'_>),*) -> R + '_> = mem::transmute((a, b));
+            let f: $ref<'_, dyn for<'a> $Fn($($var),*) -> R + '_> = mem::transmute((a, b));
             $(
                 let mut $var = <$var::Anchor as FromWasmAbi>::from_abi_prims($arg1, $arg2, $arg3, $arg4);
             )*
@@ -83,20 +86,45 @@ macro_rules! stack_closures {
             )*);
             ret.return_abi().into()
         }
-
-        impl<T, $($var,)* R> IntoWasmClosure<dyn for<'a> $Fn($($var),*) -> R> for T
-        where
-            $($var: ArgFromWasmAbi<false>,)*
-            T: for<'a> $Fn($($var),*) -> R + 'static,
-        {
-            fn unsize(self: Box<Self>) -> Box<dyn for<'a> $Fn($($var),*) -> R> { self }
-        }
     };};
 
     ($(($cnt:tt $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*))*) => ($(
         stack_closures!(@ Ref Fn $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
         stack_closures!(@ RefMut FnMut $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
-        stack_closures!(@ RefOnce FnOnce $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+        stack_closures!(@ BoxOnce FnOnce $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+
+        impl<T, $($var,)* R> IntoWasmClosure<dyn for<'a> Fn($($var),*) -> R> for T
+        where
+            $($var: AnchoredArg<false> + for<'a> ArgFromWasmAbi<'a, false>,)*
+            R: ReturnWasmAbi,
+            T: for<'a> Fn($($var),*) -> R + 'static,
+        {
+            fn unsize(self: Box<Self>) -> Box<dyn for<'a> Fn($($var),*) -> R> { self }
+        }
+
+        impl<T, $($var,)* R> IntoWasmClosure<dyn for<'a> FnMut($($var),*) -> R> for T
+        where
+            $($var: AnchoredArg<false> + for<'a> ArgFromWasmAbi<'a, false>,)*
+            R: ReturnWasmAbi,
+            T: for<'a> FnMut($($var),*) -> R + 'static,
+        {
+            fn unsize(self: Box<Self>) -> Box<dyn for<'a> FnMut($($var),*) -> R> { self }
+        }
+
+        impl<T, $($var,)* R> WasmClosureFnOnce<dyn for<'a> FnMut($($var),*) -> R> for T
+        where
+            $($var: AnchoredArg<false> + for<'a> ArgFromWasmAbi<'a, false>,)*
+            R: ReturnWasmAbi,
+            T: for<'a> FnOnce($($var),*) -> R + 'static,
+        {
+            fn box_once(self) -> Box<dyn for<'a> FnMut($($var),*) -> R> {
+                let mut f = Some(self);
+
+                Box::new(move |$($var),*| {
+                    f.take().expect_throw("FnOnce called more than once")($($var),*)
+                })
+            }
+        }
     )*);
 }
 
