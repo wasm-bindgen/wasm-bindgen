@@ -555,28 +555,24 @@ impl TryToTokens for ast::Export {
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
         let long_lived = self.function.r#async;
-        let receiver = match self.method_self {
-            Some(_) => {
-                args.push(quote! { me: u32 });
-                let class = self.rust_class.as_ref().unwrap();
-                arg_conversions.push(quote! {
-                    let mut me_anchor = unsafe {
-                        #wasm_bindgen::convert::FromWasmAbi::from_abi(me)
-                    };
-                    let me = <#class as #wasm_bindgen::convert::ArgFromWasmAbi<#long_lived>>::arg_from_anchor(&mut me_anchor);
-                });
-                quote! { me.#name }
-            }
-            None => match &self.rust_class {
-                Some(class) => quote! { #class::#name },
-                None => quote! { #name },
-            },
+        let receiver = match &self.rust_class {
+            Some(class) => quote! { #class::#name },
+            None => quote! { #name },
         };
+
+        if self.method_self.is_some() {
+            args.push(quote! { me: u32 });
+            arg_conversions.push(quote! {
+                let mut me = unsafe { #wasm_bindgen::convert::FromWasmAbi::from_abi(me) };
+            });
+            converted_arguments.push(quote! {
+                #wasm_bindgen::convert::ArgFromWasmAbi::<#long_lived>::arg_from_anchor(&mut me)
+            });
+        }
 
         let mut argtys = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ident = Ident::new(&format!("arg{i}"), Span::call_site());
-            let ident_anchor = Ident::new(&format!("{ident}_anchor"), ident.span());
             let ty = &*arg.pat_type.ty;
 
             argtys.push(ty);
@@ -586,11 +582,9 @@ impl TryToTokens for ast::Export {
             let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
             args.extend(prim_args);
             arg_conversions.push(quote! {
-                let mut #ident_anchor = unsafe { #anchor_ty::from_abi_prims(#(#prim_names),*) };
-                let #ident = #ty_as_arg::arg_from_anchor(&mut #ident_anchor);
+                let mut #ident = unsafe { #anchor_ty::from_abi_prims(#(#prim_names),*) };
             });
-
-            converted_arguments.push(quote! { #ident });
+            converted_arguments.push(quote! { #ty_as_arg::arg_from_anchor(&mut #ident) });
         }
         let syn_unit = syn::Type::Tuple(syn::TypeTuple {
             elems: Default::default(),

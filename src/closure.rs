@@ -390,6 +390,7 @@ where
     }
 }
 
+#[cfg(any())]
 // NB: we use a specific `T` for this `Closure<T>` impl block to avoid every
 // call site having to provide an explicit, turbo-fished type like
 // `Closure::<dyn FnOnce()>::once(...)`.
@@ -459,11 +460,8 @@ impl Closure<dyn FnOnce()> {
 /// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
 /// will throw if ever called more than once.
 #[doc(hidden)]
-pub trait WasmClosureFnOnce<A, R>: 'static {
-    type FnMut: ?Sized + 'static + WasmClosure;
-
-    fn into_fn_mut(self) -> Box<Self::FnMut>;
-
+pub trait WasmClosureFnOnce<FnMut: ?Sized + 'static + WasmClosure>: 'static {
+    fn into_fn_mut(self) -> Box<FnMut>;
     fn into_js_function(self) -> JsValue;
 }
 

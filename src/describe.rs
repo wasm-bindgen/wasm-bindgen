@@ -92,11 +92,10 @@ impl<T> WasmDescribe for NonNull<T> {
     }
 }
 
-impl<T: WasmDescribe> WasmDescribe for [T] {
+impl<T: WasmDescribeVector> WasmDescribe for [T] {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
-        inform(SLICE);
-        T::describe();
+        T::describe_vector();
     }
 }
 
@@ -112,6 +111,13 @@ impl<T: WasmDescribe + ?Sized> WasmDescribe for &mut T {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(REFMUT);
+        T::describe();
+    }
+}
+
+impl<T: WasmDescribe + ?Sized> WasmDescribe for Box<T> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
         T::describe();
     }
 }
@@ -142,13 +148,6 @@ impl<T: JsObject> WasmDescribeVector for T {
     fn describe_vector() {
         inform(VECTOR);
         T::describe();
-    }
-}
-
-impl<T: WasmDescribeVector> WasmDescribe for Box<[T]> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        T::describe_vector();
     }
 }
 

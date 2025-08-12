@@ -28,7 +28,6 @@ tys! {
     REF
     REFMUT
     LONGREF
-    SLICE
     VECTOR
     EXTERNREF
     NAMED_EXTERNREF

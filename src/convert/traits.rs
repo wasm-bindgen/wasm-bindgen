@@ -90,7 +90,7 @@ pub trait FromWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait ArgFromWasmAbi<const LONG_LIVED: bool>: WasmDescribe {
+pub trait ArgFromWasmAbi<const LONG_LIVED: bool>: Sized + WasmDescribe {
     /// The type that holds the reference to `Self` for the duration of the
     /// invocation of the function that has an `&Self` parameter. This is
     /// required to ensure that the lifetimes don't persist beyond one function
