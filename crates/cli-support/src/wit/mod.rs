@@ -167,9 +167,7 @@ impl<'a> Context<'a> {
 
             // If any closures exist we need to prevent the function table from
             // getting gc'd
-            if !closure_imports.is_empty() {
-                self.aux.function_table = self.module.tables.main_function_table()?;
-            }
+            self.aux.function_table = self.module.tables.main_function_table()?;
 
             // Register all the injected closure imports as that they're expected
             // to manufacture a particular type of closure.
@@ -199,7 +197,7 @@ impl<'a> Context<'a> {
                 let mut function = descriptor.function.clone();
                 function.arguments.insert(0, Descriptor::I32);
                 function.arguments.insert(0, Descriptor::I32);
-                let adapter = self.table_element_adapter(descriptor.shim_idx, function)?;
+                let adapter = self.table_element_adapter(descriptor.function.shim_idx, function)?;
                 self.aux.import_map.insert(
                     id,
                     AuxImport::Closure {

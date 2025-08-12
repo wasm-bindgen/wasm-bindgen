@@ -102,7 +102,7 @@ impl Default for ApiStability {
     }
 }
 
-fn parse_source(source: &str) -> Result<Vec<weedle::Definition>> {
+fn parse_source(source: &str) -> Result<Vec<weedle::Definition<'_>>> {
     match weedle::Definitions::parse(source) {
         Ok(("", parsed)) => Ok(parsed),
 

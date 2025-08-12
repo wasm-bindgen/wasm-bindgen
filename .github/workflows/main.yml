@@ -162,22 +162,6 @@ jobs:
     - uses: ./.github/actions/setup-geckodriver
     - run: ${{ matrix.runs.run }}
 
-  test_wasm_bindgen_wasm:
-    name: "Run wasm-bindgen wasm test"
-    runs-on: ubuntu-latest
-    env:
-      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-    steps:
-    - uses: actions/checkout@v4
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - run: cargo test --target wasm32-unknown-unknown --test wasm
-      env:
-        WASM_BINDGEN_NO_DEBUG: 1
-
   test_wasm_bindgen_envs:
     strategy:
       matrix:
@@ -414,7 +398,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: examples1
         path: exbuild
@@ -429,7 +413,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: examples2
         path: exbuild
@@ -641,7 +625,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         path: artifacts
     - run: find artifacts

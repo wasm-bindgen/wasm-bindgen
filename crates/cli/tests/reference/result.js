@@ -4,12 +4,6 @@ export function __wbg_set_wasm(val) {
 }
 
 
-const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
-
-let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
-
 let cachedUint8ArrayMemory0 = null;
 
 function getUint8ArrayMemory0() {
@@ -19,9 +13,27 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
+const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
+
+let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+cachedTextDecoder.decode();
+
+const MAX_SAFARI_DECODE_BYTES = 2146435072;
+let numBytesDecoded = 0;
+function decodeText(ptr, len) {
+    numBytesDecoded += len;
+    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
+        cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder.decode();
+        numBytesDecoded = len;
+    }
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    return decodeText(ptr, len);
 }
 
 function takeFromExternrefTable0(idx) {
@@ -69,8 +81,13 @@ export function result_i32() {
     return ret[0];
 }
 
-export function __wbindgen_error_new(arg0, arg1) {
-    const ret = new Error(getStringFromWasm0(arg0, arg1));
+export function __wbg_Error_fcfdb1a705a32d74(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
+    return ret;
+};
+
+export function __wbg_cast_55f8fbc0872e729e(arg0) {
+    const ret = /* cast */(arg0);
     return ret;
 };
 
@@ -83,11 +100,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_number_new(arg0) {
-    const ret = arg0;
-    return ret;
 };
 
 export function __wbindgen_throw(arg0, arg1) {
