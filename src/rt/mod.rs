@@ -80,6 +80,9 @@ impl<T> Deref for LazyCell<T> {
     }
 }
 
+use crate::convert::FromWasmAbi;
+use crate::describe::{inform, WasmDescribe};
+use wasm_bindgen_shared::tys::{REF, REFMUT};
 #[cfg(not(target_feature = "atomics"))]
 pub use LazyCell as LazyLock;
 
@@ -388,8 +391,17 @@ pub struct RcRef<T: ?Sized + 'static> {
     _rc: Rc<WasmRefCell<T>>,
 }
 
-impl<T> RcRef<T> {
-    pub unsafe fn from_abi(js: u32) -> Self {
+impl<T: ?Sized + WasmDescribe> WasmDescribe for RcRef<T> {
+    fn describe() {
+        inform(REF);
+        T::describe();
+    }
+}
+
+impl<T: WasmDescribe> FromWasmAbi for RcRef<T> {
+    type Abi = u32;
+
+    unsafe fn from_abi(js: u32) -> Self {
         let rc = WasmRefCell::rc_from_abi(js);
 
         let ref_ = unsafe { (*Rc::as_ptr(&rc)).borrow() };
@@ -423,8 +435,17 @@ pub struct RcRefMut<T: ?Sized + 'static> {
     _rc: Rc<WasmRefCell<T>>,
 }
 
-impl<T> RcRefMut<T> {
-    pub unsafe fn from_abi(js: u32) -> Self {
+impl<T: ?Sized + WasmDescribe> WasmDescribe for RcRefMut<T> {
+    fn describe() {
+        inform(REFMUT);
+        T::describe();
+    }
+}
+
+impl<T: WasmDescribe> FromWasmAbi for RcRefMut<T> {
+    type Abi = u32;
+
+    unsafe fn from_abi(js: u32) -> Self {
         let rc = WasmRefCell::rc_from_abi(js);
 
         let ref_ = unsafe { (*Rc::as_ptr(&rc)).borrow_mut() };

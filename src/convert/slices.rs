@@ -196,17 +196,11 @@ macro_rules! vectors_internal {
         }
 
         impl ArgFromWasmAbi for &'_ [$t] {
-            type Abi = WasmSlice;
             type Anchor = Box<[$t]>;
-
             type SameButOver<'a> = &'a [$t];
 
             #[inline]
-            unsafe fn arg_from_abi(
-                js: Self::Abi,
-                anchor: &mut Self::Anchor,
-            ) -> Self::SameButOver<'_> {
-                *anchor = <Box<[$t]>>::from_abi(js);
+            fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
                 anchor
             }
         }
@@ -384,14 +378,12 @@ impl OptionIntoWasmAbi for &str {
 }
 
 impl ArgFromWasmAbi for &'_ str {
-    type Abi = <&'static [u8] as ArgFromWasmAbi>::Abi;
-    type Anchor = <&'static [u8] as ArgFromWasmAbi>::Anchor;
-
+    type Anchor = String;
     type SameButOver<'a> = &'a str;
 
     #[inline]
-    unsafe fn arg_from_abi(js: Self::Abi, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
-        str::from_utf8_unchecked(<&[u8]>::arg_from_abi(js, anchor))
+    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+        anchor
     }
 }
 

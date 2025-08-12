@@ -325,13 +325,11 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::ArgFromWasmAbi for &#name {
-                type Abi = u32;
-                type Anchor = Option<#wasm_bindgen::__rt::RcRef<#name>>;
-
+                type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
                 type SameButOver<'a> = &'a #name;
 
-                unsafe fn arg_from_abi(js: Self::Abi, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
-                    anchor.insert(#wasm_bindgen::__rt::RcRef::from_abi(js))
+                fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                    anchor
                 }
             }
 
@@ -341,7 +339,7 @@ impl ToTokens for ast::Struct {
                 type Anchor = #wasm_bindgen::__rt::RcRefMut<#name>;
 
                 unsafe fn ref_mut_from_abi(js: Self::Abi) -> Self::Anchor {
-                    #wasm_bindgen::__rt::RcRefMut::from_abi(js)
+                    #wasm_bindgen::convert::FromWasmAbi::from_abi(js)
                 }
             }
 
@@ -351,7 +349,7 @@ impl ToTokens for ast::Struct {
                 type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
 
                 unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
-                    #wasm_bindgen::__rt::RcRef::from_abi(js)
+                    #wasm_bindgen::convert::FromWasmAbi::from_abi(js)
                 }
             }
 
@@ -607,7 +605,11 @@ impl TryToTokens for ast::Export {
                         ),
                     )
                 } else {
-                    (quote!(ArgFromWasmAbi), quote!(arg_from_abi), quote!(&*me))
+                    (
+                        quote!(ArgFromWasmAbi),
+                        quote!(arg_from_anchor),
+                        quote!(&*me),
+                    )
                 };
                 arg_conversions.push(quote! {
                     let me = unsafe {
@@ -674,20 +676,15 @@ impl TryToTokens for ast::Export {
                                 ::borrow(&#ident);
                         });
                     } else {
-                        let abi =
-                            quote! { <&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>::Abi };
+                        let abi = quote! { <<&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>::Anchor as #wasm_bindgen::convert::FromWasmAbi>::Abi };
                         let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
                         args.extend(prim_args);
                         let anchor = Ident::new(&format!("{ident}_anchor"), ident.span());
                         arg_conversions.push(quote! {
-                            let mut #anchor = Default::default();
-                            let #ident = unsafe {
-                                <&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>
-                                    ::arg_from_abi(
-                                        <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*),
-                                        &mut #anchor
-                                    )
+                            let mut #anchor = unsafe {
+                                #wasm_bindgen::convert::FromWasmAbi::from_abi_prims(#(#prim_names),*)
                             };
+                            let #ident = <&#elem as #wasm_bindgen::convert::ArgFromWasmAbi>::arg_from_anchor(&mut #anchor);
                         });
                     }
                 }
@@ -1057,14 +1054,12 @@ impl ToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl ArgFromWasmAbi for &#rust_name {
-                    type Abi = <&'static JsValue as ArgFromWasmAbi>::Abi;
                     type Anchor = <&'static JsValue as ArgFromWasmAbi>::Anchor;
-
                     type SameButOver<'a> = &'a #rust_name;
 
                     #[inline]
-                    unsafe fn arg_from_abi(js: Self::Abi, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
-                        <&JsValue as ArgFromWasmAbi>::arg_from_abi(js, anchor).unchecked_ref()
+                    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
+                        anchor.unchecked_ref()
                     }
                 }
 

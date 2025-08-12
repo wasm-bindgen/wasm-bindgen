@@ -9,6 +9,7 @@ use crate::convert::ArgFromWasmAbi;
 use crate::convert::{IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::throw_str;
+use crate::FromWasmAbi;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
 
@@ -60,24 +61,21 @@ macro_rules! stack_closures {
             a: usize,
             b: usize,
             $(
-            $arg1: <$var::Abi as WasmAbi>::Prim1,
-            $arg2: <$var::Abi as WasmAbi>::Prim2,
-            $arg3: <$var::Abi as WasmAbi>::Prim3,
-            $arg4: <$var::Abi as WasmAbi>::Prim4,
+            $arg1: <<$var::Anchor as FromWasmAbi>::Abi as WasmAbi>::Prim1,
+            $arg2: <<$var::Anchor as FromWasmAbi>::Abi as WasmAbi>::Prim2,
+            $arg3: <<$var::Anchor as FromWasmAbi>::Abi as WasmAbi>::Prim3,
+            $arg4: <<$var::Anchor as FromWasmAbi>::Abi as WasmAbi>::Prim4,
             )*
         ) -> WasmRet<R::Abi> {
             if a == 0 {
                 throw_str("closure invoked after being dropped");
             }
-            let f: &$($mut)? (dyn for<'t> $Fn($(<$var as ArgFromWasmAbi>::SameButOver<'t>),*) -> R + 'static) = mem::transmute((a, b));
+            let f: &$($mut)? (dyn for<'t> $Fn($($var::SameButOver<'t>),*) -> R + 'static) = mem::transmute((a, b));
             $(
-                let mut $var = <$var as ArgFromWasmAbi>::Anchor::default();
-            )*
-            $(
-                let $var = $var::arg_from_abi(<$var as ArgFromWasmAbi>::Abi::join($arg1, $arg2, $arg3, $arg4), &mut $var);
+                let mut $var = <$var::Anchor as FromWasmAbi>::from_abi_prims($arg1, $arg2, $arg3, $arg4);
             )*
             let ret = f($(
-                $var,
+                $var::arg_from_anchor(&mut $var),
             )*);
             ret.return_abi().into()
         }

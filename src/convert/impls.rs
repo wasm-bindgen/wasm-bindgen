@@ -10,6 +10,7 @@ use crate::convert::{
     ArgFromWasmAbi, FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, TryFromJsValue,
 };
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
+use crate::describe::WasmDescribe;
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
 
 // Primitive types can always be passed over the ABI.
@@ -448,14 +449,11 @@ impl IntoWasmAbi for &JsValue {
 }
 
 impl ArgFromWasmAbi for &'_ JsValue {
-    type Abi = u32;
     type Anchor = ManuallyDrop<JsValue>;
-
     type SameButOver<'a> = &'a JsValue;
 
     #[inline]
-    unsafe fn arg_from_abi(js: u32, anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
-        **anchor = JsValue::_new(js);
+    fn arg_from_anchor(anchor: &mut Self::Anchor) -> Self::SameButOver<'_> {
         anchor
     }
 }
@@ -511,6 +509,29 @@ impl<T: FromWasmAbi> FromWasmAbi for Clamped<T> {
     unsafe fn from_abi(js: T::Abi) -> Self {
         Clamped(T::from_abi(js))
     }
+}
+
+impl<T: WasmDescribe> WasmDescribe for ManuallyDrop<T> {
+    #[inline]
+    fn describe() {
+        T::describe();
+    }
+}
+
+impl<T: FromWasmAbi> FromWasmAbi for ManuallyDrop<T> {
+    type Abi = T::Abi;
+
+    #[inline]
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        Self::new(T::from_abi(js))
+    }
+}
+
+impl FromWasmAbi for () {
+    type Abi = ();
+
+    #[inline]
+    unsafe fn from_abi(_: ()) {}
 }
 
 impl IntoWasmAbi for () {
