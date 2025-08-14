@@ -172,116 +172,85 @@ closures! {
     (8 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
 }
 
-impl<A, R> IntoWasmAbi for &(dyn Fn(&A) -> R + '_)
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi,
-{
-    type Abi = WasmSlice;
+// Copy the above impls down here for where there's only one argument and it's a
+// reference. We could add more impls for more kinds of references, but it
+// becomes a combinatorial explosion quickly. Let's see how far we can get with
+// just this one! Maybe someone else can figure out voodoo so we don't have to
+// duplicate.
 
-    fn into_abi(self) -> WasmSlice {
-        unsafe {
-            let (a, b): (usize, usize) = mem::transmute(self);
-            WasmSlice {
-                ptr: a as u32,
-                len: b as u32,
+macro_rules! single_ref_closures {
+    ($Fn:ident $is_mut:literal) => {
+        const _: () = {
+            #[allow(coherence_leak_check)]
+            unsafe impl<A, R> WasmClosure for dyn $Fn(&A) -> R
+            where
+                A: RefFromWasmAbi,
+                R: ReturnWasmAbi + 'static,
+            {
+                const IS_MUT: bool = $is_mut;
             }
-        }
-    }
-}
 
-#[allow(non_snake_case)]
-#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-unsafe extern "C" fn invoke1_ref<A: RefFromWasmAbi, R: ReturnWasmAbi>(
-    a: usize,
-    b: usize,
-    arg1: <A::Abi as WasmAbi>::Prim1,
-    arg2: <A::Abi as WasmAbi>::Prim2,
-    arg3: <A::Abi as WasmAbi>::Prim3,
-    arg4: <A::Abi as WasmAbi>::Prim4,
-) -> WasmRet<R::Abi> {
-    if a == 0 {
-        throw_str("closure invoked after being dropped");
-    }
-    // Scope all local variables before we call `return_abi` to
-    // ensure they're all destroyed as `return_abi` may throw
-    let ret = {
-        let f: &dyn Fn(&A) -> R = mem::transmute((a, b));
-        let arg = <A as RefFromWasmAbi>::ref_from_abi(A::Abi::join(arg1, arg2, arg3, arg4));
-        f(&*arg)
-    };
-    ret.return_abi().into()
-}
+            #[allow(coherence_leak_check)]
+            impl<A, R> IntoWasmAbi for &mut (dyn $Fn(&A) -> R + '_)
+            where
+                A: RefFromWasmAbi,
+                R: ReturnWasmAbi,
+            {
+                type Abi = WasmSlice;
 
-impl<A, R> WasmDescribe for dyn Fn(&A) -> R + '_
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi,
-{
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(FUNCTION);
-        inform(invoke1_ref::<A, R> as usize as u32);
-        inform(1);
-        <&A as WasmDescribe>::describe();
-        <R as WasmDescribe>::describe();
-        <R as WasmDescribe>::describe();
-    }
-}
-
-impl<A, R> IntoWasmAbi for &mut (dyn FnMut(&A) -> R + '_)
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi,
-{
-    type Abi = WasmSlice;
-
-    fn into_abi(self) -> WasmSlice {
-        unsafe {
-            let (a, b): (usize, usize) = mem::transmute(self);
-            WasmSlice {
-                ptr: a as u32,
-                len: b as u32,
+                fn into_abi(self) -> WasmSlice {
+                    unsafe {
+                        let (a, b): (usize, usize) = mem::transmute(self);
+                        WasmSlice {
+                            ptr: a as u32,
+                            len: b as u32,
+                        }
+                    }
+                }
             }
-        }
-    }
-}
 
-#[allow(non_snake_case)]
-#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-unsafe extern "C" fn invoke1_mut_ref<A: RefFromWasmAbi, R: ReturnWasmAbi>(
-    a: usize,
-    b: usize,
-    arg1: <A::Abi as WasmAbi>::Prim1,
-    arg2: <A::Abi as WasmAbi>::Prim2,
-    arg3: <A::Abi as WasmAbi>::Prim3,
-    arg4: <A::Abi as WasmAbi>::Prim4,
-) -> WasmRet<R::Abi> {
-    if a == 0 {
-        throw_str("closure invoked recursively or after being dropped");
-    }
-    // Scope all local variables before we call `return_abi` to
-    // ensure they're all destroyed as `return_abi` may throw
-    let ret = {
-        let f: &mut dyn FnMut(&A) -> R = mem::transmute((a, b));
-        let arg = <A as RefFromWasmAbi>::ref_from_abi(A::Abi::join(arg1, arg2, arg3, arg4));
-        f(&*arg)
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            unsafe extern "C" fn invoke1_ref<A: RefFromWasmAbi, R: ReturnWasmAbi>(
+                a: usize,
+                b: usize,
+                arg1: <A::Abi as WasmAbi>::Prim1,
+                arg2: <A::Abi as WasmAbi>::Prim2,
+                arg3: <A::Abi as WasmAbi>::Prim3,
+                arg4: <A::Abi as WasmAbi>::Prim4,
+            ) -> WasmRet<R::Abi> {
+                if a == 0 {
+                    throw_str("closure invoked recursively or after being dropped");
+                }
+                // Scope all local variables before we call `return_abi` to
+                // ensure they're all destroyed as `return_abi` may throw
+                let ret = {
+                    let f: &mut dyn $Fn(&A) -> R = mem::transmute((a, b));
+                    let arg =
+                        <A as RefFromWasmAbi>::ref_from_abi(A::Abi::join(arg1, arg2, arg3, arg4));
+                    f(&*arg)
+                };
+                ret.return_abi().into()
+            }
+
+            #[allow(coherence_leak_check)]
+            impl<A, R> WasmDescribe for dyn $Fn(&A) -> R + '_
+            where
+                A: RefFromWasmAbi,
+                R: ReturnWasmAbi,
+            {
+                #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+                fn describe() {
+                    inform(FUNCTION);
+                    inform(invoke1_ref::<A, R> as usize as u32);
+                    inform(1);
+                    <&A as WasmDescribe>::describe();
+                    <R as WasmDescribe>::describe();
+                    <R as WasmDescribe>::describe();
+                }
+            }
+        };
     };
-    ret.return_abi().into()
 }
 
-impl<A, R> WasmDescribe for dyn FnMut(&A) -> R + '_
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi,
-{
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(FUNCTION);
-        inform(invoke1_mut_ref::<A, R> as usize as u32);
-        inform(1);
-        <&A as WasmDescribe>::describe();
-        <R as WasmDescribe>::describe();
-        <R as WasmDescribe>::describe();
-    }
-}
+single_ref_closures!(Fn false);
+single_ref_closures!(FnMut true);

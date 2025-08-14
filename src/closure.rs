@@ -557,28 +557,6 @@ pub trait IntoWasmClosure<T: ?Sized> {
     fn unsize(self: Box<Self>) -> Box<T>;
 }
 
-// Copy the above impls down here for where there's only one argument and it's a
-// reference. We could add more impls for more kinds of references, but it
-// becomes a combinatorial explosion quickly. Let's see how far we can get with
-// just this one! Maybe someone else can figure out voodoo so we don't have to
-// duplicate.
-
-unsafe impl<A, R> WasmClosure for dyn Fn(&A) -> R
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi + 'static,
-{
-    const IS_MUT: bool = false;
-}
-
-unsafe impl<A, R> WasmClosure for dyn FnMut(&A) -> R
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi + 'static,
-{
-    const IS_MUT: bool = true;
-}
-
 #[allow(non_snake_case)]
 impl<T, A, R> WasmClosureFnOnce<(&A,), R> for T
 where
