@@ -17,7 +17,7 @@ macro_rules! closures {
 
     (@describe ( $($ty:ty),* $(,)? )) => {
         inform(0 $(+ closures!(@count_one $ty))*);
-        $(<$ty as WasmDescribe>::describe();)*
+        $(<$ty>::describe();)*
     };
 
     (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
@@ -70,8 +70,8 @@ macro_rules! closures {
                 inform(FUNCTION);
                 inform(invoke::<$($var,)* R> as usize as u32);
                 closures!(@describe $FnArgs);
-                <R as WasmDescribe>::describe();
-                <R as WasmDescribe>::describe();
+                R::describe();
+                R::describe();
             }
         }
 
