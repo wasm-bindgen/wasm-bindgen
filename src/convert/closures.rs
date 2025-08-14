@@ -9,7 +9,7 @@ use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::throw_str;
 
 macro_rules! stack_closures {
-    ($( ($cnt:tt $invoke:ident $invoke_mut:ident $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
+    ($( ($cnt:tt $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(const _: () = {
         #[allow(coherence_leak_check)]
         impl<$($var,)* R> IntoWasmAbi for &'_ (dyn Fn($($var),*) -> R + '_)
             where $($var: FromWasmAbi,)*
@@ -26,7 +26,7 @@ macro_rules! stack_closures {
         }
 
         #[allow(non_snake_case)]
-        unsafe extern "C" fn $invoke<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
+        unsafe extern "C" fn invoke<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
             a: usize,
             b: usize,
             $(
@@ -59,7 +59,7 @@ macro_rules! stack_closures {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() {
                 inform(FUNCTION);
-                inform($invoke::<$($var,)* R> as usize as u32);
+                inform(invoke::<$($var,)* R> as usize as u32);
                 inform($cnt);
                 $(<$var as WasmDescribe>::describe();)*
                 <R as WasmDescribe>::describe();
@@ -83,7 +83,7 @@ macro_rules! stack_closures {
         }
 
         #[allow(non_snake_case)]
-        unsafe extern "C" fn $invoke_mut<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
+        unsafe extern "C" fn invoke_mut<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
             a: usize,
             b: usize,
             $(
@@ -116,26 +116,26 @@ macro_rules! stack_closures {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() {
                 inform(FUNCTION);
-                inform($invoke_mut::<$($var,)* R> as usize as u32);
+                inform(invoke_mut::<$($var,)* R> as usize as u32);
                 inform($cnt);
                 $(<$var as WasmDescribe>::describe();)*
                 <R as WasmDescribe>::describe();
                 <R as WasmDescribe>::describe();
             }
         }
-    )*)
+    };)*)
 }
 
 stack_closures! {
-    (0 invoke0 invoke0_mut)
-    (1 invoke1 invoke1_mut A a1 a2 a3 a4)
-    (2 invoke2 invoke2_mut A a1 a2 a3 a4 B b1 b2 b3 b4)
-    (3 invoke3 invoke3_mut A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4)
-    (4 invoke4 invoke4_mut A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4)
-    (5 invoke5 invoke5_mut A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4)
-    (6 invoke6 invoke6_mut A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4)
-    (7 invoke7 invoke7_mut A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4)
-    (8 invoke8 invoke8_mut A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
+    (0)
+    (1 A a1 a2 a3 a4)
+    (2 A a1 a2 a3 a4 B b1 b2 b3 b4)
+    (3 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4)
+    (4 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4)
+    (5 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4)
+    (6 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4)
+    (7 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4)
+    (8 A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
 }
 
 impl<A, R> IntoWasmAbi for &(dyn Fn(&A) -> R + '_)
