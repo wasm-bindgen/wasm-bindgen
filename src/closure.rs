@@ -388,12 +388,7 @@ where
     pub fn forget(self) {
         drop(self.into_js_value());
     }
-}
 
-// NB: we use a specific `T` for this `Closure<T>` impl block to avoid every
-// call site having to provide an explicit, turbo-fished type like
-// `Closure::<dyn FnOnce()>::once(...)`.
-impl Closure<dyn FnOnce()> {
     /// Create a `Closure` from a function that can only be called once.
     ///
     /// Since we have no way of enforcing that JS cannot attempt to call this
@@ -421,10 +416,9 @@ impl Closure<dyn FnOnce()> {
     /// // is `FnMut`, even though `f` is `FnOnce`.
     /// let closure: Closure<dyn FnMut() -> String> = Closure::once(f);
     /// ```
-    pub fn once<F, FnMut>(fn_once: F) -> Closure<FnMut>
+    pub fn once<F>(fn_once: F) -> Self
     where
-        F: WasmClosureFnOnce<FnMut>,
-        FnMut: ?Sized + WasmClosure,
+        F: WasmClosureFnOnce<T>,
     {
         Closure::wrap(fn_once.into_fn_mut())
     }
@@ -449,10 +443,9 @@ impl Closure<dyn FnOnce()> {
     ///
     /// assert!(f.is_instance_of::<js_sys::Function>());
     /// ```
-    pub fn once_into_js<F, FnMut>(fn_once: F) -> JsValue
+    pub fn once_into_js<F>(fn_once: F) -> JsValue
     where
-        F: WasmClosureFnOnce<FnMut>,
-        FnMut: ?Sized,
+        F: WasmClosureFnOnce<T>,
     {
         fn_once.into_js_function()
     }
