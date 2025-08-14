@@ -53,26 +53,12 @@ macro_rules! closures {
             // ensure they're all destroyed as `return_abi` may throw
             let ret = {
                 let f: & $($mut)? dyn $Fn $FnArgs -> R = mem::transmute((a, b));
-
-                $(let $var = $var::Abi::join($arg1, $arg2, $arg3, $arg4);)*
-
+                $(
+                    let $var = $var::Abi::join($arg1, $arg2, $arg3, $arg4);
+                )*
                 f($($var_expr),*)
             };
             ret.return_abi().into()
-        }
-
-        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
-        where
-            Self: WasmDescribe,
-        {
-            const IS_MUT: bool = $is_mut;
-        }
-
-        impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T
-        where
-            T: 'static + $Fn $FnArgs -> R,
-        {
-            fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
         }
 
         impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
@@ -88,6 +74,20 @@ macro_rules! closures {
                 R::describe();
                 R::describe();
             }
+        }
+
+        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
+        where
+            Self: WasmDescribe,
+        {
+            const IS_MUT: bool = $is_mut;
+        }
+
+        impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T
+        where
+            T: 'static + $Fn $FnArgs -> R,
+        {
+            fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
         }
     };);
 
