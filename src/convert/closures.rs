@@ -9,9 +9,9 @@ use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::throw_str;
 
 macro_rules! stack_closures {
-    ($( ($cnt:tt $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(const _: () = {
+    ($Fn:ident $($mut:ident)? $cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         #[allow(coherence_leak_check)]
-        impl<$($var,)* R> IntoWasmAbi for &'_ (dyn Fn($($var),*) -> R + '_)
+        impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn($($var),*) -> R + '_)
             where $($var: FromWasmAbi,)*
                   R: ReturnWasmAbi
         {
@@ -37,12 +37,12 @@ macro_rules! stack_closures {
             )*
         ) -> WasmRet<R::Abi> {
             if a == 0 {
-                throw_str("closure invoked after being dropped");
+                throw_str("closure invoked recursively or after being dropped");
             }
             // Scope all local variables before we call `return_abi` to
             // ensure they're all destroyed as `return_abi` may throw
             let ret = {
-                let f: &dyn Fn($($var),*) -> R = mem::transmute((a, b));
+                let f: & $($mut)? dyn $Fn($($var),*) -> R = mem::transmute((a, b));
                 $(
                     let $var = <$var as FromWasmAbi>::from_abi($var::Abi::join($arg1, $arg2, $arg3, $arg4));
                 )*
@@ -52,7 +52,7 @@ macro_rules! stack_closures {
         }
 
         #[allow(coherence_leak_check)]
-        impl<$($var,)* R> WasmDescribe for dyn Fn($($var),*) -> R + '_
+        impl<$($var,)* R> WasmDescribe for dyn $Fn($($var),*) -> R + '_
             where $($var: FromWasmAbi,)*
                   R: ReturnWasmAbi
         {
@@ -66,64 +66,14 @@ macro_rules! stack_closures {
                 <R as WasmDescribe>::describe();
             }
         }
+    };);
 
-        #[allow(coherence_leak_check)]
-        impl<$($var,)* R> IntoWasmAbi for &'_ mut (dyn FnMut($($var),*) -> R + '_)
-            where $($var: FromWasmAbi,)*
-                  R: ReturnWasmAbi
-        {
-            type Abi = WasmSlice;
-
-            fn into_abi(self) -> WasmSlice {
-                unsafe {
-                    let (a, b): (usize, usize) = mem::transmute(self);
-                    WasmSlice { ptr: a as u32, len: b as u32 }
-                }
-            }
-        }
-
-        #[allow(non_snake_case)]
-        unsafe extern "C" fn invoke_mut<$($var: FromWasmAbi,)* R: ReturnWasmAbi>(
-            a: usize,
-            b: usize,
-            $(
-            $arg1: <$var::Abi as WasmAbi>::Prim1,
-            $arg2: <$var::Abi as WasmAbi>::Prim2,
-            $arg3: <$var::Abi as WasmAbi>::Prim3,
-            $arg4: <$var::Abi as WasmAbi>::Prim4,
-            )*
-        ) -> WasmRet<R::Abi> {
-            if a == 0 {
-                throw_str("closure invoked recursively or after being dropped");
-            }
-            // Scope all local variables before we call `return_abi` to
-            // ensure they're all destroyed as `return_abi` may throw
-            let ret = {
-                let f: &mut dyn FnMut($($var),*) -> R = mem::transmute((a, b));
-                $(
-                    let $var = <$var as FromWasmAbi>::from_abi($var::Abi::join($arg1, $arg2, $arg3, $arg4));
-                )*
-                f($($var),*)
-            };
-            ret.return_abi().into()
-        }
-
-        #[allow(coherence_leak_check)]
-        impl<$($var,)* R> WasmDescribe for dyn FnMut($($var),*) -> R + '_
-            where $($var: FromWasmAbi,)*
-                  R: ReturnWasmAbi
-        {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                inform(FUNCTION);
-                inform(invoke_mut::<$($var,)* R> as usize as u32);
-                inform($cnt);
-                $(<$var as WasmDescribe>::describe();)*
-                <R as WasmDescribe>::describe();
-                <R as WasmDescribe>::describe();
-            }
-        }
-    };)*)
+    ($( ($cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => (
+        $(
+            stack_closures!(Fn $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+            stack_closures!(FnMut mut $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+        )*
+    );
 }
 
 stack_closures! {
