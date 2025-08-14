@@ -13,12 +13,18 @@ use crate::JsValue;
 use crate::UnwrapThrowExt;
 
 macro_rules! closures {
+    // A counter helper to count number of arguments.
     (@count_one $ty:ty) => (1);
 
-    (@describe ( $($ty:ty),* $(,)? )) => {
+    (@describe ( $($ty:ty),* )) => {
         inform(const { 0 $(+ closures!(@count_one $ty))* });
         $(<$ty>::describe();)*
     };
+
+    // This silly helper is because by default Rust infers `|var_with_ref_type| ...` closure
+    // as `impl Fn(&'outer_lifetime A)` instead of `impl for<'temp_lifetime> Fn(&'temp_lifetime A)`
+    // while `|var_with_ref_type: &A|` makes it use the higher-order generic as expected.
+    (@closure ($($ty:ty),*) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
     (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
@@ -90,8 +96,6 @@ macro_rules! closures {
             fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
         }
     };);
-
-    (@closure ($($ty:ty),* $(,)?) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
     (@impl_for_args $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
         closures!(@impl_for_fn false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
