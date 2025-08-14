@@ -13,9 +13,9 @@ use crate::JsValue;
 use crate::UnwrapThrowExt;
 
 macro_rules! closures {
-    ($Fn:ident $is_mut:literal $($mut:ident)? $cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+    ($Fn:ident $FnArgs:tt $is_mut:literal $($mut:ident)? $cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         #[allow(coherence_leak_check)]
-        impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn($($var),*) -> R + '_)
+        impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
             where $($var: FromWasmAbi,)*
                   R: ReturnWasmAbi
         {
@@ -46,7 +46,7 @@ macro_rules! closures {
             // Scope all local variables before we call `return_abi` to
             // ensure they're all destroyed as `return_abi` may throw
             let ret = {
-                let f: & $($mut)? dyn $Fn($($var),*) -> R = mem::transmute((a, b));
+                let f: & $($mut)? dyn $Fn $FnArgs -> R = mem::transmute((a, b));
                 $(
                     let $var = <$var as FromWasmAbi>::from_abi($var::Abi::join($arg1, $arg2, $arg3, $arg4));
                 )*
@@ -56,7 +56,7 @@ macro_rules! closures {
         }
 
         #[allow(coherence_leak_check)]
-        impl<$($var,)* R> WasmDescribe for dyn $Fn($($var),*) -> R + '_
+        impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
             where $($var: FromWasmAbi,)*
                   R: ReturnWasmAbi
         {
@@ -72,26 +72,26 @@ macro_rules! closures {
         }
 
         #[allow(coherence_leak_check)]
-        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn($($var),*) -> R + 'static
+        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + 'static
             where $($var: FromWasmAbi + 'static,)*
                   R: ReturnWasmAbi + 'static,
         {
             const IS_MUT: bool = $is_mut;
         }
 
-        impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn($($var),*) -> R> for T
-            where T: 'static + $Fn($($var),*) -> R,
+        impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T
+            where T: 'static + $Fn $FnArgs -> R,
                   $($var: FromWasmAbi + 'static,)*
                   R: ReturnWasmAbi + 'static,
         {
-            fn unsize(self: Box<Self>) -> Box<dyn $Fn($($var),*) -> R> { self }
+            fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
         }
     };);
 
     ($( ($cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => (
         $(
-            closures!(Fn false $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
-            closures!(FnMut true mut $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+            closures!(Fn($($var),*) false $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+            closures!(FnMut($($var),*) true mut $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
 
             // The memory safety here in these implementations below is a bit tricky. We
             // want to be able to drop the `Closure` object from within the invocation of a
