@@ -17,7 +17,10 @@ macro_rules! closures {
     (@count_one $ty:ty) => (1);
 
     (@describe ( $($ty:ty),* )) => {
-        inform(const { 0 $(+ closures!(@count_one $ty))* });
+        // Needs to be a constant so that interpreter doesn't crash on
+        // unsupported operations in debug mode.
+        const ARG_COUNT: u32 = 0 $(+ closures!(@count_one $ty))*;
+        inform(ARG_COUNT);
         $(<$ty>::describe();)*
     };
 
