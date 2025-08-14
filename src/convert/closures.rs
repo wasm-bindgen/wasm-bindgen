@@ -16,7 +16,7 @@ macro_rules! closures {
     (@count_one $ty:ty) => (1);
 
     (@describe ( $($ty:ty),* $(,)? )) => {
-        inform(0 $(+ closures!(@count_one $ty))*);
+        inform(const { 0 $(+ closures!(@count_one $ty))* });
         $(<$ty>::describe();)*
     };
 
