@@ -7,7 +7,7 @@ use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{FuncDescriptor, SerializedDescriptor, WasmDescribe, TUPLE};
+use crate::describe::{FuncDescriptor, SerializedDescriptor, TaggedDescriptor, WasmDescribe, REF};
 use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
@@ -16,12 +16,49 @@ macro_rules! closures {
     // A counter helper to count number of arguments.
     (@count_one $ty:ty) => (1);
 
-    (@describe ( $($ty:ty),* )) => {
-        // Needs to be a constant so that interpreter doesn't crash on
-        // unsupported operations in debug mode.
-        const ARG_COUNT: u32 = 0 $(+ closures!(@count_one $ty))*;
-        inform(ARG_COUNT);
-        $(<$ty>::describe();)*
+    // Special-case the @describe_args from below for the reference case.
+    // It's the only place where we need an explicit higher-kinded lifetime
+    // and want to erase it to get a descriptor for any `&T`.
+    (@describe_args (&$ty:ty) $var:ident) => {
+        #[repr(C)]
+        pub struct ArgsDescriptorsFor<$var: WasmDescribe> {
+            count: u32,
+            $var: TaggedDescriptor<$var>,
+        }
+
+        unsafe impl<$var: WasmDescribe> SerializedDescriptor for ArgsDescriptorsFor<$var> {}
+
+        impl<$var: WasmDescribe> ArgsDescriptorsFor<$var> {
+            const fn make_func_descriptor<R: ReturnWasmAbi>(invoke_fn: *const ()) -> FuncDescriptor<Self, R, R> {
+                FuncDescriptor::new(invoke_fn, Self {
+                    count: 1,
+                    $var: TaggedDescriptor::new(REF),
+                })
+            }
+        }
+    };
+
+    (@describe_args ( $($ty:ty),* ) $($var:ident)*) => {
+        compose_serialized_descriptor!(
+            [ArgsDescriptorsFor<$($var),*>]
+            [$($ty: WasmDescribe),*]
+            {
+                count: u32,
+                $($var: <$ty as WasmDescribe>::Descriptor,)*
+            }
+        );
+
+        impl<$($var),*> ArgsDescriptorsFor<$($var),*>
+        where
+            $($ty: WasmDescribe,)*
+        {
+            const fn make_func_descriptor<R: ReturnWasmAbi>(invoke_fn: *const ()) -> FuncDescriptor<Self, R, R> {
+                FuncDescriptor::new(invoke_fn, Self {
+                    count: 0 $(+ closures!(@count_one $ty))*,
+                    $($var: <$ty>::DESCRIPTOR,)*
+                })
+            }
+        }
     };
 
     // This silly helper is because by default Rust infers `|var_with_ref_type| ...` closure
@@ -75,19 +112,14 @@ macro_rules! closures {
             $($var: $FromWasmAbi,)*
             R: ReturnWasmAbi,
         {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                inform(FUNCTION);
-                inform(invoke::<$($var,)* R> as usize as u32);
-                closures!(@describe $FnArgs);
-                R::describe();
-                R::describe();
-            }
+            type Descriptor = FuncDescriptor<ArgsDescriptorsFor<$($var),*>, R, R>;
+
+            const DESCRIPTOR: Self::Descriptor = ArgsDescriptorsFor::make_func_descriptor(invoke::<$($var,)* R> as _);
         }
 
         unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
         where
-            Self: WasmDescribe,
+            Self: 'static + WasmDescribe,
         {
             const IS_MUT: bool = $is_mut;
         }
@@ -100,7 +132,9 @@ macro_rules! closures {
         }
     };);
 
-    (@impl_for_args $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
+    (@impl_for_args $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {const _: () = {
+        closures!(@describe_args $FnArgs $($var)*);
+
         closures!(@impl_for_fn false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
         closures!(@impl_for_fn true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
 
@@ -162,7 +196,7 @@ macro_rules! closures {
                 js_val
             }
         }
-    };
+    };};
 
     ($( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
         closures!(@impl_for_args ($($var),*) FromWasmAbi $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);

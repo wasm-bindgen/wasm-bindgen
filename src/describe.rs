@@ -74,6 +74,7 @@ macro_rules! simple {
 }
 
 simple! {
+    () => UNIT
     i8 => I8
     u8 => U8
     i16 => I16
@@ -208,22 +209,24 @@ impl WasmDescribe for JsError {
 
 compose_serialized_descriptor!(
     [FuncDescriptor<A, R, RetInner>]
-    [A: WasmDescribe, R: WasmDescribe, RetInner: ReturnWasmAbi]
+    [A: SerializedDescriptor, R: WasmDescribe, RetInner: ReturnWasmAbi]
     {
         tag: u32,
         invoke_fn: *const (),
-        args: A::Descriptor,
+        args: A,
         ret: R::Descriptor,
         inner: RetInner::Descriptor,
     }
 );
 
-impl<A: WasmDescribe, R: WasmDescribe, RetInner: ReturnWasmAbi> FuncDescriptor<A, R, RetInner> {
-    pub const fn new(invoke_fn: *const ()) -> Self {
+impl<A: SerializedDescriptor, R: WasmDescribe, RetInner: ReturnWasmAbi>
+    FuncDescriptor<A, R, RetInner>
+{
+    pub const fn new(invoke_fn: *const (), args: A) -> Self {
         Self {
             tag: FUNCTION,
             invoke_fn,
-            args: A::DESCRIPTOR,
+            args,
             ret: R::DESCRIPTOR,
             inner: RetInner::DESCRIPTOR,
         }

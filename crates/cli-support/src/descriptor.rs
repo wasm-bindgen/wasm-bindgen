@@ -147,14 +147,7 @@ impl Descriptor {
                 Descriptor::NamedExternref(name)
             }
             CHAR => Descriptor::Char,
-            TUPLE => {
-                assert_eq!(
-                    get(data),
-                    0,
-                    "non-unit tuples are not yet supported outside of function args"
-                );
-                Descriptor::Unit
-            }
+            UNIT => Descriptor::Unit,
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
             other => panic!("unknown descriptor: {other}"),
@@ -244,7 +237,7 @@ impl Function {
         Function {
             shim_idx: get(data),
             arguments: {
-                assert_eq!(get(data), TUPLE);
+                assert_eq!(get(data), UNIT);
 
                 (0..get(data))
                     .map(|_| Descriptor::_decode(data, false))
