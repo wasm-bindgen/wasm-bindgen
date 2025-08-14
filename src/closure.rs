@@ -422,9 +422,10 @@ impl Closure<dyn FnOnce()> {
     /// // is `FnMut`, even though `f` is `FnOnce`.
     /// let closure: Closure<dyn FnMut() -> String> = Closure::once(f);
     /// ```
-    pub fn once<F, A, R>(fn_once: F) -> Closure<F::FnMut>
+    pub fn once<F, FnMut>(fn_once: F) -> Closure<FnMut>
     where
-        F: 'static + WasmClosureFnOnce<A, R>,
+        F: WasmClosureFnOnce<FnMut>,
+        FnMut: ?Sized + WasmClosure,
     {
         Closure::wrap(fn_once.into_fn_mut())
     }
@@ -449,9 +450,10 @@ impl Closure<dyn FnOnce()> {
     ///
     /// assert!(f.is_instance_of::<js_sys::Function>());
     /// ```
-    pub fn once_into_js<F, A, R>(fn_once: F) -> JsValue
+    pub fn once_into_js<F, FnMut>(fn_once: F) -> JsValue
     where
-        F: 'static + WasmClosureFnOnce<A, R>,
+        F: WasmClosureFnOnce<FnMut>,
+        FnMut: ?Sized,
     {
         fn_once.into_js_function()
     }
@@ -460,10 +462,8 @@ impl Closure<dyn FnOnce()> {
 /// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
 /// will throw if ever called more than once.
 #[doc(hidden)]
-pub trait WasmClosureFnOnce<A, R>: 'static {
-    type FnMut: ?Sized + 'static + WasmClosure;
-
-    fn into_fn_mut(self) -> Box<Self::FnMut>;
+pub trait WasmClosureFnOnce<FnMut: ?Sized>: 'static {
+    fn into_fn_mut(self) -> Box<FnMut>;
 
     fn into_js_function(self) -> JsValue;
 }

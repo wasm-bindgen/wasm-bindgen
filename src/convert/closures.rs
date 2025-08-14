@@ -112,15 +112,13 @@ macro_rules! closures {
         // deallocate data immediately.
 
         #[allow(non_snake_case, unused_parens)]
-        impl<T, $($var,)* R> WasmClosureFnOnce<$FnArgs, R> for T
+        impl<T, $($var,)* R> WasmClosureFnOnce<dyn FnMut $FnArgs -> R> for T
         where
             T: 'static + FnOnce $FnArgs -> R,
             $($var: $FromWasmAbi + 'static,)*
             R: ReturnWasmAbi + 'static,
         {
-            type FnMut = dyn FnMut $FnArgs -> R;
-
-            fn into_fn_mut(self) -> Box<Self::FnMut> {
+            fn into_fn_mut(self) -> Box<dyn FnMut $FnArgs -> R> {
                 let mut me = Some(self);
                 Box::new(move |$($var),*| {
                     let me = me.take().expect_throw("FnOnce called more than once");
@@ -186,4 +184,4 @@ closures! {
 // just this one! Maybe someone else can figure out voodoo so we don't have to
 // duplicate.
 
-closures!(@impl_for_args (&A,) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+closures!(@impl_for_args (&A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
