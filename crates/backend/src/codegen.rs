@@ -539,10 +539,9 @@ impl ToTokens for ast::StructField {
             inner: quote! {
                 type Descriptor = <#ty as WasmDescribe>::Descriptor;
 
-                const DESCRIPTOR: Self::Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
+                const DESCRIPTOR: Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
             },
             attrs: vec![],
-            wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(tokens);
 
@@ -925,7 +924,6 @@ impl TryToTokens for ast::Export {
                 #describe_ret
             },
             attrs: attrs.clone(),
-            wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
 
@@ -1602,7 +1600,6 @@ impl ToTokens for DescribeImport<'_> {
                 const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(0 as _);
             },
             attrs: f.function.rust_attrs.clone(),
-            wasm_bindgen,
         }
         .to_tokens(tokens);
     }
@@ -1795,7 +1792,6 @@ impl ToTokens for ast::ImportStatic {
                 const DESCRIPTOR: Self::Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
             },
             attrs: vec![],
-            wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
     }
@@ -1881,7 +1877,6 @@ struct Descriptor<'a, T> {
     ident: &'a Ident,
     inner: T,
     attrs: Vec<syn::Attribute>,
-    wasm_bindgen: &'a syn::Path,
 }
 
 impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
@@ -1899,30 +1894,28 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
         }
 
         let ident = self.ident;
+        let name = ident.to_string();
+        let (name_len, encoded_name) = encode_name(&name);
 
-        if !DESCRIPTORS_EMITTED.with(|list| list.borrow_mut().insert(ident.to_string())) {
+        if !DESCRIPTORS_EMITTED.with(|list| list.borrow_mut().insert(name)) {
             return;
         }
 
-        let name = Ident::new(&format!("__wbindgen_describe_{}", ident), ident.span());
         let inner = &self.inner;
         let attrs = &self.attrs;
-        let wasm_bindgen = &self.wasm_bindgen;
-        (quote! {
+        (quote_spanned! { ident.span() =>
             #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
             #[automatically_derived]
             const _: () = {
-                #wasm_bindgen::__wbindgen_coverage! {
+                #inner
+
                 #(#attrs)*
-                #[no_mangle]
-                #[doc(hidden)]
-                pub extern "C" fn #name() {
-                    use #wasm_bindgen::describe::*;
-                    // See definition of `link_mem_intrinsics` for what this is doing
-                    #wasm_bindgen::__rt::link_mem_intrinsics();
-                    #inner
-                }
-                }
+                #[link_section = "__wasm_bindgen_descriptors"]
+                static _NAME: [u32; #name_len + 1] = #encoded_name;
+
+                #(#attrs)*
+                #[link_section = "__wasm_bindgen_descriptors"]
+                static _DESCRIPTOR: Descriptor = DESCRIPTOR;
             };
         })
         .to_tokens(tokens);
