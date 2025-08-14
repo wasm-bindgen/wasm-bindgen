@@ -21,28 +21,6 @@ macro_rules! closures {
     };
 
     (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
-        impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
-        where
-            $($var: $FromWasmAbi,)*
-            R: ReturnWasmAbi,
-        {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                inform(FUNCTION);
-                inform(invoke::<$($var,)* R> as usize as u32);
-                closures!(@describe $FnArgs);
-                R::describe();
-                R::describe();
-            }
-        }
-
-        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
-        where
-            Self: WasmDescribe,
-        {
-            const IS_MUT: bool = $is_mut;
-        }
-
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
         where
             Self: WasmDescribe,
@@ -83,11 +61,33 @@ macro_rules! closures {
             ret.return_abi().into()
         }
 
+        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
+        where
+            Self: WasmDescribe,
+        {
+            const IS_MUT: bool = $is_mut;
+        }
+
         impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T
         where
             T: 'static + $Fn $FnArgs -> R,
         {
             fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
+        }
+
+        impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
+        where
+            $($var: $FromWasmAbi,)*
+            R: ReturnWasmAbi,
+        {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe() {
+                inform(FUNCTION);
+                inform(invoke::<$($var,)* R> as usize as u32);
+                closures!(@describe $FnArgs);
+                R::describe();
+                R::describe();
+            }
         }
     };);
 
