@@ -1,15 +1,19 @@
 #![allow(clippy::fn_to_numeric_cast)]
 
+use alloc::boxed::Box;
 use core::mem;
 
+use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::throw_str;
+use crate::JsValue;
+use crate::UnwrapThrowExt;
 
-macro_rules! stack_closures {
-    ($Fn:ident $($mut:ident)? $cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+macro_rules! closures {
+    ($Fn:ident $is_mut:literal $($mut:ident)? $cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         #[allow(coherence_leak_check)]
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn($($var),*) -> R + '_)
             where $($var: FromWasmAbi,)*
@@ -66,17 +70,97 @@ macro_rules! stack_closures {
                 <R as WasmDescribe>::describe();
             }
         }
+
+        #[allow(coherence_leak_check)]
+        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn($($var),*) -> R + 'static
+            where $($var: FromWasmAbi + 'static,)*
+                  R: ReturnWasmAbi + 'static,
+        {
+            const IS_MUT: bool = $is_mut;
+        }
+
+        impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn($($var),*) -> R> for T
+            where T: 'static + $Fn($($var),*) -> R,
+                  $($var: FromWasmAbi + 'static,)*
+                  R: ReturnWasmAbi + 'static,
+        {
+            fn unsize(self: Box<Self>) -> Box<dyn $Fn($($var),*) -> R> { self }
+        }
     };);
 
     ($( ($cnt:literal $($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => (
         $(
-            stack_closures!(Fn $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
-            stack_closures!(FnMut mut $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+            closures!(Fn false $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+            closures!(FnMut true mut $cnt $($var $arg1 $arg2 $arg3 $arg4)*);
+
+            // The memory safety here in these implementations below is a bit tricky. We
+            // want to be able to drop the `Closure` object from within the invocation of a
+            // `Closure` for cases like promises. That means that while it's running we
+            // might drop the `Closure`, but that shouldn't invalidate the environment yet.
+            //
+            // Instead what we do is to wrap closures in `Rc` variables. The main `Closure`
+            // has a strong reference count which keeps the trait object alive. Each
+            // invocation of a closure then *also* clones this and gets a new reference
+            // count. When the closure returns it will release the reference count.
+            //
+            // This means that if the main `Closure` is dropped while it's being invoked
+            // then destruction is deferred until execution returns. Otherwise it'll
+            // deallocate data immediately.
+
+            #[allow(non_snake_case, unused_parens)]
+            impl<T, $($var,)* R> WasmClosureFnOnce<($($var),*), R> for T
+                where T: 'static + FnOnce($($var),*) -> R,
+                    $($var: FromWasmAbi + 'static,)*
+                    R: ReturnWasmAbi + 'static
+            {
+                type FnMut = dyn FnMut($($var),*) -> R;
+
+                fn into_fn_mut(self) -> Box<Self::FnMut> {
+                    let mut me = Some(self);
+                    Box::new(move |$($var),*| {
+                        let me = me.take().expect_throw("FnOnce called more than once");
+                        me($($var),*)
+                    })
+                }
+
+                fn into_js_function(self) -> JsValue {
+                    use alloc::rc::Rc;
+                    use crate::__rt::WasmRefCell;
+
+                    let mut me = Some(self);
+
+                    let rc1 = Rc::new(WasmRefCell::new(None));
+                    let rc2 = rc1.clone();
+
+                    let closure = Closure::wrap(Box::new(move |$($var),*| {
+                        // Invoke ourself and get the result.
+                        let me = me.take().expect_throw("FnOnce called more than once");
+                        let result = me($($var),*);
+
+                        // And then drop the `Rc` holding this function's `Closure`
+                        // alive.
+                        debug_assert_eq!(Rc::strong_count(&rc2), 1);
+                        let option_closure = rc2.borrow_mut().take();
+                        debug_assert!(option_closure.is_some());
+                        drop(option_closure);
+
+                        result
+                    }) as Box<dyn FnMut($($var),*) -> R>);
+
+                    let js_val = closure.as_ref().clone();
+
+                    *rc1.borrow_mut() = Some(closure);
+                    debug_assert_eq!(Rc::strong_count(&rc1), 2);
+                    drop(rc1);
+
+                    js_val
+                }
+            }
         )*
     );
 }
 
-stack_closures! {
+closures! {
     (0)
     (1 A a1 a2 a3 a4)
     (2 A a1 a2 a3 a4 B b1 b2 b3 b4)
