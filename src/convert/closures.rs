@@ -130,15 +130,11 @@ macro_rules! closures {
                 use alloc::rc::Rc;
                 use crate::__rt::WasmRefCell;
 
-                let mut me = Some(self);
-
                 let rc1 = Rc::new(WasmRefCell::new(None));
                 let rc2 = rc1.clone();
 
-                let closure = Closure::<dyn FnMut $FnArgs -> R>::new(closures!(@closure $FnArgs $($var)* {
-                    // Invoke ourself and get the result.
-                    let me = me.take().expect_throw("FnOnce called more than once");
-                    let result = me($($var),*);
+                let closure = Closure::once(closures!(@closure $FnArgs $($var)* {
+                    let result = self($($var),*);
 
                     // And then drop the `Rc` holding this function's `Closure`
                     // alive.
