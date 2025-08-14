@@ -1,4 +1,4 @@
-#![allow(clippy::fn_to_numeric_cast, coherence_leak_check)]
+#![allow(non_snake_case, coherence_leak_check)]
 
 use alloc::boxed::Box;
 use core::mem;
@@ -7,7 +7,7 @@ use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{inform, WasmDescribe, FUNCTION};
+use crate::describe::{FuncDescriptor, SerializedDescriptor, WasmDescribe, TUPLE};
 use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;

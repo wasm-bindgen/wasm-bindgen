@@ -213,15 +213,27 @@ impl TryToTokens for ast::LinkToModule {
     }
 }
 
+fn encode_name(name: &str) -> (usize, TokenStream) {
+    let name_len = name.len();
+    let name_len_u32 = name_len as u32;
+    let name_chars = name.chars();
+    (
+        name_len,
+        quote! {
+            #name_len_u32
+            #(,#name_chars as u32)*
+        },
+    )
+}
+
 impl ToTokens for ast::Struct {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = &self.rust_name;
-        let name_str = self.js_name.to_string();
-        let name_len = name_str.len() as u32;
-        let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
-        let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());
-        let free_fn = Ident::new(&shared::free_function(&name_str), Span::call_site());
-        let unwrap_fn = Ident::new(&shared::unwrap_function(&name_str), Span::call_site());
+        let name_str = &self.js_name;
+        let (name_len, encoded_name) = encode_name(name_str);
+        let new_fn = Ident::new(&shared::new_function(name_str), Span::call_site());
+        let free_fn = Ident::new(&shared::free_function(name_str), Span::call_site());
+        let unwrap_fn = Ident::new(&shared::unwrap_function(name_str), Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
         (quote! {
             #[automatically_derived]
@@ -233,12 +245,12 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #name {
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(RUST_STRUCT);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                }
+                type Descriptor = [u32; 2 + #name_len];
+
+                const DESCRIPTOR: Self::Descriptor = [
+                    #wasm_bindgen::describe::RUST_STRUCT,
+                    #encoded_name,
+                ];
             }
 
             #[automatically_derived]
@@ -416,13 +428,13 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #name {
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    inform(NAMED_EXTERNREF);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                }
+                type VectorDescriptor = [u32; 3 + #name_len];
+
+                const VECTOR_DESCRIPTOR: Self::VectorDescriptor = [
+                    #wasm_bindgen::describe::VECTOR,
+                    #wasm_bindgen::describe::NAMED_EXTERNREF,
+                    #encoded_name,
+                ];
             }
 
             #[automatically_derived]
@@ -525,7 +537,9 @@ impl ToTokens for ast::StructField {
         Descriptor {
             ident: getter,
             inner: quote! {
-                <#ty as WasmDescribe>::describe();
+                type Descriptor = <#ty as WasmDescribe>::Descriptor;
+
+                const DESCRIPTOR: Self::Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
             },
             attrs: vec![],
             wasm_bindgen: &self.wasm_bindgen,
@@ -871,11 +885,16 @@ impl TryToTokens for ast::Export {
                 {
                     let inner = &reference.elem;
                     quote! {
-                        inform(LONGREF);
-                        <#inner as WasmDescribe>::describe();
+                        type Descriptor = TaggedDescriptor<#inner>;
+
+                        const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(LONGREF);
                     }
                 }
-                _ => quote! { <#ty as WasmDescribe>::describe(); },
+                _ => quote! {
+                    type Descriptor = <#ty as WasmDescribe>::Descriptor;
+
+                    const DESCRIPTOR: Self::Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
+                },
             })
             .collect();
 
@@ -950,17 +969,20 @@ impl ToTokens for ast::ImportType {
         };
 
         let description = if let Some(typescript_type) = &self.typescript_type {
-            let typescript_type_len = typescript_type.len() as u32;
-            let typescript_type_chars = typescript_type.chars().map(|c| c as u32);
+            let (typescript_type_len, encoded_typescript_type) = encode_name(typescript_type);
             quote! {
-                use #wasm_bindgen::describe::*;
-                inform(NAMED_EXTERNREF);
-                inform(#typescript_type_len);
-                #(inform(#typescript_type_chars);)*
+                type Descriptor = [u32; 2 + #typescript_type_len];
+
+                const DESCRIPTOR: Self::Descriptor = [
+                    #wasm_bindgen::describe::NAMED_EXTERNREF,
+                    #encoded_typescript_type,
+                ];
             }
         } else {
             quote! {
-                JsValue::describe()
+                type Descriptor = <JsValue as #wasm_bindgen::describe::WasmDescribe>::Descriptor;
+
+                const DESCRIPTOR: Self::Descriptor = <JsValue as #wasm_bindgen::describe::WasmDescribe>::DESCRIPTOR;
             }
         };
 
@@ -1005,9 +1027,7 @@ impl ToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl WasmDescribe for #rust_name {
-                    fn describe() {
-                        #description
-                    }
+                    #description
                 }
 
                 #[automatically_derived]
@@ -1209,9 +1229,7 @@ impl ToTokens for ast::StringEnum {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let vis = &self.vis;
         let enum_name = &self.name;
-        let name_str = &self.js_name;
-        let name_len = name_str.len() as u32;
-        let name_chars = name_str.chars().map(u32::from);
+        let (name_len, encoded_name) = encode_name(&self.js_name);
         let variants = &self.variants;
         let variant_count = self.variant_values.len() as u32;
         let variant_values = &self.variant_values;
@@ -1306,13 +1324,13 @@ impl ToTokens for ast::StringEnum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(STRING_ENUM);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                    inform(#variant_count);
-                }
+                type Descriptor = [u32; 2 + #name_len + 1];
+
+                const DESCRIPTOR: Self::Descriptor = [
+                    #wasm_bindgen::describe::STRING_ENUM,
+                    #encoded_name,
+                    #variant_count,
+                ];
             }
 
             #[automatically_derived]
@@ -1567,26 +1585,24 @@ impl ToTokens for DescribeImport<'_> {
             ast::ImportKind::Enum(_) => return,
         };
         let argtys = f.function.arguments.iter().map(|arg| &arg.pat_type.ty);
-        let nargs = f.function.arguments.len() as u32;
-        let inform_ret = match &f.js_ret {
-            Some(ref t) => quote! { <#t as WasmDescribe>::describe(); },
+        let ret = match &f.js_ret {
+            Some(ref t) => quote! { #t },
             // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => quote! { <JsValue as WasmDescribe>::describe(); },
-            None => quote! { <() as WasmDescribe>::describe(); },
+            None if f.function.r#async => quote! { JsValue },
+            None => quote! { () },
         };
+
+        let wasm_bindgen = self.wasm_bindgen;
 
         Descriptor {
             ident: &f.shim,
             inner: quote! {
-                inform(FUNCTION);
-                inform(0);
-                inform(#nargs);
-                #(<#argtys as WasmDescribe>::describe();)*
-                #inform_ret
-                #inform_ret
+                type Descriptor = #wasm_bindgen::closures::FuncDescriptor<(#(<#argtys,)*), #ret, #ret>;
+
+                const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(0 as _);
             },
             attrs: f.function.rust_attrs.clone(),
-            wasm_bindgen: self.wasm_bindgen,
+            wasm_bindgen,
         }
         .to_tokens(tokens);
     }
@@ -1595,9 +1611,7 @@ impl ToTokens for DescribeImport<'_> {
 impl ToTokens for ast::Enum {
     fn to_tokens(&self, into: &mut TokenStream) {
         let enum_name = &self.rust_name;
-        let name_str = self.js_name.to_string();
-        let name_len = name_str.len() as u32;
-        let name_chars = name_str.chars().map(|c| c as u32);
+        let (name_len, encoded_name) = encode_name(&self.js_name);
         let hole = &self.hole;
         let underlying = if self.signed {
             quote! { i32 }
@@ -1651,13 +1665,13 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(ENUM);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                    inform(#hole);
-                }
+                type Descriptor = [u32; 2 + #name_len + 1];
+
+                const DESCRIPTOR: Self::Descriptor = [
+                    #wasm_bindgen::describe::ENUM,
+                    #encoded_name,
+                    #hole,
+                ];
             }
 
             #[automatically_derived]
@@ -1688,11 +1702,9 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::describe();
-                }
+                type VectorDescriptor = <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribeVector>::VectorDescriptor;
+
+                const VECTOR_DESCRIPTOR: Self::VectorDescriptor = <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribeVector>::VECTOR_DESCRIPTOR;
             }
 
             #[automatically_derived]
@@ -1778,7 +1790,9 @@ impl ToTokens for ast::ImportStatic {
         Descriptor {
             ident: &self.shim,
             inner: quote! {
-                <#ty as WasmDescribe>::describe();
+                type Descriptor = <#ty as WasmDescribe>::Descriptor;
+
+                const DESCRIPTOR: Self::Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
             },
             attrs: vec![],
             wasm_bindgen: &self.wasm_bindgen,

@@ -60,7 +60,7 @@ pub trait FromWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait RefFromWasmAbi: WasmDescribe {
+pub trait RefFromWasmAbi: 'static + WasmDescribe {
     /// The Wasm ABI type references to `Self` are recovered from.
     type Abi: WasmAbi;
 

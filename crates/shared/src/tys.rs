@@ -38,7 +38,7 @@ tys! {
     CHAR
     OPTIONAL
     RESULT
-    UNIT
+    TUPLE
     CLAMPED
     NONNULL
 }

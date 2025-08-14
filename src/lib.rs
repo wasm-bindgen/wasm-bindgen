@@ -132,9 +132,11 @@ pub mod prelude {
 
 pub use wasm_bindgen_macro::link_to;
 
+#[macro_use]
+pub mod describe;
+
 pub mod closure;
 pub mod convert;
-pub mod describe;
 mod externref;
 mod link;
 
@@ -1143,7 +1145,7 @@ externs! {
         fn __wbindgen_cb_drop(idx: u32) -> u32;
 
         fn __wbindgen_describe(v: u32) -> ();
-        fn __wbindgen_describe_closure(a: u32, b: u32, c: u32) -> u32;
+        fn __wbindgen_describe_closure(a: u32, b: u32, c: *const ()) -> u32;
 
         fn __wbindgen_jsval_eq(a: u32, b: u32) -> u32;
         fn __wbindgen_jsval_loose_eq(a: u32, b: u32) -> u32;

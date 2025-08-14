@@ -329,31 +329,14 @@ where
         // See crates/cli-support/src/js/closures.rs for a more information
         // about what's going on here.
 
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        extern "C" fn describe<T: WasmClosure + ?Sized>() {
-            inform(CLOSURE);
-
-            unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
-                // This can be called by the JS glue in erroneous situations
-                // such as when the closure has already been destroyed. If
-                // that's the case let's not make things worse by
-                // segfaulting and/or asserting, so just ignore null
-                // pointers.
-                if a == 0 {
-                    return;
-                }
-                drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
-            }
-            inform(destroy::<T> as usize as u32);
-
-            inform(T::IS_MUT as u32);
-            T::describe();
-        }
-
         #[inline(never)]
         #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
         unsafe fn breaks_if_inlined<T: WasmClosure + ?Sized>(a: usize, b: usize) -> u32 {
-            super::__wbindgen_describe_closure(a as u32, b as u32, describe::<T> as usize as u32)
+            super::__wbindgen_describe_closure(
+                a as u32,
+                b as u32,
+                std::ptr::from_ref(&ClosureDescriptor::<T>::VALUE).cast(),
+            )
         }
 
         let idx = unsafe { breaks_if_inlined::<T>(a, b) };
@@ -470,10 +453,9 @@ impl<T> WasmDescribe for Closure<T>
 where
     T: WasmClosure + ?Sized,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(EXTERNREF);
-    }
+    type Descriptor = u32;
+
+    const DESCRIPTOR: Self::Descriptor = EXTERNREF;
 }
 
 // `Closure` can only be passed by reference to imports.
@@ -536,7 +518,7 @@ where
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub unsafe trait WasmClosure: WasmDescribe {
+pub unsafe trait WasmClosure: 'static + WasmDescribe {
     const IS_MUT: bool;
 }
 

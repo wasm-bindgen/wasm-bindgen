@@ -147,7 +147,14 @@ impl Descriptor {
                 Descriptor::NamedExternref(name)
             }
             CHAR => Descriptor::Char,
-            UNIT => Descriptor::Unit,
+            TUPLE => {
+                assert_eq!(
+                    get(data),
+                    0,
+                    "non-unit tuples are not yet supported outside of function args"
+                );
+                Descriptor::Unit
+            }
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
             other => panic!("unknown descriptor: {other}"),
@@ -234,13 +241,15 @@ impl Closure {
 
 impl Function {
     fn decode(data: &mut &[u32]) -> Function {
-        let shim_idx = get(data);
-        let arguments = (0..get(data))
-            .map(|_| Descriptor::_decode(data, false))
-            .collect::<Vec<_>>();
         Function {
-            arguments,
-            shim_idx,
+            shim_idx: get(data),
+            arguments: {
+                assert_eq!(get(data), TUPLE);
+
+                (0..get(data))
+                    .map(|_| Descriptor::_decode(data, false))
+                    .collect()
+            },
             ret: Descriptor::_decode(data, false),
             inner_ret: Some(Descriptor::_decode(data, false)),
         }
