@@ -21,9 +21,31 @@ macro_rules! closures {
     };
 
     (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+        impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
+        where
+            $($var: $FromWasmAbi,)*
+            R: ReturnWasmAbi,
+        {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe() {
+                inform(FUNCTION);
+                inform(invoke::<$($var,)* R> as usize as u32);
+                closures!(@describe $FnArgs);
+                R::describe();
+                R::describe();
+            }
+        }
+
+        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
+        where
+            Self: WasmDescribe,
+        {
+            const IS_MUT: bool = $is_mut;
+        }
+
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
-            where $($var: $FromWasmAbi,)*
-                  R: ReturnWasmAbi
+        where
+            Self: WasmDescribe,
         {
             type Abi = WasmSlice;
 
@@ -61,31 +83,9 @@ macro_rules! closures {
             ret.return_abi().into()
         }
 
-        impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
-            where $($var: $FromWasmAbi,)*
-                  R: ReturnWasmAbi
-        {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                inform(FUNCTION);
-                inform(invoke::<$($var,)* R> as usize as u32);
-                closures!(@describe $FnArgs);
-                R::describe();
-                R::describe();
-            }
-        }
-
-        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + 'static
-            where $($var: $FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static,
-        {
-            const IS_MUT: bool = $is_mut;
-        }
-
         impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T
-            where T: 'static + $Fn $FnArgs -> R,
-                  $($var: $FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static,
+        where
+            T: 'static + $Fn $FnArgs -> R,
         {
             fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
         }
@@ -113,9 +113,10 @@ macro_rules! closures {
 
         #[allow(non_snake_case, unused_parens)]
         impl<T, $($var,)* R> WasmClosureFnOnce<$FnArgs, R> for T
-            where T: 'static + FnOnce $FnArgs -> R,
-                $($var: $FromWasmAbi + 'static,)*
-                R: ReturnWasmAbi + 'static
+        where
+            T: 'static + FnOnce $FnArgs -> R,
+            $($var: $FromWasmAbi + 'static,)*
+            R: ReturnWasmAbi + 'static,
         {
             type FnMut = dyn FnMut $FnArgs -> R;
 
