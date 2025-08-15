@@ -7,7 +7,7 @@ use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{FuncDescriptor, SerializedDescriptor, TaggedDescriptor, WasmDescribe, REF};
+use crate::describe::{ArgsDescriptor, FuncDescriptor, SerializedDescriptor, WasmDescribe, REF};
 use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
@@ -16,48 +16,24 @@ macro_rules! closures {
     // A counter helper to count number of arguments.
     (@count_one $ty:ty) => (1);
 
-    // Special-case the @describe_args from below for the reference case.
-    // It's the only place where we need an explicit higher-kinded lifetime
-    // and want to erase it to get a descriptor for any `&T`.
-    (@describe_args (&$ty:ty) $var:ident) => {
-        #[repr(C)]
-        pub struct ArgsDescriptorsFor<$var: WasmDescribe> {
-            count: u32,
-            $var: TaggedDescriptor<$var>,
-        }
-
-        unsafe impl<$var: WasmDescribe> SerializedDescriptor for ArgsDescriptorsFor<$var> {}
-
-        impl<$var: WasmDescribe> ArgsDescriptorsFor<$var> {
-            const fn make_func_descriptor<R: ReturnWasmAbi>(invoke_fn: *const ()) -> FuncDescriptor<Self, R, R> {
-                FuncDescriptor::new(invoke_fn, Self {
-                    count: 1,
-                    $var: TaggedDescriptor::new(REF),
-                })
-            }
-        }
-    };
-
-    (@describe_args ( $($ty:ty),* ) $($var:ident)*) => {
+    (@describe_args $lt:lifetime ( $($ty:ty),* ) $($var:ident)*) => {
         compose_serialized_descriptor!(
-            [ArgsDescriptorsFor<$($var),*>]
-            [$($ty: WasmDescribe),*]
+            Args
+            [$lt, $($var),*]
+            [$lt, $($var),*]
+            where [$($ty: WasmDescribe),*]
             {
-                count: u32,
                 $($var: <$ty as WasmDescribe>::Descriptor,)*
             }
+            {}
         );
 
-        impl<$($var),*> ArgsDescriptorsFor<$($var),*>
-        where
-            $($ty: WasmDescribe,)*
-        {
-            const fn make_func_descriptor<R: ReturnWasmAbi>(invoke_fn: *const ()) -> FuncDescriptor<Self, R, R> {
-                FuncDescriptor::new(invoke_fn, Self {
-                    count: 0 $(+ closures!(@count_one $ty))*,
-                    $($var: <$ty>::DESCRIPTOR,)*
-                })
-            }
+        impl<$lt, $($var),*> ArgsDescriptor for Args<$lt, $($var),*> where $($ty: WasmDescribe),* {
+            const COUNT: u32 = 0 $(+ closures!(@count_one $ty))*;
+
+            const VALUE: Self = Self {
+                $($var: <$ty>::DESCRIPTOR,)*
+            };
         }
     };
 
@@ -66,8 +42,8 @@ macro_rules! closures {
     // while `|var_with_ref_type: &A|` makes it use the higher-order generic as expected.
     (@closure ($($ty:ty),*) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
-    (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
-        impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
+    (@impl_for_fn $lt:lifetime $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+        impl<$lt, $($var,)* R> IntoWasmAbi for &$lt $($mut)? (dyn $Fn $FnArgs -> R + $lt)
         where
             Self: WasmDescribe,
         {
@@ -107,14 +83,14 @@ macro_rules! closures {
             ret.return_abi().into()
         }
 
-        impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
+        impl<$lt, $($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + $lt
         where
             $($var: $FromWasmAbi,)*
             R: ReturnWasmAbi,
         {
-            type Descriptor = FuncDescriptor<ArgsDescriptorsFor<$($var),*>, R, R>;
+            type Descriptor = FuncDescriptor<Args<$lt, $($var),*>, R, R>;
 
-            const DESCRIPTOR: Self::Descriptor = ArgsDescriptorsFor::make_func_descriptor(invoke::<$($var,)* R> as _);
+            const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(invoke::<$($var,)* R> as _);
         }
 
         unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
@@ -132,11 +108,11 @@ macro_rules! closures {
         }
     };);
 
-    (@impl_for_args $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {const _: () = {
-        closures!(@describe_args $FnArgs $($var)*);
+    (@impl_for_args $lt:lifetime $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {const _: () = {
+        closures!(@describe_args $lt $FnArgs $($var)*);
 
-        closures!(@impl_for_fn false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
-        closures!(@impl_for_fn true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_fn $lt false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_fn $lt true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
 
         // The memory safety here in these implementations below is a bit tricky. We
         // want to be able to drop the `Closure` object from within the invocation of a
@@ -198,12 +174,12 @@ macro_rules! closures {
         }
     };};
 
-    ($( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
-        closures!(@impl_for_args ($($var),*) FromWasmAbi $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
+    ($lt:lifetime $( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
+        closures!(@impl_for_args $lt ($($var),*) FromWasmAbi $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
     )*);
 }
 
-closures! {
+closures! { 'a
     ()
     (A a1 a2 a3 a4)
     (A a1 a2 a3 a4 B b1 b2 b3 b4)
@@ -221,4 +197,4 @@ closures! {
 // just this one! Maybe someone else can figure out voodoo so we don't have to
 // duplicate.
 
-closures!(@impl_for_args (&A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+closures!(@impl_for_args 'a (&'a A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);

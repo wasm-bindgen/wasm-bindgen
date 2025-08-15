@@ -12,6 +12,7 @@ use crate::convert::ReturnWasmAbi;
 use crate::{Clamped, JsError, JsObject, JsValue};
 
 use crate::closure::WasmClosure;
+use core::pin::Pin;
 pub use wasm_bindgen_shared::tys::*;
 
 const MAYBE_CACHED_STRING: u32 = if cfg!(feature = "enable-interning") {
@@ -29,23 +30,26 @@ const MAYBE_CACHED_STRING: u32 = if cfg!(feature = "enable-interning") {
 pub unsafe trait SerializedDescriptor {}
 
 unsafe impl SerializedDescriptor for u32 {}
-
+unsafe impl SerializedDescriptor for char {}
+unsafe impl SerializedDescriptor for usize {}
 unsafe impl SerializedDescriptor for *const () {}
 
-unsafe impl<const N: usize> SerializedDescriptor for [u32; N] {}
+unsafe impl<const N: usize, T: SerializedDescriptor> SerializedDescriptor for [T; N] {}
 
 macro_rules! compose_serialized_descriptor {
-    ([ $name:ident $($header:tt)* ] [ $($where:tt)* ] { $($field:ident : $ty:ty),* $(,)? }) => {
+    ($name:ident $( [$($decl_header:tt)*] [$($usage_header:tt)*] )? $(where [ $($where:tt)* ])? { $($field:ident : $ty:ty),* $(,)? } $impl:tt) => {
         #[repr(C)]
-        pub struct $name $($header)* where $($where)* {
+        pub struct $name $(<$($decl_header)*>)? $(where $($where)*)? {
             $($field: $ty),*
         }
 
-        unsafe impl $($header)* SerializedDescriptor for $name $($header)*
+        unsafe impl $(<$($decl_header)*>)? SerializedDescriptor for $name $(<$($usage_header)*>)?
         where
             $($ty: SerializedDescriptor,)*
-            $($where)*
+            $($($where)*)?
         {}
+
+        impl $(<$($decl_header)*>)? $name $(<$($usage_header)*>)? $impl
     };
 }
 
@@ -115,51 +119,63 @@ impl<T> WasmDescribe for NonNull<T> {
 }
 
 compose_serialized_descriptor!(
-    [TaggedDescriptor<T>]
+    TaggedDescriptor
     [T: ?Sized + WasmDescribe]
+    [T]
     {
         tag: u32,
-        inner: T::Descriptor,
+        descriptor: T::Descriptor,
     }
-);
-
-impl<T: ?Sized + WasmDescribe> TaggedDescriptor<T> {
-    pub const fn new(tag: u32) -> Self {
-        Self {
-            tag,
-            inner: T::DESCRIPTOR,
+    {
+        pub const fn new(tag: u32) -> Self {
+            Self {
+                tag,
+                descriptor: T::DESCRIPTOR,
+            }
         }
     }
-}
+);
 
 impl<T: WasmDescribe> WasmDescribe for [T] {
     type Descriptor = TaggedDescriptor<T>;
 
-    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(SLICE);
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(SLICE);
+}
+
+trait ArgDescribe {
+    type Descriptor: SerializedDescriptor;
+
+    const DESCRIPTOR: Self::Descriptor;
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &T {
     type Descriptor = TaggedDescriptor<T>;
 
-    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(REF);
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(REF);
+}
+
+impl<T: WasmDescribe + ?Sized> WasmDescribe for Pin<&T> {
+    type Descriptor = TaggedDescriptor<T>;
+
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(LONGREF);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &mut T {
     type Descriptor = TaggedDescriptor<T>;
 
-    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(REFMUT);
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(REFMUT);
 }
 
 impl WasmDescribeVector for JsValue {
     type VectorDescriptor = TaggedDescriptor<JsValue>;
 
-    const VECTOR_DESCRIPTOR: Self::VectorDescriptor = TaggedDescriptor::new(VECTOR);
+    const VECTOR_DESCRIPTOR: Self::VectorDescriptor = Self::VectorDescriptor::new(VECTOR);
 }
 
 impl<T: JsObject> WasmDescribeVector for T {
     type VectorDescriptor = TaggedDescriptor<T>;
 
-    const VECTOR_DESCRIPTOR: Self::VectorDescriptor = TaggedDescriptor::new(VECTOR);
+    const VECTOR_DESCRIPTOR: Self::VectorDescriptor = Self::VectorDescriptor::new(VECTOR);
 }
 
 impl<T: WasmDescribeVector> WasmDescribe for Box<[T]> {
@@ -180,13 +196,13 @@ where
 impl<T: WasmDescribe> WasmDescribe for Option<T> {
     type Descriptor = TaggedDescriptor<T>;
 
-    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(OPTIONAL);
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(OPTIONAL);
 }
 
 impl<T: WasmDescribe, E: Into<JsValue>> WasmDescribe for Result<T, E> {
     type Descriptor = TaggedDescriptor<T>;
 
-    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(RESULT);
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(RESULT);
 }
 
 impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
@@ -198,7 +214,7 @@ impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
 impl<T: WasmDescribe> WasmDescribe for Clamped<T> {
     type Descriptor = TaggedDescriptor<T>;
 
-    const DESCRIPTOR: Self::Descriptor = TaggedDescriptor::new(CLAMPED);
+    const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(CLAMPED);
 }
 
 impl WasmDescribe for JsError {
@@ -207,62 +223,180 @@ impl WasmDescribe for JsError {
     const DESCRIPTOR: Self::Descriptor = <JsValue as WasmDescribe>::DESCRIPTOR;
 }
 
-compose_serialized_descriptor!(
-    [FuncDescriptor<A, R, RetInner>]
-    [A: SerializedDescriptor, R: WasmDescribe, RetInner: ReturnWasmAbi]
-    {
-        tag: u32,
-        invoke_fn: *const (),
-        args: A,
-        ret: R::Descriptor,
-        inner: RetInner::Descriptor,
-    }
-);
-
-impl<A: SerializedDescriptor, R: WasmDescribe, RetInner: ReturnWasmAbi>
-    FuncDescriptor<A, R, RetInner>
-{
-    pub const fn new(invoke_fn: *const (), args: A) -> Self {
-        Self {
-            tag: FUNCTION,
-            invoke_fn,
-            args,
-            ret: R::DESCRIPTOR,
-            inner: RetInner::DESCRIPTOR,
-        }
-    }
+pub trait ArgsDescriptor: SerializedDescriptor {
+    const COUNT: u32;
+    const VALUE: Self;
 }
 
 compose_serialized_descriptor!(
-    [ClosureDescriptor<F>]
+    FuncDescriptor
+    [F: ArgsDescriptor, R: WasmDescribe, RetInner: ReturnWasmAbi]
+    [F, R, RetInner]
+    {
+        tag: u32,
+        invoke_fn: *const (),
+        count: u32,
+        args: F,
+        ret: R::Descriptor,
+        ret_inner: RetInner::Descriptor,
+    }
+    {
+        pub const fn new(invoke_fn: *const ()) -> Self {
+            Self {
+                tag: FUNCTION,
+                invoke_fn,
+                count: F::COUNT,
+                args: F::VALUE,
+                ret: R::DESCRIPTOR,
+                ret_inner: RetInner::DESCRIPTOR,
+            }
+        }
+
+        pub const SHIM: Self = Self::new(std::ptr::null());
+    }
+);
+
+compose_serialized_descriptor!(
+    ClosureDescriptor
     [F: ?Sized + WasmClosure]
+    [F]
     {
         tag: u32,
         dtor_fn: *const (),
         func: F::Descriptor,
         mutable: u32,
     }
+    {
+        unsafe extern "C" fn destroy(a: usize, b: usize) {
+            // This can be called by the JS glue in erroneous situations
+            // such as when the closure has already been destroyed. If
+            // that's the case let's not make things worse by
+            // segfaulting and/or asserting, so just ignore null
+            // pointers.
+            if a == 0 {
+                return;
+            }
+            drop(Box::from_raw(core::mem::transmute_copy::<_, *mut F>(&(
+                a, b,
+            ))));
+        }
+
+        pub const VALUE: Self = Self {
+            tag: CLOSURE,
+            dtor_fn: Self::destroy as *const (),
+            func: F::DESCRIPTOR,
+            mutable: F::IS_MUT as u32,
+        };
+    }
 );
 
-impl<F: ?Sized + WasmClosure> ClosureDescriptor<F> {
-    unsafe extern "C" fn destroy(a: usize, b: usize) {
-        // This can be called by the JS glue in erroneous situations
-        // such as when the closure has already been destroyed. If
-        // that's the case let's not make things worse by
-        // segfaulting and/or asserting, so just ignore null
-        // pointers.
-        if a == 0 {
-            return;
-        }
-        drop(Box::from_raw(core::mem::transmute_copy::<_, *mut F>(&(
-            a, b,
-        ))));
+compose_serialized_descriptor!(
+    SerializedName
+    [const N: usize]
+    [N]
+    {
+        len: usize,
+        name: [char; N],
     }
+    {
+        pub const fn new(name: [char; N]) -> Self {
+            Self { len: N, name }
+        }
+    }
+);
 
-    pub const VALUE: Self = Self {
-        tag: CLOSURE,
-        dtor_fn: Self::destroy as *const (),
-        func: F::DESCRIPTOR,
-        mutable: F::IS_MUT as u32,
-    };
-}
+compose_serialized_descriptor!(
+    ExportedDescriptor
+    [const N: usize, T]
+    [N, T]
+    {
+        name: SerializedName<N>,
+        descriptor: T,
+    }
+    {
+        pub const fn new(name: [char; N], descriptor: T) -> Self {
+            Self {
+                name: SerializedName::new(name),
+                descriptor,
+            }
+        }
+    }
+);
+
+compose_serialized_descriptor!(
+    NamedExternRef
+    [const N: usize]
+    [N]
+    {
+        tag: u32,
+        name: SerializedName<N>,
+    }
+    {
+        pub const fn new(name: [char; N]) -> Self {
+            Self {
+                tag: EXTERNREF,
+                name: SerializedName::new(name),
+            }
+        }
+    }
+);
+
+compose_serialized_descriptor!(
+    RustStruct
+    [const N: usize]
+    [N]
+    {
+        tag: u32,
+        name: SerializedName<N>,
+    }
+    {
+        pub const fn new(name: [char; N]) -> Self {
+            Self {
+                tag: RUST_STRUCT,
+                name: SerializedName::new(name),
+            }
+        }
+    }
+);
+
+compose_serialized_descriptor!(
+    StringEnum
+    [const N: usize]
+    [N]
+    {
+        tag: u32,
+        name: SerializedName<N>,
+        invalid: u32,
+        hole: u32,
+    }
+    {
+        pub const fn new(name: [char; N], invalid: u32, hole: u32) -> Self {
+            Self {
+                tag: STRING_ENUM,
+                name: SerializedName::new(name),
+                invalid,
+                hole,
+            }
+        }
+    }
+);
+
+compose_serialized_descriptor!(
+    Enum
+    [const N: usize]
+    [N]
+    {
+        tag: u32,
+        name: SerializedName<N>,
+        hole: u32,
+    }
+    {
+        pub const fn new(name: [char; N], hole: u32) -> Self {
+            Self {
+                tag: ENUM,
+                name: SerializedName::new(name),
+                hole,
+            }
+        }
+    }
+);
