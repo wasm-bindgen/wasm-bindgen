@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use syn::parse_quote;
 use syn::spanned::Spanned;
+use syn::visit_mut::{self, VisitMut};
 use wasm_bindgen_shared as shared;
 
 /// A trait for converting AST structs into Tokens and adding them to a TokenStream,
@@ -638,7 +639,7 @@ impl TryToTokens for ast::Export {
 
         let mut argtys = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
-            argtys.push(&*arg.pat_type.ty);
+            argtys.push((*arg.pat_type.ty).clone());
             let i = i + offset;
             let ident = Ident::new(&format!("arg{}", i), Span::call_site());
             fn unwrap_nested_types(ty: &syn::Type) -> &syn::Type {
@@ -873,39 +874,32 @@ impl TryToTokens for ast::Export {
 }
 
 fn func_descriptor(
-    argtys: Vec<&syn::Type>,
+    mut argtys: Vec<syn::Type>,
     r#async: bool,
     ret_ty: &TokenStream,
     inner_ret_ty: &TokenStream,
 ) -> TokenStream {
-    let (arg_descriptor_tys, arg_descriptors): (Vec<_>, Vec<_>) = argtys
-        .into_iter()
-        .map(|ty| match ty {
-            syn::Type::Reference(ty) => {
-                let kind = if ty.mutability.is_some() {
-                    "REFMUT"
-                } else if r#async {
-                    "LONGREF"
-                } else {
-                    "REF"
-                };
+    struct MakeAllLifetimesStatic {
+        r#async: bool,
+    }
 
-                let elem = &*ty.elem;
-                let kind = Ident::new(kind, Span::call_site());
-
-                (
-                    quote!(TaggedDescriptor::<#elem>),
-                    quote!(TaggedDescriptor::<#elem>::new(#kind)),
-                )
+    impl VisitMut for MakeAllLifetimesStatic {
+        fn visit_type_reference_mut(&mut self, ty: &mut syn::TypeReference) {
+            visit_mut::visit_type_reference_mut(self, ty);
+            ty.lifetime = Some(syn::Lifetime::new("'static", Span::call_site()));
+            if self.r#async && ty.mutability.is_none() {
+                *ty = parse_quote!(core::pin::Pin<#ty>);
             }
-            _ => (
-                quote!(<#ty as WasmDescribe>::Descriptor),
-                quote!(<#ty as WasmDescribe>::DESCRIPTOR),
-            ),
-        })
-        .unzip();
+        }
+    }
 
-    let nargs = arg_descriptor_tys.len() as u32;
+    let mut visitor = MakeAllLifetimesStatic { r#async };
+
+    for ty in &mut argtys {
+        visitor.visit_type_mut(ty);
+    }
+
+    let nargs = argtys.len() as u32;
 
     // In addition to generating the shim function above which is what
     // our generated JS will invoke, we *also* generate a "descriptor"
@@ -925,14 +919,14 @@ fn func_descriptor(
     // binary along with anything it references.
     quote! {
         #[repr(C)]
-        struct Args(#(#arg_descriptor_tys),*);
+        struct Args(#(<#argtys as WasmDescribe>::Descriptor),*);
 
         unsafe impl SerializedDescriptor for Args {}
 
         impl ArgsDescriptor for Args {
             const COUNT: u32 = #nargs;
 
-            const VALUE: Self = Self(#(#arg_descriptors),*);
+            const VALUE: Self = Self(#(<#argtys as WasmDescribe>::DESCRIPTOR),*);
         }
 
         type Descriptor = FuncDescriptor<Args, #ret_ty, #inner_ret_ty>;
@@ -1593,7 +1587,7 @@ impl ToTokens for DescribeImport<'_> {
             .function
             .arguments
             .iter()
-            .map(|arg| &*arg.pat_type.ty)
+            .map(|arg| (*arg.pat_type.ty).clone())
             .collect();
         let ret = match &f.js_ret {
             Some(ref t) => quote! { #t },
