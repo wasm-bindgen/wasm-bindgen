@@ -788,7 +788,6 @@ impl TryToTokens for ast::Export {
 
         let projection = quote! { <#ret_ty as #wasm_bindgen::convert::ReturnWasmAbi> };
         let convert_ret = quote! { #projection::return_abi(#ret).into() };
-        let nargs = self.function.arguments.len() as u32;
         let attrs = &self.function.rust_attrs;
 
         let mut checks = Vec::new();
@@ -838,6 +837,13 @@ impl TryToTokens for ast::Export {
             }
         }
 
+        let func_descriptor = Descriptor {
+            ident: &Ident::new(&export_name, Span::call_site()),
+            inner: func_descriptor(argtys, self.function.r#async, &ret_ty, &inner_ret_ty),
+            attrs,
+            wasm_bindgen,
+        };
+
         (quote! {
             #[automatically_derived]
             const _: () = {
@@ -857,77 +863,81 @@ impl TryToTokens for ast::Export {
                 }
                 }
             };
+
+            #func_descriptor
         })
         .to_tokens(into);
 
-        let (arg_descriptor_tys, arg_descriptors): (Vec<_>, Vec<_>) = argtys
-            .iter()
-            .map(|ty| match ty {
-                syn::Type::Reference(ty) => {
-                    let kind = if ty.mutability.is_some() {
-                        "REFMUT"
-                    } else if self.function.r#async {
-                        "LONGREF"
-                    } else {
-                        "REF"
-                    };
-
-                    let elem = &*ty.elem;
-                    let kind = Ident::new(kind, Span::call_site());
-
-                    (
-                        quote!(TaggedDescriptor::<#elem>),
-                        quote!(TaggedDescriptor::<#elem>::new(#kind)),
-                    )
-                }
-                _ => (
-                    quote!(<#ty as WasmDescribe>::Descriptor),
-                    quote!(<#ty as WasmDescribe>::DESCRIPTOR),
-                ),
-            })
-            .unzip();
-
-        // In addition to generating the shim function above which is what
-        // our generated JS will invoke, we *also* generate a "descriptor"
-        // shim. This descriptor shim uses the `WasmDescribe` trait to
-        // programmatically describe the type signature of the generated
-        // shim above. This in turn is then used to inform the
-        // `wasm-bindgen` CLI tool exactly what types and such it should be
-        // using in JS.
-        //
-        // Note that this descriptor function is a purely an internal detail
-        // of `#[wasm_bindgen]` and isn't intended to be exported to anyone
-        // or actually part of the final was binary. Additionally, this is
-        // literally executed when the `wasm-bindgen` tool executes.
-        //
-        // In any case, there's complications in `wasm-bindgen` to handle
-        // this, but the tl;dr; is that this is stripped from the final wasm
-        // binary along with anything it references.
-        let export = Ident::new(&export_name, Span::call_site());
-        Descriptor {
-            ident: &export,
-            inner: quote! {
-                #[repr(C)]
-                struct Args(#(#arg_descriptor_tys),*);
-
-                unsafe impl SerializedDescriptor for Args {}
-
-                impl ArgsDescriptor for Args {
-                    const COUNT: u32 = #nargs;
-
-                    const VALUE: Self = Self(#(#arg_descriptors),*);
-                }
-
-                type Descriptor = FuncDescriptor<Args, #ret_ty, #inner_ret_ty>;
-
-                const DESCRIPTOR: Descriptor = Descriptor::SHIM;
-            },
-            attrs,
-            wasm_bindgen,
-        }
-        .to_tokens(into);
-
         Ok(())
+    }
+}
+
+fn func_descriptor(
+    argtys: Vec<&syn::Type>,
+    r#async: bool,
+    ret_ty: &TokenStream,
+    inner_ret_ty: &TokenStream,
+) -> TokenStream {
+    let (arg_descriptor_tys, arg_descriptors): (Vec<_>, Vec<_>) = argtys
+        .into_iter()
+        .map(|ty| match ty {
+            syn::Type::Reference(ty) => {
+                let kind = if ty.mutability.is_some() {
+                    "REFMUT"
+                } else if r#async {
+                    "LONGREF"
+                } else {
+                    "REF"
+                };
+
+                let elem = &*ty.elem;
+                let kind = Ident::new(kind, Span::call_site());
+
+                (
+                    quote!(TaggedDescriptor::<#elem>),
+                    quote!(TaggedDescriptor::<#elem>::new(#kind)),
+                )
+            }
+            _ => (
+                quote!(<#ty as WasmDescribe>::Descriptor),
+                quote!(<#ty as WasmDescribe>::DESCRIPTOR),
+            ),
+        })
+        .unzip();
+
+    let nargs = arg_descriptor_tys.len() as u32;
+
+    // In addition to generating the shim function above which is what
+    // our generated JS will invoke, we *also* generate a "descriptor"
+    // shim. This descriptor shim uses the `WasmDescribe` trait to
+    // programmatically describe the type signature of the generated
+    // shim above. This in turn is then used to inform the
+    // `wasm-bindgen` CLI tool exactly what types and such it should be
+    // using in JS.
+    //
+    // Note that this descriptor function is a purely an internal detail
+    // of `#[wasm_bindgen]` and isn't intended to be exported to anyone
+    // or actually part of the final was binary. Additionally, this is
+    // literally executed when the `wasm-bindgen` tool executes.
+    //
+    // In any case, there's complications in `wasm-bindgen` to handle
+    // this, but the tl;dr; is that this is stripped from the final wasm
+    // binary along with anything it references.
+    quote! {
+        #[repr(C)]
+        struct Args(#(#arg_descriptor_tys),*);
+
+        unsafe impl SerializedDescriptor for Args {}
+
+        impl ArgsDescriptor for Args {
+            const COUNT: u32 = #nargs;
+
+            const VALUE: Self = Self(#(#arg_descriptors),*);
+        }
+
+        type Descriptor = FuncDescriptor<Args, #ret_ty, #inner_ret_ty>;
+
+        const DESCRIPTOR: Descriptor = Descriptor::SHIM;
     }
 }
 
@@ -1583,7 +1593,7 @@ impl ToTokens for DescribeImport<'_> {
             .function
             .arguments
             .iter()
-            .map(|arg| &arg.pat_type.ty)
+            .map(|arg| &*arg.pat_type.ty)
             .collect();
         let ret = match &f.js_ret {
             Some(ref t) => quote! { #t },
@@ -1593,26 +1603,10 @@ impl ToTokens for DescribeImport<'_> {
         };
 
         let wasm_bindgen = self.wasm_bindgen;
-        let nargs = f.function.arguments.len() as u32;
 
         Descriptor {
             ident: &f.shim,
-            inner: quote! {
-                #[repr(C)]
-                struct Args(#(<#argtys as WasmDescribe>::Descriptor),*);
-
-                unsafe impl SerializedDescriptor for Args {}
-
-                impl ArgsDescriptor for Args {
-                    const COUNT: u32 = #nargs;
-
-                    const VALUE: Self = Self(#(<#argtys as WasmDescribe>::DESCRIPTOR),*);
-                }
-
-                type Descriptor = #wasm_bindgen::describe::FuncDescriptor<Args, #ret, #ret>;
-
-                const DESCRIPTOR: Descriptor = Descriptor::SHIM;
-            },
+            inner: func_descriptor(argtys, f.function.r#async, &ret, &ret),
             attrs: &f.function.rust_attrs,
             wasm_bindgen,
         }

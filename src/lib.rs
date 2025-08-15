@@ -188,15 +188,48 @@ impl JsValue {
             _marker: PhantomData,
         }
     }
-
     /// Creates a new JS value which is a string.
     ///
     /// The utf-8 string provided is copied to the JS heap and the string will
     /// be owned by the JS garbage collector.
-    #[allow(clippy::should_implement_trait)] // cannot fix without breaking change
+    #[allow(clippy::should_implement_trait)]
     #[inline]
     pub fn from_str(s: &str) -> JsValue {
-        wbg_cast!(s, &str, JsValue)
+        {
+            #[allow(nonstandard_style)]
+            #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
+            fn __wbindgen_cast(value: &str) -> JsValue {
+                unsafe fn __wbg_cast_38bad4997839d643(
+                    value_1: <<&str as crate::convert::IntoWasmAbi>::Abi as crate::convert::WasmAbi>::Prim1,
+                    value_2: <<&str as crate::convert::IntoWasmAbi>::Abi as crate::convert::WasmAbi>::Prim2,
+                    value_3: <<&str as crate::convert::IntoWasmAbi>::Abi as crate::convert::WasmAbi>::Prim3,
+                    value_4: <<&str as crate::convert::IntoWasmAbi>::Abi as crate::convert::WasmAbi>::Prim4,
+                ) -> crate::convert::WasmRet<<JsValue as crate::convert::FromWasmAbi>::Abi>
+                {
+                    drop(value_1);
+                    drop(value_2);
+                    drop(value_3);
+                    drop(value_4);
+                    panic!();
+                    // {
+                    //     ::core::panicking::panic_fmt(format_args!(
+                    //         "cannot call wasm-bindgen imported functions on non-wasm targets",
+                    //     ));
+                    // };
+                }
+                unsafe {
+                    let _ret = {
+                        let value = <&str as crate::convert::IntoWasmAbi>::into_abi(value);
+                        let (value_1, value_2, value_3, value_4) = <<&str as crate::convert::IntoWasmAbi>::Abi as crate::convert::WasmAbi>::split(
+                            value,
+                        );
+                        __wbg_cast_38bad4997839d643(value_1, value_2, value_3, value_4)
+                    };
+                    <JsValue as crate::convert::FromWasmAbi>::from_abi(_ret.join())
+                }
+            }
+            __wbindgen_cast(s)
+        }
     }
 
     /// Creates a new JS value which is a number.

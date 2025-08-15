@@ -8,7 +8,7 @@ use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{
-    ArgsDescriptor, FuncDescriptor, SerializedDescriptor, TaggedDescriptor, WasmDescribe, REF,
+    ArgsDescriptor, FuncDescriptor, SerializedDescriptor, TaggedDescriptor, WasmDescribe,
 };
 use crate::throw_str;
 use crate::JsValue;
