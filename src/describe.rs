@@ -31,8 +31,12 @@ pub unsafe trait SerializedDescriptor {}
 
 unsafe impl SerializedDescriptor for u32 {}
 unsafe impl SerializedDescriptor for char {}
-unsafe impl SerializedDescriptor for usize {}
-unsafe impl SerializedDescriptor for *const () {}
+
+pub struct FnPtr(pub *const ());
+
+unsafe impl SerializedDescriptor for FnPtr {}
+
+unsafe impl Sync for FnPtr {}
 
 unsafe impl<const N: usize, T: SerializedDescriptor> SerializedDescriptor for [T; N] {}
 
@@ -45,11 +49,11 @@ macro_rules! compose_serialized_descriptor {
 
         unsafe impl $(<$($decl_header)*>)? SerializedDescriptor for $name $(<$($usage_header)*>)?
         where
-            $($ty: SerializedDescriptor,)*
+            // $($ty: SerializedDescriptor,)*
             $($($where)*)?
         {}
 
-        impl $(<$($decl_header)*>)? $name $(<$($usage_header)*>)? $impl
+        impl $(<$($decl_header)*>)? $name $(<$($usage_header)*>)? $(where $($where)*)? $impl
     };
 }
 
@@ -142,12 +146,6 @@ impl<T: WasmDescribe> WasmDescribe for [T] {
     const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(SLICE);
 }
 
-trait ArgDescribe {
-    type Descriptor: SerializedDescriptor;
-
-    const DESCRIPTOR: Self::Descriptor;
-}
-
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &T {
     type Descriptor = TaggedDescriptor<T>;
 
@@ -234,7 +232,7 @@ compose_serialized_descriptor!(
     [F, R, RetInner]
     {
         tag: u32,
-        invoke_fn: *const (),
+        invoke_fn: FnPtr,
         count: u32,
         args: F,
         ret: R::Descriptor,
@@ -244,7 +242,7 @@ compose_serialized_descriptor!(
         pub const fn new(invoke_fn: *const ()) -> Self {
             Self {
                 tag: FUNCTION,
-                invoke_fn,
+                invoke_fn: FnPtr(invoke_fn),
                 count: F::COUNT,
                 args: F::VALUE,
                 ret: R::DESCRIPTOR,
@@ -262,7 +260,7 @@ compose_serialized_descriptor!(
     [F]
     {
         tag: u32,
-        dtor_fn: *const (),
+        dtor_fn: FnPtr,
         func: F::Descriptor,
         mutable: u32,
     }
@@ -283,7 +281,7 @@ compose_serialized_descriptor!(
 
         pub const VALUE: Self = Self {
             tag: CLOSURE,
-            dtor_fn: Self::destroy as *const (),
+            dtor_fn: FnPtr(Self::destroy as _),
             func: F::DESCRIPTOR,
             mutable: F::IS_MUT as u32,
         };
@@ -295,12 +293,12 @@ compose_serialized_descriptor!(
     [const N: usize]
     [N]
     {
-        len: usize,
+        len: u32,
         name: [char; N],
     }
     {
         pub const fn new(name: [char; N]) -> Self {
-            Self { len: N, name }
+            Self { len: N as u32, name }
         }
     }
 );

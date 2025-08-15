@@ -10,7 +10,6 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use syn::parse_quote;
 use syn::spanned::Spanned;
-use syn::TypeReference;
 use wasm_bindgen_shared as shared;
 
 /// A trait for converting AST structs into Tokens and adding them to a TokenStream,
@@ -529,7 +528,8 @@ impl ToTokens for ast::StructField {
 
                 const DESCRIPTOR: Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
             },
-            attrs: vec![],
+            attrs: &[],
+            wasm_bindgen,
         }
         .to_tokens(tokens);
 
@@ -860,28 +860,32 @@ impl TryToTokens for ast::Export {
         })
         .to_tokens(into);
 
-        let describe_args: Vec<_> = argtys
+        let (arg_descriptor_tys, arg_descriptors): (Vec<_>, Vec<_>) = argtys
             .iter()
             .map(|ty| match ty {
                 syn::Type::Reference(ty) => {
-                    // Unfortunately, Rust doesn't allow implicit lifetimes like `<&T as Trait>`,
-                    // even though `&T` is allowed in args. To get the descriptor, we need to
-                    // substitute an explicit lifetime - 'static should work since all our
-                    // types aside from references are expected to be static.
-                    let lt_erased = syn::TypeReference {
-                        lifetime: Some(syn::Lifetime::new("'static", Span::call_site())),
-                        ..ty.clone()
-                    };
-                    if self.function.r#async && ty.mutability.is_none() {
-                        // For long-lived references, wrap them in `Pin`.
-                        quote!(Pin<#lt_erased>)
+                    let kind = if ty.mutability.is_some() {
+                        "REFMUT"
+                    } else if self.function.r#async {
+                        "LONGREF"
                     } else {
-                        quote!(#lt_erased)
-                    }
+                        "REF"
+                    };
+
+                    let elem = &*ty.elem;
+                    let kind = Ident::new(kind, Span::call_site());
+
+                    (
+                        quote!(TaggedDescriptor::<#elem>),
+                        quote!(TaggedDescriptor::<#elem>::new(#kind)),
+                    )
                 }
-                _ => quote!(#ty),
+                _ => (
+                    quote!(<#ty as WasmDescribe>::Descriptor),
+                    quote!(<#ty as WasmDescribe>::DESCRIPTOR),
+                ),
             })
-            .collect();
+            .unzip();
 
         // In addition to generating the shim function above which is what
         // our generated JS will invoke, we *also* generate a "descriptor"
@@ -904,21 +908,22 @@ impl TryToTokens for ast::Export {
             ident: &export,
             inner: quote! {
                 #[repr(C)]
-                struct Args(#(<#describe_args>::Descriptor),*);
+                struct Args(#(#arg_descriptor_tys),*);
 
                 unsafe impl SerializedDescriptor for Args {}
 
                 impl ArgsDescriptor for Args {
                     const COUNT: u32 = #nargs;
 
-                    const VALUE: Self = Self(#(<#describe_args>::DESCRIPTOR),*);
+                    const VALUE: Self = Self(#(#arg_descriptors),*);
                 }
 
                 type Descriptor = FuncDescriptor<Args, #ret_ty, #inner_ret_ty>;
 
                 const DESCRIPTOR: Descriptor = Descriptor::SHIM;
             },
-            attrs: attrs.clone(),
+            attrs,
+            wasm_bindgen,
         }
         .to_tokens(into);
 
@@ -964,15 +969,15 @@ impl ToTokens for ast::ImportType {
         let description = if let Some(typescript_type) = &self.typescript_type {
             let (typescript_type_len, encoded_typescript_type) = encode_name(typescript_type);
             quote! {
-                type Descriptor = NamedExternRef<#typescript_type_len>;
+                type Descriptor = #wasm_bindgen::describe::NamedExternRef<#typescript_type_len>;
 
                 const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(#encoded_typescript_type);
             }
         } else {
             quote! {
-                type Descriptor = JsValue::Descriptor;
+                type Descriptor = <JsValue as WasmDescribe>::Descriptor;
 
-                const DESCRIPTOR: Self::Descriptor = JsValue::DESCRIPTOR;
+                const DESCRIPTOR: Self::Descriptor = <JsValue as WasmDescribe>::DESCRIPTOR;
             }
         };
 
@@ -1319,6 +1324,7 @@ impl ToTokens for ast::StringEnum {
                 const DESCRIPTOR: Self::Descriptor = Self::Descriptor::new(
                     #encoded_name,
                     #variant_count,
+                    #hole,
                 );
             }
 
@@ -1593,21 +1599,22 @@ impl ToTokens for DescribeImport<'_> {
             ident: &f.shim,
             inner: quote! {
                 #[repr(C)]
-                struct Args(#(<#argtys>::Descriptor),*);
+                struct Args(#(<#argtys as WasmDescribe>::Descriptor),*);
 
                 unsafe impl SerializedDescriptor for Args {}
 
                 impl ArgsDescriptor for Args {
                     const COUNT: u32 = #nargs;
 
-                    const VALUE: Self = Self(#(<#argtys>::DESCRIPTOR),*);
+                    const VALUE: Self = Self(#(<#argtys as WasmDescribe>::DESCRIPTOR),*);
                 }
 
-                type Descriptor = #wasm_bindgen::closures::FuncDescriptor<Args, #ret, #ret>;
+                type Descriptor = #wasm_bindgen::describe::FuncDescriptor<Args, #ret, #ret>;
 
                 const DESCRIPTOR: Descriptor = Descriptor::SHIM;
             },
-            attrs: f.function.rust_attrs.clone(),
+            attrs: &f.function.rust_attrs,
+            wasm_bindgen,
         }
         .to_tokens(tokens);
     }
@@ -1706,9 +1713,9 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
-                type VectorDescriptor = <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribeVector>::VectorDescriptor;
+                type VectorDescriptor = <#wasm_bindgen::JsValue as WasmDescribeVector>::VectorDescriptor;
 
-                const VECTOR_DESCRIPTOR: Self::VectorDescriptor = <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribeVector>::VECTOR_DESCRIPTOR;
+                const VECTOR_DESCRIPTOR: Self::VectorDescriptor = <#wasm_bindgen::JsValue as WasmDescribeVector>::VECTOR_DESCRIPTOR;
             }
 
             #[automatically_derived]
@@ -1798,7 +1805,8 @@ impl ToTokens for ast::ImportStatic {
 
                 const DESCRIPTOR: Self::Descriptor = <#ty as WasmDescribe>::DESCRIPTOR;
             },
-            attrs: vec![],
+            attrs: &[],
+            wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
     }
@@ -1880,13 +1888,14 @@ fn static_init(wasm_bindgen: &syn::Path, ty: &syn::Type, shim_name: &Ident) -> T
 
 /// Emits the necessary glue tokens for "descriptor", generating an appropriate
 /// symbol name as well as attributes around the descriptor function itself.
-struct Descriptor<'a, T> {
+struct Descriptor<'a> {
     ident: &'a Ident,
-    inner: T,
-    attrs: Vec<syn::Attribute>,
+    inner: TokenStream,
+    attrs: &'a [syn::Attribute],
+    wasm_bindgen: &'a syn::Path,
 }
 
-impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
+impl ToTokens for Descriptor<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         // It's possible for the same descriptor to be emitted in two different
         // modules (aka a value imported twice in a crate, each in a separate
@@ -1910,17 +1919,20 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
 
         let inner = &self.inner;
         let attrs = &self.attrs;
+        let wasm_bindgen = &self.wasm_bindgen;
         (quote_spanned! { ident.span() =>
             #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
             #[automatically_derived]
             const _: () = {
+                use #wasm_bindgen::describe::*;
+
                 #inner
 
                 #(#attrs)*
                 #[link_section = "__wasm_bindgen_descriptors"]
-                static _DESCRIPTOR: ExportedDescriptor<#name_len, Descriptor> = exported_descriptor(
+                static _DESCRIPTOR: ExportedDescriptor<#name_len, Descriptor> = ExportedDescriptor::new(
                     #encoded_name,
-                    #ident::DESCRIPTOR,
+                    DESCRIPTOR,
                 );
             };
         })
