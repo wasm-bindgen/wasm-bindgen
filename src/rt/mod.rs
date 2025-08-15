@@ -35,7 +35,6 @@ macro_rules! wbg_cast {
     ($value:expr, $from:ty, $to:ty) => {{
         #[$crate::prelude::wasm_bindgen(wasm_bindgen = $crate)]
         extern "C" {
-            /// Foobar.
             #[wasm_bindgen(js_name = "/* cast */")]
             fn __wbindgen_cast(value: $from) -> $to;
         }
