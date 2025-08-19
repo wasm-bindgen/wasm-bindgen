@@ -17,7 +17,7 @@ fn runtest(test: &Test) -> Result<String> {
     let mut walrus = ModuleConfig::new()
         .generate_producers_section(false)
         .parse(&wasm)?;
-    let mut cx = wasm_bindgen_externref_xform::Context::default();
+    let mut cx = super::Context::default();
     cx.prepare(&mut walrus)?;
     for directive in test.directives.iter() {
         match &directive.kind {
@@ -50,7 +50,7 @@ fn runtest(test: &Test) -> Result<String> {
 
 #[rstest::rstest]
 fn run_test(
-    #[base_dir = "tests"]
+    #[base_dir = "src/transforms/externref/tests"]
     #[files("*.wat")]
     test: PathBuf,
 ) -> Result<()> {

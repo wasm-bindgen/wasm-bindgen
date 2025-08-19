@@ -17,7 +17,7 @@ fn runtest(test: &Test) -> Result<String> {
         .generate_producers_section(false)
         .parse(&wasm)?;
 
-    wasm_bindgen_threads_xform::run(&mut module)?;
+    super::run(&mut module)?;
     walrus::passes::gc::run(&mut module);
 
     let features = wasmparser::WasmFeatures::default() | wasmparser::WasmFeatures::THREADS;
@@ -31,7 +31,7 @@ fn runtest(test: &Test) -> Result<String> {
 
 #[rstest::rstest]
 fn run_test(
-    #[base_dir = "tests"]
+    #[base_dir = "src/transforms/threads/tests"]
     #[files("*.wat")]
     test: PathBuf,
 ) -> Result<()> {

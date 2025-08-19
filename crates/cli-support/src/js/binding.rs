@@ -1543,7 +1543,7 @@ impl Invocation {
             // The function table never changes right now, so we can statically
             // look up the desired function.
             CallTableElement(idx) => {
-                let entry = wasm_bindgen_wasm_conventions::get_function_table_entry(module, *idx)?;
+                let entry = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
                 let id = entry
                     .func
                     .ok_or_else(|| anyhow!("function table wasn't filled in a {}", idx))?;

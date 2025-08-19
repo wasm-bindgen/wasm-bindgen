@@ -112,7 +112,7 @@ You can find general documentation about using Rust and WebAssembly together
 
 Libraries that are released on [crates.io](https://crates.io) have a MSRV of v1.57. Changes to the MSRV will be accompanied by a minor version bump.
 
-CLI tools and their corresponding support libraries have a MSRV of v1.76. Changes to the MSRV will be accompanied by a patch version bump.
+CLI tools and their corresponding support libraries have a MSRV of v1.82. Changes to the MSRV will be accompanied by a patch version bump.
 
 ## License
 

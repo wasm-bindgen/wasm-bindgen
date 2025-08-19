@@ -119,7 +119,7 @@ pub fn run(
     to_xform: &[(walrus::FunctionId, usize, Vec<walrus::ValType>)],
 ) -> Result<Vec<walrus::FunctionId>, anyhow::Error> {
     // Insert multi-value to the target features section.
-    wasm_bindgen_wasm_conventions::insert_target_feature(module, "multivalue")
+    crate::wasm_conventions::insert_target_feature(module, "multivalue")
         .context("failed to parse `target_features` custom section")?;
 
     let mut wrappers = Vec::new();
@@ -307,29 +307,4 @@ fn xform_one(
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn round_up_to_alignment_works() {
-        for &(n, align, expected) in &[
-            (0, 1, 0),
-            (1, 1, 1),
-            (2, 1, 2),
-            (0, 2, 0),
-            (1, 2, 2),
-            (2, 2, 2),
-            (3, 2, 4),
-            (0, 4, 0),
-            (1, 4, 4),
-            (2, 4, 4),
-            (3, 4, 4),
-            (4, 4, 4),
-            (5, 4, 8),
-        ] {
-            let actual = super::round_up_to_alignment(n, align);
-            println!(
-                "round_up_to_alignment(n = {n}, align = {align}) = {actual} (expected {expected})"
-            );
-            assert_eq!(actual, expected);
-        }
-    }
-}
+mod tests;

@@ -70,6 +70,17 @@
 * Fix proc-macro hygiene with `core`.
   [#4606](https://github.com/wasm-bindgen/wasm-bindgen/pull/4606)
 
+### Removed
+
+* Crates intended purely for internal consumption by the wasm-bindgen CLI will no longer be published:
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
+
+  * `wasm-bindgen-externref-xform`
+  * `wasm-bindgen-multi-value-xform`
+  * `wasm-bindgen-threads-xform`
+  * `wasm-bindgen-wasm-conventions`
+  * `wasm-bindgen-wasm-interpreter`
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)

@@ -1,5 +1,5 @@
+use super::Interpreter;
 use walrus::ModuleConfig;
-use wasm_bindgen_wasm_interpreter::Interpreter;
 
 fn interpret(wat: &str, name: &str, result: Option<&[u32]>) {
     let wasm = wat::parse_str(wat).unwrap();

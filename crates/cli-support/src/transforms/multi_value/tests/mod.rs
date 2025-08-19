@@ -34,7 +34,7 @@ fn runtest(test: &Test) -> Result<String> {
     }
     let memory = walrus.memories.iter().next().unwrap().id();
     let stack_pointer = walrus.globals.iter().next().unwrap().id();
-    let ret = wasm_bindgen_multi_value_xform::run(&mut walrus, memory, stack_pointer, &xforms)?;
+    let ret = super::run(&mut walrus, memory, stack_pointer, &xforms)?;
     for (export, id) in exports.into_iter().zip(ret) {
         walrus.exports.get_mut(export).item = walrus::ExportItem::Function(id);
     }
@@ -45,7 +45,7 @@ fn runtest(test: &Test) -> Result<String> {
 
 #[rstest::rstest]
 fn run_test(
-    #[base_dir = "tests"]
+    #[base_dir = "src/transforms/multi_value/tests"]
     #[files("*.wat")]
     test: PathBuf,
 ) -> Result<()> {
@@ -162,5 +162,30 @@ impl<'a> Parse<'a> for Directive {
             Ok(())
         })?;
         Ok(Directive { name, tys })
+    }
+}
+
+#[test]
+fn round_up_to_alignment_works() {
+    for &(n, align, expected) in &[
+        (0, 1, 0),
+        (1, 1, 1),
+        (2, 1, 2),
+        (0, 2, 0),
+        (1, 2, 2),
+        (2, 2, 2),
+        (3, 2, 4),
+        (0, 4, 0),
+        (1, 4, 4),
+        (2, 4, 4),
+        (3, 4, 4),
+        (4, 4, 4),
+        (5, 4, 8),
+    ] {
+        let actual = super::round_up_to_alignment(n, align);
+        println!(
+            "round_up_to_alignment(n = {n}, align = {align}) = {actual} (expected {expected})"
+        );
+        assert_eq!(actual, expected);
     }
 }

@@ -1,5 +1,6 @@
 use crate::descriptor::VectorKind;
 use crate::intrinsic::Intrinsic;
+use crate::transforms::threads as threads_xform;
 use crate::wit::{
     Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
     AuxValue,
@@ -157,7 +158,7 @@ impl<'a> Context<'a> {
             used_string_enums: Default::default(),
             exported_classes: Some(Default::default()),
             config,
-            threads_enabled: wasm_bindgen_threads_xform::is_enabled(module),
+            threads_enabled: threads_xform::is_enabled(module),
             module,
             npm_dependencies: Default::default(),
             next_export_idx: 0,
@@ -1031,7 +1032,7 @@ __wbg_set_wasm(wasm);"
             init_stack_size_check = if self.threads_enabled {
                 format!(
                     "if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {} !== 0)) {{ throw 'invalid stack size' }}",
-                    wasm_bindgen_threads_xform::PAGE_SIZE,
+                    threads_xform::PAGE_SIZE,
                 )
             } else {
                 String::new()

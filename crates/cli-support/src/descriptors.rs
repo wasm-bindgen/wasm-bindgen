@@ -11,12 +11,12 @@
 //! functions.
 
 use crate::descriptor::{Closure, Descriptor};
+use crate::interpreter::Interpreter;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use walrus::{ConstExpr, ElementItems, ElementKind, ImportId, RefType};
 use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
-use wasm_bindgen_wasm_interpreter::Interpreter;
 
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
