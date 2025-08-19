@@ -56,6 +56,7 @@
 use anyhow::{bail, Result};
 use assert_cmd::prelude::*;
 use std::env;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -106,7 +107,7 @@ fn runtest(test: &Path) -> Result<()> {
     );
 
     fs::write(td.path().join("Cargo.toml"), manifest)?;
-    let target_dir = target_dir();
+    let target_dir = target_dir(test.file_name().unwrap());
     let mut cargo = Command::new("cargo");
     cargo
         .current_dir(td.path())
@@ -255,8 +256,8 @@ fn diff(a: &str, b: &str) -> Result<()> {
     bail!("found a difference:\n\n{}", s);
 }
 
-fn target_dir() -> PathBuf {
-    repo_root().join("target/tests/reference")
+fn target_dir(name: &OsStr) -> PathBuf {
+    repo_root().join("target/tests/reference").join(name)
 }
 
 fn repo_root() -> PathBuf {
