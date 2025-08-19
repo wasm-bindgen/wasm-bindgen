@@ -119,7 +119,7 @@ macro_rules! closures {
         // deallocate data immediately.
 
         #[allow(non_snake_case, unused_parens)]
-        impl<T, $($var,)* R> WasmClosureFnOnce<dyn FnMut $FnArgs -> R> for T
+        impl<T, $($var,)* R> WasmClosureFnOnce<dyn FnMut $FnArgs -> R, $FnArgs, R> for T
         where
             T: 'static + FnOnce $FnArgs -> R,
             $($var: $FromWasmAbi + 'static,)*
