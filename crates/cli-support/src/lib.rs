@@ -762,8 +762,7 @@ fn gc_module_and_adapters(module: &mut Module) {
         // good to go. If something is deleted though then we may have free'd up
         // some functions in the main module to get deleted, so go again to gc
         // things.
-        let aux = module.customs.get_typed::<wit::WasmBindgenAux>().unwrap();
-        let any_removed = section.gc(aux);
+        let any_removed = section.gc();
         module.customs.add(*section);
         if !any_removed {
             break;

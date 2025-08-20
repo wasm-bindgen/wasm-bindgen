@@ -1,4 +1,4 @@
-use crate::descriptor::Descriptor;
+use crate::descriptor::{Descriptor, Function};
 use crate::wit::{AdapterType, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, format_err, Error};
@@ -177,6 +177,34 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
+    fn outgoing_ref_function(
+        &mut self,
+        mutable: bool,
+        descriptor: &Function,
+        dtor_idx_if_persistent: Option<u32>,
+    ) -> Result<(), Error> {
+        let mut descriptor = descriptor.clone();
+        // synthesize the a/b arguments that aren't present in the
+        // signature from wasm-bindgen but are present in the Wasm file.
+        let nargs = descriptor.arguments.len();
+        descriptor.arguments.insert(0, Descriptor::I32);
+        descriptor.arguments.insert(0, Descriptor::I32);
+        let adapter = self
+            .cx
+            .table_element_adapter(descriptor.shim_idx, descriptor)?;
+        self.instruction(
+            &[AdapterType::I32, AdapterType::I32],
+            Instruction::Closure {
+                adapter,
+                nargs,
+                mutable,
+                dtor_idx_if_persistent,
+            },
+            &[AdapterType::Function],
+        );
+        Ok(())
+    }
+
     fn outgoing_ref(&mut self, mutable: bool, arg: &Descriptor) -> Result<(), Error> {
         match arg {
             Descriptor::Externref => {
@@ -221,24 +249,15 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Function(descriptor) => {
-                // synthesize the a/b arguments that aren't present in the
-                // signature from wasm-bindgen but are present in the Wasm file.
-                let mut descriptor = (**descriptor).clone();
-                let nargs = descriptor.arguments.len();
-                descriptor.arguments.insert(0, Descriptor::I32);
-                descriptor.arguments.insert(0, Descriptor::I32);
-                let adapter = self
-                    .cx
-                    .table_element_adapter(descriptor.shim_idx, descriptor)?;
-                self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
-                    Instruction::StackClosure {
-                        adapter,
-                        nargs,
-                        mutable,
-                    },
-                    &[AdapterType::Function],
-                );
+                self.outgoing_ref_function(mutable, descriptor, None)?;
+            }
+
+            Descriptor::Closure(descriptor) => {
+                self.outgoing_ref_function(
+                    descriptor.mutable,
+                    &descriptor.function,
+                    Some(descriptor.dtor_idx),
+                )?;
             }
 
             _ => bail!(

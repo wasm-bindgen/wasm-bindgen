@@ -272,7 +272,9 @@ fn check_standard_import(import: &AuxImport) -> Result<(), Error> {
         AuxImport::LinkTo(path, _) => {
             format!("wasm-bindgen specific link function for `{}`", path)
         }
-        AuxImport::Closure { .. } => format!("creating a `Closure` wrapper"),
+        AuxImport::Cast => {
+            format!("wasm-bindgen cast function")
+        }
         AuxImport::UnwrapExportedClass(name) => {
             format!("unwrapping a pointer from a `{}` js class wrapper", name)
         }
