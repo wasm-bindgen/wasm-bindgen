@@ -31,10 +31,10 @@ use walrus::{ExportId, FunctionId, LocalId, Module, TableId};
 #[derive(Default)]
 pub struct Interpreter {
     // Function index of the `__wbindgen_describe` and
-    // `__wbindgen_describe_closure` imported functions. We special case this
+    // `__wbindgen_describe_cast` imported functions. We special case this
     // to know when the environment's imported function is called.
     describe_id: Option<FunctionId>,
-    describe_closure_id: Option<FunctionId>,
+    describe_cast_id: Option<FunctionId>,
 
     // Id of the function table
     functions: Option<TableId>,
@@ -117,8 +117,8 @@ impl Interpreter {
             }
             if import.name == "__wbindgen_describe" {
                 ret.describe_id = Some(id);
-            } else if import.name == "__wbindgen_describe_closure" {
-                ret.describe_closure_id = Some(id);
+            } else if import.name == "__wbindgen_describe_cast" {
+                ret.describe_cast_id = Some(id);
             }
         }
 
@@ -187,10 +187,10 @@ impl Interpreter {
         Some(&self.descriptor)
     }
 
-    /// Returns the function id of the `__wbindgen_describe_closure`
+    /// Returns the function id of the `__wbindgen_describe_cast`
     /// imported function.
-    pub fn describe_closure_id(&self) -> Option<FunctionId> {
-        self.describe_closure_id
+    pub fn describe_cast_id(&self) -> Option<FunctionId> {
+        self.describe_cast_id
     }
 
     /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
@@ -333,17 +333,13 @@ impl Frame<'_> {
                     log::trace!("__wbindgen_describe({val})");
                     self.interp.descriptor.push(val as u32);
 
-                // If this function is calling the `__wbindgen_describe_closure`
+                // If this function is calling the `__wbindgen_describe_cast`
                 // function then it's just a marker for the parent function
                 // to be treated as a cast.
-                } else if Some(func) == self.interp.describe_closure_id {
-                    log::trace!("__wbindgen_describe_closure()");
-                    // The parent (cast wrapper) can return arbitrary type.
-                    // To be compatible with anything, we declare return type of
-                    // `__wbindgen_describe_closure` as `!` (never type).
-                    // This means the interpreter must stop after this call.
-                    // Cleanup the stack pointer while at it to match
-                    // `interpret_descriptor`'s expectations.
+                } else if Some(func) == self.interp.describe_cast_id {
+                    log::trace!("__wbindgen_describe_cast()");
+                    // `__wbindgen_describe_cast` marks the end of the cast
+                    // descriptor. Stop here, ignoring anything on the stack.
                     self.interp.sp = self.interp.mem.len() as i32;
                     self.done = true;
 
