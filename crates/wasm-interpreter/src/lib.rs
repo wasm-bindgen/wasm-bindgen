@@ -161,7 +161,7 @@ impl Interpreter {
     ///
     /// Returns `Some` if `func` was found in the `module` and `None` if it was
     /// not found in the `module`.
-    pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> Option<&[u32]> {
+    pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> &[u32] {
         self.descriptor.truncate(0);
 
         // We should have a blank Wasm and LLVM stack at both the start and end
@@ -184,7 +184,7 @@ impl Interpreter {
         self.call(id, module, &args);
 
         assert_eq!(self.sp, self.mem.len() as i32);
-        Some(&self.descriptor)
+        &self.descriptor
     }
 
     /// Returns the function id of the `__wbindgen_describe_cast`
