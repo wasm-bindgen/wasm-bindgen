@@ -1,10 +1,10 @@
 use crate::decode::LocalModule;
 use crate::descriptor::{Descriptor, Function};
-use crate::descriptors::WasmBindgenDescriptorsSection;
+use crate::descriptors::{CastImport, WasmBindgenDescriptorsSection};
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
-use anyhow::{anyhow, bail, Error};
+use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
 use std::str;
 use walrus::MemoryId;
@@ -168,14 +168,13 @@ impl<'a> Context<'a> {
             // getting gc'd
             self.aux.function_table = self.module.tables.main_function_table()?;
 
-            for cast in cast_imports {
-                let signature = Function {
-                    shim_idx: 0,
-                    arguments: vec![cast.from],
-                    ret: cast.to,
-                    inner_ret: None,
-                };
-                let id = self.import_adapter(cast.id, signature, AdapterJsImportKind::Normal)?;
+            for CastImport { id, descriptor } in cast_imports {
+                let signature = descriptor.unwrap_function();
+                ensure!(
+                    signature.arguments.len() == 1,
+                    "Cast function must take exactly one argument"
+                );
+                let id = self.import_adapter(id, signature, AdapterJsImportKind::Normal)?;
                 self.aux.import_map.insert(id, AuxImport::Cast);
             }
         }

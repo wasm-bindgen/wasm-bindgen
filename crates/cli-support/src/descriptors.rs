@@ -120,8 +120,7 @@ impl WasmBindgenDescriptorsSection {
                 .add("__wbindgen_placeholder__", &import_name, func_id);
             self.cast_imports.push(CastImport {
                 id: import_id,
-                from: descriptor.clone(),
-                to: Descriptor::Externref,
+                descriptor,
             });
             module.funcs.get_mut(func_id).kind = FunctionKind::Import(ImportedFunction {
                 import: import_id,

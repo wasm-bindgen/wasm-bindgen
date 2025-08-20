@@ -1,4 +1,5 @@
-use crate::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi};
+use crate::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmRet};
+use crate::describe::inform;
 use crate::JsValue;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::{Cell, UnsafeCell};
@@ -6,6 +7,7 @@ use core::convert::Infallible;
 use core::ops::{Deref, DerefMut};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
+use wasm_bindgen_shared::tys::FUNCTION;
 
 use alloc::alloc::{alloc, dealloc, realloc, Layout};
 use alloc::boxed::Box;
@@ -45,9 +47,14 @@ macro_rules! wbg_cast {
     }};
 }
 
-pub fn wbg_cast<T: IntoWasmAbi>(value: T) -> JsValue {
-    // Here we need to create a `JsValue` from an arbitrary value supported by
-    // wasm-bindgen's ABI.
+// Cast between arbitrary types supported by wasm-bindgen by going via JS.
+//
+// The implementation generates a no-op JS adapter that simply takes an argument
+// in one type, decodes it from the ABI, and then returns the same value back
+// encoded with a different type.
+pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
+    // Here we need to create a conversion function between arbitrary types
+    // supported by the wasm-bindgen's ABI.
     // To do that we... take a few unconventional turns.
     // In essence what happens here is this:
     //
@@ -86,19 +93,24 @@ pub fn wbg_cast<T: IntoWasmAbi>(value: T) -> JsValue {
 
     #[inline(never)]
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    unsafe fn breaks_if_inlined<T: IntoWasmAbi>(
-        _prim1: <T::Abi as WasmAbi>::Prim1,
-        _prim2: <T::Abi as WasmAbi>::Prim2,
-        _prim3: <T::Abi as WasmAbi>::Prim3,
-        _prim4: <T::Abi as WasmAbi>::Prim4,
-    ) -> u32 {
-        T::describe();
+    unsafe fn breaks_if_inlined<From: IntoWasmAbi, To: FromWasmAbi>(
+        _prim1: <From::Abi as WasmAbi>::Prim1,
+        _prim2: <From::Abi as WasmAbi>::Prim2,
+        _prim3: <From::Abi as WasmAbi>::Prim3,
+        _prim4: <From::Abi as WasmAbi>::Prim4,
+    ) -> WasmRet<To::Abi> {
+        inform(FUNCTION);
+        inform(0);
+        inform(1);
+        From::describe();
+        To::describe();
+        To::describe();
         super::__wbindgen_describe_cast()
     }
 
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
 
-    unsafe { JsValue::from_abi(breaks_if_inlined::<T>(prim1, prim2, prim3, prim4)) }
+    unsafe { To::from_abi(breaks_if_inlined::<From, To>(prim1, prim2, prim3, prim4).join()) }
 }
 
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.

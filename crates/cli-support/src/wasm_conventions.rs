@@ -92,8 +92,6 @@ pub fn get_tls_base(module: &Module) -> Option<GlobalId> {
 }
 
 pub struct FunctionTableEntry {
-    pub element: ElementId,
-    pub idx: usize,
     pub func: Option<FunctionId>,
 }
 
@@ -129,8 +127,6 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionTab
         match slot {
             Some(slot) => {
                 return Ok(FunctionTableEntry {
-                    element: segment.id(),
-                    idx,
                     func: slot.cloned(),
                 })
             }
