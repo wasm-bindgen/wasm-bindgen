@@ -68,11 +68,10 @@ impl WasmBindgenDescriptorsSection {
                 walrus::ExportItem::Function(id) => id,
                 _ => panic!("{} export not a function", export.name),
             };
-            if let Some(d) = interpreter.interpret_descriptor(id, module) {
-                let name = &export.name[prefix.len()..];
-                let descriptor = Descriptor::decode(d);
-                self.descriptors.insert(name.to_string(), descriptor);
-            }
+            let d = interpreter.interpret_descriptor(id, module);
+            let name = &export.name[prefix.len()..];
+            let descriptor = Descriptor::decode(d);
+            self.descriptors.insert(name.to_string(), descriptor);
             to_remove.push(export.id());
         }
 
@@ -112,7 +111,7 @@ impl WasmBindgenDescriptorsSection {
             }
         }
         for func_id in replace_with_imports {
-            let descriptor = interpreter.interpret_descriptor(func_id, module).unwrap();
+            let descriptor = interpreter.interpret_descriptor(func_id, module);
             let descriptor = Descriptor::decode(descriptor);
             let import_name = format!("__wbindgen_cast_{}", func_id.index());
             let import_id = module
