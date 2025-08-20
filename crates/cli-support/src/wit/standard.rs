@@ -1,5 +1,4 @@
 use crate::descriptor::VectorKind;
-use crate::wit::{AuxImport, WasmBindgenAux};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 use walrus::{FunctionId, ImportId, RefType, TypedCustomSectionId};
@@ -332,10 +331,11 @@ pub enum Instruction {
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure
-    StackClosure {
+    Closure {
         adapter: AdapterId,
         nargs: usize,
         mutable: bool,
+        dtor_idx_if_persistent: Option<u32>,
     },
     /// pops two i32 data pointers, pushes a vector view
     View {
@@ -424,7 +424,7 @@ impl NonstandardWitSection {
     ///
     /// Returns `true` if any adapters were deleted, or `false` if the adapters
     /// did not change.
-    pub fn gc(&mut self, aux: &WasmBindgenAux) -> bool {
+    pub fn gc(&mut self) -> bool {
         // Populate the live set with the exports, implements directives, and
         // anything transitively referenced by those adapters.
         let mut live = HashSet::new();
@@ -433,11 +433,6 @@ impl NonstandardWitSection {
         }
         for (_, _, id) in self.implements.iter() {
             self.add_live(*id, &mut live);
-        }
-        for import in aux.import_map.values() {
-            if let AuxImport::Closure { adapter, .. } = import {
-                self.add_live(*adapter, &mut live);
-            }
         }
 
         // And now that we have the live set we can filter out our list of
@@ -457,7 +452,7 @@ impl NonstandardWitSection {
         };
         for instr in instructions {
             match instr.instr {
-                Instruction::StackClosure { adapter, .. } | Instruction::CallAdapter(adapter) => {
+                Instruction::Closure { adapter, .. } | Instruction::CallAdapter(adapter) => {
                     self.add_live(adapter, live);
                 }
                 _ => {}

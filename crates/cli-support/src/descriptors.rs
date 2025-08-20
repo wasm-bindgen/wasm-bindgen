@@ -10,7 +10,7 @@
 //! `walrus::Module` which contains all the results of all the descriptor
 //! functions.
 
-use crate::descriptor::{Closure, Descriptor};
+use crate::descriptor::Descriptor;
 use crate::interpreter::Interpreter;
 use anyhow::Error;
 use std::borrow::Cow;
@@ -18,10 +18,17 @@ use std::collections::HashMap;
 use walrus::{CustomSection, FunctionId, FunctionKind, Module, TypedCustomSectionId};
 use walrus::{ImportId, ImportedFunction};
 
+#[derive(Debug)]
+pub struct CastImport {
+    pub id: ImportId,
+    pub from: Descriptor,
+    pub to: Descriptor,
+}
+
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
-    pub closure_imports: HashMap<ImportId, Closure>,
+    pub cast_imports: Vec<CastImport>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -106,12 +113,15 @@ impl WasmBindgenDescriptorsSection {
         for func_id in replace_with_imports {
             let descriptor = interpreter.interpret_descriptor(func_id, module).unwrap();
             let descriptor = Descriptor::decode(descriptor);
-            let import_name = format!("__wbindgen_closure_wrapper{}", func_id.index());
+            let import_name = format!("__wbindgen_cast_{}", func_id.index());
             let import_id = module
                 .imports
                 .add("__wbindgen_placeholder__", &import_name, func_id);
-            self.closure_imports
-                .insert(import_id, descriptor.unwrap_closure());
+            self.cast_imports.push(CastImport {
+                id: import_id,
+                from: descriptor.clone(),
+                to: Descriptor::Externref,
+            });
             let func = module.funcs.get_mut(func_id);
             func.kind = FunctionKind::Import(ImportedFunction {
                 import: import_id,
