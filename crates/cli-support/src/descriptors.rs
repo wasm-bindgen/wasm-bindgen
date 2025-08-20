@@ -21,8 +21,7 @@ use walrus::{ImportId, ImportedFunction};
 #[derive(Debug)]
 pub struct CastImport {
     pub id: ImportId,
-    pub from: Descriptor,
-    pub to: Descriptor,
+    pub descriptor: Descriptor,
 }
 
 #[derive(Default, Debug)]
