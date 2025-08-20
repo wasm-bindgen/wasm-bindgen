@@ -1137,8 +1137,7 @@ impl<'a> Context<'a> {
             // phase, but we don't have an implementation for them. We don't
             // need to error about them in this verification pass though,
             // having them lingering in the module is normal.
-            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_closure"
-            {
+            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_cast" {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {
