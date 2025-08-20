@@ -50,9 +50,8 @@ impl WasmAbi for WasmSlice {
     }
 }
 
-#[inline]
-fn null_slice() -> WasmSlice {
-    WasmSlice { ptr: 0, len: 0 }
+impl WasmSlice {
+    pub const NULL: Self = Self { ptr: 0, len: 0 };
 }
 
 pub struct WasmMutSlice {
@@ -175,7 +174,7 @@ macro_rules! vectors_internal {
         impl<'a> OptionIntoWasmAbi for &'a [$t] {
             #[inline]
             fn none() -> WasmSlice {
-                null_slice()
+                WasmSlice::NULL
             }
         }
 
@@ -191,7 +190,7 @@ macro_rules! vectors_internal {
         impl<'a> OptionIntoWasmAbi for &'a mut [$t] {
             #[inline]
             fn none() -> WasmSlice {
-                null_slice()
+                WasmSlice::NULL
             }
         }
 
@@ -299,7 +298,7 @@ where
 {
     #[inline]
     fn none() -> WasmSlice {
-        null_slice()
+        WasmSlice::NULL
     }
 }
 
@@ -339,7 +338,7 @@ impl IntoWasmAbi for String {
 impl OptionIntoWasmAbi for String {
     #[inline]
     fn none() -> Self::Abi {
-        null_slice()
+        WasmSlice::NULL
     }
 }
 
@@ -373,7 +372,7 @@ impl<'a> IntoWasmAbi for &'a str {
 impl OptionIntoWasmAbi for &str {
     #[inline]
     fn none() -> Self::Abi {
-        null_slice()
+        WasmSlice::NULL
     }
 }
 
@@ -410,7 +409,7 @@ where
     Self: IntoWasmAbi<Abi = WasmSlice>,
 {
     fn none() -> WasmSlice {
-        null_slice()
+        WasmSlice::NULL
     }
 }
 

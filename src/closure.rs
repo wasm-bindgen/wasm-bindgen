@@ -472,14 +472,27 @@ where
 }
 
 // `Closure` can only be passed by reference to imports.
+// TODO: merge this with `IntoWasmAbi for & [mut] dyn Fn[Mut](...)` in the
+// future, ideally by removing `Closure` type altogether in favour of
+// just `Box<dyn Fn[Mut](...)>` and `Box<dyn FnOnce(...)>`.
 impl<T> IntoWasmAbi for &Closure<T>
 where
     T: WasmClosure + ?Sized,
 {
-    type Abi = u32;
+    type Abi = WasmSlice;
 
-    fn into_abi(self) -> u32 {
-        (&*self.js).into_abi()
+    fn into_abi(self) -> WasmSlice {
+        assert_eq!(mem::size_of::<*const T>(), mem::size_of::<FatPtr<T>>());
+        let (a, b) = unsafe {
+            FatPtr::<T> {
+                ptr: core::ptr::from_ref(&**self.data).cast_mut(),
+            }
+            .fields
+        };
+        WasmSlice {
+            ptr: a as u32,
+            len: b as u32,
+        }
     }
 }
 
@@ -488,7 +501,7 @@ where
     T: WasmClosure + ?Sized,
 {
     fn none() -> Self::Abi {
-        0
+        WasmSlice::NULL
     }
 }
 
