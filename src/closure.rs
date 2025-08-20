@@ -353,7 +353,8 @@ where
         #[inline(never)]
         #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
         unsafe fn breaks_if_inlined<T: WasmClosure + ?Sized>(a: usize, b: usize) -> u32 {
-            super::__wbindgen_describe_closure(a as u32, b as u32, describe::<T> as usize as u32)
+            describe::<T>();
+            super::__wbindgen_describe_closure(a as u32, b as u32)
         }
 
         let idx = unsafe { breaks_if_inlined::<T>(a, b) };

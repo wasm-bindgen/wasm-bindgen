@@ -9,7 +9,7 @@ use crate::wit::InstructionData;
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, Instruction,
 };
-use anyhow::{anyhow, bail, Error};
+use anyhow::{bail, Error};
 use std::collections::HashSet;
 use std::fmt::Write;
 use walrus::{Module, ValType};
@@ -1543,10 +1543,7 @@ impl Invocation {
             // The function table never changes right now, so we can statically
             // look up the desired function.
             CallTableElement(idx) => {
-                let entry = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
-                let id = entry
-                    .func
-                    .ok_or_else(|| anyhow!("function table wasn't filled in a {}", idx))?;
+                let id = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
                 Invocation::Core { id, defer: false }
             }
 
