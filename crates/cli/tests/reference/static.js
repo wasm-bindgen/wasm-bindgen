@@ -50,11 +50,6 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_cast_29f7673db09f6132(arg0) {
-    const ret = /* cast */(arg0);
-    return ret;
-};
-
 export function __wbg_static_accessor_NAMESPACE_OPTIONAL_c9a4344c544120f4() {
     const ret = typeof test === 'undefined' ? null : test?.NAMESPACE_OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
@@ -82,6 +77,11 @@ export function __wbg_static_accessor_OPTIONAL_ade71b6402851d0c() {
 
 export function __wbg_static_accessor_PLAIN_c0f08eb2f0db194c() {
     const ret = PLAIN;
+    return ret;
+};
+
+export function __wbindgen_cast_767(arg0) {
+    const ret = arg0;
     return ret;
 };
 

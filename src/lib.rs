@@ -147,6 +147,7 @@ pub use cache::intern::{intern, unintern};
 #[doc(hidden)]
 #[path = "rt/mod.rs"]
 pub mod __rt;
+use __rt::wbg_cast;
 
 /// Representation of an object owned by JS.
 ///
@@ -194,7 +195,7 @@ impl JsValue {
     #[allow(clippy::should_implement_trait)] // cannot fix without breaking change
     #[inline]
     pub fn from_str(s: &str) -> JsValue {
-        wbg_cast!(s, &str, JsValue)
+        wbg_cast(s)
     }
 
     /// Creates a new JS value which is a number.
@@ -203,7 +204,7 @@ impl JsValue {
     /// allocated number) and returns a handle to the JS version of it.
     #[inline]
     pub fn from_f64(n: f64) -> JsValue {
-        wbg_cast!(n, f64, JsValue)
+        wbg_cast(n)
     }
 
     /// Creates a new JS value which is a bigint from a string representing a number.
@@ -533,7 +534,9 @@ impl JsValue {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Unary_plus)
     #[inline]
     pub fn unchecked_into_f64(&self) -> f64 {
-        wbg_cast!(self, &JsValue, f64)
+        // Can't use `wbg_cast` here because it expects that the value already has a correct type
+        // and will fail with an assertion error in debug mode.
+        __wbindgen_as_number(self)
     }
 }
 
@@ -972,7 +975,7 @@ macro_rules! big_numbers {
         impl From<$n> for JsValue {
             #[inline]
             fn from(arg: $n) -> JsValue {
-                wbg_cast!(arg, $n, JsValue)
+                wbg_cast(arg)
             }
         }
     )*)
@@ -1087,6 +1090,9 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = JSON, js_name = stringify)]
     fn __wbindgen_json_serialize(v: &JsValue) -> Option<String>;
+
+    #[wasm_bindgen(js_name = Number)]
+    fn __wbindgen_as_number(v: &JsValue) -> f64;
 }
 
 externs! {
@@ -1160,7 +1166,7 @@ externs! {
 impl Clone for JsValue {
     #[inline]
     fn clone(&self) -> JsValue {
-        wbg_cast!(self, &JsValue, JsValue)
+        wbg_cast(self)
     }
 }
 
@@ -1705,13 +1711,13 @@ macro_rules! typed_arrays {
     ($($ty:ident)*) => {$(
         impl From<Box<[$ty]>> for JsValue {
             fn from(vector: Box<[$ty]>) -> Self {
-                wbg_cast!(vector, Box<[$ty]>, JsValue)
+                wbg_cast(vector)
             }
         }
 
         impl From<Clamped<Box<[$ty]>>> for JsValue {
             fn from(vector: Clamped<Box<[$ty]>>) -> Self {
-                wbg_cast!(vector, Clamped<Box<[$ty]>>, JsValue)
+                wbg_cast(vector)
             }
         }
     )*};
@@ -1721,13 +1727,13 @@ typed_arrays!(u8 u16 u32 u64 i8 i16 i32 i64 f32 f64);
 
 impl __rt::VectorIntoJsValue for JsValue {
     fn vector_into_jsvalue(vector: Box<[JsValue]>) -> JsValue {
-        wbg_cast!(vector, Box<[JsValue]>, JsValue)
+        wbg_cast(vector)
     }
 }
 
 impl __rt::VectorIntoJsValue for String {
     fn vector_into_jsvalue(vector: Box<[String]>) -> JsValue {
-        wbg_cast!(vector, Box<[String]>, JsValue)
+        wbg_cast(vector)
     }
 }
 

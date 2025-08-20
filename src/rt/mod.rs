@@ -23,30 +23,6 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
-// This macro is a hack to implement "generic" casts and reduce number of
-// boilerplate intrinsics. The implementation generates a no-op JS adapter that
-// simply takes an argument in one type, decodes it from the ABI, does nothing
-// with it on the JS side (by declaring function name as empty, so instead of
-// generating typical JS call that does `ret = foo(arg);` we end up with
-// just `ret = (arg);` and then encoding same value back with a different type.
-//
-// Someday we'll support generics in #[wasm_bindgen] macro, in which case
-// this can be replaced with a proper generic intrinsic.
-#[doc(hidden)]
-#[macro_export]
-macro_rules! wbg_cast {
-    ($value:expr, $from:ty, $to:ty) => {{
-        #[$crate::prelude::wasm_bindgen(wasm_bindgen = $crate)]
-        extern "C" {
-            /// Foobar.
-            #[wasm_bindgen(js_name = "/* cast */")]
-            fn __wbindgen_cast(value: $from) -> $to;
-        }
-
-        __wbindgen_cast($value)
-    }};
-}
-
 // Cast between arbitrary types supported by wasm-bindgen by going via JS.
 //
 // The implementation generates a no-op JS adapter that simply takes an argument
