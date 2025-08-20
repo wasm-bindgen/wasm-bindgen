@@ -21,8 +21,7 @@ use walrus::{ImportId, ImportedFunction};
 #[derive(Debug)]
 pub struct CastImport {
     pub id: ImportId,
-    pub from: Descriptor,
-    pub to: Descriptor,
+    pub descriptor: Descriptor,
 }
 
 #[derive(Default, Debug)]
@@ -120,8 +119,7 @@ impl WasmBindgenDescriptorsSection {
                 .add("__wbindgen_placeholder__", &import_name, func_id);
             self.cast_imports.push(CastImport {
                 id: import_id,
-                from: descriptor.clone(),
-                to: Descriptor::Externref,
+                descriptor,
             });
             let func = module.funcs.get_mut(func_id);
             func.kind = FunctionKind::Import(ImportedFunction {
