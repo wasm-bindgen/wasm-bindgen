@@ -68,6 +68,7 @@ impl WasmBindgenDescriptorsSection {
                 walrus::ExportItem::Function(id) => id,
                 _ => panic!("{} export not a function", export.name),
             };
+            // Interpret descriptor with 0 args (export descriptors shouldn't take any).
             let d = interpreter.interpret_descriptor(id, module);
             let name = &export.name[prefix.len()..];
             let descriptor = Descriptor::decode(d);

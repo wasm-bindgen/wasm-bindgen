@@ -169,19 +169,9 @@ impl Interpreter {
         assert_eq!(self.sp, self.mem.len() as i32);
 
         let func = module.funcs.get(id);
-        let params = module.types.get(func.ty()).params();
-        assert!(
-            params.iter().all(|p| *p == walrus::ValType::I32),
-            "descriptors should only have i32 params"
-        );
-        let num_params = params.len();
-        assert!(
-            num_params <= 2,
-            "descriptors have 2 parameters, but might lose some parameters due to LTO"
-        );
+        let ty = module.types.get(func.ty());
 
-        let args = vec![0; num_params];
-        self.call(id, module, &args);
+        self.call(id, module, &vec![0; ty.params().len()]);
 
         assert_eq!(self.sp, self.mem.len() as i32);
         &self.descriptor
