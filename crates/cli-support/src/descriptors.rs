@@ -42,7 +42,7 @@ pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, E
     let mut interpreter = Interpreter::new(module)?;
 
     section.execute_exports(module, &mut interpreter)?;
-    section.execute_closures(module, &mut interpreter)?;
+    section.execute_casts(module, &mut interpreter)?;
 
     Ok(module.customs.add(section))
 }
@@ -82,27 +82,28 @@ impl WasmBindgenDescriptorsSection {
         Ok(())
     }
 
-    fn execute_closures(
+    fn execute_casts(
         &mut self,
         module: &mut Module,
         interpreter: &mut Interpreter,
     ) -> Result<(), Error> {
         use walrus::ir::*;
 
-        // If our describe closure intrinsic isn't present or wasn't linked
-        // then there's no closures, so nothing to do!
-        let wbindgen_describe_closure = match interpreter.describe_closure_id() {
+        // If our describe cast intrinsic isn't present or wasn't linked
+        // then there're no casts, so nothing to do!
+        let wbindgen_describe_cast = match interpreter.describe_cast_id() {
             Some(i) => i,
             None => return Ok(()),
         };
 
-        // Find all functions which call `wbindgen_describe_closure`. These are
+        // Find all functions which call `wbindgen_describe_cast`. These are
         // specially codegen'd so we know the rough structure of them. For each
-        // one we delegate to the interpreter to figure out the actual result.
+        // one we delegate to the interpreter to figure out the source and
+        // target type descriptors.
         let mut replace_with_imports = Vec::new();
         for (func_id, local) in module.funcs.iter_local() {
-            let mut find = FindDescribeClosure {
-                wbindgen_describe_closure,
+            let mut find = FindDescribeCast {
+                wbindgen_describe_cast,
                 found: false,
             };
             dfs_in_order(&mut find, local, local.entry_block());
@@ -131,20 +132,20 @@ impl WasmBindgenDescriptorsSection {
 
         return Ok(());
 
-        struct FindDescribeClosure {
-            wbindgen_describe_closure: FunctionId,
+        struct FindDescribeCast {
+            wbindgen_describe_cast: FunctionId,
             found: bool,
         }
 
-        impl Visitor<'_> for FindDescribeClosure {
+        impl Visitor<'_> for FindDescribeCast {
             fn visit_call(&mut self, call: &Call) {
-                if call.func == self.wbindgen_describe_closure {
+                if call.func == self.wbindgen_describe_cast {
                     self.found = true;
                 }
             }
 
             fn visit_return_call(&mut self, instr: &walrus::ir::ReturnCall) {
-                if instr.func == self.wbindgen_describe_closure {
+                if instr.func == self.wbindgen_describe_cast {
                     self.found = true;
                 }
             }
