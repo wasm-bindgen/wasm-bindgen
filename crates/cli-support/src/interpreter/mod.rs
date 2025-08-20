@@ -334,15 +334,18 @@ impl Frame<'_> {
                     self.interp.descriptor.push(val as u32);
 
                 // If this function is calling the `__wbindgen_describe_closure`
-                // function then it's similar to the above, except there's a
-                // slightly different signature. Note that we don't eval the
-                // previous arguments because they shouldn't have any side
-                // effects we're interested in.
+                // function then it's just a marker for the parent function
+                // to be treated as a cast.
                 } else if Some(func) == self.interp.describe_closure_id {
-                    stack.pop();
-                    stack.pop();
                     log::trace!("__wbindgen_describe_closure()");
-                    stack.push(0)
+                    // The parent (cast wrapper) can return arbitrary type.
+                    // To be compatible with anything, we declare return type of
+                    // `__wbindgen_describe_closure` as `!` (never type).
+                    // This means the interpreter must stop after this call.
+                    // Cleanup the stack pointer while at it to match
+                    // `interpret_descriptor`'s expectations.
+                    self.interp.sp = self.interp.mem.len() as i32;
+                    self.done = true;
 
                 // ... otherwise this is a normal call so we recurse.
                 } else {
