@@ -1,4 +1,4 @@
-use crate::descriptor::Descriptor;
+use crate::descriptor::{Descriptor, Function};
 use crate::wit::{AdapterType, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, format_err, Error};
@@ -161,7 +161,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Option(d) => self.outgoing_option(d)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
-            Descriptor::Function(_) | Descriptor::Closure(_) | Descriptor::Slice(_) => bail!(
+            Descriptor::Function(_) | Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling JS function from Rust: {:?}",
                 arg
             ),
@@ -173,6 +173,10 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::ClampedU8 => unreachable!(),
 
             Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
+
+            Descriptor::Closure(d) => {
+                self.outgoing_function(d.mutable, &d.function, Some(d.dtor_idx))?
+            }
         }
         Ok(())
     }
@@ -221,24 +225,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Function(descriptor) => {
-                // synthesize the a/b arguments that aren't present in the
-                // signature from wasm-bindgen but are present in the Wasm file.
-                let mut descriptor = (**descriptor).clone();
-                let nargs = descriptor.arguments.len();
-                descriptor.arguments.insert(0, Descriptor::I32);
-                descriptor.arguments.insert(0, Descriptor::I32);
-                let adapter = self
-                    .cx
-                    .table_element_adapter(descriptor.shim_idx, descriptor)?;
-                self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
-                    Instruction::StackClosure {
-                        adapter,
-                        nargs,
-                        mutable,
-                    },
-                    &[AdapterType::Function],
-                );
+                self.outgoing_function(mutable, descriptor, None)?;
             }
 
             _ => bail!(
@@ -246,6 +233,34 @@ impl InstructionBuilder<'_, '_> {
                 arg
             ),
         }
+        Ok(())
+    }
+
+    fn outgoing_function(
+        &mut self,
+        mutable: bool,
+        descriptor: &Function,
+        dtor_idx_if_persistent: Option<u32>,
+    ) -> Result<(), Error> {
+        let mut descriptor = descriptor.clone();
+        // synthesize the a/b arguments that aren't present in the
+        // signature from wasm-bindgen but are present in the Wasm file.
+        let nargs = descriptor.arguments.len();
+        descriptor.arguments.insert(0, Descriptor::I32);
+        descriptor.arguments.insert(0, Descriptor::I32);
+        let adapter = self
+            .cx
+            .table_element_adapter(descriptor.shim_idx, descriptor)?;
+        self.instruction(
+            &[AdapterType::I32, AdapterType::I32],
+            Instruction::Closure {
+                adapter,
+                nargs,
+                mutable,
+                dtor_idx_if_persistent,
+            },
+            &[AdapterType::Function],
+        );
         Ok(())
     }
 
