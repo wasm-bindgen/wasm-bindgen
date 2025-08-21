@@ -16,6 +16,8 @@
   [#4572](https://github.com/wasm-bindgen/wasm-bindgen/pull/4572)
 * Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
   [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
+* Add bindings for `PictureInPicture`.
+  [#4593](https://github.com/rustwasm/wasm-bindgen/pull/4593)
 
 ### Changed
 

@@ -6648,6 +6648,27 @@ mod gen_Permissions;
 #[allow(unused_imports)]
 pub use gen_Permissions::*;
 
+#[cfg(feature = "PictureInPictureEvent")]
+#[allow(non_snake_case)]
+mod gen_PictureInPictureEvent;
+#[cfg(feature = "PictureInPictureEvent")]
+#[allow(unused_imports)]
+pub use gen_PictureInPictureEvent::*;
+
+#[cfg(feature = "PictureInPictureEventInit")]
+#[allow(non_snake_case)]
+mod gen_PictureInPictureEventInit;
+#[cfg(feature = "PictureInPictureEventInit")]
+#[allow(unused_imports)]
+pub use gen_PictureInPictureEventInit::*;
+
+#[cfg(feature = "PictureInPictureWindow")]
+#[allow(non_snake_case)]
+mod gen_PictureInPictureWindow;
+#[cfg(feature = "PictureInPictureWindow")]
+#[allow(unused_imports)]
+pub use gen_PictureInPictureWindow::*;
+
 #[cfg(feature = "PlaneLayout")]
 #[allow(non_snake_case)]
 mod gen_PlaneLayout;
