@@ -1,0 +1,19 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+edition = "2021"
+name = "without-a-bundler"
+publish = false
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = { path = "../../" }
+
+[dependencies.web-sys]
+features = ['Document', 'Element', 'HtmlElement', 'Node', 'Window']
+path = "../../crates/web-sys"
+
+[lints]
+workspace = true
