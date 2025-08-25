@@ -120,9 +120,7 @@ macro_rules! externs {
 /// ```
 pub mod prelude {
     pub use crate::closure::Closure;
-    pub use crate::JsCast;
-    pub use crate::JsValue;
-    pub use crate::UnwrapThrowExt;
+    pub use crate::{JsCast, JsValue, UnwrapThrowExt};
     #[doc(hidden)]
     pub use wasm_bindgen_macro::__wasm_bindgen_class_marker;
     pub use wasm_bindgen_macro::wasm_bindgen;
@@ -139,7 +137,7 @@ mod externref;
 mod link;
 
 mod cast;
-pub use crate::cast::{JsCast, JsObject};
+pub use crate::cast::{GenericCast, JsCast, JsObject, JsUpcastRef, JsValueCast};
 
 mod cache;
 pub use cache::intern::{intern, unintern};
@@ -159,25 +157,18 @@ pub struct JsValue {
     _marker: PhantomData<*mut u8>, // not at all threadsafe
 }
 
-const JSIDX_OFFSET: u32 = 128; // keep in sync with js/mod.rs
-const JSIDX_UNDEFINED: u32 = JSIDX_OFFSET;
-const JSIDX_NULL: u32 = JSIDX_OFFSET + 1;
-const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
-const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
-const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 4;
-
 impl JsValue {
     /// The `null` JS value constant.
-    pub const NULL: JsValue = JsValue::_new(JSIDX_NULL);
+    pub const NULL: JsValue = JsValue::_new(__rt::JSIDX_NULL);
 
     /// The `undefined` JS value constant.
-    pub const UNDEFINED: JsValue = JsValue::_new(JSIDX_UNDEFINED);
+    pub const UNDEFINED: JsValue = JsValue::_new(__rt::JSIDX_UNDEFINED);
 
     /// The `true` JS value constant.
-    pub const TRUE: JsValue = JsValue::_new(JSIDX_TRUE);
+    pub const TRUE: JsValue = JsValue::_new(__rt::JSIDX_TRUE);
 
     /// The `false` JS value constant.
-    pub const FALSE: JsValue = JsValue::_new(JSIDX_FALSE);
+    pub const FALSE: JsValue = JsValue::_new(__rt::JSIDX_FALSE);
 
     #[inline]
     const fn _new(idx: u32) -> JsValue {
@@ -382,6 +373,11 @@ impl JsValue {
     #[inline]
     pub fn is_undefined(&self) -> bool {
         unsafe { __wbindgen_is_undefined(self.idx) == 1 }
+    }
+    /// Tests whether this JS value is `null` or `undefined`
+    #[inline]
+    pub fn is_null_or_undefined(&self) -> bool {
+        unsafe { __wbindgen_is_null_or_undefined(self.idx) == 1 }
     }
 
     /// Tests whether the type of this JS value is `symbol`
@@ -940,6 +936,16 @@ impl AsRef<JsValue> for JsValue {
     }
 }
 
+impl<T> JsUpcastRef for T
+where
+    T: AsRef<JsValue> + ?Sized,
+{
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        self.as_ref()
+    }
+}
+
 macro_rules! numbers {
     ($($n:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
@@ -1094,11 +1100,16 @@ externs! {
     extern "C" {
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
+        fn __wbindgen_number_new_into_slot(f: f64) -> u32;
+        fn __wbindgen_char_new_into_slot(char_code: u32) -> u32;
+        fn __wbindgen_bigint_new_into_slot(val: i64) -> u32;
+        fn __wbindgen_reset_slots() -> ();
 
         fn __wbindgen_externref_heap_live_count() -> u32;
 
         fn __wbindgen_is_null(idx: u32) -> u32;
         fn __wbindgen_is_undefined(idx: u32) -> u32;
+        fn __wbindgen_is_null_or_undefined(idx: u32) -> u32;
         fn __wbindgen_is_symbol(idx: u32) -> u32;
         fn __wbindgen_is_object(idx: u32) -> u32;
         fn __wbindgen_is_function(idx: u32) -> u32;
@@ -1177,12 +1188,16 @@ impl Drop for JsValue {
     fn drop(&mut self) {
         unsafe {
             // We definitely should never drop anything in the stack area
-            debug_assert!(self.idx >= JSIDX_OFFSET, "free of stack slot {}", self.idx);
+            debug_assert!(
+                self.idx >= __rt::JSIDX_OFFSET,
+                "free of stack slot {}",
+                self.idx
+            );
 
             // Otherwise if we're not dropping one of our reserved values,
             // actually call the intrinsic. See #1054 for eventually removing
             // this branch.
-            if self.idx >= JSIDX_RESERVED {
+            if self.idx >= __rt::JSIDX_RESERVED {
                 __wbindgen_object_drop_ref(self.idx);
             }
         }
