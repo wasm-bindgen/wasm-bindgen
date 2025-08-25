@@ -19,14 +19,10 @@ walrus = "0.23"
 wasm-bindgen-wasm-conventions = { path = "../wasm-conventions", version = "=0.2.100" }
 
 [dev-dependencies]
-rayon = "1.0"
+test-each = "0.3"
 wasmprinter = "0.214"
 wast = "214"
 wat = "1.0"
 
 [lints]
 workspace = true
-
-[[test]]
-harness = false
-name = "all"
