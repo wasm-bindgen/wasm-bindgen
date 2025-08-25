@@ -18,7 +18,6 @@ proc-macro = true
 
 [features]
 strict-macro = ["wasm-bindgen-macro-support/strict-macro"]
-xxx_debug_only_print_generated_code = []
 
 [dependencies]
 quote = "1.0"
