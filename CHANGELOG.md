@@ -27,6 +27,9 @@
 * Added `bytes` method for the `Blob` idl
   [#4506](https://github.com/wasm-bindgen/wasm-bindgen/pull/4506)
 
+* Add error message when export symbol is not found
+  [#4594](https://github.com/wasm-bindgen/wasm-bindgen/pull/4594)
+
 ### Changed
 
 * Deprecate async constructors.

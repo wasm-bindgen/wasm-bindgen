@@ -476,7 +476,13 @@ impl<'a> Context<'a> {
             None => return Ok(()),
             Some(d) => d.unwrap_function(),
         };
-        let (export_id, id) = self.function_exports[&wasm_name];
+
+        let Some((export_id, id)) = self.function_exports.get(&wasm_name).copied() else {
+            bail!("{wasm_name} symbol is missing, \
+                may be because there are multiple exports with the same name but different signatures, \
+                and discarded by wasm-ld.");
+        };
+
         if export.start {
             self.add_start_function(id)?;
         }
