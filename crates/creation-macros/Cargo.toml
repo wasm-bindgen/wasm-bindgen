@@ -1,0 +1,38 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+categories = ["wasm"]
+description = """
+Convenience macros for creating Javascript objects and arrays. For more
+information see https://github.com/rustwasm/wasm-bindgen.
+"""
+documentation = "https://rustwasm.github.io/wasm-bindgen/"
+edition = "2021"
+homepage = "https://rustwasm.github.io/wasm-bindgen/"
+include = ["/LICENSE-*", "/src"]
+license = "MIT OR Apache-2.0"
+name = "wasm-bindgen-creation-macros"
+repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/creation-macros"
+rust-version = "1.76"
+version = "0.2.100"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.95"
+quote = "1.0.40"
+syn = "2.0.101"
+
+[dev-dependencies]
+js-sys = { path = "../js-sys" }
+wasm-bindgen = { path = "../../" }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = { path = '../test' }
+
+[lints]
+workspace = true
+
+[[test]]
+name = "creation"
+path = "tests/creation.rs"
