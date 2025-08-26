@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use syn::parse_quote;
 use syn::spanned::Spanned;
+use syn::{Attribute, Meta, MetaList};
 use wasm_bindgen_shared as shared;
 
 /// A trait for converting AST structs into Tokens and adding them to a TokenStream,
@@ -792,7 +793,24 @@ impl TryToTokens for ast::Export {
             <#inner_ret_ty as WasmDescribe>::describe();
         };
         let nargs = self.function.arguments.len() as u32;
-        let attrs = &self.function.rust_attrs;
+        let attrs = self
+            .function
+            .rust_attrs
+            .iter()
+            .map(|attr| match &attr.meta {
+                Meta::List(list @ MetaList { path, .. }) if path.is_ident("expect") => {
+                    let list = MetaList {
+                        path: parse_quote!(allow),
+                        ..list.clone()
+                    };
+                    Attribute {
+                        meta: Meta::List(list),
+                        ..*attr
+                    }
+                }
+                _ => attr.clone(),
+            })
+            .collect::<Vec<_>>();
 
         let mut checks = Vec::new();
         if self.start {
@@ -905,7 +923,7 @@ impl TryToTokens for ast::Export {
                 #describe_args
                 #describe_ret
             },
-            attrs: attrs.clone(),
+            attrs,
             wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
