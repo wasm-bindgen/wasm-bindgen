@@ -21,6 +21,8 @@ features = [
   'MessageEvent',
   'Window',
   'Worker',
+  'WorkerOptions',
+  'WorkerType',
 ]
 path = "../../crates/web-sys"
 
