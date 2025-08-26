@@ -61,6 +61,9 @@
 * Skip `__wasm_call_ctors` which we don't want to interpret.
   [#4562](https://github.com/wasm-bindgen/wasm-bindgen/pull/4562)
 
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
