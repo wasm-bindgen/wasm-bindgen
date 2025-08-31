@@ -39,7 +39,7 @@ error: invalid attribute unchecked_return_type in this position
 51 | | )]
    | |__^
    |
-   = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the derive macro `::wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute return_description in this position
   --> ui-tests/unused-fn-attrs.rs:46:1
@@ -52,7 +52,7 @@ error: invalid attribute return_description in this position
 51 | | )]
    | |__^
    |
-   = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the derive macro `::wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_param_type in this position
   --> ui-tests/unused-fn-attrs.rs:46:1
@@ -65,7 +65,7 @@ error: invalid attribute unchecked_param_type in this position
 51 | | )]
    | |__^
    |
-   = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the derive macro `::wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute param_description in this position
   --> ui-tests/unused-fn-attrs.rs:46:1
@@ -78,7 +78,7 @@ error: invalid attribute param_description in this position
 51 | | )]
    | |__^
    |
-   = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the derive macro `::wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: invalid attribute unchecked_return_type in this position
   --> ui-tests/unused-fn-attrs.rs:54:1
