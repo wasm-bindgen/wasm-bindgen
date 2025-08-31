@@ -61,7 +61,7 @@
 * Skip `__wasm_call_ctors` which we don't want to interpret.
   [#4562](https://github.com/wasm-bindgen/wasm-bindgen/pull/4562)
 
-* Fix infinite recursion caused by `BindgenedStruct` derive.
+* Fix infinite recursion caused by the lack of proc-macro hygiene.
   [#4601](https://github.com/wasm-bindgen/wasm-bindgen/pull/4601)
 
 --------------------------------------------------------------------------------
