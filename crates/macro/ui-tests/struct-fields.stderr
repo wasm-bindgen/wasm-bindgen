@@ -12,7 +12,7 @@ note: required by a bound in `__wbg_get_bar_a::assert_copy`
    |
 8  | #[wasm_bindgen]
    | ^^^^^^^^^^^^^^^ required by this bound in `assert_copy`
-   = note: this error originates in the derive macro `wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the derive macro `::wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `Foo: Clone` is not satisfied
   --> ui-tests/struct-fields.rs:12:12

@@ -61,6 +61,9 @@
 * Skip `__wasm_call_ctors` which we don't want to interpret.
   [#4562](https://github.com/wasm-bindgen/wasm-bindgen/pull/4562)
 
+* Fix infinite recursion caused by the lack of proc-macro hygiene.
+  [#4601](https://github.com/wasm-bindgen/wasm-bindgen/pull/4601)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
