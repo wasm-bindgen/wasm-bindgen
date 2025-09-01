@@ -1098,8 +1098,8 @@ extern "C" {
 externs! {
     #[link(wasm_import_module = "__wbindgen_placeholder__")]
     extern "C" {
+        fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
-
 
         fn __wbindgen_externref_heap_live_count() -> u32;
 
@@ -1166,7 +1166,7 @@ externs! {
 impl Clone for JsValue {
     #[inline]
     fn clone(&self) -> JsValue {
-        wbg_cast(self)
+        JsValue::_new(unsafe { __wbindgen_object_clone_ref(self.idx) })
     }
 }
 

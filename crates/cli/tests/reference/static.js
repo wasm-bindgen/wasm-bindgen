@@ -80,11 +80,6 @@ export function __wbg_static_accessor_PLAIN_c0f08eb2f0db194c() {
     return ret;
 };
 
-export function __wbindgen_cast_767(arg0) {
-    const ret = arg0;
-    return ret;
-};
-
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_export_1;
     const offset = table.grow(4);
