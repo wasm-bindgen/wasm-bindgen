@@ -10,7 +10,7 @@ use std::io::Cursor;
 
 use anyhow::{anyhow, bail, Context, Result};
 use walrus::{
-    ir::Value, ConstExpr, ElementId, ElementItems, FunctionBuilder, FunctionId, FunctionKind,
+    ir::Value, ConstExpr, ElementItems, FunctionBuilder, FunctionId, FunctionKind,
     GlobalId, GlobalKind, MemoryId, Module, RawCustomSection, ValType,
 };
 use wasmparser::{BinaryReader, WasmFeatures};
