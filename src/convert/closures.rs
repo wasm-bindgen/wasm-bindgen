@@ -1,5 +1,3 @@
-#![allow(clippy::fn_to_numeric_cast, coherence_leak_check)]
-
 use alloc::boxed::Box;
 use core::mem;
 
@@ -70,6 +68,7 @@ macro_rules! closures {
             ret.return_abi().into()
         }
 
+        #[allow(clippy::fn_to_numeric_cast)]
         impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
         where
             $($var: $FromWasmAbi,)*
@@ -187,4 +186,8 @@ closures! {
 // just this one! Maybe someone else can figure out voodoo so we don't have to
 // duplicate.
 
-closures!(@impl_for_args (&A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+// We need to allow coherence leak check just for these traits because we're providing separate implementation for `Fn(&A)` variants when `Fn(A)` one already exists.
+#[allow(coherence_leak_check)]
+const _: () = {
+    closures!(@impl_for_args (&A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+};
