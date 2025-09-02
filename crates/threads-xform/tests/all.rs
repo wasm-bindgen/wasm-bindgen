@@ -6,16 +6,10 @@
 //! `BLESS=1` in the environment. Otherwise the test are checked against the
 //! listed expectation.
 
-use anyhow::{bail, Context, Result};
-use rayon::prelude::*;
-use std::env;
+use anyhow::{bail, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 use walrus::ModuleConfig;
-
-fn main() {
-    run("tests".as_ref(), runtest);
-}
 
 fn runtest(test: &Test) -> Result<String> {
     let wasm = wat::parse_file(&test.file)?;
@@ -35,68 +29,15 @@ fn runtest(test: &Test) -> Result<String> {
     Ok(printed)
 }
 
-fn run(dir: &Path, run: fn(&Test) -> Result<String>) {
-    let mut tests = Vec::new();
-    find_tests(dir, &mut tests);
-    let filter = std::env::args().nth(1);
-
-    let bless = env::var("BLESS").is_ok();
-    let tests = tests
-        .iter()
-        .filter(|test| {
-            if let Some(filter) = &filter {
-                if let Some(s) = test.file_name().and_then(|s| s.to_str()) {
-                    if !s.contains(filter) {
-                        return false;
-                    }
-                }
-            }
-            true
-        })
-        .collect::<Vec<_>>();
-
-    println!("\nrunning {} tests\n", tests.len());
-
-    let errors = tests
-        .par_iter()
-        .filter_map(|test| run_test(test, bless, run).err())
-        .collect::<Vec<_>>();
-
-    if !errors.is_empty() {
-        for msg in errors.iter() {
-            eprintln!("error: {msg:?}");
-        }
-
-        panic!("{} tests failed", errors.len())
-    }
-
-    println!("test result: ok. {} passed\n", tests.len());
-}
-
-fn run_test(test: &Path, bless: bool, run: fn(&Test) -> anyhow::Result<String>) -> Result<()> {
-    (|| -> Result<_> {
-        let expected = Test::from_file(test)?;
-        let actual = run(&expected)?;
-        expected.check(&actual, bless)?;
-        Ok(())
-    })()
-    .context(format!("test failed - {}", test.display()))?;
-    Ok(())
-}
-
-fn find_tests(path: &Path, tests: &mut Vec<PathBuf>) {
-    for f in path.read_dir().unwrap() {
-        let f = f.unwrap();
-        if f.file_type().unwrap().is_dir() {
-            find_tests(&f.path(), tests);
-            continue;
-        }
-        match f.path().extension().and_then(|s| s.to_str()) {
-            Some("wat") => {}
-            _ => continue,
-        }
-        tests.push(f.path());
-    }
+#[rstest::rstest]
+fn run_test(
+    #[base_dir = "tests"]
+    #[files("*.wat")]
+    test: PathBuf,
+) -> Result<()> {
+    let expected = Test::from_file(&test)?;
+    let actual = runtest(&expected)?;
+    expected.check(&actual)
 }
 
 struct Test {
@@ -136,8 +77,8 @@ impl Test {
         })
     }
 
-    fn check(&self, output: &str, bless: bool) -> Result<()> {
-        if bless {
+    fn check(&self, output: &str) -> Result<()> {
+        if option_env!("BLESS").is_some() {
             update_output(&self.file, output)
         } else if let Some(pattern) = &self.assertion {
             if output == pattern {
