@@ -43,6 +43,9 @@ strict-macro = ["wasm-bindgen-macro/strict-macro"]
 # are handled correctly
 gg-alloc = ["wasm-bindgen-test/gg-alloc"]
 
+# INTERNAL ONLY and deprecated, to be removed in the next major version.
+xxx_debug_only_print_generated_code = []
+
 [dependencies]
 cfg-if = "1.0.0"
 once_cell = { version = "1.12", default-features = false }
