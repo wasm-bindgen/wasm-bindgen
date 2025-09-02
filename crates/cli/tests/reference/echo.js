@@ -1246,7 +1246,7 @@ export function __wbg_foo_unwrap(arg0) {
     return ret;
 };
 
-export function __wbindgen_cast_1009(arg0, arg1) {
+export function __wbindgen_cast_1006(arg0, arg1) {
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 };

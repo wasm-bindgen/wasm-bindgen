@@ -50,7 +50,7 @@ export function __wbg_parseFloat_7bc8aecd47f33642(arg0) {
     return ret;
 };
 
-export function __wbindgen_cast_74(arg0, arg1) {
+export function __wbindgen_cast_73(arg0, arg1) {
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 };

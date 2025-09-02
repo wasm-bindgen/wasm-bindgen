@@ -6,7 +6,7 @@
   (type (;4;) (func (param externref) (result f64)))
   (import "./reference_test_bg.js" "__wbg_parseFloat_2be7f01c31025438" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_parseFloat_7bc8aecd47f33642" (func (;1;) (type 4)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_74" (func (;2;) (type 3)))
+  (import "./reference_test_bg.js" "__wbindgen_cast_73" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_throw" (func (;4;) (type 1)))
   (func $exported (;5;) (type 0))

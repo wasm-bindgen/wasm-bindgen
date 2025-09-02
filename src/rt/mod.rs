@@ -69,11 +69,11 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
 
     #[inline(never)]
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    unsafe fn breaks_if_inlined<From: IntoWasmAbi, To: FromWasmAbi>(
-        _prim1: <From::Abi as WasmAbi>::Prim1,
-        _prim2: <From::Abi as WasmAbi>::Prim2,
-        _prim3: <From::Abi as WasmAbi>::Prim3,
-        _prim4: <From::Abi as WasmAbi>::Prim4,
+    unsafe extern "C" fn breaks_if_inlined<From: IntoWasmAbi, To: FromWasmAbi>(
+        prim1: <From::Abi as WasmAbi>::Prim1,
+        prim2: <From::Abi as WasmAbi>::Prim2,
+        prim3: <From::Abi as WasmAbi>::Prim3,
+        prim4: <From::Abi as WasmAbi>::Prim4,
     ) -> WasmRet<To::Abi> {
         inform(FUNCTION);
         inform(0);
@@ -81,7 +81,12 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
         From::describe();
         To::describe();
         To::describe();
-        super::__wbindgen_describe_cast()
+        // Pass all inputs and outputs across the opaque FFI boundary to prevent
+        // compiler from removing them as dead code.
+        core::ptr::read(super::__wbindgen_describe_cast(
+            breaks_if_inlined::<From, To> as _,
+            &(prim1, prim2, prim3, prim4) as *const _ as _,
+        ) as _)
     }
 
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
