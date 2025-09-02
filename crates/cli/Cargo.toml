@@ -40,7 +40,7 @@ wasm-bindgen-shared = { path = "../shared", version = "=0.2.100" }
 assert_cmd = "2"
 diff = "0.1"
 predicates = "3"
-test-each = "0.3"
+rstest = "0.26"
 wasmparser = "0.214"
 wasmprinter = "0.214"
 

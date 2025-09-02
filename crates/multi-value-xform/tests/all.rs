@@ -43,9 +43,13 @@ fn runtest(test: &Test) -> Result<String> {
     Ok(printed)
 }
 
-#[test_each::path(glob = "crates/multi-value-xform/tests/*.wat")]
-fn run_test(test: &Path) -> Result<()> {
-    let expected = Test::from_file(test)?;
+#[rstest::rstest]
+fn run_test(
+    #[base_dir = "tests"]
+    #[files("*.wat")]
+    test: PathBuf,
+) -> Result<()> {
+    let expected = Test::from_file(&test)?;
     let actual = runtest(&expected)?;
     expected.check(&actual)
 }

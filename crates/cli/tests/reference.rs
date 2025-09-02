@@ -62,9 +62,13 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use walrus::ModuleConfig;
 
-#[test_each::path(glob = "crates/cli/tests/reference/*.rs")]
-fn runtest(test: &Path) -> Result<()> {
-    let contents = fs::read_to_string(test)?;
+#[rstest::rstest]
+fn runtest(
+    #[base_dir = "tests/reference"]
+    #[files("*.rs")]
+    test: PathBuf,
+) -> Result<()> {
+    let contents = fs::read_to_string(&test)?;
     let td = tempfile::TempDir::new()?;
     let root = repo_root();
     let root = root.display();
