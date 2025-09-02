@@ -71,7 +71,10 @@ wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 workspace = true
 
 [workspace.lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)', 'cfg(xxx_debug_only_print_generated_code)'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+  'cfg(wasm_bindgen_unstable_test_coverage)',
+  'cfg(xxx_debug_only_print_generated_code)',
+] }
 
 [workspace.lints.clippy]
 large_enum_variant = "allow"
