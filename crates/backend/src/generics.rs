@@ -1,0 +1,249 @@
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
+
+use crate::util::GenericNameVisitor;
+
+/// Get the list of generic parameter identifier names
+pub(crate) fn generic_params(generics: &syn::Generics) -> Vec<&syn::Ident> {
+    generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            syn::GenericParam::Type(type_param) => Some(&type_param.ident),
+            _ => None,
+        })
+        .collect()
+}
+
+pub(crate) fn uses_generic_params(ty: &syn::Type, generic_names: &Vec<&syn::Ident>) -> bool {
+    let mut visitor = GenericNameVisitor::new(generic_names, None);
+    syn::visit::visit_type(&mut visitor, ty);
+    visitor.found_a
+}
+
+/// Normalizes generics by moving inline trait bounds to where clauses.
+/// This makes it easier to hoist bounds during code generation.
+pub(crate) fn normalize_generics(generics: &mut syn::Generics) {
+    let mut new_predicates =
+        syn::punctuated::Punctuated::<syn::WherePredicate, syn::Token![,]>::new();
+
+    for param in &mut generics.params {
+        if let syn::GenericParam::Type(type_param) = param {
+            if !type_param.bounds.is_empty() {
+                let ident = &type_param.ident;
+                let bounds = type_param.bounds.clone();
+                let predicate = syn::WherePredicate::Type(syn::PredicateType {
+                    lifetimes: None,
+                    bounded_ty: syn::parse_quote!(#ident),
+                    colon_token: syn::Token![:](proc_macro2::Span::call_site()),
+                    bounds,
+                });
+                new_predicates.push(predicate);
+                type_param.bounds.clear();
+            }
+        }
+    }
+
+    if !new_predicates.is_empty() {
+        if let Some(where_clause) = &mut generics.where_clause {
+            where_clause.predicates.extend(new_predicates);
+        } else {
+            generics.where_clause = Some(syn::WhereClause {
+                where_token: syn::Token![where](proc_macro2::Span::call_site()),
+                predicates: new_predicates,
+            });
+        }
+    }
+}
+
+pub(crate) fn where_clause(generics: &syn::Generics) -> TokenStream {
+    let mut type_bounds: Vec<_> = generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            syn::GenericParam::Type(syn::TypeParam { ident, bounds, .. }) => {
+                if !bounds.is_empty() {
+                    Some(quote! { #ident: #bounds })
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        })
+        .collect();
+
+    if let Some(syn::WhereClause { predicates, .. }) = &generics.where_clause {
+        type_bounds.extend(
+            predicates
+                .iter()
+                .map(|predicate| predicate.to_token_stream()),
+        );
+    }
+    quote! { where #(#type_bounds),* }
+}
+
+/// Returns JsValue tokens for each generic type parameter
+pub(crate) fn jsvalue_tokens_for_type_params(
+    generics: &syn::Generics,
+) -> Vec<proc_macro2::TokenStream> {
+    generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            syn::GenericParam::Type(_) => Some(quote! { JsValue }),
+            syn::GenericParam::Lifetime(_) => None, // Skip lifetimes
+            syn::GenericParam::Const(_) => None,    // Skip const generics
+        })
+        .collect()
+}
+
+mod tests {
+    #[test]
+    fn test_generic_name_visitor() {
+        let t_ident = syn::Ident::new("T", proc_macro2::Span::call_site());
+        let u_ident = syn::Ident::new("U", proc_macro2::Span::call_site());
+        let name_set_a = vec![&t_ident];
+        let name_set_b = Some(vec![&u_ident]);
+
+        // Test T as value
+        let ty: syn::Type = syn::parse_quote!(T);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(!visitor.a_ref_only);
+
+        // Test &T as reference
+        let ty: syn::Type = syn::parse_quote!(&T);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(visitor.a_ref_only);
+
+        // Test T<U> - T as value, U as value
+        let ty: syn::Type = syn::parse_quote!(T<U>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(!visitor.a_ref_only);
+        assert!(visitor.found_b);
+        assert!(!visitor.b_ref_only);
+
+        // Test &T<U> - T as reference, U as value
+        let ty: syn::Type = syn::parse_quote!(&T<U>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(visitor.a_ref_only);
+        assert!(visitor.found_b);
+        assert!(!visitor.b_ref_only);
+
+        // Test T::<U>::Foo - T as value, U as value, Foo ignored
+        let ty: syn::Type = syn::parse_quote!(T::<U>::Foo);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(!visitor.a_ref_only);
+        assert!(visitor.found_b);
+        assert!(!visitor.b_ref_only);
+
+        // Test Vec<T> - T as value, Vec ignored
+        let ty: syn::Type = syn::parse_quote!(Vec<T>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(!visitor.a_ref_only);
+    }
+
+    #[test]
+    fn test_associated_type_binding() {
+        let t_ident = syn::Ident::new("T", proc_macro2::Span::call_site());
+        let u_ident = syn::Ident::new("U", proc_macro2::Span::call_site());
+        let name_set_a = vec![&t_ident];
+        let name_set_b = Some(vec![&u_ident]);
+
+        // Test SomeTrait<T = U> - should find U (RHS) but NOT T (LHS assoc type name)
+        let ty: syn::Type = syn::parse_quote!(SomeTrait<T = U>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(!visitor.found_a); // T is LHS assoc type name, should NOT be counted
+        assert!(visitor.found_b); // U is RHS generic parameter, should be counted
+        assert!(!visitor.b_ref_only);
+
+        // Test SomeTrait<U = T> - should find T (RHS) but NOT U (LHS assoc type name)
+        let ty: syn::Type = syn::parse_quote!(SomeTrait<U = T>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a); // T is RHS generic parameter, should be counted
+        assert!(!visitor.a_ref_only);
+        assert!(!visitor.found_b); // U is LHS assoc type name, should NOT be counted
+    }
+
+    #[test]
+    fn test_nested_references() {
+        let t_ident = syn::Ident::new("T", proc_macro2::Span::call_site());
+        let u_ident = syn::Ident::new("U", proc_macro2::Span::call_site());
+        let name_set_a = vec![&t_ident];
+        let name_set_b = Some(vec![&u_ident]);
+
+        // Test &T - should be ref
+        let ty: syn::Type = syn::parse_quote!(&T);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, None);
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(visitor.a_ref_only);
+
+        // Test &&T - should be ref
+        let ty: syn::Type = syn::parse_quote!(&&T);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, None);
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(visitor.a_ref_only);
+
+        // Test &&&T - should be ref
+        let ty: syn::Type = syn::parse_quote!(&&&T);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, None);
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(visitor.a_ref_only);
+
+        // Test &T<U> - T should be ref, U should be value
+        let ty: syn::Type = syn::parse_quote!(&T<U>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(visitor.a_ref_only);
+        assert!(visitor.found_b);
+        assert!(!visitor.b_ref_only);
+    }
+
+    #[test]
+    fn test_mixed_usage() {
+        let t_ident = syn::Ident::new("T", proc_macro2::Span::call_site());
+        let name_set_a = vec![&t_ident];
+
+        // Test T + &T - should find both, ref_only = false
+        let ty: syn::Type = syn::parse_quote!(SomeTrait<Item = T> + OtherTrait<Ref = &T>);
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, None);
+        syn::visit::visit_type(&mut visitor, &ty);
+        assert!(visitor.found_a);
+        assert!(!visitor.a_ref_only); // Found both ref and value usage
+    }
+
+    #[test]
+    fn test_complex_reference_with_closure() {
+        let t_ident = syn::Ident::new("T", proc_macro2::Span::call_site());
+        let r_ident = syn::Ident::new("R", proc_macro2::Span::call_site());
+        let name_set_a = vec![&t_ident];
+        let name_set_b = Some(vec![&r_ident]);
+
+        let ty: syn::Type = syn::parse_quote!(&Closure<dyn FnMut(T) -> Result<R, JsValue>>);
+
+        let mut visitor = crate::util::GenericNameVisitor::new(&name_set_a, name_set_b.as_ref());
+        syn::visit::visit_type(&mut visitor, &ty);
+
+        assert!(visitor.found_a);
+        assert!(!visitor.a_ref_only);
+        assert!(visitor.found_b);
+        assert!(!visitor.b_ref_only);
+    }
+}

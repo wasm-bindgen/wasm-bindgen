@@ -25,6 +25,7 @@ mod parser;
 /// Takes the parsed input from a `#[wasm_bindgen]` macro and returns the generated bindings
 pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diagnostic> {
     parser::reset_attrs_used();
+
     // if struct is encountered, add `derive` attribute and let everything happen there (workaround
     // to help parsing cfg_attr correctly).
     let item = syn::parse2::<syn::Item>(input)?;
