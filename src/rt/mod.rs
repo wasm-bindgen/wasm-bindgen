@@ -69,14 +69,16 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
 
     #[inline(never)]
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    unsafe fn breaks_if_inlined<From: IntoWasmAbi, To: FromWasmAbi>(
+    unsafe extern "C" fn breaks_if_inlined<From: IntoWasmAbi, To: FromWasmAbi>(
         _prim1: <From::Abi as WasmAbi>::Prim1,
         _prim2: <From::Abi as WasmAbi>::Prim2,
         _prim3: <From::Abi as WasmAbi>::Prim3,
         _prim4: <From::Abi as WasmAbi>::Prim4,
     ) -> WasmRet<To::Abi> {
         inform(FUNCTION);
-        inform(0);
+        // The actual pointer will be unused, but this prevents optimizer
+        // from removing the unused function arguments and corrupting the type.
+        inform(breaks_if_inlined::<From, To> as usize as u32);
         inform(1);
         From::describe();
         To::describe();
