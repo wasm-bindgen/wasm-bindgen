@@ -60,7 +60,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use walrus::ModuleConfig;
+use walrus::{ExportItem, FunctionKind, Module, ModuleConfig};
 
 #[rstest::rstest]
 fn runtest(
@@ -199,13 +199,9 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
     let mut module = ModuleConfig::new()
         .generate_producers_section(false)
         .parse_file(wasm)?;
-    for func in module.funcs.iter_mut() {
-        let local = match &mut func.kind {
-            walrus::FunctionKind::Local(l) => l,
-            _ => continue,
-        };
-        local.block_mut(local.entry_block()).instrs.truncate(0);
-    }
+
+    sanitize_local_funcs(&mut module);
+
     let ids = module.data.iter().map(|d| d.id()).collect::<Vec<_>>();
     for id in ids {
         module.data.delete(id);
@@ -233,6 +229,34 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
     let mut wat = wasmprinter::print_bytes(module.emit_wasm())?;
     wat.push('\n');
     Ok(wat)
+}
+
+/// Sort all exported local functions by export order, and remove their bodies.
+///
+/// This removes inconsistency between toolchains on different OS producing
+/// local functions in different order, even though exports are consistent.
+fn sanitize_local_funcs(module: &mut Module) {
+    let func_ids: Vec<_> = module
+        .exports
+        .iter()
+        .filter_map(|e| match e.item {
+            ExportItem::Function(f)
+                if matches!(module.funcs.get(f).kind, FunctionKind::Local(_)) =>
+            {
+                Some(f)
+            }
+            _ => None,
+        })
+        .collect();
+
+    for id in func_ids {
+        let old_name = module.funcs.get_mut(id).name.take();
+        // Replace with an empty function. This ensures two things:
+        // 1. Because we replace in export order, the new local functions are sorted in the same way.
+        // 2. New functions don't have any instructions, which is what we want for comparisons anyway.
+        let new_id = module.replace_exported_func(id, |_| {}).unwrap();
+        module.funcs.get_mut(new_id).name = old_name;
+    }
 }
 
 fn diff(a: &str, b: &str) -> Result<()> {
