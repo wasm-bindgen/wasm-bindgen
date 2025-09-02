@@ -64,6 +64,9 @@
 * Fix infinite recursion caused by the lack of proc-macro hygiene.
   [#4601](https://github.com/wasm-bindgen/wasm-bindgen/pull/4601)
 
+* Fix running coverage with no_modules.
+  [#4604](https://github.com/wasm-bindgen/wasm-bindgen/pull/4604)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
