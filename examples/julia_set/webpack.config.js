@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 module.exports = {
@@ -16,9 +16,12 @@ module.exports = {
         new WasmPackPlugin({
             crateDirectory: __dirname
         }),
+        new CopyWebpackPlugin({
+            patterns: [{ from: 'styles', to: 'styles' }]
+        }),
     ],
     mode: 'development',
     experiments: {
         asyncWebAssembly: true
-   }
+    }
 };

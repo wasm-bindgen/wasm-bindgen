@@ -6,6 +6,7 @@
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "catalog:",
     "html-webpack-plugin": "catalog:",
+    "copy-webpack-plugin": "catalog:",
     "webpack": "catalog:",
     "webpack-cli": "catalog:",
     "webpack-dev-server": "catalog:"

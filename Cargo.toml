@@ -91,7 +91,6 @@ members = [
   "crates/js-sys",
   "crates/test",
   "crates/test/sample",
-  "crates/example-tests",
   "crates/typescript-tests",
   "crates/web-sys",
   "crates/webidl",

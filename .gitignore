@@ -13,3 +13,4 @@ yarn.lock
 webdriver.json
 benchmarks/pkg
 /crates/msrv/*/target
+/examples/test-results
