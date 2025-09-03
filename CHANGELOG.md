@@ -67,6 +67,9 @@
 * Fix running coverage with no_modules.
   [#4604](https://github.com/wasm-bindgen/wasm-bindgen/pull/4604)
 
+* Fix the resolution for the core module.
+  [#4606](https://github.com/wasm-bindgen/wasm-bindgen/pull/4606)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.100](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.99...0.2.100)
