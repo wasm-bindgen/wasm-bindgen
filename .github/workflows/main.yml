@@ -363,7 +363,7 @@ jobs:
           ) || exit 1;
         }
         export -f build
-        ls -d */ | grep -Ev 'node_modules|raytrace|deno|wasm-audio-worklet' | parallel -j4 build
+        ls -d */ | grep -Ev 'node_modules' | parallel -j4 build
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
