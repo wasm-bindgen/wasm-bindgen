@@ -3669,6 +3669,11 @@ __wbg_set_wasm(wasm);"
                 format!("!{}", args[0])
             }
 
+            Intrinsic::AsNumber => {
+                assert_eq!(args.len(), 1);
+                format!("+{}", args[0])
+            }
+
             Intrinsic::TryIntoNumber => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str("let result;\n");
@@ -3811,6 +3816,26 @@ __wbg_set_wasm(wasm);"
                 "false".to_string()
             }
 
+            Intrinsic::NumberNew => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::BigIntFromI64 | Intrinsic::BigIntFromU64 => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::BigIntFromI128 | Intrinsic::BigIntFromU128 => {
+                assert_eq!(args.len(), 2);
+                format!("{} << BigInt(64) | {}", args[0], args[1])
+            }
+
+            Intrinsic::StringNew => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
             Intrinsic::NumberGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const obj = {};\n", args[0]));
@@ -3902,6 +3927,31 @@ __wbg_set_wasm(wasm);"
                     src = args[0],
                     dst = args[1]
                 )
+            }
+
+            Intrinsic::Uint8ArrayNew
+            | Intrinsic::Uint8ClampedArrayNew
+            | Intrinsic::Uint16ArrayNew
+            | Intrinsic::Uint32ArrayNew
+            | Intrinsic::BigUint64ArrayNew
+            | Intrinsic::Int8ArrayNew
+            | Intrinsic::Int16ArrayNew
+            | Intrinsic::Int32ArrayNew
+            | Intrinsic::BigInt64ArrayNew
+            | Intrinsic::Float32ArrayNew
+            | Intrinsic::Float64ArrayNew => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::ArrayNew => {
+                assert_eq!(args.len(), 0);
+                "[]".to_string()
+            }
+
+            Intrinsic::ArrayPush => {
+                assert_eq!(args.len(), 2);
+                format!("{}.push({})", args[0], args[1])
             }
 
             Intrinsic::ExternrefHeapLiveCount => {

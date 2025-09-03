@@ -86,11 +86,6 @@ export function __wbg_Error_fcfdb1a705a32d74(arg0, arg1) {
     return ret;
 };
 
-export function __wbg_cast_55f8fbc0872e729e(arg0) {
-    const ret = /* cast */(arg0);
-    return ret;
-};
-
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_export_0;
     const offset = table.grow(4);
@@ -100,6 +95,11 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
+};
+
+export function __wbindgen_number_new(arg0) {
+    const ret = arg0;
+    return ret;
 };
 
 export function __wbindgen_throw(arg0, arg1) {
