@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /// <reference lib="esnext" />
 
-import { dirname, delimiter } from 'node:path';
+import { dirname, delimiter, join } from 'node:path';
 import { test as baseTest, ConsoleMessage } from '@playwright/test';
 import { globSync, existsSync } from 'node:fs';
 import { platform, chdir, env } from 'node:process';
@@ -20,7 +20,7 @@ const test = baseTest.extend({
     // https://github.com/microsoft/playwright/issues/13968#issuecomment-1784041622
     await context.route('/**', (route, request) => {
       return route.fulfill({
-        path: new URL(request.url()).pathname.slice(1)
+        path: join(EXBUILD || '.', new URL(request.url()).pathname)
       });
     });
 
@@ -80,7 +80,7 @@ test.beforeAll(async () => {
 function exampleTest(dir: string, buildCmd: string, dist: string = dir) {
   test(dir, async ({ page }) => {
     if (EXBUILD) {
-      dist = `${EXBUILD}/${dir}`;
+      dist = dir;
     } else {
       await exec(buildCmd, { cwd: dir, env: childEnv });
     }
