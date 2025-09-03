@@ -176,6 +176,8 @@ impl WebDriver {
                             .context(format!("failed to connect to Firefox (after {wait_sec}s)"));
                     }
                     eprintln!("Failed to connect to Firefox: {e}, retrying...");
+                    // We can wait for a while for the firefox instance to be ready
+                    tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }
         };
@@ -468,7 +470,11 @@ pub async fn test_example(
                 }
             }
 
-            tx.send(()).unwrap();
+            // An unsuccessful send would be one where
+            // the corresponding receiver has already been deallocated.
+            //
+            // Maybe the connection above received the result, so it is not unwrap here.
+            let _ = tx.send(());
 
             Ok(())
         },
