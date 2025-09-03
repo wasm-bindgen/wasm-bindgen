@@ -59,6 +59,8 @@ test.beforeEach(async ({ page }) => {
 let childEnv = { ...env };
 
 test.beforeAll(async () => {
+  test.setTimeout(2 * 60 * 1000);
+
   // The async version of `exec` captures stderr instead of inheriting, and we'd need more code
   // to replicate that than worth it, especially since this is meant to be executed once at start.
   const stdout = execSync(
