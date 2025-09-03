@@ -5,7 +5,7 @@ import { dirname, delimiter } from 'node:path';
 import { test as baseTest, ConsoleMessage } from '@playwright/test';
 import { globSync, existsSync } from 'node:fs';
 import { platform, chdir, env } from 'node:process';
-import { exec as exec_ } from 'node:child_process';
+import { exec as exec_, execSync } from 'node:child_process';
 import { promisify } from 'node:util';
 const exec = promisify(exec_);
 
@@ -59,10 +59,11 @@ test.beforeEach(async ({ page }) => {
 let childEnv = { ...env };
 
 test.beforeAll(async () => {
-  test.setTimeout(2 * 60 * 1000);
-
-  const { stdout } = await exec(
-    'cargo build -p wasm-bindgen-cli --bin wasm-bindgen --message-format json'
+  // The async version of `exec` captures stderr instead of inheriting, and we'd need more code
+  // to replicate that than worth it, especially since this is meant to be executed once at start.
+  const stdout = execSync(
+    'cargo build -p wasm-bindgen-cli --bin wasm-bindgen --message-format json',
+    { encoding: 'utf-8' }
   );
 
   // Parse the last compiler-artifact message to get the path to the built wasm-bindgen.

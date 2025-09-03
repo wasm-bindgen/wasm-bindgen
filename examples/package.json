@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "pretest": "cargo build -p wasm-bindgen-cli --bin wasm-bindgen",
     "test": "playwright test"
   },
   "dependencies": {
