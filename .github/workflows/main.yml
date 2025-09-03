@@ -381,6 +381,9 @@ jobs:
         name: examples
         path: exbuild
     - run: rustup update --no-self-update stable && rustup default stable
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
     - run: npm install
       working-directory: examples
     - run: npm test
