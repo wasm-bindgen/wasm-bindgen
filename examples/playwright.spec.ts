@@ -59,6 +59,8 @@ test.beforeEach(async ({ page }) => {
 let childEnv = { ...env };
 
 test.beforeAll(async () => {
+  test.setTimeout(2 * 60 * 1000);
+
   const { stdout } = await exec(
     'cargo build -p wasm-bindgen-cli --bin wasm-bindgen --message-format json'
   );
