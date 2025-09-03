@@ -1168,7 +1168,7 @@ impl ToTokens for ast::ImportType {
         if !no_deref {
             (quote! {
                 #[automatically_derived]
-                impl core::ops::Deref for #rust_name {
+                impl #wasm_bindgen::__rt::core::ops::Deref for #rust_name {
                     type Target = #internal_obj;
 
                     #[inline]
