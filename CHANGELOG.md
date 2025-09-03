@@ -67,7 +67,7 @@
 * Fix running coverage with no_modules.
   [#4604](https://github.com/wasm-bindgen/wasm-bindgen/pull/4604)
 
-* Fix the resolution for the core module.
+* Fix proc-macro hygiene with `core`.
   [#4606](https://github.com/wasm-bindgen/wasm-bindgen/pull/4606)
 
 --------------------------------------------------------------------------------
