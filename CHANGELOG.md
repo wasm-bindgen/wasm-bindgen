@@ -20,6 +20,7 @@
 
 * Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
   [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
+
 * Added unstable bindings for `GestureEvent`.
   [#4589](https://github.com/wasm-bindgen/wasm-bindgen/pull/4589)
 
