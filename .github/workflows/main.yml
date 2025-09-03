@@ -382,6 +382,7 @@ jobs:
         path: exbuild
     - run: rustup update --no-self-update stable && rustup default stable
     - run: npm install
+      working-directory: examples
     - run: npm test
       working-directory: examples
       env:
