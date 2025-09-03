@@ -3,7 +3,7 @@
   (type (;1;) (func (result i32)))
   (type (;2;) (func (result i32 i32)))
   (type (;3;) (func (param i32)))
-  (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
+  (import "wbg" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
   (func $"exported multivalue shim" (;1;) (type 2) (result i32 i32))
   (func $__wbindgen_exn_store (;2;) (type 3) (param i32))
   (func $__externref_table_alloc (;3;) (type 1) (result i32))

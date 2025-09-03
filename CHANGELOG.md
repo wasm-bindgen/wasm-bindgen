@@ -21,6 +21,9 @@
 * Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
   [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
 
+* Stricter checks for `module`, `raw_module` and `inline_js` attributes applied to inapplicable items.
+  [#4522](https://github.com/wasm-bindgen/wasm-bindgen/pull/4522)
+
 * Add bindings for `PictureInPicture`.
   [#4593](https://github.com/rustwasm/wasm-bindgen/pull/4593)
 
