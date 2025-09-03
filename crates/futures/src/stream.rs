@@ -79,3 +79,68 @@ impl Stream for JsStream {
         }
     }
 }
+
+#[cfg(feature = "std")]
+mod to_iter {
+    use super::*;
+    use crate::future_to_promise;
+    use core::ops::DerefMut;
+    use js_sys::{Boolean, Object, Promise, Reflect};
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    struct RefCellStreamFuture<S>(Rc<RefCell<S>>);
+
+    impl<S> Clone for RefCellStreamFuture<S> {
+        fn clone(&self) -> Self {
+            Self(self.0.clone())
+        }
+    }
+
+    impl<S> RefCellStreamFuture<S> {
+        fn new(stream: S) -> Self {
+            Self(Rc::new(RefCell::new(stream)))
+        }
+    }
+
+    impl<S> Future for RefCellStreamFuture<S>
+    where
+        S: Stream + Unpin,
+    {
+        type Output = Option<S::Item>;
+        fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+            Pin::new(self.0.borrow_mut().deref_mut()).poll_next(cx)
+        }
+    }
+
+    /// converts a Rust `Stream` into a JavaScript `AsyncIterator`
+    pub fn stream_to_async_iterator<S>(stream: S) -> AsyncIterator
+    where
+        S: Stream<Item = Result<JsValue, JsValue>> + Unpin + 'static,
+    {
+        let next = RefCellStreamFuture::new(stream);
+        let closure = Closure::<dyn FnMut() -> Promise>::new(move || {
+            let cloned = next.clone();
+            future_to_promise(async move {
+                match cloned.await.transpose() {
+                    Ok(value) => {
+                        let result = Object::new();
+                        Reflect::set(&result, &"done".into(), &Boolean::from(value.is_none()))
+                            .unwrap();
+                        if let Some(value) = value {
+                            Reflect::set(&result, &"value".into(), &value).unwrap();
+                        }
+                        Ok(result.into())
+                    }
+                    Err(err) => Err(err),
+                }
+            })
+        });
+        let out = Object::new();
+        Reflect::set(&out, &"next".into(), &closure.into_js_value()).unwrap();
+        out.unchecked_into()
+    }
+}
+
+#[cfg(feature = "std")]
+pub use to_iter::stream_to_async_iterator;
