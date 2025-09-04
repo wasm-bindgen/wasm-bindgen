@@ -349,7 +349,15 @@ jobs:
     # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
       working-directory: examples
-    - run: pnpm run -r build
+    - run: |
+        pnpm run -r build
+        for dir in $(ls -d */ | grep -Ev 'node_modules'); do
+          if [ -f $dir/webpack.config.js ]; then
+            cp -r $dir/dist ../exbuild/$dir
+          else
+            cp -r $dir ../exbuild/$dir
+          fi
+        done
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
