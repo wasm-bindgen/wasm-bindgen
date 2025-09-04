@@ -298,16 +298,16 @@ jobs:
     - run: ${{ matrix.runs.run }}
 
   test_deno:
-    name: "Build and test the deno example"
+    name: "Test the deno example"
+    needs:
+    - build_examples
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v1.x
-    - run: cd examples/deno && ./build.sh && deno run --allow-read test.ts
+    - run: cd examples/deno && deno run --allow-read test.ts
 
   test_ui:
     name: Run UI compile-fail tests
