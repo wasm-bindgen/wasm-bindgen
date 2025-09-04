@@ -3,8 +3,6 @@
 
 interface GestureEvent : UIEvent
 {
-  constructor(DOMString type, optional GestureEventInit eventInitDict);
-
   readonly attribute float   scale;
   readonly attribute float   rotation;
 
@@ -17,20 +15,23 @@ interface GestureEvent : UIEvent
   readonly attribute long    clientY;
   readonly attribute long    screenX;
   readonly attribute long    screenY;
-};
 
-dictionary GestureEventInit : UIEventInit
-{
-  float   scale;
-  float   rotation;
-
-  boolean ctrlKey;
-  boolean shiftKey;
-  boolean altKey;
-  boolean metaKey;
-
-  long    clientX;
-  long    clientY;
-  long    screenX;
-  long    screenY;
+  undefined initGestureEvent(
+      DOMString type,
+      boolean canBubble,
+      boolean cancelable,
+      DOMWindow? view,
+      long detail,
+      long screenX,
+      long screenY,
+      long clientX,
+      long clientY,
+      boolean ctrlKey,
+      boolean altKey,
+      boolean shiftKey,
+      boolean metaKey,
+      EventTarget? target,
+      float scale,
+      float rotation
+  );
 };
