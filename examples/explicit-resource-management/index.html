@@ -1,4 +1,5 @@
-import { current_allocation, MyStruct } from "./pkg/explicit_resource_management.js";
+<script type="module">
+import { current_allocation, MyStruct } from "./explicit_resource_management.js";
 
 const initialAllocation = current_allocation();
 let referrent = {};
@@ -15,3 +16,4 @@ console.log('Before scope: ', initialAllocation);
 const afterDisposeAllocation = current_allocation();
 console.log('After scope exit: ', afterDisposeAllocation);
 console.log(referrent);
+</script>

@@ -1,5 +1,5 @@
-import init from './pkg/websockets.js';
+import init from './websockets.js';
 
 window.addEventListener('load', async () => {
-    await init({ module_or_path: './pkg/websockets_bg.wasm' });
+    await init({ module_or_path: './websockets_bg.wasm' });
 });

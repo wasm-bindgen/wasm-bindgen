@@ -65,7 +65,6 @@ jobs:
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p example-tests -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro-support -- -D warnings
@@ -298,18 +297,6 @@ jobs:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
 
-  test_deno:
-    name: "Build and test the deno example"
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - uses: denoland/setup-deno@v2
-      with:
-        deno-version: v1.x
-    - run: cd examples/deno && ./build.sh && deno run --allow-read test.ts
-
   test_ui:
     name: Run UI compile-fail tests
     runs-on: ubuntu-latest
@@ -333,6 +320,7 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
+    - run: rustup toolchain install nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
@@ -342,44 +330,12 @@ jobs:
     # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
       working-directory: examples
-    - run: |
-        function build() {
-          (cd $1 &&
-            if [ -f package.json ]; then
-              pnpm run build -- --output-path ../../exbuild/$1
-            elif [ -f build.sh ]; then
-              ./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore
-            else
-              echo "ERROR: Don't know how to build $1" >&2
-              exit 1
-            fi
-          ) || exit 1;
-        }
-        export -f build
-        ls -d */ | grep -Ev 'node_modules|raytrace|deno|wasm-audio-worklet' | parallel -j4 build
+    - run: pnpm run -r build
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
-        name: examples1
-        path: exbuild
-
-  build_nightly:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - run: rustup default nightly-2025-08-04
-    - run: rustup target add wasm32-unknown-unknown
-    - run: rustup component add rust-src
-    - run: |
-        for dir in raytrace-parallel wasm-audio-worklet; do
-          (cd examples/$dir &&
-            ./build.sh && mkdir -p ../../exbuild/$dir && cp -r ./* ../../exbuild/$dir
-          ) || exit 1;
-        done
-    - uses: actions/upload-artifact@v4
-      with:
-        name: examples2
-        path: exbuild
+        name: examples
+        path: examples/dist
 
   test_examples:
     needs:
@@ -389,27 +345,21 @@ jobs:
     - uses: actions/checkout@v5
     - uses: actions/download-artifact@v5
       with:
-        name: examples1
-        path: exbuild
+        name: examples
+        path: examples/dist
     - run: rustup update --no-self-update stable && rustup default stable
-    - run: cargo test -p example-tests
-      env:
-        EXBUILD: ${{ github.workspace }}/exbuild
-
-  test_nightly:
-    needs:
-    - build_nightly
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - uses: actions/download-artifact@v5
+    - uses: actions/setup-node@v4
       with:
-        name: examples2
-        path: exbuild
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: cargo test -p example-tests --no-default-features --features nightly
+        node-version: 22
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v1.x
+    - run: npm install
+      working-directory: examples
+    - run: npm test --ignore-scripts
+      working-directory: examples
       env:
-        EXBUILD: ${{ github.workspace }}/exbuild
+        PREBUILT_EXAMPLES: 1
 
   build_benchmarks:
     runs-on: ubuntu-latest
@@ -607,7 +557,6 @@ jobs:
       - dist_macos_aarch64
       - dist_windows
       - build_examples
-      - build_nightly
       - build_benchmarks
     runs-on: ubuntu-latest
     steps:
@@ -651,8 +600,7 @@ jobs:
         mv artifacts/doc_book gh-pages
         tar xf artifacts/doc_api/docs.tar.gz
         mv target/doc gh-pages/api
-        mv artifacts/examples1 gh-pages/exbuild
-        mv artifacts/examples2/* gh-pages/exbuild
+        mv artifacts/examples gh-pages/exbuild
         mv artifacts/benchmarks gh-pages/benchmarks
         tar czf gh-pages.tar.gz gh-pages
     - uses: actions/upload-artifact@v4

@@ -1,4 +1,4 @@
-import * as wasm from "./pkg/synchronous_instantiation.js";
+import * as wasm from "./synchronous_instantiation.js";
 
 self.onmessage = ({ data: bytes }) => {
   /**

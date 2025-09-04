@@ -41,7 +41,6 @@ const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
     "webidl-tests",
     "typescript-tests",
     "wasm-bindgen-webidl",
-    "example-tests",
     "msrv-cli-test",
     "msrv-library-test",
     "msrv-resolver-test",

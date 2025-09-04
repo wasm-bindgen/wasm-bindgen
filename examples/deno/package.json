@@ -1,0 +1,6 @@
+{
+	"scripts": {
+		"build": "wasm-pack build --target deno --out-dir ../dist/deno",
+		"test": "deno run --allow-read test.ts"
+	}
+}
