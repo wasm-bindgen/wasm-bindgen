@@ -2,7 +2,6 @@ use crate::JsValue;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::{Cell, UnsafeCell};
 use core::convert::Infallible;
-use core::mem;
 use core::ops::{Deref, DerefMut};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
@@ -20,6 +19,30 @@ pub extern crate std;
 pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
+
+// This macro is a hack to implement "generic" casts and reduce number of
+// boilerplate intrinsics. The implementation generates a no-op JS adapter that
+// simply takes an argument in one type, decodes it from the ABI, does nothing
+// with it on the JS side (by declaring function name as empty, so instead of
+// generating typical JS call that does `ret = foo(arg);` we end up with
+// just `ret = (arg);` and then encoding same value back with a different type.
+//
+// Someday we'll support generics in #[wasm_bindgen] macro, in which case
+// this can be replaced with a proper generic intrinsic.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! wbg_cast {
+    ($value:expr, $from:ty, $to:ty) => {{
+        #[$crate::prelude::wasm_bindgen(wasm_bindgen = $crate)]
+        extern "C" {
+            /// Foobar.
+            #[wasm_bindgen(js_name = "/* cast */")]
+            fn __wbindgen_cast(value: $from) -> $to;
+        }
+
+        __wbindgen_cast($value)
+    }};
+}
 
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.
 pub struct LazyCell<T, F = fn() -> T>(Wrapper<Lazy<T, F>>);
@@ -696,16 +719,4 @@ impl<T: VectorIntoJsValue> From<Box<[T]>> for JsValue {
     fn from(vector: Box<[T]>) -> Self {
         T::vector_into_jsvalue(vector)
     }
-}
-
-pub fn js_value_vector_into_jsvalue<T: Into<JsValue>>(vector: Box<[T]>) -> JsValue {
-    let result = unsafe { JsValue::_new(super::__wbindgen_array_new()) };
-    for value in vector.into_vec() {
-        let js: JsValue = value.into();
-        unsafe { super::__wbindgen_array_push(result.idx, js.idx) }
-        // `__wbindgen_array_push` takes ownership over `js` and has already dropped it,
-        // so don't drop it again.
-        mem::forget(js);
-    }
-    result
 }

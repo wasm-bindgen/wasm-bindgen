@@ -79,10 +79,6 @@ fn slice(contents: Descriptor) -> Descriptor {
     Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(contents))))
 }
 
-fn vector(contents: Descriptor) -> Descriptor {
-    Descriptor::Vector(Box::new(contents))
-}
-
 intrinsics! {
     pub enum Intrinsic {
         #[symbol = "__wbindgen_jsval_eq"]
@@ -121,9 +117,6 @@ intrinsics! {
         #[symbol = "__wbindgen_is_falsy"]
         #[signature = fn(ref_externref()) -> Boolean]
         IsFalsy,
-        #[symbol = "__wbindgen_as_number"]
-        #[signature = fn(ref_externref()) -> F64]
-        AsNumber,
         #[symbol = "__wbindgen_try_into_number"]
         #[signature = fn(ref_externref()) -> Externref]
         TryIntoNumber,
@@ -193,27 +186,9 @@ intrinsics! {
         #[symbol = "__wbindgen_cb_drop"]
         #[signature = fn(Externref) -> Boolean]
         CallbackDrop,
-        #[symbol = "__wbindgen_number_new"]
-        #[signature = fn(F64) -> Externref]
-        NumberNew,
-        #[symbol = "__wbindgen_bigint_from_i64"]
-        #[signature = fn(I64) -> Externref]
-        BigIntFromI64,
-        #[symbol = "__wbindgen_bigint_from_u64"]
-        #[signature = fn(U64) -> Externref]
-        BigIntFromU64,
-        #[symbol = "__wbindgen_bigint_from_i128"]
-        #[signature = fn(I64, U64) -> Externref]
-        BigIntFromI128,
-        #[symbol = "__wbindgen_bigint_from_u128"]
-        #[signature = fn(U64, U64) -> Externref]
-        BigIntFromU128,
         #[symbol = "__wbindgen_bigint_get_as_i64"]
         #[signature = fn(ref_externref()) -> opt_i64()]
         BigIntGetAsI64,
-        #[symbol = "__wbindgen_string_new"]
-        #[signature = fn(ref_string()) -> Externref]
-        StringNew,
         #[symbol = "__wbindgen_number_get"]
         #[signature = fn(ref_externref()) -> opt_f64()]
         NumberGet,
@@ -247,45 +222,6 @@ intrinsics! {
         #[symbol = "__wbindgen_copy_to_typed_array"]
         #[signature = fn(slice(U8), ref_externref()) -> Unit]
         CopyToTypedArray,
-        #[symbol = "__wbindgen_uint8_array_new"]
-        #[signature = fn(vector(U8)) -> Externref]
-        Uint8ArrayNew,
-        #[symbol = "__wbindgen_uint8_clamped_array_new"]
-        #[signature = fn(vector(ClampedU8)) -> Externref]
-        Uint8ClampedArrayNew,
-        #[symbol = "__wbindgen_uint16_array_new"]
-        #[signature = fn(vector(U16)) -> Externref]
-        Uint16ArrayNew,
-        #[symbol = "__wbindgen_uint32_array_new"]
-        #[signature = fn(vector(U32)) -> Externref]
-        Uint32ArrayNew,
-        #[symbol = "__wbindgen_biguint64_array_new"]
-        #[signature = fn(vector(U64)) -> Externref]
-        BigUint64ArrayNew,
-        #[symbol = "__wbindgen_int8_array_new"]
-        #[signature = fn(vector(I8)) -> Externref]
-        Int8ArrayNew,
-        #[symbol = "__wbindgen_int16_array_new"]
-        #[signature = fn(vector(I16)) -> Externref]
-        Int16ArrayNew,
-        #[symbol = "__wbindgen_int32_array_new"]
-        #[signature = fn(vector(I32)) -> Externref]
-        Int32ArrayNew,
-        #[symbol = "__wbindgen_bigint64_array_new"]
-        #[signature = fn(vector(I64)) -> Externref]
-        BigInt64ArrayNew,
-        #[symbol = "__wbindgen_float32_array_new"]
-        #[signature = fn(vector(F32)) -> Externref]
-        Float32ArrayNew,
-        #[symbol = "__wbindgen_float64_array_new"]
-        #[signature = fn(vector(F64)) -> Externref]
-        Float64ArrayNew,
-        #[symbol = "__wbindgen_array_new"]
-        #[signature = fn() -> Externref]
-        ArrayNew,
-        #[symbol = "__wbindgen_array_push"]
-        #[signature = fn(ref_externref(), Externref) -> Unit]
-        ArrayPush,
         #[symbol = "__wbindgen_externref_heap_live_count"]
         #[signature = fn() -> I32]
         ExternrefHeapLiveCount,
