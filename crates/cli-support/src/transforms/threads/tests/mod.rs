@@ -20,6 +20,11 @@ fn runtest(test: &Test) -> Result<String> {
     super::run(&mut module)?;
     walrus::passes::gc::run(&mut module);
 
+    // We add an extra parameter to the start function, making it invalid for the start section.
+    // It's only valid in combination with wasm-bindgen's "unstart" step, but for the _unit_ test
+    // purposes we can just remove the start section for now.
+    module.start = None;
+
     let features = wasmparser::WasmFeatures::default() | wasmparser::WasmFeatures::THREADS;
 
     wasmparser::Validator::new_with_features(features).validate_all(&module.emit_wasm())?;
