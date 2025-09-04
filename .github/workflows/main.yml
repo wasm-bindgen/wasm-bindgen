@@ -332,6 +332,7 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
+    - run: rustup toolchain install nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
