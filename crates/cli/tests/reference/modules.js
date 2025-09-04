@@ -40,11 +40,6 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_cast_38bad4997839d643(arg0, arg1) {
-    const ret = /* cast */(getStringFromWasm0(arg0, arg1));
-    return ret;
-};
-
 export function __wbg_parseFloat_2be7f01c31025438(arg0, arg1) {
     const ret = parseFloat(getStringFromWasm0(arg0, arg1));
     return ret;
@@ -64,6 +59,11 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
+};
+
+export function __wbindgen_string_new(arg0, arg1) {
+    const ret = getStringFromWasm0(arg0, arg1);
+    return ret;
 };
 
 export function __wbindgen_throw(arg0, arg1) {
