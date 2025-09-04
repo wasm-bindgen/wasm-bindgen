@@ -24,6 +24,11 @@ const test = baseTest.extend({
       });
     });
 
+    // Intercept the public websocket echo server to make test resilient to network issues.
+    await context.routeWebSocket('wss://echo.websocket.org', (ws) => {
+      ws.onMessage((message) => ws.send(message));
+    });
+
     await run(context);
   },
   channel: 'chrome'
