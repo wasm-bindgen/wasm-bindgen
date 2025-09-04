@@ -1,5 +1,5 @@
 {
 	"scripts": {
-		"build": "wasm-pack build --target no-modules . -Zbuild-std=std,panic_abort --config target.wasm32-unknown-unknown.rustflags=\"-Ctarget-feature=+atomics\""
+		"build": "wasm-pack build --target no-modules . -Zbuild-std=std,panic_abort --config 'target.wasm32-unknown-unknown.rustflags=\"-Ctarget-feature=+atomics\"'"
 	}
 }
