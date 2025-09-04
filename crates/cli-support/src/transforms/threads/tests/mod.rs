@@ -6,46 +6,37 @@
 //! `BLESS=1` in the environment. Otherwise the test are checked against the
 //! listed expectation.
 
+use crate::transforms::unstart_start_function;
 use anyhow::{bail, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 use walrus::ModuleConfig;
-use wast::parser::{Parse, Parser};
 
 fn runtest(test: &Test) -> Result<String> {
     let wasm = wat::parse_file(&test.file)?;
-    let mut walrus = ModuleConfig::new()
+    let mut module = ModuleConfig::new()
         .generate_producers_section(false)
         .parse(&wasm)?;
-    let mut exports = Vec::new();
-    let mut xforms = Vec::new();
-    for directive in test.directives.iter() {
-        let export = walrus
-            .exports
-            .iter()
-            .find(|e| e.name == directive.name)
-            .unwrap();
-        let id = match export.item {
-            walrus::ExportItem::Function(id) => id,
-            _ => panic!("must be function export"),
-        };
-        exports.push(export.id());
-        xforms.push((id, 0, directive.tys.clone()));
-    }
-    let memory = walrus.memories.iter().next().unwrap().id();
-    let stack_pointer = walrus.globals.iter().next().unwrap().id();
-    let ret = wasm_bindgen_multi_value_xform::run(&mut walrus, memory, stack_pointer, &xforms)?;
-    for (export, id) in exports.into_iter().zip(ret) {
-        walrus.exports.get_mut(export).item = walrus::ExportItem::Function(id);
-    }
-    walrus::passes::gc::run(&mut walrus);
-    let printed = wasmprinter::print_bytes(walrus.emit_wasm())?;
+
+    super::run(&mut module)?;
+    walrus::passes::gc::run(&mut module);
+
+    // We add an extra parameter to the start function, making it invalid for the start section.
+    // It's only valid in combination with the "unstart" step.
+    unstart_start_function(&mut module);
+
+    let features = wasmparser::WasmFeatures::default() | wasmparser::WasmFeatures::THREADS;
+
+    wasmparser::Validator::new_with_features(features).validate_all(&module.emit_wasm())?;
+
+    let printed = wasmprinter::print_bytes(module.emit_wasm())?;
+
     Ok(printed)
 }
 
 #[rstest::rstest]
 fn run_test(
-    #[base_dir = "tests"]
+    #[base_dir = "src/transforms/threads/tests"]
     #[files("*.wat")]
     test: PathBuf,
 ) -> Result<()> {
@@ -56,13 +47,7 @@ fn run_test(
 
 struct Test {
     file: PathBuf,
-    directives: Vec<Directive>,
     assertion: Option<String>,
-}
-
-struct Directive {
-    name: String,
-    tys: Vec<walrus::ValType>,
 }
 
 impl Test {
@@ -70,7 +55,6 @@ impl Test {
         let contents = fs::read_to_string(path)?;
         let mut iter = contents.lines();
         let mut assertion = None;
-        let mut directives = Vec::new();
         while let Some(line) = iter.next() {
             if line.starts_with("(; CHECK-ALL:") {
                 let mut pattern = String::new();
@@ -91,13 +75,9 @@ impl Test {
             if !line.starts_with(";; @xform") {
                 continue;
             }
-            let directive = &line[9..];
-            let buf = wast::parser::ParseBuffer::new(directive)?;
-            directives.push(wast::parser::parse::<Directive>(&buf)?);
         }
         Ok(Test {
             file: path.to_path_buf(),
-            directives,
             assertion,
         })
     }
@@ -140,27 +120,4 @@ fn update_output(path: &Path, output: &str) -> Result<()> {
     );
     fs::write(path, new)?;
     Ok(())
-}
-
-impl<'a> Parse<'a> for Directive {
-    fn parse(parser: Parser<'a>) -> wast::parser::Result<Self> {
-        use wast::{core::ValType, kw};
-
-        parser.parse::<kw::export>()?;
-        let name = parser.parse()?;
-        let mut tys = Vec::new();
-        parser.parens(|p| {
-            while !p.is_empty() {
-                tys.push(match p.parse()? {
-                    ValType::I32 => walrus::ValType::I32,
-                    ValType::I64 => walrus::ValType::I64,
-                    ValType::F32 => walrus::ValType::F32,
-                    ValType::F64 => walrus::ValType::F64,
-                    _ => panic!(),
-                });
-            }
-            Ok(())
-        })?;
-        Ok(Directive { name, tys })
-    }
 }

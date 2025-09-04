@@ -1,5 +1,6 @@
 use crate::descriptor::VectorKind;
 use crate::intrinsic::Intrinsic;
+use crate::transforms::{threads as threads_xform, unstart_start_function};
 use crate::wit::{
     Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
     AuxValue,
@@ -157,7 +158,7 @@ impl<'a> Context<'a> {
             used_string_enums: Default::default(),
             exported_classes: Some(Default::default()),
             config,
-            threads_enabled: wasm_bindgen_threads_xform::is_enabled(module),
+            threads_enabled: threads_xform::is_enabled(module),
             module,
             npm_dependencies: Default::default(),
             next_export_idx: 0,
@@ -248,7 +249,7 @@ impl<'a> Context<'a> {
         // up we always remove the `start` function if one is present. The JS
         // bindings glue then manually calls the start function (if it was
         // previously present).
-        let needs_manual_start = self.unstart_start_function();
+        let needs_manual_start = unstart_start_function(self.module);
 
         // Cause any future calls to `should_write_global` to panic, making sure
         // we don't ask for items which we can no longer emit.
@@ -1031,7 +1032,7 @@ __wbg_set_wasm(wasm);"
             init_stack_size_check = if self.threads_enabled {
                 format!(
                     "if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {} !== 0)) {{ throw 'invalid stack size' }}",
-                    wasm_bindgen_threads_xform::PAGE_SIZE,
+                    threads_xform::PAGE_SIZE,
                 )
             } else {
                 String::new()
@@ -2684,18 +2685,6 @@ __wbg_set_wasm(wasm);"
         }
 
         Ok(name)
-    }
-
-    /// If a start function is present, it removes it from the `start` section
-    /// of the Wasm module and then moves it to an exported function, named
-    /// `__wbindgen_start`.
-    fn unstart_start_function(&mut self) -> bool {
-        let start = match self.module.start.take() {
-            Some(id) => id,
-            None => return false,
-        };
-        self.module.exports.add("__wbindgen_start", start);
-        true
     }
 
     fn expose_get_from_externref_table(&mut self, table: TableId) -> Result<MemView, Error> {

@@ -1,5 +1,6 @@
 use crate::descriptor::VectorKind;
 use crate::intrinsic::Intrinsic;
+use crate::transforms::externref::Context;
 use crate::wit::AuxImport;
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection};
 use crate::wit::{AdapterType, InstructionData, StackChange, WasmBindgenAux};
@@ -7,7 +8,6 @@ use anyhow::Result;
 use std::collections::HashMap;
 use walrus::ElementItems;
 use walrus::{ir::Value, ConstExpr, ElementKind, Module};
-use wasm_bindgen_externref_xform::Context;
 
 pub fn process(module: &mut Module) -> Result<()> {
     let mut cfg = Context::default();

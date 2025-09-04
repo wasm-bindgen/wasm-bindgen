@@ -1,10 +1,10 @@
+use crate::transforms::multi_value as multi_value_xform;
+use crate::wasm_conventions;
 use crate::wit::{Adapter, NonstandardWitSection};
 use crate::wit::{AdapterKind, Instruction, WasmBindgenAux};
 use anyhow::{anyhow, Error};
 use walrus::ir::Value;
 use walrus::{ConstExpr, FunctionId, Module};
-use wasm_bindgen_multi_value_xform as multi_value_xform;
-use wasm_bindgen_wasm_conventions as wasm_conventions;
 
 pub fn run(module: &mut Module) -> Result<(), Error> {
     let mut adapters = module

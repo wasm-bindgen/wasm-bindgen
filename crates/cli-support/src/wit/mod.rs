@@ -2,14 +2,14 @@ use crate::decode::LocalModule;
 use crate::descriptor::{Descriptor, Function};
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
-use crate::{decode, Bindgen, PLACEHOLDER_MODULE};
+use crate::transforms::threads::ThreadCount;
+use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Error};
 use std::collections::{BTreeSet, HashMap};
 use std::str;
 use walrus::MemoryId;
 use walrus::{ExportId, FunctionId, ImportId, Module};
 use wasm_bindgen_shared::struct_function_export_name;
-use wasm_bindgen_threads_xform::ThreadCount;
 
 mod incoming;
 mod nonstandard;
@@ -62,7 +62,7 @@ pub fn process(
         vendor_prefixes: Default::default(),
         descriptors: Default::default(),
         unique_crate_identifier: "",
-        memory: wasm_bindgen_wasm_conventions::get_memory(module).ok(),
+        memory: wasm_conventions::get_memory(module).ok(),
         module,
         start_found: false,
         externref_enabled: bindgen.externref,
@@ -91,7 +91,7 @@ pub fn process(
 
 impl<'a> Context<'a> {
     fn init(&mut self) -> Result<(), Error> {
-        self.aux.stack_pointer = wasm_bindgen_wasm_conventions::get_stack_pointer(self.module);
+        self.aux.stack_pointer = wasm_conventions::get_stack_pointer(self.module);
 
         // Make a map from string name to ids of all exports
         for export in self.module.exports.iter() {
@@ -315,7 +315,7 @@ impl<'a> Context<'a> {
                 .add_import_func(PLACEHOLDER_MODULE, "__wbindgen_init_externref_table", ty);
 
         if self.module.start.is_some() {
-            let builder = wasm_bindgen_wasm_conventions::get_or_insert_start_builder(self.module);
+            let builder = wasm_conventions::get_or_insert_start_builder(self.module);
             builder.func_body().call_at(0, import);
         } else {
             self.module.start = Some(import);
@@ -568,10 +568,10 @@ impl<'a> Context<'a> {
         }
 
         if let Some(thread_count) = self.thread_count {
-            let builder = wasm_bindgen_wasm_conventions::get_or_insert_start_builder(self.module);
+            let builder = wasm_conventions::get_or_insert_start_builder(self.module);
             thread_count.wrap_start(builder, id);
         } else if self.module.start.is_some() {
-            let builder = wasm_bindgen_wasm_conventions::get_or_insert_start_builder(self.module);
+            let builder = wasm_conventions::get_or_insert_start_builder(self.module);
 
             // Note that we leave the previous start function, if any, first. This is
             // because the start function currently only shows up when it's injected

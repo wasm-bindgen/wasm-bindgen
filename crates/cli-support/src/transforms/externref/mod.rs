@@ -20,6 +20,7 @@ use std::cmp;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::mem;
 
+use crate::wasm_conventions;
 use walrus::{ir::*, ElementItems, RefType};
 use walrus::{ConstExpr, FunctionId, GlobalId, Module, TableId, ValType};
 use walrus::{ElementId, ExportId, ImportId, InstrLocId, TypeId};
@@ -105,11 +106,11 @@ impl Context {
     /// we're appending entries.
     pub fn prepare(&mut self, module: &mut Module) -> Result<(), Error> {
         // Insert reference types to the target features section.
-        wasm_bindgen_wasm_conventions::insert_target_feature(module, "reference-types")
+        wasm_conventions::insert_target_feature(module, "reference-types")
             .context("failed to parse `target_features` custom section")?;
 
         self.bulk_memory = matches!(
-            wasm_bindgen_wasm_conventions::target_feature(module, "bulk-memory"),
+            wasm_conventions::target_feature(module, "bulk-memory"),
             Ok(true)
         );
 
@@ -799,3 +800,6 @@ impl Transform<'_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -1,3 +1,4 @@
+use crate::wasm_conventions;
 use anyhow::{anyhow, bail, Error};
 use std::cmp;
 use walrus::ir::Value;
@@ -6,7 +7,6 @@ use walrus::{
     ir::MemArg, ConstExpr, ExportItem, FunctionId, GlobalId, GlobalKind, InstrSeqBuilder, MemoryId,
     Module, ValType,
 };
-use wasm_bindgen_wasm_conventions as wasm_conventions;
 
 pub const PAGE_SIZE: u32 = 1 << 16;
 const DEFAULT_THREAD_STACK_SIZE: u32 = 1 << 21; // 2MB
@@ -274,7 +274,7 @@ fn inject_start(
 
     let malloc = find_function(module, "__wbindgen_malloc")?;
 
-    let prev_start = wasm_bindgen_wasm_conventions::get_start(module);
+    let prev_start = wasm_conventions::get_start(module);
     let mut builder = FunctionBuilder::new(&mut module.types, &[ValType::I32], &[]);
 
     if let Ok(prev_start) | Err(Some(prev_start)) = prev_start {
@@ -476,3 +476,6 @@ fn with_temp_stack(
         .atomic_notify(memory, ATOMIC_MEM_ARG)
         .drop();
 }
+
+#[cfg(test)]
+mod tests;

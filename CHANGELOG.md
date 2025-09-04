@@ -44,6 +44,9 @@
 * The `size` argument to `GPUCommandEncoder.copyBufferToBuffer` is now optional.
   [#4508](https://github.com/wasm-bindgen/wasm-bindgen/pull/4508)
 
+* MSRV of CLI tools bumped to v1.82. This does not affect libraries like `wasm-bindgen`, `js-sys` and `web-sys`!
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
+
 ### Fixed
 
 * Detect more failure scenarios when retrieving the Wasm module.
@@ -75,6 +78,17 @@
 
 * Fix proc-macro hygiene with `core`.
   [#4606](https://github.com/wasm-bindgen/wasm-bindgen/pull/4606)
+
+### Removed
+
+* Crates intended purely for internal consumption by the wasm-bindgen CLI will no longer be published:
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
+
+  * `wasm-bindgen-externref-xform`
+  * `wasm-bindgen-multi-value-xform`
+  * `wasm-bindgen-threads-xform`
+  * `wasm-bindgen-wasm-conventions`
+  * `wasm-bindgen-wasm-interpreter`
 
 --------------------------------------------------------------------------------
 
