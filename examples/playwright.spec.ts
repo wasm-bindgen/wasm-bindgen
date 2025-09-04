@@ -11,7 +11,7 @@ const exec = promisify(exec_);
 
 chdir(__dirname);
 
-const { EXBUILD } = env;
+const { PREBUILT_EXAMPLES, PATH } = env;
 
 const test = baseTest.extend({
   baseURL: 'http://localhost',
@@ -20,7 +20,7 @@ const test = baseTest.extend({
     // https://github.com/microsoft/playwright/issues/13968#issuecomment-1784041622
     await context.route('/**', (route, request) => {
       return route.fulfill({
-        path: join(EXBUILD || 'dist', new URL(request.url()).pathname)
+        path: join('dist', new URL(request.url()).pathname)
       });
     });
 
@@ -53,33 +53,35 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-// Don't rely on the globally installed wasm-bindgen CLI to have the correct version.
-// Instead, build it locally (see `pretest` in `package.json`) and add it to the `PATH`.
-
-let childEnv = { ...env };
-test.beforeAll(async () => {
-  // Add the prebuilt wasm-bindgen.exe from npm `pretest` step to the `PATH`.
-  const { stdout } = await exec('cargo metadata --format-version 1', {
-    maxBuffer: Infinity
+if (!PREBUILT_EXAMPLES) {
+  // Don't rely on the globally installed wasm-bindgen CLI to have the correct version.
+  // Instead, build it locally (see `pretest` in `package.json`) and add it to the `PATH`.
+  test.beforeAll(async () => {
+    // Add the prebuilt wasm-bindgen.exe from npm `pretest` step to the `PATH`.
+    const { stdout } = await exec('cargo metadata --format-version 1', {
+      maxBuffer: Infinity
+    });
+    const { target_directory } = JSON.parse(stdout);
+    env.PATH = join(target_directory, 'debug') + delimiter + PATH;
   });
-  const { target_directory } = JSON.parse(stdout);
-  childEnv.PATH = join(target_directory, 'debug') + delimiter + env.PATH;
-});
+}
 
 for (const file of globSync('*/package.json')) {
   const dir = dirname(file);
 
   test(dir, async ({ page }) => {
-    if (!EXBUILD) {
-      await exec('npm run build', { cwd: dir, env: childEnv });
+    if (!PREBUILT_EXAMPLES) {
+      await exec('npm run build', { cwd: dir, env });
     }
 
-    // If index.html doesn't exist, this is not a browser test (e.g. deno).
-    // Testing that it builds is enough for now.
-    if (!existsSync(`${dir}/index.html`)) return;
-
-    await page.goto(`${dir}/index.html`, {
-      waitUntil: 'networkidle'
-    });
+    if (existsSync(`dist/${dir}/index.html`)) {
+      await page.goto(`${dir}/index.html`, {
+        waitUntil: 'networkidle'
+      });
+    } else {
+      // If index.html doesn't exist, this is not a browser test (e.g. deno).
+      // Run its own test command.
+      await exec('npm test', { cwd: dir });
+    }
   });
 }

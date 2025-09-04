@@ -297,18 +297,6 @@ jobs:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
 
-  test_deno:
-    name: "Test the deno example"
-    needs:
-    - build_examples
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - uses: denoland/setup-deno@v2
-      with:
-        deno-version: v1.x
-    - run: cd examples/deno && deno run --allow-read test.ts
-
   test_ui:
     name: Run UI compile-fail tests
     runs-on: ubuntu-latest
@@ -358,17 +346,20 @@ jobs:
     - uses: actions/download-artifact@v5
       with:
         name: examples
-        path: exbuild
+        path: examples/dist
     - run: rustup update --no-self-update stable && rustup default stable
     - uses: actions/setup-node@v4
       with:
         node-version: 22
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v1.x
     - run: npm install
       working-directory: examples
-    - run: npm test
+    - run: npm test --ignore-scripts
       working-directory: examples
       env:
-        EXBUILD: ${{ github.workspace }}/exbuild
+        PREBUILT_EXAMPLES: 1
 
   build_benchmarks:
     runs-on: ubuntu-latest
