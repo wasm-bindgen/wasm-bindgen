@@ -13,7 +13,7 @@ use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
 
-#[inline(always)] // see the wasm-interpreter crate
+#[inline(always)] // see the wasm-interpreter module
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 pub fn inform(a: u32) {
     unsafe { super::__wbindgen_describe(a) }

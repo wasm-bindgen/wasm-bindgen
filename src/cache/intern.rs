@@ -31,14 +31,11 @@ cfg_if! {
 
         fn intern_str(key: &str) {
             CACHE.with(|cache| {
-                let entries = &cache.entries;
+                let mut cache = cache.entries.borrow_mut();
 
                 // Can't use `entry` because `entry` requires a `String`
-                if !entries.borrow().contains_key(key) {
-                    // Note: we must not hold the borrow while we create the `JsValue`,
-                    // because it will try to look up the value in the cache first.
-                    let value = JsValue::from(key);
-                    entries.borrow_mut().insert(key.to_owned(), value);
+                if !cache.contains_key(key) {
+                    cache.insert(key.to_owned(), JsValue::from(key));
                 }
             })
         }

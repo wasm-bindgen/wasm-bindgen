@@ -230,9 +230,8 @@ impl Interpreter {
         // After we've got the table index of the descriptor function we're
         // interested go take a look in the function table to find what the
         // actual index of the function is.
-        let entry =
-            wasm_bindgen_wasm_conventions::get_function_table_entry(module, descriptor_table_idx)
-                .expect("failed to find entry in function table");
+        let entry = crate::wasm_conventions::get_function_table_entry(module, descriptor_table_idx)
+            .expect("failed to find entry in function table");
         let descriptor_id = entry.func.expect("element segment slot wasn't set");
         entry_removal_list
             .entry(entry.element)
@@ -247,11 +246,6 @@ impl Interpreter {
     /// imported function.
     pub fn describe_closure_id(&self) -> Option<FunctionId> {
         self.describe_closure_id
-    }
-
-    /// Returns the detected id of the function table.
-    pub fn function_table_id(&self) -> Option<TableId> {
-        self.functions
     }
 
     /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
@@ -468,3 +462,6 @@ impl Frame<'_> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod smoke_tests;

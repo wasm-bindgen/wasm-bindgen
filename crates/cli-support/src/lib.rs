@@ -1,5 +1,3 @@
-#![doc(html_root_url = "https://docs.rs/wasm-bindgen-cli-support/0.2")]
-
 use anyhow::{bail, Context, Error};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::env;
@@ -15,10 +13,13 @@ mod decode;
 mod descriptor;
 mod descriptors;
 mod externref;
+mod interpreter;
 mod intrinsic;
 mod js;
 mod multivalue;
+mod transforms;
 pub mod wasm2es6js;
+mod wasm_conventions;
 mod wit;
 
 pub struct Bindgen {
@@ -321,13 +322,12 @@ impl Bindgen {
         };
 
         // Enable reference type transformations if the module is already using it.
-        if let Ok(true) = wasm_bindgen_wasm_conventions::target_feature(&module, "reference-types")
-        {
+        if let Ok(true) = wasm_conventions::target_feature(&module, "reference-types") {
             self.externref = true;
         }
 
         // Enable multivalue transformations if the module is already using it.
-        if let Ok(true) = wasm_bindgen_wasm_conventions::target_feature(&module, "multivalue") {
+        if let Ok(true) = wasm_conventions::target_feature(&module, "multivalue") {
             self.multi_value = true;
         }
 
@@ -338,7 +338,7 @@ impl Bindgen {
             bail!("exported symbol \"default\" not allowed for --target web")
         }
 
-        let thread_count = wasm_bindgen_threads_xform::run(&mut module)
+        let thread_count = transforms::threads::run(&mut module)
             .with_context(|| "failed to prepare module for threading")?;
 
         // If requested, turn all mangled symbols into prettier unmangled

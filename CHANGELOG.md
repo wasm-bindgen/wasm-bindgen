@@ -21,6 +21,12 @@
 * Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
   [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
 
+* Added unstable bindings for `GestureEvent`.
+  [#4589](https://github.com/wasm-bindgen/wasm-bindgen/pull/4589)
+
+* Stricter checks for `module`, `raw_module` and `inline_js` attributes applied to inapplicable items.
+  [#4522](https://github.com/wasm-bindgen/wasm-bindgen/pull/4522)
+
 * Add bindings for `PictureInPicture`.
   [#4593](https://github.com/rustwasm/wasm-bindgen/pull/4593)
 
@@ -37,6 +43,9 @@
 
 * The `size` argument to `GPUCommandEncoder.copyBufferToBuffer` is now optional.
   [#4508](https://github.com/wasm-bindgen/wasm-bindgen/pull/4508)
+
+* MSRV of CLI tools bumped to v1.82. This does not affect libraries like `wasm-bindgen`, `js-sys` and `web-sys`!
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
 
 ### Fixed
 
@@ -66,6 +75,20 @@
 
 * Fix running coverage with no_modules.
   [#4604](https://github.com/wasm-bindgen/wasm-bindgen/pull/4604)
+
+* Fix proc-macro hygiene with `core`.
+  [#4606](https://github.com/wasm-bindgen/wasm-bindgen/pull/4606)
+
+### Removed
+
+* Crates intended purely for internal consumption by the wasm-bindgen CLI will no longer be published:
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
+
+  * `wasm-bindgen-externref-xform`
+  * `wasm-bindgen-multi-value-xform`
+  * `wasm-bindgen-threads-xform`
+  * `wasm-bindgen-wasm-conventions`
+  * `wasm-bindgen-wasm-interpreter`
 
 --------------------------------------------------------------------------------
 

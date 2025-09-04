@@ -326,7 +326,7 @@ where
         // means we will end up not actually calling `breaks_if_inlined` in the
         // final binary, all calls to that function should be pruned.
         //
-        // See crates/cli-support/src/js/closures.rs for a more information
+        // See crates/cli/src/js/closures.rs for a more information
         // about what's going on here.
 
         #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]

@@ -50,11 +50,6 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_cast_32bcc2d10060d0c7(arg0) {
-    const ret = /* cast */(arg0);
-    return ret;
-};
-
 export function __wbg_static_accessor_NAMESPACE_OPTIONAL_c9a4344c544120f4() {
     const ret = typeof test === 'undefined' ? null : test?.NAMESPACE_OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
