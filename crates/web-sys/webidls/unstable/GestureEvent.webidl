@@ -13,8 +13,8 @@ interface GestureEvent : UIEvent
   readonly attribute boolean altKey;
   readonly attribute boolean metaKey;
 
-  readonly attribute long    x;
-  readonly attribute long    y;
+  readonly attribute long    clientX;
+  readonly attribute long    clientY;
   readonly attribute long    screenX;
   readonly attribute long    screenY;
 };
