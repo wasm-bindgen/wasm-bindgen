@@ -249,7 +249,7 @@ impl<'a> Context<'a> {
         // up we always remove the `start` function if one is present. The JS
         // bindings glue then manually calls the start function (if it was
         // previously present).
-        let needs_manual_start = unstart_start_function(&mut self.module);
+        let needs_manual_start = unstart_start_function(self.module);
 
         // Cause any future calls to `should_write_global` to panic, making sure
         // we don't ask for items which we can no longer emit.
