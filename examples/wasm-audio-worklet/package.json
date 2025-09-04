@@ -1,5 +1,6 @@
 {
 	"scripts": {
-		"build": "wasm-pack build --target no-modules . -Zbuild-std=std,panic_abort --config 'target.wasm32-unknown-unknown.rustflags=\"-Ctarget-feature=+atomics\"'"
+		"build": "wasm-pack build --target web --out-dir ../dist/wasm-audio-worklet . -Zbuild-std=std,panic_abort --config \"target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'\"",
+		"postbuild": "node ../cp-dist.mjs index.html"
 	}
 }

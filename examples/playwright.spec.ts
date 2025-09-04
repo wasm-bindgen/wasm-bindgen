@@ -4,8 +4,8 @@
 import { dirname, delimiter, join } from 'node:path';
 import { test as baseTest, ConsoleMessage } from '@playwright/test';
 import { globSync, existsSync } from 'node:fs';
-import { platform, chdir, env } from 'node:process';
-import { exec as exec_, execSync } from 'node:child_process';
+import { chdir, env } from 'node:process';
+import { exec as exec_ } from 'node:child_process';
 import { promisify } from 'node:util';
 const exec = promisify(exec_);
 
@@ -20,7 +20,7 @@ const test = baseTest.extend({
     // https://github.com/microsoft/playwright/issues/13968#issuecomment-1784041622
     await context.route('/**', (route, request) => {
       return route.fulfill({
-        path: join(EXBUILD || '.', new URL(request.url()).pathname)
+        path: join(EXBUILD || 'dist', new URL(request.url()).pathname)
       });
     });
 
@@ -54,36 +54,23 @@ test.beforeEach(async ({ page }) => {
 });
 
 // Don't rely on the globally installed wasm-bindgen CLI to have the correct version.
-// Instead, build it locally and supply its path via PATH.
+// Instead, build it locally (see `pretest` in `package.json`) and add it to the `PATH`.
 
 let childEnv = { ...env };
-
 test.beforeAll(async () => {
-  test.setTimeout(2 * 60 * 1000);
-
-  // The async version of `exec` captures stderr instead of inheriting, and we'd need more code
-  // to replicate that than worth it, especially since this is meant to be executed once at start.
-  const stdout = execSync(
-    'cargo build -p wasm-bindgen-cli --bin wasm-bindgen --message-format json',
-    { encoding: 'utf-8' }
-  );
-
-  // Parse the last compiler-artifact message to get the path to the built wasm-bindgen.
-  // This way it works even if `CARGO_TARGET_DIR` is in a custom directory (like it is for me).
-  const { executable } = stdout
-    .trimEnd()
-    .split('\n')
-    .map(msg => JSON.parse(msg))
-    .findLast(m => m.reason === 'compiler-artifact');
-
-  childEnv.PATH = dirname(executable) + delimiter + env.PATH;
+  // Add the prebuilt wasm-bindgen.exe from npm `pretest` step to the `PATH`.
+  const { stdout } = await exec('cargo metadata --format-version 1', {
+    maxBuffer: Infinity
+  });
+  const { target_directory } = JSON.parse(stdout);
+  childEnv.PATH = join(target_directory, 'debug') + delimiter + env.PATH;
 });
 
-function exampleTest(dir: string, dist: string = dir) {
+for (const file of globSync('*/package.json')) {
+  const dir = dirname(file);
+
   test(dir, async ({ page }) => {
-    if (EXBUILD) {
-      dist = dir;
-    } else {
+    if (!EXBUILD) {
       await exec('npm run build', { cwd: dir, env: childEnv });
     }
 
@@ -91,24 +78,8 @@ function exampleTest(dir: string, dist: string = dir) {
     // Testing that it builds is enough for now.
     if (!existsSync(`${dir}/index.html`)) return;
 
-    await page.goto(`${dist}/index.html`, {
+    await page.goto(`${dir}/index.html`, {
       waitUntil: 'networkidle'
     });
   });
 }
-
-test.describe('shell', () => {
-  for (const file of globSync('*/build.sh')) {
-    let dir = dirname(file);
-
-    exampleTest(dir);
-  }
-});
-
-test.describe('webpack', () => {
-  for (const file of globSync('*/webpack.config.js')) {
-    let dir = dirname(file);
-
-    exampleTest(dir, `${dir}/dist`);
-  }
-});
