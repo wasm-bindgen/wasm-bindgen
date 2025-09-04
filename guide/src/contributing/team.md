@@ -6,7 +6,7 @@ The current project team members are listed below.
 
 We welcome new members - if you are interested in joining the team, see the [membership] section of the governance document.
 
-## Owners
+## Core
 
 * [daxpedda](https://github.com/daxpedda)
 * [Ingvar Stepanyan](https://github.com/RReverser)
