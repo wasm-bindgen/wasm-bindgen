@@ -164,5 +164,6 @@
   (export "__tls_base" (global 1))
   (export "__stack_alloc" (global 3))
   (export "__wbindgen_thread_destroy" (func $__wbindgen_thread_destroy))
+  (export "__wbindgen_start" (func 1))
 )
 ;)

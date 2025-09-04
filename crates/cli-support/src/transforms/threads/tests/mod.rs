@@ -6,6 +6,7 @@
 //! `BLESS=1` in the environment. Otherwise the test are checked against the
 //! listed expectation.
 
+use crate::transforms::unstart_start_function;
 use anyhow::{bail, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -21,9 +22,8 @@ fn runtest(test: &Test) -> Result<String> {
     walrus::passes::gc::run(&mut module);
 
     // We add an extra parameter to the start function, making it invalid for the start section.
-    // It's only valid in combination with wasm-bindgen's "unstart" step, but for the _unit_ test
-    // purposes we can just remove the start section for now.
-    module.start = None;
+    // It's only valid in combination with the "unstart" step.
+    unstart_start_function(&mut module);
 
     let features = wasmparser::WasmFeatures::default() | wasmparser::WasmFeatures::THREADS;
 
