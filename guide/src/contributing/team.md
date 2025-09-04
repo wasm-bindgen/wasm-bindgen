@@ -18,17 +18,9 @@ We welcome new members - if you are interested in joining the team, see the [mem
 
 ## Former Members
 
-`wasm-bindgen` was initially developed under the now sunsetted [Rust Wasm initiative], which included team members:
+`wasm-bindgen` was initially developed under the now sunsetted [Rust and WebAssembly Working Group], which included these [former team members]().
 
-* [`alexcrichton`](https://github.com/alexcrichton)
-* [`fitzgen`](https://github.com/fitzgen)
-* [`spastorino`](https://github.com/spastorino)
-* [`ohanar`](https://github.com/ohanar)
-* [`jonathan-s`](https://github.com/jonathan-s)
-* [`sendilkumarn`](https://github.com/sendilkumarn)
-* [`belfz`](https://github.com/belfz)
-* [`afdw`](https://github.com/afdw)
-
-[Rust Wasm initiative]: https://github.com/rustwasm
+[Rust and WebAssembly Working Group]: https://github.com/rustwasm
+[former team members]: https://github.com/orgs/rustwasm/people
 [governance]: https://wasm-bindgen.github.io/wasm-bindgen/contributing/governance
 [membership]: https://wasm-bindgen.github.io/wasm-bindgen/contributing/governance#membership
