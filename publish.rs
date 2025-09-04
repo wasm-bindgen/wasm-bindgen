@@ -21,14 +21,14 @@ const CRATES_TO_PUBLISH: &[&str] = &[
     "wasm-bindgen-backend",
     "wasm-bindgen-macro-support",
     "wasm-bindgen-macro",
-    "wasm-bindgen-test-macro",
-    "wasm-bindgen-test",
-    "wasm-bindgen-cli-support",
-    "wasm-bindgen-cli",
     "wasm-bindgen",
-    "wasm-bindgen-futures",
     "js-sys",
     "web-sys",
+    "wasm-bindgen-futures",
+    "wasm-bindgen-cli-support",
+    "wasm-bindgen-cli",
+    "wasm-bindgen-test-macro",
+    "wasm-bindgen-test",
 ];
 
 const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
