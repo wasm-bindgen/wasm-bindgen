@@ -100,7 +100,10 @@ impl Tests {
 }
 
 struct Test {
+    // test name
     name: String,
+    // symbol name
+    export: String,
     ignored: bool,
 }
 
@@ -130,8 +133,14 @@ fn main() -> anyhow::Result<()> {
             continue;
         };
         let modifiers = name.split_once('_').expect("found invalid identifier").0;
+
+        let Some(name) = export.name.split_once("::").map(|s| s.1) else {
+            continue;
+        };
+
         let test = Test {
-            name: export.name.clone(),
+            name: name.into(),
+            export: export.name.clone(),
             ignored: modifiers.contains('$'),
         };
 
@@ -170,7 +179,7 @@ fn main() -> anyhow::Result<()> {
 
     if cli.list {
         for test in tests.tests {
-            println!("{}: test", test.name.split_once("::").unwrap().1);
+            println!("{}: test", test.name);
         }
 
         // Returning cleanly has the strange effect of outputting
@@ -274,7 +283,7 @@ fn main() -> anyhow::Result<()> {
             let timeout = timeout
                 .parse()
                 .expect("Could not parse 'WASM_BINDGEN_TEST_TIMEOUT'");
-            println!("Set timeout to {} seconds...", timeout);
+            println!("Set timeout to {timeout} seconds...");
             timeout
         })
         .unwrap_or(20);
@@ -344,10 +353,7 @@ fn main() -> anyhow::Result<()> {
             // TODO: eventually we should provide the ability to exit at some point
             // (gracefully) here, but for now this just runs forever.
             if !headless {
-                println!(
-                    "Interactive browsers tests are now available at http://{}",
-                    addr
-                );
+                println!("Interactive browsers tests are now available at http://{addr}");
                 println!();
                 println!("Note that interactive mode is enabled because `NO_HEADLESS`");
                 println!("is specified in the environment of this process. Once you're");

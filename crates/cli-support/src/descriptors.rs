@@ -47,6 +47,11 @@ impl WasmBindgenDescriptorsSection {
         interpreter: &mut Interpreter,
     ) -> Result<(), Error> {
         let mut to_remove = Vec::new();
+
+        if let Some(id) = interpreter.skip_interpret() {
+            to_remove.push(id);
+        }
+
         for export in module.exports.iter() {
             let prefix = "__wbindgen_describe_";
             if !export.name.starts_with(prefix) {
@@ -113,7 +118,7 @@ impl WasmBindgenDescriptorsSection {
                 ElementItems::Functions(items) => items,
                 ElementItems::Expressions(_, items) => {
                     for idx in idxs {
-                        log::trace!("delete element {}", idx);
+                        log::trace!("delete element {idx}");
                         items[idx] = ConstExpr::RefNull(RefType::Funcref)
                     }
 
@@ -132,7 +137,7 @@ impl WasmBindgenDescriptorsSection {
             let mut to_insert = Vec::new();
 
             for idx in idxs.into_iter().rev() {
-                log::trace!("delete element {}", idx);
+                log::trace!("delete element {idx}");
 
                 items.remove(idx);
 
@@ -233,7 +238,7 @@ impl CustomSection for WasmBindgenDescriptorsSection {
         "wasm-bindgen descriptors"
     }
 
-    fn data(&self, _: &walrus::IdsToIndices) -> Cow<[u8]> {
+    fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
 }

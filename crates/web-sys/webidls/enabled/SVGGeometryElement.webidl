@@ -17,4 +17,7 @@ interface SVGGeometryElement : SVGGraphicsElement {
   float getTotalLength();
   [NewObject, Throws]
   SVGPoint getPointAtLength(float distance);
+
+  boolean isPointInFill(optional DOMPointInit point);
+  boolean isPointInStroke(optional DOMPointInit point);
 };

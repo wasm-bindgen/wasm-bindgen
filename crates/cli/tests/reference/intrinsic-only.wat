@@ -3,8 +3,8 @@
   (type (;1;) (func (result f64 i32 i32)))
   (type (;2;) (func (param i32)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
-  (func $__externref_table_dealloc (;1;) (type 2) (param i32))
-  (func $"causes_error multivalue shim" (;2;) (type 1) (result f64 i32 i32))
+  (func $"causes_error multivalue shim" (;1;) (type 1) (result f64 i32 i32))
+  (func $__externref_table_dealloc (;2;) (type 2) (param i32))
   (table (;0;) 128 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
@@ -12,6 +12,6 @@
   (export "__wbindgen_export_0" (table 0))
   (export "__externref_table_dealloc" (func $__externref_table_dealloc))
   (export "__wbindgen_start" (func 0))
-  (@custom "target_features" (after code) "\04+\0amultivalue+\0fmutable-globals+\0freference-types+\08sign-ext")
+  (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")
 )
 

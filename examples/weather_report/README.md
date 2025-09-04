@@ -3,8 +3,8 @@
 [View documentation for this example online][dox] or [View compiled example
 online][compiled]
 
-[compiled]: https://rustwasm.github.io/wasm-bindgen/exbuild/weather_report/
-[dox]: https://rustwasm.github.io/docs/wasm-bindgen/examples/weather_report.html
+[compiled]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/weather_report/
+[dox]: https://wasm-bindgen.github.io/wasm-bindgen/examples/weather_report.html
 
 You can build the example locally with:
 

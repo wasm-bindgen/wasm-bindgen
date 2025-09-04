@@ -6,12 +6,12 @@ Easy support for interacting between JS and Rust.
 """
 documentation = "https://docs.rs/wasm-bindgen"
 edition = "2021"
-homepage = "https://rustwasm.github.io/"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen"
 include = ["/build.rs", "/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen"
 readme = "README.md"
-repository = "https://github.com/rustwasm/wasm-bindgen"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.57"
 version = "0.2.100"
 
@@ -43,9 +43,8 @@ strict-macro = ["wasm-bindgen-macro/strict-macro"]
 # are handled correctly
 gg-alloc = ["wasm-bindgen-test/gg-alloc"]
 
-# INTERNAL ONLY: This is only for debugging wasm-bindgen! No stability guarantees, so enable
-# this at your own peril!
-xxx_debug_only_print_generated_code = ["wasm-bindgen-macro/xxx_debug_only_print_generated_code"]
+# INTERNAL ONLY and deprecated, to be removed in the next major version.
+xxx_debug_only_print_generated_code = []
 
 [dependencies]
 cfg-if = "1.0.0"
@@ -54,6 +53,7 @@ rustversion = { version = "1.0", optional = true }
 serde = { version = "1.0", optional = true }
 serde_json = { version = "1.0", optional = true }
 wasm-bindgen-macro = { path = "crates/macro", version = "=0.2.100" }
+wasm-bindgen-shared = { path = "crates/shared", version = "=0.2.100" }
 
 [dev-dependencies]
 once_cell = "1"
@@ -67,15 +67,14 @@ wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
 wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
+[lints]
+workspace = true
 
-[lints.clippy]
-large_enum_variant = "allow"
-new_without_default = "allow"
-overly_complex_bool_expr = "allow"
-too_many_arguments = "allow"
-type_complexity = "allow"
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+  'cfg(wasm_bindgen_unstable_test_coverage)',
+  'cfg(xxx_debug_only_print_generated_code)',
+] }
 
 [workspace.lints.clippy]
 large_enum_variant = "allow"

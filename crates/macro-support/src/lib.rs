@@ -33,7 +33,7 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
         let wasm_bindgen = opts
             .wasm_bindgen()
             .cloned()
-            .unwrap_or_else(|| syn::parse_quote! { wasm_bindgen });
+            .unwrap_or_else(|| syn::parse_quote! { ::wasm_bindgen });
 
         let item = quote! {
             #[derive(#wasm_bindgen::__rt::BindgenedStruct)]

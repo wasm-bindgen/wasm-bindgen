@@ -73,6 +73,28 @@ use core::ptr::NonNull;
 
 use crate::convert::{FromWasmAbi, TryFromJsValue, WasmRet, WasmSlice};
 
+const _: () = {
+    /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
+    ///
+    /// ## About `__wasm_call_ctors`
+    ///
+    /// There are several ways `__wasm_call_ctors` is introduced by the linker:
+    ///
+    /// * Using `#[link_section = ".init_array"]`;
+    /// * Linking with a C library that uses `__attribute__((constructor))`.
+    ///
+    /// The Wasm linker will insert a call to the `__wasm_call_ctors` function at the beginning of every
+    /// function that your module exports if it regards a module as having "command-style linkage".
+    /// Specifically, it regards a module as having "command-style linkage" if:
+    ///
+    /// * it is not relocatable;
+    /// * it is not a position-independent executable;
+    /// * and it does not call `__wasm_call_ctors`, directly or indirectly, from any
+    ///   exported function.
+    #[no_mangle]
+    pub extern "C" fn __wbindgen_skip_interpret_calls() {}
+};
+
 macro_rules! externs {
     ($(#[$attr:meta])* extern "C" { $(fn $name:ident($($args:tt)*) -> $ret:ty;)* }) => (
         #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
@@ -84,7 +106,7 @@ macro_rules! externs {
         $(
             #[cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))]
             #[allow(unused_variables)]
-            unsafe extern fn $name($($args)*) -> $ret {
+            unsafe extern "C" fn $name($($args)*) -> $ret {
                 panic!("function not implemented on non-wasm32 targets")
             }
         )*
@@ -190,7 +212,7 @@ impl JsValue {
     /// allocated large integer) and returns a handle to the JS version of it.
     #[inline]
     pub fn bigint_from_str(s: &str) -> JsValue {
-        unsafe { JsValue::_new(__wbindgen_bigint_from_str(s.as_ptr(), s.len())) }
+        __wbindgen_bigint_from_str(s)
     }
 
     /// Creates a new JS value which is a boolean.
@@ -223,15 +245,7 @@ impl JsValue {
     /// This function will invoke the `Symbol` constructor in JS and return the
     /// JS object corresponding to the symbol created.
     pub fn symbol(description: Option<&str>) -> JsValue {
-        unsafe {
-            match description {
-                Some(description) => JsValue::_new(__wbindgen_symbol_named_new(
-                    description.as_ptr(),
-                    description.len(),
-                )),
-                None => JsValue::_new(__wbindgen_symbol_anonymous_new()),
-            }
-        }
+        __wbindgen_symbol_new(description)
     }
 
     /// Creates a new `JsValue` from the JSON serialization of the object `t`
@@ -241,7 +255,7 @@ impl JsValue {
     /// some circumstances][dep-cycle-issue]. Use [`serde-wasm-bindgen`] or
     /// [`gloo_utils::format::JsValueSerdeExt`] instead.
     ///
-    /// [dep-cycle-issue]: https://github.com/rustwasm/wasm-bindgen/issues/2770
+    /// [dep-cycle-issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/2770
     /// [`serde-wasm-bindgen`]: https://docs.rs/serde-wasm-bindgen
     /// [`gloo_utils::format::JsValueSerdeExt`]: https://docs.rs/gloo-utils/latest/gloo_utils/format/trait.JsValueSerdeExt.html
     ///
@@ -264,7 +278,7 @@ impl JsValue {
         T: serde::ser::Serialize + ?Sized,
     {
         let s = serde_json::to_string(t)?;
-        unsafe { Ok(JsValue::_new(__wbindgen_json_parse(s.as_ptr(), s.len()))) }
+        Ok(__wbindgen_json_parse(s))
     }
 
     /// Invokes `JSON.stringify` on this value and then parses the resulting
@@ -274,7 +288,7 @@ impl JsValue {
     /// some circumstances][dep-cycle-issue]. Use [`serde-wasm-bindgen`] or
     /// [`gloo_utils::format::JsValueSerdeExt`] instead.
     ///
-    /// [dep-cycle-issue]: https://github.com/rustwasm/wasm-bindgen/issues/2770
+    /// [dep-cycle-issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/2770
     /// [`serde-wasm-bindgen`]: https://docs.rs/serde-wasm-bindgen
     /// [`gloo_utils::format::JsValueSerdeExt`]: https://docs.rs/gloo-utils/latest/gloo_utils/format/trait.JsValueSerdeExt.html
     ///
@@ -294,11 +308,11 @@ impl JsValue {
     where
         T: for<'a> serde::de::Deserialize<'a>,
     {
-        unsafe {
-            let ret = __wbindgen_json_serialize(self.idx);
-            let s = String::from_abi(ret);
-            serde_json::from_str(&s)
-        }
+        let s = __wbindgen_json_serialize(self);
+        // Turns out `JSON.stringify(undefined) === undefined`, so if
+        // we're passed `undefined` reinterpret it as `null` for JSON
+        // purposes.
+        serde_json::from_str(s.as_deref().unwrap_or("null"))
     }
 
     /// Returns the `f64` value of this JS value if it's an instance of a
@@ -336,7 +350,7 @@ impl JsValue {
     /// [documentation about the `str` type][caveats] which contains a few
     /// caveats about the encodings.
     ///
-    /// [caveats]: https://rustwasm.github.io/docs/wasm-bindgen/reference/types/str.html
+    /// [caveats]: https://wasm-bindgen.github.io/wasm-bindgen/reference/types/str.html
     #[inline]
     pub fn as_string(&self) -> Option<String> {
         unsafe { FromWasmAbi::from_abi(__wbindgen_string_get(self.idx)) }
@@ -385,7 +399,7 @@ impl JsValue {
     /// Tests whether this JS value is an instance of Array.
     #[inline]
     pub fn is_array(&self) -> bool {
-        unsafe { __wbindgen_is_array(self.idx) == 1 }
+        __wbindgen_is_array(self)
     }
 
     /// Tests whether the type of this JS value is `function`.
@@ -1059,6 +1073,28 @@ impl From<isize> for JsValue {
     }
 }
 
+// Intrinsics that are simply JS function bindings and can be self-hosted via the macro.
+#[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
+extern "C" {
+    #[wasm_bindgen(js_namespace = Array, js_name = isArray)]
+    fn __wbindgen_is_array(v: &JsValue) -> bool;
+
+    #[wasm_bindgen(js_name = BigInt)]
+    fn __wbindgen_bigint_from_str(s: &str) -> JsValue;
+
+    #[wasm_bindgen(js_name = Symbol)]
+    fn __wbindgen_symbol_new(description: Option<&str>) -> JsValue;
+
+    #[wasm_bindgen(js_name = Error)]
+    fn __wbindgen_error_new(msg: &str) -> JsValue;
+
+    #[wasm_bindgen(js_namespace = JSON, js_name = parse)]
+    fn __wbindgen_json_parse(json: String) -> JsValue;
+
+    #[wasm_bindgen(js_namespace = JSON, js_name = stringify)]
+    fn __wbindgen_json_serialize(v: &JsValue) -> Option<String>;
+}
+
 externs! {
     #[link(wasm_import_module = "__wbindgen_placeholder__")]
     extern "C" {
@@ -1067,13 +1103,10 @@ externs! {
 
         fn __wbindgen_string_new(ptr: *const u8, len: usize) -> u32;
         fn __wbindgen_number_new(f: f64) -> u32;
-        fn __wbindgen_bigint_from_str(ptr: *const u8, len: usize) -> u32;
         fn __wbindgen_bigint_from_i64(n: i64) -> u32;
         fn __wbindgen_bigint_from_u64(n: u64) -> u32;
         fn __wbindgen_bigint_from_i128(hi: i64, lo: u64) -> u32;
         fn __wbindgen_bigint_from_u128(hi: u64, lo: u64) -> u32;
-        fn __wbindgen_symbol_named_new(ptr: *const u8, len: usize) -> u32;
-        fn __wbindgen_symbol_anonymous_new() -> u32;
 
         fn __wbindgen_externref_heap_live_count() -> u32;
 
@@ -1081,7 +1114,6 @@ externs! {
         fn __wbindgen_is_undefined(idx: u32) -> u32;
         fn __wbindgen_is_symbol(idx: u32) -> u32;
         fn __wbindgen_is_object(idx: u32) -> u32;
-        fn __wbindgen_is_array(idx: u32) -> u32;
         fn __wbindgen_is_function(idx: u32) -> u32;
         fn __wbindgen_is_string(idx: u32) -> u32;
         fn __wbindgen_is_bigint(idx: u32) -> u32;
@@ -1121,15 +1153,12 @@ externs! {
 
         fn __wbindgen_throw(a: *const u8, b: usize) -> !;
         fn __wbindgen_rethrow(a: u32) -> !;
-        fn __wbindgen_error_new(a: *const u8, b: usize) -> u32;
 
         fn __wbindgen_cb_drop(idx: u32) -> u32;
 
         fn __wbindgen_describe(v: u32) -> ();
         fn __wbindgen_describe_closure(a: u32, b: u32, c: u32) -> u32;
 
-        fn __wbindgen_json_parse(ptr: *const u8, len: usize) -> u32;
-        fn __wbindgen_json_serialize(idx: u32) -> WasmSlice;
         fn __wbindgen_jsval_eq(a: u32, b: u32) -> u32;
         fn __wbindgen_jsval_loose_eq(a: u32, b: u32) -> u32;
 
@@ -1683,7 +1712,7 @@ impl JsError {
     #[inline]
     pub fn new(s: &str) -> JsError {
         Self {
-            value: unsafe { JsValue::_new(crate::__wbindgen_error_new(s.as_ptr(), s.len())) },
+            value: __wbindgen_error_new(s),
         }
     }
 }

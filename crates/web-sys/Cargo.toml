@@ -3,14 +3,14 @@ authors = ["The wasm-bindgen Developers"]
 description = """
 Bindings for all Web APIs, a procedurally generated crate from WebIDL
 """
-documentation = "https://rustwasm.github.io/wasm-bindgen/api/web_sys/"
+documentation = "https://wasm-bindgen.github.io/wasm-bindgen/api/web_sys/"
 edition = "2021"
-homepage = "https://rustwasm.github.io/wasm-bindgen/web-sys/index.html"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen/web-sys/index.html"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "web-sys"
 readme = "./README.md"
-repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/web-sys"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/web-sys"
 rust-version = "1.57"
 version = "0.3.77"
 
@@ -476,6 +476,8 @@ GamepadMappingType = []
 GamepadPose = []
 GamepadTouch = []
 Geolocation = []
+GestureEvent = ["Event", "UiEvent"]
+GestureEventInit = []
 GetAnimationsOptions = []
 GetRootNodeOptions = []
 GetUserMediaRequest = []
@@ -995,6 +997,9 @@ PermissionName = []
 PermissionState = []
 PermissionStatus = ["EventTarget"]
 Permissions = []
+PictureInPictureEvent = ["Event"]
+PictureInPictureEventInit = []
+PictureInPictureWindow = ["EventTarget"]
 PlaneLayout = []
 PlaybackDirection = []
 Plugin = []

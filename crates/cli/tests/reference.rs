@@ -56,65 +56,19 @@
 use anyhow::{bail, Result};
 use assert_cmd::prelude::*;
 use std::env;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use walrus::ModuleConfig;
+use walrus::{ExportItem, FunctionKind, Module, ModuleConfig};
 
-fn main() -> Result<()> {
-    let filter = env::args().nth(1);
-
-    let mut tests = Vec::new();
-    let dir = repo_root().join("crates/cli/tests/reference");
-    for entry in dir.read_dir()? {
-        let path = entry?.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("rs") {
-            continue;
-        }
-        if let Some(filter) = &filter {
-            if !path.display().to_string().contains(filter) {
-                continue;
-            }
-        }
-        tests.push(path);
-    }
-    tests.sort();
-
-    let is_ci = env::var("CI").is_ok();
-    if !is_ci {
-        // sort test files by when they were last modified, so that we run the most
-        // recently modified tests first. This just makes iterating on tests a bit
-        // easier.
-        tests.sort_by_cached_key(|p| fs::metadata(p).unwrap().modified().unwrap());
-        tests.reverse();
-    }
-
-    let mut errs_iter = tests.iter().filter_map(|t| {
-        println!("  {}", t.file_name().unwrap().to_string_lossy());
-        runtest(t).err().map(|e| (t, e))
-    });
-
-    let Some(first_error) = errs_iter.next() else {
-        println!("{} tests passed", tests.len());
-        return Ok(());
-    };
-
-    let mut errs = vec![first_error];
-    if is_ci {
-        // one error should be enough for local testing to ensure fast iteration
-        // only find all errors in CI
-        errs.extend(errs_iter);
-    }
-
-    eprintln!("failed tests:\n");
-    for (test, err) in errs {
-        eprintln!("{} failure\n{}", test.display(), tab(&format!("{:?}", err)));
-    }
-    bail!("tests failed");
-}
-
-fn runtest(test: &Path) -> Result<()> {
-    let contents = fs::read_to_string(test)?;
+#[rstest::rstest]
+fn runtest(
+    #[base_dir = "tests/reference"]
+    #[files("*.rs")]
+    test: PathBuf,
+) -> Result<()> {
+    let contents = fs::read_to_string(&test)?;
     let td = tempfile::TempDir::new()?;
     let root = repo_root();
     let root = root.display();
@@ -157,7 +111,7 @@ fn runtest(test: &Path) -> Result<()> {
     );
 
     fs::write(td.path().join("Cargo.toml"), manifest)?;
-    let target_dir = target_dir();
+    let target_dir = target_dir(test.file_name().unwrap());
     let mut cargo = Command::new("cargo");
     cargo
         .current_dir(td.path())
@@ -245,13 +199,9 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
     let mut module = ModuleConfig::new()
         .generate_producers_section(false)
         .parse_file(wasm)?;
-    for func in module.funcs.iter_mut() {
-        let local = match &mut func.kind {
-            walrus::FunctionKind::Local(l) => l,
-            _ => continue,
-        };
-        local.block_mut(local.entry_block()).instrs.truncate(0);
-    }
+
+    sanitize_local_funcs(&mut module);
+
     let ids = module.data.iter().map(|d| d.id()).collect::<Vec<_>>();
     for id in ids {
         module.data.delete(id);
@@ -281,6 +231,34 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
     Ok(wat)
 }
 
+/// Sort all exported local functions by export order, and remove their bodies.
+///
+/// This removes inconsistency between toolchains on different OS producing
+/// local functions in different order, even though exports are consistent.
+fn sanitize_local_funcs(module: &mut Module) {
+    let func_ids: Vec<_> = module
+        .exports
+        .iter()
+        .filter_map(|e| match e.item {
+            ExportItem::Function(f)
+                if matches!(module.funcs.get(f).kind, FunctionKind::Local(_)) =>
+            {
+                Some(f)
+            }
+            _ => None,
+        })
+        .collect();
+
+    for id in func_ids {
+        let old_name = module.funcs.get_mut(id).name.take();
+        // Replace with an empty function. This ensures two things:
+        // 1. Because we replace in export order, the new local functions are sorted in the same way.
+        // 2. New functions don't have any instructions, which is what we want for comparisons anyway.
+        let new_id = module.replace_exported_func(id, |_| {}).unwrap();
+        module.funcs.get_mut(new_id).name = old_name;
+    }
+}
+
 fn diff(a: &str, b: &str) -> Result<()> {
     if a == b {
         return Ok(());
@@ -306,8 +284,8 @@ fn diff(a: &str, b: &str) -> Result<()> {
     bail!("found a difference:\n\n{}", s);
 }
 
-fn target_dir() -> PathBuf {
-    repo_root().join("target/tests/reference")
+fn target_dir(name: &OsStr) -> PathBuf {
+    repo_root().join("target/tests/reference").join(name)
 }
 
 fn repo_root() -> PathBuf {
@@ -324,7 +302,7 @@ fn exec(cmd: &mut Command) -> Result<()> {
     if output.status.success() {
         return Ok(());
     }
-    let mut err = format!("command failed {:?}", cmd);
+    let mut err = format!("command failed {cmd:?}");
     err.push_str(&format!("\nstatus: {}", output.status));
     err.push_str(&format!(
         "\nstderr:\n{}",

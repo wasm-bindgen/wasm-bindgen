@@ -167,9 +167,7 @@ impl<'a> Context<'a> {
 
             // If any closures exist we need to prevent the function table from
             // getting gc'd
-            if !closure_imports.is_empty() {
-                self.aux.function_table = self.module.tables.main_function_table()?;
-            }
+            self.aux.function_table = self.module.tables.main_function_table()?;
 
             // Register all the injected closure imports as that they're expected
             // to manufacture a particular type of closure.
@@ -199,7 +197,7 @@ impl<'a> Context<'a> {
                 let mut function = descriptor.function.clone();
                 function.arguments.insert(0, Descriptor::I32);
                 function.arguments.insert(0, Descriptor::I32);
-                let adapter = self.table_element_adapter(descriptor.shim_idx, function)?;
+                let adapter = self.table_element_adapter(descriptor.function.shim_idx, function)?;
                 self.aux.import_map.insert(
                     id,
                     AuxImport::Closure {
@@ -356,7 +354,7 @@ impl<'a> Context<'a> {
         let id = self.import_adapter(id, descriptor, AdapterJsImportKind::Normal)?;
         let (path, content) = match module {
             decode::ImportModule::Named(n) => (
-                format!("snippets/{}", n),
+                format!("snippets/{n}"),
                 local_modules
                     .iter()
                     .find(|m| m.identifier == *n)
@@ -478,7 +476,13 @@ impl<'a> Context<'a> {
             None => return Ok(()),
             Some(d) => d.unwrap_function(),
         };
-        let (export_id, id) = self.function_exports[&wasm_name];
+
+        let Some((export_id, id)) = self.function_exports.get(&wasm_name).copied() else {
+            bail!("{wasm_name} symbol is missing, \
+                may be because there are multiple exports with the same name but different signatures, \
+                and discarded by wasm-ld.");
+        };
+
         if export.start {
             self.add_start_function(id)?;
         }
@@ -1404,7 +1408,7 @@ impl<'a> Context<'a> {
                     AdapterType::I64 => 8,
                     AdapterType::F32 => 4,
                     AdapterType::F64 => 8,
-                    _ => panic!("unsupported type in retptr {:?}", ty),
+                    _ => panic!("unsupported type in retptr {ty:?}"),
                 };
                 let sum_rounded_up = (sum + (size - 1)) & (!(size - 1));
                 sum_rounded_up + size
@@ -1627,7 +1631,7 @@ binary with:
     cargo install -f wasm-bindgen-cli --version {their_version}
 
 if this warning fails to go away though and you're not sure what to do feel free
-to open an issue at https://github.com/rustwasm/wasm-bindgen/issues!
+to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
 "
                 );
             }
@@ -1659,7 +1663,7 @@ fn verify_schema_matches(data: &[u8]) -> Result<Option<&str>, Error> {
         Ok(s) => s,
         Err(_) => bad!(),
     };
-    log::debug!("found version specifier {}", data);
+    log::debug!("found version specifier {data}");
     if !data.starts_with('{') || !data.ends_with('}') {
         bad!()
     }

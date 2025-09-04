@@ -488,7 +488,7 @@ impl ToTokens for ast::StructField {
         // If we don't do this, it might end up being unable to reference `js`
         // properly because it doesn't have the same span.
         //
-        // See https://github.com/rustwasm/wasm-bindgen/pull/3725.
+        // See https://github.com/wasm-bindgen/wasm-bindgen/pull/3725.
         let js_token = quote! { js };
         let mut val = quote_spanned!(self.rust_name.span()=> (*#js_token).borrow().#rust_name);
         if let Some(span) = self.getter_with_clone {
@@ -1161,7 +1161,7 @@ impl ToTokens for ast::ImportType {
         if !no_deref {
             (quote! {
                 #[automatically_derived]
-                impl core::ops::Deref for #rust_name {
+                impl #wasm_bindgen::__rt::core::ops::Deref for #rust_name {
                     type Target = #internal_obj;
 
                     #[inline]

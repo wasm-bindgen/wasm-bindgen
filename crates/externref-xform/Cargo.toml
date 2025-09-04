@@ -5,11 +5,11 @@ Internal externref transformations for wasm-bindgen
 """
 documentation = "https://docs.rs/wasm-bindgen-externref-xform"
 edition = "2021"
-homepage = "https://rustwasm.github.io/wasm-bindgen/"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen/"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-externref-xform"
-repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/externref-xform"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/externref-xform"
 rust-version = "1.76"
 version = "0.2.100"
 
@@ -19,14 +19,10 @@ walrus = "0.23"
 wasm-bindgen-wasm-conventions = { path = "../wasm-conventions", version = "=0.2.100" }
 
 [dev-dependencies]
-rayon = "1.0"
+rstest = "0.26"
 wasmprinter = "0.214"
 wast = "214"
 wat = "~1.214"
 
 [lints]
 workspace = true
-
-[[test]]
-harness = false
-name = "all"

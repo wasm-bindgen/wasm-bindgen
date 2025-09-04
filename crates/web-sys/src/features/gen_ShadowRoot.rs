@@ -74,6 +74,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `ShadowRoot`*"]
     pub fn fullscreen_element(this: &ShadowRoot) -> Option<Element>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "Element")]
+    # [wasm_bindgen (structural , method , getter , js_class = "ShadowRoot" , js_name = pictureInPictureElement)]
+    #[doc = "Getter for the `pictureInPictureElement` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/pictureInPictureElement)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ShadowRoot`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn picture_in_picture_element(this: &ShadowRoot) -> Option<Element>;
     #[cfg(feature = "Element")]
     # [wasm_bindgen (method , structural , js_class = "ShadowRoot" , js_name = getElementById)]
     #[doc = "The `getElementById()` method."]

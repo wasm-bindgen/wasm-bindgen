@@ -1,7 +1,7 @@
 # `wasm-bindgen-test`
 
 [**Read the "Testing with `wasm-bindgen-test`" section of the
-guide!**](https://rustwasm.github.io/wasm-bindgen/wasm-bindgen-test/index.html)
+guide!**](https://wasm-bindgen.github.io/wasm-bindgen/wasm-bindgen-test/index.html)
 
 ## Components
 
