@@ -79,13 +79,17 @@ test.beforeAll(async () => {
   childEnv.PATH = dirname(executable) + delimiter + env.PATH;
 });
 
-function exampleTest(dir: string, buildCmd: string, dist: string = dir) {
+function exampleTest(dir: string, dist: string = dir) {
   test(dir, async ({ page }) => {
     if (EXBUILD) {
       dist = dir;
     } else {
-      await exec(buildCmd, { cwd: dir, env: childEnv });
+      await exec('npm run build', { cwd: dir, env: childEnv });
     }
+
+    // If index.html doesn't exist, this is not a browser test (e.g. deno).
+    // Testing that it builds is enough for now.
+    if (!existsSync(`${dir}/index.html`)) return;
 
     await page.goto(`${dist}/index.html`, {
       waitUntil: 'networkidle'
@@ -94,18 +98,10 @@ function exampleTest(dir: string, buildCmd: string, dist: string = dir) {
 }
 
 test.describe('shell', () => {
-  test.skip(
-    platform === 'win32',
-    'build.sh tests are not supported on Windows'
-  );
-
   for (const file of globSync('*/build.sh')) {
     let dir = dirname(file);
 
-    // If index.html doesn't exist, this is not a browser test (e.g. deno), skip it.
-    if (!existsSync(`${dir}/index.html`)) continue;
-
-    exampleTest(dir, './build.sh');
+    exampleTest(dir);
   }
 });
 
@@ -113,6 +109,6 @@ test.describe('webpack', () => {
   for (const file of globSync('*/webpack.config.js')) {
     let dir = dirname(file);
 
-    exampleTest(dir, 'npm run build', `${dir}/dist`);
+    exampleTest(dir, `${dir}/dist`);
   }
 });

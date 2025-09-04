@@ -1,0 +1,8 @@
+{
+	"scripts": {
+		"build": "cross-env WASM_BINDGEN_EXPERIMENTAL_SYMBOL_DISPOSE=1 wasm-pack build --target deno"
+	},
+	"dependencies": {
+		"cross-env": "catalog:"
+	}
+}

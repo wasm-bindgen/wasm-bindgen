@@ -349,21 +349,7 @@ jobs:
     # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
       working-directory: examples
-    - run: |
-        function build() {
-          (cd $1 &&
-            if [ -f package.json ]; then
-              pnpm run build -- --output-path ../../exbuild/$1
-            elif [ -f build.sh ]; then
-              ./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore
-            else
-              echo "ERROR: Don't know how to build $1" >&2
-              exit 1
-            fi
-          ) || exit 1;
-        }
-        export -f build
-        ls -d */ | grep -Ev 'node_modules' | parallel -j4 build
+    - run: pnpm run -r build
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
