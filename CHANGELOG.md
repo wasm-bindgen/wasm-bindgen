@@ -1,6 +1,15 @@
 # `wasm-bindgen` Change Log
 --------------------------------------------------------------------------------
 
+## Unreleased
+
+### Changed
+
+* Fixed wrong method names for `GestureEvent` bindings.
+  [#4615](https://github.com/wasm-bindgen/wasm-bindgen/pull/4615)
+
+--------------------------------------------------------------------------------
+
 ## [0.2.101](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.100...0.2.101)
 
 ### Added
