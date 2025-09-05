@@ -50,7 +50,7 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_cast_32bcc2d10060d0c7(arg0) {
+export function __wbg_cast_29f7673db09f6132(arg0) {
     const ret = /* cast */(arg0);
     return ret;
 };
