@@ -3386,38 +3386,12 @@ __wbg_set_wasm(wasm);"
                 Ok(format!("`{escaped}`"))
             }
 
-            AuxImport::Closure {
-                dtor,
-                mutable,
-                adapter,
-            } => {
+            AuxImport::Cast => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
-                assert_eq!(args.len(), 3);
+                assert_eq!(args.len(), 1);
 
-                let call = self.adapter_name(*adapter);
-
-                if *mutable {
-                    self.expose_make_mut_closure()?;
-
-                    Ok(format!(
-                        "makeMutClosure({arg0}, {arg1}, {dtor}, {call})",
-                        arg0 = &args[0],
-                        arg1 = &args[1],
-                        dtor = dtor,
-                        call = call,
-                    ))
-                } else {
-                    self.expose_make_closure()?;
-
-                    Ok(format!(
-                        "makeClosure({arg0}, {arg1}, {dtor}, {call})",
-                        arg0 = &args[0],
-                        arg1 = &args[1],
-                        dtor = dtor,
-                        call = call,
-                    ))
-                }
+                Ok(args[0].clone())
             }
 
             AuxImport::StructuralMethod(name) => {

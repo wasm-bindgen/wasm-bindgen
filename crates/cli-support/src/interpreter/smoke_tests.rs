@@ -1,7 +1,7 @@
 use super::Interpreter;
 use walrus::ModuleConfig;
 
-fn interpret(wat: &str, name: &str, result: Option<&[u32]>) {
+fn interpret(wat: &str, name: &str, result: &[u32]) {
     let wasm = wat::parse_str(wat).unwrap();
     let module = ModuleConfig::new()
         .generate_producers_section(false)
@@ -29,7 +29,7 @@ fn smoke() {
             (func $foo)
         )
     "#;
-    interpret(wat, "foo", Some(&[]));
+    interpret(wat, "foo", &[]);
 
     let wat = r#"
         (module
@@ -44,7 +44,7 @@ fn smoke() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", Some(&[1]));
+    interpret(wat, "foo", &[1]);
 }
 
 #[test]
@@ -65,7 +65,7 @@ fn locals() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", Some(&[2]));
+    interpret(wat, "foo", &[2]);
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn globals() {
         )
     "#;
     // __wbindgen_describe is called with a global - in Frame.eval we assume all access to globals is the stack pointer
-    interpret(wat, "foo", Some(&[32768]));
+    interpret(wat, "foo", &[32768]);
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn arithmetic() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", Some(&[3, 1]));
+    interpret(wat, "foo", &[3, 1]);
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn return_early() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", Some(&[2]));
+    interpret(wat, "foo", &[2]);
 }
 
 #[test]
@@ -200,7 +200,7 @@ fn loads_and_stores() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", Some(&[1, 2, 3]));
+    interpret(wat, "foo", &[1, 2, 3]);
 }
 
 #[test]
@@ -225,5 +225,5 @@ fn calling_functions() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", Some(&[0]));
+    interpret(wat, "foo", &[0]);
 }

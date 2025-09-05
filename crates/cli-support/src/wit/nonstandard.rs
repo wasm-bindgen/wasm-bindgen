@@ -253,16 +253,8 @@ pub enum AuxImport {
     /// This import is expected to be a shim that returns an exported `JsString`.
     String(String),
 
-    /// This import is intended to manufacture a JS closure with the given
-    /// signature and then return that back to Rust.
-    Closure {
-        /// whether or not this was a `FnMut` closure
-        mutable: bool,
-        /// table element index of the destructor function
-        dtor: u32,
-        /// the adapter which translates the types for this closure
-        adapter: AdapterId,
-    },
+    /// This import is a generic cast function, monomorphised for a specific `fn(A) -> R` signature.
+    Cast,
 
     /// This import is expected to be a shim that simply calls the `foo` method
     /// on the first object, passing along all other parameters and returning

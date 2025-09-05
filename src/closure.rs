@@ -239,12 +239,7 @@ use crate::JsValue;
 /// ```
 pub struct Closure<T: ?Sized> {
     js: ManuallyDrop<JsValue>,
-    data: ManuallyDrop<Box<T>>,
-}
-
-union FatPtr<T: ?Sized> {
-    ptr: *mut T,
-    fields: (usize, usize),
+    data: OwnedClosure<T>,
 }
 
 impl<T> Closure<T>
@@ -276,91 +271,13 @@ where
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
     /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
-    pub fn wrap(mut data: Box<T>) -> Closure<T> {
-        assert_eq!(mem::size_of::<*const T>(), mem::size_of::<FatPtr<T>>());
-        let (a, b) = unsafe {
-            FatPtr {
-                ptr: &mut *data as *mut T,
-            }
-            .fields
+    pub fn wrap(data: Box<T>) -> Closure<T> {
+        let data = OwnedClosure {
+            inner: ManuallyDrop::new(data),
         };
-
-        // Here we need to create a `JsValue` with the data and `T::invoke()`
-        // function pointer. To do that we... take a few unconventional turns.
-        // In essence what happens here is this:
-        //
-        // 1. First up, below we call a function, `breaks_if_inlined`. This
-        //    function, as the name implies, does not work if it's inlined.
-        //    More on that in a moment.
-        // 2. This function internally calls a special import recognized by the
-        //    `wasm-bindgen` CLI tool, `__wbindgen_describe_closure`. This
-        //    imported symbol is similar to `__wbindgen_describe` in that it's
-        //    not intended to show up in the final binary but it's an
-        //    intermediate state for a `wasm-bindgen` binary.
-        // 3. The `__wbindgen_describe_closure` import is namely passed a
-        //    descriptor function, monomorphized for each invocation.
-        //
-        // Most of this doesn't actually make sense to happen at runtime! The
-        // real magic happens when `wasm-bindgen` comes along and updates our
-        // generated code. When `wasm-bindgen` runs it performs a few tasks:
-        //
-        // * First, it finds all functions that call
-        //   `__wbindgen_describe_closure`. These are all `breaks_if_inlined`
-        //   defined below as the symbol isn't called anywhere else.
-        // * Next, `wasm-bindgen` executes the `breaks_if_inlined`
-        //   monomorphized functions, passing it dummy arguments. This will
-        //   execute the function just enough to invoke the special import,
-        //   namely telling us about the function pointer that is the describe
-        //   shim.
-        // * This knowledge is then used to actually find the descriptor in the
-        //   function table which is then executed to figure out the signature
-        //   of the closure.
-        // * Finally, and probably most heinously, the call to
-        //   `breaks_if_inlined` is rewritten to call an otherwise globally
-        //   imported function. This globally imported function will generate
-        //   the `JsValue` for this closure specialized for the signature in
-        //   question.
-        //
-        // Later on `wasm-gc` will clean up all the dead code and ensure that
-        // we don't actually call `__wbindgen_describe_closure` at runtime. This
-        // means we will end up not actually calling `breaks_if_inlined` in the
-        // final binary, all calls to that function should be pruned.
-        //
-        // See crates/cli/src/js/closures.rs for a more information
-        // about what's going on here.
-
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        extern "C" fn describe<T: WasmClosure + ?Sized>() {
-            inform(CLOSURE);
-
-            unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
-                // This can be called by the JS glue in erroneous situations
-                // such as when the closure has already been destroyed. If
-                // that's the case let's not make things worse by
-                // segfaulting and/or asserting, so just ignore null
-                // pointers.
-                if a == 0 {
-                    return;
-                }
-                drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
-            }
-            inform(destroy::<T> as usize as u32);
-
-            inform(T::IS_MUT as u32);
-            T::describe();
-        }
-
-        #[inline(never)]
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe fn breaks_if_inlined<T: WasmClosure + ?Sized>(a: usize, b: usize) -> u32 {
-            super::__wbindgen_describe_closure(a as u32, b as u32, describe::<T> as usize as u32)
-        }
-
-        let idx = unsafe { breaks_if_inlined::<T>(a, b) };
-
-        Closure {
-            js: ManuallyDrop::new(JsValue::_new(idx)),
-            data: ManuallyDrop::new(data),
+        Self {
+            js: ManuallyDrop::new(crate::__rt::wbg_cast(&data)),
+            data,
         }
     }
 
@@ -472,6 +389,54 @@ impl<T: ?Sized> AsRef<JsValue> for Closure<T> {
     }
 }
 
+/// Internal representation of the actual owned closure which we send to the JS
+/// in the constructor to convert it into a JavaScript value.
+#[repr(transparent)]
+struct OwnedClosure<T: ?Sized> {
+    inner: ManuallyDrop<Box<T>>,
+}
+
+impl<T> WasmDescribe for &OwnedClosure<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(CLOSURE);
+
+        unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
+            // This can be called by the JS glue in erroneous situations
+            // such as when the closure has already been destroyed. If
+            // that's the case let's not make things worse by
+            // segfaulting and/or asserting, so just ignore null
+            // pointers.
+            if a == 0 {
+                return;
+            }
+            drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
+        }
+        inform(destroy::<T> as usize as u32);
+
+        inform(T::IS_MUT as u32);
+        T::describe();
+    }
+}
+
+impl<T> IntoWasmAbi for &OwnedClosure<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+
+    fn into_abi(self) -> WasmSlice {
+        let (a, b): (usize, usize) = unsafe { mem::transmute_copy(self) };
+        WasmSlice {
+            ptr: a as u32,
+            len: b as u32,
+        }
+    }
+}
+
 impl<T> WasmDescribe for Closure<T>
 where
     T: WasmClosure + ?Sized,
@@ -531,7 +496,7 @@ where
             // this will implicitly drop our strong reference in addition to
             // invalidating all future invocations of the closure
             if super::__wbindgen_cb_drop(self.js.idx) != 0 {
-                ManuallyDrop::drop(&mut self.data);
+                ManuallyDrop::drop(&mut self.data.inner);
             }
         }
     }

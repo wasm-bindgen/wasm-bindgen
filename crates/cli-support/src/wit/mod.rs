@@ -1,10 +1,10 @@
 use crate::decode::LocalModule;
 use crate::descriptor::{Descriptor, Function};
-use crate::descriptors::WasmBindgenDescriptorsSection;
+use crate::descriptors::{CastImport, WasmBindgenDescriptorsSection};
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
-use anyhow::{anyhow, bail, Error};
+use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
 use std::str;
 use walrus::MemoryId;
@@ -158,8 +158,7 @@ impl<'a> Context<'a> {
         {
             let WasmBindgenDescriptorsSection {
                 descriptors,
-                closure_imports,
-                ..
+                cast_imports,
             } = *custom;
             // Store all the executed descriptors in our own field so we have
             // access to them while processing programs.
@@ -169,43 +168,14 @@ impl<'a> Context<'a> {
             // getting gc'd
             self.aux.function_table = self.module.tables.main_function_table()?;
 
-            // Register all the injected closure imports as that they're expected
-            // to manufacture a particular type of closure.
-            //
-            // First we register the imported function shim which returns a
-            // `JsValue` for the closure. We manufacture this signature
-            // since it's not listed anywhere.
-            //
-            // Next we register the corresponding table element's signature in
-            // the interface types section. This adapter will later be used to
-            // generate a shim (if necessary) for the table element.
-            //
-            // Finally we store all this metadata in the import map which we've
-            // learned so when a binding for the import is generated we can
-            // generate all the appropriate shims.
-            for (id, descriptor) in crate::sorted_iter(&closure_imports) {
-                let signature = Function {
-                    shim_idx: 0,
-                    arguments: vec![Descriptor::I32; 3],
-                    ret: Descriptor::Externref,
-                    inner_ret: None,
-                };
-                let id = self.import_adapter(*id, signature, AdapterJsImportKind::Normal)?;
-                // Synthesize the two integer pointers we pass through which
-                // aren't present in the signature but are present in the wasm
-                // signature.
-                let mut function = descriptor.function.clone();
-                function.arguments.insert(0, Descriptor::I32);
-                function.arguments.insert(0, Descriptor::I32);
-                let adapter = self.table_element_adapter(descriptor.function.shim_idx, function)?;
-                self.aux.import_map.insert(
-                    id,
-                    AuxImport::Closure {
-                        dtor: descriptor.dtor_idx,
-                        mutable: descriptor.mutable,
-                        adapter,
-                    },
+            for CastImport { id, descriptor } in cast_imports {
+                let signature = descriptor.unwrap_function();
+                ensure!(
+                    signature.arguments.len() == 1,
+                    "Cast function must take exactly one argument"
                 );
+                let id = self.import_adapter(id, signature, AdapterJsImportKind::Normal)?;
+                self.aux.import_map.insert(id, AuxImport::Cast);
             }
         }
 
@@ -1166,8 +1136,7 @@ impl<'a> Context<'a> {
             // phase, but we don't have an implementation for them. We don't
             // need to error about them in this verification pass though,
             // having them lingering in the module is normal.
-            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_closure"
-            {
+            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_cast" {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {

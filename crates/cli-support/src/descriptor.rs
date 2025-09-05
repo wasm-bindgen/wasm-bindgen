@@ -161,13 +161,6 @@ impl Descriptor {
         }
     }
 
-    pub fn unwrap_closure(self) -> Closure {
-        match self {
-            Descriptor::Closure(s) => *s,
-            _ => panic!("not a closure"),
-        }
-    }
-
     pub fn vector_kind(&self) -> Option<VectorKind> {
         let inner = match *self {
             Descriptor::String | Descriptor::CachedString => return Some(VectorKind::String),
