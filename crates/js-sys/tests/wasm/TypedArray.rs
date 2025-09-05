@@ -212,3 +212,16 @@ fn from_slice_heap_growth() {
         .map(|_i| Int32Array::from(slice))
         .collect::<Vec<_>>();
 }
+
+#[wasm_bindgen_test]
+fn to_vec_heap_growth() {
+    let mut v = vec![];
+    for _ in 0..10_000 {
+        let x = Uint8Array::new_with_length(10);
+        // When the externref table capacity is insufficient,
+        // it will be allocated and the array buffer will be detached.
+        x.to_vec();
+        // Simulate the operation of allocating multiple JS objects in a function
+        v.push(x);
+    }
+}
