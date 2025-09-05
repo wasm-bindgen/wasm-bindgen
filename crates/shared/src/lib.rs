@@ -164,6 +164,7 @@ macro_rules! shared_api {
             comments: Vec<&'a str>,
             is_inspectable: bool,
             generate_typescript: bool,
+            extends: Option<&'a str>,
         }
 
         struct StructField<'a> {

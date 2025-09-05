@@ -62,6 +62,9 @@ pub struct WasmBindgenAux {
     pub exn_store: Option<walrus::FunctionId>,
     pub stack_pointer: Option<walrus::GlobalId>,
     pub thread_destroy: Option<walrus::FunctionId>,
+
+    /// Required JS imports needed to be referenced and not tree-shaken
+    pub required_imports: Vec<JsImport>,
 }
 
 pub type WasmBindgenAuxId = TypedCustomSectionId<WasmBindgenAux>;
@@ -212,6 +215,8 @@ pub struct AuxStruct {
     pub is_inspectable: bool,
     /// Whether typescript bindings should be generated for this struct.
     pub generate_typescript: bool,
+    /// The base class this struct extends, if any
+    pub extends: Option<String>,
 }
 
 /// All possible types of imports that can be imported by a Wasm module.

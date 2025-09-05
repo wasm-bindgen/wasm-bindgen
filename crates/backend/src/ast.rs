@@ -436,6 +436,8 @@ pub struct Struct {
     pub is_inspectable: bool,
     /// Whether to generate a typescript definition for this struct
     pub generate_typescript: bool,
+    /// The list of imported types this struct extends, if any
+    pub extends: Vec<syn::Path>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }

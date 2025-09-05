@@ -35,6 +35,7 @@ impl TryToTokens for ast::Program {
                 errors.push(e);
             }
         }
+
         for s in self.structs.iter() {
             s.to_tokens(tokens);
         }
@@ -461,6 +462,21 @@ impl ToTokens for ast::Struct {
             }
         })
         .to_tokens(tokens);
+
+        // Generate Deref implementation for extended type (single inheritance only)
+        if let Some(extends) = self.extends.first() {
+            (quote! {
+                #[automatically_derived]
+                impl #wasm_bindgen::__rt::core::convert::Into<#extends> for #name {
+                    #[inline]
+                    fn into(self) -> #extends {
+                        use #wasm_bindgen::JsCast;
+                        #wasm_bindgen::wbg_cast!(self, #name, #wasm_bindgen::JsValue).unchecked_into()
+                    }
+                }
+            })
+            .to_tokens(tokens);
+        }
 
         for field in self.fields.iter() {
             field.to_tokens(tokens);

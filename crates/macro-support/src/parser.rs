@@ -607,6 +607,23 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         }
         let generate_typescript = attrs.skip_typescript().is_none();
         let comments: Vec<String> = extract_doc_comments(&self.attrs);
+
+        let mut extends = Vec::new();
+        for (used, attr) in attrs.attrs.iter() {
+            if let BindgenAttr::Extends(_, e) = attr {
+                extends.push(e.clone());
+                used.set(true);
+            }
+        }
+
+        if extends.len() > 1 {
+            bail_span!(
+                self.ident,
+                "exported structs can only extend one type (found {} extends attributes)",
+                extends.len()
+            );
+        }
+
         attrs.check_used();
         Ok(ast::Struct {
             rust_name: self.ident.clone(),
@@ -615,6 +632,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             comments,
             is_inspectable,
             generate_typescript,
+            extends,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
     }

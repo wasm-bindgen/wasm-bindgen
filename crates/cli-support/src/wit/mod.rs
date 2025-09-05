@@ -5,7 +5,7 @@ use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Error};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::str;
 use walrus::MemoryId;
 use walrus::{ExportId, FunctionId, ImportId, Module};
@@ -37,6 +37,8 @@ struct Context<'a> {
     thread_count: Option<ThreadCount>,
     support_start: bool,
     linked_modules: bool,
+    /// Types that are referenced by extends relationships and need to be included in required_imports
+    referenced_extends_types: HashSet<String>,
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -69,8 +71,20 @@ pub fn process(
         thread_count,
         support_start: bindgen.emit_start,
         linked_modules: bindgen.split_linked_modules,
+        referenced_extends_types: Default::default(),
     };
     cx.init()?;
+
+    // First pass: collect all extends relationships across all programs
+    // This ensures that when we process imports in any program, we know which
+    // types are referenced by extends and need to be included in required_imports
+    for program in &programs {
+        for struct_ in &program.structs {
+            if let Some(extends_name) = &struct_.extends {
+                cx.referenced_extends_types.insert(extends_name.to_string());
+            }
+        }
+    }
 
     for program in programs {
         cx.program(program)?;
@@ -862,7 +876,16 @@ impl<'a> Context<'a> {
     ) -> Result<(), Error> {
         let (import_id, _id) = match self.function_imports.get(type_.instanceof_shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => {
+                // Check if this type is referenced by any extends relationship
+                if self.referenced_extends_types.contains(type_.name) {
+                    // Add this type to required_imports since it's used in extends
+                    let import_js = self.determine_import(import, type_.name)?;
+                    self.aux.required_imports.push(import_js);
+                }
+                // Types not referenced by extends are tree-shaken out (not added to required_imports)
+                return Ok(());
+            }
         };
 
         // Register the signature of this imported shim
@@ -882,7 +905,10 @@ impl<'a> Context<'a> {
         let import = self.determine_import(import, type_.name)?;
         self.aux
             .import_map
-            .insert(id, AuxImport::Instanceof(import));
+            .insert(id, AuxImport::Instanceof(import.clone()));
+
+        // Store the import for potential extends relationships
+        self.aux.required_imports.push(import);
         Ok(())
     }
 
@@ -1020,6 +1046,7 @@ impl<'a> Context<'a> {
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
+            extends: struct_.extends.map(|s| s.to_string()),
         };
         self.aux.structs.push(aux);
 

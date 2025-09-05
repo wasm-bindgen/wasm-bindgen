@@ -1,0 +1,25 @@
+error: exported structs can only extend one type (found 2 extends attributes)
+  --> ui-tests/extends-multiple.rs:11:12
+   |
+11 | pub struct MultipleExtends {
+   |            ^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `ExportedType: wasm_bindgen::JsCast` is not satisfied
+  --> ui-tests/extends-multiple.rs:22:1
+   |
+22 | #[wasm_bindgen(extends = ExportedType)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::JsCast` is not implemented for `ExportedType`
+   |
+   = help: the following other types implement trait `wasm_bindgen::JsCast`:
+             BaseType1
+             BaseType2
+             JsValue
+note: required by a bound in `unchecked_into`
+  --> $WORKSPACE/src/cast.rs
+   |
+   |     fn unchecked_into<T>(self) -> T
+   |        -------------- required by a bound in this associated function
+   |     where
+   |         T: JsCast,
+   |            ^^^^^^ required by this bound in `JsCast::unchecked_into`
+   = note: this error originates in the derive macro `::wasm_bindgen::__rt::BindgenedStruct` (in Nightly builds, run with -Z macro-backtrace for more info)

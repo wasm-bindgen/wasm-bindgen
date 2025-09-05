@@ -28,6 +28,7 @@ pub mod duplicate_deps;
 pub mod duplicates;
 pub mod enum_vecs;
 pub mod enums;
+pub mod extends_export;
 #[path = "final.rs"]
 pub mod final_;
 pub mod futures;

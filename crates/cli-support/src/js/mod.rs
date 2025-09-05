@@ -99,6 +99,8 @@ struct ExportedClass {
     readable_properties: Vec<String>,
     /// Map from field to information about those fields
     typescript_fields: HashMap<FieldLocation, FieldInfo>,
+    /// The base class this class extends, if any
+    extends: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1050,8 +1052,13 @@ __wbg_set_wasm(wasm);"
     }
 
     fn write_class(&mut self, name: &str, class: &ExportedClass) -> Result<(), Error> {
-        let mut dst = format!("class {name} {{\n");
-        let mut ts_dst = format!("export {dst}");
+        let extends_clause = if let Some(extends) = &class.extends {
+            format!(" extends {extends}")
+        } else {
+            String::new()
+        };
+        let mut dst = format!("class {name}{extends_clause} {{\n");
+        let mut ts_dst = format!("export class {name}{extends_clause} {{\n");
 
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
@@ -2753,6 +2760,7 @@ __wbg_set_wasm(wasm);"
 
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
+
         // conditionally override Symbol.dispose
         if self.config.symbol_dispose && !self.aux.structs.is_empty() {
             self.expose_symbol_dispose()?;
@@ -2785,6 +2793,27 @@ __wbg_set_wasm(wasm);"
 
         for path in self.aux.package_jsons.iter() {
             self.process_package_json(path)?;
+        }
+
+        // Process required imports after normal processing to ensure they are deduped
+        let mut seen_imports = std::collections::HashSet::new();
+        for js_import in &self.aux.required_imports {
+            if !seen_imports.insert(&js_import.name)
+                || self.imported_names.contains_key(&js_import.name)
+            {
+                continue;
+            }
+            match &js_import.name {
+                JsImportName::Module { module, name } => {
+                    self.add_module_import(module.clone(), name, name);
+                }
+                JsImportName::LocalModule { module, name } => {
+                    self.add_module_import(self.config.local_module_name(module), name, name);
+                }
+                _ => {
+                    self.import_name(js_import)?;
+                }
+            }
         }
 
         self.export_destructor();
@@ -2967,6 +2996,10 @@ __wbg_set_wasm(wasm);"
 
                         if exported.has_constructor {
                             bail!("found duplicate constructor for class `{}`", class);
+                        }
+
+                        if exported.extends.is_some() {
+                            bail!("constructors are not currently supported for exported types that extend other types (class `{}`)", class);
                         }
 
                         exported.has_constructor = true;
@@ -4043,6 +4076,8 @@ __wbg_set_wasm(wasm);"
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
+        class.extends = struct_.extends.clone();
+
         Ok(())
     }
 

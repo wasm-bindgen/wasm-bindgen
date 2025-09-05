@@ -380,6 +380,15 @@ fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> Stri
 }
 
 fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
+    let extends = s.extends.first().map(|path| {
+        let name = path
+            .segments
+            .last()
+            .map(|segment| segment.ident.to_string())
+            .unwrap_or_else(|| format!("{}", quote::quote!(#path)));
+        intern.intern_str(&name)
+    });
+
     Struct {
         name: &s.js_name,
         fields: s
@@ -390,6 +399,7 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
         comments: s.comments.iter().map(|s| &**s).collect(),
         is_inspectable: s.is_inspectable,
         generate_typescript: s.generate_typescript,
+        extends,
     }
 }
 
