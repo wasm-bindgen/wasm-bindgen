@@ -1,0 +1,14 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+edition = "2021"
+name = "wasm-bindgen-benchmark"
+publish = false
+version = "0.0.0"
+
+[dependencies]
+js-sys = { path = '../crates/js-sys' }
+wasm-bindgen = { path = '../' }
+web-sys = { path = '../crates/web-sys', features = ['Node'] }
+
+[lib]
+crate-type = ['cdylib']
