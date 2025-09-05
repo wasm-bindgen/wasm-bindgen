@@ -20,7 +20,7 @@ interface GestureEvent : UIEvent
       DOMString type,
       boolean canBubble,
       boolean cancelable,
-      DOMWindow? view,
+      Window? view,
       long detail,
       long screenX,
       long screenY,

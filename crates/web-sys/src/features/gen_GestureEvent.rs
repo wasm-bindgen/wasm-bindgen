@@ -126,4 +126,34 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn screen_y(this: &GestureEvent) -> i32;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "EventTarget", feature = "Window",))]
+    # [wasm_bindgen (method , structural , js_class = "GestureEvent" , js_name = initGestureEvent)]
+    #[doc = "The `initGestureEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/initGestureEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EventTarget`, `GestureEvent`, `Window`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn init_gesture_event(
+        this: &GestureEvent,
+        type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        target: Option<&EventTarget>,
+        scale: f32,
+        rotation: f32,
+    );
 }
