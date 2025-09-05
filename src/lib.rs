@@ -1149,7 +1149,12 @@ externs! {
         fn __wbindgen_cb_drop(idx: u32) -> u32;
 
         fn __wbindgen_describe(v: u32) -> ();
-        fn __wbindgen_describe_cast() -> !;
+        fn __wbindgen_describe_cast(
+            prim1: *const (),
+            prim2: *const (),
+            prim3: *const (),
+            prim4: *const (),
+        ) -> *const ();
 
         fn __wbindgen_jsval_eq(a: u32, b: u32) -> u32;
         fn __wbindgen_jsval_loose_eq(a: u32, b: u32) -> u32;

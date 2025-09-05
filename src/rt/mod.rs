@@ -70,20 +70,25 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
     #[inline(never)]
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     unsafe extern "C" fn breaks_if_inlined<From: IntoWasmAbi, To: FromWasmAbi>(
-        _prim1: <From::Abi as WasmAbi>::Prim1,
-        _prim2: <From::Abi as WasmAbi>::Prim2,
-        _prim3: <From::Abi as WasmAbi>::Prim3,
-        _prim4: <From::Abi as WasmAbi>::Prim4,
+        prim1: <From::Abi as WasmAbi>::Prim1,
+        prim2: <From::Abi as WasmAbi>::Prim2,
+        prim3: <From::Abi as WasmAbi>::Prim3,
+        prim4: <From::Abi as WasmAbi>::Prim4,
     ) -> WasmRet<To::Abi> {
         inform(FUNCTION);
         // The actual pointer will be unused, but this prevents optimizer
         // from removing the unused function arguments and corrupting the type.
-        inform(breaks_if_inlined::<From, To> as usize as u32);
+        inform(0);
         inform(1);
         From::describe();
         To::describe();
         To::describe();
-        super::__wbindgen_describe_cast()
+        core::ptr::read(super::__wbindgen_describe_cast(
+            &prim1 as *const _ as _,
+            &prim2 as *const _ as _,
+            &prim3 as *const _ as _,
+            &prim4 as *const _ as _,
+        ) as _)
     }
 
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
@@ -127,6 +132,7 @@ impl<T> Deref for LazyCell<T> {
     }
 }
 
+use core::mem::MaybeUninit;
 #[cfg(not(target_feature = "atomics"))]
 pub use LazyCell as LazyLock;
 
