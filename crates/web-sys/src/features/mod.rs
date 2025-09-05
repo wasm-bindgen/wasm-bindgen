@@ -3022,13 +3022,6 @@ mod gen_GestureEvent;
 #[allow(unused_imports)]
 pub use gen_GestureEvent::*;
 
-#[cfg(feature = "GestureEventInit")]
-#[allow(non_snake_case)]
-mod gen_GestureEventInit;
-#[cfg(feature = "GestureEventInit")]
-#[allow(unused_imports)]
-pub use gen_GestureEventInit::*;
-
 #[cfg(feature = "GetAnimationsOptions")]
 #[allow(non_snake_case)]
 mod gen_GetAnimationsOptions;

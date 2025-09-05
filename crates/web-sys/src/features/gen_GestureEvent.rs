@@ -83,27 +83,27 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn meta_key(this: &GestureEvent) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = x)]
-    #[doc = "Getter for the `x` field of this object."]
+    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = clientX)]
+    #[doc = "Getter for the `clientX` field of this object."]
     #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/x)"]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/clientX)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GestureEvent`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn x(this: &GestureEvent) -> i32;
+    pub fn client_x(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = y)]
-    #[doc = "Getter for the `y` field of this object."]
+    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = clientY)]
+    #[doc = "Getter for the `clientY` field of this object."]
     #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/y)"]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/clientY)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GestureEvent`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn y(this: &GestureEvent) -> i32;
+    pub fn client_y(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = screenX)]
     #[doc = "Getter for the `screenX` field of this object."]
@@ -127,29 +127,33 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn screen_y(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    #[wasm_bindgen(catch, constructor, js_class = "GestureEvent")]
-    #[doc = "The `new GestureEvent(..)` constructor, creating a new instance of `GestureEvent`."]
+    #[cfg(all(feature = "EventTarget", feature = "Window",))]
+    # [wasm_bindgen (method , structural , js_class = "GestureEvent" , js_name = initGestureEvent)]
+    #[doc = "The `initGestureEvent()` method."]
     #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/GestureEvent)"]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/initGestureEvent)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GestureEvent`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(type_: &str) -> Result<GestureEvent, JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GestureEventInit")]
-    #[wasm_bindgen(catch, constructor, js_class = "GestureEvent")]
-    #[doc = "The `new GestureEvent(..)` constructor, creating a new instance of `GestureEvent`."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/GestureEvent)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GestureEvent`, `GestureEventInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `EventTarget`, `GestureEvent`, `Window`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_event_init_dict(
+    pub fn init_gesture_event(
+        this: &GestureEvent,
         type_: &str,
-        event_init_dict: &GestureEventInit,
-    ) -> Result<GestureEvent, JsValue>;
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        target: Option<&EventTarget>,
+        scale: f32,
+        rotation: f32,
+    );
 }
