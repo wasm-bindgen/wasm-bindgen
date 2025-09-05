@@ -132,7 +132,6 @@ impl<T> Deref for LazyCell<T> {
     }
 }
 
-use core::mem::MaybeUninit;
 #[cfg(not(target_feature = "atomics"))]
 pub use LazyCell as LazyLock;
 
