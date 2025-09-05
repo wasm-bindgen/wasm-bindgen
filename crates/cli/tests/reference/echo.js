@@ -1236,7 +1236,7 @@ export class Foo {
     }
 }
 
-export function __wbg_cast_38bad4997839d643(arg0, arg1) {
+export function __wbg_cast_d7daf1f065d59f51(arg0, arg1) {
     const ret = /* cast */(getStringFromWasm0(arg0, arg1));
     return ret;
 };
