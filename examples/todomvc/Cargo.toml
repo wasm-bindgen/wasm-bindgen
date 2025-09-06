@@ -13,7 +13,7 @@ askama = "0.14"
 
 [dependencies]
 askama = "0.14"
-console_error_panic_hook = "0.1.5"
+console_error_panic_hook = "0.1.7"
 js-sys = { path = "../../crates/js-sys" }
 wasm-bindgen = { path = "../../" }
 

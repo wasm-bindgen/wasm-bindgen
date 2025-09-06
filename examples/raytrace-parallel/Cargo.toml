@@ -12,8 +12,8 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1"
 futures-channel-preview = "0.3.0-alpha.18"
 js-sys = { path = "../../crates/js-sys" }
-rayon = "1.1.0"
-rayon-core = "1.5.0"
+rayon = "1.11.0"
+rayon-core = "1.13.0"
 raytracer = { git = 'https://github.com/alexcrichton/raytracer', branch = 'update-deps' }
 serde-wasm-bindgen = "0.6"
 wasm-bindgen = { path = "../../" }
