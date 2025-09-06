@@ -20,7 +20,7 @@
   (type (;18;) (func (param externref) (result i32)))
   (import "./reference_test_bg.js" "__wbg_foo_new" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_foo_unwrap" (func (;1;) (type 18)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_1006" (func (;2;) (type 7)))
+  (import "./reference_test_bg.js" "__wbindgen_cast_d5989a47eec05c46" (func (;2;) (type 7)))
   (import "./reference_test_bg.js" "__wbindgen_debug_string" (func (;3;) (type 13)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_string_get" (func (;5;) (type 13)))

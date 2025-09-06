@@ -1,6 +1,6 @@
 use crate::decode::LocalModule;
 use crate::descriptor::{Descriptor, Function};
-use crate::descriptors::{CastImport, WasmBindgenDescriptorsSection};
+use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
@@ -168,14 +168,18 @@ impl<'a> Context<'a> {
             // getting gc'd
             self.aux.function_table = self.module.tables.main_function_table()?;
 
-            for CastImport { id, descriptor } in cast_imports {
+            for (import_name, descriptor) in cast_imports {
                 let signature = descriptor.unwrap_function();
                 ensure!(
                     signature.arguments.len() == 1,
                     "Cast function must take exactly one argument"
                 );
-                let id = self.import_adapter(id, signature, AdapterJsImportKind::Normal)?;
-                self.aux.import_map.insert(id, AuxImport::Cast);
+                let &(import_id, _) = self.function_imports.get(&import_name).ok_or_else(|| {
+                    anyhow!("cast function `{}` not found in imports", import_name)
+                })?;
+                let adapter_id =
+                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                self.aux.import_map.insert(adapter_id, AuxImport::Cast);
             }
         }
 

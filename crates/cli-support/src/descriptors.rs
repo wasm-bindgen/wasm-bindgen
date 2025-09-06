@@ -14,20 +14,15 @@ use crate::descriptor::Descriptor;
 use crate::interpreter::Interpreter;
 use anyhow::Error;
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::hash_map::{DefaultHasher, HashMap};
+use std::hash::{Hash, Hasher};
+use walrus::ImportedFunction;
 use walrus::{CustomSection, FunctionId, FunctionKind, Module, TypedCustomSectionId};
-use walrus::{ImportId, ImportedFunction};
-
-#[derive(Debug)]
-pub struct CastImport {
-    pub id: ImportId,
-    pub descriptor: Descriptor,
-}
 
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
-    pub cast_imports: Vec<CastImport>,
+    pub cast_imports: HashMap<String, Descriptor>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -112,15 +107,15 @@ impl WasmBindgenDescriptorsSection {
         }
         for func_id in replace_with_imports {
             let descriptor = interpreter.interpret_descriptor(func_id, module);
+            let mut hasher = DefaultHasher::default();
+            // Hash the raw serialized descriptor to avoid recursive walk.
+            descriptor.hash(&mut hasher);
+            let import_name = format!("__wbindgen_cast_{:016x}", hasher.finish());
             let descriptor = Descriptor::decode(descriptor);
-            let import_name = format!("__wbindgen_cast_{}", func_id.index());
             let import_id = module
                 .imports
                 .add("__wbindgen_placeholder__", &import_name, func_id);
-            self.cast_imports.push(CastImport {
-                id: import_id,
-                descriptor,
-            });
+            self.cast_imports.insert(import_name, descriptor);
             let func = module.funcs.get_mut(func_id);
             func.kind = FunctionKind::Import(ImportedFunction {
                 import: import_id,

@@ -9,7 +9,7 @@
   (type (;7;) (func (param i32 i32 i32)))
   (type (;8;) (func (param f64) (result externref)))
   (import "./reference_test_bg.js" "__wbg_Error_0497d5bdba9362e5" (func (;0;) (type 6)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_19" (func (;1;) (type 8)))
+  (import "./reference_test_bg.js" "__wbindgen_cast_472ad1a0d8f7f8a3" (func (;1;) (type 8)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;2;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_throw" (func (;3;) (type 5)))
   (func $"result_string multivalue shim" (;4;) (type 3) (result i32 i32 i32 i32))
