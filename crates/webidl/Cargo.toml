@@ -18,7 +18,7 @@ quote = '1.0'
 sourcefile = "0.2"
 syn = { version = '2.0', features = ['extra-traits', 'full'] }
 wasm-bindgen-backend = { path = "../backend" }
-weedle = { git = "https://github.com/rustwasm/weedle.git" }
+weedle = { git = "https://github.com/abhillman/weedle.git", branch = "aryeh/add-observable-array" }
 
 [lints]
 workspace = true
