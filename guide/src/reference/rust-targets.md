@@ -70,3 +70,9 @@ The `wasm-bindgen` target does not support the `wasm32-unknown-emscripten` nor
 the `asmjs-unknown-emscripten` targets. There are currently no plans to support
 these targets either. All annotations work like other platforms on the targets,
 retaining exported functions and causing all imports to panic.
+
+However, note that only the `wasm32-unknown-emscripten` target supports linking
+Rust and C or C++ together. There is currently no way to both use `wasm-bindgen`
+and also safely link with C or C++. There is a general long-term plan to fix
+this, but there is no immediate solution. See this
+[issue](https://github.com/rustwasm/team/issues/291) for more context.
