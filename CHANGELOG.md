@@ -13,7 +13,7 @@
 * Fixed wrong method names for `GestureEvent` bindings.
   [#4615](https://github.com/wasm-bindgen/wasm-bindgen/pull/4615)
 
-* Fix crash caused by buffer detached during copy
+* Fix crash caused by allocations during `TypedArray` interactions.
   [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
 
 --------------------------------------------------------------------------------
