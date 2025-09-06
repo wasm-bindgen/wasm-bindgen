@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+### Added
+
+* Added `DocumentOrShadowRoot.adoptedStyleSheets`.
+  [#4625](https://github.com/wasm-bindgen/wasm-bindgen/pull/4625)
+
 ### Changed
 
 * Fixed wrong method names for `GestureEvent` bindings.

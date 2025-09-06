@@ -50,14 +50,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `ShadowRoot`*"]
     pub fn active_element(this: &ShadowRoot) -> Option<Element>;
-    #[cfg(feature = "StyleSheetList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "ShadowRoot" , js_name = styleSheets)]
-    #[doc = "Getter for the `styleSheets` field of this object."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/styleSheets)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`, `StyleSheetList`*"]
-    pub fn style_sheets(this: &ShadowRoot) -> StyleSheetList;
     #[cfg(feature = "Element")]
     # [wasm_bindgen (structural , method , getter , js_class = "ShadowRoot" , js_name = pointerLockElement)]
     #[doc = "Getter for the `pointerLockElement` field of this object."]
@@ -74,6 +66,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `ShadowRoot`*"]
     pub fn fullscreen_element(this: &ShadowRoot) -> Option<Element>;
+    #[cfg(feature = "StyleSheetList")]
+    # [wasm_bindgen (structural , method , getter , js_class = "ShadowRoot" , js_name = styleSheets)]
+    #[doc = "Getter for the `styleSheets` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/styleSheets)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`, `StyleSheetList`*"]
+    pub fn style_sheets(this: &ShadowRoot) -> StyleSheetList;
+    # [wasm_bindgen (structural , method , getter , js_class = "ShadowRoot" , js_name = adoptedStyleSheets)]
+    #[doc = "Getter for the `adoptedStyleSheets` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/adoptedStyleSheets)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
+    pub fn adopted_style_sheets(this: &ShadowRoot) -> ::js_sys::Array;
+    # [wasm_bindgen (structural , method , setter , js_class = "ShadowRoot" , js_name = adoptedStyleSheets)]
+    #[doc = "Setter for the `adoptedStyleSheets` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/adoptedStyleSheets)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
+    pub fn set_adopted_style_sheets(this: &ShadowRoot, value: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Element")]
     # [wasm_bindgen (structural , method , getter , js_class = "ShadowRoot" , js_name = pictureInPictureElement)]
