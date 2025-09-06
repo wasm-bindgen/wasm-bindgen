@@ -17,7 +17,7 @@ version = "0.2.101"
 extra-traits = ["syn/extra-traits"]
 
 [dependencies]
-bumpalo = "3.0.0"
+bumpalo = "3.19.0"
 log = "0.4"
 proc-macro2 = "1.0"
 quote = '1.0'
