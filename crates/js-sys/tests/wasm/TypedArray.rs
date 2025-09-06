@@ -225,3 +225,60 @@ fn to_vec_heap_growth() {
         v.push(x);
     }
 }
+
+macro_rules! gen_integer_tests {
+    ($(($name:ident, $js:ident, $rust:ident),)*) => ($(
+        #[wasm_bindgen_test]
+        fn $name() {
+            let buf1 = vec![1, 2, 3, 4, $rust::MIN, $rust::MAX];
+            let array = $js::new_from_slice(&buf1);
+            let buf2 = array.to_vec();
+            assert_eq!(buf1, buf2);
+            let mut buf3 = vec![0; 2];
+            array.subarray(0, 2).copy_to(&mut buf3);
+            assert_eq!(buf3, vec![1, 2]);
+            let buf4 = $js::new_with_length(3);
+            buf4.subarray(1, 3).copy_from(&buf3);
+            assert!(buf4.get_index(0) == 0);
+            assert!(buf4.get_index(1) == 1);
+            assert!(buf4.get_index(2) == 2);
+        }
+    )*);
+}
+
+macro_rules! gen_float_tests {
+    ($(($name:ident, $js:ident, $rust:ident),)*) => ($(
+        #[wasm_bindgen_test]
+        fn $name() {
+            let buf1 = vec![1.0, 2.0, 3.0, 4.0, $rust::MIN, $rust::MAX];
+            let array = $js::new_from_slice(&buf1);
+            let buf2 = array.to_vec();
+            assert_eq!(buf1, buf2);
+            let mut buf3 = vec![0.0; 2];
+            array.subarray(0, 2).copy_to(&mut buf3);
+            assert_eq!(buf3, vec![1.0, 2.0]);
+            let buf4 = $js::new_with_length(3);
+            buf4.subarray(1, 3).copy_from(&buf3);
+            assert!(buf4.get_index(0) == 0.0);
+            assert!(buf4.get_index(1) == 1.0);
+            assert!(buf4.get_index(2) == 2.0);
+        }
+    )*);
+}
+
+gen_integer_tests! {
+    (test_i8_copy, Int8Array, i8),
+    (test_i16_copy, Int16Array, i16),
+    (test_i32_copy, Int32Array, i32),
+    (test_u8_copy, Uint8Array, u8),
+    (test_u8c_copy, Uint8ClampedArray, u8),
+    (test_u16_copy, Uint16Array, u16),
+    (test_u32_copy, Uint32Array, u32),
+    (test_i64_copy, BigInt64Array, i64),
+    (test_u64_copy, BigUint64Array, u64),
+}
+
+gen_float_tests! {
+    (test_f32_copy, Float32Array, f32),
+    (test_f64_copy, Float64Array, f64),
+}
