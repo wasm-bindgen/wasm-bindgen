@@ -18,9 +18,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 cfg-if = "1.0.3"
-once_cell = { version = "1.21.3", default-features = false }
-js-sys = { path = "../js-sys", version = '=0.3.78', default-features = false }
 futures-core = { version = "0.3.31", default-features = false, optional = true }
+js-sys = { path = "../js-sys", version = '=0.3.78', default-features = false }
+once_cell = { version = "1.21.3", default-features = false }
 wasm-bindgen = { path = "../..", version = '=0.2.101', default-features = false }
 
 [features]
