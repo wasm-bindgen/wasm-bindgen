@@ -6,6 +6,7 @@
  * The origin of this IDL file is
  * https://dom.spec.whatwg.org/#documentorshadowroot
  * http://w3c.github.io/webcomponents/spec/shadow/#extensions-to-the-documentorshadowroot-mixin
+ * https://www.w3.org/TR/cssom-1/#extensions-to-the-document-or-shadow-root-interface
  */
 
 interface mixin DocumentOrShadowRoot {
@@ -17,9 +18,14 @@ interface mixin DocumentOrShadowRoot {
   // CaretPosition? caretPositionFromPoint (float x, float y);
 
   readonly attribute Element? activeElement;
-  readonly attribute StyleSheetList styleSheets;
 
   readonly attribute Element? pointerLockElement;
   [LenientSetter, Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute Element? fullscreenElement;
+};
+
+// via https://www.w3.org/TR/cssom-1/#extensions-to-the-document-or-shadow-root-interface
+partial interface mixin DocumentOrShadowRoot {
+  [SameObject] readonly attribute StyleSheetList styleSheets;
+  attribute ObservableArray<CSSStyleSheet> adoptedStyleSheets;
 };
