@@ -6490,7 +6490,7 @@ macro_rules! arrays {
             /// the changes are guaranteed to be reflected in the input array.
             pub unsafe fn view_mut_raw(ptr: *mut $ty, length: usize) -> $name {
                 let slice = core::slice::from_raw_parts_mut(ptr, length);
-                wasm_bindgen::wbg_cast!(slice, &mut [$ty], $name)
+                Self::view(slice)
             }
 
 
