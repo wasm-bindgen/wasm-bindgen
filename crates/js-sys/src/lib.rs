@@ -29,7 +29,7 @@ use core::convert::{self, Infallible, TryFrom};
 use core::f64;
 use core::fmt;
 use core::iter::{self, Product, Sum};
-use core::mem::{self, MaybeUninit};
+use core::mem::MaybeUninit;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
 use core::str;
 use core::str::FromStr;
@@ -6470,13 +6470,7 @@ macro_rules! arrays {
             /// slice's lifetime, so there's no guarantee that the data is read
             /// at the right time.
             pub unsafe fn view(rust: &[$ty]) -> $name {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                $name::new_with_byte_offset_and_length(
-                    &mem.buffer(),
-                    rust.as_ptr() as u32,
-                    rust.len() as u32,
-                )
+                wasm_bindgen::wbg_cast!(rust, &[$ty], $name)
             }
 
             /// Creates a JS typed array which is a view into wasm's linear
@@ -6495,13 +6489,8 @@ macro_rules! arrays {
             /// Additionally the returned object can be safely mutated,
             /// the changes are guaranteed to be reflected in the input array.
             pub unsafe fn view_mut_raw(ptr: *mut $ty, length: usize) -> $name {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                $name::new_with_byte_offset_and_length(
-                    &mem.buffer(),
-                    ptr as u32,
-                    length as u32
-                )
+                let slice = core::slice::from_raw_parts_mut(ptr, length);
+                wasm_bindgen::wbg_cast!(slice, &mut [$ty], $name)
             }
 
 
@@ -6517,11 +6506,13 @@ macro_rules! arrays {
             /// This function requires `dst` to point to a buffer
             /// large enough to fit this array's contents.
             pub unsafe fn raw_copy_to_ptr(&self, dst: *mut $ty) {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                let all_wasm_memory = $name::new(&mem.buffer());
-                let offset = dst as usize / mem::size_of::<$ty>();
-                all_wasm_memory.set(self, offset as u32);
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(js_name = "/* copy_to_slice */ ((a, b) => b.set(a))")]
+                    fn __wbg_copy_to_slice(buffer: &$name, slice: &mut [$ty]);
+                }
+                let slice = core::slice::from_raw_parts_mut(dst, self.length() as usize);
+                __wbg_copy_to_slice(self, slice);
             }
 
             /// Copy the contents of this JS typed array into the destination
@@ -6568,17 +6559,23 @@ macro_rules! arrays {
             /// This function will panic if this typed array's length is
             /// different than the length of the provided `src` array.
             pub fn copy_from(&self, src: &[$ty]) {
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(js_name = "/* copy_to_typed_array */ ((a, b) => b.set(a))")]
+                    fn __wbg_copy_to_typed_array(slice: &[$ty], buffer: &$name);
+                }
                 core::assert_eq!(self.length() as usize, src.len());
-                // This is safe because the `set` function copies from its TypedArray argument
-                unsafe { self.set(&$name::view(src), 0) }
+                __wbg_copy_to_typed_array(src, self);
             }
 
             /// Efficiently copies the contents of this JS typed array into a new Vec.
             pub fn to_vec(&self) -> Vec<$ty> {
-                let mut output = Vec::with_capacity(self.length() as usize);
+                let len = self.length() as usize;
+                let mut output = Vec::with_capacity(len);
+                // Safety: the capacity has been set
                 unsafe {
                     self.raw_copy_to_ptr(output.as_mut_ptr());
-                    output.set_len(self.length() as usize);
+                    output.set_len(len);
                 }
                 output
             }
