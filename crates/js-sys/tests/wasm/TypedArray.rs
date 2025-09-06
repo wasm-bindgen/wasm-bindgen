@@ -214,6 +214,47 @@ fn from_slice_heap_growth() {
 }
 
 #[wasm_bindgen_test]
+fn copy_to_heap_growth() {
+    let mut v = vec![];
+    for _ in 0..10_000 {
+        let x = Uint8Array::new_with_length(10);
+        let mut y = [0; 10];
+        // When the externref table capacity is insufficient,
+        // it will be allocated and the array buffer will be detached.
+        x.copy_to(&mut y);
+        // Simulate the operation of allocating multiple JS objects in a function
+        v.push(x);
+    }
+}
+
+#[wasm_bindgen_test]
+fn copy_from_heap_growth() {
+    let _ = (0..10_000)
+        .map(|_| {
+            let x = Uint8Array::new_with_length(10);
+            x.copy_from(&[1; 10]);
+            x
+        })
+        .collect::<Vec<_>>();
+}
+
+#[wasm_bindgen_test]
+fn raw_copy_to_ptr_heap_growth() {
+    let mut v = vec![];
+    for _ in 0..10_000 {
+        let x = Uint8Array::new_with_length(10);
+        let mut y = [0; 10];
+        // When the externref table capacity is insufficient,
+        // it will be allocated and the array buffer will be detached.
+        unsafe {
+            x.raw_copy_to_ptr(y.as_mut_ptr());
+        }
+        // Simulate the operation of allocating multiple JS objects in a function
+        v.push(x);
+    }
+}
+
+#[wasm_bindgen_test]
 fn to_vec_heap_growth() {
     let mut v = vec![];
     for _ in 0..10_000 {
