@@ -836,6 +836,7 @@ fn flag_slices_allow_shared(ty: &mut IdlType) {
         IdlType::Nullable(item) => flag_slices_allow_shared(item),
         IdlType::FrozenArray(item) => flag_slices_allow_shared(item),
         IdlType::Sequence(item) => flag_slices_allow_shared(item),
+        IdlType::ObservableArray(item) => flag_slices_allow_shared(item),
         IdlType::Promise(item) => flag_slices_allow_shared(item),
         IdlType::Record(item1, item2) => {
             flag_slices_allow_shared(item1);
@@ -921,6 +922,7 @@ pub fn nullable(mut ty: weedle::types::Type) -> weedle::types::Type {
         Type::Single(SingleType::NonAny(NonAnyType::ArrayBufferView(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::BufferSource(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::FrozenArrayType(mb))) => make_nullable(mb),
+        Type::Single(SingleType::NonAny(NonAnyType::ObservableArrayType(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::RecordType(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::Identifier(mb))) => make_nullable(mb),
         Type::Union(mb) => make_nullable(mb),
