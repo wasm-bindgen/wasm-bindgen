@@ -6470,13 +6470,7 @@ macro_rules! arrays {
             /// slice's lifetime, so there's no guarantee that the data is read
             /// at the right time.
             pub unsafe fn view(rust: &[$ty]) -> $name {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                $name::new_with_byte_offset_and_length(
-                    &mem.buffer(),
-                    rust.as_ptr() as u32,
-                    rust.len() as u32,
-                )
+                wasm_bindgen::wbg_cast!(rust, &[$ty], $name)
             }
 
             /// Creates a JS typed array which is a view into wasm's linear
@@ -6495,13 +6489,8 @@ macro_rules! arrays {
             /// Additionally the returned object can be safely mutated,
             /// the changes are guaranteed to be reflected in the input array.
             pub unsafe fn view_mut_raw(ptr: *mut $ty, length: usize) -> $name {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                $name::new_with_byte_offset_and_length(
-                    &mem.buffer(),
-                    ptr as u32,
-                    length as u32
-                )
+                let slice = core::slice::from_raw_parts_mut(ptr, length);
+                wasm_bindgen::wbg_cast!(slice, &mut [$ty], $name)
             }
 
 
