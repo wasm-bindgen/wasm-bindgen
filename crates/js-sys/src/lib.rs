@@ -6447,6 +6447,13 @@ macro_rules! arrays {
             /// Sets the value at `idx`, equivalent to the javascript `arr[idx] = value`.
             #[wasm_bindgen(method, structural, indexing_setter)]
             pub fn set_index(this: &$name, idx: u32, value: $ty);
+
+            /// Copies the Rust slice's data to self.
+            ///
+            /// This method is not expected to be public. It requires the length of the
+            /// TypedArray to be the same as the slice, use `TypedArray::copy_from(&self, slice)` instead.
+            #[wasm_bindgen(method, js_name = set)]
+            fn copy_from_slice(this: &$name, slice: &[$ty]);
         }
 
         impl $name {
@@ -6559,13 +6566,8 @@ macro_rules! arrays {
             /// This function will panic if this typed array's length is
             /// different than the length of the provided `src` array.
             pub fn copy_from(&self, src: &[$ty]) {
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_name = "/* copy_to_typed_array */ ((a, b) => b.set(a))")]
-                    fn __wbg_copy_to_typed_array(slice: &[$ty], buffer: &$name);
-                }
                 core::assert_eq!(self.length() as usize, src.len());
-                __wbg_copy_to_typed_array(src, self);
+                self.copy_from_slice(src);
             }
 
             /// Efficiently copies the contents of this JS typed array into a new Vec.
