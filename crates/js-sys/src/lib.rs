@@ -6451,14 +6451,14 @@ macro_rules! arrays {
             /// Copies the Rust slice's data to self.
             ///
             /// This method is not expected to be public. It requires the length of the
-            /// TypedArray to be the same as the slice, use `TypedArray::copy_from(&self, slice)` instead.
+            /// TypedArray to be the same as the slice, use `self.copy_from(slice)` instead.
             #[wasm_bindgen(method, js_name = set)]
             fn copy_from_slice(this: &$name, slice: &[$ty]);
 
             /// Copies this TypedArray's data to Rust slice;
             ///
             /// This method is not expected to be public. It requires the length of the
-            /// TypedArray to be the same as the slice, use `TypedArray::copy_to(&self, slice)` instead.
+            /// TypedArray to be the same as the slice, use `self.copy_to(slice)` instead.
             #[wasm_bindgen(js_namespace = $name, js_name = "prototype.set.call")]
             fn copy_to_slice(slice: &mut [$ty], this: &$name);
         }
