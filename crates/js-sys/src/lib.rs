@@ -6455,8 +6455,12 @@ macro_rules! arrays {
             #[wasm_bindgen(method, js_name = set)]
             fn copy_from_slice(this: &$name, slice: &[$ty]);
 
+            /// Copies this TypedArray's data to Rust slice;
+            ///
+            /// This method is not expected to be public. It requires the length of the
+            /// TypedArray to be the same as the slice, use `TypedArray::copy_to(&self, slice)` instead.
             #[wasm_bindgen(js_namespace = $name, js_name = "prototype.set.call")]
-            fn copy_to_slice(slice: &mut [$ty], buffer: &$name);
+            fn copy_to_slice(slice: &mut [$ty], this: &$name);
         }
 
         impl $name {
@@ -6516,7 +6520,7 @@ macro_rules! arrays {
             /// large enough to fit this array's contents.
             pub unsafe fn raw_copy_to_ptr(&self, dst: *mut $ty) {
                 let slice = core::slice::from_raw_parts_mut(dst, self.length() as usize);
-                $name::copy_to_slice(slice, self);
+                self.copy_to(slice);
             }
 
             /// Copy the contents of this JS typed array into the destination
@@ -6532,7 +6536,7 @@ macro_rules! arrays {
             /// different than the length of the provided `dst` array.
             pub fn copy_to(&self, dst: &mut [$ty]) {
                 core::assert_eq!(self.length() as usize, dst.len());
-                unsafe { self.raw_copy_to_ptr(dst.as_mut_ptr()); }
+                $name::copy_to_slice(dst, self);
             }
 
             /// Copy the contents of this JS typed array into the destination
@@ -6548,8 +6552,9 @@ macro_rules! arrays {
             /// different than the length of the provided `dst` array.
             pub fn copy_to_uninit<'dst>(&self, dst: &'dst mut [MaybeUninit<$ty>]) -> &'dst mut [$ty] {
                 core::assert_eq!(self.length() as usize, dst.len());
-                unsafe { self.raw_copy_to_ptr(dst.as_mut_ptr().cast()); }
-                unsafe { &mut *(dst as *mut [MaybeUninit<$ty>] as *mut [$ty]) }
+                let dst = unsafe { &mut *(dst as *mut [MaybeUninit<$ty>] as *mut [$ty]) };
+                self.copy_to(dst);
+                dst
             }
 
             /// Copy the contents of the source Rust slice into this
