@@ -9,7 +9,7 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = "0.4.11"
+chrono = "0.4.41"
 gloo = "0.11"
 json = "0.12"
 reqwest = "0.12"
