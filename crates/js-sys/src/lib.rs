@@ -6454,6 +6454,9 @@ macro_rules! arrays {
             /// TypedArray to be the same as the slice, use `TypedArray::copy_from(&self, slice)` instead.
             #[wasm_bindgen(method, js_name = set)]
             fn copy_from_slice(this: &$name, slice: &[$ty]);
+
+            #[wasm_bindgen(js_namespace = $name, js_name = "prototype.set.call")]
+            fn copy_to_slice(slice: &mut [$ty], buffer: &$name);
         }
 
         impl $name {
@@ -6500,7 +6503,6 @@ macro_rules! arrays {
                 Self::view(slice)
             }
 
-
             /// Copy the contents of this JS typed array into the destination
             /// Rust pointer.
             ///
@@ -6513,13 +6515,8 @@ macro_rules! arrays {
             /// This function requires `dst` to point to a buffer
             /// large enough to fit this array's contents.
             pub unsafe fn raw_copy_to_ptr(&self, dst: *mut $ty) {
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_name = "/* copy_to_slice */ ((a, b) => b.set(a))")]
-                    fn __wbg_copy_to_slice(buffer: &$name, slice: &mut [$ty]);
-                }
                 let slice = core::slice::from_raw_parts_mut(dst, self.length() as usize);
-                __wbg_copy_to_slice(self, slice);
+                $name::copy_to_slice(slice, self);
             }
 
             /// Copy the contents of this JS typed array into the destination
