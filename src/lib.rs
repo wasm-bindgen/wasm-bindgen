@@ -1150,8 +1150,6 @@ externs! {
 
         fn __wbindgen_copy_to_typed_array(ptr: *const u8, len: usize, idx: u32) -> ();
 
-        fn __wbindgen_not(idx: u32) -> u32;
-
         fn __wbindgen_exports() -> u32;
         fn __wbindgen_memory() -> u32;
         fn __wbindgen_module() -> u32;
