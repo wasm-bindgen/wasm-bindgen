@@ -256,7 +256,7 @@ impl Driver {
             shlex::split(&var).unwrap_or_else(|| {
                 var.split_whitespace()
                     .map(|s| s.to_string())
-                    .collect::<Vec<_>>()
+                    .collect()
             })
         };
 
