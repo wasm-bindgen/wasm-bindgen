@@ -43,92 +43,46 @@ jobs:
           tool: taplo-cli
       - run: taplo fmt --check
 
-  # Run `cargo check` over everything
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: cargo check --all
-    - run: cargo check --no-default-features
-
-  # Run `cargo clippy` over everything
+  # Run `cargo clippy` over everything on the host platform.
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-backend -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-shared -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-test -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-test-macro -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p typescript-tests -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-webidl -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p webidl-tests -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-benchmark -- -D warnings
+    - run: cargo clippy --all --all-targets --all-features -- -D warnings
 
-  # Run `cargo clippy` over web-sys and js-sys crates
-  clippy_web_sys:
-    name: Clippy (web-sys)
+  # Run `cargo clippy` over Wasm-specific crates on the Wasm target.
+  clippy_wasm:
+    strategy:
+      matrix:
+        include:
+          - name: "all features"
+            rust-version: stable
+            cargo_flags: "--all-targets --all-features"
+          - name: "no default features"
+            rust-version: stable
+            # Can't use `--all-targets` because tests depend on default features.
+            cargo_flags: "--no-default-features"
+          - name: "with `atomics`"
+            rust-version: nightly-2025-08-04
+            rustup_components: rust-src
+            cargo_flags: "--no-default-features -Zbuild-std=core,alloc"
+            rust_flags: "-Ctarget-feature=+atomics"
+    name: Clippy Wasm-specific crates (${{ matrix.name }})
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
+    - run: rustup default ${{ matrix.rust-version }}
+    - run: rustup component add clippy ${{ matrix.rustup_components }}
     - run: rustup target add wasm32-unknown-unknown
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p js-sys --all-targets -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p web-sys --all-targets -- -D warnings
-
-  # Run `cargo clippy` over crates that support `no_std`
-  clippy_no_std:
-    name: Clippy `no_std`
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p js-sys -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p web-sys -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-test -- -D warnings
-
-  # Run `cargo clippy` over crates that support `no_std` with `target_feature = "atomics"` support.
-  clippy_no_std_atomics:
-    name: Clippy `no_std` with `atomics`
-    runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: -Ctarget-feature=+atomics
-    steps:
-    - uses: actions/checkout@v5
-    - run: rustup default nightly-2025-08-04
-    - run: rustup target add wasm32-unknown-unknown
-    - run: rustup component add clippy rust-src
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p js-sys -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p web-sys -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-test -Zbuild-std=core,alloc -- -D warnings
-
-  # Run `cargo clippy` over the project
-  clippy_project:
-    name: Clippy (project)
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown --tests -- -D warnings
-    - run: for i in examples/*/; do cd "$i"; cargo +stable clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings || exit 1; cd ../..; done
+    - run: |
+        cargo clippy --all --target wasm32-unknown-unknown
+        --exclude wasm-bindgen-cli*
+        --exclude wasm-bindgen-*macro
+        ${{ matrix.cargo_flags }}
+        -- -D warnings
+      env:
+        RUSTFLAGS: ${{ matrix.rust_flags }}
 
   test_wasm_bindgen:
     strategy:
