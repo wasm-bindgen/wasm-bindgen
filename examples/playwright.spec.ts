@@ -40,22 +40,25 @@ test.beforeEach(async ({ page }) => {
   // We don't print logs right away because they might be noisy, instead
   // follow the Cargo approach of buffering until a failure.
   let logs: ConsoleMessage[] = [];
-  page.on('console', msg => {
-    logs.push(msg);
-    // Treat logged errors as if they're page errors.
-    if (msg.type() === 'error') {
-      throw new Error('An error was logged to the console.');
-    }
-  });
 
-  // Fail test on any page errors (uncaught errors, unhandled rejections, network errors, etc.)
-  page.once('pageerror', error => {
+  function throwWithLogs(error: Error) {
     // Print the delayed logs before failing the test with the error.
     for (const msg of logs) {
       (console as any)[msg.type()](msg.text());
     }
     throw error;
+  }
+
+  page.on('console', msg => {
+    logs.push(msg);
+    // Treat logged errors as if they're page errors.
+    if (msg.type() === 'error') {
+      throwWithLogs(new Error('An error was logged to the console.'));
+    }
   });
+
+  // Fail test on any page errors (uncaught errors, unhandled rejections, network errors, etc.)
+  page.once('pageerror', throwWithLogs);
 });
 
 if (!PREBUILT_EXAMPLES) {
