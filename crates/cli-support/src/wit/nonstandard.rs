@@ -254,7 +254,7 @@ pub enum AuxImport {
     String(String),
 
     /// This import is a generic cast function, monomorphised for a specific `fn(A) -> R` signature.
-    Cast,
+    Cast { sig_comment: String },
 
     /// This import is expected to be a shim that simply calls the `foo` method
     /// on the first object, passing along all other parameters and returning

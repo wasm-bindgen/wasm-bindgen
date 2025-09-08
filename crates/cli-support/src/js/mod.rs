@@ -3386,11 +3386,12 @@ __wbg_set_wasm(wasm);"
                 Ok(format!("`{escaped}`"))
             }
 
-            AuxImport::Cast => {
+            AuxImport::Cast { sig_comment } => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
 
+                writeln!(prelude, "// Cast intrinsic for `{sig_comment}`.")?;
                 Ok(args[0].clone())
             }
 

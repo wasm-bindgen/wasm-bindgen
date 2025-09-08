@@ -87,6 +87,7 @@ export function __wbg_Error_0497d5bdba9362e5(arg0, arg1) {
 };
 
 export function __wbindgen_cast_472ad1a0d8f7f8a3(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return ret;
 };

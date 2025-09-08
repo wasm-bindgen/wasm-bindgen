@@ -177,9 +177,12 @@ impl<'a> Context<'a> {
                 let &(import_id, _) = self.function_imports.get(&import_name).ok_or_else(|| {
                     anyhow!("cast function `{}` not found in imports", import_name)
                 })?;
+                let sig_comment = format!("{:?} -> {:?}", signature.arguments[0], signature.ret);
                 let adapter_id =
                     self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
-                self.aux.import_map.insert(adapter_id, AuxImport::Cast);
+                self.aux
+                    .import_map
+                    .insert(adapter_id, AuxImport::Cast { sig_comment });
             }
         }
 
