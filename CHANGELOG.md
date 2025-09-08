@@ -11,11 +11,14 @@
 * Added support for arguments with spaces in webdriver `*_ARGS`
   environment variables to `wasm-bindgen-test`.
   [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
-
-### Changed
+  
+### Fixed
 
 * Fixed wrong method names for `GestureEvent` bindings.
   [#4615](https://github.com/wasm-bindgen/wasm-bindgen/pull/4615)
+
+* Fix crash caused by allocations during `TypedArray` interactions.
+  [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
 
 --------------------------------------------------------------------------------
 
