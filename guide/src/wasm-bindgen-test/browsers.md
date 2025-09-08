@@ -64,8 +64,9 @@ wasm-pack test --headless --chrome --firefox --safari
 
 ## Configuring Headless Browser capabilities
 
-Add the file `webdriver.json` to the root of your crate. Each browser has own 
-section for capabilities. For example:
+Either add the file `webdriver.json` to the root of your crate or ensure an environment
+variable `WASM_BINDGEN_TEST_WEBDRIVER_JSON` is set and points to a `webdriver.json` file.
+Each browser has own section for capabilities. For example:
 
 ```json
 {
@@ -139,7 +140,7 @@ installation by default.
 
 ### Running the Tests in the Remote Headless Browser
 
-Tests can be run on a remote webdriver. To do this, the above environment 
+Tests can be run on a remote webdriver. To do this, the above environment
 variables must be set as URL to the remote webdriver. For example:
 
 ```
