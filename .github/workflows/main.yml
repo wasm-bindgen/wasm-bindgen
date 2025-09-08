@@ -75,7 +75,7 @@ jobs:
     - run: rustup default ${{ matrix.rust-version }}
     - run: rustup component add clippy ${{ matrix.rustup_components }}
     - run: rustup target add wasm32-unknown-unknown
-    - run: |
+    - run: >
         cargo clippy --all --target wasm32-unknown-unknown
         --exclude wasm-bindgen-cli*
         --exclude wasm-bindgen-*macro
