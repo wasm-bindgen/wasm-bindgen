@@ -8,6 +8,11 @@
 * Added `DocumentOrShadowRoot.adoptedStyleSheets`.
   [#4625](https://github.com/wasm-bindgen/wasm-bindgen/pull/4625)
 
+* Added ability to determine `webdriver.json` config location via
+  `WASM_BINDGEN_TEST_WEBDRIVER_JSON` environment variable to
+  `wasm-bindgen-test`.
+  [#4434](https://github.com/wasm-bindgen/wasm-bindgen/pull/4434)
+
 ### Changed
 
 * Fixed wrong method names for `GestureEvent` bindings.
