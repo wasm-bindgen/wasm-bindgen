@@ -253,11 +253,8 @@ impl Driver {
         let env_args = |name: &str| {
             let var = env::var(format!("{}_ARGS", name.to_uppercase())).unwrap_or_default();
 
-            shlex::split(&var).unwrap_or_else(|| {
-                var.split_whitespace()
-                    .map(|s| s.to_string())
-                    .collect()
-            })
+            shlex::split(&var)
+                .unwrap_or_else(|| var.split_whitespace().map(|s| s.to_string()).collect())
         };
 
         let drivers = [
