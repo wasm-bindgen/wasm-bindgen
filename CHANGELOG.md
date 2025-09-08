@@ -10,7 +10,7 @@
 
 * Added support for arguments with spaces in webdriver `*_ARGS`
   environment variables to `wasm-bindgen-test`.
-  [#4434](https://github.com/wasm-bindgen/wasm-bindgen/pull/4434)
+  [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
 
 ### Changed
 
