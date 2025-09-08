@@ -8,6 +8,10 @@
 * Added `DocumentOrShadowRoot.adoptedStyleSheets`.
   [#4625](https://github.com/wasm-bindgen/wasm-bindgen/pull/4625)
 
+* Added support for arguments with spaces using shell-style quoting in webdriver `*_ARGS`
+  environment variables to `wasm-bindgen-test`.
+  [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
+  
 ### Fixed
 
 * Fixed wrong method names for `GestureEvent` bindings.
