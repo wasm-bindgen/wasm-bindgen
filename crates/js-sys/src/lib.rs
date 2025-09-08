@@ -6459,6 +6459,15 @@ macro_rules! arrays {
             ///
             /// This method is not expected to be public. It requires the length of the
             /// TypedArray to be the same as the slice, use `self.copy_to(slice)` instead.
+            ///
+            /// # Workaround
+            ///
+            /// We actually need `slice.set(typed_array)` here, but since slice cannot be treated as
+            /// `Uint8Array` on the Rust side, we use `Uint8Array.prototype.set.call`, which allows
+            /// us to specify the `this` value inside the function.
+            ///
+            /// Therefore, `Uint8Array.prototype.set.call(slice, typed_array)` is equivalent to
+            /// `slice.set(typed_array)`.
             #[wasm_bindgen(js_namespace = $name, js_name = "prototype.set.call")]
             fn copy_to_slice(slice: &mut [$ty], this: &$name);
         }
