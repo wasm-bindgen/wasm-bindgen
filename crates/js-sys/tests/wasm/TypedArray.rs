@@ -229,18 +229,17 @@ fn copy_to_heap_growth() {
 
 #[wasm_bindgen_test]
 fn copy_from_heap_growth() {
-    let _ = (0..10_000)
-        .map(|_| {
-            let x = Uint8Array::new_with_length(10);
-            x.copy_from(&[1; 10]);
-            x
-        })
-        .collect::<Vec<_>>();
+    let mut v = Vec::with_capacity(10_000);
+    for _ in 0..10_000 {
+        let x = Uint8Array::new_with_length(10);
+        x.copy_from(&[1; 10]);
+        v.push(x);
+    }
 }
 
 #[wasm_bindgen_test]
 fn raw_copy_to_ptr_heap_growth() {
-    let mut v = vec![];
+    let mut v = Vec::with_capacity(10_000);
     for _ in 0..10_000 {
         let x = Uint8Array::new_with_length(10);
         let mut y = [0; 10];
@@ -256,7 +255,7 @@ fn raw_copy_to_ptr_heap_growth() {
 
 #[wasm_bindgen_test]
 fn to_vec_heap_growth() {
-    let mut v = vec![];
+    let mut v = Vec::with_capacity(10_000);
     for _ in 0..10_000 {
         let x = Uint8Array::new_with_length(10);
         // When the externref table capacity is insufficient,
