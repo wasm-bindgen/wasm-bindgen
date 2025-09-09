@@ -55,6 +55,7 @@
 
 use anyhow::{bail, Result};
 use assert_cmd::prelude::*;
+use std::collections::BTreeMap;
 use std::env;
 use std::ffi::OsStr;
 use std::fs;
@@ -247,6 +248,15 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
     );
     walrus::passes::gc::run(&mut module);
     module.elements.delete(temp_element_id);
+    // Sort imports for deterministic snapshot.
+    std::mem::take(&mut module.imports)
+        .iter()
+        .map(|i| ((&i.module, &i.name), i.kind.clone()))
+        .collect::<BTreeMap<_, _>>()
+        .into_iter()
+        .for_each(|((module_name, name), kind)| {
+            module.imports.add(module_name, name, kind);
+        });
     wasmprinter::print_bytes(module.emit_wasm())
 }
 
