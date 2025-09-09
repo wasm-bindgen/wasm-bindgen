@@ -55,12 +55,15 @@
 
 use anyhow::{bail, Result};
 use assert_cmd::prelude::*;
+use std::collections::BTreeMap;
 use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use walrus::{ExportItem, FunctionKind, Module, ModuleConfig};
+use walrus::{
+    ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
+};
 
 #[rstest::rstest]
 fn runtest(
@@ -219,16 +222,42 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
     let ids = module
         .exports
         .iter()
-        .filter(|e| matches!(e.item, walrus::ExportItem::Global(_)))
+        .filter(|e| matches!(e.item, ExportItem::Global(_)))
         .map(|d| d.id())
         .collect::<Vec<_>>();
     for id in ids {
         module.exports.delete(id);
     }
+    // Prevent imports from being GC'd away as we want to see them in snapshots.
+    let temp_element_id = module.elements.add(
+        ElementKind::Declared,
+        ElementItems::Functions(
+            module
+                .imports
+                .iter()
+                .filter_map(|i| match i.kind {
+                    ImportKind::Function(f) => {
+                        // Preserve but delete name as it's not cross-platform.
+                        module.funcs.get_mut(f).name = None;
+                        Some(f)
+                    }
+                    _ => None,
+                })
+                .collect(),
+        ),
+    );
     walrus::passes::gc::run(&mut module);
-    let mut wat = wasmprinter::print_bytes(module.emit_wasm())?;
-    wat.push('\n');
-    Ok(wat)
+    module.elements.delete(temp_element_id);
+    // Sort imports for deterministic snapshot.
+    std::mem::take(&mut module.imports)
+        .iter()
+        .map(|i| ((&i.module, &i.name), i.kind.clone()))
+        .collect::<BTreeMap<_, _>>()
+        .into_iter()
+        .for_each(|((module_name, name), kind)| {
+            module.imports.add(module_name, name, kind);
+        });
+    wasmprinter::print_bytes(module.emit_wasm())
 }
 
 /// Sort all exported local functions by export order, and remove their bodies.
