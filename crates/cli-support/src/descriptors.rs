@@ -136,12 +136,6 @@ impl WasmBindgenDescriptorsSection {
                     self.found = true;
                 }
             }
-
-            fn visit_return_call(&mut self, instr: &walrus::ir::ReturnCall) {
-                if instr.func == self.wbindgen_describe_cast {
-                    self.found = true;
-                }
-            }
         }
     }
 }
