@@ -1246,7 +1246,7 @@ export function __wbg_foo_unwrap(arg0) {
     return ret;
 };
 
-export function __wbindgen_cast_d5989a47eec05c46(arg0, arg1) {
+export function __wbindgen_cast_2241b6af4c4b2941(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

@@ -4,8 +4,9 @@ use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
-use anyhow::{anyhow, bail, ensure, Error};
+use anyhow::{anyhow, bail, Error};
 use std::collections::{BTreeSet, HashMap};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
@@ -147,7 +148,6 @@ impl<'a> Context<'a> {
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
-        self.handle_duplicate_imports(&duplicate_import_map);
 
         self.inject_externref_initialization()?;
 
@@ -168,23 +168,37 @@ impl<'a> Context<'a> {
             // getting gc'd
             self.aux.function_table = self.module.tables.main_function_table()?;
 
-            for (import_name, descriptor) in cast_imports {
+            for (descriptor, orig_func_ids) in cast_imports {
                 let signature = descriptor.unwrap_function();
-                ensure!(
-                    signature.arguments.len() == 1,
-                    "Cast function must take exactly one argument"
-                );
-                let &(import_id, _) = self.function_imports.get(&import_name).ok_or_else(|| {
-                    anyhow!("cast function `{}` not found in imports", import_name)
-                })?;
-                let sig_comment = format!("{:?} -> {:?}", signature.arguments[0], signature.ret);
+                let [arg] = &signature.arguments[..] else {
+                    bail!("Cast function must take exactly one argument");
+                };
+                let sig_comment = format!("{:?} -> {:?}", arg, &signature.ret);
+
+                // Hash the descriptor string to produce a stable import name.
+                let mut hasher = DefaultHasher::default();
+                sig_comment.hash(&mut hasher);
+                let import_name = format!("__wbindgen_cast_{:016x}", hasher.finish());
+
+                // Manufacture an import for this cast.
+                let ty = self.module.funcs.get(orig_func_ids[0]).ty();
+                let (import_func_id, import_id) =
+                    self.module
+                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
+                self.module.funcs.get_mut(import_func_id).name = Some(sig_comment.clone());
                 let adapter_id =
                     self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
                 self.aux
                     .import_map
                     .insert(adapter_id, AuxImport::Cast { sig_comment });
+
+                // Mark all original functions for replacement with the new import.
+                duplicate_import_map
+                    .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
             }
         }
+
+        self.handle_duplicate_imports(&duplicate_import_map);
 
         self.aux.thread_destroy = self.thread_destroy();
 
