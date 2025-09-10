@@ -71,7 +71,7 @@ use core::ops::{
 };
 use core::ptr::NonNull;
 
-use crate::convert::{FromWasmAbi, TryFromJsValue, WasmRet, WasmSlice};
+use crate::convert::{FromWasmAbi, TryFromJsValue, VectorIntoWasmAbi, WasmRet, WasmSlice};
 
 const _: () = {
     /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
@@ -1707,49 +1707,25 @@ impl From<JsError> for JsValue {
     }
 }
 
-macro_rules! typed_arrays {
-    ($($ty:ident)*) => {$(
-        impl From<Box<[$ty]>> for JsValue {
-            fn from(vector: Box<[$ty]>) -> Self {
-                wbg_cast(vector)
-            }
-        }
-
-        impl From<Clamped<Box<[$ty]>>> for JsValue {
-            fn from(vector: Clamped<Box<[$ty]>>) -> Self {
-                wbg_cast(vector)
-            }
-        }
-    )*};
-}
-
-typed_arrays!(u8 u16 u32 u64 i8 i16 i32 i64 f32 f64);
-
-impl __rt::VectorIntoJsValue for JsValue {
-    fn vector_into_jsvalue(vector: Box<[JsValue]>) -> JsValue {
+impl<T: VectorIntoWasmAbi> From<Box<[T]>> for JsValue {
+    fn from(vector: Box<[T]>) -> Self {
         wbg_cast(vector)
     }
 }
 
-impl __rt::VectorIntoJsValue for String {
-    fn vector_into_jsvalue(vector: Box<[String]>) -> JsValue {
+impl<T: VectorIntoWasmAbi> From<Clamped<Box<[T]>>> for JsValue {
+    fn from(vector: Clamped<Box<[T]>>) -> Self {
         wbg_cast(vector)
     }
 }
 
-impl<T> From<Vec<T>> for JsValue
-where
-    JsValue: From<Box<[T]>>,
-{
+impl<T: VectorIntoWasmAbi> From<Vec<T>> for JsValue {
     fn from(vector: Vec<T>) -> Self {
         JsValue::from(vector.into_boxed_slice())
     }
 }
 
-impl<T> From<Clamped<Vec<T>>> for JsValue
-where
-    JsValue: From<Clamped<Box<[T]>>>,
-{
+impl<T: VectorIntoWasmAbi> From<Clamped<Vec<T>>> for JsValue {
     fn from(vector: Clamped<Vec<T>>) -> Self {
         JsValue::from(Clamped(vector.0.into_boxed_slice()))
     }
