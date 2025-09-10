@@ -7,8 +7,8 @@ use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
 use std::str;
-use walrus::MemoryId;
-use walrus::{ExportId, FunctionId, ImportId, Module};
+use walrus::ir::VisitorMut;
+use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
 use wasm_bindgen_shared::struct_function_export_name;
 
 mod incoming;
@@ -209,7 +209,7 @@ impl<'a> Context<'a> {
         struct Replace<'a> {
             map: &'a HashMap<FunctionId, FunctionId>,
         }
-        impl walrus::ir::VisitorMut for Replace<'_> {
+        impl VisitorMut for Replace<'_> {
             fn visit_function_id_mut(&mut self, function: &mut FunctionId) {
                 if let Some(replacement) = self.map.get(function) {
                     *function = *replacement;
@@ -220,6 +220,22 @@ impl<'a> Context<'a> {
         for (_id, func) in self.module.funcs.iter_local_mut() {
             let entry = func.entry_block();
             walrus::ir::dfs_pre_order_mut(&mut replace, func, entry);
+        }
+        for elems in self.module.elements.iter_mut() {
+            match &mut elems.items {
+                ElementItems::Functions(funcs) => {
+                    for func in funcs.iter_mut() {
+                        replace.visit_function_id_mut(func);
+                    }
+                }
+                ElementItems::Expressions(_, exprs) => {
+                    for expr in exprs {
+                        if let ConstExpr::RefFunc(func) = expr {
+                            replace.visit_function_id_mut(func);
+                        }
+                    }
+                }
+            }
         }
     }
 
