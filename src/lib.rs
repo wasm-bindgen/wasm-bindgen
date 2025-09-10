@@ -1719,18 +1719,6 @@ macro_rules! typed_arrays {
 
 typed_arrays!(u8 u16 u32 u64 i8 i16 i32 i64 f32 f64);
 
-impl __rt::VectorIntoJsValue for JsValue {
-    fn vector_into_jsvalue(vector: Box<[JsValue]>) -> JsValue {
-        wbg_cast!(vector, Box<[JsValue]>, JsValue)
-    }
-}
-
-impl __rt::VectorIntoJsValue for String {
-    fn vector_into_jsvalue(vector: Box<[String]>) -> JsValue {
-        wbg_cast!(vector, Box<[String]>, JsValue)
-    }
-}
-
 impl<T> From<Vec<T>> for JsValue
 where
     JsValue: From<Box<[T]>>,

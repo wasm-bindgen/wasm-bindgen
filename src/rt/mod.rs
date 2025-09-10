@@ -7,7 +7,6 @@ use core::ops::{Deref, DerefMut};
 use core::sync::atomic::{AtomicU8, Ordering};
 
 use alloc::alloc::{alloc, dealloc, realloc, Layout};
-use alloc::boxed::Box;
 use alloc::rc::Rc;
 use once_cell::unsync::Lazy;
 
@@ -707,16 +706,4 @@ pub const fn encode_u32_to_fixed_len_bytes(value: u32) -> [u8; 5] {
     }
     result[4] = (value >> (7 * 4)) as u8;
     result
-}
-
-/// Trait for element types to implement `Into<JsValue>` for vectors of
-/// themselves, which isn't possible directly thanks to the orphan rule.
-pub trait VectorIntoJsValue: Sized {
-    fn vector_into_jsvalue(vector: Box<[Self]>) -> JsValue;
-}
-
-impl<T: VectorIntoJsValue> From<Box<[T]>> for JsValue {
-    fn from(vector: Box<[T]>) -> Self {
-        T::vector_into_jsvalue(vector)
-    }
 }
