@@ -1128,7 +1128,7 @@ extern "C" {
     fn __wbindgen_throw(msg: &str) /* -> ! */;
     fn __wbindgen_rethrow(js: JsValue) /* -> ! */;
 
-    fn __wbindgen_cb_drop(js: JsValue) -> bool;
+    fn __wbindgen_cb_drop(js: &JsValue) -> bool;
 
     fn __wbindgen_jsval_eq(a: &JsValue, b: &JsValue) -> bool;
     fn __wbindgen_jsval_loose_eq(a: &JsValue, b: &JsValue) -> bool;

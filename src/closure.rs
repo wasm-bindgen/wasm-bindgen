@@ -492,10 +492,10 @@ where
     T: ?Sized,
 {
     fn drop(&mut self) {
-        unsafe {
-            // this will implicitly drop our strong reference in addition to
-            // invalidating all future invocations of the closure
-            if super::__wbindgen_cb_drop(ManuallyDrop::take(&mut self.js)) {
+        // this will implicitly drop our strong reference in addition to
+        // invalidating all future invocations of the closure
+        if super::__wbindgen_cb_drop(&self.js) {
+            unsafe {
                 ManuallyDrop::drop(&mut self.data.inner);
             }
         }
