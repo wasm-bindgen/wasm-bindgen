@@ -122,7 +122,7 @@ fn main() -> anyhow::Result<()> {
 
     let debug = env::var("WASM_BINDGEN_NO_DEBUG").is_err();
 
-    let no_generate_dwarf = env::var("WASM_BINDGEN_NO_GENERATE_DWARF").is_ok();
+    let no_generate_dwarf = env::var("WASM_BINDGEN_TEST_NO_DWARF").is_ok();
 
     // Collect all tests that the test harness is supposed to run. We assume
     // that any exported function with the prefix `__wbg_test` is a test we need
