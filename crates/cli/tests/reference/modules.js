@@ -50,6 +50,10 @@ export function __wbg_parseFloat_7bc8aecd47f33642(arg0) {
     return ret;
 };
 
+export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
 export function __wbindgen_cast_2241b6af4c4b2941(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
@@ -65,9 +69,5 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_throw(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

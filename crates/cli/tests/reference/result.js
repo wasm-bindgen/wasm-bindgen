@@ -86,6 +86,10 @@ export function __wbg_Error_0497d5bdba9362e5(arg0, arg1) {
     return ret;
 };
 
+export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
 export function __wbindgen_cast_d6cd19b81560fd6e(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
@@ -101,9 +105,5 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_throw(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

@@ -122,6 +122,10 @@ export const Ordering = Object.freeze({
 
 const __wbindgen_enum_ColorName = ["green", "yellow", "red"];
 
+export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_export_0;
     const offset = table.grow(4);
@@ -131,9 +135,5 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_throw(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

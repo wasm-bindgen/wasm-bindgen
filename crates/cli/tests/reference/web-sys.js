@@ -205,12 +205,16 @@ export function __wbg_new_fcda3bb4bd4bb938() { return handleError(function (arg0
     return ret;
 }, arguments) };
 
-export function __wbindgen_debug_string(arg0, arg1) {
+export function __wbg_wbindgendebugstring_bbc653acd48e77af(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+};
+
+export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
 export function __wbindgen_init_externref_table() {
@@ -222,9 +226,5 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_throw(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

@@ -126,6 +126,9 @@ function __wbg_get_imports() {
         const ret = a.CONST;
         return ret;
     };
+    imports.wbg.__wbg_wbindgenthrow_c9e5e8466b626192 = function(arg0, arg1) {
+        throw new Error(getStringFromWasm0(arg0, arg1));
+    };
     imports.wbg.__wbg_write_c2ce0ce33a6087d5 = function(arg0, arg1) {
         window.document.write(getStringFromWasm0(arg0, arg1));
     };
@@ -138,9 +141,6 @@ function __wbg_get_imports() {
         table.set(offset + 2, true);
         table.set(offset + 3, false);
         ;
-    };
-    imports.wbg.__wbindgen_throw = function(arg0, arg1) {
-        throw new Error(getStringFromWasm0(arg0, arg1));
     };
     imports['./snippets/reference-test-ddc0ab9a51c9d25f/inline0.js'] = __wbg_star0;
     imports['foo-raw'] = __wbg_star1;
