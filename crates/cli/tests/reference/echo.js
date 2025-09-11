@@ -1236,11 +1236,6 @@ export class Foo {
     }
 }
 
-export function __wbg_cast_d7daf1f065d59f51(arg0, arg1) {
-    const ret = /* cast */(getStringFromWasm0(arg0, arg1));
-    return ret;
-};
-
 export function __wbg_foo_new(arg0) {
     const ret = Foo.__wrap(arg0);
     return ret;
@@ -1248,6 +1243,12 @@ export function __wbg_foo_new(arg0) {
 
 export function __wbg_foo_unwrap(arg0) {
     const ret = Foo.__unwrap(arg0);
+    return ret;
+};
+
+export function __wbindgen_cast_2241b6af4c4b2941(arg0, arg1) {
+    // Cast intrinsic for `Ref(String) -> Externref`.
+    const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 };
 

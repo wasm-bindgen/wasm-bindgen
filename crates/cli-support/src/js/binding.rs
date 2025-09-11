@@ -9,7 +9,7 @@ use crate::wit::InstructionData;
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, Instruction,
 };
-use anyhow::{anyhow, bail, Error};
+use anyhow::{bail, Error};
 use std::collections::HashSet;
 use std::fmt::Write;
 use walrus::{Module, ValType};
@@ -1356,47 +1356,64 @@ fn instruction(
             js.push(format!("getObject({val})"));
         }
 
-        Instruction::StackClosure {
+        Instruction::Closure {
             adapter,
             nargs,
             mutable,
+            dtor_idx_if_persistent,
         } => {
-            let i = js.tmp();
             let b = js.pop();
             let a = js.pop();
-            js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
-            let args = (0..*nargs)
-                .map(|i| format!("arg{i}"))
-                .collect::<Vec<_>>()
-                .join(", ");
             let wrapper = js.cx.adapter_name(*adapter);
-            if *mutable {
-                // Mutable closures need protection against being called
-                // recursively, so ensure that we clear out one of the
-                // internal pointers while it's being invoked.
-                js.prelude(&format!(
-                    "var cb{i} = ({args}) => {{
-                        const a = state{i}.a;
-                        state{i}.a = 0;
-                        try {{
-                            return {wrapper}(a, state{i}.b, {args});
-                        }} finally {{
-                            state{i}.a = a;
-                        }}
-                    }};",
-                ));
-            } else {
-                js.prelude(&format!(
-                    "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
-                ));
-            }
 
-            // Make sure to null out our internal pointers when we return
-            // back to Rust to ensure that any lingering references to the
-            // closure will fail immediately due to null pointers passed in
-            // to Rust.
-            js.finally(&format!("state{i}.a = state{i}.b = 0;"));
-            js.push(format!("cb{i}"));
+            // TODO: further merge the heap and stack closure handling as
+            // they're almost identical (by nature) except for ownership
+            // integration.
+            if let Some(dtor) = dtor_idx_if_persistent {
+                let make_closure = if *mutable {
+                    js.cx.expose_make_mut_closure()?;
+                    "makeMutClosure"
+                } else {
+                    js.cx.expose_make_closure()?;
+                    "makeClosure"
+                };
+
+                js.push(format!("{make_closure}({a}, {b}, {dtor}, {wrapper})"));
+            } else {
+                let i = js.tmp();
+                js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
+                let args = (0..*nargs)
+                    .map(|i| format!("arg{i}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                if *mutable {
+                    // Mutable closures need protection against being called
+                    // recursively, so ensure that we clear out one of the
+                    // internal pointers while it's being invoked.
+                    js.prelude(&format!(
+                        "var cb{i} = ({args}) => {{
+                            const a = state{i}.a;
+                            state{i}.a = 0;
+                            try {{
+                                return {wrapper}(a, state{i}.b, {args});
+                            }} finally {{
+                                state{i}.a = a;
+                            }}
+                        }};",
+                    ));
+                } else {
+                    js.prelude(&format!(
+                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                    ));
+                }
+
+                // Make sure to null out our internal pointers when we return
+                // back to Rust to ensure that any lingering references to the
+                // closure will fail immediately due to null pointers passed in
+                // to Rust.
+                js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+                js.push(format!("cb{i}"));
+            }
         }
 
         Instruction::VectorLoad { kind, mem, free } => {
@@ -1543,10 +1560,7 @@ impl Invocation {
             // The function table never changes right now, so we can statically
             // look up the desired function.
             CallTableElement(idx) => {
-                let entry = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
-                let id = entry
-                    .func
-                    .ok_or_else(|| anyhow!("function table wasn't filled in a {}", idx))?;
+                let id = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
                 Invocation::Core { id, defer: false }
             }
 

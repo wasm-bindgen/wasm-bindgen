@@ -6493,7 +6493,7 @@ macro_rules! arrays {
             /// slice's lifetime, so there's no guarantee that the data is read
             /// at the right time.
             pub unsafe fn view(rust: &[$ty]) -> $name {
-                wasm_bindgen::wbg_cast!(rust, &[$ty], $name)
+                wasm_bindgen::__rt::wbg_cast(rust)
             }
 
             /// Creates a JS typed array which is a view into wasm's linear

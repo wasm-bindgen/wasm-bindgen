@@ -6,9 +6,10 @@ use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Error};
 use std::collections::{BTreeSet, HashMap};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::str;
-use walrus::MemoryId;
-use walrus::{ExportId, FunctionId, ImportId, Module};
+use walrus::ir::VisitorMut;
+use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
 use wasm_bindgen_shared::struct_function_export_name;
 
 mod incoming;
@@ -147,7 +148,6 @@ impl<'a> Context<'a> {
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
-        self.handle_duplicate_imports(&duplicate_import_map);
 
         self.inject_externref_initialization()?;
 
@@ -158,8 +158,7 @@ impl<'a> Context<'a> {
         {
             let WasmBindgenDescriptorsSection {
                 descriptors,
-                closure_imports,
-                ..
+                cast_imports,
             } = *custom;
             // Store all the executed descriptors in our own field so we have
             // access to them while processing programs.
@@ -169,45 +168,37 @@ impl<'a> Context<'a> {
             // getting gc'd
             self.aux.function_table = self.module.tables.main_function_table()?;
 
-            // Register all the injected closure imports as that they're expected
-            // to manufacture a particular type of closure.
-            //
-            // First we register the imported function shim which returns a
-            // `JsValue` for the closure. We manufacture this signature
-            // since it's not listed anywhere.
-            //
-            // Next we register the corresponding table element's signature in
-            // the interface types section. This adapter will later be used to
-            // generate a shim (if necessary) for the table element.
-            //
-            // Finally we store all this metadata in the import map which we've
-            // learned so when a binding for the import is generated we can
-            // generate all the appropriate shims.
-            for (id, descriptor) in crate::sorted_iter(&closure_imports) {
-                let signature = Function {
-                    shim_idx: 0,
-                    arguments: vec![Descriptor::I32; 3],
-                    ret: Descriptor::Externref,
-                    inner_ret: None,
+            for (descriptor, orig_func_ids) in cast_imports {
+                let signature = descriptor.unwrap_function();
+                let [arg] = &signature.arguments[..] else {
+                    bail!("Cast function must take exactly one argument");
                 };
-                let id = self.import_adapter(*id, signature, AdapterJsImportKind::Normal)?;
-                // Synthesize the two integer pointers we pass through which
-                // aren't present in the signature but are present in the wasm
-                // signature.
-                let mut function = descriptor.function.clone();
-                function.arguments.insert(0, Descriptor::I32);
-                function.arguments.insert(0, Descriptor::I32);
-                let adapter = self.table_element_adapter(descriptor.function.shim_idx, function)?;
-                self.aux.import_map.insert(
-                    id,
-                    AuxImport::Closure {
-                        dtor: descriptor.dtor_idx,
-                        mutable: descriptor.mutable,
-                        adapter,
-                    },
-                );
+                let sig_comment = format!("{:?} -> {:?}", arg, &signature.ret);
+
+                // Hash the descriptor string to produce a stable import name.
+                let mut hasher = DefaultHasher::default();
+                sig_comment.hash(&mut hasher);
+                let import_name = format!("__wbindgen_cast_{:016x}", hasher.finish());
+
+                // Manufacture an import for this cast.
+                let ty = self.module.funcs.get(orig_func_ids[0]).ty();
+                let (import_func_id, import_id) =
+                    self.module
+                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
+                self.module.funcs.get_mut(import_func_id).name = Some(sig_comment.clone());
+                let adapter_id =
+                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                self.aux
+                    .import_map
+                    .insert(adapter_id, AuxImport::Cast { sig_comment });
+
+                // Mark all original functions for replacement with the new import.
+                duplicate_import_map
+                    .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
             }
         }
+
+        self.handle_duplicate_imports(&duplicate_import_map);
 
         self.aux.thread_destroy = self.thread_destroy();
 
@@ -232,7 +223,7 @@ impl<'a> Context<'a> {
         struct Replace<'a> {
             map: &'a HashMap<FunctionId, FunctionId>,
         }
-        impl walrus::ir::VisitorMut for Replace<'_> {
+        impl VisitorMut for Replace<'_> {
             fn visit_function_id_mut(&mut self, function: &mut FunctionId) {
                 if let Some(replacement) = self.map.get(function) {
                     *function = *replacement;
@@ -243,6 +234,22 @@ impl<'a> Context<'a> {
         for (_id, func) in self.module.funcs.iter_local_mut() {
             let entry = func.entry_block();
             walrus::ir::dfs_pre_order_mut(&mut replace, func, entry);
+        }
+        for elems in self.module.elements.iter_mut() {
+            match &mut elems.items {
+                ElementItems::Functions(funcs) => {
+                    for func in funcs.iter_mut() {
+                        replace.visit_function_id_mut(func);
+                    }
+                }
+                ElementItems::Expressions(_, exprs) => {
+                    for expr in exprs {
+                        if let ConstExpr::RefFunc(func) = expr {
+                            replace.visit_function_id_mut(func);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1166,8 +1173,7 @@ impl<'a> Context<'a> {
             // phase, but we don't have an implementation for them. We don't
             // need to error about them in this verification pass though,
             // having them lingering in the module is normal.
-            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_closure"
-            {
+            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_cast" {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {

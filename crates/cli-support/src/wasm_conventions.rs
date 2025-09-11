@@ -10,8 +10,8 @@ use std::io::Cursor;
 
 use anyhow::{anyhow, bail, Context, Result};
 use walrus::{
-    ir::Value, ConstExpr, ElementId, ElementItems, FunctionBuilder, FunctionId, FunctionKind,
-    GlobalId, GlobalKind, MemoryId, Module, RawCustomSection, ValType,
+    ir::Value, ConstExpr, ElementItems, FunctionBuilder, FunctionId, FunctionKind, GlobalId,
+    GlobalKind, MemoryId, Module, RawCustomSection, ValType,
 };
 use wasmparser::{BinaryReader, WasmFeatures};
 
@@ -91,14 +91,8 @@ pub fn get_tls_base(module: &Module) -> Option<GlobalId> {
     }
 }
 
-pub struct FunctionTableEntry {
-    pub element: ElementId,
-    pub idx: usize,
-    pub func: Option<FunctionId>,
-}
-
 /// Looks up a function table entry by index in the main function table.
-pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionTableEntry> {
+pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId> {
     let table = module
         .tables
         .main_function_table()?
@@ -128,11 +122,7 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionTab
 
         match slot {
             Some(slot) => {
-                return Ok(FunctionTableEntry {
-                    element: segment.id(),
-                    idx,
-                    func: slot.cloned(),
-                })
+                return slot.copied().context("function table entry wasn't filled");
             }
             None => continue,
         }
