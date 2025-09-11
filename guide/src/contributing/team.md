@@ -1,36 +1,26 @@
 # Team
 
-`wasm-bindgen` follows the [`rustwasm` organization's governance described
-here][governance]:
+`wasm-bindgen` follows the project [governance described here][governance].
 
-* All pull requests (including those made by a team member) must be approved by
-  at least one other team member.
+The current project team members are listed below.
 
-* Larger, more nuanced decisions about design, architecture, breaking changes,
-  trade offs, etc are made by team consensus.
+We welcome new members - if you are interested in joining the team, see the [membership] section of the governance document.
 
-[governance]: https://github.com/rustwasm/team/blob/master/GOVERNANCE.md#repositories
+## Core
 
-## Members
+* [daxpedda](https://github.com/daxpedda)
+* [Ingvar Stepanyan](https://github.com/RReverser)
+* [Guy Bedford](https://github.com/guybedford)
 
-<style>
-img {
-    max-width: 117px;
-    max-height: 117px;
-}
-</style>
+## Collaborators
 
-| [![](https://github.com/alexcrichton.png?size=117)][alexcrichton] | [![](https://github.com/fitzgen.png?size=117)][fitzgen] | [![](https://github.com/spastorino.png?size=117)][spastorino] | [![](https://github.com/ohanar.png?size=117)][ohanar] | [![](https://github.com/jonathan-s.png?size=117)][jonathan-s] |
-|:---:|:---:|:---:|:---:|
-| [`alexcrichton`][alexcrichton] | [`fitzgen`][fitzgen] | [`spastorino`][spastorino] | [`ohanar`][ohanar] | [`jonathan-s`][jonathan-s] |
-| [![](https://github.com/sendilkumarn.png?size=117)][sendilkumarn] | [![](https://github.com/belfz.png?size=117)][belfz] | [![](https://github.com/afdw.png?size=117)][afdw] | | |
-| [`sendilkumarn`][sendilkumarn] | [`belfz`][belfz] | [`afdw`][afdw] | | |
+* [Hood Chatham](https://github.com/hoodmane)
 
-[alexcrichton]: https://github.com/alexcrichton
-[fitzgen]: https://github.com/fitzgen
-[spastorino]: https://github.com/spastorino
-[ohanar]: https://github.com/ohanar
-[jonathan-s]: https://github.com/jonathan-s
-[sendilkumarn]: https://github.com/sendilkumarn
-[belfz]: https://github.com/belfz
-[afdw]: https://github.com/afdw
+## Former Members
+
+`wasm-bindgen` was initially developed under the now sunsetted [Rust and WebAssembly Working Group], which included these [former team members].
+
+[Rust and WebAssembly Working Group]: https://github.com/rustwasm
+[former team members]: https://github.com/orgs/rustwasm/people
+[governance]: https://wasm-bindgen.github.io/wasm-bindgen/contributing/governance
+[membership]: https://wasm-bindgen.github.io/wasm-bindgen/contributing/governance#membership

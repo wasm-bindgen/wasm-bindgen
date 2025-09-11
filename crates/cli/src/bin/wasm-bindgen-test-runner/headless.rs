@@ -126,7 +126,9 @@ pub fn run(
         session: None,
     };
     println!("Try find `webdriver.json` for configure browser's capabilities:");
-    let capabilities: Capabilities = match File::open("webdriver.json") {
+    let capabilities: Capabilities = match File::open(
+        std::env::var("WASM_BINDGEN_TEST_WEBDRIVER_JSON").unwrap_or("webdriver.json".to_string()),
+    ) {
         Ok(file) => {
             println!("Ok");
             serde_json::from_reader(file)
@@ -251,11 +253,10 @@ impl Driver {
     /// extra arguments to the driver's invocation.
     fn find() -> Result<Driver, Error> {
         let env_args = |name: &str| {
-            env::var(format!("{}_ARGS", name.to_uppercase()))
-                .unwrap_or_default()
-                .split_whitespace()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>()
+            let var = env::var(format!("{}_ARGS", name.to_uppercase())).unwrap_or_default();
+
+            shlex::split(&var)
+                .unwrap_or_else(|| var.split_whitespace().map(|s| s.to_string()).collect())
         };
 
         let drivers = [

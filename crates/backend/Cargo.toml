@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-backend"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/backend"
 rust-version = "1.57"
-version = "0.2.100"
+version = "0.2.101"
 
 [features]
 extra-traits = ["syn/extra-traits"]
@@ -22,7 +22,7 @@ log = "0.4"
 proc-macro2 = "1.0"
 quote = '1.0'
 syn = { version = '2.0', features = ['full'] }
-wasm-bindgen-shared = { path = "../shared", version = "=0.2.100" }
+wasm-bindgen-shared = { path = "../shared", version = "=0.2.101" }
 
 [lints]
 workspace = true

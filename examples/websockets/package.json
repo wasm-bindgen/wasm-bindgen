@@ -1,0 +1,6 @@
+{
+	"scripts": {
+		"build": "wasm-pack build --target web --out-dir ../dist/websockets",
+		"postbuild": "node ../cp-dist.mjs index.html index.js"
+	}
+}

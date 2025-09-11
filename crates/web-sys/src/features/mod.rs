@@ -3015,6 +3015,13 @@ mod gen_Geolocation;
 #[allow(unused_imports)]
 pub use gen_Geolocation::*;
 
+#[cfg(feature = "GestureEvent")]
+#[allow(non_snake_case)]
+mod gen_GestureEvent;
+#[cfg(feature = "GestureEvent")]
+#[allow(unused_imports)]
+pub use gen_GestureEvent::*;
+
 #[cfg(feature = "GetAnimationsOptions")]
 #[allow(non_snake_case)]
 mod gen_GetAnimationsOptions;
@@ -6647,6 +6654,27 @@ mod gen_Permissions;
 #[cfg(feature = "Permissions")]
 #[allow(unused_imports)]
 pub use gen_Permissions::*;
+
+#[cfg(feature = "PictureInPictureEvent")]
+#[allow(non_snake_case)]
+mod gen_PictureInPictureEvent;
+#[cfg(feature = "PictureInPictureEvent")]
+#[allow(unused_imports)]
+pub use gen_PictureInPictureEvent::*;
+
+#[cfg(feature = "PictureInPictureEventInit")]
+#[allow(non_snake_case)]
+mod gen_PictureInPictureEventInit;
+#[cfg(feature = "PictureInPictureEventInit")]
+#[allow(unused_imports)]
+pub use gen_PictureInPictureEventInit::*;
+
+#[cfg(feature = "PictureInPictureWindow")]
+#[allow(non_snake_case)]
+mod gen_PictureInPictureWindow;
+#[cfg(feature = "PictureInPictureWindow")]
+#[allow(unused_imports)]
+pub use gen_PictureInPictureWindow::*;
 
 #[cfg(feature = "PlaneLayout")]
 #[allow(non_snake_case)]

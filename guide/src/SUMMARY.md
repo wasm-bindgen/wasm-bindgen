@@ -133,4 +133,5 @@
     - [Logging](./contributing/web-sys/logging.md)
     - [Supporting More Web APIs](./contributing/web-sys/supporting-more-web-apis.md)
   - [Publishing](./contributing/publishing.md)
+  - [Governance](./contributing/governance.md)
   - [Team](./contributing/team.md)

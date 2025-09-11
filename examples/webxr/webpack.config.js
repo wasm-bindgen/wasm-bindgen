@@ -6,7 +6,7 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 module.exports = {
     entry: './index.js',
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, '..', 'dist', 'webxr'),
         filename: 'index.js',
     },
     plugins: [

@@ -83,6 +83,7 @@ pub(crate) enum IdlType<'a> {
 
     Nullable(Box<IdlType<'a>>),
     FrozenArray(Box<IdlType<'a>>),
+    ObservableArray(Box<IdlType<'a>>),
     Sequence(Box<IdlType<'a>>),
     Promise(Box<IdlType<'a>>),
     Record(Box<IdlType<'a>>, Box<IdlType<'a>>),
@@ -215,6 +216,7 @@ impl<'a> ToIdlType<'a> for NonAnyType<'a> {
             NonAnyType::Float32Array(t) => t.to_idl_type(record),
             NonAnyType::Float64Array(t) => t.to_idl_type(record),
             NonAnyType::FrozenArrayType(t) => t.to_idl_type(record),
+            NonAnyType::ObservableArrayType(t) => t.to_idl_type(record),
             NonAnyType::ArrayBufferView(t) => t.to_idl_type(record),
             NonAnyType::BufferSource(t) => t.to_idl_type(record),
             NonAnyType::RecordType(t) => t.to_idl_type(record),
@@ -232,6 +234,12 @@ impl<'a> ToIdlType<'a> for SequenceType<'a> {
 impl<'a> ToIdlType<'a> for FrozenArrayType<'a> {
     fn to_idl_type(&self, record: &FirstPassRecord<'a>) -> IdlType<'a> {
         IdlType::FrozenArray(Box::new(self.generics.body.to_idl_type(record)))
+    }
+}
+
+impl<'a> ToIdlType<'a> for ObservableArrayType<'a> {
+    fn to_idl_type(&self, record: &FirstPassRecord<'a>) -> IdlType<'a> {
+        IdlType::ObservableArray(Box::new(self.generics.body.to_idl_type(record)))
     }
 }
 
@@ -548,6 +556,10 @@ impl<'a> IdlType<'a> {
                 idl_type.push_snake_case_name(dst);
                 dst.push_str("_sequence");
             }
+            IdlType::ObservableArray(idl_type) => {
+                idl_type.push_snake_case_name(dst);
+                dst.push_str("_observable_array");
+            }
             IdlType::Promise(idl_type) => {
                 idl_type.push_snake_case_name(dst);
                 dst.push_str("_promise");
@@ -744,7 +756,9 @@ impl<'a> IdlType<'a> {
             // webidl sequences must always be returned as javascript `Array`s. They may accept
             // anything implementing the @@iterable interface.
             // The same implementation is fine for `FrozenArray`
-            IdlType::FrozenArray(_idl_type) | IdlType::Sequence(_idl_type) => match pos {
+            IdlType::FrozenArray(_idl_type)
+            | IdlType::Sequence(_idl_type)
+            | IdlType::ObservableArray(_idl_type) => match pos {
                 TypePosition::Argument => Ok(js_value),
                 TypePosition::Return => Ok(js_sys("Array")),
             },

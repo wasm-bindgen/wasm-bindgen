@@ -98,9 +98,6 @@ greet("World!");
 
 [**📚 Read the `wasm-bindgen` guide here! 📚**](https://wasm-bindgen.github.io/wasm-bindgen/)
 
-You can find general documentation about using Rust and WebAssembly together
-[here](https://rustwasm.github.io/docs).
-
 ## API Docs
 
 - [wasm-bindgen](https://docs.rs/wasm-bindgen)
@@ -112,7 +109,7 @@ You can find general documentation about using Rust and WebAssembly together
 
 Libraries that are released on [crates.io](https://crates.io) have a MSRV of v1.57. Changes to the MSRV will be accompanied by a minor version bump.
 
-CLI tools and their corresponding support libraries have a MSRV of v1.76. Changes to the MSRV will be accompanied by a patch version bump.
+CLI tools and their corresponding support libraries have a MSRV of v1.82. Changes to the MSRV will be accompanied by a patch version bump.
 
 ## License
 
@@ -127,8 +124,7 @@ at your option.
 
 ## Contribution
 
-**[See the "Contributing" section of the guide for information on
-hacking on `wasm-bindgen`!][contributing]**
+**[See the "Contributing" section of the guide for information on hacking on `wasm-bindgen`!][contributing]**
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this project by you, as defined in the Apache-2.0 license,

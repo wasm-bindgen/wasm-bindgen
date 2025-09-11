@@ -12,7 +12,6 @@
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -22,19 +21,14 @@ const CRATES_TO_PUBLISH: &[&str] = &[
     "wasm-bindgen-backend",
     "wasm-bindgen-macro-support",
     "wasm-bindgen-macro",
-    "wasm-bindgen-test-macro",
-    "wasm-bindgen-test",
-    "wasm-bindgen-wasm-interpreter",
-    "wasm-bindgen-wasm-conventions",
-    "wasm-bindgen-threads-xform",
-    "wasm-bindgen-multi-value-xform",
-    "wasm-bindgen-externref-xform",
-    "wasm-bindgen-cli-support",
-    "wasm-bindgen-cli",
     "wasm-bindgen",
-    "wasm-bindgen-futures",
     "js-sys",
     "web-sys",
+    "wasm-bindgen-futures",
+    "wasm-bindgen-cli-support",
+    "wasm-bindgen-cli",
+    "wasm-bindgen-test-macro",
+    "wasm-bindgen-test",
 ];
 
 const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
@@ -46,7 +40,6 @@ const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
     "webidl-tests",
     "typescript-tests",
     "wasm-bindgen-webidl",
-    "example-tests",
     "msrv-cli-test",
     "msrv-library-test",
     "msrv-resolver-test",

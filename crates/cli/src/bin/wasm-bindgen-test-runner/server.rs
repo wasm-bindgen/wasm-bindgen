@@ -40,7 +40,7 @@ pub(crate) fn spawn(
     "#;
 
     let wbg_import_script = if test_mode.no_modules() {
-        String::from(
+        format!(
             r#"
             let Context = wasm_bindgen.WasmBindgenTestContext;
             let __wbgtest_console_debug = wasm_bindgen.__wbgtest_console_debug;

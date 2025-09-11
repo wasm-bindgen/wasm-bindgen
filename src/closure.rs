@@ -14,7 +14,6 @@ use core::mem::{self, ManuallyDrop};
 use crate::convert::*;
 use crate::describe::*;
 use crate::JsValue;
-use crate::UnwrapThrowExt;
 
 /// A handle to both a closure in Rust as well as JS closure which will invoke
 /// the Rust closure.
@@ -240,12 +239,7 @@ use crate::UnwrapThrowExt;
 /// ```
 pub struct Closure<T: ?Sized> {
     js: ManuallyDrop<JsValue>,
-    data: ManuallyDrop<Box<T>>,
-}
-
-union FatPtr<T: ?Sized> {
-    ptr: *mut T,
-    fields: (usize, usize),
+    data: OwnedClosure<T>,
 }
 
 impl<T> Closure<T>
@@ -277,91 +271,13 @@ where
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
     /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
-    pub fn wrap(mut data: Box<T>) -> Closure<T> {
-        assert_eq!(mem::size_of::<*const T>(), mem::size_of::<FatPtr<T>>());
-        let (a, b) = unsafe {
-            FatPtr {
-                ptr: &mut *data as *mut T,
-            }
-            .fields
+    pub fn wrap(data: Box<T>) -> Closure<T> {
+        let data = OwnedClosure {
+            inner: ManuallyDrop::new(data),
         };
-
-        // Here we need to create a `JsValue` with the data and `T::invoke()`
-        // function pointer. To do that we... take a few unconventional turns.
-        // In essence what happens here is this:
-        //
-        // 1. First up, below we call a function, `breaks_if_inlined`. This
-        //    function, as the name implies, does not work if it's inlined.
-        //    More on that in a moment.
-        // 2. This function internally calls a special import recognized by the
-        //    `wasm-bindgen` CLI tool, `__wbindgen_describe_closure`. This
-        //    imported symbol is similar to `__wbindgen_describe` in that it's
-        //    not intended to show up in the final binary but it's an
-        //    intermediate state for a `wasm-bindgen` binary.
-        // 3. The `__wbindgen_describe_closure` import is namely passed a
-        //    descriptor function, monomorphized for each invocation.
-        //
-        // Most of this doesn't actually make sense to happen at runtime! The
-        // real magic happens when `wasm-bindgen` comes along and updates our
-        // generated code. When `wasm-bindgen` runs it performs a few tasks:
-        //
-        // * First, it finds all functions that call
-        //   `__wbindgen_describe_closure`. These are all `breaks_if_inlined`
-        //   defined below as the symbol isn't called anywhere else.
-        // * Next, `wasm-bindgen` executes the `breaks_if_inlined`
-        //   monomorphized functions, passing it dummy arguments. This will
-        //   execute the function just enough to invoke the special import,
-        //   namely telling us about the function pointer that is the describe
-        //   shim.
-        // * This knowledge is then used to actually find the descriptor in the
-        //   function table which is then executed to figure out the signature
-        //   of the closure.
-        // * Finally, and probably most heinously, the call to
-        //   `breaks_if_inlined` is rewritten to call an otherwise globally
-        //   imported function. This globally imported function will generate
-        //   the `JsValue` for this closure specialized for the signature in
-        //   question.
-        //
-        // Later on `wasm-gc` will clean up all the dead code and ensure that
-        // we don't actually call `__wbindgen_describe_closure` at runtime. This
-        // means we will end up not actually calling `breaks_if_inlined` in the
-        // final binary, all calls to that function should be pruned.
-        //
-        // See crates/cli-support/src/js/closures.rs for a more information
-        // about what's going on here.
-
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        extern "C" fn describe<T: WasmClosure + ?Sized>() {
-            inform(CLOSURE);
-
-            unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
-                // This can be called by the JS glue in erroneous situations
-                // such as when the closure has already been destroyed. If
-                // that's the case let's not make things worse by
-                // segfaulting and/or asserting, so just ignore null
-                // pointers.
-                if a == 0 {
-                    return;
-                }
-                drop(Box::from_raw(FatPtr::<T> { fields: (a, b) }.ptr));
-            }
-            inform(destroy::<T> as usize as u32);
-
-            inform(T::IS_MUT as u32);
-            T::describe();
-        }
-
-        #[inline(never)]
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe fn breaks_if_inlined<T: WasmClosure + ?Sized>(a: usize, b: usize) -> u32 {
-            super::__wbindgen_describe_closure(a as u32, b as u32, describe::<T> as usize as u32)
-        }
-
-        let idx = unsafe { breaks_if_inlined::<T>(a, b) };
-
-        Closure {
-            js: ManuallyDrop::new(JsValue::_new(idx)),
-            data: ManuallyDrop::new(data),
+        Self {
+            js: ManuallyDrop::new(crate::__rt::wbg_cast(&data)),
+            data,
         }
     }
 
@@ -389,12 +305,7 @@ where
     pub fn forget(self) {
         drop(self.into_js_value());
     }
-}
 
-// NB: we use a specific `T` for this `Closure<T>` impl block to avoid every
-// call site having to provide an explicit, turbo-fished type like
-// `Closure::<dyn FnOnce()>::once(...)`.
-impl Closure<dyn FnOnce()> {
     /// Create a `Closure` from a function that can only be called once.
     ///
     /// Since we have no way of enforcing that JS cannot attempt to call this
@@ -422,9 +333,12 @@ impl Closure<dyn FnOnce()> {
     /// // is `FnMut`, even though `f` is `FnOnce`.
     /// let closure: Closure<dyn FnMut() -> String> = Closure::once(f);
     /// ```
-    pub fn once<F, A, R>(fn_once: F) -> Closure<F::FnMut>
+    ///
+    /// Note: the `A` and `R` type parameters are here just for backward compat
+    /// and will be removed in the future.
+    pub fn once<F, A, R>(fn_once: F) -> Self
     where
-        F: 'static + WasmClosureFnOnce<A, R>,
+        F: WasmClosureFnOnce<T, A, R>,
     {
         Closure::wrap(fn_once.into_fn_mut())
     }
@@ -449,9 +363,12 @@ impl Closure<dyn FnOnce()> {
     ///
     /// assert!(f.is_instance_of::<js_sys::Function>());
     /// ```
+    ///
+    /// Note: the `A` and `R` type parameters are here just for backward compat
+    /// and will be removed in the future.
     pub fn once_into_js<F, A, R>(fn_once: F) -> JsValue
     where
-        F: 'static + WasmClosureFnOnce<A, R>,
+        F: WasmClosureFnOnce<T, A, R>,
     {
         fn_once.into_js_function()
     }
@@ -460,10 +377,8 @@ impl Closure<dyn FnOnce()> {
 /// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
 /// will throw if ever called more than once.
 #[doc(hidden)]
-pub trait WasmClosureFnOnce<A, R>: 'static {
-    type FnMut: ?Sized + 'static + WasmClosure;
-
-    fn into_fn_mut(self) -> Box<Self::FnMut>;
+pub trait WasmClosureFnOnce<FnMut: ?Sized, A, R>: 'static {
+    fn into_fn_mut(self) -> Box<FnMut>;
 
     fn into_js_function(self) -> JsValue;
 }
@@ -471,6 +386,54 @@ pub trait WasmClosureFnOnce<A, R>: 'static {
 impl<T: ?Sized> AsRef<JsValue> for Closure<T> {
     fn as_ref(&self) -> &JsValue {
         &self.js
+    }
+}
+
+/// Internal representation of the actual owned closure which we send to the JS
+/// in the constructor to convert it into a JavaScript value.
+#[repr(transparent)]
+struct OwnedClosure<T: ?Sized> {
+    inner: ManuallyDrop<Box<T>>,
+}
+
+impl<T> WasmDescribe for &OwnedClosure<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(CLOSURE);
+
+        unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
+            // This can be called by the JS glue in erroneous situations
+            // such as when the closure has already been destroyed. If
+            // that's the case let's not make things worse by
+            // segfaulting and/or asserting, so just ignore null
+            // pointers.
+            if a == 0 {
+                return;
+            }
+            drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
+        }
+        inform(destroy::<T> as usize as u32);
+
+        inform(T::IS_MUT as u32);
+        T::describe();
+    }
+}
+
+impl<T> IntoWasmAbi for &OwnedClosure<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+
+    fn into_abi(self) -> WasmSlice {
+        let (a, b): (usize, usize) = unsafe { mem::transmute_copy(self) };
+        WasmSlice {
+            ptr: a as u32,
+            len: b as u32,
+        }
     }
 }
 
@@ -533,7 +496,7 @@ where
             // this will implicitly drop our strong reference in addition to
             // invalidating all future invocations of the closure
             if super::__wbindgen_cb_drop(self.js.idx) != 0 {
-                ManuallyDrop::drop(&mut self.data);
+                ManuallyDrop::drop(&mut self.data.inner);
             }
         }
     }
@@ -555,191 +518,4 @@ pub unsafe trait WasmClosure: WasmDescribe {
 #[doc(hidden)]
 pub trait IntoWasmClosure<T: ?Sized> {
     fn unsize(self: Box<Self>) -> Box<T>;
-}
-
-// The memory safety here in these implementations below is a bit tricky. We
-// want to be able to drop the `Closure` object from within the invocation of a
-// `Closure` for cases like promises. That means that while it's running we
-// might drop the `Closure`, but that shouldn't invalidate the environment yet.
-//
-// Instead what we do is to wrap closures in `Rc` variables. The main `Closure`
-// has a strong reference count which keeps the trait object alive. Each
-// invocation of a closure then *also* clones this and gets a new reference
-// count. When the closure returns it will release the reference count.
-//
-// This means that if the main `Closure` is dropped while it's being invoked
-// then destruction is deferred until execution returns. Otherwise it'll
-// deallocate data immediately.
-
-macro_rules! doit {
-    ($(
-        ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*)
-    )*) => ($(
-        #[allow(coherence_leak_check)]
-        unsafe impl<$($var,)* R> WasmClosure for dyn Fn($($var),*) -> R + 'static
-            where $($var: FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static,
-        {
-            const IS_MUT: bool = false;
-        }
-
-        #[allow(coherence_leak_check)]
-        unsafe impl<$($var,)* R> WasmClosure for dyn FnMut($($var),*) -> R + 'static
-            where $($var: FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static,
-        {
-            const IS_MUT: bool = true;
-        }
-
-        #[allow(non_snake_case, unused_parens)]
-        impl<T, $($var,)* R> WasmClosureFnOnce<($($var),*), R> for T
-            where T: 'static + FnOnce($($var),*) -> R,
-                  $($var: FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static
-        {
-            type FnMut = dyn FnMut($($var),*) -> R;
-
-            fn into_fn_mut(self) -> Box<Self::FnMut> {
-                let mut me = Some(self);
-                Box::new(move |$($var),*| {
-                    let me = me.take().expect_throw("FnOnce called more than once");
-                    me($($var),*)
-                })
-            }
-
-            fn into_js_function(self) -> JsValue {
-                use alloc::rc::Rc;
-                use crate::__rt::WasmRefCell;
-
-                let mut me = Some(self);
-
-                let rc1 = Rc::new(WasmRefCell::new(None));
-                let rc2 = rc1.clone();
-
-                let closure = Closure::wrap(Box::new(move |$($var),*| {
-                    // Invoke ourself and get the result.
-                    let me = me.take().expect_throw("FnOnce called more than once");
-                    let result = me($($var),*);
-
-                    // And then drop the `Rc` holding this function's `Closure`
-                    // alive.
-                    debug_assert_eq!(Rc::strong_count(&rc2), 1);
-                    let option_closure = rc2.borrow_mut().take();
-                    debug_assert!(option_closure.is_some());
-                    drop(option_closure);
-
-                    result
-                }) as Box<dyn FnMut($($var),*) -> R>);
-
-                let js_val = closure.as_ref().clone();
-
-                *rc1.borrow_mut() = Some(closure);
-                debug_assert_eq!(Rc::strong_count(&rc1), 2);
-                drop(rc1);
-
-                js_val
-            }
-        }
-
-        impl<T, $($var,)* R> IntoWasmClosure<dyn FnMut($($var),*) -> R> for T
-            where T: 'static + FnMut($($var),*) -> R,
-                  $($var: FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static,
-        {
-            fn unsize(self: Box<Self>) -> Box<dyn FnMut($($var),*) -> R> { self }
-        }
-
-        impl<T, $($var,)* R> IntoWasmClosure<dyn Fn($($var),*) -> R> for T
-            where T: 'static + Fn($($var),*) -> R,
-                  $($var: FromWasmAbi + 'static,)*
-                  R: ReturnWasmAbi + 'static,
-        {
-            fn unsize(self: Box<Self>) -> Box<dyn Fn($($var),*) -> R> { self }
-        }
-    )*)
-}
-
-doit! {
-    ()
-    (A a1 a2 a3 a4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4)
-    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
-}
-
-// Copy the above impls down here for where there's only one argument and it's a
-// reference. We could add more impls for more kinds of references, but it
-// becomes a combinatorial explosion quickly. Let's see how far we can get with
-// just this one! Maybe someone else can figure out voodoo so we don't have to
-// duplicate.
-
-unsafe impl<A, R> WasmClosure for dyn Fn(&A) -> R
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi + 'static,
-{
-    const IS_MUT: bool = false;
-}
-
-unsafe impl<A, R> WasmClosure for dyn FnMut(&A) -> R
-where
-    A: RefFromWasmAbi,
-    R: ReturnWasmAbi + 'static,
-{
-    const IS_MUT: bool = true;
-}
-
-#[allow(non_snake_case)]
-impl<T, A, R> WasmClosureFnOnce<(&A,), R> for T
-where
-    T: 'static + FnOnce(&A) -> R,
-    A: RefFromWasmAbi + 'static,
-    R: ReturnWasmAbi + 'static,
-{
-    type FnMut = dyn FnMut(&A) -> R;
-
-    fn into_fn_mut(self) -> Box<Self::FnMut> {
-        let mut me = Some(self);
-        Box::new(move |arg| {
-            let me = me.take().expect_throw("FnOnce called more than once");
-            me(arg)
-        })
-    }
-
-    fn into_js_function(self) -> JsValue {
-        use crate::__rt::WasmRefCell;
-        use alloc::rc::Rc;
-
-        let mut me = Some(self);
-
-        let rc1 = Rc::new(WasmRefCell::new(None));
-        let rc2 = rc1.clone();
-
-        let closure = Closure::wrap(Box::new(move |arg: &A| {
-            // Invoke ourself and get the result.
-            let me = me.take().expect_throw("FnOnce called more than once");
-            let result = me(arg);
-
-            // And then drop the `Rc` holding this function's `Closure`
-            // alive.
-            debug_assert_eq!(Rc::strong_count(&rc2), 1);
-            let option_closure = rc2.borrow_mut().take();
-            debug_assert!(option_closure.is_some());
-            drop(option_closure);
-
-            result
-        }) as Box<dyn FnMut(&A) -> R>);
-
-        let js_val = closure.as_ref().clone();
-
-        *rc1.borrow_mut() = Some(closure);
-        debug_assert_eq!(Rc::strong_count(&rc1), 2);
-        drop(rc1);
-
-        js_val
-    }
 }

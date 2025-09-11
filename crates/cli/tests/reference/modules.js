@@ -40,11 +40,6 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_cast_38bad4997839d643(arg0, arg1) {
-    const ret = /* cast */(getStringFromWasm0(arg0, arg1));
-    return ret;
-};
-
 export function __wbg_parseFloat_2be7f01c31025438(arg0, arg1) {
     const ret = parseFloat(getStringFromWasm0(arg0, arg1));
     return ret;
@@ -52,6 +47,12 @@ export function __wbg_parseFloat_2be7f01c31025438(arg0, arg1) {
 
 export function __wbg_parseFloat_7bc8aecd47f33642(arg0) {
     const ret = parseFloat(arg0);
+    return ret;
+};
+
+export function __wbindgen_cast_2241b6af4c4b2941(arg0, arg1) {
+    // Cast intrinsic for `Ref(String) -> Externref`.
+    const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 };
 

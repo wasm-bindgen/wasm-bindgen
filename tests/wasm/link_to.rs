@@ -10,7 +10,10 @@ extern "C" {
 #[wasm_bindgen_test]
 fn test_module() {
     let link = wasm_bindgen::link_to!(module = "/tests/wasm/linked_module.js");
-    assert_eq!(read_file(&link).unwrap(), "// linked module\n");
+    assert_eq!(
+        read_file(&link).unwrap(),
+        include_str!("./linked_module.js")
+    );
 }
 
 #[wasm_bindgen_test]

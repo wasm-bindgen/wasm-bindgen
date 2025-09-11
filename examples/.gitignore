@@ -2,3 +2,4 @@ package-lock.json
 pkg
 dist
 wasm-pack.log
+/test-results

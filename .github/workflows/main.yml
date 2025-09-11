@@ -25,7 +25,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup component add rustfmt
     - run: cargo fmt --all -- --check
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: taiki-e/install-action@v2
         with:
           tool: taplo-cli
@@ -48,7 +48,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: cargo check --all
     - run: cargo check --no-default-features
@@ -58,26 +58,20 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-backend -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p example-tests -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-externref-xform -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-multi-value-xform -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-shared -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-test -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-test-macro -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-threads-xform -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p typescript-tests -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-wasm-conventions -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-wasm-interpreter -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-webidl -- -D warnings
     - run: cargo clippy --no-deps --all-features -p webidl-tests -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-benchmark -- -D warnings
@@ -87,7 +81,7 @@ jobs:
     name: Clippy (web-sys)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p js-sys --all-targets -- -D warnings
@@ -98,7 +92,7 @@ jobs:
     name: Clippy `no_std`
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -- -D warnings
@@ -114,7 +108,7 @@ jobs:
     env:
       RUSTFLAGS: -Ctarget-feature=+atomics
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add clippy rust-src
@@ -129,7 +123,7 @@ jobs:
     name: Clippy (project)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings
@@ -153,13 +147,12 @@ jobs:
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: '20'
-    - uses: ./.github/actions/setup-geckodriver
     - run: ${{ matrix.runs.run }}
 
   test_wasm_bindgen_envs:
@@ -179,10 +172,10 @@ jobs:
       WASM_BINDGEN_EXTERNREF: ${{ matrix.envs.WASM_BINDGEN_EXTERNREF }}
       WASM_BINDGEN_MULTI_VALUE: ${{ matrix.envs.WASM_BINDGEN_MULTI_VALUE }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown
@@ -193,7 +186,7 @@ jobs:
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup default nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: rustup component add rust-src
@@ -207,13 +200,12 @@ jobs:
   #   name: "Run wasm-bindgen crate tests (Windows)"
   #   runs-on: windows-latest
   #   steps:
-  #   - uses: actions/checkout@v4
+  #   - uses: actions/checkout@v5
   #   - run: rustup update --no-self-update stable && rustup default stable
   #   - run: rustup target add wasm32-unknown-unknown
-  #   - uses: actions/setup-node@v4
+  #   - uses: actions/setup-node@v5
   #     with:
   #       node-version: '20'
-  #   - uses: ./.github/actions/setup-geckodriver
   #   - run: cargo test --target wasm32-unknown-unknown
   #     env:
   #       RUST_LOG: wasm_bindgen_test_runner
@@ -229,8 +221,8 @@ jobs:
     name: Run CLI reference TypeScript check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v5
+    - uses: actions/setup-node@v5
       with:
         node-version: 'lts/*'
     - run: npm i -g typescript
@@ -244,19 +236,16 @@ jobs:
     name: Run native tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: '20'
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli
-    - run: cargo test -p wasm-bindgen-externref-xform
     - run: cargo test -p wasm-bindgen-macro-support
-    - run: cargo test -p wasm-bindgen-multi-value-xform
-    - run: cargo test -p wasm-bindgen-wasm-interpreter
     - run: cargo test -p wasm-bindgen-futures
     - run: cargo test -p wasm-bindgen-shared
 
@@ -300,32 +289,19 @@ jobs:
       WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE: ${{ matrix.runs.env.WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: '20'
-    - uses: ./.github/actions/setup-geckodriver
     - run: ${{ matrix.runs.run }}
-
-  test_deno:
-    name: "Build and test the deno example"
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
-    - uses: denoland/setup-deno@v2
-      with:
-        deno-version: v1.x
-    - run: cd examples/deno && ./build.sh && deno run --allow-read test.ts
 
   test_ui:
     name: Run UI compile-fail tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update 1.88.0 && rustup default 1.88.0
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
@@ -334,7 +310,7 @@ jobs:
     name: "Verify that web-sys is compiled correctly"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: cd crates/web-sys && cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
     - run: git diff --exit-code
@@ -342,8 +318,9 @@ jobs:
   build_examples:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
+    - run: rustup toolchain install nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
@@ -353,79 +330,41 @@ jobs:
     # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
       working-directory: examples
-    - run: |
-        function build() {
-          (cd $1 &&
-            if [ -f package.json ]; then
-              pnpm run build -- --output-path ../../exbuild/$1
-            elif [ -f build.sh ]; then
-              ./build.sh && mkdir -p ../../exbuild/$1 && cp -r ./* ../../exbuild/$1 && rm ../../exbuild/$1/**/.gitignore
-            else
-              echo "ERROR: Don't know how to build $1" >&2
-              exit 1
-            fi
-          ) || exit 1;
-        }
-        export -f build
-        ls -d */ | grep -Ev 'node_modules|raytrace|deno|wasm-audio-worklet' | parallel -j4 build
+    - run: pnpm run -r build
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
-        name: examples1
-        path: exbuild
-
-  build_nightly:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: rustup default nightly-2025-08-04
-    - run: rustup target add wasm32-unknown-unknown
-    - run: rustup component add rust-src
-    - run: |
-        for dir in raytrace-parallel wasm-audio-worklet; do
-          (cd examples/$dir &&
-            ./build.sh && mkdir -p ../../exbuild/$dir && cp -r ./* ../../exbuild/$dir
-          ) || exit 1;
-        done
-    - uses: actions/upload-artifact@v4
-      with:
-        name: examples2
-        path: exbuild
+        name: examples
+        path: examples/dist
 
   test_examples:
     needs:
     - build_examples
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: actions/download-artifact@v5
       with:
-        name: examples1
-        path: exbuild
+        name: examples
+        path: examples/dist
     - run: rustup update --no-self-update stable && rustup default stable
-    - run: cargo test -p example-tests
-      env:
-        EXBUILD: ${{ github.workspace }}/exbuild
-
-  test_nightly:
-    needs:
-    - build_nightly
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v5
+    - uses: actions/setup-node@v5
       with:
-        name: examples2
-        path: exbuild
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: cargo test -p example-tests --no-default-features --features nightly
+        node-version: 22
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v1.x
+    - run: npm install
+      working-directory: examples
+    - run: npm test --ignore-scripts
+      working-directory: examples
       env:
-        EXBUILD: ${{ github.workspace }}/exbuild
+        PREBUILT_EXAMPLES: 1
 
   build_benchmarks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add wasm32-unknown-unknown
     - run: cargo build --manifest-path benchmarks/Cargo.toml --release --target wasm32-unknown-unknown
@@ -438,7 +377,7 @@ jobs:
   dist_linux_x86_64_musl:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add x86_64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
@@ -455,7 +394,7 @@ jobs:
   dist_linux_aarch64_gnu:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add aarch64-unknown-linux-gnu
     - run: sudo apt update -y && sudo apt install gcc-aarch64-linux-gnu -y
@@ -471,7 +410,7 @@ jobs:
   dist_macos_x86_64:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add x86_64-apple-darwin
     - run: cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-apple-darwin --release
@@ -485,7 +424,7 @@ jobs:
   dist_macos_aarch64:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --release
@@ -499,7 +438,7 @@ jobs:
   dist_windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
@@ -512,7 +451,7 @@ jobs:
   doc_book:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: |
         curl -L https://github.com/rust-lang/mdBook/releases/download/v0.4.28/mdbook-v0.4.28-x86_64-unknown-linux-gnu.tar.gz | tar xzf -
         echo $PWD >> $GITHUB_PATH
@@ -525,7 +464,7 @@ jobs:
   doc_api:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update nightly && rustup default nightly
     - run: cargo doc --no-deps --features 'serde-serialize'
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
@@ -562,7 +501,7 @@ jobs:
       run:
         working-directory: crates/msrv/resolver
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }} && rustup target add ${{ matrix.target }}
     - if: matrix.rust == '1.57'
       run: |
@@ -588,7 +527,7 @@ jobs:
       run:
         working-directory: crates/msrv/lib
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: rustup update --no-self-update 1.57 && rustup default 1.57 && rustup target add ${{ matrix.target }}
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
@@ -599,8 +538,8 @@ jobs:
       run:
         working-directory: crates/msrv/cli
     steps:
-    - uses: actions/checkout@v4
-    - run: rustup update --no-self-update 1.76 && rustup default 1.76
+    - uses: actions/checkout@v5
+    - run: rustup update --no-self-update 1.82 && rustup default 1.82
     - run: cargo build
 
 
@@ -618,11 +557,10 @@ jobs:
       - dist_macos_aarch64
       - dist_windows
       - build_examples
-      - build_nightly
       - build_benchmarks
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
     - uses: actions/download-artifact@v5
@@ -662,8 +600,7 @@ jobs:
         mv artifacts/doc_book gh-pages
         tar xf artifacts/doc_api/docs.tar.gz
         mv target/doc gh-pages/api
-        mv artifacts/examples1 gh-pages/exbuild
-        mv artifacts/examples2/* gh-pages/exbuild
+        mv artifacts/examples gh-pages/exbuild
         mv artifacts/benchmarks gh-pages/benchmarks
         tar czf gh-pages.tar.gz gh-pages
     - uses: actions/upload-artifact@v4

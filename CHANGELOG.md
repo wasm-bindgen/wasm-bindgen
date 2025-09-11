@@ -5,17 +5,65 @@
 
 ### Added
 
+* Added `DocumentOrShadowRoot.adoptedStyleSheets`.
+  [#4625](https://github.com/wasm-bindgen/wasm-bindgen/pull/4625)
+
+* Added support for arguments with spaces using shell-style quoting in webdriver `*_ARGS`
+  environment variables to `wasm-bindgen-test`.
+  [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
+  
+* Added ability to determine WebDriver JSON config location via
+  `WASM_BINDGEN_TEST_WEBDRIVER_JSON` environment variable to
+  `wasm-bindgen-test`.
+  [#4434](https://github.com/wasm-bindgen/wasm-bindgen/pull/4434)
+
+### Fixed
+
+* Fixed wrong method names for `GestureEvent` bindings.
+  [#4615](https://github.com/wasm-bindgen/wasm-bindgen/pull/4615)
+
+* Fix crash caused by allocations during `TypedArray` interactions.
+  [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
+
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+
+--------------------------------------------------------------------------------
+
+## [0.2.101](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.100...0.2.101)
+
+### Added
+
 * Added format and colorSpace support to VideoFrameCopyToOptions
   [#4543](https://github.com/wasm-bindgen/wasm-bindgen/pull/4543)
+
 * Added support for the [`onbeforeinput`](https://developer.mozilla.org/en-US/docs/Web/API/Element/beforeinput_event) attribute.
   [#4544](https://github.com/wasm-bindgen/wasm-bindgen/pull/4544)
+
 * `TypedArray::new_from_slice(&[T])` constructor that allows to create a
   JS-owned `TypedArray` from a Rust slice.
   [#4555](https://github.com/wasm-bindgen/wasm-bindgen/pull/4555)
+
 * Added `Function::call4` and `Function::bind4` through `Function::call9` `Function::bind9` methods for calling  and binding JavaScript functions with 4-9 arguments.
   [#4572](https://github.com/wasm-bindgen/wasm-bindgen/pull/4572)
+
 * Added isPointInFill and isPointInStroke methods for the SVGGeometryElement idl.
   [#4509](https://github.com/wasm-bindgen/wasm-bindgen/pull/4509)
+
+* Added unstable bindings for `GestureEvent`.
+  [#4589](https://github.com/wasm-bindgen/wasm-bindgen/pull/4589)
+
+* Stricter checks for `module`, `raw_module` and `inline_js` attributes applied to inapplicable items.
+  [#4522](https://github.com/wasm-bindgen/wasm-bindgen/pull/4522)
+
+* Add bindings for `PictureInPicture`.
+  [#4593](https://github.com/rustwasm/wasm-bindgen/pull/4593)
+
+* Added `bytes` method for the `Blob` idl
+  [#4506](https://github.com/wasm-bindgen/wasm-bindgen/pull/4506)
+
+* Add error message when export symbol is not found
+  [#4594](https://github.com/wasm-bindgen/wasm-bindgen/pull/4594)
 
 ### Changed
 
@@ -24,6 +72,9 @@
 
 * The `size` argument to `GPUCommandEncoder.copyBufferToBuffer` is now optional.
   [#4508](https://github.com/wasm-bindgen/wasm-bindgen/pull/4508)
+
+* MSRV of CLI tools bumped to v1.82. This does not affect libraries like `wasm-bindgen`, `js-sys` and `web-sys`!
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
 
 ### Fixed
 
@@ -48,8 +99,25 @@
 * Skip `__wasm_call_ctors` which we don't want to interpret.
   [#4562](https://github.com/wasm-bindgen/wasm-bindgen/pull/4562)
 
-* Quote names containing colons in generated .d.ts.
-  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+* Fix infinite recursion caused by the lack of proc-macro hygiene.
+  [#4601](https://github.com/wasm-bindgen/wasm-bindgen/pull/4601)
+
+* Fix running coverage with no_modules.
+  [#4604](https://github.com/wasm-bindgen/wasm-bindgen/pull/4604)
+
+* Fix proc-macro hygiene with `core`.
+  [#4606](https://github.com/wasm-bindgen/wasm-bindgen/pull/4606)
+
+### Removed
+
+* Crates intended purely for internal consumption by the wasm-bindgen CLI will no longer be published:
+  [#4608](https://github.com/wasm-bindgen/wasm-bindgen/pull/4608)
+
+  * `wasm-bindgen-externref-xform`
+  * `wasm-bindgen-multi-value-xform`
+  * `wasm-bindgen-threads-xform`
+  * `wasm-bindgen-wasm-conventions`
+  * `wasm-bindgen-wasm-interpreter`
 
 --------------------------------------------------------------------------------
 

@@ -136,6 +136,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Blob`*"]
     pub fn array_buffer(this: &Blob) -> ::js_sys::Promise;
+    # [wasm_bindgen (method , structural , js_class = "Blob" , js_name = bytes)]
+    #[doc = "The `bytes()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Blob/bytes)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`*"]
+    pub fn bytes(this: &Blob) -> ::js_sys::Promise;
     # [wasm_bindgen (catch , method , structural , js_class = "Blob" , js_name = slice)]
     #[doc = "The `slice()` method."]
     #[doc = ""]
