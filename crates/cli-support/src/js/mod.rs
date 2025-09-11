@@ -3790,7 +3790,7 @@ __wbg_set_wasm(wasm);"
             Intrinsic::BooleanGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const v = {};\n", args[0]));
-                "typeof(v) === 'boolean' ? (v ? 1 : 0) : 2".to_string()
+                "typeof(v) === 'boolean' ? v : undefined".to_string()
             }
 
             Intrinsic::BigIntGetAsI64 => {

@@ -93,13 +93,13 @@ pub struct MutSlice<T> {
 
 impl<T> Drop for MutSlice<T> {
     fn drop(&mut self) {
-        unsafe {
-            __wbindgen_copy_to_typed_array(
+        let byte_slice = unsafe {
+            core::slice::from_raw_parts(
                 self.contents.as_ptr() as *const u8,
                 self.contents.len() * mem::size_of::<T>(),
-                self.js.idx,
-            );
-        }
+            )
+        };
+        __wbindgen_copy_to_typed_array(byte_slice, &self.js);
     }
 }
 
