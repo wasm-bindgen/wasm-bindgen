@@ -70,7 +70,7 @@ use core::ops::{
 };
 use core::ptr::NonNull;
 
-use crate::convert::{FromWasmAbi, TryFromJsValue, VectorIntoWasmAbi};
+use crate::convert::{TryFromJsValue, VectorIntoWasmAbi};
 
 const _: () = {
     /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
@@ -1222,7 +1222,7 @@ pub struct JsStatic<T: 'static> {
 #[cfg(feature = "std")]
 #[allow(deprecated)]
 #[cfg(not(target_feature = "atomics"))]
-impl<T: FromWasmAbi + 'static> Deref for JsStatic<T> {
+impl<T: crate::convert::FromWasmAbi + 'static> Deref for JsStatic<T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { self.__inner.with(|ptr| &*(ptr as *const T)) }
