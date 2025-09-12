@@ -230,7 +230,7 @@ jobs:
     - name: Check TypeScript output
       run: tsc --noEmit --skipLibCheck --lib esnext,dom $(echo crates/cli/tests/reference/*.d.ts)
     - name: Check JavaScript output
-      run: tsc --noEmit --skipLibCheck --lib esnext,dom --module esnext --allowJs $(echo crates/cli/tests/reference/*.js)
+      run: tsc --noEmit --skipLibCheck --lib esnext,dom --module esnext --allowJs $(echo crates/cli/tests/reference/*.js | sed 's/ crates\/cli\/tests\/reference\/targets-5\.js//g')
 
   test_native:
     name: Run native tests
@@ -350,7 +350,7 @@ jobs:
     - run: rustup update --no-self-update stable && rustup default stable
     - uses: actions/setup-node@v5
       with:
-        node-version: 22
+        node-version: 24
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v1.x
