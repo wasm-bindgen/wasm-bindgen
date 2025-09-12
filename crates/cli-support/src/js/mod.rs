@@ -610,12 +610,12 @@ __wbg_set_wasm(wasm);"
 
                 // Add instantiation code using wasmModule from source import
                 footer.push_str(&wasm_import_object);
-                footer.push_str(&format!(
+                footer.push_str(
                     "
 const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
-"
-                ));
+",
+                );
 
                 if needs_manual_start {
                     footer.push_str("\nwasm.__wbindgen_start();\n");
