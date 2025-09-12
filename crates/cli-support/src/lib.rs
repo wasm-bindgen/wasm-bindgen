@@ -704,6 +704,8 @@ impl Output {
                 &js_path,
                 format!(
                     "\
+// @ts-ignore TypeScript doesn't yet support source phase imports
+// See: https://github.com/microsoft/TypeScript/issues/61216
 import source wasmModule from \"./{wasm_name}.wasm\";
 
 {start}{}",
