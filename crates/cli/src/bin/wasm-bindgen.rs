@@ -68,7 +68,7 @@ struct Args {
         long,
         value_name = "TARGET",
         help = "What type of output to generate, valid\n\
-                values are [web, bundler, nodejs, no-modules, deno, experimental-nodejs-module],\n\
+                values are [web, bundler, nodejs, no-modules, deno, experimental-nodejs-module, source-phase],\n\
                 and the default is [bundler]"
     )]
     target: Option<String>,
@@ -110,7 +110,8 @@ fn rmain(args: &Args) -> Result<(), Error> {
             "nodejs" => b.nodejs(true)?,
             "deno" => b.deno(true)?,
             "experimental-nodejs-module" => b.nodejs_module(true)?,
-            s => bail!("invalid encode-into mode: `{}`", s),
+            "source-phase" => b.source_phase(true)?,
+            s => bail!("invalid target: `{}`", s),
         };
     }
     b.input_path(&args.input)
