@@ -16,6 +16,7 @@ The methods of deployment and integration here are primarily tied to the
 | [`deno`]        | Loadable using imports from Deno modules                   |
 | [`no-modules`]  | Like `web`, but older and doesn't use ES modules           |
 | [`experimental-nodejs-module`]  | Loadable via `import` as a Node.js ESM module. |
+| [`source-phase`] | Uses the new source phase imports syntax to obtain the compiled WebAssembly module |
 
 [`bundler`]: #bundlers
 [`web`]: #without-a-bundler
@@ -23,6 +24,7 @@ The methods of deployment and integration here are primarily tied to the
 [`nodejs`]: #nodejs
 [`deno`]: #deno
 [`experimental-nodejs-module`]: #nodejs-module
+[`source-phase`]: #source-phase-imports
 
 ## Bundlers
 
@@ -116,6 +118,20 @@ To then import your module inside deno, use
 // @deno-types="./out/crate_name.d.ts"
 import { yourFunction } from "./out/crate_name.js";
 ```
+
+## Source Phase Imports
+
+**`--target source-phase`**
+
+The `--target source-phase` option generates ES modules that use the new source phase imports syntax to obtain uninstantiated WebAssembly modules.
+
+Source phase imports allow importing the compiled WebAssembly module directly (rather than its exports) using the Wasm ESM Integration:
+
+```js
+import source wasmModule from "./module.wasm";
+```
+
+Currently supported in Node.js 24.
 
 ## NPM
 
