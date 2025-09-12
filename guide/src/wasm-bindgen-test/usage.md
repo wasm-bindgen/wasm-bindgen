@@ -128,13 +128,4 @@ Run the tests by passing `--target wasm32-unknown-unknown` to `cargo test`:
 cargo test --target wasm32-unknown-unknown
 ```
 
-Doctest cross-compiling is now unconditionally enabled starting in Rust 1.89,
-this means that the above command will also run doctest.
-
-Prior to this Rust version, if you also need to run doctests, add the unstable
-[`-Zdoctest-xcompile`](https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#doctest-xcompile) 
-flag. This requires using the Rust nightly channel like this:
-
-```
-cargo +nightly test --target wasm32-unknown-unknown -Zdoctest-xcompile
-```
+This will run all tests, including doctests (requires at least Rust 1.89).
