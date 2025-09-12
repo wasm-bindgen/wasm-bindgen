@@ -3847,7 +3847,7 @@ wasm = wasmInstance.exports;
                     OutputMode::Node { .. } | OutputMode::SourcePhase => "wasmModule",
                     _ => bail!(
                         "`wasm_bindgen::module` is currently only supported with \
-                         `--target no-modules`, `--target web`, `--target source-phase` and `--target nodejs`"
+                         `--target no-modules`, `--target web`, `--target module` and `--target nodejs`"
                     ),
                 }
                 .to_string()

@@ -222,7 +222,7 @@ impl Bindgen {
 
     pub fn source_phase(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
         if source_phase {
-            self.switch_mode(OutputMode::SourcePhase, "--target source-phase")?;
+            self.switch_mode(OutputMode::SourcePhase, "--target module")?;
         }
         Ok(self)
     }

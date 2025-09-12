@@ -16,7 +16,7 @@ The methods of deployment and integration here are primarily tied to the
 | [`deno`]        | Loadable using imports from Deno modules                   |
 | [`no-modules`]  | Like `web`, but older and doesn't use ES modules           |
 | [`experimental-nodejs-module`]  | Loadable via `import` as a Node.js ESM module. |
-| [`source-phase`] | Uses the new source phase imports syntax to obtain the compiled WebAssembly module |
+| [`module`] | Uses the new source phase imports syntax to obtain the compiled WebAssembly module |
 
 [`bundler`]: #bundlers
 [`web`]: #without-a-bundler
@@ -24,7 +24,7 @@ The methods of deployment and integration here are primarily tied to the
 [`nodejs`]: #nodejs
 [`deno`]: #deno
 [`experimental-nodejs-module`]: #nodejs-module
-[`source-phase`]: #source-phase-imports
+[`module`]: #source-phase-imports
 
 ## Bundlers
 
@@ -119,19 +119,27 @@ To then import your module inside deno, use
 import { yourFunction } from "./out/crate_name.js";
 ```
 
-## Source Phase Imports
+## Module
 
-**`--target source-phase`**
+**`--target module`**
 
-The `--target source-phase` option generates ES modules that use the new source phase imports syntax to obtain uninstantiated WebAssembly modules.
+The `--target module` option generates a cross-toolchain portable ES module target, that by default uses the new source phase imports syntax to obtain uninstantiated WebAssembly modules.
 
-Source phase imports allow importing the compiled WebAssembly module directly (rather than its exports) using the Wasm ESM Integration:
+[Source phase imports](https://github.com/tc39/proposal-source-phase-imports) allow importing the compiled WebAssembly module (rather than its instance) using the Wasm ESM Integration:
 
 ```js
 import source wasmModule from "./module.wasm";
+
+// Example illustrative usage:
+const instance = new WebAssembly.Instance(wasmModule, imports);
+export function foo () {
+  instance.doFoo();
+}
 ```
 
-Currently supported in Node.js 24.
+This replaces the need for `compileStreaming` and platform-specific Wasm-loading paths which require separate target implementations.
+
+_Currently only supported in Esbuild and Node.js 24._
 
 ## NPM
 

@@ -17,7 +17,7 @@
   `wasm-bindgen-test`.
   [#4434](https://github.com/wasm-bindgen/wasm-bindgen/pull/4434)
 
-* New `--target=source-phase` target for outputting source phase imports.
+* New `--target=module` target for outputting source phase imports.
   [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
 
 ### Fixed
