@@ -136,7 +136,7 @@ fn runtest(
             .find_map(|f| f.strip_prefix("--target="))
             .unwrap_or("bundler");
 
-        let out_dir = &td.path().join(target);
+        let out_dir = &td.path().join(&format!("{target}{flags_index}"));
         fs::create_dir(out_dir)?;
 
         let mut bindgen = Command::cargo_bin("wasm-bindgen")?;

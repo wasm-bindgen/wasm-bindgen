@@ -3,6 +3,7 @@
 // FLAGS: --target=no-modules
 // FLAGS: --target=nodejs
 // FLAGS: --target=deno
+// FLAGS: --target=source-phase
 
 use wasm_bindgen::prelude::*;
 
