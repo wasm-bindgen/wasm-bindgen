@@ -65,4 +65,3 @@ jobs:
         --exclude msrv-*-test
         ${{ matrix.flags }}
         -- -D warnings
- javascript is a love language
