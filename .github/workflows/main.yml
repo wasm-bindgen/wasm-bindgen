@@ -26,7 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: cargo clippy --no-deps --all --all-features --all-targets -- -D warnings
+    - run: >
+        cargo clippy --no-deps --all
+        --all-features --all-targets
+        -- -D warnings
 
   # Run `cargo clippy` over Wasm-specific crates on the Wasm target.
   clippy_wasm:
@@ -35,9 +38,7 @@ jobs:
         include:
           - name: "all features"
             rust-version: stable
-            flags: >
-              --all-features
-              --all-targets
+            flags: --all-features --all-targets
           - name: "no_std"
             rust-version: stable
             # Can't use `--all-targets` because tests depend on default features.
@@ -56,8 +57,7 @@ jobs:
     - run: rustup component add clippy ${{ matrix.rustup_components }}
     - run: rustup target add wasm32-unknown-unknown
     - run: >
-        cargo clippy
-        --all
+        cargo clippy --no-deps --all
         --target wasm32-unknown-unknown
         --exclude wasm-bindgen-cli*
         --exclude wasm-bindgen-*macro
@@ -65,3 +65,4 @@ jobs:
         --exclude msrv-*-test
         ${{ matrix.flags }}
         -- -D warnings
+ javascript is a love language
