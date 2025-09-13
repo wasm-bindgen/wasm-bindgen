@@ -38,16 +38,16 @@ jobs:
         include:
           - name: "all features"
             rust-version: stable
-            flags: --all-features --all-targets
+            cargo-flags: --all-features --all-targets
           - name: "no_std"
             rust-version: stable
             # Can't use `--all-targets` because tests depend on default features.
-            flags: --no-default-features
+            cargo-flags: --no-default-features
           - name: "with `atomics`"
             rust-version: nightly-2025-08-04
             rustup_components: rust-src
-            flags: >
-              -Zbuild-std=core,alloc
+            cargo-flags: >
+              -Zbuild-std=panic_abort,std
               --config 'target.wasm32-unknown-unknown.rustflags="-Ctarget-feature=+atomics"'
     name: Clippy Wasm-specific crates (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -63,5 +63,5 @@ jobs:
         --exclude wasm-bindgen-*macro
         --exclude wasm-bindgen-webidl
         --exclude msrv-*-test
-        ${{ matrix.flags }}
+        ${{ matrix.cargo-flags }}
         -- -D warnings
