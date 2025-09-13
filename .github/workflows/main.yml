@@ -47,7 +47,7 @@ jobs:
             rustup_components: rust-src
             flags: >
               -Zbuild-std=core,alloc
-              --config target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'
+              --config 'target.wasm32-unknown-unknown.rustflags="-Ctarget-feature=+atomics"'
     name: Clippy Wasm-specific crates (${{ matrix.name }})
     runs-on: ubuntu-latest
     steps:
