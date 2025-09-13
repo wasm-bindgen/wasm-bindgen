@@ -84,10 +84,10 @@ pub fn wasm_bindgen_test(
         None => quote! { ::core::option::Option::None },
     };
 
-    let test_body = if attributes.r#async {
-        quote! { cx.execute_async(test_name, #ident, #should_panic_par, #ignore_par); }
+    let execute = if attributes.r#async {
+        quote! { execute_async }
     } else {
-        quote! { cx.execute_sync(test_name, #ident, #should_panic_par, #ignore_par); }
+        quote! { execute_sync }
     };
 
     let ignore_name = if ignore.is_some() { "$" } else { "" };
@@ -95,13 +95,13 @@ pub fn wasm_bindgen_test(
     let wasm_bindgen_path = attributes.wasm_bindgen_path;
     tokens.extend(
         quote! {
+            #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
             const _: () = {
                 #wasm_bindgen_path::__rt::wasm_bindgen::__wbindgen_coverage! {
                 #[export_name = ::core::concat!("__wbgt_", #ignore_name, "_", ::core::module_path!(), "::", ::core::stringify!(#ident))]
-                #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
                 extern "C" fn __wbgt_test(cx: &#wasm_bindgen_path::__rt::Context) {
                     let test_name = ::core::concat!(::core::module_path!(), "::", ::core::stringify!(#ident));
-                    #test_body
+                    cx.#execute(test_name, #ident, #should_panic_par, #ignore_par);
                 }
                 }
             };
@@ -136,6 +136,13 @@ pub fn wasm_bindgen_test(
                 quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #ignore)] }
             )
         }
+    } else {
+        tokens.extend(quote! {
+            #[cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))]
+            const _: () = {
+                let _ = #ident;
+            };
+        });
     }
 
     tokens.extend(leading_tokens);
