@@ -128,8 +128,4 @@ Run the tests by passing `--target wasm32-unknown-unknown` to `cargo test`:
 cargo test --target wasm32-unknown-unknown
 ```
 
-If you also need to run doctests, add the unstable [`-Zdoctest-xcompile`](https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#doctest-xcompile) flag. This requires using the Rust nightly channel like this:
-
-```
-cargo +nightly test --target wasm32-unknown-unknown -Zdoctest-xcompile
-```
+Running doctests requires at least Rust v1.89.
