@@ -128,4 +128,4 @@ Run the tests by passing `--target wasm32-unknown-unknown` to `cargo test`:
 cargo test --target wasm32-unknown-unknown
 ```
 
-This will run all tests, including doctests (requires at least Rust 1.89).
+Running doctests requires at least Rust v1.89.
