@@ -362,7 +362,7 @@ pub trait TryFromJsValue: Sized {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait TryFromJsRef: Clone {
+pub trait TryFromJsRef {
     /// The type returned in the event of a conversion error.
     type Error;
 
