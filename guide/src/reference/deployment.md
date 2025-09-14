@@ -123,9 +123,13 @@ import { yourFunction } from "./out/crate_name.js";
 
 **`--target module`**
 
-The `--target module` option generates a cross-toolchain portable ES module target, that by default uses the new source phase imports syntax to obtain uninstantiated WebAssembly modules.
+The `--target module` option generates a new cross-toolchain ES module target, that by default uses the new source phase imports syntax to obtain uninstantiated WebAssembly modules.
 
-[Source phase imports](https://github.com/tc39/proposal-source-phase-imports) allow importing the compiled WebAssembly module (rather than its instance) using the Wasm ESM Integration:
+[Source phase imports](https://github.com/tc39/proposal-source-phase-imports) allow importing the compiled WebAssembly module (rather than its instance) using the Wasm ESM Integration.
+
+_Note that source phase imports are currently only supported in ESBuild and Node.js 24._
+
+For example:
 
 ```js
 import source wasmModule from "./module.wasm";
@@ -137,9 +141,7 @@ export function foo () {
 }
 ```
 
-This replaces the need for `compileStreaming` and platform-specific Wasm-loading paths which require separate target implementations.
-
-_Currently only supported in Esbuild and Node.js 24._
+This replaces the need for `compileStreaming` and platform-specific Wasm-loading paths which previously required separate target implementations.
 
 ## NPM
 

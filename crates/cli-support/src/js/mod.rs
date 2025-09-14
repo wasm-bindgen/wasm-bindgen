@@ -210,7 +210,7 @@ impl<'a> Context<'a> {
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
-            | OutputMode::SourcePhase
+            | OutputMode::Module
             | OutputMode::Deno => match export {
                 ExportJs::Class(class) => {
                     assert_eq!(export_name, definition_name);
@@ -601,7 +601,7 @@ __wbg_set_wasm(wasm);"
             }
 
             // For source phase imports, we need to instantiate the module
-            OutputMode::SourcePhase => {
+            OutputMode::Module => {
                 js.push_str("let wasm;\n");
 
                 // Generate the import object similar to Deno
@@ -714,7 +714,7 @@ wasm = wasmInstance.exports;
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
-            | OutputMode::SourcePhase
+            | OutputMode::Module
             | OutputMode::Deno => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
                     imports.push_str("import { ");
@@ -1817,7 +1817,7 @@ wasm = wasmInstance.exports;
                 self.global(&format!("{decl_kind} {cached_text_processor_init}"));
             }
             OutputMode::Deno
-            | OutputMode::SourcePhase
+            | OutputMode::Module
             | OutputMode::Web
             | OutputMode::NoModules { .. }
             | OutputMode::Bundler { browser_only: true } => {
@@ -1830,7 +1830,7 @@ wasm = wasmInstance.exports;
         if let Some(init) = init {
             match &self.config.mode {
                 OutputMode::Node { .. }
-                | OutputMode::SourcePhase
+                | OutputMode::Module
                 | OutputMode::Bundler {
                     browser_only: false,
                 } => self.global(init),
@@ -1871,7 +1871,7 @@ wasm = wasmInstance.exports;
                 format!("cached{s} = new l{s}{args};")
             }
             OutputMode::Deno
-            | OutputMode::SourcePhase
+            | OutputMode::Module
             | OutputMode::Web
             | OutputMode::NoModules { .. }
             | OutputMode::Bundler { browser_only: true } => {
@@ -3543,7 +3543,7 @@ wasm = wasmInstance.exports;
                     let base = match self.config.mode {
                         OutputMode::Web
                         | OutputMode::Bundler { .. }
-                        | OutputMode::SourcePhase
+                        | OutputMode::Module
                         | OutputMode::Deno
                         | OutputMode::Node { module: true } => "import.meta.url",
                         OutputMode::Node { module: false } => {
@@ -3844,7 +3844,7 @@ wasm = wasmInstance.exports;
                     OutputMode::Web | OutputMode::NoModules { .. } => {
                         "__wbg_init.__wbindgen_wasm_module"
                     }
-                    OutputMode::Node { .. } | OutputMode::SourcePhase => "wasmModule",
+                    OutputMode::Node { .. } | OutputMode::Module => "wasmModule",
                     _ => bail!(
                         "`wasm_bindgen::module` is currently only supported with \
                          `--target no-modules`, `--target web`, `--target module` and `--target nodejs`"

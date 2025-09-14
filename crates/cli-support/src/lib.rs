@@ -67,7 +67,7 @@ enum OutputMode {
     NoModules { global: String },
     Node { module: bool },
     Deno,
-    SourcePhase,
+    Module,
 }
 
 enum Input {
@@ -222,7 +222,7 @@ impl Bindgen {
 
     pub fn source_phase(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
         if source_phase {
-            self.switch_mode(OutputMode::SourcePhase, "--target module")?;
+            self.switch_mode(OutputMode::Module, "--target module")?;
         }
         Ok(self)
     }
