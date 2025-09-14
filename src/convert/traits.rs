@@ -347,3 +347,25 @@ pub trait TryFromJsValue: Sized {
     /// Performs the conversion.
     fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error>;
 }
+
+/// [`TryFromJsRef`] is a trait for converting a reference to a JavaScript value ([`JsValue`])
+/// into a reference to a Rust type. It is used by the [`wasm_bindgen`](wasm_bindgen_macro::wasm_bindgen)
+/// proc-macro to allow conversion to user reference types.
+///
+/// Types implementing this trait must specify their conversion logic from
+/// a reference to [`JsValue`] to a reference to the Rust type, handling any potential errors
+/// that may occur during the conversion process. This is useful for zero-copy conversions
+/// or when borrowing is required instead of taking ownership.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait TryFromJsRef: Clone {
+    /// The type returned in the event of a conversion error.
+    type Error;
+
+    /// Performs the conversion.
+    fn try_from_js_ref(value: &JsValue) -> Result<&Self, Self::Error>;
+}
