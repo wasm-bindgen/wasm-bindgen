@@ -696,7 +696,7 @@ impl Output {
 
         let js_path = out_dir.join(&self.stem).with_extension(extension);
 
-        if matches!(&gen.mode, OutputMode::SourcePhase) {
+        if matches!(&gen.mode, OutputMode::Module) {
             let wasm_name = format!("{}_bg", self.stem);
             let start = gen.start.as_deref().unwrap_or("");
 
