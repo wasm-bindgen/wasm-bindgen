@@ -120,17 +120,15 @@ fn main() -> anyhow::Result<()> {
         .map(Path::new)
         .context("file to test is not a valid file, can't extract file name")?;
 
-    let debug = env::var("WASM_BINDGEN_NO_DEBUG").is_err();
-
-    let no_generate_dwarf = env::var("WASM_BINDGEN_TEST_NO_DWARF").is_ok();
-
     // Collect all tests that the test harness is supposed to run. We assume
     // that any exported function with the prefix `__wbg_test` is a test we need
     // to execute.
     let wasm = fs::read(&cli.file).context("failed to read Wasm file")?;
     let mut wasm = walrus::ModuleConfig::new()
-        // generate dwarf
-        .generate_dwarf(!no_generate_dwarf)
+        // generate dwarf by default, it can be controlled by debug profile
+        //
+        // https://doc.rust-lang.org/cargo/reference/profiles.html#debug
+        .generate_dwarf(true)
         .parse(&wasm)
         .context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
@@ -249,6 +247,7 @@ fn main() -> anyhow::Result<()> {
     };
 
     let headless = env::var("NO_HEADLESS").is_err();
+    let debug = env::var("WASM_BINDGEN_NO_DEBUG").is_err();
 
     // Gracefully handle requests to execute only node or only web tests.
     let node = matches!(test_mode, TestMode::Node { .. });
