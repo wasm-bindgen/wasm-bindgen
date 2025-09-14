@@ -67,6 +67,7 @@ enum OutputMode {
     NoModules { global: String },
     Node { module: bool },
     Deno,
+    Module,
 }
 
 enum Input {
@@ -215,6 +216,13 @@ impl Bindgen {
         if deno {
             self.switch_mode(OutputMode::Deno, "--target deno")?;
             self.encode_into(EncodeInto::Always);
+        }
+        Ok(self)
+    }
+
+    pub fn source_phase(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
+        if source_phase {
+            self.switch_mode(OutputMode::Module, "--target module")?;
         }
         Ok(self)
     }
@@ -688,7 +696,21 @@ impl Output {
 
         let js_path = out_dir.join(&self.stem).with_extension(extension);
 
-        if gen.mode.esm_integration() {
+        if matches!(&gen.mode, OutputMode::Module) {
+            let wasm_name = format!("{}_bg", self.stem);
+            let start = gen.start.as_deref().unwrap_or("");
+
+            write(
+                &js_path,
+                format!(
+                    "\
+import source wasmModule from \"./{wasm_name}.wasm\";
+
+{start}{}",
+                    reset_indentation(&gen.js)
+                ),
+            )?;
+        } else if gen.mode.esm_integration() {
             let js_name = format!("{}_bg.{}", self.stem, extension);
 
             let start = gen.start.as_deref().unwrap_or("");
