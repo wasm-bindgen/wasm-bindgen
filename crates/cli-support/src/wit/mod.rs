@@ -139,7 +139,7 @@ impl<'a> Context<'a> {
             "__wbindgen_object_clone_ref",
             vec![Descriptor::I32],
             Descriptor::I32,
-            AuxImport::Intrinsic(Intrinsic::Throw),
+            AuxImport::Intrinsic(Intrinsic::ObjectCloneRef),
         )?;
         self.add_aux_import_to_import_map(
             "__wbindgen_object_drop_ref",
