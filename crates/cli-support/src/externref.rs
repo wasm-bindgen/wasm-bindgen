@@ -1,7 +1,5 @@
 use crate::descriptor::VectorKind;
-use crate::intrinsic::Intrinsic;
 use crate::transforms::externref::Context;
-use crate::wit::AuxImport;
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection};
 use crate::wit::{AdapterType, InstructionData, StackChange, WasmBindgenAux};
 use anyhow::Result;
@@ -85,24 +83,6 @@ pub fn process(module: &mut Module) -> Result<()> {
         };
         for instr in instrs {
             match instr.instr {
-                // Calls to the heap live count intrinsic are now routed to the
-                // actual Wasm function which keeps track of this.
-                Instruction::CallAdapter(adapter) => {
-                    let id = match meta.live_count {
-                        Some(id) => id,
-                        None => continue,
-                    };
-                    let import = match aux.import_map.get(&adapter) {
-                        Some(import) => import,
-                        None => continue,
-                    };
-                    match import {
-                        AuxImport::Intrinsic(Intrinsic::ExternrefHeapLiveCount) => {}
-                        _ => continue,
-                    }
-                    instr.instr = Instruction::CallCore(id);
-                }
-
                 // Optional externref values are now managed in the Wasm module, so
                 // we need to store where they're managed.
                 Instruction::I32FromOptionExternref {

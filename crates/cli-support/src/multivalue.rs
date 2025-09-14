@@ -36,7 +36,6 @@ pub fn run(module: &mut Module) -> Result<(), Error> {
 
     for (slot, id) in slots.into_iter().zip(wrappers) {
         match slot {
-            Slot::Id(s) => *s = id,
             Slot::Export(e) => module.exports.get_mut(e).item = id.into(),
             Slot::TableElement(index) => set_table_entry(module, index, id),
         }
@@ -47,17 +46,16 @@ pub fn run(module: &mut Module) -> Result<(), Error> {
     Ok(())
 }
 
-enum Slot<'a> {
-    Id(&'a mut walrus::FunctionId),
+enum Slot {
     Export(walrus::ExportId),
     TableElement(u32),
 }
 
-fn extract_xform<'a>(
+fn extract_xform(
     module: &Module,
-    adapter: &'a mut Adapter,
+    adapter: &mut Adapter,
     to_xform: &mut Vec<(walrus::FunctionId, usize, Vec<walrus::ValType>)>,
-    slots: &mut Vec<Slot<'a>>,
+    slots: &mut Vec<Slot>,
 ) {
     let instructions = match &mut adapter.kind {
         AdapterKind::Local { instructions } => instructions,
@@ -80,7 +78,6 @@ fn extract_xform<'a>(
         let slot = instructions
             .iter_mut()
             .find_map(|i| match &mut i.instr {
-                Instruction::CallCore(f) => Some(Slot::Id(f)),
                 Instruction::CallExport(e) => Some(Slot::Export(*e)),
                 Instruction::CallTableElement(index) => Some(Slot::TableElement(*index)),
                 _ => None,
@@ -90,7 +87,6 @@ fn extract_xform<'a>(
         // LLVM currently always uses the first parameter for the return
         // pointer. We hard code that here, since we have no better option.
         let id = match &slot {
-            Slot::Id(i) => **i,
             Slot::Export(e) => match module.exports.get(*e).item {
                 walrus::ExportItem::Function(f) => f,
                 _ => panic!("found call to non-function export"),

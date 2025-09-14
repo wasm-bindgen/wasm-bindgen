@@ -763,8 +763,7 @@ fn instruction(
             js.push(arg);
         }
 
-        Instruction::CallCore(_)
-        | Instruction::CallExport(_)
+        Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::CallTableElement(_)
         | Instruction::DeferFree { .. } => {
@@ -1542,11 +1541,6 @@ impl Invocation {
     fn from(instr: &Instruction, module: &Module) -> Result<Invocation, Error> {
         use Instruction::*;
         Ok(match instr {
-            CallCore(f) => Invocation::Core {
-                id: *f,
-                defer: false,
-            },
-
             DeferFree { free, .. } => Invocation::Core {
                 id: *free,
                 defer: true,

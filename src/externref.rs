@@ -161,8 +161,7 @@ pub unsafe extern "C" fn __externref_drop_slice(ptr: *mut JsValue, len: usize) {
 
 // Implementation of `__wbindgen_externref_heap_live_count` for when we are using
 // `externref` instead of the JS `heap`.
-#[no_mangle]
-pub unsafe extern "C" fn __externref_heap_live_count() -> u32 {
+pub fn __wbindgen_externref_heap_live_count() -> u32 {
     HEAP_SLAB
         .try_with(|slot| {
             let slab = slot.replace(Slab::new());

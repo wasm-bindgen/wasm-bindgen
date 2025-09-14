@@ -134,8 +134,12 @@ pub use wasm_bindgen_macro::link_to;
 pub mod closure;
 pub mod convert;
 pub mod describe;
-mod externref;
 mod link;
+
+#[cfg(target_feature = "reference-types")]
+mod externref;
+#[cfg(target_feature = "reference-types")]
+use externref::__wbindgen_externref_heap_live_count;
 
 mod cast;
 pub use crate::cast::{JsCast, JsObject};
@@ -1083,6 +1087,7 @@ extern "C" {
 // standard wasm-bindgen ABI conversions.
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate, raw_module = "__wbindgen_placeholder__")]
 extern "C" {
+    #[cfg(not(target_feature = "reference-types"))]
     fn __wbindgen_externref_heap_live_count() -> u32;
 
     fn __wbindgen_is_null(js: &JsValue) -> bool;
