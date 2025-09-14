@@ -76,7 +76,9 @@ synthesized by Rust's linker, LLD.
 ### `--keep-debug`
 
 When post-processing the `.wasm` binary, do not strip DWARF debug info custom
-sections.
+sections. See [debug information] for more.
+
+[debug information]: debug-info.html
 
 ### `--browser`
 

@@ -17,8 +17,10 @@
   `wasm-bindgen-test`.
   [#4434](https://github.com/wasm-bindgen/wasm-bindgen/pull/4434)
 
-* Generate dwarf for tests by default, it will help with debugging in devtools.
+* Generate DWARF for tests by default. See the [guide on debug information] for more details.
   [#4635](https://github.com/wasm-bindgen/wasm-bindgen/pull/4635)
+
+  [guide on debug information]: https://wasm-bindgen.github.io/wasm-bindgen/reference/debug-info.html
 
 ### Fixed
 
