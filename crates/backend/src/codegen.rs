@@ -222,6 +222,7 @@ impl ToTokens for ast::Struct {
         let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());
         let free_fn = Ident::new(&shared::free_function(&name_str), Span::call_site());
         let unwrap_fn = Ident::new(&shared::unwrap_function(&name_str), Span::call_site());
+        let peek_fn = Ident::new(&shared::peek_function(&name_str), Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
         (quote! {
             #[automatically_derived]
@@ -408,6 +409,39 @@ impl ToTokens for ast::Struct {
                         unsafe {
                             #wasm_bindgen::__rt::core::result::Result::Ok(
                                 <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(ptr)
+                            )
+                        }
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl<'__wbg_a> #wasm_bindgen::convert::TryFromJsRef<'__wbg_a> for #name {
+                type Error = #wasm_bindgen::JsValue;
+                type Anchor = #wasm_bindgen::__rt::RcRef<#name>;
+
+                fn try_from_js_ref(value: &'__wbg_a #wasm_bindgen::JsValue)
+                    -> #wasm_bindgen::__rt::core::result::Result<Self::Anchor, Self::Error> {
+                    let idx = #wasm_bindgen::convert::IntoWasmAbi::into_abi(value);
+
+                    #[link(wasm_import_module = "__wbindgen_placeholder__")]
+                    #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
+                    extern "C" {
+                        fn #peek_fn(ptr: u32) -> u32;
+                    }
+
+                    #[cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))]
+                    unsafe fn #peek_fn(_: u32) -> u32 {
+                        panic!("cannot convert from JsValue outside of the Wasm target")
+                    }
+
+                    let ptr = unsafe { #peek_fn(idx) };
+                    if ptr == 0 {
+                        #wasm_bindgen::__rt::core::result::Result::Err(value.clone())
+                    } else {
+                        unsafe {
+                            #wasm_bindgen::__rt::core::result::Result::Ok(
+                                <Self as #wasm_bindgen::convert::RefFromWasmAbi>::ref_from_abi(ptr)
                             )
                         }
                     }

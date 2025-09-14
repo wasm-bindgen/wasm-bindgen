@@ -349,23 +349,31 @@ pub trait TryFromJsValue: Sized {
 }
 
 /// [`TryFromJsRef`] is a trait for converting a reference to a JavaScript value ([`JsValue`])
-/// into a reference to a Rust type. It is used by the [`wasm_bindgen`](wasm_bindgen_macro::wasm_bindgen)
-/// proc-macro to allow conversion to user reference types.
+/// into a borrowed Rust type with an associated anchor that keeps the borrow alive.
+/// It is used by the [`wasm_bindgen`](wasm_bindgen_macro::wasm_bindgen) proc-macro to
+/// allow conversion to user reference types.
 ///
-/// Types implementing this trait must specify their conversion logic from
-/// a reference to [`JsValue`] to a reference to the Rust type, handling any potential errors
+/// Types implementing this trait must specify their conversion logic from a reference to
+/// [`JsValue`] to an anchored reference to the Rust type, handling any potential errors
 /// that may occur during the conversion process. This is useful for zero-copy conversions
 /// or when borrowing is required instead of taking ownership.
+///
+/// The returned [`Anchor`](TryFromJsRef::Anchor) type holds the borrow for the duration of
+/// its lifetime. For example, exported Rust structs typically use an `RcRef<T>` anchor,
+/// while transparent imported wrappers typically use `&'a T`.
 ///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait TryFromJsRef {
+pub trait TryFromJsRef<'a>: Sized {
     /// The type returned in the event of a conversion error.
     type Error;
 
+    /// The anchor type that owns the borrow for the returned reference.
+    type Anchor: Deref<Target = Self> + 'a;
+
     /// Performs the conversion.
-    fn try_from_js_ref(value: &JsValue) -> Result<&Self, Self::Error>;
+    fn try_from_js_ref(value: &'a JsValue) -> Result<Self::Anchor, Self::Error>;
 }

@@ -1064,6 +1064,14 @@ impl<'a> Context<'a> {
             AuxImport::UnwrapExportedClass(struct_.name.to_string()),
         )?;
 
+        let peek_fn = wasm_bindgen_shared::peek_function(struct_.name);
+        self.add_aux_import_to_import_map(
+            &peek_fn,
+            vec![Descriptor::Externref],
+            Descriptor::I32,
+            AuxImport::PeekExportedClassPointer(struct_.name.to_string()),
+        )?;
+
         Ok(())
     }
 

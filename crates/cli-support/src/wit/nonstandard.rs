@@ -368,6 +368,11 @@ pub enum AuxImport {
     /// instance of the given exported class. The class name is one that is
     /// exported from the Rust/wasm.
     UnwrapExportedClass(String),
+
+    /// This import is a generated shim which will non-destructively peek the raw
+    /// pointer from a JsValue that wraps the given exported class.
+    /// Returns 0 if the value is not an instance of the class.
+    PeekExportedClassPointer(String),
 }
 
 /// Values that can be imported verbatim to hook up to an import.
