@@ -33,6 +33,11 @@
 * Fix crash caused by allocations during `TypedArray` interactions.
   [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
 
+### Changed
+
+* Hidden deprecated options from the `wasm-bindgen --help` docs.
+  [#4646](https://github.com/wasm-bindgen/wasm-bindgen/pull/4646)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.101](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.100...0.2.101)

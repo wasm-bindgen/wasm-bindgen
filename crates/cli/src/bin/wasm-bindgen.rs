@@ -91,6 +91,7 @@ struct Args {
     // The options below are deprecated. They're still parsed for backwards compatibility,
     // but we don't want to show them in `--help` to avoid distracting users.
     #[arg(long, hide = true)]
+    #[deprecated(note = "implied default, only `--no-typescript` is needed")]
     typescript: bool,
     #[arg(long, hide = true, group = "target-group")]
     #[deprecated(note = "use `Args::target` instead")]
@@ -123,8 +124,6 @@ fn main() {
 }
 
 fn rmain(args: &Args) -> Result<(), Error> {
-    let typescript = args.typescript || !args.no_typescript;
-
     let mut b = Bindgen::new();
     match &args.target {
         Target::Bundler => b.bundler(true)?,
@@ -147,7 +146,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .keep_debug(args.keep_debug)
         .remove_name_section(args.remove_name_section)
         .remove_producers_section(args.remove_producers_section)
-        .typescript(typescript)
+        .typescript(!args.no_typescript)
         .omit_imports(args.omit_imports)
         .omit_default_module_path(args.omit_default_module_path)
         .split_linked_modules(args.split_linked_modules)
