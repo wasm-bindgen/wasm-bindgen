@@ -41,6 +41,7 @@ pub struct Bindgen {
     encode_into: EncodeInto,
     split_linked_modules: bool,
     symbol_dispose: bool,
+    generate_reset_state: bool,
 }
 
 pub struct Output {
@@ -111,6 +112,7 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             symbol_dispose,
+            generate_reset_state: false,
         }
     }
 
@@ -221,7 +223,7 @@ impl Bindgen {
         Ok(self)
     }
 
-    pub fn source_phase(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
+    pub fn module(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
         if source_phase {
             self.switch_mode(OutputMode::Module, "--target module")?;
         }
@@ -296,6 +298,11 @@ impl Bindgen {
         self
     }
 
+    pub fn reset_state_function(&mut self, generate_reset_state: bool) -> &mut Bindgen {
+        self.generate_reset_state = generate_reset_state;
+        self
+    }
+
     pub fn generate<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         self.generate_output()?.emit(path.as_ref())
     }
@@ -345,6 +352,11 @@ impl Bindgen {
             && module.exports.iter().any(|export| export.name == "default")
         {
             bail!("exported symbol \"default\" not allowed for --target web")
+        }
+
+        // Check that reset_state is only used with --target module
+        if self.generate_reset_state && !matches!(self.mode, OutputMode::Module) {
+            bail!("--experimental-reset-state-function is only supported for --target module")
         }
 
         let thread_count = transforms::threads::run(&mut module)
