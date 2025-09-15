@@ -174,6 +174,10 @@ impl<'a> Context<'a> {
         self.exposed_globals.as_mut().unwrap().insert(name.into())
     }
 
+    fn has_global(&self, name: &str) -> bool {
+        self.exposed_globals.as_ref().unwrap().contains(name)
+    }
+
     fn export(
         &mut self,
         export_name: &str,
@@ -1093,13 +1097,25 @@ wasm = wasmInstance.exports;
         }
 
         if class.wrap_needed {
+            let (ptr_assignment, register_data) = if self.config.generate_reset_state {
+                (
+                    "\
+                    obj.__wbg_ptr = ptr;
+                    obj.__wbg_inst = __wbg_instance_id;
+                    ",
+                    "{ ptr, instance: __wbg_instance_id }",
+                )
+            } else {
+                ("obj.__wbg_ptr = ptr;", "obj.__wbg_ptr")
+            };
+
             dst.push_str(&format!(
                 "
                 static __wrap(ptr) {{
                     ptr = ptr >>> 0;
                     const obj = Object.create({name}.prototype);
-                    obj.__wbg_ptr = ptr;
-                    {name}Finalization.register(obj, obj.__wbg_ptr, obj);
+                    {ptr_assignment}
+                    {name}Finalization.register(obj, {register_data}, obj);
                     return obj;
                 }}
                 "
@@ -1119,12 +1135,25 @@ wasm = wasmInstance.exports;
             ));
         }
 
+        let finalization_callback = if self.config.generate_reset_state {
+            format!(
+                "({{ ptr, instance }}) => {{
+                if (instance === __wbg_instance_id) wasm.{}(ptr >>> 0, 1);
+            }}",
+                wasm_bindgen_shared::free_function(name)
+            )
+        } else {
+            format!(
+                "ptr => wasm.{}(ptr >>> 0, 1)",
+                wasm_bindgen_shared::free_function(name)
+            )
+        };
+
         self.global(&format!(
             "
             const {name}Finalization = (typeof FinalizationRegistry === 'undefined')
                 ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry(ptr => wasm.{}(ptr >>> 0, 1));",
-            wasm_bindgen_shared::free_function(name),
+                : new FinalizationRegistry({finalization_callback});",
         ));
 
         // If the class is inspectable, generate `toJSON` and `toString`
@@ -2485,11 +2514,26 @@ wasm = wasmInstance.exports;
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
+        let dtor_call = format!("wasm.{table}.get(state.dtor)(a, state.b);");
+        let (state_init, instance_check) = if self.config.generate_reset_state {
+            (
+                "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                "
+                if (state.instance !== __wbg_instance_id) {
+                    throw new Error('Cannot invoke closure from previous WASM instance');
+                }
+                ",
+            )
+        } else {
+            ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+        };
+
         self.global(&format!(
             "
             function makeMutClosure(arg0, arg1, dtor, f) {{
-                const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                {state_init}
                 const real = (...args) => {{
+                    {instance_check}
                     // First up with a closure we increment the internal reference
                     // count. This ensures that the Rust closure environment won't
                     // be deallocated while we're invoking it.
@@ -2500,7 +2544,7 @@ wasm = wasmInstance.exports;
                         return f(a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(a, state.b);
+                            {dtor_call}
                             CLOSURE_DTORS.unregister(state);
                         }} else {{
                             state.a = a;
@@ -2511,7 +2555,7 @@ wasm = wasmInstance.exports;
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
-            ",
+            "
         ));
 
         Ok(())
@@ -2531,11 +2575,26 @@ wasm = wasmInstance.exports;
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
+        let dtor_call = format!("wasm.{table}.get(state.dtor)(state.a, state.b); state.a = 0;");
+        let (state_init, instance_check) = if self.config.generate_reset_state {
+            (
+                "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                "
+                if (state.instance !== __wbg_instance_id) {
+                    throw new Error('Cannot invoke closure from previous WASM instance');
+                }
+                ",
+            )
+        } else {
+            ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+        };
+
         self.global(&format!(
             "
             function makeClosure(arg0, arg1, dtor, f) {{
-                const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                {state_init}
                 const real = (...args) => {{
+                    {instance_check}
                     // First up with a closure we increment the internal reference
                     // count. This ensures that the Rust closure environment won't
                     // be deallocated while we're invoking it.
@@ -2544,8 +2603,7 @@ wasm = wasmInstance.exports;
                         return f(state.a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(state.a, state.b);
-                            state.a = 0;
+                            {dtor_call}
                             CLOSURE_DTORS.unregister(state);
                         }}
                     }}
@@ -2554,7 +2612,7 @@ wasm = wasmInstance.exports;
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
-            ",
+            "
         ));
 
         Ok(())
@@ -2565,18 +2623,119 @@ wasm = wasmInstance.exports;
             return Ok(());
         }
         let table = self.export_function_table()?;
+
+        let finalization_callback = if self.config.generate_reset_state {
+            format!(
+                "
+                state => {{
+                    if (state.instance === __wbg_instance_id) {{
+                        wasm.{table}.get(state.dtor)(state.a, state.b);
+                    }}
+                }}
+                "
+            )
+        } else {
+            format!(
+                "
+                state => {{
+                    wasm.{table}.get(state.dtor)(state.a, state.b);
+                }}
+                "
+            )
+        };
+
         self.global(&format!(
             "
             const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
                 ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry(state => {{
-                    wasm.{table}.get(state.dtor)(state.a, state.b)
-                }});
+                : new FinalizationRegistry({finalization_callback});
             "
         ));
 
         Ok(())
     }
+
+    fn generate_reset_state(&mut self) -> Result<(), Error> {
+        self.global("let __wbg_instance_id = 0;");
+
+        let mut reset_statements = Vec::new();
+
+        reset_statements.push("__wbg_instance_id++;".to_string());
+
+        for (_memory_id, (num, kinds)) in &self.memories {
+            for kind in kinds {
+                let memview_name = format!("get{}Memory", kind);
+                if self.has_global(memview_name.as_str()) {
+                    reset_statements.push(format!("cached{kind}Memory{num} = null;"));
+                }
+            }
+        }
+
+        // Conditionally reset globals based on whether they were used
+        if self.has_global("text_decoder") {
+            reset_statements.push(
+                "if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;".to_string(),
+            );
+        }
+
+        if self.has_global("wasm_vector_len") {
+            reset_statements.push(
+                "if (typeof WASM_VECTOR_LEN !== 'undefined') WASM_VECTOR_LEN = 0;".to_string(),
+            );
+        }
+
+        if self.has_global("heap") {
+            let mut heap_reset = format!(
+                "\
+                    if (typeof heap !== 'undefined') {{
+                        heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);
+                        heap = heap.concat([{}]);
+                ",
+                INITIAL_HEAP_VALUES.join(", ")
+            );
+
+            if self.has_global("heap_next") {
+                heap_reset.push_str(
+                    "\
+                        if (typeof heap_next !== 'undefined')
+                            heap_next = heap.length;
+                    ",
+                );
+            }
+
+            if self.has_global("stack_pointer") {
+                heap_reset.push_str(&format!(
+                    "\
+                        if (typeof stack_pointer !== 'undefined')
+                            stack_pointer = {INITIAL_HEAP_OFFSET};
+                    "
+                ));
+            }
+
+            heap_reset.push_str("}");
+            reset_statements.push(heap_reset);
+        }
+
+        reset_statements.push(
+            "\
+                const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+                wasm = wasmInstance.exports;
+                wasm.__wbindgen_start();
+            "
+            .to_string(),
+        );
+
+        let function_body = format!(" () {{\n{}}}", reset_statements.join("\n"));
+
+        self.export(
+            "__wbg_reset_state",
+            ExportJs::Function(&format!("function{function_body}")),
+            None,
+        )?;
+
+        Ok(())
+    }
+
     fn global(&mut self, s: &str) {
         let s = s.trim();
 
@@ -2815,6 +2974,11 @@ wasm = wasmInstance.exports;
         }
 
         self.export_destructor();
+
+        // Generate reset state function last, to ensure it knows about all other state.
+        if self.config.generate_reset_state {
+            self.generate_reset_state()?;
+        }
 
         Ok(())
     }

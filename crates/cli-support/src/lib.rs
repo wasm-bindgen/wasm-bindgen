@@ -41,6 +41,7 @@ pub struct Bindgen {
     encode_into: EncodeInto,
     split_linked_modules: bool,
     symbol_dispose: bool,
+    generate_reset_state: bool,
 }
 
 pub struct Output {
@@ -90,6 +91,7 @@ impl Bindgen {
             env::var("WASM_BINDGEN_ANYREF").is_ok() || env::var("WASM_BINDGEN_EXTERNREF").is_ok();
         let multi_value = env::var("WASM_BINDGEN_MULTI_VALUE").is_ok();
         let symbol_dispose = env::var("WASM_BINDGEN_EXPERIMENTAL_SYMBOL_DISPOSE").is_ok();
+        let generate_reset_state = env::var("WASM_BINDGEN_GENERATE_RESET_STATE").is_ok();
         Bindgen {
             input: Input::None,
             out_name: None,
@@ -111,6 +113,7 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             symbol_dispose,
+            generate_reset_state,
         }
     }
 
@@ -221,7 +224,7 @@ impl Bindgen {
         Ok(self)
     }
 
-    pub fn source_phase(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
+    pub fn module(&mut self, source_phase: bool) -> Result<&mut Bindgen, Error> {
         if source_phase {
             self.switch_mode(OutputMode::Module, "--target module")?;
         }
@@ -296,6 +299,11 @@ impl Bindgen {
         self
     }
 
+    pub fn reset_state_function(&mut self, generate_reset_state: bool) -> &mut Bindgen {
+        self.generate_reset_state = generate_reset_state;
+        self
+    }
+
     pub fn generate<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         self.generate_output()?.emit(path.as_ref())
     }
@@ -345,6 +353,11 @@ impl Bindgen {
             && module.exports.iter().any(|export| export.name == "default")
         {
             bail!("exported symbol \"default\" not allowed for --target web")
+        }
+
+        // Check that reset_state is only used with --target module
+        if self.generate_reset_state && !matches!(self.mode, OutputMode::Module) {
+            bail!("--generate-reset-state is only supported for --target module")
         }
 
         let thread_count = transforms::threads::run(&mut module)

@@ -88,6 +88,11 @@ struct Args {
                 If a bundler is used, it needs to be set up accordingly."
     )]
     split_linked_modules: bool,
+    #[arg(
+        long,
+        help = "Generate __wbg_reset_state function for WASM reinitialization"
+    )]
+    generate_reset_state: bool,
     // The options below are deprecated. They're still parsed for backwards compatibility,
     // but we don't want to show them in `--help` to avoid distracting users.
     #[arg(long, hide = true)]
@@ -132,7 +137,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         Target::Nodejs => b.nodejs(true)?,
         Target::Deno => b.deno(true)?,
         Target::ExperimentalNodejsModule => b.nodejs_module(true)?,
-        Target::Module => b.source_phase(true)?,
+        Target::Module => b.module(true)?,
     };
     #[allow(deprecated)]
     b.input_path(&args.input)
@@ -150,7 +155,8 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .omit_imports(args.omit_imports)
         .omit_default_module_path(args.omit_default_module_path)
         .split_linked_modules(args.split_linked_modules)
-        .reference_types(args.reference_types);
+        .reference_types(args.reference_types)
+        .reset_state_function(args.generate_reset_state);
 
     if let Some(ref name) = args.no_modules_global {
         b.no_modules_global(name)?;
