@@ -2662,7 +2662,7 @@ wasm = wasmInstance.exports;
 
         reset_statements.push("__wbg_instance_id++;".to_string());
 
-        for (_memory_id, (num, kinds)) in &self.memories {
+        for (num, kinds) in self.memories.values() {
             for kind in kinds {
                 let memview_name = format!("get{}Memory", kind);
                 if self.has_global(memview_name.as_str()) {
@@ -2712,7 +2712,7 @@ wasm = wasmInstance.exports;
                 ));
             }
 
-            heap_reset.push_str("}");
+            heap_reset.push('}');
             reset_statements.push(heap_reset);
         }
 
