@@ -94,23 +94,23 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
 }
 
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.
-pub struct LazyCell<T, F = fn() -> T>(Wrapper<Lazy<T, F>>);
+pub struct LazyCell<T, F = fn() -> T>(Lazy<T, F>);
 
-struct Wrapper<T>(T);
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl<T, F> Sync for LazyCell<T, F> {}
 
-unsafe impl<T> Sync for Wrapper<T> {}
-
-unsafe impl<T> Send for Wrapper<T> {}
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl<T, F> Send for LazyCell<T, F> {}
 
 impl<T, F> LazyCell<T, F> {
     pub const fn new(init: F) -> LazyCell<T, F> {
-        Self(Wrapper(Lazy::new(init)))
+        Self(Lazy::new(init))
     }
 }
 
 impl<T, F: FnOnce() -> T> LazyCell<T, F> {
     pub fn force(this: &Self) -> &T {
-        &this.0 .0
+        &this.0
     }
 }
 
@@ -118,7 +118,7 @@ impl<T> Deref for LazyCell<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        ::once_cell::unsync::Lazy::force(&self.0 .0)
+        ::once_cell::unsync::Lazy::force(&self.0)
     }
 }
 
@@ -128,7 +128,7 @@ pub use LazyCell as LazyLock;
 #[cfg(target_feature = "atomics")]
 pub struct LazyLock<T, F = fn() -> T> {
     state: AtomicU8,
-    data: Wrapper<UnsafeCell<Data<T, F>>>,
+    data: UnsafeCell<Data<T, F>>,
 }
 
 #[cfg(target_feature = "atomics")]
@@ -146,7 +146,7 @@ impl<T, F> LazyLock<T, F> {
     pub const fn new(init: F) -> LazyLock<T, F> {
         Self {
             state: AtomicU8::new(Self::STATE_UNINIT),
-            data: Wrapper(UnsafeCell::new(Data::Init(init))),
+            data: UnsafeCell::new(Data::Init(init)),
         }
     }
 }
@@ -161,7 +161,7 @@ impl<T> Deref for LazyLock<T> {
         loop {
             match state {
                 Self::STATE_INIT => {
-                    let Data::Value(value) = (unsafe { &*self.data.0.get() }) else {
+                    let Data::Value(value) = (unsafe { &*self.data.get() }) else {
                         unreachable!()
                     };
                     return value;
@@ -177,7 +177,7 @@ impl<T> Deref for LazyLock<T> {
                         continue;
                     }
 
-                    let data = unsafe { &mut *self.data.0.get() };
+                    let data = unsafe { &mut *self.data.get() };
                     let Data::Init(init) = data else {
                         unreachable!()
                     };
@@ -195,6 +195,12 @@ impl<T> Deref for LazyLock<T> {
         }
     }
 }
+
+#[cfg(target_feature = "atomics")]
+unsafe impl<T, F: Sync> Sync for LazyLock<T, F> {}
+
+#[cfg(target_feature = "atomics")]
+unsafe impl<T, F: Send> Send for LazyLock<T, F> {}
 
 #[macro_export]
 #[doc(hidden)]
@@ -593,7 +599,7 @@ pub fn link_mem_intrinsics() {
 }
 
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static GLOBAL_EXNDATA: Wrapper<Cell<[u32; 2]>> = Wrapper(Cell::new([0; 2]));
+static GLOBAL_EXNDATA: LazyCell<Cell<[u32; 2]>> = LazyCell::new(|| Cell::new([0; 2]));
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
