@@ -357,7 +357,7 @@ impl Bindgen {
 
         // Check that reset_state is only used with --target module
         if self.generate_reset_state && !matches!(self.mode, OutputMode::Module) {
-            bail!("--generate-reset-state is only supported for --target module")
+            bail!("--experimental-generate-reset-state is only supported for --target module")
         }
 
         let thread_count = transforms::threads::run(&mut module)
