@@ -77,6 +77,7 @@ enum Input {
     None,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum EncodeInto {
     Test,
     Always,
