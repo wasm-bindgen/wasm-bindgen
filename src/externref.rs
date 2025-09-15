@@ -13,21 +13,14 @@ externs! {
     }
 }
 
-pub struct Slab {
+#[derive(Default)]
+struct Slab {
     data: Vec<usize>,
     head: usize,
     base: usize,
 }
 
 impl Slab {
-    fn new() -> Slab {
-        Slab {
-            data: Vec::new(),
-            head: 0,
-            base: 0,
-        }
-    }
-
     fn alloc(&mut self) -> usize {
         let ret = self.head;
         if ret == self.data.len() {
@@ -118,19 +111,18 @@ fn internal_error(_msg: &str) -> ! {
 // Management of `externref` is always thread local since an `externref` value
 // can't cross threads in wasm. Indices as a result are always thread-local.
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static HEAP_SLAB: crate::__rt::LazyCell<Cell<Slab>> =
-    crate::__rt::LazyCell::new(|| Cell::new(Slab::new()));
+static HEAP_SLAB: crate::__rt::LazyCell<Cell<Slab>> = crate::__rt::LazyCell::new(Default::default);
+
+fn with_slab<R>(f: impl FnOnce(&mut Slab) -> R) -> R {
+    let mut slot = HEAP_SLAB.take();
+    let ret = f(&mut slot);
+    HEAP_SLAB.replace(slot);
+    ret
+}
 
 #[no_mangle]
 pub extern "C" fn __externref_table_alloc() -> usize {
-    HEAP_SLAB
-        .try_with(|slot| {
-            let mut slab = slot.replace(Slab::new());
-            let ret = slab.alloc();
-            slot.replace(slab);
-            ret
-        })
-        .unwrap_or_else(|_| internal_error("tls access failure"))
+    with_slab(|slab| slab.alloc())
 }
 
 #[no_mangle]
@@ -143,13 +135,7 @@ pub extern "C" fn __externref_table_dealloc(idx: usize) {
     unsafe {
         __wbindgen_externref_table_set_null(idx);
     }
-    HEAP_SLAB
-        .try_with(|slot| {
-            let mut slab = slot.replace(Slab::new());
-            slab.dealloc(idx);
-            slot.replace(slab);
-        })
-        .unwrap_or_else(|_| internal_error("tls access failure"))
+    with_slab(|slab| slab.dealloc(idx))
 }
 
 #[no_mangle]
@@ -161,14 +147,6 @@ pub unsafe extern "C" fn __externref_drop_slice(ptr: *mut JsValue, len: usize) {
 
 // Implementation of `__wbindgen_externref_heap_live_count` for when we are using
 // `externref` instead of the JS `heap`.
-#[no_mangle]
-pub unsafe extern "C" fn __externref_heap_live_count() -> u32 {
-    HEAP_SLAB
-        .try_with(|slot| {
-            let slab = slot.replace(Slab::new());
-            let count = slab.live_count();
-            slot.replace(slab);
-            count
-        })
-        .unwrap_or_else(|_| internal_error("tls access failure"))
+pub fn __wbindgen_externref_heap_live_count() -> u32 {
+    with_slab(|slab| slab.live_count())
 }

@@ -63,7 +63,6 @@ pub struct Meta {
     pub alloc: Option<FunctionId>,
     pub drop: Option<FunctionId>,
     pub drop_slice: Option<FunctionId>,
-    pub live_count: Option<FunctionId>,
 }
 
 struct Transform<'a> {
@@ -214,7 +213,6 @@ impl Context {
         let mut heap_alloc = None;
         let mut heap_dealloc = None;
         let mut drop_slice = None;
-        let mut live_count = None;
 
         // Find exports of some intrinsics which we only need for a runtime
         // implementation.
@@ -228,7 +226,6 @@ impl Context {
                 "__externref_table_alloc" => heap_alloc = Some(f),
                 "__externref_table_dealloc" => heap_dealloc = Some(f),
                 "__externref_drop_slice" => drop_slice = Some(f),
-                "__externref_heap_live_count" => live_count = Some(f),
                 _ => continue,
             }
             to_delete.push(export.id());
@@ -284,7 +281,6 @@ impl Context {
             alloc: heap_alloc,
             drop: heap_dealloc,
             drop_slice,
-            live_count,
         })
     }
 }
