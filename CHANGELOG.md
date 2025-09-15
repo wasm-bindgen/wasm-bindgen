@@ -21,6 +21,9 @@
   [#4635](https://github.com/wasm-bindgen/wasm-bindgen/pull/4635)
 
   [guide on debug information]: https://wasm-bindgen.github.io/wasm-bindgen/reference/debug-info.html
+  
+* New `--target=module` target for outputting source phase imports.
+  [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
 
 ### Fixed
 
