@@ -23,7 +23,6 @@ enum Target {
     about,
     after_help = "Additional documentation: https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html"
 )]
-#[group(id = "target-group", multiple = false)]
 struct Args {
     input: PathBuf,
     #[arg(
