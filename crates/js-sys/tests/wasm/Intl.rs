@@ -30,7 +30,9 @@ fn collator() {
     let opts = Object::new();
 
     let c = Intl::Collator::new(&locales, &opts);
-    assert!(c.compare().is_instance_of::<Function>());
+    assert_eq!(c.compare("a", "b"), -1);
+    assert_eq!(c.compare("a", "a"), 0);
+    assert_eq!(c.compare("b", "a"), 1);
     assert!(c.resolved_options().is_instance_of::<Object>());
 
     let a = Intl::Collator::supported_locales_of(&locales, &opts);
@@ -55,7 +57,7 @@ fn date_time_format() {
     let epoch = Date::new(&JsValue::from(0));
 
     let c = Intl::DateTimeFormat::new(&locales, &opts);
-    assert!(c.format().is_instance_of::<Function>());
+    assert!(c.format(&epoch).is_string());
     assert!(c.format_to_parts(&epoch).is_instance_of::<Array>());
     assert!(c.resolved_options().is_instance_of::<Object>());
 
@@ -80,7 +82,7 @@ fn number_format() {
     let opts = Object::new();
 
     let n = Intl::NumberFormat::new(&locales, &opts);
-    assert!(n.format().is_instance_of::<Function>());
+    assert_eq!(n.format(42.5), JsString::from("42.5"));
     assert!(n.format_to_parts(42.5).is_instance_of::<Array>());
     assert!(n.resolved_options().is_instance_of::<Object>());
 
