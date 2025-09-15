@@ -93,6 +93,7 @@ struct ExportedClass {
     has_constructor: bool,
     wrap_needed: bool,
     unwrap_needed: bool,
+    peek_needed: bool,
     /// Whether to generate helper methods for inspecting the class
     is_inspectable: bool,
     /// All readable properties of the class
@@ -1114,6 +1115,19 @@ wasm = wasmInstance.exports;
                         return 0;
                     }}
                     return jsValue.__destroy_into_raw();
+                }}
+                ",
+            ));
+        }
+
+        if class.peek_needed {
+            dst.push_str(&format!(
+                "
+                static __peek(jsValue) {{
+                    if (!(jsValue instanceof {name})) {{
+                        return 0;
+                    }}
+                    return jsValue.__wbg_ptr;
                 }}
                 ",
             ));
@@ -2597,6 +2611,10 @@ wasm = wasmInstance.exports;
         require_class(&mut self.exported_classes, name).unwrap_needed = true;
     }
 
+    fn require_class_peek(&mut self, name: &str) {
+        require_class(&mut self.exported_classes, name).peek_needed = true;
+    }
+
     fn add_module_import(&mut self, module: String, name: &str, actual: &str) {
         let rename = if name == actual {
             None
@@ -3585,6 +3603,14 @@ wasm = wasmInstance.exports;
                 assert_eq!(args.len(), 1);
                 self.require_class_unwrap(class);
                 Ok(format!("{}.__unwrap({})", class, args[0]))
+            }
+
+            AuxImport::PeekExportedClassPointer(class) => {
+                assert!(kind == AdapterJsImportKind::Normal);
+                assert!(!variadic);
+                assert_eq!(args.len(), 1);
+                self.require_class_peek(class);
+                Ok(format!("{}.__peek({})", class, args[0]))
             }
         }
     }
