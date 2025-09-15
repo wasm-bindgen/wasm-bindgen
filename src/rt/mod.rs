@@ -109,13 +109,6 @@ impl<T, F> LazyCell<T, F> {
 }
 
 impl<T, F: FnOnce() -> T> LazyCell<T, F> {
-    pub(crate) fn try_with<R>(
-        &self,
-        f: impl FnOnce(&T) -> R,
-    ) -> Result<R, core::convert::Infallible> {
-        Ok(f(&self.0 .0))
-    }
-
     pub fn force(this: &Self) -> &T {
         &this.0 .0
     }
