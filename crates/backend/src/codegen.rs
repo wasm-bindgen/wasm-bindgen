@@ -993,7 +993,7 @@ impl ToTokens for ast::ImportType {
                 use #wasm_bindgen::convert::{OptionIntoWasmAbi, OptionFromWasmAbi};
                 use #wasm_bindgen::convert::{RefFromWasmAbi, LongRefFromWasmAbi};
                 use #wasm_bindgen::describe::WasmDescribe;
-                use #wasm_bindgen::{JsValue, JsCast, JsObject};
+                use #wasm_bindgen::{JsValue, JsCast};
                 use #wasm_bindgen::__rt::core;
 
                 #[automatically_derived]
@@ -1145,8 +1145,6 @@ impl ToTokens for ast::ImportType {
                         unsafe { &*(val as *const JsValue as *const #rust_name) }
                     }
                 }
-
-                impl JsObject for #rust_name {}
             };
         })
         .to_tokens(tokens);

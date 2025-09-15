@@ -8,7 +8,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{Clamped, JsError, JsObject, JsValue};
+use crate::{Clamped, JsCast, JsError, JsValue};
 use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
@@ -129,15 +129,7 @@ cfg_if! {
     }
 }
 
-impl WasmDescribeVector for JsValue {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        JsValue::describe();
-    }
-}
-
-impl<T: JsObject> WasmDescribeVector for T {
+impl<T: JsCast + WasmDescribe> WasmDescribeVector for T {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
         inform(VECTOR);

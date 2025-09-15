@@ -142,7 +142,7 @@ mod externref;
 use externref::__wbindgen_externref_heap_live_count;
 
 mod cast;
-pub use crate::cast::{JsCast, JsObject};
+pub use crate::cast::JsCast;
 
 mod cache;
 pub use cache::intern::{intern, unintern};
