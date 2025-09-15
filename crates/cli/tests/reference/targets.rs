@@ -4,7 +4,7 @@
 // FLAGS: --target=nodejs
 // FLAGS: --target=deno
 // FLAGS: --target=module
-// FLAGS: --target=module --experimental-generate-reset-state
+// FLAGS: --target=module --experimental-reset-state-function
 
 use wasm_bindgen::prelude::*;
 

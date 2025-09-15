@@ -2514,7 +2514,6 @@ wasm = wasmInstance.exports;
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
-        let dtor_call = format!("wasm.{table}.get(state.dtor)(a, state.b);");
         let (state_init, instance_check) = if self.config.generate_reset_state {
             (
                 "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2544,7 +2543,7 @@ wasm = wasmInstance.exports;
                         return f(a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            {dtor_call}
+                            wasm.{table}.get(state.dtor)(a, state.b);
                             CLOSURE_DTORS.unregister(state);
                         }} else {{
                             state.a = a;
@@ -2575,7 +2574,6 @@ wasm = wasmInstance.exports;
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
-        let dtor_call = format!("wasm.{table}.get(state.dtor)(state.a, state.b); state.a = 0;");
         let (state_init, instance_check) = if self.config.generate_reset_state {
             (
                 "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2603,7 +2601,7 @@ wasm = wasmInstance.exports;
                         return f(state.a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            {dtor_call}
+                            wasm.{table}.get(state.dtor)(state.a, state.b); state.a = 0;
                             CLOSURE_DTORS.unregister(state);
                         }}
                     }}
