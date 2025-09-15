@@ -2,7 +2,7 @@ use crate::JsValue;
 
 use alloc::slice;
 use alloc::vec::Vec;
-use core::cell::Cell;
+use core::cell::UnsafeCell;
 use core::cmp::max;
 
 externs! {
@@ -111,13 +111,13 @@ fn internal_error(_msg: &str) -> ! {
 // Management of `externref` is always thread local since an `externref` value
 // can't cross threads in wasm. Indices as a result are always thread-local.
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static HEAP_SLAB: crate::__rt::LazyCell<Cell<Slab>> = crate::__rt::LazyCell::new(Default::default);
+static HEAP_SLAB: crate::__rt::LazyCell<UnsafeCell<Slab>> =
+    crate::__rt::LazyCell::new(Default::default);
 
 fn with_slab<R>(f: impl FnOnce(&mut Slab) -> R) -> R {
-    let mut slot = HEAP_SLAB.take();
-    let ret = f(&mut slot);
-    HEAP_SLAB.replace(slot);
-    ret
+    // Safety: `externref` is always thread local
+    let slab = unsafe { &mut *HEAP_SLAB.get() };
+    f(slab)
 }
 
 #[no_mangle]
