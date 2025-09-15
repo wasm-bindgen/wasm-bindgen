@@ -1,34 +1,52 @@
-use anyhow::{bail, Error};
-use clap::Parser;
+use anyhow::Error;
+use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 use std::process;
 use wasm_bindgen_cli_support::{Bindgen, EncodeInto};
+
+#[derive(Debug, Clone, ValueEnum)]
+#[clap(rename_all = "kebab-case")]
+enum Target {
+    Bundler,
+    Web,
+    Nodejs,
+    NoModules,
+    Deno,
+    ExperimentalNodejsModule,
+    Module,
+}
 
 #[derive(Debug, Parser)]
 #[command(
     name = "wasm-bindgen",
     version,
     about,
-    long_about = None,
-    after_help = "Additional documentation: https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html",
+    after_help = "Additional documentation: https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html"
 )]
+#[group(id = "target-group", multiple = false)]
 struct Args {
-    #[arg(long, help = "Deprecated, use `--target nodejs`")]
-    nodejs: bool,
-    #[arg(long, help = "Hint that JS should only be compatible with a browser")]
+    input: PathBuf,
+    #[arg(
+        long,
+        value_name = "TARGET",
+        value_enum,
+        default_value_t = Target::Bundler,
+        help = "What type of output to generate",
+        group = "target-group"
+    )]
+    target: Target,
+    #[arg(long, value_name = "DIR", help = "Output directory")]
+    out_dir: PathBuf,
+    #[arg(
+        long,
+        help = "Hint that JS should only be compatible with a browser",
+        group = "target-group"
+    )]
     browser: bool,
-    #[arg(long, help = "Deprecated, use `--target web`")]
-    web: bool,
-    #[arg(long, help = "Deprecated, use `--target no-modules`")]
-    no_modules: bool,
-    #[arg(long, help = "Output a TypeScript definition file (on by default)")]
-    typescript: bool,
-    #[arg(long, help = "Don't emit a *.d.ts file")]
+    #[arg(long, help = "Don't emit a *.d.ts file", conflicts_with = "typescript")]
     no_typescript: bool,
     #[arg(long, help = "Don't emit imports in generated JavaScript")]
     omit_imports: bool,
-    #[arg(long, value_name = "DIR", help = "Output directory")]
-    out_dir: Option<PathBuf>,
     #[arg(
         long,
         value_name = "VAR",
@@ -49,11 +67,6 @@ struct Args {
     remove_name_section: bool,
     #[arg(long, help = "Remove the telemetry `producers` section")]
     remove_producers_section: bool,
-    #[arg(long, help = "Deprecated, is runtime-detected")]
-    #[allow(dead_code)]
-    weak_refs: bool,
-    #[arg(long, help = "Deprecated, use `-Ctarget-feature=+reference-types`")]
-    reference_types: bool,
     #[arg(long, help = "Keep exports synthesized by LLD")]
     keep_lld_exports: bool,
     #[arg(long, help = "Keep debug sections in Wasm files")]
@@ -61,17 +74,10 @@ struct Args {
     #[arg(
         long,
         value_name = "MODE",
-        help = "Whether or not to use TextEncoder#encodeInto, valid values are [test, always, never]"
+        help = "Whether or not to use TextEncoder#encodeInto",
+        value_parser = ["test", "always", "never"]
     )]
-    encode_into: Option<String>,
-    #[arg(
-        long,
-        value_name = "TARGET",
-        help = "What type of output to generate, valid\n\
-                values are [web, bundler, nodejs, no-modules, deno, experimental-nodejs-module, module],\n\
-                and the default is [bundler]"
-    )]
-    target: Option<String>,
+    encode_into: Option<EncodeInto>,
     #[arg(
         long,
         help = "Don't add WebAssembly fallback imports in generated JavaScript"
@@ -83,7 +89,26 @@ struct Args {
                 If a bundler is used, it needs to be set up accordingly."
     )]
     split_linked_modules: bool,
-    input: PathBuf,
+    // The options below are deprecated. They're still parsed for backwards compatibility,
+    // but we don't want to show them in `--help` to avoid distracting users.
+    #[arg(long, hide = true)]
+    typescript: bool,
+    #[arg(long, hide = true, group = "target-group")]
+    #[deprecated(note = "use `Args::target` instead")]
+    nodejs: bool,
+    #[arg(long, hide = true, group = "target-group")]
+    #[deprecated(note = "use `Args::target` instead")]
+    web: bool,
+    #[arg(long, hide = true, group = "target-group")]
+    #[deprecated(note = "use `Args::target` instead")]
+    no_modules: bool,
+    #[arg(long, hide = true)]
+    #[deprecated(note = "runtime-detected")]
+    #[allow(dead_code)]
+    weak_refs: bool,
+    #[arg(long, hide = true)]
+    #[deprecated(note = "automatically inferred from the Wasm features")]
+    reference_types: bool,
 }
 
 fn main() {
@@ -102,18 +127,16 @@ fn rmain(args: &Args) -> Result<(), Error> {
     let typescript = args.typescript || !args.no_typescript;
 
     let mut b = Bindgen::new();
-    if let Some(name) = &args.target {
-        match name.as_str() {
-            "bundler" => b.bundler(true)?,
-            "web" => b.web(true)?,
-            "no-modules" => b.no_modules(true)?,
-            "nodejs" => b.nodejs(true)?,
-            "deno" => b.deno(true)?,
-            "experimental-nodejs-module" => b.nodejs_module(true)?,
-            "module" => b.source_phase(true)?,
-            s => bail!("invalid target: `{}`", s),
-        };
-    }
+    match &args.target {
+        Target::Bundler => b.bundler(true)?,
+        Target::Web => b.web(true)?,
+        Target::NoModules => b.no_modules(true)?,
+        Target::Nodejs => b.nodejs(true)?,
+        Target::Deno => b.deno(true)?,
+        Target::ExperimentalNodejsModule => b.nodejs_module(true)?,
+        Target::Module => b.source_phase(true)?,
+    };
+    #[allow(deprecated)]
     b.input_path(&args.input)
         .nodejs(args.nodejs)?
         .web(args.web)?
@@ -128,30 +151,18 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .typescript(typescript)
         .omit_imports(args.omit_imports)
         .omit_default_module_path(args.omit_default_module_path)
-        .split_linked_modules(args.split_linked_modules);
-    if args.reference_types {
-        #[allow(deprecated)]
-        b.reference_types(true);
-    }
+        .split_linked_modules(args.split_linked_modules)
+        .reference_types(args.reference_types);
+
     if let Some(ref name) = args.no_modules_global {
         b.no_modules_global(name)?;
     }
     if let Some(ref name) = args.out_name {
         b.out_name(name);
     }
-    if let Some(mode) = &args.encode_into {
-        match mode.as_str() {
-            "test" => b.encode_into(EncodeInto::Test),
-            "always" => b.encode_into(EncodeInto::Always),
-            "never" => b.encode_into(EncodeInto::Never),
-            s => bail!("invalid encode-into mode: `{}`", s),
-        };
+    if let Some(mode) = args.encode_into {
+        b.encode_into(mode);
     }
 
-    let out_dir = match args.out_dir {
-        Some(ref p) => p,
-        None => bail!("the `--out-dir` argument is now required"),
-    };
-
-    b.generate(out_dir)
+    b.generate(&args.out_dir)
 }
