@@ -197,12 +197,12 @@ fn runtest(
 
         let mut sanitizer = Sanitizer::default();
 
-        if !contents.contains("async") {
-            let js = fs::read_to_string(out_dir.join(main_js_file))?;
-            sanitizer.assert_same(&js, &test.with_extension("js"))?;
-            let wat = sanitize_wasm(&out_dir.join("reference_test_bg.wasm"))?;
-            sanitizer.assert_same(&wat, &test.with_extension("wat"))?;
-        }
+        let js = fs::read_to_string(out_dir.join(main_js_file))?;
+        sanitizer.assert_same(&js, &test.with_extension("js"))?;
+
+        let wat = sanitize_wasm(&out_dir.join("reference_test_bg.wasm"))?;
+        sanitizer.assert_same(&wat, &test.with_extension("wat"))?;
+
         let d_ts = fs::read_to_string(out_dir.join("reference_test.d.ts"))?;
         sanitizer.assert_same(&d_ts, &test.with_extension("d.ts"))?;
     }
