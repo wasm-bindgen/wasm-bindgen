@@ -2,7 +2,7 @@ use crate::JsValue;
 
 use alloc::slice;
 use alloc::vec::Vec;
-use core::cell::Cell;
+use core::cell::RefCell;
 use core::cmp::max;
 
 externs! {
@@ -13,7 +13,6 @@ externs! {
     }
 }
 
-#[derive(Default)]
 struct Slab {
     data: Vec<usize>,
     head: usize,
@@ -21,6 +20,14 @@ struct Slab {
 }
 
 impl Slab {
+    const fn new() -> Self {
+        Self {
+            data: Vec::new(),
+            head: 0,
+            base: 0,
+        }
+    }
+
     fn alloc(&mut self) -> usize {
         let ret = self.head;
         if ret == self.data.len() {
@@ -111,18 +118,12 @@ fn internal_error(_msg: &str) -> ! {
 // Management of `externref` is always thread local since an `externref` value
 // can't cross threads in wasm. Indices as a result are always thread-local.
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static HEAP_SLAB: crate::__rt::LazyCell<Cell<Slab>> = crate::__rt::LazyCell::new(Default::default);
-
-fn with_slab<R>(f: impl FnOnce(&mut Slab) -> R) -> R {
-    let mut slot = HEAP_SLAB.take();
-    let ret = f(&mut slot);
-    HEAP_SLAB.replace(slot);
-    ret
-}
+static HEAP_SLAB: crate::__rt::ThreadLocalWrapper<RefCell<Slab>> =
+    crate::__rt::ThreadLocalWrapper(RefCell::new(Slab::new()));
 
 #[no_mangle]
 pub extern "C" fn __externref_table_alloc() -> usize {
-    with_slab(|slab| slab.alloc())
+    HEAP_SLAB.0.borrow_mut().alloc()
 }
 
 #[no_mangle]
@@ -135,7 +136,7 @@ pub extern "C" fn __externref_table_dealloc(idx: usize) {
     unsafe {
         __wbindgen_externref_table_set_null(idx);
     }
-    with_slab(|slab| slab.dealloc(idx))
+    HEAP_SLAB.0.borrow_mut().dealloc(idx)
 }
 
 #[no_mangle]
@@ -148,5 +149,5 @@ pub unsafe extern "C" fn __externref_drop_slice(ptr: *mut JsValue, len: usize) {
 // Implementation of `__wbindgen_externref_heap_live_count` for when we are using
 // `externref` instead of the JS `heap`.
 pub fn __wbindgen_externref_heap_live_count() -> u32 {
-    with_slab(|slab| slab.live_count())
+    HEAP_SLAB.0.borrow_mut().live_count()
 }
