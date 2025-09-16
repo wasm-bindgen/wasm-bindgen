@@ -93,24 +93,26 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
     unsafe { To::from_abi(breaks_if_inlined::<From, To>(prim1, prim2, prim3, prim4).join()) }
 }
 
+pub(crate) struct ThreadLocalWrapper<T>(pub(crate) T);
+
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl<T> Sync for ThreadLocalWrapper<T> {}
+
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl<T> Send for ThreadLocalWrapper<T> {}
+
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.
-pub struct LazyCell<T, F = fn() -> T>(Lazy<T, F>);
-
-#[cfg(not(target_feature = "atomics"))]
-unsafe impl<T, F> Sync for LazyCell<T, F> {}
-
-#[cfg(not(target_feature = "atomics"))]
-unsafe impl<T, F> Send for LazyCell<T, F> {}
+pub struct LazyCell<T, F = fn() -> T>(ThreadLocalWrapper<Lazy<T, F>>);
 
 impl<T, F> LazyCell<T, F> {
     pub const fn new(init: F) -> LazyCell<T, F> {
-        Self(Lazy::new(init))
+        Self(ThreadLocalWrapper(Lazy::new(init)))
     }
 }
 
 impl<T, F: FnOnce() -> T> LazyCell<T, F> {
     pub fn force(this: &Self) -> &T {
-        &this.0
+        &this.0 .0
     }
 }
 
@@ -118,7 +120,7 @@ impl<T> Deref for LazyCell<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        ::once_cell::unsync::Lazy::force(&self.0)
+        ::once_cell::unsync::Lazy::force(&self.0 .0)
     }
 }
 
@@ -599,7 +601,7 @@ pub fn link_mem_intrinsics() {
 }
 
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static GLOBAL_EXNDATA: LazyCell<Cell<[u32; 2]>> = LazyCell::new(|| Cell::new([0; 2]));
+static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(Cell::new([0; 2]));
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
