@@ -1,17 +1,17 @@
 use crate::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmRet};
 use crate::describe::inform;
 use crate::JsValue;
+use alloc::alloc::{alloc, dealloc, realloc, Layout};
+use alloc::rc::Rc;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::{Cell, UnsafeCell};
 use core::convert::Infallible;
 use core::ops::{Deref, DerefMut};
 #[cfg(target_feature = "atomics")]
-use core::sync::atomic::{AtomicU8, Ordering};
-use wasm_bindgen_shared::tys::FUNCTION;
-
-use alloc::alloc::{alloc, dealloc, realloc, Layout};
-use alloc::rc::Rc;
+use core::sync::atomic::AtomicU8;
+use core::sync::atomic::{AtomicU32, Ordering};
 use once_cell::unsync::Lazy;
+use wasm_bindgen_shared::tys::FUNCTION;
 
 pub extern crate alloc;
 pub extern crate core;
@@ -599,22 +599,20 @@ pub fn link_mem_intrinsics() {
 }
 
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static GLOBAL_EXNDATA: LazyCell<Cell<[u32; 2]>> = LazyCell::new(|| Cell::new([0; 2]));
+static GLOBAL_EXNDATA: AtomicU32 = AtomicU32::new(0);
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
-    debug_assert_eq!(GLOBAL_EXNDATA.0.get()[0], 0);
-    GLOBAL_EXNDATA.0.set([1, idx]);
+    debug_assert_ne!(idx, 0);
+    let prev = GLOBAL_EXNDATA.swap(idx, Ordering::Relaxed);
+    debug_assert_eq!(prev, 0);
 }
 
 pub fn take_last_exception() -> Result<(), super::JsValue> {
-    let ret = if GLOBAL_EXNDATA.0.get()[0] == 1 {
-        Err(super::JsValue::_new(GLOBAL_EXNDATA.0.get()[1]))
-    } else {
-        Ok(())
-    };
-    GLOBAL_EXNDATA.0.set([0, 0]);
-    ret
+    match GLOBAL_EXNDATA.swap(0, Ordering::Relaxed) {
+        0 => Ok(()),
+        err => Err(super::JsValue::_new(err)),
+    }
 }
 
 /// An internal helper trait for usage in `#[wasm_bindgen]` on `async`
