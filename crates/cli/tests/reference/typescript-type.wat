@@ -4,7 +4,7 @@
   (type (;2;) (func (param i32 i32)))
   (type (;3;) (func (param i32 i32) (result i32)))
   (type (;4;) (func (param externref)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_c9e5e8466b626192" (func (;0;) (type 2)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_681185b504fabc8e" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $"single externref shim" (;2;) (type 4) (param externref))
   (func $slice (;3;) (type 2) (param i32 i32))

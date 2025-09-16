@@ -122,7 +122,7 @@ export const Ordering = Object.freeze({
 
 const __wbindgen_enum_ColorName = ["green", "yellow", "red"];
 
-export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+export function __wbg_wbindgenthrow_681185b504fabc8e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

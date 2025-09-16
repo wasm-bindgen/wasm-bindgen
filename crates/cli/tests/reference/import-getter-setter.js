@@ -99,7 +99,7 @@ export function __wbg_someprop_fd4fc05f44bf5de2(arg0) {
     return ret;
 };
 
-export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+export function __wbg_wbindgenthrow_681185b504fabc8e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

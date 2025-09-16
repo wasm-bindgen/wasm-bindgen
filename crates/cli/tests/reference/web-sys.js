@@ -200,12 +200,12 @@ export function get_media_source() {
 
 const __wbindgen_enum_MediaSourceEnum = ["camera", "screen", "application", "window", "browser", "microphone", "audioCapture", "other"];
 
-export function __wbg_new_fcda3bb4bd4bb938() { return handleError(function (arg0, arg1) {
+export function __wbg_new_828f41dc32583926() { return handleError(function (arg0, arg1) {
     const ret = new URL(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments) };
 
-export function __wbg_wbindgendebugstring_bbc653acd48e77af(arg0, arg1) {
+export function __wbg_wbindgendebugstring_0c28a61befa1f3ce(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
@@ -213,7 +213,7 @@ export function __wbg_wbindgendebugstring_bbc653acd48e77af(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-export function __wbg_wbindgenthrow_c9e5e8466b626192(arg0, arg1) {
+export function __wbg_wbindgenthrow_681185b504fabc8e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

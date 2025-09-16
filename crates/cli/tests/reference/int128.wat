@@ -5,7 +5,7 @@
   (type (;3;) (func (param i32 i32)))
   (type (;4;) (func (param i32 i64 i64) (result i32 i64 i64)))
   (type (;5;) (func (param i64 i64) (result i64 i64)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_c9e5e8466b626192" (func (;0;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_681185b504fabc8e" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $"echo_i128 multivalue shim" (;2;) (type 5) (param i64 i64) (result i64 i64))
   (func $"echo_u128 multivalue shim" (;3;) (type 5) (param i64 i64) (result i64 i64))

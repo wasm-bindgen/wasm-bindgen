@@ -5,7 +5,7 @@
   (type (;3;) (func (param i32)))
   (type (;4;) (func (param i32 i32)))
   (import "./reference_test_bg.js" "__wbg_foo_4e8309b1aa95a4ac" (func (;0;) (type 0)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_c9e5e8466b626192" (func (;1;) (type 4)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_681185b504fabc8e" (func (;1;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;2;) (type 0)))
   (func $"exported multivalue shim" (;3;) (type 2) (result i32 i32))
   (func $__wbindgen_exn_store (;4;) (type 3) (param i32))
