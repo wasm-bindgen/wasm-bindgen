@@ -326,12 +326,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup default ${{ matrix.rust-version }}
     - run: rustup toolchain install nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
         cargo install --path crates/cli --debug
+    # Change the default only after we've installed the CLI, so it applies only to `examples` builds.
+    - run: rustup default ${{ matrix.rust-version }}
     - run: npm install -g pnpm@latest-10
     # crete a workspace of all examples and install their dependencies at once
     # sed is used to convert the literal "\n" to a newline character
