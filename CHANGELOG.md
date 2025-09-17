@@ -3,6 +3,15 @@
 
 ## Unreleased
 
+### Fixed
+
+* Fixed incorrect function mapping during post-processing.
+  [#4656](https://github.com/wasm-bindgen/wasm-bindgen/pull/4656)
+
+--------------------------------------------------------------------------------
+
+## [0.2.102](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.101...0.2.102)
+
 ### Added
 
 * Added `DocumentOrShadowRoot.adoptedStyleSheets`.

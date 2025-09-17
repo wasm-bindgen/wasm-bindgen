@@ -137,13 +137,13 @@ impl<'a> Context<'a> {
         }
         self.add_aux_import_to_import_map(
             "__wbindgen_object_clone_ref",
-            vec![Descriptor::I32],
-            Descriptor::I32,
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Externref,
             AuxImport::Intrinsic(Intrinsic::ObjectCloneRef),
         )?;
         self.add_aux_import_to_import_map(
             "__wbindgen_object_drop_ref",
-            vec![],
+            vec![Descriptor::Externref],
             Descriptor::Unit,
             AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
         )?;
