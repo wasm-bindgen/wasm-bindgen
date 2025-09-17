@@ -10,7 +10,7 @@
   (import "./reference_test_bg.js" "__wbg_new_d4bfd9add722b492" (func (;3;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_new_e17dd7c5a1cd57d8" (func (;4;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_TRUE_c6b68bf8545d99a3" (func (;5;) (type 1)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_681185b504fabc8e" (func (;6;) (type 2)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;6;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;7;) (type 0)))
   (func $exported (;8;) (type 0))
   (func $_function (;9;) (type 0))

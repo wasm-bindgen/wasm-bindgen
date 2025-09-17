@@ -68,7 +68,7 @@ export function __wbg_foo_4e8309b1aa95a4ac() { return handleError(function () {
     foo();
 }, arguments) };
 
-export function __wbg_wbindgenthrow_681185b504fabc8e(arg0, arg1) {
+export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
