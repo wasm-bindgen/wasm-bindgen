@@ -9,7 +9,7 @@
   (type (;7;) (func (param i32 i32 i32)))
   (type (;8;) (func (param i32 i32 i32 i32) (result i32)))
   (type (;9;) (func (param i32 f64)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_681185b504fabc8e" (func (;0;) (type 5)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;0;) (type 5)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $__wbg_foo_free (;2;) (type 5) (param i32 i32))
   (func $__wbg_get_foo_x (;3;) (type 3) (param i32) (result i32))

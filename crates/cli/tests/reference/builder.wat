@@ -2,7 +2,7 @@
   (type (;0;) (func))
   (type (;1;) (func (result i32)))
   (type (;2;) (func (param i32 i32)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_681185b504fabc8e" (func (;0;) (type 2)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $__wbg_classbuilder_free (;2;) (type 2) (param i32 i32))
   (func $classbuilder_builder (;3;) (type 1) (result i32))

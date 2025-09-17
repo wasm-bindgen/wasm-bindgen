@@ -14,7 +14,7 @@ name = "js-sys"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys"
 rust-version = "1.57"
-version = "0.3.79"
+version = "0.3.80"
 
 [lib]
 doctest = false
@@ -26,7 +26,7 @@ std = ["wasm-bindgen/std"]
 
 [dependencies]
 once_cell = { version = "1.12", default-features = false }
-wasm-bindgen = { path = "../..", version = "=0.2.102", default-features = false }
+wasm-bindgen = { path = "../..", version = "=0.2.103", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-futures = { path = '../futures' }
