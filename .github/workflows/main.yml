@@ -316,6 +316,13 @@ jobs:
     - run: git diff --exit-code
 
   build_examples:
+    strategy:
+      matrix:
+        include:
+          - name: examples
+            rust-version: stable
+          - name: examples-msrv
+            rust-version: 1.57
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -334,10 +341,15 @@ jobs:
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
-        name: examples
+        name: ${{ matrix.name }}
         path: examples/dist
 
   test_examples:
+    strategy:
+      matrix:
+        artifact:
+          - examples
+          - examples-msrv
     needs:
     - build_examples
     runs-on: ubuntu-latest
@@ -345,7 +357,7 @@ jobs:
     - uses: actions/checkout@v5
     - uses: actions/download-artifact@v5
       with:
-        name: examples
+        name: ${{ matrix.artifact }}
         path: examples/dist
     - run: rustup update --no-self-update stable && rustup default stable
     - uses: actions/setup-node@v5
