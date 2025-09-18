@@ -1238,7 +1238,7 @@ wasm = wasmInstance.exports;
             }}
             ",
         );
-        ts_dst.push_str("  [symbolDispose](): void;\n");
+        ts_dst.push_str("  [Symbol.dispose](): void;\n");
         dst.push_str(&class.contents);
         ts_dst.push_str(&class.typescript);
 
