@@ -38,6 +38,7 @@ pub mod TypeError;
 pub mod TypedArray;
 pub mod UriError;
 pub mod WeakMap;
+pub mod WeakRef;
 pub mod WeakSet;
 pub mod WebAssembly;
 pub mod global_fns;

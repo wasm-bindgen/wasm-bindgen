@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+### Added
+
+* Added bindings for `WeakRef`.
+  [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4659)
+
 ### Fixed
 
 * Fixed wasm-bindgen-cli's `encode_into` argument not working.
