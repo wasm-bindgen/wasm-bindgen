@@ -13,7 +13,7 @@ export function fn_with_attr(firstArg: number, secondArg: boolean | undefined): 
 export class HoldsNumber {
   private constructor();
   free(): void;
-  [symbolDispose](): void;
+  [Symbol.dispose](): void;
   /**
    * Description for static_fn_with_attr
    * @param firstArg - some number

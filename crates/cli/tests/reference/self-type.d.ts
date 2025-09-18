@@ -2,7 +2,7 @@
 /* eslint-disable */
 export class Test {
   free(): void;
-  [symbolDispose](): void;
+  [Symbol.dispose](): void;
   constructor();
   consume_self(): void;
   ref_self(): void;

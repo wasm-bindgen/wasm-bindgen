@@ -1734,7 +1734,7 @@ wasm = wasmInstance.exports;
         if !self.should_write_global("symbol_dispose") {
             return Ok(());
         }
-        self.global("const symbolDispose = Symbol.dispose || Symbol('Symbol.dispose');");
+        self.global("const symbolDispose = Symbol.dispose || Symbol.for('wbg_symbol_dispose');");
         Ok(())
     }
 

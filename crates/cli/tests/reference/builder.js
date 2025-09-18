@@ -40,7 +40,7 @@ const ClassBuilderFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_classbuilder_free(ptr >>> 0, 1));
 
-const symbolDispose = Symbol.dispose || Symbol('Symbol.dispose');
+const symbolDispose = Symbol.dispose || Symbol.for('wbg_symbol_dispose');
 
 export class ClassBuilder {
 

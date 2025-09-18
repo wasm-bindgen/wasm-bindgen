@@ -3,6 +3,6 @@
 export class ClassBuilder {
   private constructor();
   free(): void;
-  [symbolDispose](): void;
+  [Symbol.dispose](): void;
   static builder(): ClassBuilder;
 }

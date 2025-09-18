@@ -3,7 +3,7 @@
 export class Foo {
   private constructor();
   free(): void;
-  [symbolDispose](): void;
+  [Symbol.dispose](): void;
   x: number;
   get y(): number | undefined;
   set y(value: number | null | undefined);
