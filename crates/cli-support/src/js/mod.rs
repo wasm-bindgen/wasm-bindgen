@@ -1409,7 +1409,7 @@ wasm = wasmInstance.exports;
         }
         assert!(!self.config.externref);
         self.global(&format!(
-            "const heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);"
+            "let heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);"
         ));
         self.global(&format!("heap.push({});", INITIAL_HEAP_VALUES.join(", ")));
     }
