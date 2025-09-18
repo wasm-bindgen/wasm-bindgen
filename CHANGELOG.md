@@ -1,15 +1,21 @@
 # `wasm-bindgen` Change Log
 --------------------------------------------------------------------------------
 
+## Unreleased
+
+### Fixed
+
+* Fixed wasm-bindgen-cli's `encode_into` argument not working.
+  [#4663](https://github.com/wasm-bindgen/wasm-bindgen/pull/4663)
+
+--------------------------------------------------------------------------------
+
 ## [0.2.103](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.102...0.2.103)
 
 ### Fixed
 
 * Fixed incorrect function mapping during post-processing.
   [#4656](https://github.com/wasm-bindgen/wasm-bindgen/pull/4656)
-
-* Fixed wasm-bindgen-cli's `encode_into` argument not working.
-  [#4663](https://github.com/wasm-bindgen/wasm-bindgen/pull/4663)
 
 --------------------------------------------------------------------------------
 
