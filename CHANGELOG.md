@@ -7,8 +7,10 @@
 
 * Added bindings for `WeakRef`.
   [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4659)
+
 * Support `Symbol.dispose` by default, without overwriting the global `Symbol.dispose`
   when unsupported, using `Symbol.for('wbg_symbol_dispose')` when unavailable.
+  [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
 
 ### Fixed
 
