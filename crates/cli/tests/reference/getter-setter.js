@@ -102,6 +102,8 @@ const FooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo_free(ptr >>> 0, 1));
 
+const symbolDispose = Symbol.dispose || Symbol('Symbol.dispose');
+
 export class Foo {
 
     __destroy_into_raw() {
@@ -115,6 +117,10 @@ export class Foo {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_foo_free(ptr, 0);
     }
+
+    [symbolDispose]() {{
+        this.free();
+    }}
     /**
      * @returns {number}
      */

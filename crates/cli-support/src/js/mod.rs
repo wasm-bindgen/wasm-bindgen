@@ -1230,16 +1230,15 @@ wasm = wasmInstance.exports;
             wasm_bindgen_shared::free_function(name),
         ));
         ts_dst.push_str("  free(): void;\n");
-        if self.config.symbol_dispose {
-            dst.push_str(
-                "
-                [Symbol.dispose]() {{
-                    this.free();
-                }}
-                ",
-            );
-            ts_dst.push_str("  [Symbol.dispose](): void;\n");
-        }
+        self.expose_symbol_dispose()?;
+        dst.push_str(
+            "
+            [symbolDispose]() {{
+                this.free();
+            }}
+            ",
+        );
+        ts_dst.push_str("  [symbolDispose](): void;\n");
         dst.push_str(&class.contents);
         ts_dst.push_str(&class.typescript);
 
@@ -1735,7 +1734,7 @@ wasm = wasmInstance.exports;
         if !self.should_write_global("symbol_dispose") {
             return Ok(());
         }
-        self.global("if(!Symbol.dispose) { Symbol.dispose = Symbol('Symbol.dispose'); }");
+        self.global("const symbolDispose = Symbol.dispose || Symbol('Symbol.dispose');");
         Ok(())
     }
 
@@ -2937,11 +2936,6 @@ wasm = wasmInstance.exports;
 
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
-        // conditionally override Symbol.dispose
-        if self.config.symbol_dispose && !self.aux.structs.is_empty() {
-            self.expose_symbol_dispose()?;
-        }
-
         for (id, adapter, kind) in iter_adapeter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
                 AdapterKind::Import { .. } => continue,

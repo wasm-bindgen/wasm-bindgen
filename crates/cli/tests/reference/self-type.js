@@ -40,6 +40,8 @@ const TestFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_test_free(ptr >>> 0, 1));
 
+const symbolDispose = Symbol.dispose || Symbol('Symbol.dispose');
+
 export class Test {
 
     __destroy_into_raw() {
@@ -53,6 +55,10 @@ export class Test {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_test_free(ptr, 0);
     }
+
+    [symbolDispose]() {{
+        this.free();
+    }}
     constructor() {
         const ret = wasm.test_new();
         this.__wbg_ptr = ret >>> 0;

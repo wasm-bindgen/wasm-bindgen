@@ -75,4 +75,5 @@ export function echo_option_vec_struct(a?: Foo[] | null): Foo[] | undefined;
 export class Foo {
   private constructor();
   free(): void;
+  [symbolDispose](): void;
 }
