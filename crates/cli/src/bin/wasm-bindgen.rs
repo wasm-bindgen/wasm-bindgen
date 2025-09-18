@@ -76,7 +76,7 @@ struct Args {
         help = "Whether or not to use TextEncoder#encodeInto",
         value_parser = ["test", "always", "never"]
     )]
-    encode_into: Option<EncodeInto>,
+    encode_into: Option<String>,
     #[arg(
         long,
         help = "Don't add WebAssembly fallback imports in generated JavaScript"
@@ -164,7 +164,15 @@ fn rmain(args: &Args) -> Result<(), Error> {
     if let Some(ref name) = args.out_name {
         b.out_name(name);
     }
-    if let Some(mode) = args.encode_into {
+
+    if let Some(mode) = &args.encode_into {
+        let mode = match mode.as_str() {
+            "test" => EncodeInto::Test,
+            "always" => EncodeInto::Always,
+            "never" => EncodeInto::Never,
+            // clap guarantees
+            _ => unreachable!(),
+        };
         b.encode_into(mode);
     }
 
