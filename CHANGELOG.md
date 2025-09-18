@@ -12,7 +12,9 @@
 
 * Fixed wasm-bindgen-cli's `encode_into` argument not working.
   [#4663](https://github.com/wasm-bindgen/wasm-bindgen/pull/4663)
+
 * Fixed a bug in `--experimental-reset-state-function` support for heap reset.
+  [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
 
 --------------------------------------------------------------------------------
 
