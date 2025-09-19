@@ -316,15 +316,23 @@ jobs:
     - run: git diff --exit-code
 
   build_examples:
+    strategy:
+      matrix:
+        include:
+          - name: examples
+            rust-version: stable
+          - name: examples-msrv
+            rust-version: 1.57
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup toolchain install nightly-2025-08-04
     - run: rustup target add wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
         cargo install --path crates/cli --debug
+    # Change the default only after we've installed the CLI, so it applies only to `examples` builds.
+    - run: rustup default ${{ matrix.rust-version }}
     - run: npm install -g pnpm@latest-10
     # crete a workspace of all examples and install their dependencies at once
     # sed is used to convert the literal "\n" to a newline character
@@ -334,10 +342,15 @@ jobs:
       working-directory: examples
     - uses: actions/upload-artifact@v4
       with:
-        name: examples
+        name: ${{ matrix.name }}
         path: examples/dist
 
   test_examples:
+    strategy:
+      matrix:
+        artifact:
+          - examples
+          - examples-msrv
     needs:
     - build_examples
     runs-on: ubuntu-latest
@@ -345,7 +358,7 @@ jobs:
     - uses: actions/checkout@v5
     - uses: actions/download-artifact@v5
       with:
-        name: examples
+        name: ${{ matrix.artifact }}
         path: examples/dist
     - run: rustup update --no-self-update stable && rustup default stable
     - uses: actions/setup-node@v5
