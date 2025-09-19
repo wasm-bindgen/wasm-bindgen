@@ -202,6 +202,7 @@ export class Foo {
         wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
     }
 }
+if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
 
 export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
