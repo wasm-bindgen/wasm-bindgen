@@ -40,8 +40,6 @@ const ClassConstructorFinalization = (typeof FinalizationRegistry === 'undefined
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_classconstructor_free(ptr >>> 0, 1));
 
-const symbolDispose = Symbol.dispose || Symbol.for('wbg_symbol_dispose');
-
 export class ClassConstructor {
 
     __destroy_into_raw() {
@@ -55,10 +53,6 @@ export class ClassConstructor {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_classconstructor_free(ptr, 0);
     }
-
-    [symbolDispose]() {{
-        this.free();
-    }}
     constructor() {
         const ret = wasm.classconstructor_new();
         this.__wbg_ptr = ret >>> 0;
@@ -66,6 +60,7 @@ export class ClassConstructor {
         return this;
     }
 }
+if (Symbol.dispose) ClassConstructor.prototype[Symbol.dispose] = ClassConstructor.prototype.free;
 
 export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));

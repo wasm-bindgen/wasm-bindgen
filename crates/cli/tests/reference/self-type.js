@@ -40,8 +40,6 @@ const TestFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_test_free(ptr >>> 0, 1));
 
-const symbolDispose = Symbol.dispose || Symbol.for('wbg_symbol_dispose');
-
 export class Test {
 
     __destroy_into_raw() {
@@ -55,10 +53,6 @@ export class Test {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_test_free(ptr, 0);
     }
-
-    [symbolDispose]() {{
-        this.free();
-    }}
     constructor() {
         const ret = wasm.test_new();
         this.__wbg_ptr = ret >>> 0;
@@ -86,6 +80,7 @@ export class Test {
         wasm.test_self_ref_mut_Self(this.__wbg_ptr);
     }
 }
+if (Symbol.dispose) Test.prototype[Symbol.dispose] = Test.prototype.free;
 
 export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));

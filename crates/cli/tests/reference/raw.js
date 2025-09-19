@@ -48,8 +48,6 @@ const TestFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_test_free(ptr >>> 0, 1));
 
-const symbolDispose = Symbol.dispose || Symbol.for('wbg_symbol_dispose');
-
 export class Test {
 
     static __wrap(ptr) {
@@ -71,10 +69,6 @@ export class Test {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_test_free(ptr, 0);
     }
-
-    [symbolDispose]() {{
-        this.free();
-    }}
     /**
      * @param {number} test
      * @returns {Test}
@@ -90,6 +84,7 @@ export class Test {
         wasm.test_test2(this.__wbg_ptr, test);
     }
 }
+if (Symbol.dispose) Test.prototype[Symbol.dispose] = Test.prototype.free;
 
 export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));

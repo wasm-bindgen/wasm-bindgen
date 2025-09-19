@@ -1230,14 +1230,6 @@ wasm = wasmInstance.exports;
             wasm_bindgen_shared::free_function(name),
         ));
         ts_dst.push_str("  free(): void;\n");
-        self.expose_symbol_dispose()?;
-        dst.push_str(
-            "
-            [symbolDispose]() {{
-                this.free();
-            }}
-            ",
-        );
         ts_dst.push_str("  [Symbol.dispose](): void;\n");
         dst.push_str(&class.contents);
         ts_dst.push_str(&class.typescript);
@@ -1246,6 +1238,12 @@ wasm = wasmInstance.exports;
 
         dst.push('}');
         ts_dst.push_str("}\n");
+
+        dst.push_str(&format!(
+            "
+                if (Symbol.dispose) {name}.prototype[Symbol.dispose] = {name}.prototype.free;
+            "
+        ));
 
         self.export(name, ExportJs::Class(&dst), Some(&class.comments))?;
 
@@ -1728,14 +1726,6 @@ wasm = wasmInstance.exports;
             "
         ));
         Ok(ret)
-    }
-
-    fn expose_symbol_dispose(&mut self) -> Result<(), Error> {
-        if !self.should_write_global("symbol_dispose") {
-            return Ok(());
-        }
-        self.global("const symbolDispose = Symbol.dispose || Symbol.for('wbg_symbol_dispose');");
-        Ok(())
     }
 
     fn expose_text_encoder(&mut self) -> Result<(), Error> {
