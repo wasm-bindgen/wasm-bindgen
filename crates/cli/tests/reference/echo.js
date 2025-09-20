@@ -1235,6 +1235,7 @@ export class Foo {
         wasm.__wbg_foo_free(ptr, 0);
     }
 }
+if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
 
 export function __wbg_foo_new(arg0) {
     const ret = Foo.__wrap(arg0);

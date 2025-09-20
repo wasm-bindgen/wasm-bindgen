@@ -69,6 +69,7 @@ export class ClassBuilder {
         return ClassBuilder.__wrap(ret);
     }
 }
+if (Symbol.dispose) ClassBuilder.prototype[Symbol.dispose] = ClassBuilder.prototype.free;
 
 export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));

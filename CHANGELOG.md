@@ -8,6 +8,9 @@
 * Added bindings for `WeakRef`.
   [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4659)
 
+* Support `Symbol.dispose` methods by default, when it is supported in the environment.
+  [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
+
 ### Fixed
 
 * Fixed wasm-bindgen-cli's `encode_into` argument not working.
