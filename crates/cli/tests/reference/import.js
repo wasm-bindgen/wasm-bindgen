@@ -30,16 +30,16 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : { decode: () => { throw Error('TextDecoder not available') } } );
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 
-if (typeof TextDecoder !== 'undefined') { cachedTextDecoder.decode(); };
+cachedTextDecoder.decode();
 
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
 let numBytesDecoded = 0;
 function decodeText(ptr, len) {
     numBytesDecoded += len;
     if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
-        cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : { decode: () => { throw Error('TextDecoder not available') } } );
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
         cachedTextDecoder.decode();
         numBytesDecoded = len;
     }

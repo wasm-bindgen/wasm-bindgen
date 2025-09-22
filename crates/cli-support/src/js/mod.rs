@@ -1506,9 +1506,7 @@ wasm = wasmInstance.exports;
         }
         self.expose_text_encoder()?;
 
-        // The first implementation we have for this is to use
-        // `TextEncoder#encode` which has been around for quite some time.
-        let encode = "function (arg, view) {
+        let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
             const buf = cachedTextEncoder.encode(arg);
             view.set(buf);
             return {
@@ -1517,41 +1515,24 @@ wasm = wasmInstance.exports;
             };
         }";
 
-        // Another possibility is to use `TextEncoder#encodeInto` which is much
-        // newer and isn't implemented everywhere yet. It's more efficient,
-        // however, because it allows us to elide an intermediate allocation.
-        let encode_into = "function (arg, view) {
-            return cachedTextEncoder.encodeInto(arg, view);
-        }";
-
-        // Looks like `encodeInto` doesn't currently work when the memory passed
+        // `encodeInto` doesn't currently work in any browsers when the memory passed
         // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
         // a `SharedArrayBuffer` is in use.
         let shared = self.module.memories.get(memory).shared;
 
         match self.config.encode_into {
-            EncodeInto::Always if !shared => {
-                self.global(&format!(
-                    "
-                    const encodeString = {encode_into};
-                "
-                ));
-            }
+            EncodeInto::Always if !shared => {}
             EncodeInto::Test if !shared => {
                 self.global(&format!(
                     "
-                    const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
-                        ? {encode_into}
-                        : {encode});
+                    if (!('encodeInto' in cachedTextEncoder)) {{
+                        {polyfill_encode_into}
+                    }}
                 "
                 ));
             }
             _ => {
-                self.global(&format!(
-                    "
-                    const encodeString = {encode};
-                "
-                ));
+                self.global(polyfill_encode_into);
             }
         }
 
@@ -1599,7 +1580,7 @@ wasm = wasmInstance.exports;
                     }}
                     ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
                     const view = {mem}().subarray(ptr + offset, ptr + len);
-                    const ret = encodeString(arg, view);
+                    const ret = cachedTextEncoder.encodeInto(arg, view);
                     {debug_end}
                     offset += ret.written;
                     ptr = realloc(ptr, len, offset, 1) >>> 0;
@@ -1732,7 +1713,7 @@ wasm = wasmInstance.exports;
         if !self.should_write_global("text_encoder") {
             return Ok(());
         }
-        self.expose_text_processor("const", "TextEncoder", "encode", "('utf-8')", None)
+        self.expose_text_processor("const", "TextEncoder", "()", None)
     }
 
     fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) -> Result<(), Error> {
@@ -1749,7 +1730,6 @@ wasm = wasmInstance.exports;
         self.expose_text_processor(
             "let",
             "TextDecoder",
-            "decode",
             "('utf-8', { ignoreBOM: true, fatal: true })",
             init,
         )?;
@@ -1766,9 +1746,8 @@ wasm = wasmInstance.exports;
 
                 let cached_text_processor = self.generate_cached_text_processor_init(
                     "TextDecoder",
-                    "decode",
                     "('utf-8', { ignoreBOM: true, fatal: true })",
-                )?;
+                );
 
                 // Maximum number of bytes Safari can handle for one TextDecoder is 2GiB (0x80000000 bytes)
                 // but empirically it seems to crash a bit before the end, so we remove 1MiB (0x100000 bytes)
@@ -1812,53 +1791,15 @@ wasm = wasmInstance.exports;
         &mut self,
         decl_kind: &str,
         s: &str,
-        op: &str,
         args: &str,
         init: Option<&str>,
     ) -> Result<(), Error> {
-        let cached_text_processor_init = self.generate_cached_text_processor_init(s, op, args)?;
-        match &self.config.mode {
-            OutputMode::Node { .. } => {
-                // decl_kind is the kind of the kind of the declaration: let or const
-                // cached_text_processor_init is the rest of the statement for initializing a cached text processor
-                self.global(&format!("{decl_kind} {cached_text_processor_init}"));
-            }
-            OutputMode::Bundler {
-                browser_only: false,
-            } => {
-                self.global(&format!(
-                    "
-                    const l{s} = typeof {s} === 'undefined' ? \
-                        (0, module.require)('util').{s} : {s};\
-                "
-                ));
-                self.global(&format!("{decl_kind} {cached_text_processor_init}"));
-            }
-            OutputMode::Deno
-            | OutputMode::Module
-            | OutputMode::Web
-            | OutputMode::NoModules { .. }
-            | OutputMode::Bundler { browser_only: true } => {
-                // decl_kind is the kind of the kind of the declaration: let or const
-                // cached_text_processor_init is the rest of the statement for initializing a cached text processor
-                self.global(&format!("{decl_kind} {cached_text_processor_init}"))
-            }
-        };
-
+        let cached_text_processor_init = self.generate_cached_text_processor_init(s, args);
+        // decl_kind is the kind of the declaration: let or const
+        // cached_text_processor_init is the rest of the statement for initializing a cached text processor
+        self.global(&format!("{decl_kind} {cached_text_processor_init}"));
         if let Some(init) = init {
-            match &self.config.mode {
-                OutputMode::Node { .. }
-                | OutputMode::Module
-                | OutputMode::Bundler {
-                    browser_only: false,
-                } => self.global(init),
-                OutputMode::Deno
-                | OutputMode::Web
-                | OutputMode::NoModules { .. }
-                | OutputMode::Bundler { browser_only: true } => {
-                    self.global(&format!("if (typeof {s} !== 'undefined') {{ {init} }};"))
-                }
-            }
+            self.global(init);
         }
 
         Ok(())
@@ -1866,37 +1807,8 @@ wasm = wasmInstance.exports;
 
     /// Generates a partial text processor statement, everything except the declaration kind,
     /// i.e. everything except for `const` or `let` which the caller needs to handle itself.
-    fn generate_cached_text_processor_init(
-        &mut self,
-        s: &str,
-        op: &str,
-        args: &str,
-    ) -> Result<String, Error> {
-        let new_cached_text_procesor = match &self.config.mode {
-            OutputMode::Node { .. } => {
-                let name = self.import_name(&JsImport {
-                    name: JsImportName::Module {
-                        module: "util".to_string(),
-                        name: s.to_string(),
-                    },
-                    fields: Vec::new(),
-                })?;
-                format!("cached{s} = new {name}{args};")
-            }
-            OutputMode::Bundler {
-                browser_only: false,
-            } => {
-                format!("cached{s} = new l{s}{args};")
-            }
-            OutputMode::Deno
-            | OutputMode::Module
-            | OutputMode::Web
-            | OutputMode::NoModules { .. }
-            | OutputMode::Bundler { browser_only: true } => {
-                format!("cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : {{ {op}: () => {{ throw Error('{s} not available') }} }} );")
-            }
-        };
-        Ok(new_cached_text_procesor)
+    fn generate_cached_text_processor_init(&mut self, s: &str, args: &str) -> String {
+        format!("cached{s} = new {s}{args};")
     }
 
     fn expose_get_string_from_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
