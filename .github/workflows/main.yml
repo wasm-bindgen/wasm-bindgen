@@ -408,16 +408,14 @@ jobs:
         path: "target/aarch64-unknown-linux-gnu/release/wasm*"
 
   dist_linux_aarch64_musl:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v5
     - run: rustup update --no-self-update stable && rustup default stable
     - run: rustup target add aarch64-unknown-linux-musl
+    - run: sudo apt update -y && sudo apt install musl-tools -y
     - run: |
-        pip3 install ziglang
-        cargo install --locked cargo-zigbuild
-    - run: |
-        cargo zigbuild --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-musl --features vendored-openssl --release
+        cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-musl --features vendored-openssl --release
     - uses: actions/upload-artifact@v4
       with:
         name: dist_linux_aarch64_musl
