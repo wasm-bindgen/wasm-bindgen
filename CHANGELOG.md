@@ -19,6 +19,11 @@
 * Fixed a bug in `--experimental-reset-state-function` support for heap reset.
   [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
 
+### Changed
+
+* Limited minimum glibc version (0.2.34) for aarch64's gnu artifacts
+  [#4669](https://github.com/wasm-bindgen/wasm-bindgen/pull/4669)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.103](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.102...0.2.103)
