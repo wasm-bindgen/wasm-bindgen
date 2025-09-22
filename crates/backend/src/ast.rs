@@ -320,6 +320,8 @@ pub struct ImportType {
     pub rust_name: Ident,
     /// The name of this type on the JS side
     pub js_name: String,
+    /// Path to the module, if present
+    pub path_name: Option<String>,
     /// The custom attributes to apply to this type
     pub attrs: Vec<syn::Attribute>,
     /// The TS definition to generate for this type

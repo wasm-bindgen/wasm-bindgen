@@ -951,6 +951,16 @@ impl ToTokens for ast::ImportType {
                 inform(#typescript_type_len);
                 #(inform(#typescript_type_chars);)*
             }
+        } else if let Some(path_name) = &self.path_name {
+            let full_name = format!(r#"import("{}").{}"#, path_name, self.js_name);
+            let full_name_len = full_name.len() as u32;
+            let full_name_chars = full_name.chars().map(|c| c as u32);
+            quote! {
+                use wasm_bindgen::describe::*;
+                inform(NAMED_EXTERNREF);
+                inform(#full_name_len);
+                #(inform(#full_name_chars);)*
+            }
         } else {
             quote! {
                 JsValue::describe()
