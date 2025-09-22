@@ -12,7 +12,7 @@
   [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
 
 * Added `aarch64-unknown-linux-musl` release artifacts.
-  [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
+  [#4668](https://github.com/wasm-bindgen/wasm-bindgen/pull/4668)
 
 ### Fixed
 
