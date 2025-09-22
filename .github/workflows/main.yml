@@ -407,6 +407,22 @@ jobs:
         name: dist_linux_aarch64_gnu
         path: "target/aarch64-unknown-linux-gnu/release/wasm*"
 
+  dist_linux_aarch64_musl:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - run: rustup update --no-self-update stable && rustup default stable
+    - run: rustup target add aarch64-unknown-linux-musl
+    - run: |
+        pip3 install ziglang
+        cargo install --locked cargo-zigbuild
+    - run: |
+        cargo zigbuild --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-musl --features vendored-openssl --release
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dist_linux_aarch64_musl
+        path: "target/aarch64-unknown-linux-musl/release/wasm*"
+
   dist_macos_x86_64:
     runs-on: macos-latest
     steps:
@@ -553,6 +569,7 @@ jobs:
       - doc_book
       - dist_linux_x86_64_musl
       - dist_linux_aarch64_gnu
+      - dist_linux_aarch64_musl
       - dist_macos_x86_64
       - dist_macos_aarch64
       - dist_windows
@@ -589,6 +606,7 @@ jobs:
         }
         mk x86_64-unknown-linux-musl dist_linux_x86_64_musl
         mk aarch64-unknown-linux-gnu dist_linux_aarch64_gnu
+        mk aarch64-unknown-linux-musl dist_linux_aarch64_musl
         mk x86_64-apple-darwin dist_macos_x86_64
         mk aarch64-apple-darwin dist_macos_aarch64
         mk x86_64-pc-windows-msvc dist_windows
