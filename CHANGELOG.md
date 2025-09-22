@@ -21,8 +21,8 @@
 
 ### Changed
 
-* Unconditionally use `TextEncoder`/`TextDecoder` for string encoding/decoding.
-  [#TODO]
+* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
+  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
 
 --------------------------------------------------------------------------------
 
