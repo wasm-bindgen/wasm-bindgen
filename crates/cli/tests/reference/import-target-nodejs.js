@@ -5,7 +5,6 @@ imports['__wbindgen_placeholder__'] = module.exports;
 imports['foo-raw'] = require('foo-raw');
 imports['pure-extern'] = require('pure-extern');
 imports['tests/wasm/imports.js'] = require('tests/wasm/imports.js');
-let wasm;
 const { default: default1 } = require(`tests/wasm/import_class.js`);
 
 function addToExternrefTable0(obj) {
@@ -51,53 +50,53 @@ function takeFromExternrefTable0(idx) {
     return value;
 }
 
-module.exports.exported = function() {
+exports.exported = function() {
     const ret = wasm.exported();
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
 };
 
-module.exports.__wbg_catchme_f7d87ea824a61e87 = function() { return handleError(function () {
+exports.__wbg_catchme_f7d87ea824a61e87 = function() { return handleError(function () {
     catch_me();
 }, arguments) };
 
-module.exports.__wbg_get_56ba567010fb9959 = function(arg0) {
+exports.__wbg_get_56ba567010fb9959 = function(arg0) {
     const ret = arg0.get();
     return ret;
 };
 
-module.exports.__wbg_myfunction_8c7b624429f78550 = function() {
+exports.__wbg_myfunction_8c7b624429f78550 = function() {
     b.my_function();
 };
 
-module.exports.__wbg_new_d21827b66c7fd25d = function(arg0) {
+exports.__wbg_new_d21827b66c7fd25d = function(arg0) {
     const ret = new default1(arg0);
     return ret;
 };
 
-module.exports.__wbg_nocatch_be850a8dddd9599d = function() {
+exports.__wbg_nocatch_be850a8dddd9599d = function() {
     no_catch();
 };
 
-module.exports.__wbg_reload_84c12f152ad689f0 = function() {
+exports.__wbg_reload_84c12f152ad689f0 = function() {
     window.location.reload();
 };
 
-module.exports.__wbg_static_accessor_CONST_9e9d5ae758197645 = function() {
+exports.__wbg_static_accessor_CONST_9e9d5ae758197645 = function() {
     const ret = a.CONST;
     return ret;
 };
 
-module.exports.__wbg_wbindgenthrow_4c11a24fca429ccf = function(arg0, arg1) {
+exports.__wbg_wbindgenthrow_4c11a24fca429ccf = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-module.exports.__wbg_write_c2ce0ce33a6087d5 = function(arg0, arg1) {
+exports.__wbg_write_c2ce0ce33a6087d5 = function(arg0, arg1) {
     window.document.write(getStringFromWasm0(arg0, arg1));
 };
 
-module.exports.__wbindgen_init_externref_table = function() {
+exports.__wbindgen_init_externref_table = function() {
     const table = wasm.__wbindgen_export_2;
     const offset = table.grow(4);
     table.set(0, undefined);
@@ -108,13 +107,10 @@ module.exports.__wbindgen_init_externref_table = function() {
     ;
 };
 
-const path = require('path').join(__dirname, 'reference_test_bg.wasm');
-const bytes = require('fs').readFileSync(path);
-
-const wasmModule = new WebAssembly.Module(bytes);
-const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-wasm = wasmInstance.exports;
-module.exports.__wasm = wasm;
+const wasmPath = `${__dirname}/reference_test_bg.wasm`;
+const wasmBytes = require('fs').readFileSync(wasmPath);
+const wasmModule = new WebAssembly.Module(wasmBytes);
+const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
 
