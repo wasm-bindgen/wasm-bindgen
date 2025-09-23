@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"scripts": {
 		"build:nodejs": "wasm-pack build --target nodejs --out-dir ../dist/nodejs_and_deno --out-name nodejs",
 		"build:deno": "wasm-pack build --target deno --out-dir ../dist/nodejs_and_deno --out-name deno",
