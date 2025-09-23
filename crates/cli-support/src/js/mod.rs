@@ -398,8 +398,8 @@ impl<'a> Context<'a> {
     }
 
     fn generate_deno_wasm_loading(&self, module_name: &str) -> String {
-        // Deno removed support for .wasm imports in https://github.com/denoland/deno/pull/5135
-        // the issue for bringing it back is https://github.com/denoland/deno/issues/5609.
+        // Deno added support for .wasm imports in 2024 in https://github.com/denoland/deno/issues/2552.
+        // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
             "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports)).instance.exports;
