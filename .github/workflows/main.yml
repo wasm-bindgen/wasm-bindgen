@@ -230,7 +230,7 @@ jobs:
     - name: Check TypeScript output
       run: tsc --noEmit --skipLibCheck --lib esnext,dom $(echo crates/cli/tests/reference/*.d.ts)
     - name: Check JavaScript output
-      run: tsc --noEmit --skipLibCheck --lib esnext,dom --module esnext --allowJs $(echo crates/cli/tests/reference/*.js | sed 's/ crates\/cli\/tests\/reference\/targets-[56]\.js//g')
+      run: tsc --noEmit --skipLibCheck --lib esnext,dom --module esnext --allowJs $(find crates/cli/tests/reference -maxdepth 1 -name '*.js' ! -name '*target-module*.js')
 
   test_native:
     name: Run native tests

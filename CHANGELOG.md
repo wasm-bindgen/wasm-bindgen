@@ -23,6 +23,9 @@
 
 * Limited minimum glibc version (0.2.34) for aarch64's gnu artifacts
   [#4669](https://github.com/wasm-bindgen/wasm-bindgen/pull/4669)
+  
+* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
+  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
 
 --------------------------------------------------------------------------------
 
