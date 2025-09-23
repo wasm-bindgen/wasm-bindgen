@@ -9,11 +9,6 @@
 //! compilation. Use `BLESS=1` in the environment to automatically update all
 //! tests.
 //!
-//! Note: Tests are run sequentially. In CI, tests are run ordered by name and
-//! all tests will be run to show all errors. Outside of CI, recently modified
-//! tests are run first and the runner will stop on the first failure. This is
-//! done to make it faster to iterate on tests.
-//!
 //! ## Dependencies
 //!
 //! By default, tests only have access to the `wasm-bindgen` and
@@ -53,14 +48,12 @@
 //! // FLAGS: --target=nodejs
 //! ```
 
+use crate::Project;
 use anyhow::{bail, Result};
-use assert_cmd::prelude::*;
 use std::collections::BTreeMap;
 use std::env;
-use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use walrus::{
     ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
 };
@@ -72,9 +65,6 @@ fn runtest(
     test: PathBuf,
 ) -> Result<()> {
     let contents = fs::read_to_string(&test)?;
-    let td = tempfile::TempDir::new()?;
-    let root = repo_root();
-    let root = root.display();
 
     // parse target declarations
     let mut all_flags: Vec<_> = contents
@@ -86,72 +76,37 @@ fn runtest(
         all_flags.push("");
     }
 
-    // parse additional dependency declarations
-    let dependencies = contents
-        .lines()
-        .filter_map(|l| l.strip_prefix("// DEPENDENCY: "))
-        .map(|l| "\n            ".to_string() + &l.trim().replace("{root}", &root.to_string()))
-        .fold(String::new(), |a, b| a + &b);
-
-    let manifest = format!(
-        "
-            [package]
-            name = \"reference-test\"
-            authors = []
-            version = \"1.0.0\"
-            edition = '2021'
-
-            [dependencies]
-            wasm-bindgen = {{ path = '{root}' }}
-            wasm-bindgen-futures = {{ path = '{root}/crates/futures' }}
-            {dependencies}
-
-            [lib]
-            crate-type = ['cdylib']
-            path = '{test}'
-        ",
-        test = test.display(),
+    let mut project = Project::new(
+        test.file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .replace('-', "_")
+            + "_reftest",
     );
 
-    fs::write(td.path().join("Cargo.toml"), manifest)?;
-    let target_dir = target_dir(test.file_name().unwrap());
-    let mut cargo = Command::new("cargo");
-    cargo
-        .current_dir(td.path())
-        .arg("build")
-        .arg("--target")
-        .arg("wasm32-unknown-unknown")
-        .env("CARGO_TARGET_DIR", &target_dir);
-    exec(&mut cargo)?;
+    // parse additional dependency declarations
+    project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
 
-    let wasm = target_dir
-        .join("wasm32-unknown-unknown")
-        .join("debug")
-        .join("reference_test.wasm");
+    contents
+        .lines()
+        .filter_map(|l| l.strip_prefix("// DEPENDENCY: "))
+        .for_each(|dep| {
+            project.dep(dep);
+        });
 
-    for (flags_index, &flags) in all_flags.iter().enumerate() {
+    project.file_link("src/lib.rs", &test);
+
+    for &flags in &all_flags {
         // extract the target from the flags
         let target = flags
             .split_whitespace()
             .find_map(|f| f.strip_prefix("--target="))
             .unwrap_or("bundler");
 
-        let out_dir = &td.path().join(&format!("{target}{flags_index}"));
-        fs::create_dir(out_dir)?;
-
-        let mut bindgen = Command::cargo_bin("wasm-bindgen")?;
-        bindgen
-            .arg("--out-dir")
-            .arg(out_dir)
-            .arg(&wasm)
-            .arg("--remove-producers-section");
-        for flag in flags.split_whitespace() {
-            bindgen.arg(flag);
-        }
-        if contents.contains("// enable-externref") {
-            bindgen.env("WASM_BINDGEN_EXTERNREF", "1");
-        }
-        exec(&mut bindgen)?;
+        let (mut cmd, out_dir) =
+            project.wasm_bindgen(&format!("{flags} --out-name reference_test"));
+        cmd.assert().success();
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {
@@ -315,39 +270,4 @@ fn diff(a: &str, b: &str) -> Result<()> {
         s.push('\n');
     }
     bail!("found a difference:\n\n{}", s);
-}
-
-fn target_dir(name: &OsStr) -> PathBuf {
-    repo_root().join("target/tests/reference").join(name)
-}
-
-fn repo_root() -> PathBuf {
-    let mut repo_root = env::current_dir().unwrap();
-    if repo_root.file_name() == Some("cli".as_ref()) {
-        repo_root.pop(); // remove 'cli'
-        repo_root.pop(); // remove 'crates'
-    }
-    repo_root
-}
-
-fn exec(cmd: &mut Command) -> Result<()> {
-    let output = cmd.output()?;
-    if output.status.success() {
-        return Ok(());
-    }
-    let mut err = format!("command failed {cmd:?}");
-    err.push_str(&format!("\nstatus: {}", output.status));
-    err.push_str(&format!(
-        "\nstderr:\n{}",
-        tab(&String::from_utf8_lossy(&output.stderr))
-    ));
-    err.push_str(&format!(
-        "\nstdout:\n{}",
-        tab(&String::from_utf8_lossy(&output.stdout))
-    ));
-    bail!("{}", err);
-}
-
-fn tab(s: &str) -> String {
-    format!("    {}", s.replace('\n', "\n    "))
 }

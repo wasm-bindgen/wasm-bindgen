@@ -48,32 +48,32 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_static_accessor_NAMESPACE_OPTIONAL_c9a4344c544120f4() {
+export function __wbg_static_accessor_NAMESPACE_OPTIONAL_2e93032090b95d76() {
     const ret = typeof test === 'undefined' ? null : test?.NAMESPACE_OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_NAMESPACE_PLAIN_784c8d7f5bbac62a() {
+export function __wbg_static_accessor_NAMESPACE_PLAIN_996cfe92d41df43c() {
     const ret = test.NAMESPACE_PLAIN;
     return ret;
 };
 
-export function __wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_a414abbeb018a35a() {
+export function __wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_c736ff66b2fdaa43() {
     const ret = typeof test1 === 'undefined' ? null : test1?.test2?.NESTED_NAMESPACE_OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_1121b285cb8479df() {
+export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_e9affde7bc139ebd() {
     const ret = test1.test2.NESTED_NAMESPACE_PLAIN;
     return ret;
 };
 
-export function __wbg_static_accessor_OPTIONAL_ade71b6402851d0c() {
+export function __wbg_static_accessor_OPTIONAL_8c4485fd717985fd() {
     const ret = typeof OPTIONAL === 'undefined' ? null : OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_PLAIN_c0f08eb2f0db194c() {
+export function __wbg_static_accessor_PLAIN_c0ea7240f2fd9157() {
     const ret = PLAIN;
     return ret;
 };

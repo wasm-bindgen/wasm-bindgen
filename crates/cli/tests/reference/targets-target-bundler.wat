@@ -1,8 +1,8 @@
-(module $reference_test.wasm
+(module $targets_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (result f64)))
   (type (;2;) (func (param i32 i32) (result i32)))
-  (import "./reference_test_bg.js" "__wbg_random_8be0a899673d8681" (func (;0;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg_random_ae0b2256206ad108" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $add_that_might_fail (;2;) (type 2) (param i32 i32) (result i32))
   (table (;0;) 128 externref)

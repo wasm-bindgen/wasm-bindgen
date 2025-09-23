@@ -1,4 +1,4 @@
-(module $reference_test.wasm
+(module $enums_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (param i32) (result i32)))
   (type (;2;) (func (param i32 i32)))

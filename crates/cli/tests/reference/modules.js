@@ -38,13 +38,13 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_parseFloat_2be7f01c31025438(arg0, arg1) {
-    const ret = parseFloat(getStringFromWasm0(arg0, arg1));
+export function __wbg_parseFloat_9247671d3fd29c8d(arg0) {
+    const ret = parseFloat(arg0);
     return ret;
 };
 
-export function __wbg_parseFloat_7bc8aecd47f33642(arg0) {
-    const ret = parseFloat(arg0);
+export function __wbg_parseFloat_e568a9a7c2403488(arg0, arg1) {
+    const ret = parseFloat(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 

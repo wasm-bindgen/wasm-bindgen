@@ -1,4 +1,4 @@
-(module $reference_test.wasm
+(module $empty_reftest.wasm
   (type (;0;) (func))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
   (table (;0;) 128 externref)

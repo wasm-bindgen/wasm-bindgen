@@ -1,10 +1,10 @@
-(module $reference_test.wasm
+(module $anyref_import_catch_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (result i32)))
   (type (;2;) (func (result i32 i32)))
   (type (;3;) (func (param i32)))
   (type (;4;) (func (param i32 i32)))
-  (import "./reference_test_bg.js" "__wbg_foo_4e8309b1aa95a4ac" (func (;0;) (type 0)))
+  (import "./reference_test_bg.js" "__wbg_foo_9ceaa09e9e1e3047" (func (;0;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;1;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;2;) (type 0)))
   (func $"exported multivalue shim" (;3;) (type 2) (result i32 i32))
