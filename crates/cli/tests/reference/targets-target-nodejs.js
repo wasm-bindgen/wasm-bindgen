@@ -33,3 +33,4 @@ const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
+
