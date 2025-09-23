@@ -100,7 +100,7 @@ members = [
   "examples/char",
   "examples/closures",
   "examples/console_log",
-  "examples/deno",
+  "examples/nodejs_and_deno",
   "examples/dom",
   "examples/duck-typed-interfaces",
   "examples/explicit-resource-management",
