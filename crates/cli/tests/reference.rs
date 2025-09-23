@@ -155,7 +155,7 @@ fn runtest(
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {
-            let mut base_file_name = test.file_stem().unwrap().to_string_lossy().into_owned();
+            let mut base_file_name = test.file_stem().unwrap().to_str().unwrap().to_owned();
 
             for chunk in flags.split(|c: char| !c.is_ascii_alphanumeric()) {
                 if !chunk.is_empty() {
