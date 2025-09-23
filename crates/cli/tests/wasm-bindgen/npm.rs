@@ -1,4 +1,5 @@
-use crate::*;
+use crate::{Project, REPO_ROOT};
+use predicates::str;
 
 #[test]
 fn no_modules_rejects_npm() {
@@ -69,28 +70,7 @@ fn more_package_json_fields_ignored() {
 #[test]
 fn npm_conflict_rejected() {
     let (mut cmd, _out_dir) = Project::new("npm_conflict_rejected")
-        .file(
-            "Cargo.toml",
-            &format!(
-                r#"
-                [package]
-                name = "npm_conflict_rejected"
-                authors = []
-                version = "1.0.0"
-                edition = '2021'
-
-                [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
-                bar = {{ path = 'bar' }}
-
-                [lib]
-                crate-type = ['cdylib']
-
-                [workspace]
-            "#,
-                repo_root().display()
-            ),
-        )
+        .dep("bar = { path = 'bar' }")
         .file(
             "src/lib.rs",
             r#"
@@ -129,7 +109,7 @@ fn npm_conflict_rejected() {
                 [dependencies]
                 wasm-bindgen = {{ path = '{}' }}
             "#,
-                repo_root().display()
+                REPO_ROOT.display()
             ),
         )
         .file(

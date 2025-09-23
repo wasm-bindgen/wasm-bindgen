@@ -1,4 +1,4 @@
-(module $reference_test.wasm
+(module $result_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (result i32 i32)))
   (type (;2;) (func (result i32 i32 i32)))

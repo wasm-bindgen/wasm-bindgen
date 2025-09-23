@@ -1,4 +1,4 @@
-(module $reference_test.wasm
+(module $optional_args_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (param f64 i32 f64)))
   (type (;2;) (func (param f64 f64 f64)))

@@ -57,29 +57,29 @@ export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
 }
 
-export function __wbg_await_e0a0e75be8b6fef6() {
+export function __wbg_await_d6a3b8c6a7818623() {
     await();
 };
 
-export function __wbg_let_8d461e9e0592bd8c(arg0) {
+export function __wbg_let_6f6af6103d3e2d91(arg0) {
     arg0.let();
 };
 
-export function __wbg_new_4b026aaf1c1e4438() {
+export function __wbg_new_06a005f0311eb839() {
     const ret = A.new();
     return ret;
 };
 
-export function __wbg_new_d4bfd9add722b492() {
+export function __wbg_new_27ac6aec351615ea() {
     const ret = window.__TAURI__.menu.Menu.new();
     return ret;
 };
 
-export function __wbg_new_e17dd7c5a1cd57d8() {
+export function __wbg_new_f777371617c89b36() {
     B.new();
 };
 
-export function __wbg_static_accessor_TRUE_c6b68bf8545d99a3() {
+export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {
     const ret = true;
     return ret;
 };

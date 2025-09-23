@@ -1,6 +1,6 @@
 
 let imports = {};
-imports['./snippets/reference-test-ddc0ab9a51c9d25f/inline0.js'] = require('./snippets/reference-test-ddc0ab9a51c9d25f/inline0.js');
+imports['./snippets/import_reftest-a82831e16a4c30f1/inline0.js'] = require('./snippets/import_reftest-a82831e16a4c30f1/inline0.js');
 imports['__wbindgen_placeholder__'] = module.exports;
 imports['foo-raw'] = require('foo-raw');
 imports['pure-extern'] = require('pure-extern');
@@ -57,33 +57,33 @@ exports.exported = function() {
     }
 };
 
-exports.__wbg_catchme_f7d87ea824a61e87 = function() { return handleError(function () {
+exports.__wbg_catchme_1d18acaa34acb005 = function() { return handleError(function () {
     catch_me();
 }, arguments) };
 
-exports.__wbg_get_56ba567010fb9959 = function(arg0) {
+exports.__wbg_get_c871386e44ba8c35 = function(arg0) {
     const ret = arg0.get();
     return ret;
 };
 
-exports.__wbg_myfunction_8c7b624429f78550 = function() {
+exports.__wbg_myfunction_597f96bc4719408a = function() {
     b.my_function();
 };
 
-exports.__wbg_new_d21827b66c7fd25d = function(arg0) {
+exports.__wbg_new_c30895ccee9479d4 = function(arg0) {
     const ret = new default1(arg0);
     return ret;
 };
 
-exports.__wbg_nocatch_be850a8dddd9599d = function() {
+exports.__wbg_nocatch_757175fbf9e08b9e = function() {
     no_catch();
 };
 
-exports.__wbg_reload_84c12f152ad689f0 = function() {
+exports.__wbg_reload_b091d4dc4b1b3a74 = function() {
     window.location.reload();
 };
 
-exports.__wbg_static_accessor_CONST_9e9d5ae758197645 = function() {
+exports.__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
     const ret = a.CONST;
     return ret;
 };
@@ -92,7 +92,7 @@ exports.__wbg_wbindgenthrow_4c11a24fca429ccf = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-exports.__wbg_write_c2ce0ce33a6087d5 = function(arg0, arg1) {
+exports.__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
     window.document.write(getStringFromWasm0(arg0, arg1));
 };
 
@@ -113,4 +113,3 @@ const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
-

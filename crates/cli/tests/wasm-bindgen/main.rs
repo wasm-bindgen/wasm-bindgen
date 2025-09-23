@@ -11,42 +11,58 @@
 //! quite expensive, so it's recommended that this test suite doesn't become too
 //! large!
 
-use assert_cmd::prelude::*;
+mod npm;
+mod reference;
+
+use assert_cmd::Command;
 use predicates::str;
 use std::env;
 use std::fs;
+use std::hash::DefaultHasher;
+use std::hash::Hash;
+use std::hash::Hasher;
+use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 use wasmparser::Payload;
 
-fn target_dir() -> PathBuf {
-    let mut dir = env::current_exe().unwrap();
-    dir.pop(); // current exe
-    if dir.ends_with("deps") {
-        dir.pop();
-    }
-    dir.pop(); // debug and/or release
-    dir
-}
+lazy_static::lazy_static! {
+    static ref TARGET_DIR: PathBuf = {
+        let mut dir = env::current_exe().unwrap();
+        dir.pop(); // current exe
+        if dir.ends_with("deps") {
+            dir.pop();
+        }
+        dir.pop(); // debug and/or release
+        dir
+    };
 
-fn repo_root() -> PathBuf {
-    let mut repo_root = env::current_dir().unwrap();
-    repo_root.pop(); // remove 'cli'
-    repo_root.pop(); // remove 'crates'
-    repo_root
+    static ref REPO_ROOT: PathBuf = {
+        let mut repo_root = env::current_dir().unwrap();
+        repo_root.pop(); // remove 'cli'
+        repo_root.pop(); // remove 'crates'
+        repo_root
+    };
 }
 
 struct Project {
     root: PathBuf,
-    name: &'static str,
+    name: String,
+    deps: String,
+    built: bool,
 }
 
 impl Project {
-    fn new(name: &'static str) -> Project {
-        let root = target_dir().join("cli-tests").join(name);
+    fn new(name: impl Into<String>) -> Project {
+        let name = name.into();
+        let root = TARGET_DIR.join("cli-tests").join(&name);
         drop(fs::remove_dir_all(&root));
         fs::create_dir_all(&root).unwrap();
-        Project { root, name }
+        Project {
+            root,
+            name,
+            deps: "wasm-bindgen = { path = '{root}' }\n".to_owned(),
+            built: false,
+        }
     }
 
     fn file(&mut self, name: &str, contents: &str) -> &mut Project {
@@ -56,25 +72,45 @@ impl Project {
         self
     }
 
+    fn file_link(&mut self, name: &str, src: &Path) -> &mut Project {
+        let dst = self.root.join(name);
+        fs::create_dir_all(dst.parent().unwrap()).unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(src, &dst).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(src, &dst).unwrap();
+        self
+    }
+
     fn wasm_bindgen(&mut self, args: &str) -> (Command, PathBuf) {
-        let wasm = self.build();
-        let output = self.root.join("pkg");
+        let output = self.root.join("pkg").join({
+            let mut hasher = DefaultHasher::new();
+            args.hash(&mut hasher);
+            hasher.finish().to_string()
+        });
         fs::create_dir_all(&output).unwrap();
         let mut cmd = Command::cargo_bin("wasm-bindgen").unwrap();
         cmd.arg("--out-dir").arg(&output);
-        cmd.arg(&wasm);
+        cmd.arg(self.build());
         for arg in args.split_whitespace() {
             cmd.arg(arg);
         }
         (cmd, output)
     }
 
+    fn dep(&mut self, line: &str) -> &mut Project {
+        self.deps.push_str(line);
+        self.deps.push_str("\n");
+        self
+    }
+
     fn build(&mut self) -> PathBuf {
-        if !self.root.join("Cargo.toml").is_file() {
-            self.file(
-                "Cargo.toml",
-                &format!(
-                    "
+        if !self.built {
+            if !self.root.join("Cargo.toml").is_file() {
+                self.file(
+                    "Cargo.toml",
+                    &format!(
+                        "
                         [package]
                         name = \"{}\"
                         authors = []
@@ -82,34 +118,38 @@ impl Project {
                         edition = '2021'
 
                         [dependencies]
-                        wasm-bindgen = {{ path = '{}' }}
+                        {}
 
                         [lib]
                         crate-type = ['cdylib']
 
                         [workspace]
                     ",
-                    self.name,
-                    repo_root().display(),
-                ),
-            );
+                        self.name,
+                        self.deps.replace("{root}", REPO_ROOT.to_str().unwrap())
+                    ),
+                );
+            }
+
+            Command::new("cargo")
+                .current_dir(&self.root)
+                .arg("build")
+                .arg("--target")
+                .arg("wasm32-unknown-unknown")
+                .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+                .assert()
+                .success();
+
+            self.built = true;
         }
 
-        let target_dir = target_dir();
-        Command::new("cargo")
-            .current_dir(&self.root)
-            .arg("build")
-            .arg("--target")
-            .arg("wasm32-unknown-unknown")
-            .env("CARGO_TARGET_DIR", &target_dir)
-            .assert()
-            .success();
+        let mut built = TARGET_DIR.to_path_buf();
+        built.push("wasm32-unknown-unknown");
+        built.push("debug");
+        built.push(&self.name);
+        built.set_extension("wasm");
 
-        target_dir
-            .join("wasm32-unknown-unknown")
-            .join("debug")
-            .join(self.name)
-            .with_extension("wasm")
+        built
     }
 }
 
@@ -164,8 +204,6 @@ fn namespace_global_and_noglobal_works() {
     cmd.assert().success();
 }
 
-mod npm;
-
 #[test]
 fn one_export_works() {
     let (mut cmd, _out_dir) = Project::new("one_export_works")
@@ -214,7 +252,7 @@ fn bin_crate_works() {
 
                     [workspace]
                 ",
-                repo_root().display(),
+                REPO_ROOT.display(),
             ),
         )
         .wasm_bindgen("--target nodejs");
@@ -261,10 +299,10 @@ fn bin_crate_works_without_name_section() {
 
                     [workspace]
                 ",
-                repo_root().display(),
+                REPO_ROOT.display(),
             ),
         );
-    let wasm = project.build();
+    let wasm = &*project.build();
 
     // Remove the name section from the module.
     // This simulates a situation like #3362 where it fails to parse because one of
@@ -301,14 +339,7 @@ fn bin_crate_works_without_name_section() {
     fs::write(&wasm, contents).unwrap();
 
     // Then run wasm-bindgen on the result.
-    let out_dir = project.root.join("pkg");
-    fs::create_dir_all(&out_dir).unwrap();
-    let mut cmd = Command::cargo_bin("wasm-bindgen").unwrap();
-    cmd.arg("--out-dir")
-        .arg(&out_dir)
-        .arg(&wasm)
-        .arg("--target")
-        .arg("nodejs");
+    let (mut cmd, out_dir) = project.wasm_bindgen("--target nodejs");
     cmd.assert().success();
 
     Command::new("node")

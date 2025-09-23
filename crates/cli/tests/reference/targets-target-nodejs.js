@@ -11,7 +11,7 @@ exports.add_that_might_fail = function(a, b) {
     return ret >>> 0;
 };
 
-exports.__wbg_random_8be0a899673d8681 = function() {
+exports.__wbg_random_ae0b2256206ad108 = function() {
     const ret = Math.random();
     return ret;
 };
@@ -33,4 +33,3 @@ const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
-
