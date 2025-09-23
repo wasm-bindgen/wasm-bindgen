@@ -9,11 +9,6 @@
 //! compilation. Use `BLESS=1` in the environment to automatically update all
 //! tests.
 //!
-//! Note: Tests are run sequentially. In CI, tests are run ordered by name and
-//! all tests will be run to show all errors. Outside of CI, recently modified
-//! tests are run first and the runner will stop on the first failure. This is
-//! done to make it faster to iterate on tests.
-//!
 //! ## Dependencies
 //!
 //! By default, tests only have access to the `wasm-bindgen` and
