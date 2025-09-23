@@ -197,10 +197,10 @@ impl<'a> Context<'a> {
         let global = match self.config.mode {
             OutputMode::Node { module: false } => match export {
                 ExportJs::Class(class) => {
-                    format!("{class}\nmodule.exports.{export_name} = {export_name};\n")
+                    format!("{class}\nexports.{export_name} = {export_name};\n")
                 }
                 ExportJs::Function(expr) | ExportJs::Expression(expr) => {
-                    format!("module.exports.{export_name} = {expr};\n")
+                    format!("exports.{export_name} = {expr};\n")
                 }
             },
             OutputMode::NoModules { .. } => match export {
@@ -304,12 +304,12 @@ impl<'a> Context<'a> {
         reset_indentation(&shim)
     }
 
-    fn generate_node_wasm_loading(&mut self, path: &Path) -> String {
+    fn generate_node_wasm_loading(&mut self, module_name: &str) -> String {
         let mut shim = String::new();
 
-        let module_name = "wbg";
         if let Some(mem) = self.module.memories.iter().next() {
             if let Some(id) = mem.import {
+                let module_name = "wbg";
                 self.module.imports.get_mut(id).module = module_name.to_string();
                 shim.push_str(&format!(
                     "imports.{module_name} = {{ memory: new WebAssembly.Memory({{"
@@ -330,42 +330,24 @@ impl<'a> Context<'a> {
             // url to use `C:\...` instead of `\C:\...`
             shim.push_str(&format!(
                 "
-                import * as path from 'node:path';
-                import * as fs from 'node:fs';
-                import * as process from 'node:process';
+                import {{ readFileSync }} from 'node:fs';
 
-                let file = path.dirname(new URL(import.meta.url).pathname);
-                if (process.platform === 'win32') {{
-                    file = file.substring(1);
-                }}
-                const bytes = fs.readFileSync(path.join(file, '{}'));
-            ",
-                path.file_name().unwrap().to_str().unwrap()
+                const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
+                const wasmBytes = readFileSync(wasmUrl);
+                const wasmModule = new WebAssembly.Module(wasmBytes);
+                const wasm = new WebAssembly.Instance(wasmModule, imports).exports;
+                export {{ wasm as __wasm }};
+            "
             ));
-            shim.push_str(
-                "
-                const wasmModule = new WebAssembly.Module(bytes);
-                const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-                const wasm = wasmInstance.exports;
-                export const __wasm = wasm;
-            ",
-            );
         } else {
             shim.push_str(&format!(
                 "
-                const path = require('path').join(__dirname, '{}');
-                const bytes = require('fs').readFileSync(path);
-            ",
-                path.file_name().unwrap().to_str().unwrap()
+                const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
+                const wasmBytes = require('fs').readFileSync(wasmPath);
+                const wasmModule = new WebAssembly.Module(wasmBytes);
+                const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
+            "
             ));
-            shim.push_str(
-                "
-                const wasmModule = new WebAssembly.Module(bytes);
-                const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-                wasm = wasmInstance.exports;
-                module.exports.__wasm = wasm;
-            ",
-            );
         }
 
         reset_indentation(&shim)
@@ -416,26 +398,12 @@ impl<'a> Context<'a> {
     }
 
     fn generate_deno_wasm_loading(&self, module_name: &str) -> String {
-        // Deno removed support for .wasm imports in https://github.com/denoland/deno/pull/5135
-        // the issue for bringing it back is https://github.com/denoland/deno/issues/5609.
+        // Deno added support for .wasm imports in 2024 in https://github.com/denoland/deno/issues/2552.
+        // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
-            "const wasm_url = new URL('{module_name}_bg.wasm', import.meta.url);
-            let wasmCode = '';
-            switch (wasm_url.protocol) {{
-                case 'file:':
-                    wasmCode = await Deno.readFile(wasm_url);
-                    break
-                case 'https:':
-                case 'http:':
-                    wasmCode = await (await fetch(wasm_url)).arrayBuffer();
-                    break
-                default:
-                    throw new Error(`Unsupported protocol: ${{wasm_url.protocol}}`);
-            }}
-
-            const wasmInstance = (await WebAssembly.instantiate(wasmCode, imports)).instance;
-            const wasm = wasmInstance.exports;
-            export const __wasm = wasm;"
+            "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
+            const wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports)).instance.exports;
+            export {{ wasm as __wasm }};"
         )
     }
 
@@ -486,21 +454,16 @@ impl<'a> Context<'a> {
             OutputMode::Node { module: false } => {
                 js.push_str(&self.generate_node_imports());
 
-                js.push_str("let wasm;\n");
-
                 for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
                     let import = self.module.imports.get(*id);
-                    footer.push_str("\nmodule.exports.");
+                    footer.push_str("\nexports.");
                     footer.push_str(&import.name);
                     footer.push_str(" = ");
                     footer.push_str(js.trim());
                     footer.push_str(";\n");
                 }
 
-                footer
-                    .push_str(&self.generate_node_wasm_loading(Path::new(&format!(
-                        "./{module_name}_bg.wasm"
-                    ))));
+                footer.push_str(&self.generate_node_wasm_loading(module_name));
 
                 if needs_manual_start {
                     footer.push_str("\nwasm.__wbindgen_start();\n");
@@ -574,9 +537,7 @@ __wbg_set_wasm(wasm);"
 
                         let start = start.get_or_insert_with(String::new);
                         start.push_str(&self.generate_node_imports());
-                        start.push_str(&self.generate_node_wasm_loading(Path::new(&format!(
-                            "./{module_name}_bg.wasm"
-                        ))));
+                        start.push_str(&self.generate_node_wasm_loading(module_name));
 
                         start.push_str(&format!(
                             "imports[\"./{module_name}_bg.js\"].__wbg_set_wasm(wasm, wasmModule);"
