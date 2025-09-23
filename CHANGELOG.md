@@ -19,6 +19,9 @@
 * Fixed a bug in `--experimental-reset-state-function` support for heap reset.
   [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
 
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+
 ### Changed
 
 * Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
