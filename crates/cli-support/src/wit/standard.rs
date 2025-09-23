@@ -98,8 +98,6 @@ pub enum AdapterType {
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
-    /// Calls a function by its id.
-    CallCore(walrus::FunctionId),
     /// Call the deallocation function.
     DeferFree {
         free: walrus::FunctionId,
@@ -480,7 +478,7 @@ impl walrus::CustomSection for NonstandardWitSection {
             };
             for instr in instrs {
                 match instr.instr {
-                    DeferFree { free: f, .. } | CallCore(f) => {
+                    DeferFree { free: f, .. } => {
                         roots.push_func(f);
                     }
                     StoreRetptr { mem, .. }

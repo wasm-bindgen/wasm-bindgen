@@ -5,6 +5,40 @@
 
 ### Added
 
+* Added bindings for `WeakRef`.
+  [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4659)
+
+* Support `Symbol.dispose` methods by default, when it is supported in the environment.
+  [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
+
+### Fixed
+
+* Fixed wasm-bindgen-cli's `encode_into` argument not working.
+  [#4663](https://github.com/wasm-bindgen/wasm-bindgen/pull/4663)
+
+* Fixed a bug in `--experimental-reset-state-function` support for heap reset.
+  [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
+
+### Changed
+
+* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
+  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
+
+--------------------------------------------------------------------------------
+
+## [0.2.103](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.102...0.2.103)
+
+### Fixed
+
+* Fixed incorrect function mapping during post-processing.
+  [#4656](https://github.com/wasm-bindgen/wasm-bindgen/pull/4656)
+
+--------------------------------------------------------------------------------
+
+## [0.2.102](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.101...0.2.102)
+
+### Added
+
 * Added `DocumentOrShadowRoot.adoptedStyleSheets`.
   [#4625](https://github.com/wasm-bindgen/wasm-bindgen/pull/4625)
 
@@ -17,6 +51,14 @@
   `wasm-bindgen-test`.
   [#4434](https://github.com/wasm-bindgen/wasm-bindgen/pull/4434)
 
+* Generate DWARF for tests by default. See the [guide on debug information] for more details.
+  [#4635](https://github.com/wasm-bindgen/wasm-bindgen/pull/4635)
+
+  [guide on debug information]: https://wasm-bindgen.github.io/wasm-bindgen/reference/debug-info.html
+  
+* New `--target=module` target for outputting source phase imports.
+  [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
+
 ### Fixed
 
 * Fixed wrong method names for `GestureEvent` bindings.
@@ -25,8 +67,10 @@
 * Fix crash caused by allocations during `TypedArray` interactions.
   [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
 
-* Quote names containing colons in generated .d.ts.
-  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+### Changed
+
+* Hidden deprecated options from the `wasm-bindgen --help` docs.
+  [#4646](https://github.com/wasm-bindgen/wasm-bindgen/pull/4646)
 
 --------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-use crate::decode::LocalModule;
+use crate::decode::{ImportModule, LocalModule};
 use crate::descriptor::{Descriptor, Function};
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
@@ -105,7 +105,6 @@ impl<'a> Context<'a> {
         // Make a map from string name to ids of all imports from our
         // placeholder module name which we'll want to be sure that we've got a
         // location listed of what to import there for each item.
-        let mut intrinsics = Vec::new();
         let mut duplicate_import_map = HashMap::new();
         // The order in which imports are deleted later might matter, so we
         // use an ordered set here to make everything deterministic.
@@ -135,16 +134,19 @@ impl<'a> Context<'a> {
                         .insert(import.name.clone(), (import.id(), f));
                 }
             }
-
-            // Test to see if this is an intrinsic symbol, in which case we'll
-            // process this later.
-            if let Some(intrinsic) = Intrinsic::from_symbol(&import.name) {
-                intrinsics.push((import.id(), intrinsic));
-            }
         }
-        for (id, intrinsic) in intrinsics {
-            self.bind_intrinsic(id, intrinsic)?;
-        }
+        self.add_aux_import_to_import_map(
+            "__wbindgen_object_clone_ref",
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::ObjectCloneRef),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_object_drop_ref",
+            vec![Descriptor::Externref],
+            Descriptor::Unit,
+            AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
+        )?;
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
@@ -311,6 +313,8 @@ impl<'a> Context<'a> {
     // Note that this is disabled if WebAssembly interface types are enabled
     // since that's a slightly different environment for now which doesn't have
     // quite the same initialization.
+    //
+    // TODO: can we just move this to the JS generation?
     fn inject_externref_initialization(&mut self) -> Result<(), Error> {
         if !self.externref_enabled {
             return Ok(());
@@ -328,19 +332,21 @@ impl<'a> Context<'a> {
             self.module.start = Some(import);
         }
 
-        self.bind_intrinsic(import_id, Intrinsic::InitExternrefTable)?;
+        let adapter_id = self.import_adapter(
+            import_id,
+            Function {
+                shim_idx: 0,
+                arguments: vec![],
+                ret: Descriptor::Unit,
+                inner_ret: None,
+            },
+            AdapterJsImportKind::Normal,
+        )?;
+        self.aux.import_map.insert(
+            adapter_id,
+            AuxImport::Intrinsic(Intrinsic::InitExternrefTable),
+        );
 
-        Ok(())
-    }
-
-    fn bind_intrinsic(&mut self, id: ImportId, intrinsic: Intrinsic) -> Result<(), Error> {
-        if let Intrinsic::FunctionTable = intrinsic {
-            self.aux.function_table = self.module.tables.main_function_table()?;
-        }
-        let id = self.import_adapter(id, intrinsic.signature(), AdapterJsImportKind::Normal)?;
-        self.aux
-            .import_map
-            .insert(id, AuxImport::Intrinsic(intrinsic));
         Ok(())
     }
 
@@ -662,8 +668,20 @@ impl<'a> Context<'a> {
             // expected that the binding isn't changing anyway.
             None => {
                 let id = self.import_adapter(import_id, descriptor, AdapterJsImportKind::Normal)?;
-                let name = self.determine_import(import, function.name)?;
-                (id, AuxImport::Value(AuxValue::Bare(name)))
+                let aux_import = match import.module {
+                    Some(ImportModule::RawNamed(PLACEHOLDER_MODULE)) => {
+                        let intrinsic = function.name.parse()?;
+                        if let Intrinsic::FunctionTable = intrinsic {
+                            self.aux.function_table = self.module.tables.main_function_table()?;
+                        }
+                        AuxImport::Intrinsic(intrinsic)
+                    }
+                    _ => {
+                        let js_import = self.determine_import(import, function.name)?;
+                        AuxImport::Value(AuxValue::Bare(js_import))
+                    }
+                };
+                (id, aux_import)
             }
         };
 
@@ -1051,7 +1069,7 @@ impl<'a> Context<'a> {
 
     fn add_aux_import_to_import_map(
         &mut self,
-        fn_name: &String,
+        fn_name: &str,
         arguments: Vec<Descriptor>,
         ret: Descriptor,
         aux_import: AuxImport,

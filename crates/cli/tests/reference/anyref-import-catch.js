@@ -28,9 +28,7 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
-
-let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 
 cachedTextDecoder.decode();
 
@@ -39,7 +37,7 @@ let numBytesDecoded = 0;
 function decodeText(ptr, len) {
     numBytesDecoded += len;
     if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
-        cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
         cachedTextDecoder.decode();
         numBytesDecoded = len;
     }
@@ -68,6 +66,10 @@ export function __wbg_foo_4e8309b1aa95a4ac() { return handleError(function () {
     foo();
 }, arguments) };
 
+export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_export_2;
     const offset = table.grow(4);
@@ -77,9 +79,5 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
-};
-
-export function __wbindgen_throw(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

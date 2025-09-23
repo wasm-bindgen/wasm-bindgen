@@ -136,7 +136,7 @@ fn runtest(
             .find_map(|f| f.strip_prefix("--target="))
             .unwrap_or("bundler");
 
-        let out_dir = &td.path().join(target);
+        let out_dir = &td.path().join(&format!("{target}{flags_index}"));
         fs::create_dir(out_dir)?;
 
         let mut bindgen = Command::cargo_bin("wasm-bindgen")?;
@@ -153,13 +153,17 @@ fn runtest(
         }
         exec(&mut bindgen)?;
 
-        // suffix the file name with the target
+        // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {
-            let base_file_name = format!(
-                "{}-{}.rs",
-                test.file_stem().unwrap().to_string_lossy(),
-                flags_index
-            );
+            let mut base_file_name = test.file_stem().unwrap().to_str().unwrap().to_owned();
+
+            for chunk in flags.split(|c: char| !c.is_ascii_alphanumeric()) {
+                if !chunk.is_empty() {
+                    base_file_name.push('-');
+                    base_file_name.push_str(chunk);
+                }
+            }
+
             test.with_file_name(base_file_name)
         } else {
             test.to_owned()

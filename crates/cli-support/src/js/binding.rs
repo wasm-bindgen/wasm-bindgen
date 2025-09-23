@@ -150,6 +150,15 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js = JsBuilder::new(self.cx, debug_name);
         if let Some(consumes_self) = self.method {
             let _ = params.next();
+            if js.cx.config.generate_reset_state {
+                js.prelude(
+                    "
+                    if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+                        throw new Error('Invalid stale object from previous Wasm instance');
+                    }
+                    ",
+                );
+            }
             if js.cx.config.debug {
                 js.prelude(
                     "if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');",
@@ -679,16 +688,26 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
-        if !self.cx.config.debug {
-            return;
+        if self.cx.config.generate_reset_state {
+            // Under reset state, we need comprehensive validation
+            self.prelude(&format!(
+                "\
+                if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
+                    throw new Error('Invalid stale object from previous Wasm instance');
+                }}
+                "
+            ));
         }
-        self.prelude(&format!(
-            "\
+        if self.cx.config.debug {
+            // Debug mode only checks for moved values
+            self.prelude(&format!(
+                "\
                 if ({arg}.__wbg_ptr === 0) {{
                     throw new Error('Attempt to use a moved value');
                 }}
-            ",
-        ));
+                ",
+            ));
+        }
     }
 
     fn string_to_memory(
@@ -763,8 +782,7 @@ fn instruction(
             js.push(arg);
         }
 
-        Instruction::CallCore(_)
-        | Instruction::CallExport(_)
+        Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::CallTableElement(_)
         | Instruction::DeferFree { .. } => {
@@ -1304,10 +1322,27 @@ fn instruction(
             let val = js.pop();
             match constructor {
                 Some(name) if name == class => {
+                    let (ptr_assignment, register_data) = if js.cx.config.generate_reset_state {
+                        (
+                            format!(
+                                "\
+                                this.__wbg_ptr = {val} >>> 0;
+                                this.__wbg_inst = __wbg_instance_id;
+                                "
+                            ),
+                            format!("{{ ptr: {val} >>> 0, instance: __wbg_instance_id }}"),
+                        )
+                    } else {
+                        (
+                            format!("this.__wbg_ptr = {val} >>> 0;"),
+                            "this.__wbg_ptr".to_string(),
+                        )
+                    };
+
                     js.prelude(&format!(
                         "
-                        this.__wbg_ptr = {val} >>> 0;
-                        {name}Finalization.register(this, this.__wbg_ptr, this);
+                        {ptr_assignment}
+                        {name}Finalization.register(this, {register_data}, this);
                         "
                     ));
                     js.push(String::from("this"));
@@ -1542,11 +1577,6 @@ impl Invocation {
     fn from(instr: &Instruction, module: &Module) -> Result<Invocation, Error> {
         use Instruction::*;
         Ok(match instr {
-            CallCore(f) => Invocation::Core {
-                id: *f,
-                defer: false,
-            },
-
             DeferFree { free, .. } => Invocation::Core {
                 id: *free,
                 defer: true,

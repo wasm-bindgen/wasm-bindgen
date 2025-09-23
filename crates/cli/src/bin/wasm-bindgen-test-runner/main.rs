@@ -124,8 +124,13 @@ fn main() -> anyhow::Result<()> {
     // that any exported function with the prefix `__wbg_test` is a test we need
     // to execute.
     let wasm = fs::read(&cli.file).context("failed to read Wasm file")?;
-    let mut wasm =
-        walrus::Module::from_buffer(&wasm).context("failed to deserialize Wasm module")?;
+    let mut wasm = walrus::ModuleConfig::new()
+        // generate dwarf by default, it can be controlled by debug profile
+        //
+        // https://doc.rust-lang.org/cargo/reference/profiles.html#debug
+        .generate_dwarf(true)
+        .parse(&wasm)
+        .context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
 
     'outer: for export in wasm.exports.iter() {
@@ -313,9 +318,12 @@ fn main() -> anyhow::Result<()> {
 
     let coverage = coverage_args(file_name);
 
+    // The debug here means adding some assertions and some error messages to the generated js
+    // code.
+    //
+    // It has nothing to do with Rust.
     b.debug(debug)
         .input_module(module, wasm)
-        .keep_debug(false)
         .emit_start(false)
         .generate(&tmpdir)
         .context("executing `wasm-bindgen` over the Wasm file")?;

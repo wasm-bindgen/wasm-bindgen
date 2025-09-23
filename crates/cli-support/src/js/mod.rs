@@ -174,6 +174,10 @@ impl<'a> Context<'a> {
         self.exposed_globals.as_mut().unwrap().insert(name.into())
     }
 
+    fn has_global(&self, name: &str) -> bool {
+        self.exposed_globals.as_ref().unwrap().contains(name)
+    }
+
     fn export(
         &mut self,
         export_name: &str,
@@ -210,6 +214,7 @@ impl<'a> Context<'a> {
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
+            | OutputMode::Module
             | OutputMode::Deno => match export {
                 ExportJs::Class(class) => {
                     assert_eq!(export_name, definition_name);
@@ -598,6 +603,28 @@ __wbg_set_wasm(wasm);"
                 footer.push_str("export { initSync };\n");
                 footer.push_str("export default __wbg_init;");
             }
+
+            // For source phase imports, we need to instantiate the module
+            OutputMode::Module => {
+                js.push_str("let wasm;\n");
+
+                // Generate the import object similar to Deno
+                let (js_imports, wasm_import_object) = self.generate_deno_imports();
+                imports.push_str(&js_imports);
+
+                // Add instantiation code using wasmModule from source import
+                footer.push_str(&wasm_import_object);
+                footer.push_str(
+                    "
+const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+wasm = wasmInstance.exports;
+",
+                );
+
+                if needs_manual_start {
+                    footer.push_str("\nwasm.__wbindgen_start();\n");
+                }
+            }
         }
 
         // Before putting the static init code declaration info, put all existing typescript into a `wasm_bindgen` namespace declaration.
@@ -691,6 +718,7 @@ __wbg_set_wasm(wasm);"
             OutputMode::Bundler { .. }
             | OutputMode::Node { module: true }
             | OutputMode::Web
+            | OutputMode::Module
             | OutputMode::Deno => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
                     imports.push_str("import { ");
@@ -1069,13 +1097,25 @@ __wbg_set_wasm(wasm);"
         }
 
         if class.wrap_needed {
+            let (ptr_assignment, register_data) = if self.config.generate_reset_state {
+                (
+                    "\
+                    obj.__wbg_ptr = ptr;
+                    obj.__wbg_inst = __wbg_instance_id;
+                    ",
+                    "{ ptr, instance: __wbg_instance_id }",
+                )
+            } else {
+                ("obj.__wbg_ptr = ptr;", "obj.__wbg_ptr")
+            };
+
             dst.push_str(&format!(
                 "
                 static __wrap(ptr) {{
                     ptr = ptr >>> 0;
                     const obj = Object.create({name}.prototype);
-                    obj.__wbg_ptr = ptr;
-                    {name}Finalization.register(obj, obj.__wbg_ptr, obj);
+                    {ptr_assignment}
+                    {name}Finalization.register(obj, {register_data}, obj);
                     return obj;
                 }}
                 "
@@ -1095,12 +1135,25 @@ __wbg_set_wasm(wasm);"
             ));
         }
 
+        let finalization_callback = if self.config.generate_reset_state {
+            format!(
+                "({{ ptr, instance }}) => {{
+                if (instance === __wbg_instance_id) wasm.{}(ptr >>> 0, 1);
+            }}",
+                wasm_bindgen_shared::free_function(name)
+            )
+        } else {
+            format!(
+                "ptr => wasm.{}(ptr >>> 0, 1)",
+                wasm_bindgen_shared::free_function(name)
+            )
+        };
+
         self.global(&format!(
             "
             const {name}Finalization = (typeof FinalizationRegistry === 'undefined')
                 ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry(ptr => wasm.{}(ptr >>> 0, 1));",
-            wasm_bindgen_shared::free_function(name),
+                : new FinalizationRegistry({finalization_callback});",
         ));
 
         // If the class is inspectable, generate `toJSON` and `toString`
@@ -1177,16 +1230,7 @@ __wbg_set_wasm(wasm);"
             wasm_bindgen_shared::free_function(name),
         ));
         ts_dst.push_str("  free(): void;\n");
-        if self.config.symbol_dispose {
-            dst.push_str(
-                "
-                [Symbol.dispose]() {{
-                    this.free();
-                }}
-                ",
-            );
-            ts_dst.push_str("  [Symbol.dispose](): void;\n");
-        }
+        ts_dst.push_str("  [Symbol.dispose](): void;\n");
         dst.push_str(&class.contents);
         ts_dst.push_str(&class.typescript);
 
@@ -1194,6 +1238,12 @@ __wbg_set_wasm(wasm);"
 
         dst.push('}');
         ts_dst.push_str("}\n");
+
+        dst.push_str(&format!(
+            "
+                if (Symbol.dispose) {name}.prototype[Symbol.dispose] = {name}.prototype.free;
+            "
+        ));
 
         self.export(name, ExportJs::Class(&dst), Some(&class.comments))?;
 
@@ -1356,7 +1406,7 @@ __wbg_set_wasm(wasm);"
         }
         assert!(!self.config.externref);
         self.global(&format!(
-            "const heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);"
+            "let heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);"
         ));
         self.global(&format!("heap.push({});", INITIAL_HEAP_VALUES.join(", ")));
     }
@@ -1456,9 +1506,7 @@ __wbg_set_wasm(wasm);"
         }
         self.expose_text_encoder()?;
 
-        // The first implementation we have for this is to use
-        // `TextEncoder#encode` which has been around for quite some time.
-        let encode = "function (arg, view) {
+        let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
             const buf = cachedTextEncoder.encode(arg);
             view.set(buf);
             return {
@@ -1467,41 +1515,24 @@ __wbg_set_wasm(wasm);"
             };
         }";
 
-        // Another possibility is to use `TextEncoder#encodeInto` which is much
-        // newer and isn't implemented everywhere yet. It's more efficient,
-        // however, because it allows us to elide an intermediate allocation.
-        let encode_into = "function (arg, view) {
-            return cachedTextEncoder.encodeInto(arg, view);
-        }";
-
-        // Looks like `encodeInto` doesn't currently work when the memory passed
+        // `encodeInto` doesn't currently work in any browsers when the memory passed
         // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
         // a `SharedArrayBuffer` is in use.
         let shared = self.module.memories.get(memory).shared;
 
         match self.config.encode_into {
-            EncodeInto::Always if !shared => {
-                self.global(&format!(
-                    "
-                    const encodeString = {encode_into};
-                "
-                ));
-            }
+            EncodeInto::Always if !shared => {}
             EncodeInto::Test if !shared => {
                 self.global(&format!(
                     "
-                    const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
-                        ? {encode_into}
-                        : {encode});
+                    if (!('encodeInto' in cachedTextEncoder)) {{
+                        {polyfill_encode_into}
+                    }}
                 "
                 ));
             }
             _ => {
-                self.global(&format!(
-                    "
-                    const encodeString = {encode};
-                "
-                ));
+                self.global(polyfill_encode_into);
             }
         }
 
@@ -1549,7 +1580,7 @@ __wbg_set_wasm(wasm);"
                     }}
                     ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
                     const view = {mem}().subarray(ptr + offset, ptr + len);
-                    const ret = encodeString(arg, view);
+                    const ret = cachedTextEncoder.encodeInto(arg, view);
                     {debug_end}
                     offset += ret.written;
                     ptr = realloc(ptr, len, offset, 1) >>> 0;
@@ -1678,19 +1709,11 @@ __wbg_set_wasm(wasm);"
         Ok(ret)
     }
 
-    fn expose_symbol_dispose(&mut self) -> Result<(), Error> {
-        if !self.should_write_global("symbol_dispose") {
-            return Ok(());
-        }
-        self.global("if(!Symbol.dispose) { Symbol.dispose = Symbol('Symbol.dispose'); }");
-        Ok(())
-    }
-
     fn expose_text_encoder(&mut self) -> Result<(), Error> {
         if !self.should_write_global("text_encoder") {
             return Ok(());
         }
-        self.expose_text_processor("const", "TextEncoder", "encode", "('utf-8')", None)
+        self.expose_text_processor("const", "TextEncoder", "()", None)
     }
 
     fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) -> Result<(), Error> {
@@ -1707,7 +1730,6 @@ __wbg_set_wasm(wasm);"
         self.expose_text_processor(
             "let",
             "TextDecoder",
-            "decode",
             "('utf-8', { ignoreBOM: true, fatal: true })",
             init,
         )?;
@@ -1724,9 +1746,8 @@ __wbg_set_wasm(wasm);"
 
                 let cached_text_processor = self.generate_cached_text_processor_init(
                     "TextDecoder",
-                    "decode",
                     "('utf-8', { ignoreBOM: true, fatal: true })",
-                )?;
+                );
 
                 // Maximum number of bytes Safari can handle for one TextDecoder is 2GiB (0x80000000 bytes)
                 // but empirically it seems to crash a bit before the end, so we remove 1MiB (0x100000 bytes)
@@ -1770,51 +1791,15 @@ __wbg_set_wasm(wasm);"
         &mut self,
         decl_kind: &str,
         s: &str,
-        op: &str,
         args: &str,
         init: Option<&str>,
     ) -> Result<(), Error> {
-        let cached_text_processor_init = self.generate_cached_text_processor_init(s, op, args)?;
-        match &self.config.mode {
-            OutputMode::Node { .. } => {
-                // decl_kind is the kind of the kind of the declaration: let or const
-                // cached_text_processor_init is the rest of the statement for initializing a cached text processor
-                self.global(&format!("{decl_kind} {cached_text_processor_init}"));
-            }
-            OutputMode::Bundler {
-                browser_only: false,
-            } => {
-                self.global(&format!(
-                    "
-                    const l{s} = typeof {s} === 'undefined' ? \
-                        (0, module.require)('util').{s} : {s};\
-                "
-                ));
-                self.global(&format!("{decl_kind} {cached_text_processor_init}"));
-            }
-            OutputMode::Deno
-            | OutputMode::Web
-            | OutputMode::NoModules { .. }
-            | OutputMode::Bundler { browser_only: true } => {
-                // decl_kind is the kind of the kind of the declaration: let or const
-                // cached_text_processor_init is the rest of the statement for initializing a cached text processor
-                self.global(&format!("{decl_kind} {cached_text_processor_init}"))
-            }
-        };
-
+        let cached_text_processor_init = self.generate_cached_text_processor_init(s, args);
+        // decl_kind is the kind of the declaration: let or const
+        // cached_text_processor_init is the rest of the statement for initializing a cached text processor
+        self.global(&format!("{decl_kind} {cached_text_processor_init}"));
         if let Some(init) = init {
-            match &self.config.mode {
-                OutputMode::Node { .. }
-                | OutputMode::Bundler {
-                    browser_only: false,
-                } => self.global(init),
-                OutputMode::Deno
-                | OutputMode::Web
-                | OutputMode::NoModules { .. }
-                | OutputMode::Bundler { browser_only: true } => {
-                    self.global(&format!("if (typeof {s} !== 'undefined') {{ {init} }};"))
-                }
-            }
+            self.global(init);
         }
 
         Ok(())
@@ -1822,36 +1807,8 @@ __wbg_set_wasm(wasm);"
 
     /// Generates a partial text processor statement, everything except the declaration kind,
     /// i.e. everything except for `const` or `let` which the caller needs to handle itself.
-    fn generate_cached_text_processor_init(
-        &mut self,
-        s: &str,
-        op: &str,
-        args: &str,
-    ) -> Result<String, Error> {
-        let new_cached_text_procesor = match &self.config.mode {
-            OutputMode::Node { .. } => {
-                let name = self.import_name(&JsImport {
-                    name: JsImportName::Module {
-                        module: "util".to_string(),
-                        name: s.to_string(),
-                    },
-                    fields: Vec::new(),
-                })?;
-                format!("cached{s} = new {name}{args};")
-            }
-            OutputMode::Bundler {
-                browser_only: false,
-            } => {
-                format!("cached{s} = new l{s}{args};")
-            }
-            OutputMode::Deno
-            | OutputMode::Web
-            | OutputMode::NoModules { .. }
-            | OutputMode::Bundler { browser_only: true } => {
-                format!("cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : {{ {op}: () => {{ throw Error('{s} not available') }} }} );")
-            }
-        };
-        Ok(new_cached_text_procesor)
+    fn generate_cached_text_processor_init(&mut self, s: &str, args: &str) -> String {
+        format!("cached{s} = new {s}{args};")
     }
 
     fn expose_get_string_from_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
@@ -2458,11 +2415,25 @@ __wbg_set_wasm(wasm);"
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
+        let (state_init, instance_check) = if self.config.generate_reset_state {
+            (
+                "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                "
+                if (state.instance !== __wbg_instance_id) {
+                    throw new Error('Cannot invoke closure from previous WASM instance');
+                }
+                ",
+            )
+        } else {
+            ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+        };
+
         self.global(&format!(
             "
             function makeMutClosure(arg0, arg1, dtor, f) {{
-                const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                {state_init}
                 const real = (...args) => {{
+                    {instance_check}
                     // First up with a closure we increment the internal reference
                     // count. This ensures that the Rust closure environment won't
                     // be deallocated while we're invoking it.
@@ -2484,7 +2455,7 @@ __wbg_set_wasm(wasm);"
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
-            ",
+            "
         ));
 
         Ok(())
@@ -2504,11 +2475,25 @@ __wbg_set_wasm(wasm);"
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
+        let (state_init, instance_check) = if self.config.generate_reset_state {
+            (
+                "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                "
+                if (state.instance !== __wbg_instance_id) {
+                    throw new Error('Cannot invoke closure from previous WASM instance');
+                }
+                ",
+            )
+        } else {
+            ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+        };
+
         self.global(&format!(
             "
             function makeClosure(arg0, arg1, dtor, f) {{
-                const state = {{ a: arg0, b: arg1, cnt: 1, dtor }};
+                {state_init}
                 const real = (...args) => {{
+                    {instance_check}
                     // First up with a closure we increment the internal reference
                     // count. This ensures that the Rust closure environment won't
                     // be deallocated while we're invoking it.
@@ -2517,8 +2502,7 @@ __wbg_set_wasm(wasm);"
                         return f(state.a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(state.a, state.b);
-                            state.a = 0;
+                            wasm.{table}.get(state.dtor)(state.a, state.b); state.a = 0;
                             CLOSURE_DTORS.unregister(state);
                         }}
                     }}
@@ -2527,7 +2511,7 @@ __wbg_set_wasm(wasm);"
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
-            ",
+            "
         ));
 
         Ok(())
@@ -2538,18 +2522,119 @@ __wbg_set_wasm(wasm);"
             return Ok(());
         }
         let table = self.export_function_table()?;
+
+        let finalization_callback = if self.config.generate_reset_state {
+            format!(
+                "
+                state => {{
+                    if (state.instance === __wbg_instance_id) {{
+                        wasm.{table}.get(state.dtor)(state.a, state.b);
+                    }}
+                }}
+                "
+            )
+        } else {
+            format!(
+                "
+                state => {{
+                    wasm.{table}.get(state.dtor)(state.a, state.b);
+                }}
+                "
+            )
+        };
+
         self.global(&format!(
             "
             const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
                 ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry(state => {{
-                    wasm.{table}.get(state.dtor)(state.a, state.b)
-                }});
+                : new FinalizationRegistry({finalization_callback});
             "
         ));
 
         Ok(())
     }
+
+    fn generate_reset_state(&mut self) -> Result<(), Error> {
+        self.global("let __wbg_instance_id = 0;");
+
+        let mut reset_statements = Vec::new();
+
+        reset_statements.push("__wbg_instance_id++;".to_string());
+
+        for (num, kinds) in self.memories.values() {
+            for kind in kinds {
+                let memview_name = format!("get{}Memory", kind);
+                if self.has_global(memview_name.as_str()) {
+                    reset_statements.push(format!("cached{kind}Memory{num} = null;"));
+                }
+            }
+        }
+
+        // Conditionally reset globals based on whether they were used
+        if self.has_global("text_decoder") {
+            reset_statements.push(
+                "if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;".to_string(),
+            );
+        }
+
+        if self.has_global("wasm_vector_len") {
+            reset_statements.push(
+                "if (typeof WASM_VECTOR_LEN !== 'undefined') WASM_VECTOR_LEN = 0;".to_string(),
+            );
+        }
+
+        if self.has_global("heap") {
+            let mut heap_reset = format!(
+                "\
+                    if (typeof heap !== 'undefined') {{
+                        heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);
+                        heap = heap.concat([{}]);
+                ",
+                INITIAL_HEAP_VALUES.join(", ")
+            );
+
+            if self.has_global("heap_next") {
+                heap_reset.push_str(
+                    "\
+                        if (typeof heap_next !== 'undefined')
+                            heap_next = heap.length;
+                    ",
+                );
+            }
+
+            if self.has_global("stack_pointer") {
+                heap_reset.push_str(&format!(
+                    "\
+                        if (typeof stack_pointer !== 'undefined')
+                            stack_pointer = {INITIAL_HEAP_OFFSET};
+                    "
+                ));
+            }
+
+            heap_reset.push('}');
+            reset_statements.push(heap_reset);
+        }
+
+        reset_statements.push(
+            "\
+                const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+                wasm = wasmInstance.exports;
+                wasm.__wbindgen_start();
+            "
+            .to_string(),
+        );
+
+        let function_body = format!(" () {{\n{}}}", reset_statements.join("\n"));
+
+        self.export(
+            "__wbg_reset_state",
+            ExportJs::Function(&format!("function{function_body}")),
+            None,
+        )?;
+
+        Ok(())
+    }
+
     fn global(&mut self, s: &str) {
         let s = s.trim();
 
@@ -2753,11 +2838,6 @@ __wbg_set_wasm(wasm);"
 
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
-        // conditionally override Symbol.dispose
-        if self.config.symbol_dispose && !self.aux.structs.is_empty() {
-            self.expose_symbol_dispose()?;
-        }
-
         for (id, adapter, kind) in iter_adapeter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
                 AdapterKind::Import { .. } => continue,
@@ -2788,6 +2868,11 @@ __wbg_set_wasm(wasm);"
         }
 
         self.export_destructor();
+
+        // Generate reset state function last, to ensure it knows about all other state.
+        if self.config.generate_reset_state {
+            self.generate_reset_state()?;
+        }
 
         Ok(())
     }
@@ -3092,9 +3177,7 @@ __wbg_set_wasm(wasm);"
                         call = Some(id);
                     }
                 }
-                Instruction::CallExport(_)
-                | Instruction::CallTableElement(_)
-                | Instruction::CallCore(_) => return Ok(false),
+                Instruction::CallExport(_) | Instruction::CallTableElement(_) => return Ok(false),
                 _ => {}
             }
         }
@@ -3516,6 +3599,7 @@ __wbg_set_wasm(wasm);"
                     let base = match self.config.mode {
                         OutputMode::Web
                         | OutputMode::Bundler { .. }
+                        | OutputMode::Module
                         | OutputMode::Deno
                         | OutputMode::Node { module: true } => "import.meta.url",
                         OutputMode::Node { module: false } => {
@@ -3790,7 +3874,7 @@ __wbg_set_wasm(wasm);"
             Intrinsic::BooleanGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const v = {};\n", args[0]));
-                "typeof(v) === 'boolean' ? (v ? 1 : 0) : 2".to_string()
+                "typeof(v) === 'boolean' ? v : undefined".to_string()
             }
 
             Intrinsic::BigIntGetAsI64 => {
@@ -3816,10 +3900,10 @@ __wbg_set_wasm(wasm);"
                     OutputMode::Web | OutputMode::NoModules { .. } => {
                         "__wbg_init.__wbindgen_wasm_module"
                     }
-                    OutputMode::Node { .. } => "wasmModule",
+                    OutputMode::Node { .. } | OutputMode::Module => "wasmModule",
                     _ => bail!(
                         "`wasm_bindgen::module` is currently only supported with \
-                         `--target no-modules`, `--target web` and `--target nodejs`"
+                         `--target no-modules`, `--target web`, `--target module` and `--target nodejs`"
                     ),
                 }
                 .to_string()

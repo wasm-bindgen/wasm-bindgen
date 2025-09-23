@@ -4571,6 +4571,29 @@ impl Default for WeakSet {
     }
 }
 
+// WeakRef
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object, typescript_type = "WeakRef<object>")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type WeakRef;
+
+    /// The `WeakRef` object contains a weak reference to an object. A weak
+    /// reference to an object is a reference that does not prevent the object
+    /// from being reclaimed by the garbage collector.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef)
+    #[wasm_bindgen(constructor)]
+    pub fn new(target: &Object) -> WeakRef;
+
+    /// Returns the `Object` this `WeakRef` points to, or `None` if the
+    /// object has been garbage collected.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef/deref)
+    #[wasm_bindgen(method)]
+    pub fn deref(this: &WeakRef) -> Option<Object>;
+}
+
 #[cfg(js_sys_unstable_apis)]
 #[allow(non_snake_case)]
 pub mod Temporal;
