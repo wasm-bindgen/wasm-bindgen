@@ -39,7 +39,6 @@ wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.103" }
 [dev-dependencies]
 assert_cmd = "2"
 diff = "0.1"
-lazy_static = "1.4"
 predicates = "3"
 rstest = "0.26"
 wasmparser = "0.214"

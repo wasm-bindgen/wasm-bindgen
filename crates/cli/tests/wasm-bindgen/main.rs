@@ -23,26 +23,25 @@ use std::hash::Hash;
 use std::hash::Hasher;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 use wasmparser::Payload;
 
-lazy_static::lazy_static! {
-    static ref TARGET_DIR: PathBuf = {
-        let mut dir = env::current_exe().unwrap();
-        dir.pop(); // current exe
-        if dir.ends_with("deps") {
-            dir.pop();
-        }
-        dir.pop(); // debug and/or release
-        dir
-    };
+static TARGET_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
+    let mut dir = env::current_exe().unwrap();
+    dir.pop(); // current exe
+    if dir.ends_with("deps") {
+        dir.pop();
+    }
+    dir.pop(); // debug and/or release
+    dir
+});
 
-    static ref REPO_ROOT: PathBuf = {
-        let mut repo_root = env::current_dir().unwrap();
-        repo_root.pop(); // remove 'cli'
-        repo_root.pop(); // remove 'crates'
-        repo_root
-    };
-}
+static REPO_ROOT: LazyLock<PathBuf> = LazyLock::new(|| {
+    let mut repo_root = env::current_dir().unwrap();
+    repo_root.pop(); // remove 'cli'
+    repo_root.pop(); // remove 'crates'
+    repo_root
+});
 
 struct Project {
     root: PathBuf,
