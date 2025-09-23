@@ -330,12 +330,12 @@ impl<'a> Context<'a> {
             // url to use `C:\...` instead of `\C:\...`
             shim.push_str(&format!(
                 "
-                import {{ readFile }} from 'node:fs/promises';
+                import {{ readFileSync }} from 'node:fs';
 
                 const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
-                const wasmBytes = await readFile(wasmUrl);
-                const {{ module: wasmModule, instance: wasmInstance }} = await WebAssembly.instantiate(wasmBytes, imports);
-                const wasm = wasmInstance.exports;
+                const wasmBytes = readFileSync(wasmUrl);
+                const wasmModule = new WebAssembly.Module(wasmBytes);
+                const wasm = new WebAssembly.Instance(wasmModule, imports).exports;
                 export {{ wasm as __wasm }};
             "
             ));
@@ -345,7 +345,7 @@ impl<'a> Context<'a> {
                 const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
                 const wasmBytes = require('fs').readFileSync(wasmPath);
                 const wasmModule = new WebAssembly.Module(wasmBytes);
-                wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
+                const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
             "
             ));
         }
@@ -453,8 +453,6 @@ impl<'a> Context<'a> {
             // until the end so most of our own exports are hooked up
             OutputMode::Node { module: false } => {
                 js.push_str(&self.generate_node_imports());
-
-                js.push_str("let wasm;\n");
 
                 for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
                     let import = self.module.imports.get(*id);

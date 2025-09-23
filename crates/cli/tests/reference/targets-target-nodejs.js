@@ -1,7 +1,6 @@
 
 let imports = {};
 imports['__wbindgen_placeholder__'] = module.exports;
-let wasm;
 /**
  * @param {number} a
  * @param {number} b
@@ -31,7 +30,7 @@ exports.__wbindgen_init_externref_table = function() {
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
+const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
 
