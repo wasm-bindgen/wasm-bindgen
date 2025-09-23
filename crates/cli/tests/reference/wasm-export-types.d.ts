@@ -36,6 +36,7 @@ export function __wbgtest_cov_dump(): Uint8Array | undefined;
  */
 export class WasmBindgenTestContext {
   free(): void;
+  [Symbol.dispose](): void;
   /**
    * Creates a new context ready to run tests.
    *
@@ -73,7 +74,6 @@ export interface InitOutput {
   readonly example: (a: number, b: bigint, c: any, d: number, e: number) => [number, number];
   readonly example_128: (a: bigint, b: bigint) => [number, bigint, bigint];
   readonly "__wbgt__reference_test::example_test": (a: number) => void;
-  readonly __wbgtest_cov_dump: () => [number, number];
   readonly __wbg_wasmbindgentestcontext_free: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_new: () => number;
   readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
@@ -84,6 +84,7 @@ export interface InitOutput {
   readonly __wbgtest_console_info: (a: any) => void;
   readonly __wbgtest_console_warn: (a: any) => void;
   readonly __wbgtest_console_error: (a: any) => void;
+  readonly __wbgtest_cov_dump: () => [number, number];
   readonly __externref_table_alloc: () => number;
   readonly __wbindgen_export_1: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
@@ -91,9 +92,9 @@ export interface InitOutput {
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __wbindgen_export_5: WebAssembly.Table;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
-  readonly closure51_externref_shim: (a: number, b: number, c: any) => void;
-  readonly wasm_bindgen__convert__closures__invoke0_mut__h99d1e3009d33d179: (a: number, b: number) => void;
-  readonly closure81_externref_shim: (a: number, b: number, c: any, d: number, e: any) => void;
+  readonly closure53_externref_shim: (a: number, b: number, c: any) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__hc3e1c6a93eb88fad: (a: number, b: number) => void;
+  readonly closure69_externref_shim: (a: number, b: number, c: any, d: number, e: any) => void;
   readonly closure65_externref_shim: (a: number, b: number, c: any, d: any) => void;
   readonly __wbindgen_start: () => void;
 }
