@@ -109,6 +109,10 @@ impl Sanitizer {
 
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
 
+        let s = self.sanitize_one(&s, regex!(r"makeMutClosure\(arg0, arg1, \d+,"), |idx| {
+            format!("makeMutClosure(arg0, arg1, {idx},")
+        });
+
         s.into_owned()
     }
 
