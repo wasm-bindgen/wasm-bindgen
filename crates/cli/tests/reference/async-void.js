@@ -333,7 +333,7 @@ export function __wbg_wbindgenthrow_0000000000000012(arg0, arg1) {
 
 export function __wbindgen_cast_0000000000000013(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { dtor_idx: 23, function: Function { arguments: [Externref], shim_idx: 24, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen__closure__OwnedClosure_T__as_wasm_bindgen__describe__WasmDescribe___describe__destroy__h0000000000000014, __wbg_adapter_21);
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000014, __wbg_adapter_21);
     return ret;
 };
 

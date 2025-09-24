@@ -205,7 +205,7 @@ export function __wbindgen_cast_000000000000000f(arg0, arg1) {
 
 export function __wbindgen_cast_0000000000000010(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { dtor_idx: 20, function: Function { arguments: [], shim_idx: 21, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen__closure__OwnedClosure_T__as_wasm_bindgen__describe__WasmDescribe___describe__destroy__h0000000000000011, __wbg_adapter_18);
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000011, __wbg_adapter_18);
     return ret;
 };
 
