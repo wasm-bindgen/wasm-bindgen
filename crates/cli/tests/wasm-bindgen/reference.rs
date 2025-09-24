@@ -49,7 +49,7 @@
 //! ```
 
 use crate::Project;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use regex::Regex;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -120,7 +120,7 @@ impl Sanitizer {
             fs::write(expected, output.as_bytes())?;
         } else {
             let expected = fs::read_to_string(expected)?;
-            diff(&expected, &output)?;
+            pretty_assertions::assert_str_eq!(expected, output);
         }
         Ok(())
     }
@@ -305,29 +305,4 @@ fn sanitize_local_funcs(module: &mut Module) {
         let new_id = module.replace_exported_func(id, |_| {}).unwrap();
         module.funcs.get_mut(new_id).name = old_name;
     }
-}
-
-fn diff(a: &str, b: &str) -> Result<()> {
-    if a == b {
-        return Ok(());
-    }
-    let mut s = String::new();
-    for result in diff::lines(a, b) {
-        match result {
-            diff::Result::Both(l, _) => {
-                s.push(' ');
-                s.push_str(l);
-            }
-            diff::Result::Left(l) => {
-                s.push('-');
-                s.push_str(l);
-            }
-            diff::Result::Right(l) => {
-                s.push('+');
-                s.push_str(l);
-            }
-        }
-        s.push('\n');
-    }
-    bail!("found a difference:\n\n{}", s);
 }
