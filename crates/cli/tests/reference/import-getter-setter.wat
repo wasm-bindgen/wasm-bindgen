@@ -19,7 +19,7 @@
   (import "./reference_test_bg.js" "__wbg_setsomeprop_4108a32b244b7d28" (func (;10;) (type 6)))
   (import "./reference_test_bg.js" "__wbg_signal_54e2df9a78183990" (func (;11;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_someprop_3c07d616a6648f3b" (func (;12;) (type 5)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;13;) (type 4)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_451ec1a8469d7eb6" (func (;13;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;14;) (type 0)))
   (func $exported (;15;) (type 0))
   (table (;0;) 128 externref)
