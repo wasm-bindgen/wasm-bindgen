@@ -208,7 +208,7 @@ export function __wbindgen_cast_000000000000000e(arg0, arg1) {
 };
 
 export function __wbindgen_cast_000000000000000f(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 10, function: Function { arguments: [], shim_idx: 1, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 19, function: Function { arguments: [], shim_idx: 20, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
     const ret = makeMutClosure(arg0, arg1, 10, __wbg_adapter_17);
     return ret;
 };
