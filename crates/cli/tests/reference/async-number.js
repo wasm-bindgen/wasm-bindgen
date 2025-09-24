@@ -335,15 +335,15 @@ export function __wbg_wbindgenthrow_0000000000000010(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbindgen_cast_0000000000000011(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
+export function __wbindgen_cast_0000000000000011(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 23, function: Function { arguments: [Externref], shim_idx: 24, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, 25, __wbg_adapter_21);
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000012(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 23, function: Function { arguments: [Externref], shim_idx: 24, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, 25, __wbg_adapter_21);
+export function __wbindgen_cast_0000000000000012(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
+    const ret = arg0;
     return ret;
 };
 

@@ -123,6 +123,9 @@ impl Project {
                         crate-type = ['cdylib']
 
                         [workspace]
+
+                        [profile.dev]
+                        codegen-units = 1
                     ",
                         self.name,
                         self.deps.replace("{root}", REPO_ROOT.to_str().unwrap())
