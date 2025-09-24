@@ -177,21 +177,6 @@ impl Context {
         self
     }
 
-    /// Store information about a function pointer that needs to be transformed.
-    /// The actual transformation happens later during `run`. Returns an index
-    /// that the new wrapped function pointer will be injected at.
-    pub fn table_element_xform(
-        &mut self,
-        idx: u32,
-        externref: &[(usize, bool)],
-        ret_externref: bool,
-    ) -> Option<u32> {
-        self.function(externref, ret_externref).map(|f| {
-            self.new_elements.push((idx, f));
-            self.new_elements.len() as u32 + self.new_element_offset - 1
-        })
-    }
-
     fn function(&self, externref: &[(usize, bool)], ret_externref: bool) -> Option<Function> {
         if !ret_externref && externref.is_empty() {
             return None;

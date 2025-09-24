@@ -37,11 +37,8 @@ pub fn process(module: &mut Module) -> Result<()> {
                 &mut adapter.params,
                 &mut adapter.results,
             );
-            continue;
-        }
-        if let Some(id) = find_call_export(instructions) {
-            export_xform(&mut cfg, id, instructions);
-            continue;
+        } else {
+            export_xform(&mut cfg, instructions);
         }
     }
 
@@ -111,30 +108,6 @@ pub fn process(module: &mut Module) -> Result<()> {
     module.customs.add(*aux);
 
     Ok(())
-}
-
-fn find_call_export(instrs: &[InstructionData]) -> Option<Export> {
-    instrs
-        .iter()
-        .enumerate()
-        .find_map(|(i, instr)| match instr.instr {
-            Instruction::CallExport(e) => Some(Export::Export(e)),
-            Instruction::CallTableElement(e) => Some(Export::TableElement {
-                idx: e,
-                call_idx: i,
-            }),
-            _ => None,
-        })
-}
-
-enum Export {
-    Export(walrus::ExportId),
-    TableElement {
-        /// Table element that we're calling
-        idx: u32,
-        /// Index in the instruction stream where the call instruction is found
-        call_idx: usize,
-    },
 }
 
 /// Adapts the `instrs` given which are an implementation of the import of `id`.
@@ -233,7 +206,7 @@ fn import_xform(
 /// pattern matched below to pass off to the externref transformation pass. The
 /// signature of the adapter doesn't change (it remains as externref-aware) but the
 /// signature of the export we're calling will change during the transformation.
-fn export_xform(cx: &mut Context, export: Export, instrs: &mut Vec<InstructionData>) {
+fn export_xform(cx: &mut Context, instrs: &mut Vec<InstructionData>) {
     let mut to_delete = Vec::new();
     let mut iter = instrs.iter().enumerate();
     let mut args = Vec::new();
@@ -245,34 +218,38 @@ fn export_xform(cx: &mut Context, export: Export, instrs: &mut Vec<InstructionDa
     //
     // Note that we're going to delete the `I32FromExternref*` instructions, so we
     // also maintain indices of the instructions to delete.
-    for (i, instr) in iter.by_ref() {
-        match instr.instr {
-            Instruction::CallExport(_) | Instruction::CallTableElement(_) => break,
-            Instruction::I32FromExternrefOwned => {
-                args.pop();
-                args.push(Some(true));
-                to_delete.push(i);
-            }
-            Instruction::I32FromExternrefBorrow => {
-                args.pop();
-                args.push(Some(false));
-                to_delete.push(i);
-            }
-            _ => match instr.stack_change {
-                StackChange::Modified { pushed, popped } => {
-                    for _ in 0..popped {
-                        args.pop();
-                    }
-                    for _ in 0..pushed {
-                        args.push(None);
-                    }
+    let export = iter
+        .by_ref()
+        .find_map(|(i, instr)| {
+            match instr.instr {
+                Instruction::CallExport(export) => return Some(export),
+                Instruction::I32FromExternrefOwned => {
+                    args.pop();
+                    args.push(Some(true));
+                    to_delete.push(i);
                 }
-                StackChange::Unknown => {
-                    panic!("must have stack change data");
+                Instruction::I32FromExternrefBorrow => {
+                    args.pop();
+                    args.push(Some(false));
+                    to_delete.push(i);
                 }
-            },
-        }
-    }
+                _ => match instr.stack_change {
+                    StackChange::Modified { pushed, popped } => {
+                        for _ in 0..popped {
+                            args.pop();
+                        }
+                        for _ in 0..pushed {
+                            args.push(None);
+                        }
+                    }
+                    StackChange::Unknown => {
+                        panic!("must have stack change data");
+                    }
+                },
+            }
+            None
+        })
+        .expect("must call an export");
 
     // If one of the instructions after the call is an `ExternrefLoadOwned`,
     // and a retptr isn't used, the function must return an externref.
@@ -301,16 +278,7 @@ fn export_xform(cx: &mut Context, export: Export, instrs: &mut Vec<InstructionDa
 
     // ... and register this entire transformation with the externref
     // transformation pass.
-    match export {
-        Export::Export(id) => {
-            cx.export_xform(id, &args, ret_externref);
-        }
-        Export::TableElement { idx, call_idx } => {
-            if let Some(new_idx) = cx.table_element_xform(idx, &args, ret_externref) {
-                instrs[call_idx].instr = Instruction::CallTableElement(new_idx);
-            }
-        }
-    }
+    cx.export_xform(export, &args, ret_externref);
 
     // Delete all unnecessary externref management instructions. We're going to
     // sink these instructions into the Wasm module itself.
