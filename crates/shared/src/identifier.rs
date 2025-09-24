@@ -40,7 +40,7 @@ pub fn is_valid_ident(name: &str) -> bool {
         Some(c) if is_id_start(c) => {}
         _ => return false,
     }
-    chars.all(|c| is_id_continue(c))
+    chars.all(is_id_continue)
 }
 
 /// Converts a string to a valid JavaScript identifier by replacing invalid
@@ -50,8 +50,7 @@ pub fn to_valid_ident(name: &str) -> String {
     let mut result = String::new();
     match chars.next() {
         Some(c) if is_id_start(c) => result.push(c),
-        Some(_) => result.push('_'),
-        None => return "_".into(),
+        _ => result.push('_'),
     }
     result.extend(chars.map(|c| if is_id_continue(c) { c } else { '_' }));
     result

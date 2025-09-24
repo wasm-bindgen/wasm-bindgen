@@ -2480,17 +2480,16 @@ wasm = wasmInstance.exports;
         }
 
         let finalization_callback = if self.config.generate_reset_state {
-            format!(
-                "
-                state => {{
-                    if (state.instance === __wbg_instance_id) {{
-                        state.dtor(state.a, state.b);
-                    }}
+            "
+            state => {{
+                if (state.instance === __wbg_instance_id) {{
+                    state.dtor(state.a, state.b);
                 }}
-                "
-            )
+            }}
+            "
+            .to_owned()
         } else {
-            format!("state => state.dtor(state.a, state.b)")
+            "state => state.dtor(state.a, state.b)".to_owned()
         };
 
         self.global(&format!(
@@ -4241,7 +4240,7 @@ wasm = wasmInstance.exports;
             _ => default_name,
         };
         self.module.exports.add(&name, id);
-        return name;
+        name
     }
 
     fn adapter_name(&self, id: AdapterId) -> String {
