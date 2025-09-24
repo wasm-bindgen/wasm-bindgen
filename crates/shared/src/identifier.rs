@@ -32,26 +32,22 @@ fn is_id_continue(c: char) -> bool {
     }
 }
 
+fn maybe_valid_chars(name: &str) -> impl Iterator<Item = Option<char>> + '_ {
+    let mut chars = name.chars();
+    core::iter::once(chars.next().filter(|&c| is_id_start(c)))
+        .chain(chars.map(|c| is_id_continue(c).then_some(c)))
+}
+
 /// Returns whether a string is a valid JavaScript identifier.
 /// Defined at https://tc39.es/ecma262/#prod-IdentifierName.
 pub fn is_valid_ident(name: &str) -> bool {
-    let mut chars = name.chars();
-    match chars.next() {
-        Some(c) if is_id_start(c) => {}
-        _ => return false,
-    }
-    chars.all(is_id_continue)
+    maybe_valid_chars(name).all(|opt| opt.is_some())
 }
 
 /// Converts a string to a valid JavaScript identifier by replacing invalid
 /// characters with underscores.
 pub fn to_valid_ident(name: &str) -> String {
-    let mut chars = name.chars();
-    let mut result = String::new();
-    match chars.next() {
-        Some(c) if is_id_start(c) => result.push(c),
-        _ => result.push('_'),
-    }
-    result.extend(chars.map(|c| if is_id_continue(c) { c } else { '_' }));
-    result
+    maybe_valid_chars(name)
+        .map(|opt| opt.unwrap_or('_'))
+        .collect()
 }
