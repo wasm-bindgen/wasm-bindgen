@@ -111,7 +111,7 @@ function __wbg_adapter_17(arg0, arg1) {
 }
 
 function __wbg_adapter_18(arg0, arg1, arg2, arg3, arg4) {
-    wasm.closure_16_externref_shim(arg0, arg1, arg2, arg3, arg4);
+    wasm.closure16_externref_shim(arg0, arg1, arg2, arg3, arg4);
 }
 
 export function __wbg_call_0000000000000001() { return handleError(function (arg0, arg1) {
