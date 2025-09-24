@@ -107,6 +107,8 @@ impl Sanitizer {
             format!("__wbg_adapter_{idx}")
         });
 
+        let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
+
         s.into_owned()
     }
 
