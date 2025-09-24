@@ -12,14 +12,6 @@ default = [
   "web-sys/default",
   "wasm-bindgen-test/default",
 ]
-msrv = ["wasm-bindgen/msrv"]
-std = [
-  "wasm-bindgen/std",
-  "js-sys/std",
-  "wasm-bindgen-futures/std",
-  "web-sys/std",
-  "wasm-bindgen-test/std",
-]
 
 [dependencies]
 js-sys = { path = "../../js-sys", default-features = false }
