@@ -2,7 +2,7 @@
   (type (;0;) (func))
   (type (;1;) (func (result f64)))
   (type (;2;) (func (param i32 i32) (result i32)))
-  (import "wbg" "__wbg_random_ae0b2256206ad108" (func (;0;) (type 1)))
+  (import "wbg" "__wbg_random_0000000000000000" (func (;0;) (type 1)))
   (import "wbg" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $add_that_might_fail (;2;) (type 2) (param i32 i32) (result i32))
   (table (;0;) 128 externref)

@@ -50,13 +50,77 @@
 
 use crate::Project;
 use anyhow::{bail, Result};
+use regex::Regex;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use walrus::{
     ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
 };
+
+macro_rules! regex {
+    ($re:literal) => {{
+        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new($re).unwrap());
+        &*RE
+    }};
+}
+
+// A helper to remove unstable parts of the output like function indices
+// and hash values, while ensuring that the replacement names stay consistent
+// between all output files.
+#[derive(Default)]
+struct Sanitizer {
+    prev_replacements: HashMap<String, usize>,
+}
+
+impl Sanitizer {
+    fn sanitize_one<'s>(
+        &mut self,
+        s: &'s str,
+        regex: &Regex,
+        replacement: impl Fn(usize) -> String,
+    ) -> Cow<'s, str> {
+        regex.replace_all(s, |caps: &regex::Captures| {
+            let index = self.prev_replacements.len();
+
+            let index = self
+                .prev_replacements
+                .entry(caps[0].to_string())
+                .or_insert(index);
+
+            replacement(*index)
+        })
+    }
+
+    fn sanitize(&mut self, s: &str) -> String {
+        let s = self.sanitize_one(s, regex!(r"[0-9a-f]{16}"), |idx| format!("{idx:016x}"));
+
+        let s = self.sanitize_one(&s, regex!(r"closure\d+_externref_shim"), |idx| {
+            format!("closure_{idx}_externref_shim")
+        });
+
+        let s = self.sanitize_one(&s, regex!(r"__wbg_adapter_\d+"), |idx| {
+            format!("__wbg_adapter_{idx}")
+        });
+
+        s.into_owned()
+    }
+
+    fn assert_same(&mut self, output: &str, expected: &Path) -> Result<()> {
+        let output = self.sanitize(output);
+        if env::var("BLESS").is_ok() {
+            fs::write(expected, output.as_bytes())?;
+        } else {
+            let expected = fs::read_to_string(expected)?;
+            diff(&expected, &output)?;
+        }
+        Ok(())
+    }
+}
 
 #[rstest::rstest]
 fn runtest(
@@ -131,26 +195,18 @@ fn runtest(
             _ => "reference_test.js",
         };
 
+        let mut sanitizer = Sanitizer::default();
+
         if !contents.contains("async") {
             let js = fs::read_to_string(out_dir.join(main_js_file))?;
-            assert_same(&js, &test.with_extension("js"))?;
+            sanitizer.assert_same(&js, &test.with_extension("js"))?;
             let wat = sanitize_wasm(&out_dir.join("reference_test_bg.wasm"))?;
-            assert_same(&wat, &test.with_extension("wat"))?;
+            sanitizer.assert_same(&wat, &test.with_extension("wat"))?;
         }
         let d_ts = fs::read_to_string(out_dir.join("reference_test.d.ts"))?;
-        assert_same(&d_ts, &test.with_extension("d.ts"))?;
+        sanitizer.assert_same(&d_ts, &test.with_extension("d.ts"))?;
     }
 
-    Ok(())
-}
-
-fn assert_same(output: &str, expected: &Path) -> Result<()> {
-    if env::var("BLESS").is_ok() {
-        fs::write(expected, output)?;
-    } else {
-        let expected = fs::read_to_string(expected)?;
-        diff(&expected, output)?;
-    }
     Ok(())
 }
 

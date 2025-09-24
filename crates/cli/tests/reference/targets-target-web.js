@@ -48,7 +48,7 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_random_ae0b2256206ad108 = function() {
+    imports.wbg.__wbg_random_0000000000000000 = function() {
         const ret = Math.random();
         return ret;
     };

@@ -3,7 +3,7 @@
   (type (;1;) (func (result i32)))
   (type (;2;) (func (param i32)))
   (type (;3;) (func (param i32 i32)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_451ec1a8469d7eb6" (func (;0;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_0000000000000000" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $__wbg_test_free (;2;) (type 3) (param i32 i32))
   (func $test_new (;3;) (type 1) (result i32))
