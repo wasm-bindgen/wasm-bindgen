@@ -126,7 +126,7 @@ function __wbg_get_imports() {
         const ret = a.CONST;
         return ret;
     };
-    imports.wbg.__wbg_wbindgenthrow_4c11a24fca429ccf = function(arg0, arg1) {
+    imports.wbg.__wbg_wbindgenthrow_451ec1a8469d7eb6 = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {

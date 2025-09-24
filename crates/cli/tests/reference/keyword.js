@@ -84,7 +84,7 @@ export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {
     return ret;
 };
 
-export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
+export function __wbg_wbindgenthrow_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

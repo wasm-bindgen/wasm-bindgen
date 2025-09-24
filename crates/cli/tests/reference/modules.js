@@ -48,7 +48,7 @@ export function __wbg_parseFloat_e568a9a7c2403488(arg0, arg1) {
     return ret;
 };
 
-export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
+export function __wbg_wbindgenthrow_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

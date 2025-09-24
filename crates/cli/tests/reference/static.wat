@@ -9,7 +9,7 @@
   (import "./reference_test_bg.js" "__wbg_static_accessor_NESTED_NAMESPACE_PLAIN_e9affde7bc139ebd" (func (;3;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_OPTIONAL_8c4485fd717985fd" (func (;4;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_PLAIN_c0ea7240f2fd9157" (func (;5;) (type 2)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;6;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_451ec1a8469d7eb6" (func (;6;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;7;) (type 0)))
   (func $exported (;8;) (type 0))
   (func $__externref_table_alloc (;9;) (type 1) (result i32))

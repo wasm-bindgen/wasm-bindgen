@@ -3,7 +3,7 @@
   (type (;1;) (func (param i32 i32)))
   (type (;2;) (func (param i32 i32) (result i32)))
   (type (;3;) (func (param i32 i32 i32 i32) (result i32)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;0;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_451ec1a8469d7eb6" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $foo (;2;) (type 1) (param i32 i32))
   (func $__wbindgen_malloc (;3;) (type 2) (param i32 i32) (result i32))

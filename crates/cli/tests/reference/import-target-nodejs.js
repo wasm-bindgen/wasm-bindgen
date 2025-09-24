@@ -88,7 +88,7 @@ exports.__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
     return ret;
 };
 
-exports.__wbg_wbindgenthrow_4c11a24fca429ccf = function(arg0, arg1) {
+exports.__wbg_wbindgenthrow_451ec1a8469d7eb6 = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

@@ -79,12 +79,12 @@ export function result_i32() {
     return ret[0];
 }
 
-export function __wbg_Error_1f3748b298f99708(arg0, arg1) {
+export function __wbg_Error_e17e777aac105295(arg0, arg1) {
     const ret = Error(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 
-export function __wbg_wbindgenthrow_4c11a24fca429ccf(arg0, arg1) {
+export function __wbg_wbindgenthrow_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

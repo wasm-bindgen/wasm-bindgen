@@ -19,7 +19,7 @@
   (import "wbg" "__wbg_nocatch_757175fbf9e08b9e" (func (;8;) (type 0)))
   (import "wbg" "__wbg_reload_b091d4dc4b1b3a74" (func (;9;) (type 0)))
   (import "wbg" "__wbg_static_accessor_CONST_85b96acb48be57e1" (func (;10;) (type 3)))
-  (import "wbg" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;11;) (type 6)))
+  (import "wbg" "__wbg_wbindgenthrow_451ec1a8469d7eb6" (func (;11;) (type 6)))
   (import "wbg" "__wbg_write_691fc0d693f0c7b5" (func (;12;) (type 6)))
   (import "wbg" "__wbindgen_init_externref_table" (func (;13;) (type 0)))
   (func $"exported multivalue shim" (;14;) (type 2) (result i32 i32))
