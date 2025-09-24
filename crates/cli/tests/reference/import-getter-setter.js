@@ -38,66 +38,66 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_another_f4b9a21c6e8a4d1c(arg0) {
+export function __wbg_another_0000000000000000(arg0) {
     const ret = arg0.prop2;
     return ret;
 };
 
-export function __wbg_b_bb1b582d09c61aba(arg0) {
+export function __wbg_b_0000000000000001(arg0) {
     const ret = arg0.a;
     return ret;
 };
 
-export function __wbg_bar2_713391e46a0bb7be() {
+export function __wbg_bar2_0000000000000002() {
     const ret = Bar.bar2();
     return ret;
 };
 
-export function __wbg_getfoo_8df4cafb04f0009f() {
+export function __wbg_getfoo_0000000000000003() {
     const ret = Bar.get_foo();
     return ret;
 };
 
-export function __wbg_new_20883a5bbcc03d8a() {
+export function __wbg_new_0000000000000004() {
     const ret = new SomeClass();
     return ret;
 };
 
-export function __wbg_setanother_cde5169fcc608e26(arg0, arg1) {
+export function __wbg_setanother_0000000000000005(arg0, arg1) {
     arg0.prop2 = arg1 >>> 0;
 };
 
-export function __wbg_setb_1453844add10f92c(arg0, arg1) {
+export function __wbg_setb_0000000000000006(arg0, arg1) {
     arg0.a = arg1 >>> 0;
 };
 
-export function __wbg_setbar2_e814dd44597f34a8(arg0) {
+export function __wbg_setbar2_0000000000000007(arg0) {
     Bar.set_bar2(arg0 >>> 0);
 };
 
-export function __wbg_setfoo_0f65d059f3230f2a(arg0) {
+export function __wbg_setfoo_0000000000000008(arg0) {
     Bar.set_foo(arg0 >>> 0);
 };
 
-export function __wbg_setsignal_d8e77f065b1f0439(arg0, arg1) {
+export function __wbg_setsignal_0000000000000009(arg0, arg1) {
     arg0.signal = arg1 >>> 0;
 };
 
-export function __wbg_setsomeprop_4108a32b244b7d28(arg0, arg1) {
+export function __wbg_setsomeprop_000000000000000a(arg0, arg1) {
     arg0.some_prop = arg1 >>> 0;
 };
 
-export function __wbg_signal_54e2df9a78183990(arg0) {
+export function __wbg_signal_000000000000000b(arg0) {
     const ret = arg0.signal;
     return ret;
 };
 
-export function __wbg_someprop_3c07d616a6648f3b(arg0) {
+export function __wbg_someprop_000000000000000c(arg0) {
     const ret = arg0.some_prop;
     return ret;
 };
 
-export function __wbg_wbindgenthrow_451ec1a8469d7eb6(arg0, arg1) {
+export function __wbg_wbindgenthrow_000000000000000d(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

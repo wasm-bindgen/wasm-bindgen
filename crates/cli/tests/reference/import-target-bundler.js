@@ -64,42 +64,42 @@ export function exported() {
     }
 }
 
-export function __wbg_catchme_1d18acaa34acb005() { return handleError(function () {
+export function __wbg_catchme_0000000000000000() { return handleError(function () {
     catch_me();
 }, arguments) };
 
-export function __wbg_get_c871386e44ba8c35(arg0) {
+export function __wbg_get_0000000000000001(arg0) {
     const ret = arg0.get();
     return ret;
 };
 
-export function __wbg_myfunction_597f96bc4719408a() {
+export function __wbg_myfunction_0000000000000002() {
     b.my_function();
 };
 
-export function __wbg_new_c30895ccee9479d4(arg0) {
+export function __wbg_new_0000000000000003(arg0) {
     const ret = new default1(arg0);
     return ret;
 };
 
-export function __wbg_nocatch_757175fbf9e08b9e() {
+export function __wbg_nocatch_0000000000000004() {
     no_catch();
 };
 
-export function __wbg_reload_b091d4dc4b1b3a74() {
+export function __wbg_reload_0000000000000005() {
     window.location.reload();
 };
 
-export function __wbg_static_accessor_CONST_85b96acb48be57e1() {
+export function __wbg_static_accessor_CONST_0000000000000006() {
     const ret = a.CONST;
     return ret;
 };
 
-export function __wbg_wbindgenthrow_451ec1a8469d7eb6(arg0, arg1) {
+export function __wbg_wbindgenthrow_0000000000000007(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbg_write_691fc0d693f0c7b5(arg0, arg1) {
+export function __wbg_write_0000000000000008(arg0, arg1) {
     window.document.write(getStringFromWasm0(arg0, arg1));
 };
 

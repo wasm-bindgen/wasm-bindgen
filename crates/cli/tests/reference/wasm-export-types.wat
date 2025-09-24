@@ -6,7 +6,7 @@
   (type (;4;) (func (param i32 i32 i32 i32) (result i32)))
   (type (;5;) (func (param i32 i64 externref i32 i32) (result i32 i32)))
   (type (;6;) (func (param i64 i64) (result i32 i64 i64)))
-  (import "wbg" "__wbg_wbindgenthrow_451ec1a8469d7eb6" (func (;0;) (type 1)))
+  (import "wbg" "__wbg_wbindgenthrow_0000000000000000" (func (;0;) (type 1)))
   (import "wbg" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $"example externref shim multivalue shim" (;2;) (type 5) (param i32 i64 externref i32 i32) (result i32 i32))
   (func $"example_128 multivalue shim" (;3;) (type 6) (param i64 i64) (result i32 i64 i64))
