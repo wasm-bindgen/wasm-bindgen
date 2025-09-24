@@ -34,7 +34,7 @@
   (func $__externref_table_dealloc (;20;) (type 3) (param i32))
   (func $wasm_bindgen::convert::closures::_::invoke::h0000000000000000 (;21;) (type 4) (param i32 i32))
   (func $"closure16 externref shim" (;22;) (type 6) (param i32 i32 externref i32 externref))
-  (table (;0;) 65 65 funcref)
+  (table (;0;) 0 funcref)
   (table (;1;) 128 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))

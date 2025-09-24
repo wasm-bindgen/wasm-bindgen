@@ -236,6 +236,11 @@ fn sanitize_wasm(wasm: &Path) -> Result<String> {
         module.elements.delete(id);
     }
     for table in module.tables.iter_mut() {
+        // The function table comes from LLVM and has different size between platforms.
+        if table.element_ty == walrus::RefType::Funcref {
+            table.initial = 0;
+            table.maximum = None;
+        }
         table.elem_segments.drain();
     }
     let ids = module
