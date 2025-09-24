@@ -14,14 +14,6 @@
 //! This feature currently enables the `std` feature, meaning that it is not
 //! compatible with `no_std` environments.
 //!
-//! ### `msrv` (default)
-//!
-//! Enables Rust language features that require a higher MSRV. Enabling this
-//! feature on older compilers will NOT result in a compilation error, the newer
-//! language features will simply not be used.
-//!
-//! When compiling with Rust v1.78 or later, this feature enables better error messages for invalid methods on structs and enums.
-//!
 //! ### `std` (default)
 //!
 //! Enabling this feature will make the crate depend on the Rust standard library.
@@ -136,9 +128,9 @@ pub mod convert;
 pub mod describe;
 mod link;
 
-#[cfg(target_feature = "reference-types")]
+#[cfg(wbg_reference_types)]
 mod externref;
-#[cfg(target_feature = "reference-types")]
+#[cfg(wbg_reference_types)]
 use externref::__wbindgen_externref_heap_live_count;
 
 mod cast;
@@ -1087,7 +1079,7 @@ extern "C" {
 // standard wasm-bindgen ABI conversions.
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate, raw_module = "__wbindgen_placeholder__")]
 extern "C" {
-    #[cfg(not(target_feature = "reference-types"))]
+    #[cfg(not(wbg_reference_types))]
     fn __wbindgen_externref_heap_live_count() -> u32;
 
     fn __wbindgen_is_null(js: &JsValue) -> bool;

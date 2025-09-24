@@ -508,8 +508,6 @@ jobs:
           - wasm32-unknown-unknown
         features:
           - --no-default-features
-          - --no-default-features --features std
-          - --no-default-features --features msrv
           - ""
     defaults:
       run:
@@ -529,20 +527,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        rust:
+          - 1.57
+          - 1.82
         target:
           - x86_64-unknown-linux-gnu
           - wasm32-unknown-unknown
         features:
           - --no-default-features
-          - --no-default-features --features std
-          - --no-default-features --features msrv
           - ""
     defaults:
       run:
         working-directory: crates/msrv/lib
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update 1.57 && rustup default 1.57 && rustup target add ${{ matrix.target }}
+    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }} && rustup target add ${{ matrix.target }}
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-cli:

@@ -14,6 +14,14 @@
 * Added `aarch64-unknown-linux-musl` release artifacts.
   [#4668](https://github.com/wasm-bindgen/wasm-bindgen/pull/4668)
 
+### Changed
+
+* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
+  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
+
+* Deprecate the `msrv` crate feature. MSRV detection is now always on.
+  [#4675](https://github.com/wasm-bindgen/wasm-bindgen/pull/4675)
+
 ### Fixed
 
 * Fixed wasm-bindgen-cli's `encode_into` argument not working.
@@ -22,10 +30,8 @@
 * Fixed a bug in `--experimental-reset-state-function` support for heap reset.
   [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
 
-### Changed
-
-* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
-  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
+* Fixed compilation failures on Rust v1.82 and v1.83.
+  [#4675](https://github.com/wasm-bindgen/wasm-bindgen/pull/4675)
 
 --------------------------------------------------------------------------------
 
@@ -62,6 +68,11 @@
 * New `--target=module` target for outputting source phase imports.
   [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
 
+### Changed
+
+* Hidden deprecated options from the `wasm-bindgen --help` docs.
+  [#4646](https://github.com/wasm-bindgen/wasm-bindgen/pull/4646)
+
 ### Fixed
 
 * Fixed wrong method names for `GestureEvent` bindings.
@@ -69,11 +80,6 @@
 
 * Fix crash caused by allocations during `TypedArray` interactions.
   [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
-
-### Changed
-
-* Hidden deprecated options from the `wasm-bindgen --help` docs.
-  [#4646](https://github.com/wasm-bindgen/wasm-bindgen/pull/4646)
 
 --------------------------------------------------------------------------------
 
