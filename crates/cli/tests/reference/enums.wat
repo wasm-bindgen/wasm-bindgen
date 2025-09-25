@@ -2,7 +2,7 @@
   (type (;0;) (func))
   (type (;1;) (func (param i32) (result i32)))
   (type (;2;) (func (param i32 i32)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_0000000000000000" (func (;0;) (type 2)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_0000000000000000" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $enum_echo (;2;) (type 1) (param i32) (result i32))
   (func $option_enum_echo (;3;) (type 1) (param i32) (result i32))

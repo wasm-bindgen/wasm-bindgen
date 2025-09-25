@@ -76,12 +76,12 @@ let wasm_bindgen;
     function __wbg_get_imports(memory) {
         const imports = {};
         imports.wbg = {};
-        imports.wbg.__wbg_random_0000000000000000 = function() {
+        imports.wbg.__wbg___wbindgen_throw_0000000000000000 = function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        };
+        imports.wbg.__wbg_random_0000000000000001 = function() {
             const ret = Math.random();
             return ret;
-        };
-        imports.wbg.__wbg_wbindgenthrow_0000000000000001 = function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
         };
         imports.wbg.__wbindgen_init_externref_table = function() {
             const table = wasm.__wbindgen_export_1;

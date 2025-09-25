@@ -46,12 +46,12 @@ export function __wbg_reset_state () {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg_random_0000000000000000: function() {
+        __wbg___wbindgen_throw_0000000000000000: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_random_0000000000000001: function() {
             const ret = Math.random();
             return ret;
-        },
-        __wbg_wbindgenthrow_0000000000000001: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbindgen_init_externref_table: function() {
             const table = wasm.__wbindgen_export_1;

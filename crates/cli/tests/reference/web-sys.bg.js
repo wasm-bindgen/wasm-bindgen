@@ -4,51 +4,6 @@ export function __wbg_set_wasm(val) {
 }
 
 
-let cachedUint8ArrayMemory0 = null;
-
-function getUint8ArrayMemory0() {
-    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
-        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachedUint8ArrayMemory0;
-}
-
-let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
-
-const MAX_SAFARI_DECODE_BYTES = 2146435072;
-let numBytesDecoded = 0;
-function decodeText(ptr, len) {
-    numBytesDecoded += len;
-    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
-        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-        cachedTextDecoder.decode();
-        numBytesDecoded = len;
-    }
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
-}
-
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
-}
-
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_export_2.set(idx, obj);
-    return idx;
-}
-
-function handleError(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        const idx = addToExternrefTable0(e);
-        wasm.__wbindgen_exn_store(idx);
-    }
-}
-
 function debugString(val) {
     // primitive types
     const type = typeof val;
@@ -116,6 +71,15 @@ function debugString(val) {
 
 let WASM_VECTOR_LEN = 0;
 
+let cachedUint8ArrayMemory0 = null;
+
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
+}
+
 const cachedTextEncoder = new TextEncoder();
 
 if (!('encodeInto' in cachedTextEncoder)) {
@@ -176,6 +140,42 @@ function getDataViewMemory0() {
     }
     return cachedDataViewMemory0;
 }
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+cachedTextDecoder.decode();
+
+const MAX_SAFARI_DECODE_BYTES = 2146435072;
+let numBytesDecoded = 0;
+function decodeText(ptr, len) {
+    numBytesDecoded += len;
+    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder.decode();
+        numBytesDecoded = len;
+    }
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
+
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_export_4.set(idx, obj);
+    return idx;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
+}
 /**
  * @returns {URL}
  */
@@ -194,12 +194,7 @@ export function get_media_source() {
 
 const __wbindgen_enum_MediaSourceEnum = ["camera", "screen", "application", "window", "browser", "microphone", "audioCapture", "other"];
 
-export function __wbg_new_0000000000000000() { return handleError(function (arg0, arg1) {
-    const ret = new URL(getStringFromWasm0(arg0, arg1));
-    return ret;
-}, arguments) };
-
-export function __wbg_wbindgendebugstring_0000000000000001(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_0000000000000000(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
@@ -207,12 +202,17 @@ export function __wbg_wbindgendebugstring_0000000000000001(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-export function __wbg_wbindgenthrow_0000000000000002(arg0, arg1) {
+export function __wbg___wbindgen_throw_0000000000000001(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
+export function __wbg_new_0000000000000002() { return handleError(function (arg0, arg1) {
+    const ret = new URL(getStringFromWasm0(arg0, arg1));
+    return ret;
+}, arguments) };
+
 export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_export_2;
+    const table = wasm.__wbindgen_export_4;
     const offset = table.grow(4);
     table.set(0, undefined);
     table.set(offset + 0, undefined);

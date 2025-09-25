@@ -37,13 +37,13 @@ export function add_that_might_fail(a, b) {
     return ret >>> 0;
 }
 
-export function __wbg_random_0000000000000000() {
-    const ret = Math.random();
-    return ret;
+export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbg_wbindgenthrow_0000000000000001(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
+export function __wbg_random_0000000000000001() {
+    const ret = Math.random();
+    return ret;
 };
 
 export function __wbindgen_init_externref_table() {

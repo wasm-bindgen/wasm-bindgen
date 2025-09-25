@@ -33,13 +33,13 @@ exports.add_that_might_fail = function(a, b) {
     return ret >>> 0;
 };
 
-exports.__wbg_random_0000000000000000 = function() {
-    const ret = Math.random();
-    return ret;
+exports.__wbg___wbindgen_throw_0000000000000000 = function(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-exports.__wbg_wbindgenthrow_0000000000000001 = function(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
+exports.__wbg_random_0000000000000001 = function() {
+    const ret = Math.random();
+    return ret;
 };
 
 exports.__wbindgen_init_externref_table = function() {
