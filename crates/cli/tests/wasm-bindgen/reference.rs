@@ -99,17 +99,11 @@ impl Sanitizer {
     fn sanitize(&mut self, s: &str) -> String {
         let s = self.sanitize_one(s, regex!(r"[0-9a-f]{16}"), |idx| format!("{idx:016x}"));
 
-        let s = self.sanitize_one(&s, regex!(r"closure\d+"), |idx| format!("closure{idx}"));
-
         let s = self.sanitize_one(&s, regex!(r"__wbg_adapter_\d+"), |idx| {
             format!("__wbg_adapter_{idx}")
         });
 
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
-
-        let s = self.sanitize_one(&s, regex!(r"makeMutClosure\(arg0, arg1, \d+,"), |idx| {
-            format!("makeMutClosure(arg0, arg1, {idx},")
-        });
 
         s.into_owned()
     }
