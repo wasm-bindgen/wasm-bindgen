@@ -1,7 +1,7 @@
 # `wasm-bindgen` Change Log
 --------------------------------------------------------------------------------
 
-## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
+## Unreleased
 
 ### Fixed
 
