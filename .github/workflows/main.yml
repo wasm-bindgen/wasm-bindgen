@@ -26,8 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup component add rustfmt
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
     - run: cargo fmt --all -- --check
 
   # Check TOML style by using Taplo.
@@ -49,7 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
     - run: cargo check --all
     - run: cargo check --no-default-features
 
@@ -59,8 +62,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy,rustfmt
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-backend -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli -- -D warnings
@@ -82,8 +87,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p js-sys --all-targets -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p web-sys --all-targets -- -D warnings
 
@@ -93,8 +100,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -- -D warnings
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p js-sys -- -D warnings
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p web-sys -- -D warnings
@@ -109,9 +118,10 @@ jobs:
       RUSTFLAGS: -Ctarget-feature=+atomics
     steps:
     - uses: actions/checkout@v5
-    - run: rustup default nightly-2025-08-04
-    - run: rustup target add wasm32-unknown-unknown
-    - run: rustup component add clippy rust-src
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy,rust-src
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -Zbuild-std=core,alloc -- -D warnings
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p js-sys -Zbuild-std=core,alloc -- -D warnings
     - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p web-sys -Zbuild-std=core,alloc -- -D warnings
@@ -124,8 +134,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings
     - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown --tests -- -D warnings
     - run: for i in examples/*/; do cd "$i"; cargo +stable clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings || exit 1; cd ../..; done
@@ -148,8 +160,9 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v5
       with:
         node-version: '20'
@@ -173,8 +186,9 @@ jobs:
       WASM_BINDGEN_MULTI_VALUE: ${{ matrix.envs.WASM_BINDGEN_MULTI_VALUE }}
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v5
       with:
         node-version: '20'
@@ -187,9 +201,10 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v5
-    - run: rustup default nightly-2025-08-04
-    - run: rustup target add wasm32-unknown-unknown
-    - run: rustup component add rust-src
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy,rust-src
     - run: |
         RUSTFLAGS='-C target-feature=+atomics' \
           cargo test --target wasm32-unknown-unknown -Z build-std=std,panic_abort
@@ -237,8 +252,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v5
       with:
         node-version: '20'
@@ -290,8 +306,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+        components: rustfmt
     - uses: actions/setup-node@v5
       with:
         node-version: '20'
@@ -302,7 +320,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update 1.88.0 && rustup default 1.88.0
+    - uses: dtolnay/rust-toolchain@1.88
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
 
@@ -311,7 +329,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
     - run: cd crates/web-sys && cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
     - run: git diff --exit-code
 
@@ -319,9 +339,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup toolchain install nightly-2025-08-04
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: clippy,rust-src
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
         cargo install --path crates/cli --debug
@@ -347,7 +371,7 @@ jobs:
       with:
         name: examples
         path: examples/dist
-    - run: rustup update --no-self-update stable && rustup default stable
+    - uses: dtolnay/rust-toolchain@stable
     - uses: actions/setup-node@v5
       with:
         node-version: 22
@@ -365,8 +389,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
     - run: cargo build --manifest-path benchmarks/Cargo.toml --release --target wasm32-unknown-unknown
     - run: cargo run -p wasm-bindgen-cli -- target/wasm32-unknown-unknown/release/wasm_bindgen_benchmark.wasm --out-dir benchmarks/pkg --target web
     - uses: actions/upload-artifact@v4
@@ -379,8 +404,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add x86_64-unknown-linux-musl
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: x86_64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-unknown-linux-musl --features vendored-openssl --release
@@ -397,8 +423,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add aarch64-unknown-linux-gnu
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: aarch64-unknown-linux-gnu
     - run: sudo apt update -y && sudo apt install gcc-aarch64-linux-gnu -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-gnu --features vendored-openssl --release
@@ -414,8 +441,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add aarch64-unknown-linux-musl
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: aarch64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-musl --features vendored-openssl --release
@@ -429,8 +457,9 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
-    - run: rustup target add x86_64-apple-darwin
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: x86_64-apple-darwin
     - run: cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-apple-darwin --release
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.7
@@ -444,7 +473,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
+    - uses: dtolnay/rust-toolchain@stable
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
@@ -459,7 +488,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update stable && rustup default stable
+    - uses: dtolnay/rust-toolchain@stable
     - run: cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
         RUSTFLAGS: -Ctarget-feature=+crt-static
@@ -487,7 +516,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update nightly && rustup default nightly
+    - uses: dtolnay/rust-toolchain@nightly
     - run: cargo doc --no-deps --features 'serde-serialize'
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
     - run: cargo doc --no-deps --manifest-path crates/web-sys/Cargo.toml --all-features
@@ -522,7 +551,10 @@ jobs:
         working-directory: crates/msrv/resolver
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }} && rustup target add ${{ matrix.target }}
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        targets: ${{ matrix.target }}
     - if: matrix.rust == '1.57'
       run: |
         cargo update -p bumpalo --precise 3.12.0
@@ -549,7 +581,10 @@ jobs:
         working-directory: crates/msrv/lib
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }} && rustup target add ${{ matrix.target }}
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        targets: ${{ matrix.target }}
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-cli:
@@ -560,7 +595,7 @@ jobs:
         working-directory: crates/msrv/cli
     steps:
     - uses: actions/checkout@v5
-    - run: rustup update --no-self-update 1.82 && rustup default 1.82
+    - uses: dtolnay/rust-toolchain@1.82
     - run: cargo build
 
 
