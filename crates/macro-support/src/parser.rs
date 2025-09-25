@@ -759,7 +759,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 "__wbg_{}_{}",
                 wasm.name
                     .chars()
-                    .filter(|c| c.is_ascii_alphanumeric())
+                    .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
                     .collect::<String>(),
                 ShortHash(data)
             )

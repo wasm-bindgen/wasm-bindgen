@@ -4,21 +4,6 @@ export function __wbg_set_wasm(val) {
 }
 
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_export_2.set(idx, obj);
-    return idx;
-}
-
-function handleError(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        const idx = addToExternrefTable0(e);
-        wasm.__wbindgen_exn_store(idx);
-    }
-}
-
 let cachedUint8ArrayMemory0 = null;
 
 function getUint8ArrayMemory0() {
@@ -49,6 +34,21 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_export_2.set(idx, obj);
+    return idx;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
+}
+
 function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_export_2.get(idx);
     wasm.__externref_table_dealloc(idx);
@@ -62,13 +62,13 @@ export function exported() {
     }
 }
 
-export function __wbg_foo_0000000000000000() { return handleError(function () {
-    foo();
-}, arguments) };
-
-export function __wbg_wbindgenthrow_0000000000000001(arg0, arg1) {
+export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
+
+export function __wbg_foo_0000000000000001() { return handleError(function () {
+    foo();
+}, arguments) };
 
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_export_2;

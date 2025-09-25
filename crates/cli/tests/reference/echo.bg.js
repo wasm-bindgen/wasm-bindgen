@@ -1231,17 +1231,7 @@ export class Foo {
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
 
-export function __wbg_foo_new(arg0) {
-    const ret = Foo.__wrap(arg0);
-    return ret;
-};
-
-export function __wbg_foo_unwrap(arg0) {
-    const ret = Foo.__unwrap(arg0);
-    return ret;
-};
-
-export function __wbg_wbindgendebugstring_0000000000000000(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_0000000000000000(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
@@ -1249,7 +1239,7 @@ export function __wbg_wbindgendebugstring_0000000000000000(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-export function __wbg_wbindgenstringget_0000000000000001(arg0, arg1) {
+export function __wbg___wbindgen_string_get_0000000000000001(arg0, arg1) {
     const obj = arg1;
     const ret = typeof(obj) === 'string' ? obj : undefined;
     var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -1258,8 +1248,18 @@ export function __wbg_wbindgenstringget_0000000000000001(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-export function __wbg_wbindgenthrow_0000000000000002(arg0, arg1) {
+export function __wbg___wbindgen_throw_0000000000000002(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
+export function __wbg_foo_new(arg0) {
+    const ret = Foo.__wrap(arg0);
+    return ret;
+};
+
+export function __wbg_foo_unwrap(arg0) {
+    const ret = Foo.__unwrap(arg0);
+    return ret;
 };
 
 export function __wbindgen_cast_0000000000000003(arg0, arg1) {

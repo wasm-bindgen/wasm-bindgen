@@ -75,7 +75,7 @@ export function slice(a) {
     wasm.slice(ptr0, len0);
 }
 
-export function __wbg_wbindgenthrow_0000000000000000(arg0, arg1) {
+export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

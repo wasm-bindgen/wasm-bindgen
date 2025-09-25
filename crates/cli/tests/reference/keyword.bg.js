@@ -57,35 +57,35 @@ export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
 }
 
-export function __wbg_await_0000000000000000() {
+export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
+export function __wbg_await_0000000000000001() {
     await();
 };
 
-export function __wbg_let_0000000000000001(arg0) {
+export function __wbg_let_0000000000000002(arg0) {
     arg0.let();
 };
 
-export function __wbg_new_0000000000000002() {
+export function __wbg_new_0000000000000003() {
     const ret = A.new();
     return ret;
 };
 
-export function __wbg_new_0000000000000003() {
+export function __wbg_new_0000000000000004() {
     const ret = window.__TAURI__.menu.Menu.new();
     return ret;
 };
 
-export function __wbg_new_0000000000000004() {
+export function __wbg_new_0000000000000005() {
     B.new();
 };
 
-export function __wbg_static_accessor_TRUE_0000000000000005() {
+export function __wbg_static_accessor_TRUE_0000000000000006() {
     const ret = true;
     return ret;
-};
-
-export function __wbg_wbindgenthrow_0000000000000006(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
 export function __wbindgen_init_externref_table() {

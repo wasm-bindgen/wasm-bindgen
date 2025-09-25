@@ -6,21 +6,6 @@ import * as __wbg_star3 from 'tests/wasm/imports.js';
 
 let wasm;
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_export_2.set(idx, obj);
-    return idx;
-}
-
-function handleError(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        const idx = addToExternrefTable0(e);
-        wasm.__wbindgen_exn_store(idx);
-    }
-}
-
 let cachedUint8ArrayMemory0 = null;
 
 function getUint8ArrayMemory0() {
@@ -49,6 +34,21 @@ function decodeText(ptr, len) {
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
+}
+
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_export_2.set(idx, obj);
+    return idx;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
 }
 
 function takeFromExternrefTable0(idx) {
@@ -102,32 +102,32 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_catchme_0000000000000001 = function() { return handleError(function () {
+    imports.wbg.__wbg___wbindgen_throw_0000000000000001 = function(arg0, arg1) {
+        throw new Error(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbg_catch_me_0000000000000002 = function() { return handleError(function () {
         catch_me();
     }, arguments) };
-    imports.wbg.__wbg_get_0000000000000002 = function(arg0) {
+    imports.wbg.__wbg_get_0000000000000003 = function(arg0) {
         const ret = arg0.get();
         return ret;
     };
-    imports.wbg.__wbg_myfunction_0000000000000003 = function() {
+    imports.wbg.__wbg_my_function_0000000000000004 = function() {
         b.my_function();
     };
-    imports.wbg.__wbg_new_0000000000000004 = function(arg0) {
+    imports.wbg.__wbg_new_0000000000000005 = function(arg0) {
         const ret = new default1(arg0);
         return ret;
     };
-    imports.wbg.__wbg_nocatch_0000000000000005 = function() {
+    imports.wbg.__wbg_no_catch_0000000000000006 = function() {
         no_catch();
     };
-    imports.wbg.__wbg_reload_0000000000000006 = function() {
+    imports.wbg.__wbg_reload_0000000000000007 = function() {
         window.location.reload();
     };
-    imports.wbg.__wbg_static_accessor_CONST_0000000000000007 = function() {
+    imports.wbg.__wbg_static_accessor_CONST_0000000000000008 = function() {
         const ret = a.CONST;
         return ret;
-    };
-    imports.wbg.__wbg_wbindgenthrow_0000000000000008 = function(arg0, arg1) {
-        throw new Error(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbg_write_0000000000000009 = function(arg0, arg1) {
         window.document.write(getStringFromWasm0(arg0, arg1));

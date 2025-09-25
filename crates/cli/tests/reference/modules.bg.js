@@ -38,18 +38,18 @@ export function exported() {
     wasm.exported();
 }
 
-export function __wbg_parseFloat_0000000000000000(arg0) {
+export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
+export function __wbg_parseFloat_0000000000000001(arg0) {
     const ret = parseFloat(arg0);
     return ret;
 };
 
-export function __wbg_parseFloat_0000000000000001(arg0, arg1) {
+export function __wbg_parseFloat_0000000000000002(arg0, arg1) {
     const ret = parseFloat(getStringFromWasm0(arg0, arg1));
     return ret;
-};
-
-export function __wbg_wbindgenthrow_0000000000000002(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
 export function __wbindgen_cast_0000000000000003(arg0, arg1) {

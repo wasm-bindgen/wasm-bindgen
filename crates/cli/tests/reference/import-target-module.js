@@ -7,21 +7,6 @@ import * as import1 from 'foo-raw'
 import * as import2 from './snippets/import_reftest-0000000000000000/inline0.js'
 import * as import3 from 'pure-extern'
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_export_2.set(idx, obj);
-    return idx;
-}
-
-function handleError(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        const idx = addToExternrefTable0(e);
-        wasm.__wbindgen_exn_store(idx);
-    }
-}
-
 let cachedUint8ArrayMemory0 = null;
 
 function getUint8ArrayMemory0() {
@@ -44,6 +29,21 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_export_2.set(idx, obj);
+    return idx;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
+}
+
 function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_export_2.get(idx);
     wasm.__externref_table_dealloc(idx);
@@ -59,32 +59,32 @@ export function exported() {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg_catchme_0000000000000001: function() { return handleError(function () {
+        __wbg___wbindgen_throw_0000000000000001: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_catch_me_0000000000000002: function() { return handleError(function () {
             catch_me();
         }, arguments) },
-        __wbg_get_0000000000000002: function(arg0) {
+        __wbg_get_0000000000000003: function(arg0) {
             const ret = arg0.get();
             return ret;
         },
-        __wbg_myfunction_0000000000000003: function() {
+        __wbg_my_function_0000000000000004: function() {
             b.my_function();
         },
-        __wbg_new_0000000000000004: function(arg0) {
+        __wbg_new_0000000000000005: function(arg0) {
             const ret = new default1(arg0);
             return ret;
         },
-        __wbg_nocatch_0000000000000005: function() {
+        __wbg_no_catch_0000000000000006: function() {
             no_catch();
         },
-        __wbg_reload_0000000000000006: function() {
+        __wbg_reload_0000000000000007: function() {
             window.location.reload();
         },
-        __wbg_static_accessor_CONST_0000000000000007: function() {
+        __wbg_static_accessor_CONST_0000000000000008: function() {
             const ret = a.CONST;
             return ret;
-        },
-        __wbg_wbindgenthrow_0000000000000008: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_write_0000000000000009: function(arg0, arg1) {
             window.document.write(getStringFromWasm0(arg0, arg1));
