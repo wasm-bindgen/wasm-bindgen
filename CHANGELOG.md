@@ -1,6 +1,12 @@
 # `wasm-bindgen` Change Log
 --------------------------------------------------------------------------------
 
+## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
+
+### Fixed
+
+* Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
+
 ## [0.2.104](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.103...0.2.104)
 
 ### Added

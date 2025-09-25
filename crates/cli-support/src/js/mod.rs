@@ -307,24 +307,6 @@ impl<'a> Context<'a> {
     fn generate_node_wasm_loading(&mut self, module_name: &str) -> String {
         let mut shim = String::new();
 
-        if let Some(mem) = self.module.memories.iter().next() {
-            if let Some(id) = mem.import {
-                let module_name = "wbg";
-                self.module.imports.get_mut(id).module = module_name.to_string();
-                shim.push_str(&format!(
-                    "imports.{module_name} = {{ memory: new WebAssembly.Memory({{"
-                ));
-                shim.push_str(&format!("initial:{}", mem.initial));
-                if let Some(max) = mem.maximum {
-                    shim.push_str(&format!(",maximum:{max}"));
-                }
-                if mem.shared {
-                    shim.push_str(",shared:true");
-                }
-                shim.push_str("}) };");
-            }
-        }
-
         if self.config.mode.uses_es_modules() {
             // On windows skip the leading `/` which comes out when we parse a
             // url to use `C:\...` instead of `\C:\...`
@@ -421,6 +403,22 @@ impl<'a> Context<'a> {
 
         if let OutputMode::NoModules { global } = &self.config.mode {
             js.push_str(&format!("let {global};\n(function() {{\n"));
+        }
+
+        if let Some(mem) = self.module.memories.iter().next() {
+            if let Some(id) = mem.import {
+                self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
+                let mut init_memory = format!("new WebAssembly.Memory({{");
+                init_memory.push_str(&format!("initial:{}", mem.initial));
+                if let Some(max) = mem.maximum {
+                    init_memory.push_str(&format!(",maximum:{max}"));
+                }
+                if mem.shared {
+                    init_memory.push_str(",shared:true");
+                }
+                init_memory.push_str("})");
+                self.wasm_import_definitions.insert(id, init_memory);
+            }
         }
 
         // Depending on the output mode, generate necessary glue to actually
@@ -782,22 +780,16 @@ wasm = wasmInstance.exports;
     ) -> Result<(String, String), Error> {
         let module_name = "wbg";
         let mut init_memory_arg = "";
-        let mut init_memory = String::new();
+        let mut init_memory_arg_alone = "";
         let mut has_memory = false;
         if let Some(mem) = self.module.memories.iter().next() {
             if let Some(id) = mem.import {
-                self.module.imports.get_mut(id).module = module_name.to_string();
-                init_memory =
-                    format!("imports.{module_name}.memory = memory || new WebAssembly.Memory({{");
-                init_memory.push_str(&format!("initial:{}", mem.initial));
-                if let Some(max) = mem.maximum {
-                    init_memory.push_str(&format!(",maximum:{max}"));
-                }
-                if mem.shared {
-                    init_memory.push_str(",shared:true");
-                }
-                init_memory.push_str("});");
+                self.wasm_import_definitions
+                    .get_mut(&id)
+                    .expect("memory should already be in wasm_import_definitions")
+                    .insert_str(0, "memory || ");
                 init_memory_arg = ", memory";
+                init_memory_arg_alone = "memory";
                 has_memory = true;
             }
         }
@@ -926,14 +918,10 @@ wasm = wasmInstance.exports;
                     }}
                 }}
 
-                function __wbg_get_imports() {{
+                function __wbg_get_imports({init_memory_arg_alone}) {{
                     const imports = {{}};
                     {imports_init}
                     return imports;
-                }}
-
-                function __wbg_init_memory(imports, memory) {{
-                    {init_memory}
                 }}
 
                 function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
@@ -957,9 +945,7 @@ wasm = wasmInstance.exports;
                         }}
                     }}
 
-                    const imports = __wbg_get_imports();
-
-                    __wbg_init_memory(imports{init_memory_arg});
+                    const imports = __wbg_get_imports({init_memory_arg_alone});
 
                     if (!(module instanceof WebAssembly.Module)) {{
                         module = new WebAssembly.Module(module);
@@ -983,7 +969,7 @@ wasm = wasmInstance.exports;
                     }}
 
                     {default_module_path}
-                    const imports = __wbg_get_imports();
+                    const imports = __wbg_get_imports({init_memory_arg_alone});
 
                     if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {{
                         module_or_path = fetch(module_or_path);
@@ -996,10 +982,6 @@ wasm = wasmInstance.exports;
                     return __wbg_finalize_init(instance, module{init_stack_size_arg});
                 }}
             ",
-            init_memory_arg = init_memory_arg,
-            default_module_path = default_module_path,
-            init_memory = init_memory,
-            init_memviews = init_memviews,
             start = if needs_manual_start && self.threads_enabled {
                 "wasm.__wbindgen_start(thread_stack_size);"
             } else if needs_manual_start {
@@ -1007,7 +989,6 @@ wasm = wasmInstance.exports;
             } else {
                 ""
             },
-            imports_init = imports_init,
             init_stack_size = if self.threads_enabled {
                 "let thread_stack_size"
             } else {

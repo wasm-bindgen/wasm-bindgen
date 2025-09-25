@@ -57,3 +57,5 @@ export function __wbindgen_init_externref_table() {
     ;
 };
 
+export const memory = new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
+

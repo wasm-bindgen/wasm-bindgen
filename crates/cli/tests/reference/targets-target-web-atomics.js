@@ -74,7 +74,7 @@ async function __wbg_load(module, imports) {
     }
 }
 
-function __wbg_get_imports() {
+function __wbg_get_imports(memory) {
     const imports = {};
     imports.wbg = {};
     imports.wbg.__wbg_random_0000000000000000 = function() {
@@ -94,12 +94,9 @@ function __wbg_get_imports() {
         table.set(offset + 3, false);
         ;
     };
+    imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 
     return imports;
-}
-
-function __wbg_init_memory(imports, memory) {
-    imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 }
 
 function __wbg_finalize_init(instance, module, thread_stack_size) {
@@ -124,9 +121,7 @@ function initSync(module, memory) {
         }
     }
 
-    const imports = __wbg_get_imports();
-
-    __wbg_init_memory(imports, memory);
+    const imports = __wbg_get_imports(memory);
 
     if (!(module instanceof WebAssembly.Module)) {
         module = new WebAssembly.Module(module);
@@ -152,7 +147,7 @@ async function __wbg_init(module_or_path, memory) {
     if (typeof module_or_path === 'undefined') {
         module_or_path = new URL('reference_test_bg.wasm', import.meta.url);
     }
-    const imports = __wbg_get_imports();
+    const imports = __wbg_get_imports(memory);
 
     if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
         module_or_path = fetch(module_or_path);

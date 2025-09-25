@@ -2,7 +2,7 @@
 let imports = {};
 import * as import0 from './reference_test_bg.js';
 imports['./reference_test_bg.js'] = import0;
-imports.wbg = { memory: new WebAssembly.Memory({initial:18,maximum:16384,shared:true}) };
+
 import { readFileSync } from 'node:fs';
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
