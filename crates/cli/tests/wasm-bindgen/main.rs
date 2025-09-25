@@ -47,6 +47,7 @@ struct Project {
     root: PathBuf,
     name: String,
     deps: String,
+    cargo_cmd: Command,
     built: bool,
 }
 
@@ -56,10 +57,18 @@ impl Project {
         let root = TARGET_DIR.join("cli-tests").join(&name);
         drop(fs::remove_dir_all(&root));
         fs::create_dir_all(&root).unwrap();
+        let mut cargo_cmd = Command::new("cargo");
+        cargo_cmd
+            .current_dir(&root)
+            .arg("build")
+            .arg("--target")
+            .arg("wasm32-unknown-unknown")
+            .env("CARGO_TARGET_DIR", &*TARGET_DIR);
         Project {
             root,
             name,
             deps: "wasm-bindgen = { path = '{root}' }\n".to_owned(),
+            cargo_cmd,
             built: false,
         }
     }
@@ -133,14 +142,7 @@ impl Project {
                 );
             }
 
-            Command::new("cargo")
-                .current_dir(&self.root)
-                .arg("build")
-                .arg("--target")
-                .arg("wasm32-unknown-unknown")
-                .env("CARGO_TARGET_DIR", &*TARGET_DIR)
-                .assert()
-                .success();
+            self.cargo_cmd.assert().success();
 
             self.built = true;
         }

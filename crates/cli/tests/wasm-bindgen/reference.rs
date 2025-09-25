@@ -132,6 +132,20 @@ fn runtest(
     #[files("*.rs")]
     test: PathBuf,
 ) -> Result<()> {
+    runtest_with_opts(test, false)
+}
+
+#[test]
+fn runtest_targets_atomics() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("targets.rs");
+
+    runtest_with_opts(test, true)
+}
+
+fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
     let contents = fs::read_to_string(&test)?;
 
     // parse target declarations
@@ -155,6 +169,14 @@ fn runtest(
 
     // parse additional dependency declarations
     project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
+
+    if atomics {
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-C target-feature=+atomics")
+            .arg("-Zbuild-std=std,panic_abort");
+    }
 
     contents
         .lines()
@@ -185,6 +207,10 @@ fn runtest(
                     base_file_name.push('-');
                     base_file_name.push_str(chunk);
                 }
+            }
+
+            if atomics {
+                base_file_name.push_str("-atomics");
             }
 
             test.with_file_name(base_file_name)
