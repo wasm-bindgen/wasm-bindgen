@@ -34,8 +34,16 @@ fn is_id_continue(c: char) -> bool {
 
 fn maybe_valid_chars(name: &str) -> impl Iterator<Item = Option<char>> + '_ {
     let mut chars = name.chars();
-    core::iter::once(chars.next().filter(|&c| is_id_start(c)))
-        .chain(chars.map(|c| is_id_continue(c).then_some(c)))
+    // Always emit at least one `None` item - that way `is_valid_ident` can fail without
+    // a separate check for empty strings, and `to_valid_ident` will always produce at least
+    // one underscore.
+    core::iter::once(chars.next().filter(|&c| is_id_start(c))).chain(chars.map(|c| {
+        if is_id_continue(c) {
+            Some(c)
+        } else {
+            None
+        }
+    }))
 }
 
 /// Returns whether a string is a valid JavaScript identifier.
