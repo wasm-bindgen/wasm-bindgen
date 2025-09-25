@@ -255,6 +255,10 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: rust-src
     - uses: actions/setup-node@v5
       with:
         node-version: '20'
