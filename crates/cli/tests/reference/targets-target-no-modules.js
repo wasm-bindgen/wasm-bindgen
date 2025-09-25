@@ -125,8 +125,6 @@ let wasm_bindgen;
             module_or_path = fetch(module_or_path);
         }
 
-        __wbg_init_memory(imports);
-
         const { instance, module } = await __wbg_load(await module_or_path, imports);
 
         return __wbg_finalize_init(instance, module);

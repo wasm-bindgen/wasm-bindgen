@@ -153,8 +153,6 @@ async function __wbg_init(module_or_path, memory) {
         module_or_path = fetch(module_or_path);
     }
 
-    __wbg_init_memory(imports, memory);
-
     const { instance, module } = await __wbg_load(await module_or_path, imports);
 
     return __wbg_finalize_init(instance, module, thread_stack_size);

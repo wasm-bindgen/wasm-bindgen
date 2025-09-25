@@ -975,8 +975,6 @@ wasm = wasmInstance.exports;
                         module_or_path = fetch(module_or_path);
                     }}
 
-                    __wbg_init_memory(imports{init_memory_arg});
-
                     const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
 
                     return __wbg_finalize_init(instance, module{init_stack_size_arg});
