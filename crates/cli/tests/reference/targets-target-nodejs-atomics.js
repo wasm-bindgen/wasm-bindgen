@@ -52,7 +52,9 @@ exports.__wbindgen_init_externref_table = function() {
     table.set(offset + 3, false);
     ;
 };
-imports.wbg = { memory: new WebAssembly.Memory({initial:18,maximum:16384,shared:true}) };
+
+exports.memory = new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
+
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);

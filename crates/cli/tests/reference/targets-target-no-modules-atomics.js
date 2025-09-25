@@ -73,7 +73,7 @@ let wasm_bindgen;
         }
     }
 
-    function __wbg_get_imports() {
+    function __wbg_get_imports(memory) {
         const imports = {};
         imports.wbg = {};
         imports.wbg.__wbg_random_0000000000000000 = function() {
@@ -93,12 +93,9 @@ let wasm_bindgen;
             table.set(offset + 3, false);
             ;
         };
+        imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 
         return imports;
-    }
-
-    function __wbg_init_memory(imports, memory) {
-        imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
     }
 
     function __wbg_finalize_init(instance, module, thread_stack_size) {
@@ -123,9 +120,7 @@ let wasm_bindgen;
             }
         }
 
-        const imports = __wbg_get_imports();
-
-        __wbg_init_memory(imports, memory);
+        const imports = __wbg_get_imports(memory);
 
         if (!(module instanceof WebAssembly.Module)) {
             module = new WebAssembly.Module(module);
@@ -151,13 +146,11 @@ let wasm_bindgen;
         if (typeof module_or_path === 'undefined' && typeof script_src !== 'undefined') {
             module_or_path = script_src.replace(/\.js$/, '_bg.wasm');
         }
-        const imports = __wbg_get_imports();
+        const imports = __wbg_get_imports(memory);
 
         if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
             module_or_path = fetch(module_or_path);
         }
-
-        __wbg_init_memory(imports, memory);
 
         const { instance, module } = await __wbg_load(await module_or_path, imports);
 

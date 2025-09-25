@@ -1,4 +1,4 @@
-import * as import0 from 'env'
+
 
 let cachedUint8ArrayMemory0 = null;
 
@@ -50,8 +50,9 @@ const imports = {
             table.set(offset + 3, false);
             ;
         },
+        memory: new WebAssembly.Memory({initial:18,maximum:16384,shared:true}),
     },
-    'env': import0,
+
 };
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
