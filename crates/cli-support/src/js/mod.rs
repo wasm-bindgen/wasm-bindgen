@@ -408,7 +408,7 @@ impl<'a> Context<'a> {
         if let Some(mem) = self.module.memories.iter().next() {
             if let Some(id) = mem.import {
                 self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
-                let mut init_memory = format!("new WebAssembly.Memory({{");
+                let mut init_memory = "new WebAssembly.Memory({".to_string();
                 init_memory.push_str(&format!("initial:{}", mem.initial));
                 if let Some(max) = mem.maximum {
                     init_memory.push_str(&format!(",maximum:{max}"));
