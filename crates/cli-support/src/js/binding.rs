@@ -784,7 +784,6 @@ fn instruction(
 
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
-        | Instruction::CallTableElement(_)
         | Instruction::DeferFree { .. } => {
             let invoc = Invocation::from(instr, js.cx.module)?;
             let (mut params, results) = invoc.params_results(js.cx);
@@ -1395,7 +1394,7 @@ fn instruction(
             adapter,
             nargs,
             mutable,
-            dtor_idx_if_persistent,
+            dtor_if_persistent,
         } => {
             let b = js.pop();
             let a = js.pop();
@@ -1404,7 +1403,7 @@ fn instruction(
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership
             // integration.
-            if let Some(dtor) = dtor_idx_if_persistent {
+            if let Some(dtor) = dtor_if_persistent {
                 let make_closure = if *mutable {
                     js.cx.expose_make_mut_closure()?;
                     "makeMutClosure"
@@ -1413,7 +1412,9 @@ fn instruction(
                     "makeClosure"
                 };
 
-                js.push(format!("{make_closure}({a}, {b}, {dtor}, {wrapper})"));
+                let dtor = &js.cx.module.exports.get(*dtor).name;
+
+                js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
             } else {
                 let i = js.tmp();
                 js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
@@ -1586,13 +1587,6 @@ impl Invocation {
                 walrus::ExportItem::Function(id) => Invocation::Core { id, defer: false },
                 _ => panic!("can only call exported function"),
             },
-
-            // The function table never changes right now, so we can statically
-            // look up the desired function.
-            CallTableElement(idx) => {
-                let id = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
-                Invocation::Core { id, defer: false }
-            }
 
             CallAdapter(id) => Invocation::Adapter(*id),
 

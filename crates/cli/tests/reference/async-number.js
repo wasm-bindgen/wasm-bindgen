@@ -183,11 +183,7 @@ function getDataViewMemory0() {
 
 const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(
-state => {
-    wasm.__wbindgen_export_5.get(state.dtor)(state.a, state.b);
-}
-);
+    : new FinalizationRegistry(state => state.dtor(state.a, state.b));
 
 function makeMutClosure(arg0, arg1, dtor, f) {
     const state = { a: arg0, b: arg1, cnt: 1, dtor };
@@ -203,7 +199,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
             return f(a, state.b, ...args);
         } finally {
             if (--state.cnt === 0) {
-                wasm.__wbindgen_export_5.get(state.dtor)(a, state.b);
+                state.dtor(a, state.b);
                 CLOSURE_DTORS.unregister(state);
             } else {
                 state.a = a;
@@ -222,32 +218,32 @@ export function foo() {
     return ret;
 }
 
-function __wbg_adapter_21(arg0, arg1, arg2) {
-    wasm.closure19_externref_shim(arg0, arg1, arg2);
+function __wbg_adapter_22(arg0, arg1, arg2) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1, arg2);
 }
 
-function __wbg_adapter_22(arg0, arg1, arg2, arg3) {
-    wasm.closure20_externref_shim(arg0, arg1, arg2, arg3);
+function __wbg_adapter_23(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1, arg2, arg3);
 }
 
-export function __wbg_call_0000000000000000() { return handleError(function (arg0, arg1) {
+export function __wbg_call_0000000000000002() { return handleError(function (arg0, arg1) {
     const ret = arg0.call(arg1);
     return ret;
 }, arguments) };
 
-export function __wbg_call_0000000000000001() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_0000000000000003() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments) };
 
-export function __wbg_new_0000000000000002(arg0, arg1) {
+export function __wbg_new_0000000000000004(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {
             const a = state0.a;
             state0.a = 0;
             try {
-                return __wbg_adapter_22(a, state0.b, arg0, arg1);
+                return __wbg_adapter_23(a, state0.b, arg0, arg1);
             } finally {
                 state0.a = a;
             }
@@ -259,51 +255,51 @@ export function __wbg_new_0000000000000002(arg0, arg1) {
     }
 };
 
-export function __wbg_newnoargs_0000000000000003(arg0, arg1) {
+export function __wbg_newnoargs_0000000000000005(arg0, arg1) {
     const ret = new Function(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 
-export function __wbg_queueMicrotask_0000000000000004(arg0) {
+export function __wbg_queueMicrotask_0000000000000006(arg0) {
     queueMicrotask(arg0);
 };
 
-export function __wbg_queueMicrotask_0000000000000005(arg0) {
+export function __wbg_queueMicrotask_0000000000000007(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 };
 
-export function __wbg_resolve_0000000000000006(arg0) {
+export function __wbg_resolve_0000000000000008(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 };
 
-export function __wbg_static_accessor_GLOBAL_0000000000000007() {
+export function __wbg_static_accessor_GLOBAL_0000000000000009() {
     const ret = typeof global === 'undefined' ? null : global;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_GLOBAL_THIS_0000000000000008() {
+export function __wbg_static_accessor_GLOBAL_THIS_000000000000000a() {
     const ret = typeof globalThis === 'undefined' ? null : globalThis;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_SELF_0000000000000009() {
+export function __wbg_static_accessor_SELF_000000000000000b() {
     const ret = typeof self === 'undefined' ? null : self;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_WINDOW_000000000000000a() {
+export function __wbg_static_accessor_WINDOW_000000000000000c() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_then_000000000000000b(arg0, arg1) {
+export function __wbg_then_000000000000000d(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 };
 
-export function __wbg_wbindgencbdrop_000000000000000c(arg0) {
+export function __wbg_wbindgencbdrop_000000000000000e(arg0) {
     const obj = arg0.original;
     if (obj.cnt-- == 1) {
         obj.a = 0;
@@ -313,7 +309,7 @@ export function __wbg_wbindgencbdrop_000000000000000c(arg0) {
     return ret;
 };
 
-export function __wbg_wbindgendebugstring_000000000000000d(arg0, arg1) {
+export function __wbg_wbindgendebugstring_000000000000000f(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
@@ -321,27 +317,27 @@ export function __wbg_wbindgendebugstring_000000000000000d(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-export function __wbg_wbindgenisfunction_000000000000000e(arg0) {
+export function __wbg_wbindgenisfunction_0000000000000010(arg0) {
     const ret = typeof(arg0) === 'function';
     return ret;
 };
 
-export function __wbg_wbindgenisundefined_000000000000000f(arg0) {
+export function __wbg_wbindgenisundefined_0000000000000011(arg0) {
     const ret = arg0 === undefined;
     return ret;
 };
 
-export function __wbg_wbindgenthrow_0000000000000010(arg0, arg1) {
+export function __wbg_wbindgenthrow_0000000000000012(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbindgen_cast_0000000000000011(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 23, function: Function { arguments: [Externref], shim_idx: 24, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, 25, __wbg_adapter_21);
+export function __wbindgen_cast_0000000000000013(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 24, function: Function { arguments: [Externref], shim_idx: 25, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000014, __wbg_adapter_22);
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000012(arg0) {
+export function __wbindgen_cast_0000000000000015(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return ret;

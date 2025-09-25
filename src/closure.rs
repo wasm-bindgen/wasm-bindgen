@@ -396,6 +396,18 @@ struct OwnedClosure<T: ?Sized> {
     inner: ManuallyDrop<Box<T>>,
 }
 
+unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
+    // This can be called by the JS glue in erroneous situations
+    // such as when the closure has already been destroyed. If
+    // that's the case let's not make things worse by
+    // segfaulting and/or asserting, so just ignore null
+    // pointers.
+    if a == 0 {
+        return;
+    }
+    drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
+}
+
 impl<T> WasmDescribe for &OwnedClosure<T>
 where
     T: WasmClosure + ?Sized,
@@ -403,20 +415,7 @@ where
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(CLOSURE);
-
-        unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
-            // This can be called by the JS glue in erroneous situations
-            // such as when the closure has already been destroyed. If
-            // that's the case let's not make things worse by
-            // segfaulting and/or asserting, so just ignore null
-            // pointers.
-            if a == 0 {
-                return;
-            }
-            drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
-        }
         inform(destroy::<T> as usize as u32);
-
         inform(T::IS_MUT as u32);
         T::describe();
     }

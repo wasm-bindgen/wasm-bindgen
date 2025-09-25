@@ -108,8 +108,6 @@ pub enum Instruction {
     CallAdapter(AdapterId),
     /// Call an exported function in the core module
     CallExport(walrus::ExportId),
-    /// Call an element in the function table of the core module
-    CallTableElement(u32),
 
     /// Gets an argument by its index.
     ArgGet(u32),
@@ -333,7 +331,7 @@ pub enum Instruction {
         adapter: AdapterId,
         nargs: usize,
         mutable: bool,
-        dtor_idx_if_persistent: Option<u32>,
+        dtor_if_persistent: Option<walrus::ExportId>,
     },
     /// pops two i32 data pointers, pushes a vector view
     View {

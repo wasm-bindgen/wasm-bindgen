@@ -18,7 +18,7 @@ use std::fmt::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
-use wasm_bindgen_shared::identifier::is_valid_ident;
+use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
 
 mod binding;
 
@@ -2367,8 +2367,6 @@ wasm = wasmInstance.exports;
             return Ok(());
         }
 
-        let table = self.export_function_table()?;
-
         self.expose_closure_finalization()?;
 
         // For mutable closures they can't be invoked recursively.
@@ -2405,7 +2403,7 @@ wasm = wasmInstance.exports;
                         return f(a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(a, state.b);
+                            state.dtor(a, state.b);
                             CLOSURE_DTORS.unregister(state);
                         }} else {{
                             state.a = a;
@@ -2426,8 +2424,6 @@ wasm = wasmInstance.exports;
         if !self.should_write_global("make_closure") {
             return Ok(());
         }
-
-        let table = self.export_function_table()?;
 
         self.expose_closure_finalization()?;
 
@@ -2463,7 +2459,7 @@ wasm = wasmInstance.exports;
                         return f(state.a, state.b, ...args);
                     }} finally {{
                         if (--state.cnt === 0) {{
-                            wasm.{table}.get(state.dtor)(state.a, state.b); state.a = 0;
+                            state.dtor(state.a, state.b); state.a = 0;
                             CLOSURE_DTORS.unregister(state);
                         }}
                     }}
@@ -2482,26 +2478,18 @@ wasm = wasmInstance.exports;
         if !self.should_write_global("closure_finalization") {
             return Ok(());
         }
-        let table = self.export_function_table()?;
 
         let finalization_callback = if self.config.generate_reset_state {
-            format!(
-                "
-                state => {{
-                    if (state.instance === __wbg_instance_id) {{
-                        wasm.{table}.get(state.dtor)(state.a, state.b);
-                    }}
+            "
+            state => {{
+                if (state.instance === __wbg_instance_id) {{
+                    state.dtor(state.a, state.b);
                 }}
-                "
-            )
+            }}
+            "
+            .to_owned()
         } else {
-            format!(
-                "
-                state => {{
-                    wasm.{table}.get(state.dtor)(state.a, state.b);
-                }}
-                "
-            )
+            "state => state.dtor(state.a, state.b)".to_owned()
         };
 
         self.global(&format!(
@@ -3138,7 +3126,7 @@ wasm = wasmInstance.exports;
                         call = Some(id);
                     }
                 }
-                Instruction::CallExport(_) | Instruction::CallTableElement(_) => return Ok(false),
+                Instruction::CallExport(_) => return Ok(false),
                 _ => {}
             }
         }
@@ -4237,7 +4225,7 @@ wasm = wasmInstance.exports;
             }
             walrus::ExportItem::Function(f) => match &self.module.funcs.get(f).name {
                 Some(s) => {
-                    let mut name = to_js_identifier(s);
+                    let mut name = to_valid_ident(s);
 
                     // Account for duplicate export names.
                     // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4371.
@@ -4252,20 +4240,7 @@ wasm = wasmInstance.exports;
             _ => default_name,
         };
         self.module.exports.add(&name, id);
-        return name;
-
-        // Not really an exhaustive list, but works for our purposes.
-        fn to_js_identifier(name: &str) -> String {
-            name.chars()
-                .map(|c| {
-                    if c.is_ascii() && (c.is_alphabetic() || c.is_numeric()) {
-                        c
-                    } else {
-                        '_'
-                    }
-                })
-                .collect()
-        }
+        name
     }
 
     fn adapter_name(&self, id: AdapterId) -> String {
