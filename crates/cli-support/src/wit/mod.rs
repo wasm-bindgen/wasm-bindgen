@@ -1327,20 +1327,6 @@ impl<'a> Context<'a> {
         export: ExportId,
         signature: Function,
     ) -> Result<AdapterId, Error> {
-        let export = self.module.exports.get(export);
-        let name = export.name.clone();
-        // Do the actual heavy lifting elsewhere to generate the `binding`.
-        let call = Instruction::CallExport(export.id());
-        let id = self.register_export_adapter(call, signature)?;
-        self.adapters.exports.insert(id, name);
-        Ok(id)
-    }
-
-    fn register_export_adapter(
-        &mut self,
-        call: Instruction,
-        signature: Function,
-    ) -> Result<AdapterId, Error> {
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
         for arg in signature.arguments.iter() {
@@ -1395,7 +1381,7 @@ impl<'a> Context<'a> {
         }
         instructions.extend(args.instructions);
         instructions.push(InstructionData {
-            instr: call,
+            instr: Instruction::CallExport(export),
             stack_change: StackChange::Unknown,
         });
         if uses_retptr {
@@ -1414,12 +1400,18 @@ impl<'a> Context<'a> {
         }
         instructions.extend(ret.instructions);
 
-        Ok(ret.cx.adapters.append(
+        let id = ret.cx.adapters.append(
             args.input,
             ret.output,
             inner_ret_output,
             AdapterKind::Local { instructions },
-        ))
+        );
+
+        self.adapters
+            .exports
+            .insert(id, self.module.exports.get(export).name.clone());
+
+        Ok(id)
     }
 
     fn instruction_builder<'b>(&'b mut self, return_position: bool) -> InstructionBuilder<'b, 'a> {
