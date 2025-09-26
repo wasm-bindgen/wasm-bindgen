@@ -1398,14 +1398,7 @@ fn instruction(
         } => {
             let b = js.pop();
             let a = js.pop();
-            let wrapper = &js
-                .cx
-                .wit
-                .exports
-                .iter()
-                .find(|(_, id)| id == adapter)
-                .expect("closure adapter missing in exports")
-                .0;
+            let wrapper = js.cx.export_adapter_name(*adapter);
 
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership

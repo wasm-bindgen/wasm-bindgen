@@ -271,7 +271,11 @@ impl<'a> Context<'a> {
                 // actually a `main` function. Unfortunately, there doesn't seem to be any 100%
                 // reliable way to make sure that it is, but we can at least rule out any
                 // `#[wasm_bindgen]` exported functions.
-                let unknown = !self.adapters.exports.iter().any(|(name, _)| name == "main");
+                let unknown = !self
+                    .adapters
+                    .exports
+                    .iter()
+                    .any(|(export_id, _)| *export_id == export.id());
                 name_matches && type_matches && unknown
             })
             .map(|(_, func)| func.id());
@@ -1333,7 +1337,7 @@ impl<'a> Context<'a> {
             .adapters
             .exports
             .iter()
-            .find(|(name, _)| *name == self.module.exports.get(export).name)
+            .find(|(export_id, _)| *export_id == export)
         {
             return Ok(*id);
         }
@@ -1418,9 +1422,7 @@ impl<'a> Context<'a> {
             AdapterKind::Local { instructions },
         );
 
-        self.adapters
-            .exports
-            .push((self.module.exports.get(export).name.clone(), id));
+        self.adapters.exports.push((export, id));
 
         Ok(id)
     }

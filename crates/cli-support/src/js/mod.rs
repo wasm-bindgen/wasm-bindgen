@@ -3060,15 +3060,7 @@ wasm = wasmInstance.exports;
                 assert!(!log_error);
 
                 self.globals.push_str("function ");
-                self.globals.push_str(
-                    &self
-                        .wit
-                        .exports
-                        .iter()
-                        .find(|(_, id2)| id == *id2)
-                        .context("adapter name not found in exports")?
-                        .0,
-                );
+                self.globals.push_str(&self.export_adapter_name(id));
                 self.globals.push_str(&code);
                 self.globals.push_str("\n\n");
             }
@@ -4228,6 +4220,17 @@ wasm = wasmInstance.exports;
         };
         self.module.exports.add(&name, id);
         name
+    }
+
+    fn export_adapter_name(&self, adapter_id: AdapterId) -> String {
+        let (export_id, _) = *self
+            .wit
+            .exports
+            .iter()
+            .find(|(_, id)| *id == adapter_id)
+            .expect("could not find an export adapter");
+
+        self.module.exports.get(export_id).name.clone()
     }
 
     fn generate_identifier(&mut self, name: &str) -> String {
