@@ -19,11 +19,9 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
-use wasm_bindgen_cli_support::testing::walrus;
-use wasm_bindgen_cli_support::testing::Test;
-use wasm_bindgen_cli_support::testing::TestMode;
-use wasm_bindgen_cli_support::testing::Tests;
-use wasm_bindgen_cli_support::testing::{deno, headless, node, server, shell};
+use wasm_bindgen_cli_support::testing::{
+    deno, headless, node, server, shell, walrus, Test, TestMode, Tests,
+};
 use wasm_bindgen_cli_support::Bindgen;
 
 #[derive(Parser)]

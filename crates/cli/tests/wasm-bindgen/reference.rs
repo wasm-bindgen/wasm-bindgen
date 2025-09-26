@@ -59,8 +59,8 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use wasm_bindgen_cli_support::testing::walrus::{self,
-ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
+use wasm_bindgen_cli_support::testing::walrus::{
+    self, ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
 };
 
 macro_rules! regex {
