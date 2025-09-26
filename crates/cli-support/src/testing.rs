@@ -71,15 +71,4 @@ impl TestMode {
             | Self::ServiceWorker { no_modules } => no_modules,
         }
     }
-
-    pub fn env(self) -> &'static str {
-        match self {
-            TestMode::Node { .. } => "WASM_BINDGEN_USE_NODE_EXPERIMENTAL",
-            TestMode::Deno => "WASM_BINDGEN_USE_DENO",
-            TestMode::Browser { .. } => "WASM_BINDGEN_USE_BROWSER",
-            TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
-            TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
-            TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
-        }
-    }
 }

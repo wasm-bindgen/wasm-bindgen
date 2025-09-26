@@ -182,8 +182,11 @@ fn main() -> anyhow::Result<()> {
         Some(_) => bail!("invalid __wasm_bingen_test_unstable value"),
         None => {
             let mut modes = Vec::new();
-            let mut add_mode =
-                |mode: TestMode| std::env::var(mode.env()).is_ok().then(|| modes.push(mode));
+            let mut add_mode = |mode: TestMode| {
+                std::env::var(test_mode_env(&mode))
+                    .is_ok()
+                    .then(|| modes.push(mode))
+            };
             add_mode(TestMode::Deno);
             add_mode(TestMode::Browser { no_modules });
             add_mode(TestMode::DedicatedWorker { no_modules });
@@ -198,8 +201,8 @@ fn main() -> anyhow::Result<()> {
                     bail!(
                         "only one test mode must be set, found: `{}`",
                         modes
-                            .into_iter()
-                            .map(TestMode::env)
+                            .iter()
+                            .map(test_mode_env)
                             .collect::<Vec<_>>()
                             .join("`, `")
                     )
@@ -408,4 +411,15 @@ fn coverage_args(file_name: &Path) -> PathBuf {
 enum FormatSetting {
     /// Display one character per test
     Terse,
+}
+
+fn test_mode_env(mode: &TestMode) -> &'static str {
+    match mode {
+        TestMode::Node { .. } => "WASM_BINDGEN_USE_NODE_EXPERIMENTAL",
+        TestMode::Deno => "WASM_BINDGEN_USE_DENO",
+        TestMode::Browser { .. } => "WASM_BINDGEN_USE_BROWSER",
+        TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
+        TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
+        TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
+    }
 }
