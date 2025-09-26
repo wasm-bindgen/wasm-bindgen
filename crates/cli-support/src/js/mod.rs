@@ -4179,38 +4179,27 @@ wasm = wasmInstance.exports;
     }
 
     fn export_name_of(&mut self, id: impl Into<walrus::ExportItem>) -> String {
-        let id = id.into();
-        let export = self.module.exports.iter().find(|e| {
-            use walrus::ExportItem::*;
+        use walrus::ExportItem::*;
 
-            match (e.item, id) {
-                (Function(a), Function(b)) => a == b,
-                (Table(a), Table(b)) => a == b,
-                (Memory(a), Memory(b)) => a == b,
-                (Global(a), Global(b)) => a == b,
-                _ => false,
-            }
+        let id = id.into();
+        let export = self.module.exports.iter().find(|e| match (e.item, id) {
+            (Function(a), Function(b)) => a == b,
+            (Table(a), Table(b)) => a == b,
+            (Memory(a), Memory(b)) => a == b,
+            (Global(a), Global(b)) => a == b,
+            _ => false,
         });
         if let Some(export) = export {
             return export.name.clone();
         }
         let name = match id {
-            walrus::ExportItem::Memory(_) if self.module.memories.iter().count() == 1 => {
-                Some("memory".to_owned())
-            }
-            #[expect(clippy::manual_map)]
-            // false positive, we can't use option.map with closue that needs `&mut self`
-            walrus::ExportItem::Function(f) => match &self.module.funcs.get(f).name {
-                Some(s) => {
-                    // Account for duplicate export names.
-                    // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4371.
-                    Some(self.generate_identifier(&to_valid_ident(s)))
-                }
-                None => None,
-            },
-            _ => None,
+            Function(f) => self.module.funcs.get(f).name.as_deref(),
+            Table(table) => self.module.tables.get(table).name.as_deref(),
+            Memory(_) => Some("memory"),
+            Global(g) => self.module.globals.get(g).name.as_deref(),
         }
-        .unwrap_or_else(|| self.generate_identifier("__wbindgen_export"));
+        .unwrap_or("__wbindgen_export");
+        let name = self.generate_identifier(&to_valid_ident(name));
         self.module.exports.add(&name, id);
         name
     }

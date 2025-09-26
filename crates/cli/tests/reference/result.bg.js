@@ -35,7 +35,7 @@ function getStringFromWasm0(ptr, len) {
 }
 
 function takeFromExternrefTable0(idx) {
-    const value = wasm.__wbindgen_export.get(idx);
+    const value = wasm.externref_table.get(idx);
     wasm.__externref_table_dealloc(idx);
     return value;
 }
@@ -95,7 +95,7 @@ export function __wbindgen_cast_0000000000000000(arg0) {
 };
 
 export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_export;
+    const table = wasm.externref_table;
     const offset = table.grow(4);
     table.set(0, undefined);
     table.set(offset + 0, undefined);

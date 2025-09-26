@@ -85,7 +85,7 @@ function __wbg_get_imports(memory) {
         return ret;
     };
     imports.wbg.__wbindgen_init_externref_table = function() {
-        const table = wasm.__wbindgen_export;
+        const table = wasm.externref_table;
         const offset = table.grow(4);
         table.set(0, undefined);
         table.set(offset + 0, undefined);

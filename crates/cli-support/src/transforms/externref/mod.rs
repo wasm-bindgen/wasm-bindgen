@@ -92,15 +92,19 @@ impl Context {
         wasm_conventions::insert_target_feature(module, "reference-types")
             .context("failed to parse `target_features` custom section")?;
 
+        let table = module
+            .tables
+            .add_local(false, DEFAULT_MIN, None, RefType::Externref);
+
+        module.tables.get_mut(table).name = Some("externref table".to_string());
+
         Ok(Self {
             imports: Default::default(),
             exports: Default::default(),
             bulk_memory: wasm_conventions::target_feature(module, "bulk-memory").unwrap_or(false),
             // Add in an externref table to the module, which we'll be using for
             // our transform below.
-            table: module
-                .tables
-                .add_local(false, DEFAULT_MIN, None, RefType::Externref),
+            table,
         })
     }
 

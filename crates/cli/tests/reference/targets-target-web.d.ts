@@ -7,7 +7,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly add_that_might_fail: (a: number, b: number) => number;
-  readonly __wbindgen_export: WebAssembly.Table;
+  readonly externref_table: WebAssembly.Table;
   readonly __wbindgen_start: () => void;
 }
 
