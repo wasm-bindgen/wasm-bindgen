@@ -21,7 +21,7 @@
 use anyhow::{bail, ensure};
 use std::collections::{BTreeMap, HashSet};
 use walrus::ir::Instr;
-use walrus::{ExportId, FunctionId, LocalId, Module, TableId};
+use walrus::{ExportId, FunctionId, LocalId, Module};
 
 /// A ready-to-go interpreter of a Wasm module.
 ///
@@ -35,9 +35,6 @@ pub struct Interpreter {
     // to know when the environment's imported function is called.
     describe_id: Option<FunctionId>,
     describe_cast_id: Option<FunctionId>,
-
-    // Id of the function table
-    functions: Option<TableId>,
 
     // The current stack pointer (global 0) and Wasm memory (the stack). Only
     // used in a limited capacity.
@@ -135,8 +132,6 @@ impl Interpreter {
             ret.skip_interpret = Some(export.id());
             ret.skip_calls = skip_calls(module, id);
         }
-
-        ret.functions = module.tables.main_function_table()?;
 
         Ok(ret)
     }
