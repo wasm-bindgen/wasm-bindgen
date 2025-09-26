@@ -3060,7 +3060,7 @@ wasm = wasmInstance.exports;
                 assert!(!log_error);
 
                 self.globals.push_str("function ");
-                self.globals.push_str(&self.adapter_name(id));
+                self.globals.push_str(&self.wit.exports[&id]);
                 self.globals.push_str(&code);
                 self.globals.push_str("\n\n");
             }
@@ -4220,10 +4220,6 @@ wasm = wasmInstance.exports;
         };
         self.module.exports.add(&name, id);
         name
-    }
-
-    fn adapter_name(&self, id: AdapterId) -> String {
-        format!("__wbg_adapter_{}", id.0)
     }
 
     fn generate_identifier(&mut self, name: &str) -> String {

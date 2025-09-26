@@ -1398,7 +1398,7 @@ fn instruction(
         } => {
             let b = js.pop();
             let a = js.pop();
-            let wrapper = js.cx.adapter_name(*adapter);
+            let wrapper = &js.cx.wit.exports[adapter];
 
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership

@@ -102,11 +102,11 @@ export function delayed_callback() {
     }
 }
 
-function __wbg_adapter_5(arg0, arg1) {
+function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1);
 }
 
-function __wbg_adapter_6(arg0, arg1, arg2, arg3, arg4) {
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4);
 }
 
@@ -141,7 +141,7 @@ export function __wbg_forEach_d77328dbdd4919da(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return __wbg_adapter_6(a, state0.b, arg0, arg1, arg2);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, arg0, arg1, arg2);
             } finally {
                 state0.a = a;
             }
@@ -204,8 +204,8 @@ export function __wbindgen_cast_0000000000000000(arg0, arg1) {
 };
 
 export function __wbindgen_cast_0000000000000001(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 7, function: Function { arguments: [], shim_idx: 8, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, __wbg_adapter_5);
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
     return ret;
 };
 

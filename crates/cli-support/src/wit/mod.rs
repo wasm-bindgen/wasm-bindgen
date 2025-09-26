@@ -271,7 +271,7 @@ impl<'a> Context<'a> {
                 // actually a `main` function. Unfortunately, there doesn't seem to be any 100%
                 // reliable way to make sure that it is, but we can at least rule out any
                 // `#[wasm_bindgen]` exported functions.
-                let unknown = !self.adapters.exports.iter().any(|(name, _)| name == "main");
+                let unknown = !self.adapters.exports.values().any(|name| name == "main");
                 name_matches && type_matches && unknown
             })
             .map(|(_, func)| func.id());
@@ -1332,7 +1332,7 @@ impl<'a> Context<'a> {
         // Do the actual heavy lifting elsewhere to generate the `binding`.
         let call = Instruction::CallExport(export.id());
         let id = self.register_export_adapter(call, signature)?;
-        self.adapters.exports.push((name, id));
+        self.adapters.exports.insert(id, name);
         Ok(id)
     }
 

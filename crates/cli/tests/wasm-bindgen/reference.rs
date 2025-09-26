@@ -105,11 +105,6 @@ impl Sanitizer {
         // `h...` are mangled generic function names with unstable type IDs.
         let s = self.sanitize_one(&s, regex!(r"h[0-9a-f]{16}"), |idx| format!("h{idx:016x}"));
 
-        // `__wbg_adapter_N` functions are generated with unstable indices.
-        let s = self.sanitize_one(&s, regex!(r"__wbg_adapter_\d+"), |idx| {
-            format!("__wbg_adapter_{idx}")
-        });
-
         // Cast descriptors contain `Closure`'s `Debug` impl which has unstable function indices.
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
 
