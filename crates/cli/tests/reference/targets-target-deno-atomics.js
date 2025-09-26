@@ -36,7 +36,7 @@ const imports = {
         __wbg___wbindgen_throw_451ec1a8469d7eb6: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_random_ae0b2256206ad108: function() {
+        __wbg_random_e2b253f0e987bd7c: function() {
             const ret = Math.random();
             return ret;
         },

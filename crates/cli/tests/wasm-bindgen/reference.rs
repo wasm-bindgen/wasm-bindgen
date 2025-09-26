@@ -160,14 +160,10 @@ fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
         all_flags.push("");
     }
 
-    let mut project = Project::new(
-        test.file_stem()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .replace('-', "_")
-            + "_reftest",
-    );
+    let stem = test.file_stem().unwrap().to_str().unwrap();
+
+    let mut project =
+        Project::new(stem.replace('-', "_") + "_reftest" + if atomics { "_atomics" } else { "" });
 
     // parse additional dependency declarations
     project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
@@ -202,7 +198,7 @@ fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {
-            let mut base_file_name = test.file_stem().unwrap().to_str().unwrap().to_owned();
+            let mut base_file_name = stem.to_owned();
 
             for chunk in flags.split(|c: char| !c.is_ascii_alphanumeric()) {
                 if !chunk.is_empty() {
