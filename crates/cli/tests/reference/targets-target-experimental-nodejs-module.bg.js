@@ -15,7 +15,7 @@ export function add_that_might_fail(a, b) {
     return ret >>> 0;
 }
 
-export function __wbg_random_0000000000000000() {
+export function __wbg_random_ae0b2256206ad108() {
     const ret = Math.random();
     return ret;
 };

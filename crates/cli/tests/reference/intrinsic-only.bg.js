@@ -50,7 +50,7 @@ export function causes_error() {
     return ret[0];
 }
 
-export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
+export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

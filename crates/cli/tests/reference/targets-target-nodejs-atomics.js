@@ -33,11 +33,11 @@ exports.add_that_might_fail = function(a, b) {
     return ret >>> 0;
 };
 
-exports.__wbg___wbindgen_throw_0000000000000000 = function(arg0, arg1) {
+exports.__wbg___wbindgen_throw_451ec1a8469d7eb6 = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-exports.__wbg_random_0000000000000001 = function() {
+exports.__wbg_random_e2b253f0e987bd7c = function() {
     const ret = Math.random();
     return ret;
 };

@@ -46,10 +46,10 @@ export function __wbg_reset_state () {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg___wbindgen_throw_0000000000000000: function(arg0, arg1) {
+        __wbg___wbindgen_throw_451ec1a8469d7eb6: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_random_0000000000000001: function() {
+        __wbg_random_e2b253f0e987bd7c: function() {
             const ret = Math.random();
             return ret;
         },

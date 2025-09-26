@@ -102,15 +102,15 @@ export function delayed_callback() {
     }
 }
 
-function __wbg_adapter_18(arg0, arg1) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1);
 }
 
-function __wbg_adapter_19(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4);
 }
 
-export function __wbg___wbindgen_cb_drop_0000000000000002(arg0) {
+export function __wbg___wbindgen_cb_drop_eb10308566512b88(arg0) {
     const obj = arg0.original;
     if (obj.cnt-- == 1) {
         obj.a = 0;
@@ -120,28 +120,28 @@ export function __wbg___wbindgen_cb_drop_0000000000000002(arg0) {
     return ret;
 };
 
-export function __wbg___wbindgen_is_undefined_0000000000000003(arg0) {
+export function __wbg___wbindgen_is_undefined_c4b71d073b92f3c5(arg0) {
     const ret = arg0 === undefined;
     return ret;
 };
 
-export function __wbg___wbindgen_throw_0000000000000004(arg0, arg1) {
+export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbg_call_0000000000000005() { return handleError(function (arg0, arg1) {
+export function __wbg_call_13410aac570ffff7() { return handleError(function (arg0, arg1) {
     const ret = arg0.call(arg1);
     return ret;
 }, arguments) };
 
-export function __wbg_forEach_0000000000000006(arg0, arg1, arg2) {
+export function __wbg_forEach_d77328dbdd4919da(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = (arg0, arg1, arg2) => {
             const a = state0.a;
             state0.a = 0;
             try {
-                return __wbg_adapter_19(a, state0.b, arg0, arg1, arg2);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, arg0, arg1, arg2);
             } finally {
                 state0.a = a;
             }
@@ -152,7 +152,7 @@ export function __wbg_forEach_0000000000000006(arg0, arg1, arg2) {
     }
 };
 
-export function __wbg_instanceof_Window_0000000000000007(arg0) {
+export function __wbg_instanceof_Window_12d20d558ef92592(arg0) {
     let result;
     try {
         result = arg0 instanceof Window;
@@ -163,49 +163,49 @@ export function __wbg_instanceof_Window_0000000000000007(arg0) {
     return ret;
 };
 
-export function __wbg_log_0000000000000008(arg0) {
+export function __wbg_log_6c7b5f4f00b8ce3f(arg0) {
     console.log(arg0);
 };
 
-export function __wbg_new_no_args_0000000000000009(arg0, arg1) {
+export function __wbg_new_no_args_254190557c45b4ec(arg0, arg1) {
     const ret = new Function(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 
-export function __wbg_setTimeout_000000000000000a() { return handleError(function (arg0, arg1) {
+export function __wbg_setTimeout_b3de16ce9694711c() { return handleError(function (arg0, arg1) {
     const ret = arg0.setTimeout(arg1);
     return ret;
 }, arguments) };
 
-export function __wbg_static_accessor_GLOBAL_000000000000000b() {
+export function __wbg_static_accessor_GLOBAL_8921f820c2ce3f12() {
     const ret = typeof global === 'undefined' ? null : global;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_GLOBAL_THIS_000000000000000c() {
+export function __wbg_static_accessor_GLOBAL_THIS_f0a4409105898184() {
     const ret = typeof globalThis === 'undefined' ? null : globalThis;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_SELF_000000000000000d() {
+export function __wbg_static_accessor_SELF_995b214ae681ff99() {
     const ret = typeof self === 'undefined' ? null : self;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_WINDOW_000000000000000e() {
+export function __wbg_static_accessor_WINDOW_cde3890479c675ea() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbindgen_cast_000000000000000f(arg0, arg1) {
+export function __wbindgen_cast_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000010(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 20, function: Function { arguments: [], shim_idx: 21, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000011, __wbg_adapter_18);
+export function __wbindgen_cast_0000000000000001(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
     return ret;
 };
 

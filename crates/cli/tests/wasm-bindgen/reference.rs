@@ -97,19 +97,16 @@ impl Sanitizer {
     }
 
     fn sanitize(&mut self, s: &str) -> String {
-        let s = self.sanitize_one(s, regex!(r"[0-9a-f]{16}"), |idx| format!("{idx:016x}"));
-
-        let s = self.sanitize_one(&s, regex!(r"closure\d+"), |idx| format!("closure{idx}"));
-
-        let s = self.sanitize_one(&s, regex!(r"__wbg_adapter_\d+"), |idx| {
-            format!("__wbg_adapter_{idx}")
+        // Cast descriptors for closures contain unstable function indices, so we need to sanitize the hash.
+        let s = self.sanitize_one(&s, regex!(r"__wbindgen_cast_[0-9a-f]{16}"), |idx| {
+            format!("__wbindgen_cast_{idx:016x}")
         });
 
+        // `h...` are mangled generic function names with unstable type IDs.
+        let s = self.sanitize_one(&s, regex!(r"h[0-9a-f]{16}"), |idx| format!("h{idx:016x}"));
+
+        // Cast descriptors contain `Closure`'s `Debug` impl which has unstable function indices.
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
-
-        let s = self.sanitize_one(&s, regex!(r"makeMutClosure\(arg0, arg1, \d+,"), |idx| {
-            format!("makeMutClosure(arg0, arg1, {idx},")
-        });
 
         s.into_owned()
     }
@@ -158,14 +155,10 @@ fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
         all_flags.push("");
     }
 
-    let mut project = Project::new(
-        test.file_stem()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .replace('-', "_")
-            + "_reftest",
-    );
+    let stem = test.file_stem().unwrap().to_str().unwrap();
+
+    let mut project =
+        Project::new(stem.replace('-', "_") + "_reftest" + if atomics { "_atomics" } else { "" });
 
     // parse additional dependency declarations
     project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
@@ -200,7 +193,7 @@ fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {
-            let mut base_file_name = test.file_stem().unwrap().to_str().unwrap().to_owned();
+            let mut base_file_name = stem.to_owned();
 
             for chunk in flags.split(|c: char| !c.is_ascii_alphanumeric()) {
                 if !chunk.is_empty() {

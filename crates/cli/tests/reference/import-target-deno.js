@@ -1,7 +1,7 @@
 import { default as default1 } from 'tests/wasm/import_class.js';
 import * as import0 from 'tests/wasm/imports.js'
 import * as import1 from 'foo-raw'
-import * as import2 from './snippets/import_reftest-0000000000000000/inline0.js'
+import * as import2 from './snippets/import_reftest-a82831e16a4c30f1/inline0.js'
 import * as import3 from 'pure-extern'
 
 let cachedUint8ArrayMemory0 = null;
@@ -56,34 +56,34 @@ export function exported() {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg___wbindgen_throw_0000000000000001: function(arg0, arg1) {
+        __wbg___wbindgen_throw_451ec1a8469d7eb6: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_catch_me_0000000000000002: function() { return handleError(function () {
+        __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
             catch_me();
         }, arguments) },
-        __wbg_get_0000000000000003: function(arg0) {
+        __wbg_get_c871386e44ba8c35: function(arg0) {
             const ret = arg0.get();
             return ret;
         },
-        __wbg_my_function_0000000000000004: function() {
+        __wbg_my_function_597f96bc4719408a: function() {
             b.my_function();
         },
-        __wbg_new_0000000000000005: function(arg0) {
+        __wbg_new_c30895ccee9479d4: function(arg0) {
             const ret = new default1(arg0);
             return ret;
         },
-        __wbg_no_catch_0000000000000006: function() {
+        __wbg_no_catch_757175fbf9e08b9e: function() {
             no_catch();
         },
-        __wbg_reload_0000000000000007: function() {
+        __wbg_reload_b091d4dc4b1b3a74: function() {
             window.location.reload();
         },
-        __wbg_static_accessor_CONST_0000000000000008: function() {
+        __wbg_static_accessor_CONST_85b96acb48be57e1: function() {
             const ret = a.CONST;
             return ret;
         },
-        __wbg_write_0000000000000009: function(arg0, arg1) {
+        __wbg_write_691fc0d693f0c7b5: function(arg0, arg1) {
             window.document.write(getStringFromWasm0(arg0, arg1));
         },
         __wbindgen_init_externref_table: function() {
@@ -97,7 +97,7 @@ const imports = {
             ;
         },
     },
-    'tests/wasm/imports.js': import0,  'foo-raw': import1,  './snippets/import_reftest-0000000000000000/inline0.js': import2,  'pure-extern': import3,
+    'tests/wasm/imports.js': import0,  'foo-raw': import1,  './snippets/import_reftest-a82831e16a4c30f1/inline0.js': import2,  'pure-extern': import3,
 };
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);

@@ -271,7 +271,11 @@ impl<'a> Context<'a> {
                 // actually a `main` function. Unfortunately, there doesn't seem to be any 100%
                 // reliable way to make sure that it is, but we can at least rule out any
                 // `#[wasm_bindgen]` exported functions.
-                let unknown = !self.adapters.exports.iter().any(|(name, _)| name == "main");
+                let unknown = !self
+                    .adapters
+                    .exports
+                    .iter()
+                    .any(|(export_id, _)| *export_id == export.id());
                 name_matches && type_matches && unknown
             })
             .map(|(_, func)| func.id());
@@ -1327,20 +1331,17 @@ impl<'a> Context<'a> {
         export: ExportId,
         signature: Function,
     ) -> Result<AdapterId, Error> {
-        let export = self.module.exports.get(export);
-        let name = export.name.clone();
-        // Do the actual heavy lifting elsewhere to generate the `binding`.
-        let call = Instruction::CallExport(export.id());
-        let id = self.register_export_adapter(call, signature)?;
-        self.adapters.exports.push((name, id));
-        Ok(id)
-    }
+        // Same export might be requested multiple times due to codegen-units.
+        // Check if we already have an adapter for it.
+        if let Some((_, id)) = self
+            .adapters
+            .exports
+            .iter()
+            .find(|(export_id, _)| *export_id == export)
+        {
+            return Ok(*id);
+        }
 
-    fn register_export_adapter(
-        &mut self,
-        call: Instruction,
-        signature: Function,
-    ) -> Result<AdapterId, Error> {
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
         for arg in signature.arguments.iter() {
@@ -1395,7 +1396,7 @@ impl<'a> Context<'a> {
         }
         instructions.extend(args.instructions);
         instructions.push(InstructionData {
-            instr: call,
+            instr: Instruction::CallExport(export),
             stack_change: StackChange::Unknown,
         });
         if uses_retptr {
@@ -1414,12 +1415,16 @@ impl<'a> Context<'a> {
         }
         instructions.extend(ret.instructions);
 
-        Ok(ret.cx.adapters.append(
+        let id = ret.cx.adapters.append(
             args.input,
             ret.output,
             inner_ret_output,
             AdapterKind::Local { instructions },
-        ))
+        );
+
+        self.adapters.exports.push((export, id));
+
+        Ok(id)
     }
 
     fn instruction_builder<'b>(&'b mut self, return_position: bool) -> InstructionBuilder<'b, 'a> {

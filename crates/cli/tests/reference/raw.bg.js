@@ -84,7 +84,7 @@ export class Test {
 }
 if (Symbol.dispose) Test.prototype[Symbol.dispose] = Test.prototype.free;
 
-export function __wbg___wbindgen_throw_0000000000000000(arg0, arg1) {
+export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

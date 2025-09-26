@@ -1,12 +1,12 @@
-(module $targets_reftest.wasm
+(module $targets_reftest_atomics.wasm
   (type (;0;) (func))
   (type (;1;) (func (result f64)))
   (type (;2;) (func (param i32)))
   (type (;3;) (func (param i32 i32)))
   (type (;4;) (func (param i32 i32) (result i32)))
   (type (;5;) (func (param i32 i32 i32)))
-  (import "wbg" "__wbg___wbindgen_throw_0000000000000000" (func (;0;) (type 3)))
-  (import "wbg" "__wbg_random_0000000000000001" (func (;1;) (type 1)))
+  (import "wbg" "__wbg___wbindgen_throw_451ec1a8469d7eb6" (func (;0;) (type 3)))
+  (import "wbg" "__wbg_random_e2b253f0e987bd7c" (func (;1;) (type 1)))
   (import "wbg" "__wbindgen_init_externref_table" (func (;2;) (type 0)))
   (import "wbg" "memory" (memory (;0;) 18 16384 shared))
   (func $add_that_might_fail (;3;) (type 4) (param i32 i32) (result i32))

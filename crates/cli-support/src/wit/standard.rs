@@ -1,7 +1,7 @@
 use crate::descriptor::VectorKind;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
-use walrus::{FunctionId, ImportId, RefType, TypedCustomSectionId};
+use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
 
 #[derive(Default, Debug)]
 pub struct NonstandardWitSection {
@@ -16,7 +16,7 @@ pub struct NonstandardWitSection {
     pub implements: Vec<(ImportId, FunctionId, AdapterId)>,
 
     /// A list of adapter functions and the names they're exported under.
-    pub exports: Vec<(String, AdapterId)>,
+    pub exports: Vec<(ExportId, AdapterId)>,
 }
 
 pub type NonstandardWitSectionId = TypedCustomSectionId<NonstandardWitSection>;

@@ -1,5 +1,5 @@
 import { default as default1 } from 'tests/wasm/import_class.js';
-import * as __wbg_star0 from './snippets/import_reftest-0000000000000000/inline0.js';
+import * as __wbg_star0 from './snippets/import_reftest-a82831e16a4c30f1/inline0.js';
 import * as __wbg_star1 from 'foo-raw';
 import * as __wbg_star2 from 'pure-extern';
 import * as __wbg_star3 from 'tests/wasm/imports.js';
@@ -102,34 +102,34 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg___wbindgen_throw_0000000000000001 = function(arg0, arg1) {
+    imports.wbg.__wbg___wbindgen_throw_451ec1a8469d7eb6 = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbg_catch_me_0000000000000002 = function() { return handleError(function () {
+    imports.wbg.__wbg_catch_me_1d18acaa34acb005 = function() { return handleError(function () {
         catch_me();
     }, arguments) };
-    imports.wbg.__wbg_get_0000000000000003 = function(arg0) {
+    imports.wbg.__wbg_get_c871386e44ba8c35 = function(arg0) {
         const ret = arg0.get();
         return ret;
     };
-    imports.wbg.__wbg_my_function_0000000000000004 = function() {
+    imports.wbg.__wbg_my_function_597f96bc4719408a = function() {
         b.my_function();
     };
-    imports.wbg.__wbg_new_0000000000000005 = function(arg0) {
+    imports.wbg.__wbg_new_c30895ccee9479d4 = function(arg0) {
         const ret = new default1(arg0);
         return ret;
     };
-    imports.wbg.__wbg_no_catch_0000000000000006 = function() {
+    imports.wbg.__wbg_no_catch_757175fbf9e08b9e = function() {
         no_catch();
     };
-    imports.wbg.__wbg_reload_0000000000000007 = function() {
+    imports.wbg.__wbg_reload_b091d4dc4b1b3a74 = function() {
         window.location.reload();
     };
-    imports.wbg.__wbg_static_accessor_CONST_0000000000000008 = function() {
+    imports.wbg.__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
         const ret = a.CONST;
         return ret;
     };
-    imports.wbg.__wbg_write_0000000000000009 = function(arg0, arg1) {
+    imports.wbg.__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
         window.document.write(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbindgen_init_externref_table = function() {
@@ -142,7 +142,7 @@ function __wbg_get_imports() {
         table.set(offset + 3, false);
         ;
     };
-    imports['./snippets/import_reftest-0000000000000000/inline0.js'] = __wbg_star0;
+    imports['./snippets/import_reftest-a82831e16a4c30f1/inline0.js'] = __wbg_star0;
     imports['foo-raw'] = __wbg_star1;
     imports['pure-extern'] = __wbg_star2;
     imports['tests/wasm/imports.js'] = __wbg_star3;
