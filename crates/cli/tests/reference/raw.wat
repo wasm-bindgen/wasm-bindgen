@@ -17,7 +17,7 @@
   (export "__wbg_test_free" (func $__wbg_test_free))
   (export "test_test1" (func $test_test1))
   (export "test_test2" (func $test_test2))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_start" (func 1))
   (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")
 )

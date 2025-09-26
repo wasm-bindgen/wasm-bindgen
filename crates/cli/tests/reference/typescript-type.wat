@@ -15,7 +15,7 @@
   (export "memory" (memory 0))
   (export "single" (func $"single externref shim"))
   (export "slice" (func $slice))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__externref_table_alloc" (func $__externref_table_alloc))
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_start" (func 1))

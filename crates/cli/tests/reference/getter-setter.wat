@@ -42,7 +42,7 @@
   (export "foo_set_weird" (func $foo_set_weird))
   (export "foo_x_static" (func $foo_x_static))
   (export "foo_set_x_static" (func $foo_set_x_static))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_realloc" (func $__wbindgen_realloc))
   (export "__wbindgen_start" (func 1))

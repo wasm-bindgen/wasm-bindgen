@@ -17,7 +17,7 @@
   (export "exported" (func $"exported multivalue shim"))
   (export "__wbindgen_exn_store" (func $__wbindgen_exn_store))
   (export "__externref_table_alloc" (func $__externref_table_alloc))
-  (export "__wbindgen_export_2" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__externref_table_dealloc" (func $__externref_table_dealloc))
   (export "__wbindgen_start" (func 2))
   (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")

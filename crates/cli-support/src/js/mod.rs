@@ -27,7 +27,6 @@ pub struct Context<'a> {
     imports_post: String,
     typescript: String,
     exposed_globals: Option<HashSet<Cow<'static, str>>>,
-    next_export_idx: usize,
     config: &'a Bindgen,
     pub module: &'a mut Module,
     aux: &'a WasmBindgenAux,
@@ -161,7 +160,6 @@ impl<'a> Context<'a> {
             threads_enabled: threads_xform::is_enabled(module),
             module,
             npm_dependencies: Default::default(),
-            next_export_idx: 0,
             wit,
             aux,
             memories: Default::default(),
@@ -4196,28 +4194,23 @@ wasm = wasmInstance.exports;
         if let Some(export) = export {
             return export.name.clone();
         }
-        let default_name = format!("__wbindgen_export_{}", self.next_export_idx);
-        self.next_export_idx += 1;
         let name = match id {
             walrus::ExportItem::Memory(_) if self.module.memories.iter().count() == 1 => {
-                "memory".to_owned()
+                Some("memory".to_owned())
             }
+            #[expect(clippy::manual_map)]
+            // false positive, we can't use option.map with closue that needs `&mut self`
             walrus::ExportItem::Function(f) => match &self.module.funcs.get(f).name {
                 Some(s) => {
-                    let mut name = to_valid_ident(s);
-
                     // Account for duplicate export names.
                     // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4371.
-                    if self.module.exports.get_func(&name).is_ok() {
-                        name.push_str(&self.next_export_idx.to_string());
-                    }
-
-                    name
+                    Some(self.generate_identifier(&to_valid_ident(s)))
                 }
-                _ => default_name,
+                None => None,
             },
-            _ => default_name,
-        };
+            _ => None,
+        }
+        .unwrap_or_else(|| self.generate_identifier("__wbindgen_export"));
         self.module.exports.add(&name, id);
         name
     }

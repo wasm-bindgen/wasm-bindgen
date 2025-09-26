@@ -14,7 +14,7 @@
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "exported" (func $exported))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_start" (func 4))
   (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")
 )

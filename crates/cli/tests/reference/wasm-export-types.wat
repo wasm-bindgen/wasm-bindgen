@@ -18,7 +18,7 @@
   (export "memory" (memory 0))
   (export "example" (func $"example externref shim multivalue shim"))
   (export "example_128" (func $"example_128 multivalue shim"))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_realloc" (func $__wbindgen_realloc))
   (export "__wbindgen_free" (func $__wbindgen_free))

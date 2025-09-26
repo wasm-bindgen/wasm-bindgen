@@ -23,7 +23,7 @@
   (export "result_string" (func $"result_string multivalue shim"))
   (export "result_void" (func $"result_void multivalue shim"))
   (export "result_i32" (func $"result_i32 multivalue shim"))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__externref_table_dealloc" (func $__externref_table_dealloc))
   (export "__wbindgen_free" (func $__wbindgen_free))
   (export "__wbindgen_start" (func 3))

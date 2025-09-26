@@ -15,7 +15,7 @@
   (table (;0;) 128 externref)
   (export "add_that_might_fail" (func $add_that_might_fail))
   (export "memory" (memory 0))
-  (export "__wbindgen_export_1" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_thread_destroy" (func $__wbindgen_thread_destroy))
   (export "__wbindgen_start" (func 5))
   (@custom "target_features" (after code) "\09+\07atomics+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")

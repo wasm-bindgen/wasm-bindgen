@@ -181,7 +181,7 @@
   (export "echo_option_vec_struct" (func $"echo_option_vec_struct multivalue shim"))
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_realloc" (func $__wbindgen_realloc))
-  (export "__wbindgen_export_2" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_free" (func $__wbindgen_free))
   (export "__externref_table_alloc" (func $__externref_table_alloc))
   (export "__externref_drop_slice" (func $__externref_drop_slice))

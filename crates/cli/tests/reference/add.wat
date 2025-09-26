@@ -9,7 +9,7 @@
   (export "memory" (memory 0))
   (export "add_u32" (func $add_u32))
   (export "add_i32" (func $add_i32))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_start" (func 0))
   (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")
 )

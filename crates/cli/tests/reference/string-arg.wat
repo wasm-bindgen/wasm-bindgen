@@ -12,7 +12,7 @@
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "foo" (func $foo))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_realloc" (func $__wbindgen_realloc))
   (export "__wbindgen_start" (func 1))

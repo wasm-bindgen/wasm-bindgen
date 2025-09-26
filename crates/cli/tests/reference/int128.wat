@@ -21,7 +21,7 @@
   (export "echo_option_i128" (func $"echo_option_i128 multivalue shim"))
   (export "echo_option_u128" (func $"echo_option_u128 multivalue shim"))
   (export "throw_i128" (func $"throw_i128 multivalue shim"))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_export" (table 0))
   (export "__externref_table_dealloc" (func $__externref_table_dealloc))
   (export "__wbindgen_start" (func 1))
   (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")

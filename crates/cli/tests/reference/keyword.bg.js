@@ -89,7 +89,7 @@ export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {
 };
 
 export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_export_0;
+    const table = wasm.__wbindgen_export;
     const offset = table.grow(4);
     table.set(0, undefined);
     table.set(offset + 0, undefined);

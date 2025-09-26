@@ -15,7 +15,7 @@ const imports = {
             return ret;
         },
         __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_export_0;
+            const table = wasm.__wbindgen_export;
             const offset = table.grow(4);
             table.set(0, undefined);
             table.set(offset + 0, undefined);
