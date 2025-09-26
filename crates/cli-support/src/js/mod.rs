@@ -3060,7 +3060,15 @@ wasm = wasmInstance.exports;
                 assert!(!log_error);
 
                 self.globals.push_str("function ");
-                self.globals.push_str(&self.wit.exports[&id]);
+                self.globals.push_str(
+                    &self
+                        .wit
+                        .exports
+                        .iter()
+                        .find(|(_, id2)| id == *id2)
+                        .context("adapter name not found in exports")?
+                        .0,
+                );
                 self.globals.push_str(&code);
                 self.globals.push_str("\n\n");
             }

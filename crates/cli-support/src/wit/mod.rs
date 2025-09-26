@@ -271,7 +271,7 @@ impl<'a> Context<'a> {
                 // actually a `main` function. Unfortunately, there doesn't seem to be any 100%
                 // reliable way to make sure that it is, but we can at least rule out any
                 // `#[wasm_bindgen]` exported functions.
-                let unknown = !self.adapters.exports.values().any(|name| name == "main");
+                let unknown = !self.adapters.exports.iter().any(|(name, _)| name == "main");
                 name_matches && type_matches && unknown
             })
             .map(|(_, func)| func.id());
@@ -1327,6 +1327,17 @@ impl<'a> Context<'a> {
         export: ExportId,
         signature: Function,
     ) -> Result<AdapterId, Error> {
+        // Same export might be requested multiple times due to codegen-units.
+        // Check if we already have an adapter for it.
+        if let Some((_, id)) = self
+            .adapters
+            .exports
+            .iter()
+            .find(|(name, _)| *name == self.module.exports.get(export).name)
+        {
+            return Ok(*id);
+        }
+
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
         for arg in signature.arguments.iter() {
@@ -1409,7 +1420,7 @@ impl<'a> Context<'a> {
 
         self.adapters
             .exports
-            .insert(id, self.module.exports.get(export).name.clone());
+            .push((self.module.exports.get(export).name.clone(), id));
 
         Ok(id)
     }

@@ -16,7 +16,7 @@ pub struct NonstandardWitSection {
     pub implements: Vec<(ImportId, FunctionId, AdapterId)>,
 
     /// A list of adapter functions and the names they're exported under.
-    pub exports: BTreeMap<AdapterId, String>,
+    pub exports: Vec<(String, AdapterId)>,
 }
 
 pub type NonstandardWitSectionId = TypedCustomSectionId<NonstandardWitSection>;
@@ -424,7 +424,7 @@ impl NonstandardWitSection {
         // Populate the live set with the exports, implements directives, and
         // anything transitively referenced by those adapters.
         let mut live = HashSet::new();
-        for id in self.exports.keys() {
+        for (_, id) in self.exports.iter() {
             self.add_live(*id, &mut live);
         }
         for (_, _, id) in self.implements.iter() {
