@@ -7,18 +7,19 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Context, Error};
 use rouille::{Request, Response, Server};
 
-use crate::{Cli, TestMode, Tests};
+use crate::testing::{TestMode, Tests};
 
-pub(crate) fn spawn(
+pub fn spawn(
     addr: &SocketAddr,
     headless: bool,
     module: &'static str,
     tmpdir: &Path,
-    cli: Cli,
     tests: Tests,
     test_mode: TestMode,
     isolate_origin: bool,
     coverage: PathBuf,
+    nocapture: bool,
+    include_ignored_tests: bool,
 ) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
     let mut js_to_execute = String::new();
 
@@ -69,8 +70,7 @@ pub(crate) fn spawn(
         )
     };
 
-    let nocapture = cli.nocapture;
-    let args = cli.into_args(&tests);
+    let args = tests.into_args(include_ignored_tests);
 
     if test_mode.is_worker() {
         let mut worker_script = if test_mode.no_modules() {
@@ -139,7 +139,7 @@ pub(crate) fn spawn(
                 self.on_console_info = __wbgtest_console_info;
                 self.on_console_warn = __wbgtest_console_warn;
                 self.on_console_error = __wbgtest_console_error;
-                
+
                 {args}
 
                 await cx.run(tests.map(s => wasm[s]));

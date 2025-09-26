@@ -17,6 +17,7 @@ mod interpreter;
 mod intrinsic;
 mod js;
 mod multivalue;
+pub mod testing;
 mod transforms;
 pub mod wasm2es6js;
 mod wasm_conventions;

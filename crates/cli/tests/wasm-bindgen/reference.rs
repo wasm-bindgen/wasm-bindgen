@@ -59,7 +59,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use walrus::{
+use wasm_bindgen_cli_support::testing::walrus::{
     ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
 };
 
@@ -324,7 +324,7 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
                 .collect(),
         ),
     );
-    walrus::passes::gc::run(&mut module);
+    wasm_bindgen_cli_support::testing::walrus::passes::gc::run(&mut module);
     module.elements.delete(temp_element_id);
     // Sort imports for deterministic snapshot.
     std::mem::take(&mut module.imports)

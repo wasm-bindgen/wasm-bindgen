@@ -6,8 +6,7 @@ use std::process::Command;
 
 use anyhow::{Context, Error};
 
-use crate::Cli;
-use crate::Tests;
+use crate::testing::Tests;
 
 // depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
 pub const SHARED_SETUP: &str = r#"
@@ -48,10 +47,11 @@ handlers.on_console_error = wasm.__wbgtest_console_error;
 pub fn execute(
     module: &str,
     tmpdir: &Path,
-    cli: Cli,
     tests: Tests,
     module_format: bool,
     coverage: PathBuf,
+    nocapture: bool,
+    include_ignored_tests: bool,
 ) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"
@@ -95,9 +95,9 @@ pub fn execute(
             r"import fs from 'node:fs/promises'".to_string()
         },
         coverage = coverage.display(),
-        nocapture = cli.nocapture.clone(),
+        nocapture = nocapture,
         console_override = SHARED_SETUP,
-        args = cli.into_args(&tests),
+        args = tests.into_args(include_ignored_tests),
     );
 
     // Note that we're collecting *JS objects* that represent the functions to

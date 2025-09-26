@@ -25,15 +25,7 @@ anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
 env_logger = "0.11.5"
 log = "0.4"
-native-tls = { version = "0.2", default-features = false, optional = true }
-rouille = { version = "3.0.0", default-features = false }
-serde = { version = "1.0", features = ['derive'] }
-serde_derive = "1.0"
-serde_json = "1.0"
-shlex = "1"
 tempfile = "3.0"
-ureq = { version = "2.7", default-features = false, features = ["brotli", "gzip"] }
-walrus = "0.23"
 wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.104" }
 
 [dev-dependencies]
@@ -48,12 +40,12 @@ wasmprinter = "0.214"
 [features]
 default = ["rustls-tls"]
 
-native-tls = ["ureq/native-tls"]
-rustls-tls = ["ureq/tls"]
+native-tls = ["wasm-bindgen-cli-support/native-tls"]
+rustls-tls = ["wasm-bindgen-cli-support/rustls-tls"]
 
 # Legacy support
-openssl = ["dep:native-tls"]
-vendored-openssl = ["openssl", "native-tls/vendored"]
+openssl = ["wasm-bindgen-cli-support/openssl"]
+vendored-openssl = ["wasm-bindgen-cli-support/vendored-openssl"]
 
 [lints]
 workspace = true

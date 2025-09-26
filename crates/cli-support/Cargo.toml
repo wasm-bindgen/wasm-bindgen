@@ -18,9 +18,13 @@ anyhow = "1.0"
 base64 = "0.22"
 leb128 = "0.2"
 log = "0.4"
+native-tls = { version = "0.2", default-features = false, optional = true }
+rouille = { version = "3.0.0", default-features = false }
 rustc-demangle = "0.1.13"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+shlex = "1"
+ureq = { version = "2.7", default-features = false, features = ["brotli", "gzip"] }
 walrus = { version = "0.23", features = ['parallel'] }
 wasm-bindgen-shared = { path = "../shared", version = "=0.2.104" }
 wasmparser = "0.214"
@@ -30,6 +34,16 @@ rstest = "0.26"
 wasmprinter = "0.214"
 wast = "214"
 wat = "1.0"
+
+[features]
+default = ["rustls-tls"]
+
+native-tls = ["ureq/native-tls"]
+rustls-tls = ["ureq/tls"]
+
+# Legacy support
+openssl = ["dep:native-tls"]
+vendored-openssl = ["openssl", "native-tls/vendored"]
 
 [lints]
 workspace = true

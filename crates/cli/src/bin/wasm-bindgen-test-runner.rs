@@ -19,13 +19,12 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
+use wasm_bindgen_cli_support::testing::walrus;
+use wasm_bindgen_cli_support::testing::Test;
+use wasm_bindgen_cli_support::testing::TestMode;
+use wasm_bindgen_cli_support::testing::Tests;
+use wasm_bindgen_cli_support::testing::{deno, headless, node, server, shell};
 use wasm_bindgen_cli_support::Bindgen;
-
-mod deno;
-mod headless;
-mod node;
-mod server;
-mod shell;
 
 #[derive(Parser)]
 #[command(name = "wasm-bindgen-test-runner", version, about, long_about = None)]
@@ -68,43 +67,6 @@ struct Cli {
                 whose names contain the filter are run."
     )]
     filter: Option<String>,
-}
-
-impl Cli {
-    fn into_args(self, tests: &Tests) -> String {
-        let include_ignored = self.include_ignored;
-        let filtered = tests.filtered;
-
-        format!(
-            r#"
-            // Forward runtime arguments.
-            cx.include_ignored({include_ignored:?});
-            cx.filtered_count({filtered});
-        "#
-        )
-    }
-}
-
-struct Tests {
-    tests: Vec<Test>,
-    filtered: usize,
-}
-
-impl Tests {
-    fn new() -> Self {
-        Self {
-            tests: Vec::new(),
-            filtered: 0,
-        }
-    }
-}
-
-struct Test {
-    // test name
-    name: String,
-    // symbol name
-    export: String,
-    ignored: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -330,10 +292,22 @@ fn main() -> anyhow::Result<()> {
     shell.clear();
 
     match test_mode {
-        TestMode::Node { no_modules } => {
-            node::execute(module, tmpdir.path(), cli, tests, !no_modules, coverage)?
-        }
-        TestMode::Deno => deno::execute(module, tmpdir.path(), cli, tests)?,
+        TestMode::Node { no_modules } => node::execute(
+            module,
+            tmpdir.path(),
+            tests,
+            !no_modules,
+            coverage,
+            cli.nocapture,
+            cli.include_ignored,
+        )?,
+        TestMode::Deno => deno::execute(
+            module,
+            tmpdir.path(),
+            tests,
+            cli.nocapture,
+            cli.include_ignored,
+        )?,
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
         | TestMode::SharedWorker { .. }
@@ -349,11 +323,12 @@ fn main() -> anyhow::Result<()> {
                 headless,
                 module,
                 tmpdir.path(),
-                cli,
                 tests,
                 test_mode,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
                 coverage,
+                cli.nocapture,
+                cli.include_ignored,
             )
             .context("failed to spawn server")?;
             let addr = srv.server_addr();
@@ -376,47 +351,6 @@ fn main() -> anyhow::Result<()> {
         }
     }
     Ok(())
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-enum TestMode {
-    Node { no_modules: bool },
-    Deno,
-    Browser { no_modules: bool },
-    DedicatedWorker { no_modules: bool },
-    SharedWorker { no_modules: bool },
-    ServiceWorker { no_modules: bool },
-}
-
-impl TestMode {
-    fn is_worker(self) -> bool {
-        matches!(
-            self,
-            Self::DedicatedWorker { .. } | Self::SharedWorker { .. } | Self::ServiceWorker { .. }
-        )
-    }
-
-    fn no_modules(self) -> bool {
-        match self {
-            Self::Deno => true,
-            Self::Browser { no_modules }
-            | Self::Node { no_modules }
-            | Self::DedicatedWorker { no_modules }
-            | Self::SharedWorker { no_modules }
-            | Self::ServiceWorker { no_modules } => no_modules,
-        }
-    }
-
-    fn env(self) -> &'static str {
-        match self {
-            TestMode::Node { .. } => "WASM_BINDGEN_USE_NODE_EXPERIMENTAL",
-            TestMode::Deno => "WASM_BINDGEN_USE_DENO",
-            TestMode::Browser { .. } => "WASM_BINDGEN_USE_BROWSER",
-            TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
-            TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
-            TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
-        }
-    }
 }
 
 fn coverage_args(file_name: &Path) -> PathBuf {
