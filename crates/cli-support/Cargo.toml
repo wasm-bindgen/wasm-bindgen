@@ -38,9 +38,9 @@ wat = "1.0"
 [features]
 default = []
 
-test-runner = ["dep:rouille", "dep:shlex", "dep:ureq"]
 native-tls = ["ureq/native-tls"]
 rustls-tls = ["ureq/tls"]
+test-runner = ["dep:rouille", "dep:shlex", "dep:ureq"]
 
 # Legacy support
 openssl = ["dep:native-tls"]

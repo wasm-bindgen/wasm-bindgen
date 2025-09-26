@@ -26,7 +26,9 @@ clap = { version = "4", features = ["derive"] }
 env_logger = "0.11.5"
 log = "0.4"
 tempfile = "3.0"
-wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.104", features = ["test-runner"]}
+wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.104", features = [
+    "test-runner",
+] }
 
 [dev-dependencies]
 assert_cmd = "2"
