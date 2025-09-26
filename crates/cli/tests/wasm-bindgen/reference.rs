@@ -50,6 +50,7 @@
 
 use crate::Project;
 use anyhow::Result;
+use assert_cmd::Command;
 use regex::Regex;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -139,9 +140,8 @@ fn runtest_targets_atomics() -> Result<()> {
     test.push("reference");
     test.push("targets.rs");
 
-    runtest_with_opts(test, Some("atomics"), |project| {
-        project
-            .cargo_cmd
+    runtest_with_opts(test, Some("atomics"), |command| {
+        command
             .env("RUSTUP_TOOLCHAIN", "nightly")
             .env("RUSTFLAGS", "-C target-feature=+atomics")
             .arg("-Zbuild-std=std,panic_abort");
@@ -155,9 +155,8 @@ fn runtest_targets_mvp() -> Result<()> {
     test.push("reference");
     test.push("targets.rs");
 
-    runtest_with_opts(test, Some("mvp"), |project| {
-        project
-            .cargo_cmd
+    runtest_with_opts(test, Some("mvp"), |command| {
+        command
             .env("RUSTUP_TOOLCHAIN", "nightly")
             .env("RUSTFLAGS", "-C target-cpu=mvp")
             .arg("-Zbuild-std=std,panic_abort");
@@ -167,7 +166,7 @@ fn runtest_targets_mvp() -> Result<()> {
 fn runtest_with_opts(
     test: PathBuf,
     suffix: Option<&str>,
-    f: impl FnOnce(&mut Project),
+    f: impl FnOnce(&mut Command),
 ) -> Result<()> {
     let contents = fs::read_to_string(&test)?;
 
@@ -195,7 +194,7 @@ fn runtest_with_opts(
     // parse additional dependency declarations
     project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
 
-    f(&mut project);
+    f(&mut project.cargo_cmd);
 
     contents
         .lines()
