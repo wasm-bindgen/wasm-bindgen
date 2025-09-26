@@ -62,6 +62,8 @@ pub fn run(
     shell: &Shell,
     driver_timeout: u64,
     test_timeout: u64,
+    capabilities_file: &Path,
+    override_address: Option<String>,
 ) -> Result<(), Error> {
     let driver = Driver::find()?;
     let mut drop_log: Box<dyn FnMut()> = Box::new(|| ());
@@ -126,9 +128,7 @@ pub fn run(
         session: None,
     };
     println!("Try find `webdriver.json` for configure browser's capabilities:");
-    let capabilities: Capabilities = match File::open(
-        std::env::var("WASM_BINDGEN_TEST_WEBDRIVER_JSON").unwrap_or("webdriver.json".to_string()),
-    ) {
+    let capabilities: Capabilities = match File::open(capabilities_file) {
         Ok(file) => {
             println!("Ok");
             serde_json::from_reader(file)
@@ -149,15 +149,15 @@ pub fn run(
     //
     // If WASM_BINDGEN_TEST_ADDRESS is set, use it as the local server URL,
     // trying to inherit the port from the server if it isn't specified.
-    let url = match std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
-        Ok(u) => {
+    let url = match override_address {
+        Some(u) => {
             let mut url = Url::parse(&u)?;
             if url.port().is_none() {
                 url.set_port(Some(server.port())).unwrap();
             }
             url.to_string()
         }
-        Err(_) => format!("http://{server}"),
+        None => format!("http://{server}"),
     };
 
     shell.status(&format!("Visiting {url}..."));

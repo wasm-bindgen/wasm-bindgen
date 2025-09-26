@@ -19,7 +19,7 @@ impl Tests {
         }
     }
 
-    fn into_args(&self, include_ignored: bool) -> String {
+    fn as_args(&self, include_ignored: bool) -> String {
         let filtered = self.filtered;
 
         format!(

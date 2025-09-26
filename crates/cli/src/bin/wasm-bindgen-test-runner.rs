@@ -292,15 +292,32 @@ fn main() -> anyhow::Result<()> {
     shell.clear();
 
     match test_mode {
-        TestMode::Node { no_modules } => node::execute(
-            module,
-            tmpdir.path(),
-            tests,
-            !no_modules,
-            coverage,
-            cli.nocapture,
-            cli.include_ignored,
-        )?,
+        TestMode::Node { no_modules } => {
+            // Augment `NODE_PATH` so things like `require("tests/my-custom.js")` work
+            // and Rust code can import from custom JS shims. This is a bit of a hack
+            // and should probably be removed at some point.
+            let path = env::var("NODE_PATH").unwrap_or_default();
+            let path = env::split_paths(&path).collect::<Vec<_>>();
+
+            let extra_node_args = env::var("NODE_ARGS")
+                .unwrap_or_default()
+                .split(',')
+                .map(|s| s.to_string())
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>();
+
+            node::execute(
+                module,
+                tmpdir.path(),
+                tests,
+                !no_modules,
+                coverage,
+                cli.nocapture,
+                cli.include_ignored,
+                path,
+                extra_node_args,
+            )?
+        }
         TestMode::Deno => deno::execute(
             module,
             tmpdir.path(),
@@ -312,6 +329,10 @@ fn main() -> anyhow::Result<()> {
         | TestMode::DedicatedWorker { .. }
         | TestMode::SharedWorker { .. }
         | TestMode::ServiceWorker { .. } => {
+            let capabilities_file = PathBuf::from(
+                std::env::var("WASM_BINDGEN_TEST_WEBDRIVER_JSON")
+                    .unwrap_or("webdriver.json".to_string()),
+            );
             let srv = server::spawn(
                 &if headless {
                     "127.0.0.1:0".parse().unwrap()
@@ -347,7 +368,14 @@ fn main() -> anyhow::Result<()> {
             }
 
             thread::spawn(|| srv.run());
-            headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
+            headless::run(
+                &addr,
+                &shell,
+                driver_timeout,
+                browser_timeout,
+                &capabilities_file,
+                std::env::var("WASM_BINDGEN_TEST_ADDRESS").ok(),
+            )?;
         }
     }
     Ok(())

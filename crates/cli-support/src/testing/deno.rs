@@ -28,7 +28,7 @@ pub fn execute(
     "#,
         nocapture = nocapture,
         console_override = SHARED_SETUP,
-        args = tests.into_args(include_ignored_tests),
+        args = tests.as_args(include_ignored_tests),
     );
 
     for test in tests.tests {

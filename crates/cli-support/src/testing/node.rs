@@ -52,6 +52,8 @@ pub fn execute(
     coverage: PathBuf,
     nocapture: bool,
     include_ignored_tests: bool,
+    node_path: Vec<PathBuf>,
+    node_args: Vec<String>,
 ) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"
@@ -97,7 +99,7 @@ pub fn execute(
         coverage = coverage.display(),
         nocapture = nocapture,
         console_override = SHARED_SETUP,
-        args = tests.into_args(include_ignored_tests),
+        args = tests.as_args(include_ignored_tests),
     );
 
     // Note that we're collecting *JS objects* that represent the functions to
@@ -127,24 +129,15 @@ pub fn execute(
     };
     fs::write(&js_path, js_to_execute).context("failed to write JS file")?;
 
-    // Augment `NODE_PATH` so things like `require("tests/my-custom.js")` work
-    // and Rust code can import from custom JS shims. This is a bit of a hack
-    // and should probably be removed at some point.
-    let path = env::var("NODE_PATH").unwrap_or_default();
-    let mut path = env::split_paths(&path).collect::<Vec<_>>();
-    path.push(env::current_dir().unwrap());
-    path.push(tmpdir.to_path_buf());
-    let extra_node_args = env::var("NODE_ARGS")
-        .unwrap_or_default()
-        .split(',')
-        .map(|s| s.to_string())
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>();
+    let path: Vec<_> = vec![env::current_dir().unwrap(), tmpdir.to_path_buf()]
+        .into_iter()
+        .chain(node_path)
+        .collect();
 
     let status = Command::new("node")
-        .env("NODE_PATH", env::join_paths(&path).unwrap())
+        .env("NODE_PATH", env::join_paths(path).unwrap())
         .arg("--expose-gc")
-        .args(&extra_node_args)
+        .args(node_args)
         .arg(&js_path)
         .status()
         .context("failed to find or execute Node.js")?;

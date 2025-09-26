@@ -70,7 +70,7 @@ pub fn spawn(
         )
     };
 
-    let args = tests.into_args(include_ignored_tests);
+    let args = tests.as_args(include_ignored_tests);
 
     if test_mode.is_worker() {
         let mut worker_script = if test_mode.no_modules() {
