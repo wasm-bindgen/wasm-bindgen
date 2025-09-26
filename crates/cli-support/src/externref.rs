@@ -8,8 +8,7 @@ use walrus::ElementItems;
 use walrus::{ir::Value, ConstExpr, ElementKind, Module};
 
 pub fn process(module: &mut Module) -> Result<()> {
-    let mut cfg = Context::default();
-    cfg.prepare(module)?;
+    let mut cfg = Context::new(module)?;
     let section = module
         .customs
         .get_typed_mut::<NonstandardWitSection>()

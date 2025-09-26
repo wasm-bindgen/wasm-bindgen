@@ -17,8 +17,7 @@ fn runtest(test: &Test) -> Result<String> {
     let mut walrus = ModuleConfig::new()
         .generate_producers_section(false)
         .parse(&wasm)?;
-    let mut cx = super::Context::default();
-    cx.prepare(&mut walrus)?;
+    let mut cx = super::Context::new(&mut walrus)?;
     for directive in test.directives.iter() {
         match &directive.kind {
             DirectiveKind::Export(name) => {
