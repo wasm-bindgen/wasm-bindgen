@@ -129,7 +129,7 @@ fn runtest(
     #[files("*.rs")]
     test: PathBuf,
 ) -> Result<()> {
-    runtest_with_opts(test, false)
+    runtest_with_opts(test, None, |_| ())
 }
 
 #[test]
@@ -139,10 +139,36 @@ fn runtest_targets_atomics() -> Result<()> {
     test.push("reference");
     test.push("targets.rs");
 
-    runtest_with_opts(test, true)
+    runtest_with_opts(test, Some("atomics"), |project| {
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-C target-feature=+atomics")
+            .arg("-Zbuild-std=std,panic_abort");
+    })
 }
 
-fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
+#[test]
+fn runtest_targets_mvp() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("targets.rs");
+
+    runtest_with_opts(test, Some("mvp"), |project| {
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-C target-cpu=mvp")
+            .arg("-Zbuild-std=std,panic_abort");
+    })
+}
+
+fn runtest_with_opts(
+    test: PathBuf,
+    suffix: Option<&str>,
+    f: impl FnOnce(&mut Project),
+) -> Result<()> {
     let contents = fs::read_to_string(&test)?;
 
     // parse target declarations
@@ -157,19 +183,19 @@ fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
 
     let stem = test.file_stem().unwrap().to_str().unwrap();
 
-    let mut project =
-        Project::new(stem.replace('-', "_") + "_reftest" + if atomics { "_atomics" } else { "" });
+    let mut name = stem.replace('-', "_") + "_reftest";
+
+    if let Some(suffix) = suffix {
+        name.push('_');
+        name.push_str(suffix);
+    }
+
+    let mut project = Project::new(name);
 
     // parse additional dependency declarations
     project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
 
-    if atomics {
-        project
-            .cargo_cmd
-            .env("RUSTUP_TOOLCHAIN", "nightly")
-            .env("RUSTFLAGS", "-C target-feature=+atomics")
-            .arg("-Zbuild-std=std,panic_abort");
-    }
+    f(&mut project);
 
     contents
         .lines()
@@ -202,8 +228,9 @@ fn runtest_with_opts(test: PathBuf, atomics: bool) -> Result<()> {
                 }
             }
 
-            if atomics {
-                base_file_name.push_str("-atomics");
+            if let Some(suffix) = suffix {
+                base_file_name.push('-');
+                base_file_name.push_str(suffix);
             }
 
             test.with_file_name(base_file_name)
