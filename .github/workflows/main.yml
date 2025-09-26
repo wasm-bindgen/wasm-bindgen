@@ -324,7 +324,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@1.88
+    - uses: dtolnay/rust-toolchain@1.100
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
 
@@ -599,7 +599,7 @@ jobs:
         working-directory: crates/msrv/cli
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@1.82
+    - uses: dtolnay/rust-toolchain@1.100
     - run: cargo build
 
 
