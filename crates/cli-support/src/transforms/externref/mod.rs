@@ -362,7 +362,6 @@ impl Transform<'_> {
 
             let (shim, externref_ty) = self.append_shim(
                 f,
-                &import.name,
                 func,
                 &mut module.types,
                 &mut module.funcs,
@@ -390,7 +389,6 @@ impl Transform<'_> {
             };
             let (shim, _externref_ty) = self.append_shim(
                 f,
-                &export.name,
                 function,
                 &mut module.types,
                 &mut module.funcs,
@@ -432,7 +430,6 @@ impl Transform<'_> {
 
             let (shim, _externref_ty) = self.append_shim(
                 target,
-                &format!("closure{idx}"),
                 function,
                 &mut module.types,
                 &mut module.funcs,
@@ -463,7 +460,6 @@ impl Transform<'_> {
     fn append_shim(
         &mut self,
         shim_target: FunctionId,
-        name: &str,
         mut func: Function,
         types: &mut walrus::ModuleTypes,
         funcs: &mut walrus::ModuleFunctions,
@@ -681,6 +677,11 @@ impl Transform<'_> {
         // with a fresh type we've been calculating so far. Give the function a
         // nice name for debugging and then we're good to go!
         let id = builder.finish(params, funcs);
+        let name = funcs
+            .get(shim_target)
+            .name
+            .as_deref()
+            .unwrap_or("<unknown>");
         let name = format!("{name} externref shim");
         funcs.get_mut(id).name = Some(name);
         self.shims.insert(id);
