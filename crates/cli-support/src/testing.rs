@@ -120,7 +120,7 @@ impl TestRunner {
     /// Constructor for the [TestRunner].
     pub fn new(file: PathBuf) -> Self {
         Self {
-            file: file,
+            file,
             include_ignored: false,
             ignored: false,
             exact: false,
