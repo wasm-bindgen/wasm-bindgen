@@ -21,7 +21,7 @@
     call $alloc
     local.tee 0
     local.get 1
-    table.set 0
+    table.set $"externref table"
     local.get 0
   )
   (func (;2;) (type 0) (result i32)
@@ -30,7 +30,7 @@
   (func $alloc (;3;) (type 0) (result i32)
     i32.const 0
   )
-  (table (;0;) 128 externref)
+  (table $"externref table" (;0;) 128 externref)
   (export "foo" (func 2))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
