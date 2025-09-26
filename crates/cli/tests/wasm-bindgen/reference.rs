@@ -59,10 +59,9 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use wasm_bindgen_cli_support::testing::walrus::passes::gc::run as walrus_gc_run;
+use wasm_bindgen_cli_support::testing::walrus;
 use wasm_bindgen_cli_support::testing::walrus::{
     ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
-    RefType as WalrusRefType,
 };
 
 macro_rules! regex {
@@ -293,7 +292,7 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
     }
     for table in module.tables.iter_mut() {
         // The function table comes from LLVM and has different size between platforms.
-        if table.element_ty == WalrusRefType::Funcref {
+        if table.element_ty == walrus::RefType::Funcref {
             table.initial = 0;
             table.maximum = None;
         }
@@ -326,7 +325,7 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
                 .collect(),
         ),
     );
-    walrus_gc_run(&mut module);
+    walrus::passes::gc::run(&mut module);
     module.elements.delete(temp_element_id);
     // Sort imports for deterministic snapshot.
     std::mem::take(&mut module.imports)
