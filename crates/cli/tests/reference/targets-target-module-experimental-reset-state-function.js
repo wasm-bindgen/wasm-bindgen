@@ -22,7 +22,7 @@ export function __wbg_reset_state () {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg_random_0000000000000000: function() {
+        __wbg_random_ae0b2256206ad108: function() {
             const ret = Math.random();
             return ret;
         },

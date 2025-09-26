@@ -76,10 +76,10 @@ let wasm_bindgen;
     function __wbg_get_imports(memory) {
         const imports = {};
         imports.wbg = {};
-        imports.wbg.__wbg___wbindgen_throw_0000000000000000 = function(arg0, arg1) {
+        imports.wbg.__wbg___wbindgen_throw_451ec1a8469d7eb6 = function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         };
-        imports.wbg.__wbg_random_0000000000000001 = function() {
+        imports.wbg.__wbg_random_ae0b2256206ad108 = function() {
             const ret = Math.random();
             return ret;
         };

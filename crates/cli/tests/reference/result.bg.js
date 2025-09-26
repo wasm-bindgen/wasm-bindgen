@@ -79,16 +79,16 @@ export function result_i32() {
     return ret[0];
 }
 
-export function __wbg_Error_0000000000000000(arg0, arg1) {
+export function __wbg_Error_e17e777aac105295(arg0, arg1) {
     const ret = Error(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 
-export function __wbg___wbindgen_throw_0000000000000001(arg0, arg1) {
+export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbindgen_cast_0000000000000002(arg0) {
+export function __wbindgen_cast_0000000000000000(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return ret;

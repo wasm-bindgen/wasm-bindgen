@@ -97,12 +97,20 @@ impl Sanitizer {
     }
 
     fn sanitize(&mut self, s: &str) -> String {
-        let s = self.sanitize_one(s, regex!(r"[0-9a-f]{16}"), |idx| format!("{idx:016x}"));
+        // Cast descriptors for closures contain unstable function indices, so we need to sanitize the hash.
+        let s = self.sanitize_one(&s, regex!(r"__wbindgen_cast_[0-9a-f]{16}"), |idx| {
+            format!("__wbindgen_cast_{idx:016x}")
+        });
 
+        // `h...` are mangled generic function names with unstable type IDs.
+        let s = self.sanitize_one(&s, regex!(r"h[0-9a-f]{16}"), |idx| format!("h{idx:016x}"));
+
+        // `__wbg_adapter_N` functions are generated with unstable indices.
         let s = self.sanitize_one(&s, regex!(r"__wbg_adapter_\d+"), |idx| {
             format!("__wbg_adapter_{idx}")
         });
 
+        // Cast descriptors contain `Closure`'s `Debug` impl which has unstable function indices.
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
 
         s.into_owned()

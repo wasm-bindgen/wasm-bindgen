@@ -11,7 +11,7 @@ exports.add_that_might_fail = function(a, b) {
     return ret >>> 0;
 };
 
-exports.__wbg_random_0000000000000000 = function() {
+exports.__wbg_random_ae0b2256206ad108 = function() {
     const ret = Math.random();
     return ret;
 };
