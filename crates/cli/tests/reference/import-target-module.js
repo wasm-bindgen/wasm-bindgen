@@ -31,7 +31,7 @@ function getStringFromWasm0(ptr, len) {
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
-    wasm.externref_table.set(idx, obj);
+    wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
 }
 
@@ -45,7 +45,7 @@ function handleError(f, args) {
 }
 
 function takeFromExternrefTable0(idx) {
-    const value = wasm.externref_table.get(idx);
+    const value = wasm.__wbindgen_externrefs.get(idx);
     wasm.__externref_table_dealloc(idx);
     return value;
 }
@@ -90,7 +90,7 @@ const imports = {
             window.document.write(getStringFromWasm0(arg0, arg1));
         },
         __wbindgen_init_externref_table: function() {
-            const table = wasm.externref_table;
+            const table = wasm.__wbindgen_externrefs;
             const offset = table.grow(4);
             table.set(0, undefined);
             table.set(offset + 0, undefined);

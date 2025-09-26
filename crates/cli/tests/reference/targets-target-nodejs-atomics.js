@@ -43,7 +43,7 @@ exports.__wbg_random_e2b253f0e987bd7c = function() {
 };
 
 exports.__wbindgen_init_externref_table = function() {
-    const table = wasm.externref_table;
+    const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
     table.set(0, undefined);
     table.set(offset + 0, undefined);

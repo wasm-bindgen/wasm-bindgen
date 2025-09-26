@@ -96,7 +96,7 @@ impl Context {
             .tables
             .add_local(false, DEFAULT_MIN, None, RefType::Externref);
 
-        module.tables.get_mut(table).name = Some("externref table".to_string());
+        module.tables.get_mut(table).name = Some("__wbindgen_externrefs".to_string());
 
         Ok(Self {
             imports: Default::default(),

@@ -9,7 +9,7 @@ export interface InitOutput {
   readonly exported: () => [number, number];
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __externref_table_alloc: () => number;
-  readonly externref_table: WebAssembly.Table;
+  readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __externref_table_dealloc: (a: number) => void;
   readonly __wbindgen_start: () => void;
 }

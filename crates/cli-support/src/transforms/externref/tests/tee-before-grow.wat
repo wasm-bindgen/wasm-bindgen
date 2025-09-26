@@ -26,7 +26,7 @@
     local.set 1
     ref.null extern
     local.get 1
-    table.grow $"externref table"
+    table.grow $__wbindgen_externrefs
     drop
   )
   (func $"foo externref shim" (;1;) (type 2) (param externref)
@@ -34,14 +34,14 @@
     call $alloc
     local.tee 1
     local.get 0
-    table.set $"externref table"
+    table.set $__wbindgen_externrefs
     local.get 1
     call $foo
   )
   (func $alloc (;2;) (type 0) (result i32)
     i32.const 0
   )
-  (table $"externref table" (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (export "foo" (func $"foo externref shim"))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )

@@ -24,10 +24,10 @@
   (func $"a externref shim" (;1;) (type 2) (param f32 i32 i64 i32 i32)
     local.get 0
     local.get 1
-    table.get $"externref table"
+    table.get $__wbindgen_externrefs
     local.get 2
     local.get 3
-    table.get $"externref table"
+    table.get $__wbindgen_externrefs
     local.get 3
     call $dealloc
     local.get 4
@@ -42,7 +42,7 @@
     call $"a externref shim"
   )
   (func $dealloc (;3;) (type 1) (param i32))
-  (table $"externref table" (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (export "foo" (func 2))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
