@@ -17,6 +17,7 @@ use clap::ValueEnum;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::process;
 use wasm_bindgen_cli_support::test_runner::TestMode;
 use wasm_bindgen_cli_support::test_runner::{OutputFormatSetting, TestRunner};
 
@@ -229,7 +230,11 @@ fn main() -> anyhow::Result<()> {
         runner.coverage_profraw_out(PathBuf::from(out));
     }
 
-    runner.execute()
+    runner.execute()?;
+
+    // Returning cleanly has the strange effect of outputting
+    // an additional empty line with spaces in it.
+    process::exit(0)
 }
 
 fn test_mode_env(mode: &TestMode) -> &'static str {

@@ -412,8 +412,6 @@ impl TestRunner {
                 println!("{}: test", test.name);
             }
 
-            // Returning cleanly has the strange effect of outputting
-            // an additional empty line with spaces in it.
             return Ok(());
         }
 
