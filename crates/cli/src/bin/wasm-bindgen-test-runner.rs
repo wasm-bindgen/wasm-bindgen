@@ -13,8 +13,8 @@
 
 use anyhow::{bail, Context};
 use clap::{Parser, ValueEnum};
+use std::path::PathBuf;
 use std::{env, fs, process};
-use std::path::PathBuf;´
 use wasm_bindgen_cli_support::test_runner::TestMode;
 use wasm_bindgen_cli_support::test_runner::{OutputFormatSetting, TestRunner};
 
