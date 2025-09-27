@@ -17,6 +17,8 @@ mod interpreter;
 mod intrinsic;
 mod js;
 mod multivalue;
+#[cfg(feature = "test-runner")]
+pub mod test_runner;
 mod transforms;
 pub mod wasm2es6js;
 mod wasm_conventions;

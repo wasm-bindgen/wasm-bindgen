@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+### Changed
+
+* Migrated core `wasm-bindgen-test-runner` implementation into `wasm_bindgen_cli_support` library as the `testing` module.
+  [#4693](https://github.com/wasm-bindgen/wasm-bindgen/pull/4693)
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
@@ -60,7 +65,7 @@
 * Added support for arguments with spaces using shell-style quoting in webdriver `*_ARGS`
   environment variables to `wasm-bindgen-test`.
   [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
-  
+
 * Added ability to determine WebDriver JSON config location via
   `WASM_BINDGEN_TEST_WEBDRIVER_JSON` environment variable to
   `wasm-bindgen-test`.
@@ -70,7 +75,7 @@
   [#4635](https://github.com/wasm-bindgen/wasm-bindgen/pull/4635)
 
   [guide on debug information]: https://wasm-bindgen.github.io/wasm-bindgen/reference/debug-info.html
-  
+
 * New `--target=module` target for outputting source phase imports.
   [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
 

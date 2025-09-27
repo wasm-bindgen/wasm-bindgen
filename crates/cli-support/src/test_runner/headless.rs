@@ -1,11 +1,10 @@
-use crate::shell::Shell;
+use crate::test_runner::shell::Shell;
 use anyhow::{bail, format_err, Context, Error};
 use log::{debug, warn};
 use rouille::url::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value as Json};
 use std::env;
-use std::fs::File;
 use std::io::{self, Cursor, ErrorKind, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
@@ -62,6 +61,8 @@ pub fn run(
     shell: &Shell,
     driver_timeout: u64,
     test_timeout: u64,
+    capabilities_content: &Option<String>,
+    override_address: Option<String>,
 ) -> Result<(), Error> {
     let driver = Driver::find()?;
     let mut drop_log: Box<dyn FnMut()> = Box::new(|| ());
@@ -126,14 +127,12 @@ pub fn run(
         session: None,
     };
     println!("Try find `webdriver.json` for configure browser's capabilities:");
-    let capabilities: Capabilities = match File::open(
-        std::env::var("WASM_BINDGEN_TEST_WEBDRIVER_JSON").unwrap_or("webdriver.json".to_string()),
-    ) {
-        Ok(file) => {
+    let capabilities: Capabilities = match capabilities_content {
+        Some(content) => {
             println!("Ok");
-            serde_json::from_reader(file)
+            serde_json::from_str(content)
         }
-        Err(_) => {
+        None => {
             println!("Not found");
             Ok(Capabilities::new())
         }
@@ -149,15 +148,15 @@ pub fn run(
     //
     // If WASM_BINDGEN_TEST_ADDRESS is set, use it as the local server URL,
     // trying to inherit the port from the server if it isn't specified.
-    let url = match std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
-        Ok(u) => {
+    let url = match override_address {
+        Some(u) => {
             let mut url = Url::parse(&u)?;
             if url.port().is_none() {
                 url.set_port(Some(server.port())).unwrap();
             }
             url.to_string()
         }
-        Err(_) => format!("http://{server}"),
+        None => format!("http://{server}"),
     };
 
     shell.status(&format!("Visiting {url}..."));

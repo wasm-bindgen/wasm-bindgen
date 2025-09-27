@@ -4,10 +4,16 @@ use std::{fs, process};
 
 use anyhow::{Context, Error};
 
-use crate::Tests;
-use crate::{node::SHARED_SETUP, Cli};
+use crate::test_runner::node::SHARED_SETUP;
+use crate::test_runner::Tests;
 
-pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<(), Error> {
+pub fn execute(
+    module: &str,
+    tmpdir: &Path,
+    tests: Tests,
+    nocapture: bool,
+    include_ignored_tests: bool,
+) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"import * as wasm from "./{module}.js";
 
@@ -20,9 +26,9 @@ pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<()
 
         const tests = [];
     "#,
-        nocapture = cli.nocapture.clone(),
+        nocapture = nocapture,
         console_override = SHARED_SETUP,
-        args = cli.into_args(&tests),
+        args = tests.as_args(include_ignored_tests),
     );
 
     for test in tests.tests {
