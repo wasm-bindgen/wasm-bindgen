@@ -21,19 +21,19 @@
     call $alloc
     local.tee 1
     local.get 0
-    table.set 0
+    table.set $__wbindgen_externrefs
     local.get 1
     call $foo
   )
   (func $foo (;1;) (type 1) (param i32)
     local.get 0
     ref.null extern
-    table.set 0
+    table.set $__wbindgen_externrefs
   )
   (func $alloc (;2;) (type 0) (result i32)
     i32.const 0
   )
-  (table (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (export "foo" (func $"foo externref shim"))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
