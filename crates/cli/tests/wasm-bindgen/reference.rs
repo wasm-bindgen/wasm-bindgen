@@ -59,7 +59,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use wasm_bindgen_cli_support::test_runner::walrus::{
+use wasm_bindgen_test_cli_support::walrus::{
     self, ElementItems, ElementKind, ExportItem, FunctionKind, ImportKind, Module, ModuleConfig,
 };
 
