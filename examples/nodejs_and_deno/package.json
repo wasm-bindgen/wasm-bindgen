@@ -1,12 +1,14 @@
 {
 	"type": "module",
 	"scripts": {
-		"build:nodejs": "wasm-pack build --target nodejs --out-dir ../dist/nodejs_and_deno --out-name nodejs",
-		"build:deno": "wasm-pack build --target deno --out-dir ../dist/nodejs_and_deno --out-name deno",
-		"build": "npm run build:nodejs && npm run build:deno",
+		"build:nodejs": "wasm-pack build --target nodejs --out-dir ../dist/nodejs_and_deno/nodejs",
+		"build:deno": "wasm-pack build --target deno --out-dir ../dist/nodejs_and_deno/deno",
+		"build:experimental-nodejs-module": "node cargo-and-wasm-bindgen.js --target experimental-nodejs-module --out-dir ../dist/nodejs_and_deno/experimental-nodejs-module",
+		"build": "npm run build:nodejs && npm run build:deno && npm run build:experimental-nodejs-module",
 
 		"test:nodejs": "node test.js nodejs",
 		"test:deno": "deno run --allow-read test.js deno",
-		"test": "npm run test:nodejs && npm run test:deno"
+		"test:experimental-nodejs-module": "node test.js experimental-nodejs-module",
+		"test": "npm run test:nodejs && npm run test:deno && npm run test:experimental-nodejs-module"
 	}
 }
