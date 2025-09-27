@@ -127,7 +127,7 @@ fn main() -> anyhow::Result<()> {
 
     let no_modules = std::env::var("WASM_BINDGEN_USE_NO_MODULE").is_ok();
     if no_modules {
-        runner.with_no_modules();
+        runner.no_modules();
     }
 
     if env::var("NO_HEADLESS").is_err() {
@@ -135,7 +135,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if env::var("WASM_BINDGEN_NO_DEBUG").is_err() {
-        runner.with_debug();
+        runner.debug();
     }
 
     let mut modes = Vec::new();
@@ -183,7 +183,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if std::env::var("WASM_BINDGEN_SPLIT_LINKED_MODULES").is_ok() {
-        runner.with_split_linked_modules();
+        runner.split_linked_modules();
     }
 
     let capabilities_file = PathBuf::from(

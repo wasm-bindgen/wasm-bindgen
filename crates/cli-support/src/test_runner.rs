@@ -209,17 +209,17 @@ impl TestRunner {
         }
     }
 
-    pub fn with_no_modules(&mut self) -> &mut Self {
+    pub fn no_modules(&mut self) -> &mut Self {
         self.no_modules = true;
         self
     }
 
-    pub fn with_debug(&mut self) -> &mut Self {
+    pub fn debug(&mut self) -> &mut Self {
         self.debug = true;
         self
     }
 
-    pub fn with_split_linked_modules(&mut self) -> &mut Self {
+    pub fn split_linked_modules(&mut self) -> &mut Self {
         self.split_linked_modules = true;
         self
     }
