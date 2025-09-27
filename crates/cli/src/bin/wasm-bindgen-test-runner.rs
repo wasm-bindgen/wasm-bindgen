@@ -15,6 +15,7 @@ use anyhow::{bail, Context};
 use clap::Parser;
 use clap::ValueEnum;
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use wasm_bindgen_cli_support::test_runner::TestMode;
 use wasm_bindgen_cli_support::test_runner::{OutputFormatSetting, TestRunner};
@@ -82,14 +83,22 @@ fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
 
-    let mut runner = TestRunner::new(cli.file);
+    let file_name = cli
+        .file
+        .file_name()
+        .and_then(|s| s.to_str())
+        .map(|s| s.to_string())
+        .context("file to test is not a valid file, can't extract file name")?;
+
+    let file_content = fs::read(&cli.file).context("failed to read Wasm file")?;
+    let mut runner = TestRunner::new(file_name, file_content);
 
     if cli.include_ignored {
-        runner.with_include_ignored()?;
+        runner.with_include_ignored();
     }
 
     if cli.ignored {
-        runner.with_ignored()?;
+        runner.with_ignored();
     }
 
     if cli.exact {
@@ -155,7 +164,7 @@ fn main() -> anyhow::Result<()> {
                     .join("`, `")
             )
         }
-    })?;
+    });
 
     if let Ok(timeout) = env::var("WASM_BINDGEN_TEST_DRIVER_TIMEOUT") {
         runner.with_driver_timeout(

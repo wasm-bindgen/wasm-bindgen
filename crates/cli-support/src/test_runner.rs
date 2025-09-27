@@ -1,7 +1,6 @@
 use crate::Bindgen;
 use anyhow::{bail, Context};
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::thread;
 
 mod deno;
@@ -88,8 +87,20 @@ pub enum OutputFormatSetting {
 
 #[derive(Debug)]
 pub struct TestRunner {
-    /// The file to test. `cargo test` passes this argument for you.
-    file: PathBuf,
+    /// The basename of the file being tested.
+    file_name: String,
+
+    /// The raw contents of the file to test. `cargo test` passes this argument for you.
+    file_content: Vec<u8>,
+
+    /// Use [Bindgen::no_modules] when generating test sources.
+    no_modules: bool,
+
+    /// Use [Bindgen::debug] when generating test sources.
+    debug: bool,
+
+    /// Use [Bindgen::split_linked_modules] when generating test sources.
+    split_linked_modules: bool,
 
     /// Run ignored tests
     include_ignored: bool,
@@ -115,14 +126,8 @@ pub struct TestRunner {
     /// The FILTER string is tested against the name of all tests, and only those tests whose names contain the filter are run.
     filter: Option<String>,
 
-    /// Use [Bindgen::no_modules] when generating test sources.
-    no_modules: bool,
-
     /// Disable headless tests.
     no_headless: bool,
-
-    /// Use [Bindgen::debug] when generating test sources.
-    debug: bool,
 
     /// A directory to use in place of a generated temp directory.
     temp_dir: Option<PathBuf>,
@@ -132,9 +137,6 @@ pub struct TestRunner {
 
     /// The timeout to use for browser processes.
     browser_timeout: u64,
-
-    /// Use [Bindgen::split_linked_modules] when generating test sources.
-    split_linked_modules: bool,
 
     /// The webdriver json config content.
     capabilities_content: Option<String>,
@@ -174,9 +176,13 @@ pub struct TestRunner {
 
 impl TestRunner {
     /// Constructor for the [TestRunner].
-    pub fn new(file: PathBuf) -> Self {
+    pub fn new(file_name: String, file_content: Vec<u8>) -> Self {
         Self {
-            file,
+            file_name,
+            file_content,
+            no_modules: false,
+            debug: false,
+            split_linked_modules: false,
             include_ignored: false,
             ignored: false,
             exact: false,
@@ -185,13 +191,10 @@ impl TestRunner {
             nocapture: false,
             format: None,
             filter: None,
-            no_modules: false,
             no_headless: false,
-            debug: false,
             temp_dir: None,
             driver_timeout: 5,
             browser_timeout: 20,
-            split_linked_modules: false,
             capabilities_content: None,
             coverage_profraw_prefix: None,
             coverage_profraw_out: None,
@@ -206,20 +209,29 @@ impl TestRunner {
         }
     }
 
-    pub fn with_include_ignored(&mut self) -> anyhow::Result<&mut Self> {
-        if self.ignored {
-            bail!("`--ignored` is mutually exclusive with `--include-ignored`");
-        }
-        self.include_ignored = true;
-        Ok(self)
+    pub fn with_no_modules(&mut self) -> &mut Self {
+        self.no_modules = true;
+        self
     }
 
-    pub fn with_ignored(&mut self) -> anyhow::Result<&mut Self> {
-        if self.include_ignored {
-            bail!("`--ignored` is mutually exclusive with `--include-ignored`");
-        }
+    pub fn with_debug(&mut self) -> &mut Self {
+        self.debug = true;
+        self
+    }
+
+    pub fn with_split_linked_modules(&mut self) -> &mut Self {
+        self.split_linked_modules = true;
+        self
+    }
+
+    pub fn with_include_ignored(&mut self) -> &mut Self {
+        self.include_ignored = true;
+        self
+    }
+
+    pub fn with_ignored(&mut self) -> &mut Self {
         self.ignored = true;
-        Ok(self)
+        self
     }
 
     pub fn with_exact(&mut self) -> &mut Self {
@@ -252,18 +264,8 @@ impl TestRunner {
         self
     }
 
-    pub fn with_no_modules(&mut self) -> &mut Self {
-        self.no_modules = true;
-        self
-    }
-
     pub fn with_no_headless(&mut self) -> &mut Self {
         self.no_headless = true;
-        self
-    }
-
-    pub fn with_debug(&mut self) -> &mut Self {
-        self.debug = true;
         self
     }
 
@@ -279,11 +281,6 @@ impl TestRunner {
 
     pub fn with_browser_timeout(&mut self, timeout: u64) -> &mut Self {
         self.browser_timeout = timeout;
-        self
-    }
-
-    pub fn with_split_linked_modules(&mut self) -> &mut Self {
-        self.split_linked_modules = true;
         self
     }
 
@@ -312,13 +309,9 @@ impl TestRunner {
         self
     }
 
-    pub fn with_fallback_test_mode(&mut self, test_mode: TestMode) -> anyhow::Result<&mut Self> {
-        if self.fallback_test_mode.is_some() {
-            bail!("fallback TestMode is already set.");
-        }
-
+    pub fn with_fallback_test_mode(&mut self, test_mode: TestMode) -> &mut Self {
         self.fallback_test_mode = Some(test_mode);
-        Ok(self)
+        self
     }
 
     pub fn with_test_only_web(&mut self) -> &mut Self {
@@ -347,24 +340,21 @@ impl TestRunner {
     }
 
     pub fn execute(&self) -> anyhow::Result<()> {
-        let shell = shell::Shell::new();
+        if self.ignored && self.include_ignored {
+            bail!("`ignored` is mutually exclusive with `include_ignored`.");
+        }
 
-        let file_name = self
-            .file
-            .file_name()
-            .map(Path::new)
-            .context("file to test is not a valid file, can't extract file name")?;
+        let shell = shell::Shell::new();
 
         // Collect all tests that the test harness is supposed to run. We assume
         // that any exported function with the prefix `__wbg_test` is a test we need
         // to execute.
-        let wasm = fs::read(&self.file).context("failed to read Wasm file")?;
         let mut wasm = walrus::ModuleConfig::new()
             // generate dwarf by default, it can be controlled by debug profile
             //
             // https://doc.rust-lang.org/cargo/reference/profiles.html#debug
             .generate_dwarf(true)
-            .parse(&wasm)
+            .parse(&self.file_content)
             .context("failed to deserialize Wasm module")?;
         let mut tests = Tests::new();
 
@@ -520,7 +510,7 @@ impl TestRunner {
             b.split_linked_modules(true);
         }
 
-        let coverage = self.coverage_args(file_name);
+        let coverage = self.coverage_args(&self.file_name);
 
         // The debug here means adding some assertions and some error messages to the generated js
         // code.
@@ -602,9 +592,9 @@ impl TestRunner {
         Ok(())
     }
 
-    fn coverage_args(&self, file_name: &Path) -> PathBuf {
-        fn generated(file_name: &Path, prefix: &str) -> String {
-            let res = format!("{prefix}{}.profraw", file_name.display());
+    fn coverage_args(&self, file_name: &str) -> PathBuf {
+        fn generated(file_name: &str, prefix: &str) -> String {
+            let res = format!("{prefix}{}.profraw", file_name);
             res
         }
 
