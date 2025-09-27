@@ -224,117 +224,117 @@ impl TestRunner {
         self
     }
 
-    pub fn with_include_ignored(&mut self) -> &mut Self {
+    pub fn include_ignored(&mut self) -> &mut Self {
         self.include_ignored = true;
         self
     }
 
-    pub fn with_ignored(&mut self) -> &mut Self {
+    pub fn ignored(&mut self) -> &mut Self {
         self.ignored = true;
         self
     }
 
-    pub fn with_exact(&mut self) -> &mut Self {
+    pub fn exact(&mut self) -> &mut Self {
         self.exact = true;
         self
     }
 
-    pub fn with_skip<S: Into<String>>(&mut self, filter: S) -> &mut Self {
+    pub fn skip<S: Into<String>>(&mut self, filter: S) -> &mut Self {
         self.skip.push(filter.into());
         self
     }
 
-    pub fn with_list(&mut self) -> &mut Self {
+    pub fn list(&mut self) -> &mut Self {
         self.list = true;
         self
     }
 
-    pub fn with_nocapture(&mut self) -> &mut Self {
+    pub fn no_capture(&mut self) -> &mut Self {
         self.nocapture = true;
         self
     }
 
-    pub fn with_format(&mut self, format: OutputFormatSetting) -> &mut Self {
+    pub fn format(&mut self, format: OutputFormatSetting) -> &mut Self {
         self.format = Some(format);
         self
     }
 
-    pub fn with_filter<S: Into<String>>(&mut self, filter: S) -> &mut Self {
+    pub fn filter<S: Into<String>>(&mut self, filter: S) -> &mut Self {
         self.filter = Some(filter.into());
         self
     }
 
-    pub fn with_no_headless(&mut self) -> &mut Self {
+    pub fn no_headless(&mut self) -> &mut Self {
         self.no_headless = true;
         self
     }
 
-    pub fn with_temp_dir(&mut self, path: PathBuf) -> &mut Self {
+    pub fn temp_dir(&mut self, path: PathBuf) -> &mut Self {
         self.temp_dir = Some(path);
         self
     }
 
-    pub fn with_driver_timeout(&mut self, timeout: u64) -> &mut Self {
+    pub fn driver_timeout(&mut self, timeout: u64) -> &mut Self {
         self.driver_timeout = timeout;
         self
     }
 
-    pub fn with_browser_timeout(&mut self, timeout: u64) -> &mut Self {
+    pub fn browser_timeout(&mut self, timeout: u64) -> &mut Self {
         self.browser_timeout = timeout;
         self
     }
 
-    pub fn with_capabilities(&mut self, content: String) -> &mut Self {
+    pub fn capabilities(&mut self, content: String) -> &mut Self {
         self.capabilities_content = Some(content);
         self
     }
 
-    pub fn with_coverage_profraw_prefix(&mut self, prefix: String) -> &mut Self {
+    pub fn coverage_profraw_prefix(&mut self, prefix: String) -> &mut Self {
         self.coverage_profraw_prefix = Some(prefix);
         self
     }
 
-    pub fn with_coverage_profraw_out(&mut self, path: PathBuf) -> &mut Self {
+    pub fn coverage_profraw_out(&mut self, path: PathBuf) -> &mut Self {
         self.coverage_profraw_out = Some(path);
         self
     }
 
-    pub fn with_no_origin_isolation(&mut self) -> &mut Self {
+    pub fn no_origin_isolation(&mut self) -> &mut Self {
         self.no_origin_isolation = true;
         self
     }
 
-    pub fn with_address(&mut self, address: String) -> &mut Self {
+    pub fn address(&mut self, address: String) -> &mut Self {
         self.address = Some(address);
         self
     }
 
-    pub fn with_fallback_test_mode(&mut self, test_mode: TestMode) -> &mut Self {
+    pub fn fallback_test_mode(&mut self, test_mode: TestMode) -> &mut Self {
         self.fallback_test_mode = Some(test_mode);
         self
     }
 
-    pub fn with_test_only_web(&mut self) -> &mut Self {
+    pub fn test_only_web(&mut self) -> &mut Self {
         self.test_only_web = true;
         self
     }
 
-    pub fn with_test_only_node(&mut self) -> &mut Self {
+    pub fn test_only_node(&mut self) -> &mut Self {
         self.test_only_node = true;
         self
     }
 
-    pub fn with_node_bin(&mut self, binary: PathBuf) -> &mut Self {
+    pub fn node_bin(&mut self, binary: PathBuf) -> &mut Self {
         self.node_bin = Some(binary);
         self
     }
 
-    pub fn with_node_path(&mut self, path: Vec<PathBuf>) -> &mut Self {
+    pub fn node_path(&mut self, path: Vec<PathBuf>) -> &mut Self {
         self.node_path = path;
         self
     }
 
-    pub fn with_node_args(&mut self, args: Vec<String>) -> &mut Self {
+    pub fn node_args(&mut self, args: Vec<String>) -> &mut Self {
         self.node_args = args;
         self
     }
@@ -568,6 +568,8 @@ impl TestRunner {
                 // TODO: eventually we should provide the ability to exit at some point
                 // (gracefully) here, but for now this just runs forever.
                 if !headless {
+                    // TODO: This mentions an environment variable that might or might not exist
+                    // because we don't handle environment variables here directly anymore.
                     println!("Interactive browsers tests are now available at http://{addr}");
                     println!();
                     println!("Note that interactive mode is enabled because `NO_HEADLESS`");

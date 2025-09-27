@@ -94,35 +94,35 @@ fn main() -> anyhow::Result<()> {
     let mut runner = TestRunner::new(file_name, file_content);
 
     if cli.include_ignored {
-        runner.with_include_ignored();
+        runner.include_ignored();
     }
 
     if cli.ignored {
-        runner.with_ignored();
+        runner.ignored();
     }
 
     if cli.exact {
-        runner.with_exact();
+        runner.exact();
     }
 
     for skip in cli.skip {
-        runner.with_skip(skip);
+        runner.skip(skip);
     }
 
     if cli.list {
-        runner.with_list();
+        runner.list();
     }
 
     if cli.nocapture {
-        runner.with_nocapture();
+        runner.no_capture();
     }
 
     if let Some(fmt) = cli.format {
-        runner.with_format(fmt.into());
+        runner.format(fmt.into());
     }
 
     if let Some(filter) = cli.filter {
-        runner.with_filter(filter);
+        runner.filter(filter);
     }
 
     let no_modules = std::env::var("WASM_BINDGEN_USE_NO_MODULE").is_ok();
@@ -131,7 +131,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if env::var("NO_HEADLESS").is_err() {
-        runner.with_no_headless();
+        runner.no_headless();
     }
 
     if env::var("WASM_BINDGEN_NO_DEBUG").is_err() {
@@ -151,7 +151,7 @@ fn main() -> anyhow::Result<()> {
     add_mode(TestMode::ServiceWorker { no_modules });
     add_mode(TestMode::Node { no_modules });
 
-    runner.with_fallback_test_mode(match modes.len() {
+    runner.fallback_test_mode(match modes.len() {
         0 => TestMode::Node { no_modules: true },
         1 => modes[0],
         _ => {
@@ -167,7 +167,7 @@ fn main() -> anyhow::Result<()> {
     });
 
     if let Ok(timeout) = env::var("WASM_BINDGEN_TEST_DRIVER_TIMEOUT") {
-        runner.with_driver_timeout(
+        runner.driver_timeout(
             timeout
                 .parse()
                 .expect("Could not parse 'WASM_BINDGEN_TEST_DRIVER_TIMEOUT'"),
@@ -175,7 +175,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if let Ok(timeout) = env::var("WASM_BINDGEN_TEST_TIMEOUT") {
-        runner.with_browser_timeout(
+        runner.browser_timeout(
             timeout
                 .parse()
                 .expect("Could not parse 'WASM_BINDGEN_TEST_TIMEOUT'"),
@@ -192,24 +192,24 @@ fn main() -> anyhow::Result<()> {
     if capabilities_file.exists() {
         let content = std::fs::read_to_string(capabilities_file)
             .context("A capabilities file was found but could not be read")?;
-        runner.with_capabilities(content);
+        runner.capabilities(content);
     }
 
     if std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err() {
-        runner.with_no_origin_isolation();
+        runner.no_origin_isolation();
     }
 
     if env::var_os("WASM_BINDGEN_TEST_ONLY_NODE").is_some() {
-        runner.with_test_only_node();
+        runner.test_only_node();
     }
 
     if env::var_os("WASM_BINDGEN_TEST_ONLY_WEB").is_some() {
-        runner.with_test_only_web();
+        runner.test_only_web();
     }
 
     if let Ok(value) = env::var("NODE_PATH") {
         let path = env::split_paths(&value).collect::<Vec<_>>();
-        runner.with_node_path(path);
+        runner.node_path(path);
     }
 
     if let Ok(args) = env::var("NODE_ARGS") {
@@ -218,15 +218,15 @@ fn main() -> anyhow::Result<()> {
             .map(|s| s.to_string())
             .filter(|s| !s.is_empty())
             .collect::<Vec<_>>();
-        runner.with_node_args(extra_node_args);
+        runner.node_args(extra_node_args);
     }
 
     if let Some(prefix) = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX") {
-        runner.with_coverage_profraw_prefix(prefix.to_str().unwrap().to_string());
+        runner.coverage_profraw_prefix(prefix.to_str().unwrap().to_string());
     }
 
     if let Some(out) = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT") {
-        runner.with_coverage_profraw_out(PathBuf::from(out));
+        runner.coverage_profraw_out(PathBuf::from(out));
     }
 
     runner.execute()
