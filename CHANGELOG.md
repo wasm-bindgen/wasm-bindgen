@@ -3,9 +3,9 @@
 
 ## Unreleased
 
-### Changed
+### Added
 
-* Migrated core `wasm-bindgen-test-runner` implementation into `wasm_bindgen_cli_support` library as the `testing` module.
+* `wasm-bindgen-cli-support` now offers a way to execute the test-runner.
   [#4693](https://github.com/wasm-bindgen/wasm-bindgen/pull/4693)
 
 ### Fixed
