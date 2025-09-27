@@ -5,7 +5,7 @@
 
 ### Added
 
-* `wasm-bindgen-cli-support` now offers a way to execute the test-runner.
+* Added `wasm-bindgen-test-cli-support` which introduces a new way to execute the `wasm-bindgen-test-runner`.
   [#4693](https://github.com/wasm-bindgen/wasm-bindgen/pull/4693)
 
 ### Fixed
