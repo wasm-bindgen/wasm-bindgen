@@ -18,7 +18,7 @@
   (import "" "a" (func $a (;0;) (type 2)))
   (func $"a externref shim" (;1;) (type 1) (param i32)
     local.get 0
-    table.get 0
+    table.get $__wbindgen_externrefs
     local.get 0
     call $dealloc
     call $a
@@ -28,7 +28,7 @@
     call $"a externref shim"
   )
   (func $dealloc (;3;) (type 1) (param i32))
-  (table (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (export "foo" (func 2))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )

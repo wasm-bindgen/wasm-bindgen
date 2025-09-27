@@ -47,7 +47,7 @@ export function __wbg_random_e2b253f0e987bd7c() {
 };
 
 export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_export_1;
+    const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
     table.set(0, undefined);
     table.set(offset + 0, undefined);

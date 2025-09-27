@@ -22,11 +22,11 @@
     call $alloc
     local.tee 1
     local.get 0
-    table.set 0
+    table.set $__wbindgen_externrefs
     local.get 1
     call $foo
     local.tee 1
-    table.get 0
+    table.get $__wbindgen_externrefs
     local.get 1
     call $dealloc
   )
@@ -35,8 +35,8 @@
     call $alloc
     local.tee 1
     local.get 0
-    table.get 0
-    table.set 0
+    table.get $__wbindgen_externrefs
+    table.set $__wbindgen_externrefs
     local.get 1
   )
   (func $foo (;2;) (type 2) (param i32) (result i32)
@@ -47,7 +47,7 @@
     i32.const 0
   )
   (func $dealloc (;4;) (type 1) (param i32))
-  (table (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (export "foo" (func $"foo externref shim"))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
