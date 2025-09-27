@@ -4,13 +4,11 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::{env, fs};
 
-pub mod deno;
-pub mod headless;
-pub mod node;
-pub mod server;
-pub mod shell;
-
-pub use walrus;
+mod deno;
+mod headless;
+mod node;
+mod server;
+mod shell;
 
 pub struct Tests {
     pub tests: Vec<Test>,

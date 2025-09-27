@@ -1,4 +1,4 @@
-use crate::testing::shell::Shell;
+use crate::test_runner::shell::Shell;
 use anyhow::{bail, format_err, Context, Error};
 use log::{debug, warn};
 use rouille::url::Url;
