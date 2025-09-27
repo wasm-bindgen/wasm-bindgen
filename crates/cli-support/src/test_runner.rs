@@ -10,6 +10,8 @@ mod node;
 mod server;
 mod shell;
 
+pub use walrus;
+
 struct Tests {
     pub tests: Vec<Test>,
     pub filtered: usize,
