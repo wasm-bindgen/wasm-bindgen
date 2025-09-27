@@ -131,7 +131,7 @@ fn main() -> anyhow::Result<()> {
         runner.no_modules();
     }
 
-    if env::var("NO_HEADLESS").is_err() {
+    if env::var("NO_HEADLESS").is_ok() {
         runner.no_headless();
     }
 
