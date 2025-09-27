@@ -25,9 +25,8 @@ anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
 env_logger = "0.11.5"
 log = "0.4"
-wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.104", features = [
-  "test-runner",
-] }
+wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.104" }
+wasm-bindgen-test-cli-support = { path = "../test-cli-support", version = "=0.2.104" }
 
 [dev-dependencies]
 assert_cmd = "2"
@@ -41,12 +40,12 @@ wasmprinter = "0.214"
 [features]
 default = ["rustls-tls"]
 
-native-tls = ["wasm-bindgen-cli-support/native-tls"]
-rustls-tls = ["wasm-bindgen-cli-support/rustls-tls"]
+native-tls = ["wasm-bindgen-test-cli-support/native-tls"]
+rustls-tls = ["wasm-bindgen-test-cli-support/rustls-tls"]
 
 # Legacy support
-openssl = ["wasm-bindgen-cli-support/openssl"]
-vendored-openssl = ["wasm-bindgen-cli-support/vendored-openssl"]
+openssl = ["wasm-bindgen-test-cli-support/openssl"]
+vendored-openssl = ["wasm-bindgen-test-cli-support/vendored-openssl"]
 
 [lints]
 workspace = true

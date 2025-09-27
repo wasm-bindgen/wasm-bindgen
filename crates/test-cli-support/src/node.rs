@@ -6,7 +6,7 @@ use std::process::Command;
 
 use anyhow::{Context, Error};
 
-use crate::test_runner::Tests;
+use crate::Tests;
 
 // depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
 pub const SHARED_SETUP: &str = r#"

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Context, Error};
 use rouille::{Request, Response, Server};
 
-use crate::test_runner::{TestMode, Tests};
+use crate::{TestMode, Tests};
 
 pub fn spawn(
     addr: &SocketAddr,

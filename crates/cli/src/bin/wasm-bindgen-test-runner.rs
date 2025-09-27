@@ -15,8 +15,7 @@ use anyhow::{bail, Context};
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 use std::{env, fs, process};
-use wasm_bindgen_cli_support::test_runner::TestMode;
-use wasm_bindgen_cli_support::test_runner::{OutputFormatSetting, TestRunner};
+use wasm_bindgen_test_cli_support::{OutputFormatSetting, TestMode, TestRunner};
 
 /// Possible values for the `--format` option.
 #[derive(Debug, Clone, Copy, ValueEnum)]

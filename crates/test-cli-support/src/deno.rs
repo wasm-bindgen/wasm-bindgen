@@ -4,8 +4,8 @@ use std::{fs, process};
 
 use anyhow::{Context, Error};
 
-use crate::test_runner::node::SHARED_SETUP;
-use crate::test_runner::Tests;
+use crate::node::SHARED_SETUP;
+use crate::Tests;
 
 pub fn execute(
     module: &str,

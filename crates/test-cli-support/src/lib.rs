@@ -1,7 +1,7 @@
-use crate::Bindgen;
 use anyhow::{bail, Context};
 use std::path::PathBuf;
 use std::thread;
+use wasm_bindgen_cli_support::Bindgen;
 
 mod deno;
 mod headless;
