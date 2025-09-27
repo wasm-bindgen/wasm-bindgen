@@ -52,8 +52,9 @@ pub fn execute(
     coverage: PathBuf,
     nocapture: bool,
     include_ignored_tests: bool,
-    node_path: Vec<PathBuf>,
-    node_args: Vec<String>,
+    node_bin: &Option<PathBuf>,
+    node_path: &[PathBuf],
+    node_args: &Vec<String>,
 ) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"
@@ -131,10 +132,16 @@ pub fn execute(
 
     let path: Vec<_> = vec![env::current_dir().unwrap(), tmpdir.to_path_buf()]
         .into_iter()
-        .chain(node_path)
+        .chain(node_path.iter().cloned())
         .collect();
 
-    let status = Command::new("node")
+    let default_node = PathBuf::from("node");
+    let node = match node_bin {
+        Some(p) => p.as_path(),
+        None => default_node.as_path(),
+    };
+
+    let status = Command::new(node)
         .env("NODE_PATH", env::join_paths(path).unwrap())
         .arg("--expose-gc")
         .args(node_args)

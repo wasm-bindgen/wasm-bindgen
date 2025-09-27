@@ -11,9 +11,12 @@
 //! For more documentation about this see the `wasm-bindgen-test` crate README
 //! and source code.
 
+use anyhow::{bail, Context};
 use clap::Parser;
 use clap::ValueEnum;
+use std::env;
 use std::path::PathBuf;
+use wasm_bindgen_cli_support::test_runner::TestMode;
 use wasm_bindgen_cli_support::test_runner::{OutputFormatSetting, TestRunner};
 
 /// Possible values for the `--format` option.
@@ -82,36 +85,151 @@ fn main() -> anyhow::Result<()> {
     let mut runner = TestRunner::new(cli.file);
 
     if cli.include_ignored {
-        runner = runner.with_include_ignored()?;
+        runner.with_include_ignored()?;
     }
 
     if cli.ignored {
-        runner = runner.with_ignored()?;
+        runner.with_ignored()?;
     }
 
     if cli.exact {
-        runner = runner.with_exact();
+        runner.with_exact();
     }
 
     for skip in cli.skip {
-        runner = runner.with_skip(skip);
+        runner.with_skip(skip);
     }
 
     if cli.list {
-        runner = runner.with_list();
+        runner.with_list();
     }
 
     if cli.nocapture {
-        runner = runner.with_nocapture();
+        runner.with_nocapture();
     }
 
     if let Some(fmt) = cli.format {
-        runner = runner.with_format(fmt.into());
+        runner.with_format(fmt.into());
     }
 
     if let Some(filter) = cli.filter {
-        runner = runner.with_filter(filter);
+        runner.with_filter(filter);
+    }
+
+    let no_modules = std::env::var("WASM_BINDGEN_USE_NO_MODULE").is_ok();
+    if no_modules {
+        runner.with_no_modules();
+    }
+
+    if env::var("NO_HEADLESS").is_err() {
+        runner.with_no_headless();
+    }
+
+    if env::var("WASM_BINDGEN_NO_DEBUG").is_err() {
+        runner.with_debug();
+    }
+
+    let mut modes = Vec::new();
+    let mut add_mode = |mode: TestMode| {
+        std::env::var(test_mode_env(&mode))
+            .is_ok()
+            .then(|| modes.push(mode))
+    };
+    add_mode(TestMode::Deno);
+    add_mode(TestMode::Browser { no_modules });
+    add_mode(TestMode::DedicatedWorker { no_modules });
+    add_mode(TestMode::SharedWorker { no_modules });
+    add_mode(TestMode::ServiceWorker { no_modules });
+    add_mode(TestMode::Node { no_modules });
+
+    runner.with_fallback_test_mode(match modes.len() {
+        0 => TestMode::Node { no_modules: true },
+        1 => modes[0],
+        _ => {
+            bail!(
+                "only one test mode must be set, found: `{}`",
+                modes
+                    .iter()
+                    .map(test_mode_env)
+                    .collect::<Vec<_>>()
+                    .join("`, `")
+            )
+        }
+    })?;
+
+    if let Ok(timeout) = env::var("WASM_BINDGEN_TEST_DRIVER_TIMEOUT") {
+        runner.with_driver_timeout(
+            timeout
+                .parse()
+                .expect("Could not parse 'WASM_BINDGEN_TEST_DRIVER_TIMEOUT'"),
+        );
+    }
+
+    if let Ok(timeout) = env::var("WASM_BINDGEN_TEST_TIMEOUT") {
+        runner.with_browser_timeout(
+            timeout
+                .parse()
+                .expect("Could not parse 'WASM_BINDGEN_TEST_TIMEOUT'"),
+        );
+    }
+
+    if std::env::var("WASM_BINDGEN_SPLIT_LINKED_MODULES").is_ok() {
+        runner.with_split_linked_modules();
+    }
+
+    let capabilities_file = PathBuf::from(
+        std::env::var("WASM_BINDGEN_TEST_WEBDRIVER_JSON").unwrap_or("webdriver.json".to_string()),
+    );
+    if capabilities_file.exists() {
+        let content = std::fs::read_to_string(capabilities_file)
+            .context("A capabilities file was found but could not be read")?;
+        runner.with_capabilities(content);
+    }
+
+    if std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err() {
+        runner.with_no_origin_isolation();
+    }
+
+    if env::var_os("WASM_BINDGEN_TEST_ONLY_NODE").is_some() {
+        runner.with_test_only_node();
+    }
+
+    if env::var_os("WASM_BINDGEN_TEST_ONLY_WEB").is_some() {
+        runner.with_test_only_web();
+    }
+
+    if let Ok(value) = env::var("NODE_PATH") {
+        let path = env::split_paths(&value).collect::<Vec<_>>();
+        runner.with_node_path(path);
+    }
+
+    if let Ok(args) = env::var("NODE_ARGS") {
+        let extra_node_args = args
+            .split(',')
+            .map(|s| s.to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
+        runner.with_node_args(extra_node_args);
+    }
+
+    if let Some(prefix) = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX") {
+        runner.with_coverage_profraw_prefix(prefix.to_str().unwrap().to_string());
+    }
+
+    if let Some(out) = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT") {
+        runner.with_coverage_profraw_out(PathBuf::from(out));
     }
 
     runner.execute()
+}
+
+fn test_mode_env(mode: &TestMode) -> &'static str {
+    match mode {
+        TestMode::Node { .. } => "WASM_BINDGEN_USE_NODE_EXPERIMENTAL",
+        TestMode::Deno => "WASM_BINDGEN_USE_DENO",
+        TestMode::Browser { .. } => "WASM_BINDGEN_USE_BROWSER",
+        TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
+        TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
+        TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
+    }
 }

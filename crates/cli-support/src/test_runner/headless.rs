@@ -5,7 +5,6 @@ use rouille::url::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value as Json};
 use std::env;
-use std::fs::File;
 use std::io::{self, Cursor, ErrorKind, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
@@ -62,7 +61,7 @@ pub fn run(
     shell: &Shell,
     driver_timeout: u64,
     test_timeout: u64,
-    capabilities_file: &Path,
+    capabilities_content: &Option<String>,
     override_address: Option<String>,
 ) -> Result<(), Error> {
     let driver = Driver::find()?;
@@ -128,12 +127,12 @@ pub fn run(
         session: None,
     };
     println!("Try find `webdriver.json` for configure browser's capabilities:");
-    let capabilities: Capabilities = match File::open(capabilities_file) {
-        Ok(file) => {
+    let capabilities: Capabilities = match capabilities_content {
+        Some(content) => {
             println!("Ok");
-            serde_json::from_reader(file)
+            serde_json::from_str(content)
         }
-        Err(_) => {
+        None => {
             println!("Not found");
             Ok(Capabilities::new())
         }

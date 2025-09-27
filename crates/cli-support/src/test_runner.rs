@@ -1,8 +1,8 @@
 use crate::Bindgen;
 use anyhow::{bail, Context};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
-use std::{env, fs};
 
 mod deno;
 mod headless;
@@ -10,7 +10,7 @@ mod node;
 mod server;
 mod shell;
 
-pub struct Tests {
+struct Tests {
     pub tests: Vec<Test>,
     pub filtered: usize,
 }
@@ -36,7 +36,7 @@ impl Tests {
     }
 }
 
-pub struct Test {
+struct Test {
     /// The test name.
     pub name: String,
 
@@ -112,6 +112,62 @@ pub struct TestRunner {
 
     /// The FILTER string is tested against the name of all tests, and only those tests whose names contain the filter are run.
     filter: Option<String>,
+
+    /// Use [Bindgen::no_modules] when generating test sources.
+    no_modules: bool,
+
+    /// Disable headless tests.
+    no_headless: bool,
+
+    /// Use [Bindgen::debug] when generating test sources.
+    debug: bool,
+
+    /// A directory to use in place of a generated temp directory.
+    temp_dir: Option<PathBuf>,
+
+    /// The timeout to use for webdriver processes.
+    driver_timeout: u64,
+
+    /// The timeout to use for browser processes.
+    browser_timeout: u64,
+
+    /// Use [Bindgen::split_linked_modules] when generating test sources.
+    split_linked_modules: bool,
+
+    /// The webdriver json config content.
+    capabilities_content: Option<String>,
+
+    /// An optional prefix
+    coverage_profraw_prefix: Option<String>,
+
+    /// The expected output file or directory for coverage profraw files.
+    coverage_profraw_out: Option<PathBuf>,
+
+    /// Skip setting Cross-Origin policies for tests.
+    no_origin_isolation: bool,
+
+    /// An optional override address to use for headless tests.
+    address: Option<String>,
+
+    /// The test mode to use when the type is not identifiable from [TestRunner::file].
+    fallback_test_mode: Option<TestMode>,
+
+    /// Only run web tests.
+    test_only_web: bool,
+
+    /// Only run node tests.
+    test_only_node: bool,
+
+    /// The path to the desired `nodejs` binary for node tests.
+    node_bin: Option<PathBuf>,
+
+    /// Augment `NODE_PATH` so things like `require("tests/my-custom.js")` work
+    /// and Rust code can import from custom JS shims. This is a bit of a hack
+    /// and should probably be removed at some point.
+    node_path: Vec<PathBuf>,
+
+    /// Arguments to pass to nodejs for node tests.
+    node_args: Vec<String>,
 }
 
 impl TestRunner {
@@ -127,10 +183,28 @@ impl TestRunner {
             nocapture: false,
             format: None,
             filter: None,
+            no_modules: false,
+            no_headless: false,
+            debug: false,
+            temp_dir: None,
+            driver_timeout: 5,
+            browser_timeout: 20,
+            split_linked_modules: false,
+            capabilities_content: None,
+            coverage_profraw_prefix: None,
+            coverage_profraw_out: None,
+            no_origin_isolation: false,
+            address: None,
+            fallback_test_mode: None,
+            test_only_node: false,
+            test_only_web: false,
+            node_bin: None,
+            node_path: Vec::new(),
+            node_args: Vec::new(),
         }
     }
 
-    pub fn with_include_ignored(mut self) -> anyhow::Result<Self> {
+    pub fn with_include_ignored(&mut self) -> anyhow::Result<&mut Self> {
         if self.ignored {
             bail!("`--ignored` is mutually exclusive with `--include-ignored`");
         }
@@ -138,7 +212,7 @@ impl TestRunner {
         Ok(self)
     }
 
-    pub fn with_ignored(mut self) -> anyhow::Result<Self> {
+    pub fn with_ignored(&mut self) -> anyhow::Result<&mut Self> {
         if self.include_ignored {
             bail!("`--ignored` is mutually exclusive with `--include-ignored`");
         }
@@ -146,33 +220,127 @@ impl TestRunner {
         Ok(self)
     }
 
-    pub fn with_exact(mut self) -> Self {
+    pub fn with_exact(&mut self) -> &mut Self {
         self.exact = true;
         self
     }
 
-    pub fn with_skip<S: Into<String>>(mut self, filter: S) -> Self {
+    pub fn with_skip<S: Into<String>>(&mut self, filter: S) -> &mut Self {
         self.skip.push(filter.into());
         self
     }
 
-    pub fn with_list(mut self) -> Self {
+    pub fn with_list(&mut self) -> &mut Self {
         self.list = true;
         self
     }
 
-    pub fn with_nocapture(mut self) -> Self {
+    pub fn with_nocapture(&mut self) -> &mut Self {
         self.nocapture = true;
         self
     }
 
-    pub fn with_format(mut self, format: OutputFormatSetting) -> Self {
+    pub fn with_format(&mut self, format: OutputFormatSetting) -> &mut Self {
         self.format = Some(format);
         self
     }
 
-    pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Self {
+    pub fn with_filter<S: Into<String>>(&mut self, filter: S) -> &mut Self {
         self.filter = Some(filter.into());
+        self
+    }
+
+    pub fn with_no_modules(&mut self) -> &mut Self {
+        self.no_modules = true;
+        self
+    }
+
+    pub fn with_no_headless(&mut self) -> &mut Self {
+        self.no_headless = true;
+        self
+    }
+
+    pub fn with_debug(&mut self) -> &mut Self {
+        self.debug = true;
+        self
+    }
+
+    pub fn with_temp_dir(&mut self, path: PathBuf) -> &mut Self {
+        self.temp_dir = Some(path);
+        self
+    }
+
+    pub fn with_driver_timeout(&mut self, timeout: u64) -> &mut Self {
+        self.driver_timeout = timeout;
+        self
+    }
+
+    pub fn with_browser_timeout(&mut self, timeout: u64) -> &mut Self {
+        self.browser_timeout = timeout;
+        self
+    }
+
+    pub fn with_split_linked_modules(&mut self) -> &mut Self {
+        self.split_linked_modules = true;
+        self
+    }
+
+    pub fn with_capabilities(&mut self, content: String) -> &mut Self {
+        self.capabilities_content = Some(content);
+        self
+    }
+
+    pub fn with_coverage_profraw_prefix(&mut self, prefix: String) -> &mut Self {
+        self.coverage_profraw_prefix = Some(prefix);
+        self
+    }
+
+    pub fn with_coverage_profraw_out(&mut self, path: PathBuf) -> &mut Self {
+        self.coverage_profraw_out = Some(path);
+        self
+    }
+
+    pub fn with_no_origin_isolation(&mut self) -> &mut Self {
+        self.no_origin_isolation = true;
+        self
+    }
+
+    pub fn with_address(&mut self, address: String) -> &mut Self {
+        self.address = Some(address);
+        self
+    }
+
+    pub fn with_fallback_test_mode(&mut self, test_mode: TestMode) -> anyhow::Result<&mut Self> {
+        if self.fallback_test_mode.is_some() {
+            bail!("fallback TestMode is already set.");
+        }
+
+        self.fallback_test_mode = Some(test_mode);
+        Ok(self)
+    }
+
+    pub fn with_test_only_web(&mut self) -> &mut Self {
+        self.test_only_web = true;
+        self
+    }
+
+    pub fn with_test_only_node(&mut self) -> &mut Self {
+        self.test_only_node = true;
+        self
+    }
+
+    pub fn with_node_bin(&mut self, binary: PathBuf) -> &mut Self {
+        self.node_bin = Some(binary);
+        self
+    }
+
+    pub fn with_node_path(&mut self, path: Vec<PathBuf>) -> &mut Self {
+        self.node_path = path;
+        self
+    }
+
+    pub fn with_node_args(&mut self, args: Vec<String>) -> &mut Self {
+        self.node_args = args;
         self
     }
 
@@ -254,10 +422,17 @@ impl TestRunner {
 
             // Returning cleanly has the strange effect of outputting
             // an additional empty line with spaces in it.
-            std::process::exit(0);
+            return Ok(());
         }
 
-        let tmpdir = tempfile::tempdir()?;
+        let (_, tmpdir) = match &self.temp_dir {
+            Some(p) => (None, p.clone()),
+            None => {
+                let tmp = tempfile::tempdir()?;
+                let path = tmp.path().to_path_buf();
+                (Some(tmp), path)
+            }
+        };
 
         let module = "wasm-bindgen-test";
 
@@ -275,7 +450,7 @@ impl TestRunner {
         // to read later on.
 
         let custom_section = wasm.customs.remove_raw("__wasm_bindgen_test_unstable");
-        let no_modules = std::env::var("WASM_BINDGEN_USE_NO_MODULE").is_ok();
+        let no_modules = self.no_modules;
         let test_mode = match custom_section {
             Some(section) if section.data.contains(&0x01) => TestMode::Browser { no_modules },
             Some(section) if section.data.contains(&0x02) => {
@@ -285,51 +460,23 @@ impl TestRunner {
             Some(section) if section.data.contains(&0x04) => TestMode::ServiceWorker { no_modules },
             Some(section) if section.data.contains(&0x05) => TestMode::Node { no_modules },
             Some(_) => bail!("invalid __wasm_bingen_test_unstable value"),
-            None => {
-                let mut modes = Vec::new();
-                let mut add_mode = |mode: TestMode| {
-                    std::env::var(test_mode_env(&mode))
-                        .is_ok()
-                        .then(|| modes.push(mode))
-                };
-                add_mode(TestMode::Deno);
-                add_mode(TestMode::Browser { no_modules });
-                add_mode(TestMode::DedicatedWorker { no_modules });
-                add_mode(TestMode::SharedWorker { no_modules });
-                add_mode(TestMode::ServiceWorker { no_modules });
-                add_mode(TestMode::Node { no_modules });
-
-                match modes.len() {
-                    0 => TestMode::Node { no_modules: true },
-                    1 => modes[0],
-                    _ => {
-                        bail!(
-                            "only one test mode must be set, found: `{}`",
-                            modes
-                                .iter()
-                                .map(test_mode_env)
-                                .collect::<Vec<_>>()
-                                .join("`, `")
-                        )
-                    }
-                }
-            }
+            None => match self.fallback_test_mode {
+                Some(fallback) => fallback,
+                None => bail!("Unable to determine test mode. No fallback was provided."),
+            },
         };
-
-        let headless = env::var("NO_HEADLESS").is_err();
-        let debug = env::var("WASM_BINDGEN_NO_DEBUG").is_err();
 
         // Gracefully handle requests to execute only node or only web tests.
         let node = matches!(test_mode, TestMode::Node { .. });
 
-        if env::var_os("WASM_BINDGEN_TEST_ONLY_NODE").is_some() && !node {
+        if self.test_only_node && !node {
             println!(
                 "this test suite is only configured to run in a browser, \
              but we're only testing node.js tests so skipping"
             );
             return Ok(());
         }
-        if env::var_os("WASM_BINDGEN_TEST_ONLY_WEB").is_some() && node {
+        if self.test_only_web && node {
             println!(
                 "\
     This test suite is only configured to run in node.js, but we're only running
@@ -345,23 +492,8 @@ impl TestRunner {
             return Ok(());
         }
 
-        let driver_timeout = env::var("WASM_BINDGEN_TEST_DRIVER_TIMEOUT")
-            .map(|timeout| {
-                timeout
-                    .parse()
-                    .expect("Could not parse 'WASM_BINDGEN_TEST_DRIVER_TIMEOUT'")
-            })
-            .unwrap_or(5);
-
-        let browser_timeout = env::var("WASM_BINDGEN_TEST_TIMEOUT")
-            .map(|timeout| {
-                let timeout = timeout
-                    .parse()
-                    .expect("Could not parse 'WASM_BINDGEN_TEST_TIMEOUT'");
-                println!("Set timeout to {timeout} seconds...");
-                timeout
-            })
-            .unwrap_or(20);
+        let driver_timeout = self.driver_timeout;
+        let browser_timeout = self.browser_timeout;
 
         // Make the generated bindings available for the tests to execute against.
         shell.status("Executing bindgen...");
@@ -382,17 +514,17 @@ impl TestRunner {
             }
         };
 
-        if std::env::var("WASM_BINDGEN_SPLIT_LINKED_MODULES").is_ok() {
+        if self.split_linked_modules {
             b.split_linked_modules(true);
         }
 
-        let coverage = coverage_args(file_name);
+        let coverage = self.coverage_args(file_name);
 
         // The debug here means adding some assertions and some error messages to the generated js
         // code.
         //
         // It has nothing to do with Rust.
-        b.debug(debug)
+        b.debug(self.debug)
             .input_module(module, wasm)
             .emit_start(false)
             .generate(&tmpdir)
@@ -400,61 +532,40 @@ impl TestRunner {
         shell.clear();
 
         match test_mode {
-            TestMode::Node { no_modules } => {
-                // Augment `NODE_PATH` so things like `require("tests/my-custom.js")` work
-                // and Rust code can import from custom JS shims. This is a bit of a hack
-                // and should probably be removed at some point.
-                let path = env::var("NODE_PATH").unwrap_or_default();
-                let path = env::split_paths(&path).collect::<Vec<_>>();
-
-                let extra_node_args = env::var("NODE_ARGS")
-                    .unwrap_or_default()
-                    .split(',')
-                    .map(|s| s.to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect::<Vec<_>>();
-
-                node::execute(
-                    module,
-                    tmpdir.path(),
-                    tests,
-                    !no_modules,
-                    coverage,
-                    self.nocapture,
-                    self.include_ignored,
-                    path,
-                    extra_node_args,
-                )?
-            }
-            TestMode::Deno => deno::execute(
+            TestMode::Node { no_modules } => node::execute(
                 module,
-                tmpdir.path(),
+                &tmpdir,
                 tests,
+                !no_modules,
+                coverage,
                 self.nocapture,
                 self.include_ignored,
+                &self.node_bin,
+                &self.node_path,
+                &self.node_args,
             )?,
+            TestMode::Deno => {
+                deno::execute(module, &tmpdir, tests, self.nocapture, self.include_ignored)?
+            }
             TestMode::Browser { .. }
             | TestMode::DedicatedWorker { .. }
             | TestMode::SharedWorker { .. }
             | TestMode::ServiceWorker { .. } => {
-                let capabilities_file = PathBuf::from(
-                    std::env::var("WASM_BINDGEN_TEST_WEBDRIVER_JSON")
-                        .unwrap_or("webdriver.json".to_string()),
-                );
+                let headless = !self.no_headless;
                 let srv = server::spawn(
                     &if headless {
                         "127.0.0.1:0".parse().unwrap()
-                    } else if let Ok(address) = std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
+                    } else if let Some(address) = &self.address {
                         address.parse().unwrap()
                     } else {
                         "127.0.0.1:8000".parse().unwrap()
                     },
                     headless,
                     module,
-                    tmpdir.path(),
+                    &tmpdir,
                     tests,
                     test_mode,
-                    std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
+                    self.no_origin_isolation,
                     coverage,
                     self.nocapture,
                     self.include_ignored,
@@ -481,44 +592,34 @@ impl TestRunner {
                     &shell,
                     driver_timeout,
                     browser_timeout,
-                    &capabilities_file,
-                    std::env::var("WASM_BINDGEN_TEST_ADDRESS").ok(),
+                    &self.capabilities_content,
+                    self.address.clone(),
                 )?;
             }
         }
         Ok(())
     }
-}
 
-fn coverage_args(file_name: &Path) -> PathBuf {
-    fn generated(file_name: &Path, prefix: &str) -> String {
-        let res = format!("{prefix}{}.profraw", file_name.display());
-        res
-    }
-
-    let prefix = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX")
-        .map(|s| s.to_str().unwrap().to_string())
-        .unwrap_or_default();
-
-    match env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT") {
-        Some(s) => {
-            let mut buf = PathBuf::from(s);
-            if buf.is_dir() {
-                buf.push(generated(file_name, &prefix));
-            }
-            buf
+    fn coverage_args(&self, file_name: &Path) -> PathBuf {
+        fn generated(file_name: &Path, prefix: &str) -> String {
+            let res = format!("{prefix}{}.profraw", file_name.display());
+            res
         }
-        None => PathBuf::from(generated(file_name, &prefix)),
-    }
-}
 
-fn test_mode_env(mode: &TestMode) -> &'static str {
-    match mode {
-        TestMode::Node { .. } => "WASM_BINDGEN_USE_NODE_EXPERIMENTAL",
-        TestMode::Deno => "WASM_BINDGEN_USE_DENO",
-        TestMode::Browser { .. } => "WASM_BINDGEN_USE_BROWSER",
-        TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
-        TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
-        TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
+        let prefix = match &self.coverage_profraw_prefix {
+            Some(p) => p.clone(),
+            None => String::new(),
+        };
+
+        match &self.coverage_profraw_out {
+            Some(s) => {
+                let mut buf = PathBuf::from(s);
+                if buf.is_dir() {
+                    buf.push(generated(file_name, &prefix));
+                }
+                buf
+            }
+            None => PathBuf::from(generated(file_name, &prefix)),
+        }
     }
 }
