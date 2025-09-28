@@ -6,6 +6,12 @@
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
+  [#4685](https://github.com/wasm-bindgen/wasm-bindgen/pull/4685)
+
+### Removed
+
+* Internal crate `wasm-bindgen-backend` will no longer be published.
+  [#4696](https://github.com/wasm-bindgen/wasm-bindgen/pull/4696)
 
 ## [0.2.104](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.103...0.2.104)
 

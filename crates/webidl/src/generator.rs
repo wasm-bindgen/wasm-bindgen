@@ -1,11 +1,10 @@
+use crate::util::{leading_colon_path_ty, raw_ident, rust_ident};
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use quote::format_ident;
 use quote::quote;
 use std::collections::BTreeSet;
 use syn::{Ident, Type};
-use wasm_bindgen_backend::util::leading_colon_path_ty;
-use wasm_bindgen_backend::util::{raw_ident, rust_ident};
 
 use crate::constants::{BUILTIN_IDENTS, POLYFILL_INTERFACES};
 use crate::idl_type::IdlType;

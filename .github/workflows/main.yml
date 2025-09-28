@@ -66,7 +66,6 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rustfmt
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-backend -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli -- -D warnings
     - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli-support -- -D warnings
@@ -562,7 +561,6 @@ jobs:
     - if: matrix.rust == '1.57'
       run: |
         cargo update -p bumpalo --precise 3.12.0
-        cargo update -p log --precise 0.4.18
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-lib:
