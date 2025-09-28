@@ -1,5 +1,4 @@
-//! This crate contains the part of the implementation of the `#[wasm_bindgen]` optsibute that is
-//! not in the shared backend crate.
+//! This crate contains implementation APIs for the `#[wasm_bindgen]` attribute.
 
 #![doc(html_root_url = "https://docs.rs/wasm-bindgen-macro-support/0.2")]
 
