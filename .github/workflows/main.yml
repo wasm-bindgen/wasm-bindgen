@@ -561,7 +561,6 @@ jobs:
     - if: matrix.rust == '1.57'
       run: |
         cargo update -p bumpalo --precise 3.12.0
-        cargo update -p log --precise 0.4.18
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-lib:
