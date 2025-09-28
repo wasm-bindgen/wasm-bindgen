@@ -2,7 +2,7 @@
 //! with all the added metadata necessary to generate Wasm bindings
 //! for it.
 
-use crate::{util::ShortHash, Diagnostic};
+use crate::{hash::ShortHash, Diagnostic};
 use proc_macro2::{Ident, Span};
 use std::hash::{Hash, Hasher};
 use syn::Path;
@@ -53,20 +53,10 @@ impl Default for Program {
 }
 
 impl Program {
-    /// Returns true if the Program is empty
-    pub fn is_empty(&self) -> bool {
-        self.exports.is_empty()
-            && self.imports.is_empty()
-            && self.enums.is_empty()
-            && self.structs.is_empty()
-            && self.typescript_custom_sections.is_empty()
-            && self.inline_js.is_empty()
-    }
-
     /// Name of the link function for a specific linked module
     pub fn link_function_name(&self, idx: usize) -> String {
         let hash = match &self.linked_modules[idx] {
-            ImportModule::Inline(idx, _) => ShortHash((1, &self.inline_js[*idx])).to_string(),
+            ImportModule::Inline(idx) => ShortHash((1, &self.inline_js[*idx])).to_string(),
             other => ShortHash((0, other)).to_string(),
         };
         format!("__wbindgen_link_{}", hash)
@@ -142,14 +132,14 @@ pub enum ImportModule {
     /// Import from the named module, without interpreting paths
     RawNamed(String, Span),
     /// Import from an inline JS snippet
-    Inline(usize, Span),
+    Inline(usize),
 }
 
 impl Hash for ImportModule {
     fn hash<H: Hasher>(&self, h: &mut H) {
         match self {
             ImportModule::Named(name, _) => (1u8, name).hash(h),
-            ImportModule::Inline(idx, _) => (2u8, idx).hash(h),
+            ImportModule::Inline(idx) => (2u8, idx).hash(h),
             ImportModule::RawNamed(name, _) => (3u8, name).hash(h),
         }
     }
@@ -372,8 +362,6 @@ pub struct Function {
     pub name: String,
     /// The span of the function's name in Rust code
     pub name_span: Span,
-    /// Whether the function has a js_name attribute
-    pub renamed_via_js_name: bool,
     /// The arguments to the function
     pub arguments: Vec<FunctionArgumentData>,
     /// The data of return type of the function
@@ -507,30 +495,6 @@ pub struct Variant {
     pub value: u32,
     /// The doc comments on this variant, if any
     pub comments: Vec<String>,
-}
-
-/// Unused, the type of an argument to / return from a function
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum TypeKind {
-    /// A by-reference arg, EG `&T`
-    ByRef,
-    /// A by-mutable-reference arg, EG `&mut T`
-    ByMutRef,
-    /// A by-value arg, EG `T`
-    ByValue,
-}
-
-/// Unused, the location of a type for a function argument (import/export, argument/ret)
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum TypeLocation {
-    /// An imported argument (JS side type)
-    ImportArgument,
-    /// An imported return
-    ImportRet,
-    /// An exported argument (Rust side type)
-    ExportArgument,
-    /// An exported return
-    ExportRet,
 }
 
 /// An enum representing either a literal value (`Lit`) or an expression (`syn::Expr`).
