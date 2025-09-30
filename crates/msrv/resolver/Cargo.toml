@@ -20,3 +20,7 @@ wasm-bindgen = { path = "../../../", default-features = false }
 wasm-bindgen-futures = { path = "../../futures", default-features = false }
 wasm-bindgen-test = { path = "../../test", default-features = false }
 web-sys = { path = "../../web-sys", default-features = false }
+
+# Pinned sub-dependencies for MSRV
+bumpalo = "=3.12.0"
+quote = "=1.0.40"
