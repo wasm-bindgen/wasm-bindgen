@@ -4848,7 +4848,11 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/grow)
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
-        pub fn grow_with_value(this: &Table, additional_capacity: u32, value: JsValue) -> Result<u32, JsValue>;
+        pub fn grow_with_value(
+            this: &Table,
+            additional_capacity: u32,
+            value: JsValue,
+        ) -> Result<u32, JsValue>;
 
         /// The `set()` prototype method of the `WebAssembly.Table` object mutates a
         /// reference stored at a given index to a different value.
