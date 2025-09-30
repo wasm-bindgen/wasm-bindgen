@@ -561,6 +561,7 @@ jobs:
     - if: matrix.rust == '1.57'
       run: |
         cargo update -p bumpalo --precise 3.12.0
+        cargo update -p quote --precise 1.0.40
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-lib:
@@ -587,6 +588,9 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.target }}
+    - if: matrix.rust == '1.57'
+      run: |
+        cargo update -p quote --precise 1.0.40
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-cli:
