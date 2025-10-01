@@ -46,7 +46,7 @@ jobs:
 
   # Run `cargo clippy` over everything
   clippy:
-    name: Clippy
+    name: Clippy (native)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -57,7 +57,7 @@ jobs:
 
   # Run `cargo clippy` over all Wasm crates
   clippy_wasm:
-    name: Clippy (wasm)
+    name: Clippy (Wasm)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -76,11 +76,11 @@ jobs:
   clippy_no_std:
     strategy:
       matrix:
-        flags:
-          - ""
-          # Also with `target_feature = "atomics"` support.
-          - --config "target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'"
-    name: Clippy `no_std`
+        include:
+          - name: "no_std"
+          - name: "no_std + atomics"
+            flags: --config "target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'"
+    name: Clippy (Wasm + ${{ matrix.name }})
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
