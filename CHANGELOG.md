@@ -20,6 +20,9 @@
 * Added bindings for `WeakRef`.
   [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4659)
 
+* Added new methods for for `WebAssembly.Table` with value parameter.
+  [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4698)
+
 * Support `Symbol.dispose` methods by default, when it is supported in the environment.
   [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
 
