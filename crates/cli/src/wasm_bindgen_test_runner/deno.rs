@@ -4,8 +4,8 @@ use std::{fs, process};
 
 use anyhow::{Context, Error};
 
-use crate::Tests;
-use crate::{node::SHARED_SETUP, Cli};
+use super::Tests;
+use super::{node::SHARED_SETUP, Cli};
 
 pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<(), Error> {
     let mut js_to_execute = format!(

@@ -15,6 +15,7 @@ use anyhow::{bail, Context};
 use clap::Parser;
 use clap::ValueEnum;
 use std::env;
+use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
@@ -107,10 +108,17 @@ struct Test {
     ignored: bool,
 }
 
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
+pub fn run_cli_with_args<I, T>(args: I) -> anyhow::Result<()>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    let cli = Cli::try_parse_from(args)?;
+    rmain(cli)
+}
 
-    let cli = Cli::parse();
+fn rmain(cli: Cli) -> anyhow::Result<()> {
+    env_logger::init();
 
     let shell = shell::Shell::new();
 

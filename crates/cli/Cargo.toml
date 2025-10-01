@@ -20,6 +20,18 @@ version = "0.2.104"
 bin-dir = "wasm-bindgen-{ version }-{ target }/{ bin }{ binary-ext }"
 pkg-url = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/{ version }/wasm-bindgen-{ version }-{ target }{ archive-suffix }"
 
+[[bin]]
+name = "wasm-bindgen"
+path = "src/bin/wasm-bindgen.rs"
+
+[[bin]]
+name = "wasm-bindgen-test-runner"
+path = "src/bin/wasm-bindgen-test-runner.rs"
+
+[[bin]]
+name = "wasm2es6js"
+path = "src/bin/wasm2es6js.rs"
+
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
