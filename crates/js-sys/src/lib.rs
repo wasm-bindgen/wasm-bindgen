@@ -4847,7 +4847,7 @@ pub mod WebAssembly {
         /// elements.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/grow)
-        #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = grow)]
         pub fn grow_with_value(
             this: &Table,
             additional_capacity: u32,
