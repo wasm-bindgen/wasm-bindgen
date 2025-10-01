@@ -8,9 +8,24 @@
 * Added `wasm-bindgen-test-cli-support` which introduces a new way to execute the `wasm-bindgen-test-runner`.
   [#4693](https://github.com/wasm-bindgen/wasm-bindgen/pull/4693)
 
+* Added `get_raw` and `set_raw` for `WebAssembly.Table`.
+  [#4701](https://github.com/wasm-bindgen/wasm-bindgen/pull/4701)
+
+* Added `new_with_value` and `grow_with_value` for `WebAssembly.Table`.
+  [#4698](https://github.com/wasm-bindgen/wasm-bindgen/pull/4698)
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
+  [#4685](https://github.com/wasm-bindgen/wasm-bindgen/pull/4685)
+
+* Fixed post-processing failures in case Std has debug assertions enabled.
+  [#4705](https://github.com/wasm-bindgen/wasm-bindgen/pull/4705)
+
+### Removed
+
+* Internal crate `wasm-bindgen-backend` will no longer be published.
+  [#4696](https://github.com/wasm-bindgen/wasm-bindgen/pull/4696)
 
 ## [0.2.104](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.103...0.2.104)
 

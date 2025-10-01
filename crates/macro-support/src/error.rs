@@ -3,7 +3,6 @@ use quote::{ToTokens, TokenStreamExt};
 use syn::parse::Error;
 
 /// Provide a Diagnostic with the given span and message
-#[macro_export]
 macro_rules! err_span {
     ($span:expr, $($msg:tt)*) => (
         $crate::Diagnostic::spanned_error(&$span, format!($($msg)*))
@@ -11,7 +10,6 @@ macro_rules! err_span {
 }
 
 /// Immediately fail and return an Err, with the arguments passed to err_span!
-#[macro_export]
 macro_rules! bail_span {
     ($($t:tt)*) => (
         return Err(err_span!($($t)*).into())

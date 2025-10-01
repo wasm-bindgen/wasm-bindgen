@@ -26,8 +26,8 @@ use crate::idl_type::ToIdlType;
 use crate::traverse::TraverseType;
 use crate::util::{
     camel_case_ident, get_rust_deprecated, getter_throws, is_structural, is_type_unstable,
-    optional_return_ty, read_dir, setter_throws, shouty_snake_case_ident, snake_case_ident, throws,
-    webidl_const_v_to_backend_const_v, TypePosition,
+    optional_return_ty, read_dir, rust_ident, setter_throws, shouty_snake_case_ident,
+    snake_case_ident, throws, webidl_const_v_to_backend_const_v, TypePosition,
 };
 use anyhow::Context;
 use anyhow::Result;
@@ -42,7 +42,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fmt, iter};
-use wasm_bindgen_backend::util::rust_ident;
 use weedle::attribute::ExtendedAttributeList;
 use weedle::common::Identifier;
 use weedle::dictionary::DictionaryMember;

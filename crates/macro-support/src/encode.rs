@@ -1,4 +1,4 @@
-use crate::util::ShortHash;
+use crate::hash::ShortHash;
 use proc_macro2::{Ident, Span};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -308,7 +308,7 @@ fn shared_module<'a>(
             intern.resolve_import_module(m, *span, linked_module)?
         }
         ast::ImportModule::RawNamed(m, _span) => ImportModule::RawNamed(intern.intern_str(m)),
-        ast::ImportModule::Inline(idx, _) => ImportModule::Inline(*idx as u32),
+        ast::ImportModule::Inline(idx) => ImportModule::Inline(*idx as u32),
     })
 }
 
