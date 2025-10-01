@@ -204,6 +204,19 @@ fn memory_works() {
 }
 
 #[wasm_bindgen_test]
+fn table_get_and_set_raw() {
+    let obj = Object::new();
+    Reflect::set(obj.as_ref(), &"element".into(), &"externref".into()).unwrap();
+    Reflect::set(obj.as_ref(), &"initial".into(), &1.into()).unwrap();
+    let tbl = WebAssembly::Table::new(&obj).unwrap();
+
+    assert_eq!(tbl.length(), 1);
+    tbl.set_raw(0, &JsValue::from(42)).unwrap();
+    let value = tbl.get_raw(0).unwrap();
+    assert_eq!(value, JsValue::from(42));
+}
+
+#[wasm_bindgen_test]
 fn new_and_grow_with_value() {
     let obj = Object::new();
     Reflect::set(obj.as_ref(), &"element".into(), &"externref".into()).unwrap();
@@ -211,11 +224,11 @@ fn new_and_grow_with_value() {
     let tbl = WebAssembly::Table::new_with_value(&obj, JsValue::from(42)).unwrap();
 
     assert_eq!(tbl.length(), 1);
-    let value = tbl.get(0).unwrap();
-    assert_eq!(JsValue::from(value), JsValue::from(42));
+    let value = tbl.get_raw(0).unwrap();
+    assert_eq!(value, JsValue::from(42));
 
     tbl.grow_with_value(1, JsValue::from(43)).unwrap();
     assert_eq!(tbl.length(), 2);
-    let value = tbl.get(1).unwrap();
-    assert_eq!(JsValue::from(value), JsValue::from(43));
+    let value = tbl.get_raw(1).unwrap();
+    assert_eq!(value, JsValue::from(43));
 }

@@ -5,7 +5,10 @@
 
 ### Added
 
-* Added `new_with_value` and `grow_with_value` for for `WebAssembly.Table`.
+* Added `get_raw` and `set_raw` for `WebAssembly.Table`.
+  [#4701](https://github.com/wasm-bindgen/wasm-bindgen/pull/4701)
+
+* Added `new_with_value` and `grow_with_value` for `WebAssembly.Table`.
   [#4698](https://github.com/wasm-bindgen/wasm-bindgen/pull/4698)
 
 ### Fixed
