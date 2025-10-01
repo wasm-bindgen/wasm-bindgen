@@ -73,7 +73,7 @@ jobs:
         -- -D warnings
 
   # Run `cargo clippy` over crates that support `no_std`
-  clippy_no_std:
+  clippy_wasm_no_std:
     strategy:
       matrix:
         include:
