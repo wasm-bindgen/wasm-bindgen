@@ -225,7 +225,7 @@ impl Frame<'_> {
     fn eval(&mut self, seq: InstrSeqId) -> anyhow::Result<()> {
         use walrus::ir::*;
 
-        for (instr, _) in self.func.block(seq).instrs.iter() {
+        for (instr, _) in self.func.block(seq).iter() {
             let stack = &mut self.interp.scratch;
 
             match instr {
@@ -269,7 +269,7 @@ impl Frame<'_> {
                     let address = stack.pop().unwrap();
                     let address = address as u32 + e.arg.offset;
                     ensure!(
-                    address > 0,
+                        address > 0,
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     ensure!(address % 4 == 0);
