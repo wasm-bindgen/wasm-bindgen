@@ -145,13 +145,13 @@ jobs:
     strategy:
       matrix:
         runs:
-          - name: "wasm-bindgen"
+          - name: default
             run: |
               cargo test --target wasm32-unknown-unknown
               cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures
-          - name: "wasm-bindgen (serde-serialize)"
+          - name: serde-serialize
             run: cargo test --target wasm32-unknown-unknown --features serde-serialize
-          - name: "wasm-bindgen (enable-interning)"
+          - name: enable-interning
             run: cargo test --target wasm32-unknown-unknown --features enable-interning
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
@@ -167,34 +167,15 @@ jobs:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
 
-  test_wasm_bindgen_envs:
+  test_wasm_bindgen_custom:
     strategy:
       matrix:
         envs:
-          - name: "externref"
-            env:
-              WASM_BINDGEN_EXTERNREF: 1
-          - name: "multi-value"
-            env:
-              WASM_BINDGEN_MULTI_VALUE: 1
-    name: "Run wasm-bindgen crate tests with ${{ matrix.envs.name }} feature"
-    runs-on: ubuntu-latest
-    env:
-      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      WASM_BINDGEN_EXTERNREF: ${{ matrix.envs.WASM_BINDGEN_EXTERNREF }}
-      WASM_BINDGEN_MULTI_VALUE: ${{ matrix.envs.WASM_BINDGEN_MULTI_VALUE }}
-    steps:
-    - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
-    - uses: actions/setup-node@v5
-      with:
-        node-version: '20'
-    - run: cargo test --target wasm32-unknown-unknown
-
-  test_threads:
-    name: "Run wasm-bindgen crate tests with multithreading"
+          - name: mvp
+            rustflags: -C target-cpu=mvp
+          - name: atomics
+            rustflags: -C target-feature=+atomics
+    name: "Run wasm-bindgen crate tests (${{ matrix.envs.name }})"
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
@@ -203,10 +184,11 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
-        components: clippy,rust-src
-    - run: |
-        RUSTFLAGS='-C target-feature=+atomics' \
-          cargo test --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+        components: rust-src
+    - uses: actions/setup-node@v5
+      with:
+        node-version: '20'
+    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
 
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.
