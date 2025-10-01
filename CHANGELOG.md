@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added CookieStore API
+  [#4706](https://github.com/wasm-bindgen/wasm-bindgen/pull/4706)
+
 * Added `get_raw` and `set_raw` for `WebAssembly.Table`.
   [#4701](https://github.com/wasm-bindgen/wasm-bindgen/pull/4701)
 
