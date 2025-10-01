@@ -20,8 +20,8 @@
 
 use anyhow::{bail, ensure};
 use std::collections::{BTreeMap, HashSet};
-use walrus::ir::Instr;
-use walrus::{ExportId, FunctionId, LocalId, Module};
+use walrus::ir::InstrSeqId;
+use walrus::{ExportId, FunctionId, LocalFunction, LocalId, Module};
 
 /// A ready-to-go interpreter of a Wasm module.
 ///
@@ -183,7 +183,7 @@ impl Interpreter {
         self.skip_interpret
     }
 
-    fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) -> Option<i32> {
+    fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) {
         let func = module.funcs.get(id);
         log::trace!("starting a call of {:?} {:?}", id, func.name);
         log::trace!("arguments {args:?}");
@@ -192,14 +192,11 @@ impl Interpreter {
             _ => panic!("can only call locally defined functions"),
         };
 
-        let entry = local.entry_block();
-        let block = local.block(entry);
-
         let mut frame = Frame {
             module,
+            func: local,
             interp: self,
             locals: BTreeMap::new(),
-            done: false,
         };
 
         assert_eq!(local.args.len(), args.len());
@@ -207,183 +204,180 @@ impl Interpreter {
             frame.locals.insert(*arg, *val);
         }
 
-        for (instr, _) in block.instrs.iter() {
-            if let Err(err) = frame.eval(instr) {
-                if let Some(name) = &module.funcs.get(id).name {
-                    panic!("{name}: {err}")
-                } else {
-                    panic!("{err}")
-                }
+        frame.eval(local.entry_block()).unwrap_or_else(|err| {
+            if let Some(name) = &module.funcs.get(id).name {
+                panic!("{name}: {err}")
+            } else {
+                panic!("{err}")
             }
-
-            if frame.done {
-                break;
-            }
-        }
-        self.scratch.last().cloned()
+        })
     }
 }
 
 struct Frame<'a> {
     module: &'a Module,
+    func: &'a LocalFunction,
     interp: &'a mut Interpreter,
     locals: BTreeMap<LocalId, i32>,
-    done: bool,
 }
 
 impl Frame<'_> {
-    fn eval(&mut self, instr: &Instr) -> anyhow::Result<()> {
+    fn eval(&mut self, seq: InstrSeqId) -> anyhow::Result<()> {
         use walrus::ir::*;
 
-        let stack = &mut self.interp.scratch;
+        for (instr, _) in self.func.block(seq).instrs.iter() {
+            let stack = &mut self.interp.scratch;
 
-        match instr {
-            Instr::Const(c) => match c.value {
-                Value::I32(n) => stack.push(n),
-                _ => bail!("non-i32 constant"),
-            },
-            Instr::LocalGet(e) => stack.push(self.locals.get(&e.local).cloned().unwrap_or(0)),
-            Instr::LocalSet(e) => {
-                let val = stack.pop().unwrap();
-                self.locals.insert(e.local, val);
-            }
-            Instr::LocalTee(e) => {
-                let val = *stack.last().unwrap();
-                self.locals.insert(e.local, val);
-            }
-
-            // Blindly assume all globals are the stack pointer
-            Instr::GlobalGet(_) => stack.push(self.interp.sp),
-            Instr::GlobalSet(_) => {
-                let val = stack.pop().unwrap();
-                self.interp.sp = val;
-            }
-
-            // Support simple arithmetic, mainly for the stack pointer
-            // manipulation
-            Instr::Binop(e) => {
-                let rhs = stack.pop().unwrap();
-                let lhs = stack.pop().unwrap();
-                stack.push(match e.op {
-                    BinaryOp::I32Sub => lhs - rhs,
-                    BinaryOp::I32Add => lhs + rhs,
-                    op => bail!("invalid binary op {:?}", op),
-                });
-            }
-
-            // Support small loads/stores to the stack. These show up in debug
-            // mode where there's some traffic on the linear stack even when in
-            // theory there doesn't need to be.
-            Instr::Load(e) => {
-                let address = stack.pop().unwrap();
-                let address = address as u32 + e.arg.offset;
-                ensure!(
-                    address > 0,
-                    "Read a negative or zero address value from the stack. Did we run out of memory?"
-                );
-                ensure!(address % 4 == 0);
-                stack.push(self.interp.mem[address as usize / 4])
-            }
-            Instr::Store(e) => {
-                let value = stack.pop().unwrap();
-                let address = stack.pop().unwrap();
-                let address = address as u32 + e.arg.offset;
-                ensure!(
-                    address > 0,
-                    "Read a negative or zero address value from the stack. Did we run out of memory?"
-                );
-                ensure!(address % 4 == 0);
-                self.interp.mem[address as usize / 4] = value;
-            }
-
-            Instr::Return(_) => {
-                log::trace!("return");
-                self.done = true;
-            }
-
-            Instr::Drop(_) => {
-                log::trace!("drop");
-                stack.pop().unwrap();
-            }
-
-            Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => {
-                let func = *func;
-                // If this function is calling the `__wbindgen_describe`
-                // function, which we've precomputed the id for, then
-                // it's telling us about the next `u32` element in the
-                // descriptor to return. We "call" the imported function
-                // here by directly inlining it.
-                if Some(func) == self.interp.describe_id {
+            match instr {
+                Instr::Const(c) => match c.value {
+                    Value::I32(n) => stack.push(n),
+                    _ => bail!("non-i32 constant"),
+                },
+                Instr::LocalGet(e) => stack.push(self.locals.get(&e.local).cloned().unwrap_or(0)),
+                Instr::LocalSet(e) => {
                     let val = stack.pop().unwrap();
-                    log::trace!("__wbindgen_describe({val})");
-                    self.interp.descriptor.push(val as u32);
-
-                // If this function is calling the `__wbindgen_describe_cast`
-                // function then it's just a marker for the parent function
-                // to be treated as a cast.
-                } else if Some(func) == self.interp.describe_cast_id {
-                    log::trace!("__wbindgen_describe_cast()");
-                    // `__wbindgen_describe_cast` marks the end of the cast
-                    // descriptor. Stop here, ignoring anything on the stack.
-                    self.interp.sp = self.interp.mem.len() as i32;
-                    self.done = true;
-
-                // ... otherwise this is a normal call so we recurse.
-                } else {
-                    // Skip the constructor function.
-                    //
-                    // Complex logic can be implemented in the ctor, our simple interpreter will fail
-                    // to execute due to missing instructions.
-                    //
-                    // For example, executing `1 + 1` fails due to the lack of `I32.And` instruction.
-                    //
-                    // Because `wasm-ld` may insert a call to ctor from the beginning of every function that
-                    // your module exports, the interpreter will enter the ctor logic when parsing the
-                    // `wasm-bindgen` function, causing failure.
-                    if self.interp.skip_calls.contains(&func) {
-                        return Ok(());
-                    }
-
-                    // Skip profiling related functions which we don't want to interpret.
-                    if self
-                        .module
-                        .funcs
-                        .get(func)
-                        .name
-                        .as_ref()
-                        .is_some_and(|name| {
-                            name.starts_with("__llvm_profile_init")
-                                || name.starts_with("__llvm_profile_register_function")
-                                || name.starts_with("__llvm_profile_register_function")
-                        })
-                    {
-                        return Ok(());
-                    }
-
-                    let ty = self.module.types.get(self.module.funcs.get(func).ty());
-                    let args = (0..ty.params().len())
-                        .map(|_| stack.pop().unwrap())
-                        .collect::<Vec<_>>();
-
-                    self.interp.call(func, self.module, &args);
+                    self.locals.insert(e.local, val);
+                }
+                Instr::LocalTee(e) => {
+                    let val = *stack.last().unwrap();
+                    self.locals.insert(e.local, val);
                 }
 
-                if let Instr::ReturnCall(_) = instr {
-                    log::trace!("return_call");
-                    self.done = true;
+                // Blindly assume all globals are the stack pointer
+                Instr::GlobalGet(_) => stack.push(self.interp.sp),
+                Instr::GlobalSet(_) => {
+                    let val = stack.pop().unwrap();
+                    self.interp.sp = val;
                 }
+
+                // Support simple arithmetic, mainly for the stack pointer
+                // manipulation
+                Instr::Binop(e) => {
+                    let rhs = stack.pop().unwrap();
+                    let lhs = stack.pop().unwrap();
+                    stack.push(match e.op {
+                        BinaryOp::I32Sub => lhs - rhs,
+                        BinaryOp::I32Add => lhs + rhs,
+                        op => bail!("invalid binary op {:?}", op),
+                    });
+                }
+
+                // Support small loads/stores to the stack. These show up in debug
+                // mode where there's some traffic on the linear stack even when in
+                // theory there doesn't need to be.
+                Instr::Load(e) => {
+                    let address = stack.pop().unwrap();
+                    let address = address as u32 + e.arg.offset;
+                    ensure!(
+                    address > 0,
+                        "Read a negative or zero address value from the stack. Did we run out of memory?"
+                    );
+                    ensure!(address % 4 == 0);
+                    stack.push(self.interp.mem[address as usize / 4])
+                }
+                Instr::Store(e) => {
+                    let value = stack.pop().unwrap();
+                    let address = stack.pop().unwrap();
+                    let address = address as u32 + e.arg.offset;
+                    ensure!(
+                        address > 0,
+                        "Read a negative or zero address value from the stack. Did we run out of memory?"
+                    );
+                    ensure!(address % 4 == 0);
+                    self.interp.mem[address as usize / 4] = value;
+                }
+
+                Instr::Return(_) => {
+                    log::trace!("return");
+                    break;
+                }
+
+                Instr::Drop(_) => {
+                    log::trace!("drop");
+                    stack.pop().unwrap();
+                }
+
+                Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => {
+                    let func = *func;
+                    // If this function is calling the `__wbindgen_describe`
+                    // function, which we've precomputed the id for, then
+                    // it's telling us about the next `u32` element in the
+                    // descriptor to return. We "call" the imported function
+                    // here by directly inlining it.
+                    if Some(func) == self.interp.describe_id {
+                        let val = stack.pop().unwrap();
+                        log::trace!("__wbindgen_describe({val})");
+                        self.interp.descriptor.push(val as u32);
+
+                    // If this function is calling the `__wbindgen_describe_cast`
+                    // function then it's just a marker for the parent function
+                    // to be treated as a cast.
+                    } else if Some(func) == self.interp.describe_cast_id {
+                        log::trace!("__wbindgen_describe_cast()");
+                        // `__wbindgen_describe_cast` marks the end of the cast
+                        // descriptor. Stop here, ignoring anything on the stack.
+                        self.interp.sp = self.interp.mem.len() as i32;
+                        break;
+
+                    // ... otherwise this is a normal call so we recurse.
+                    } else {
+                        // Skip the constructor function.
+                        //
+                        // Complex logic can be implemented in the ctor, our simple interpreter will fail
+                        // to execute due to missing instructions.
+                        //
+                        // For example, executing `1 + 1` fails due to the lack of `I32.And` instruction.
+                        //
+                        // Because `wasm-ld` may insert a call to ctor from the beginning of every function that
+                        // your module exports, the interpreter will enter the ctor logic when parsing the
+                        // `wasm-bindgen` function, causing failure.
+                        if self.interp.skip_calls.contains(&func) {
+                            continue;
+                        }
+
+                        // Skip profiling related functions which we don't want to interpret.
+                        if self
+                            .module
+                            .funcs
+                            .get(func)
+                            .name
+                            .as_ref()
+                            .is_some_and(|name| {
+                                name.starts_with("__llvm_profile_init")
+                                    || name.starts_with("__llvm_profile_register_function")
+                                    || name.starts_with("__llvm_profile_register_function")
+                            })
+                        {
+                            continue;
+                        }
+
+                        let ty = self.module.types.get(self.module.funcs.get(func).ty());
+                        let args = (0..ty.params().len())
+                            .map(|_| stack.pop().unwrap())
+                            .collect::<Vec<_>>();
+
+                        self.interp.call(func, self.module, &args);
+                    }
+
+                    if let Instr::ReturnCall(_) = instr {
+                        log::trace!("return_call");
+                        break;
+                    }
+                }
+
+                Instr::Block(block) => self.eval(block.seq)?,
+
+                // All other instructions shouldn't be used by our various
+                // descriptor functions. LLVM optimizations may mean that some
+                // of the above instructions aren't actually needed either, but
+                // the above instructions have empirically been required when
+                // executing our own test suite in wasm-bindgen.
+                //
+                // Note that LLVM may change over time to generate new
+                // instructions in debug mode, and we'll have to react to those
+                // sorts of changes as they arise.
+                s => bail!("unknown instruction {:?}", s),
             }
-
-            // All other instructions shouldn't be used by our various
-            // descriptor functions. LLVM optimizations may mean that some
-            // of the above instructions aren't actually needed either, but
-            // the above instructions have empirically been required when
-            // executing our own test suite in wasm-bindgen.
-            //
-            // Note that LLVM may change over time to generate new
-            // instructions in debug mode, and we'll have to react to those
-            // sorts of changes as they arise.
-            s => bail!("unknown instruction {:?}", s),
         }
 
         Ok(())
