@@ -4834,6 +4834,13 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn get(this: &Table, index: u32) -> Result<Function, JsValue>;
 
+        /// The `get()` prototype method of the `WebAssembly.Table()` object
+        /// retrieves a function reference stored at a given index.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/get)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = get)]
+        pub fn get_raw(this: &Table, index: u32) -> Result<JsValue, JsValue>;
+
         /// The `grow()` prototype method of the `WebAssembly.Table` object
         /// increases the size of the `Table` instance by a specified number of
         /// elements.
@@ -4860,6 +4867,13 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/set)
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn set(this: &Table, index: u32, function: &Function) -> Result<(), JsValue>;
+
+        /// The `set()` prototype method of the `WebAssembly.Table` object mutates a
+        /// reference stored at a given index to a different value.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/set)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = set)]
+        pub fn set_raw(this: &Table, index: u32, value: &JsValue) -> Result<(), JsValue>;
     }
 
     // WebAssembly.Tag
