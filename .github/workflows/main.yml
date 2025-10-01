@@ -79,7 +79,7 @@ jobs:
         flags:
           - ""
           # Also with `target_feature = "atomics"` support.
-          - "--config target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'"
+          - --config "target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'"
     name: Clippy `no_std`
     runs-on: ubuntu-latest
     steps:
