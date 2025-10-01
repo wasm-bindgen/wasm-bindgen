@@ -16,6 +16,9 @@
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
   [#4685](https://github.com/wasm-bindgen/wasm-bindgen/pull/4685)
 
+* Fixed `TextDe/Encoder` detection for audio worklet use-cases.
+  [#4703](https://github.com/wasm-bindgen/wasm-bindgen/pull/4703)
+
 ### Removed
 
 * Internal crate `wasm-bindgen-backend` will no longer be published.
