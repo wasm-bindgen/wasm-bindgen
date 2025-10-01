@@ -1,7 +1,5 @@
 use std::env;
 
 fn main() -> anyhow::Result<()> {
-    let args: Vec<String> = env::args().collect();
-    let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-    wasm_bindgen_cli::wasm2es6js::run_cli_with_args(&args_ref)
+    wasm_bindgen_cli::wasm2es6js::run_cli_with_args(env::args())
 }

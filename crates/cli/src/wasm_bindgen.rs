@@ -126,8 +126,6 @@ where
 }
 
 fn rmain(args: &Args) -> Result<(), Error> {
-    env_logger::init();
-
     let mut b = Bindgen::new();
     match &args.target {
         Target::Bundler => b.bundler(true)?,

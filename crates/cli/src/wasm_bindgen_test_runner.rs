@@ -118,8 +118,6 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    env_logger::init();
-
     let shell = shell::Shell::new();
 
     let file_name = cli
