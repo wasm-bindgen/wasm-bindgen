@@ -108,7 +108,7 @@ impl Project {
 
     fn dep(&mut self, line: &str) -> &mut Project {
         self.deps.push_str(line);
-        self.deps.push_str("\n");
+        self.deps.push('\n');
         self
     }
 
@@ -313,7 +313,7 @@ fn bin_crate_works_without_name_section() {
     // the names is too long.
     // Unfortunately, we can't use `walrus` to do this because it gives the name
     // section special treatment, so instead we use `wasmparser` directly.
-    let mut contents = fs::read(&wasm).unwrap();
+    let mut contents = fs::read(wasm).unwrap();
     for payload in wasmparser::Parser::new(0).parse_all(&contents.clone()) {
         match payload.unwrap() {
             Payload::CustomSection(reader) if reader.name() == "name" => {
@@ -340,7 +340,7 @@ fn bin_crate_works_without_name_section() {
         }
     }
 
-    fs::write(&wasm, contents).unwrap();
+    fs::write(wasm, contents).unwrap();
 
     // Then run wasm-bindgen on the result.
     let (mut cmd, out_dir) = project.wasm_bindgen("--target nodejs");
