@@ -16,6 +16,9 @@
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
   [#4685](https://github.com/wasm-bindgen/wasm-bindgen/pull/4685)
 
+* Fixed post-processing failures in case Std has debug assertions enabled.
+  [#4705](https://github.com/wasm-bindgen/wasm-bindgen/pull/4705)
+
 ### Removed
 
 * Internal crate `wasm-bindgen-backend` will no longer be published.
