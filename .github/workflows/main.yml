@@ -70,6 +70,7 @@ jobs:
         --target wasm32-unknown-unknown
         --exclude wasm-bindgen-cli*
         --exclude wasm-bindgen-*macro*
+        --exclude wasm-bindgen-webidl
         -- -D warnings
 
   # Run `cargo clippy` over crates that support `no_std`
