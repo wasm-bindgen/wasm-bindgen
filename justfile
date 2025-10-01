@@ -2,7 +2,7 @@ default:
     @just --list
 
 clippy *ARGS="":
-    cargo clippy --all-features --workspace {{ARGS}} -- -D warnings
+    cargo clippy --all-features --all-targets --workspace {{ARGS}} -- -D warnings
 
 test-macro:
     cargo test -p wasm-bindgen-test-macro
