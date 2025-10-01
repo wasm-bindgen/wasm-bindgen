@@ -2379,15 +2379,17 @@ wasm = wasmInstance.exports;
                     try {{
                         return f(a, state.b, ...args);
                     }} finally {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(a, state.b);
-                            CLOSURE_DTORS.unregister(state);
-                        }} else {{
-                            state.a = a;
-                        }}
+                        state.a = a;
+                        real._wbg_cb_unref();
                     }}
                 }};
-                real.original = state;
+                real._wbg_cb_unref = () => {{
+                    if (--state.cnt === 0) {{
+                        state.dtor(state.a, state.b);
+                        state.a = 0;
+                        CLOSURE_DTORS.unregister(state);
+                    }}
+                }};
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
@@ -2435,13 +2437,16 @@ wasm = wasmInstance.exports;
                     try {{
                         return f(state.a, state.b, ...args);
                     }} finally {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b); state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
-                        }}
+                        real._wbg_cb_unref();
                     }}
                 }};
-                real.original = state;
+                real._wbg_cb_unref = () => {{
+                    if (--state.cnt === 0) {{
+                        state.dtor(state.a, state.b);
+                        state.a = 0;
+                        CLOSURE_DTORS.unregister(state);
+                    }}
+                }};
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
@@ -3773,16 +3778,6 @@ wasm = wasmInstance.exports;
             Intrinsic::ObjectDropRef => {
                 assert_eq!(args.len(), 1);
                 args[0].clone()
-            }
-
-            Intrinsic::CallbackDrop => {
-                assert_eq!(args.len(), 1);
-                prelude.push_str(&format!("const obj = {}.original;\n", args[0]));
-                prelude.push_str("if (obj.cnt-- == 1) {\n");
-                prelude.push_str("obj.a = 0;\n");
-                prelude.push_str("return true;\n");
-                prelude.push_str("}\n");
-                "false".to_string()
             }
 
             Intrinsic::NumberGet => {

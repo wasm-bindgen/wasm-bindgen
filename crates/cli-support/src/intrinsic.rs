@@ -71,7 +71,6 @@ intrinsics! {
         GT = "__wbindgen_gt",
         ObjectCloneRef = "__wbindgen_object_clone_ref",
         ObjectDropRef = "__wbindgen_object_drop_ref",
-        CallbackDrop = "__wbindgen_cb_drop",
         BigIntGetAsI64 = "__wbindgen_bigint_get_as_i64",
         NumberGet = "__wbindgen_number_get",
         StringGet = "__wbindgen_string_get",
