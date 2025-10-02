@@ -321,9 +321,10 @@ jobs:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x
-    - run: npm install
+    - run: npm install -g pnpm@latest-10
+    - run: pnpm install
       working-directory: examples
-    - run: npm test --ignore-scripts
+    - run: pnpm test --ignore-scripts
       working-directory: examples
       env:
         PREBUILT_EXAMPLES: 1
