@@ -50,7 +50,7 @@ impl Task {
     pub(crate) fn spawn<F: Future<Output = ()> + 'static>(future: F) {
         let this = Rc::new(Self {
             #[cfg(debug_assertions)]
-            console: create_task(std::any::type_name::<F>()).ok(),
+            console: create_task(core::any::type_name::<F>()).ok(),
             inner: RefCell::new(None),
             is_queued: Cell::new(true),
         });
