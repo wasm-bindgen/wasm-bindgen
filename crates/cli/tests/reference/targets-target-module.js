@@ -7,15 +7,13 @@ let wasm;
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 }
 
 const imports = {
     __wbindgen_placeholder__: {
         __wbg_random_ae0b2256206ad108: function() {
-            const ret = Math.random();
-            return ret;
+            return Math.random();
         },
         __wbindgen_init_externref_table: function() {
             const table = wasm.__wbindgen_externrefs;

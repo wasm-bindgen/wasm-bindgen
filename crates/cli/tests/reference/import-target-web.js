@@ -109,15 +109,13 @@ function __wbg_get_imports() {
         catch_me();
     }, arguments) };
     imports.wbg.__wbg_get_c871386e44ba8c35 = function(arg0) {
-        const ret = arg0.get();
-        return ret;
+        return arg0.get();
     };
     imports.wbg.__wbg_my_function_597f96bc4719408a = function() {
         b.my_function();
     };
     imports.wbg.__wbg_new_c30895ccee9479d4 = function(arg0) {
-        const ret = new default1(arg0);
-        return ret;
+        return new default1(arg0);
     };
     imports.wbg.__wbg_no_catch_757175fbf9e08b9e = function() {
         no_catch();
@@ -126,8 +124,7 @@ function __wbg_get_imports() {
         window.location.reload();
     };
     imports.wbg.__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
-        const ret = a.CONST;
-        return ret;
+        return a.CONST;
     };
     imports.wbg.__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
         window.document.write(getStringFromWasm0(arg0, arg1));

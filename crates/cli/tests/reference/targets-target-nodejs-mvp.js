@@ -7,13 +7,11 @@ imports['__wbindgen_placeholder__'] = module.exports;
  * @returns {number}
  */
 exports.add_that_might_fail = function(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 };
 
 exports.__wbg_random_9526caf33df4270d = function() {
-    const ret = Math.random();
-    return ret;
+    return Math.random();
 };
 
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;

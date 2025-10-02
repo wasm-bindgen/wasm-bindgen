@@ -9,12 +9,10 @@ export function __wbg_set_wasm(val) {
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 }
 
 export function __wbg_random_9526caf33df4270d() {
-    const ret = Math.random();
-    return ret;
+    return Math.random();
 };
 

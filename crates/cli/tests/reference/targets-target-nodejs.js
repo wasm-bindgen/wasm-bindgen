@@ -7,13 +7,11 @@ imports['__wbindgen_placeholder__'] = module.exports;
  * @returns {number}
  */
 exports.add_that_might_fail = function(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 };
 
 exports.__wbg_random_ae0b2256206ad108 = function() {
-    const ret = Math.random();
-    return ret;
+    return Math.random();
 };
 
 exports.__wbindgen_init_externref_table = function() {

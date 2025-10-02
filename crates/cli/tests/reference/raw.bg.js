@@ -38,8 +38,7 @@ function getStringFromWasm0(ptr, len) {
  * @returns {number}
  */
 export function test1(test) {
-    const ret = wasm.test1(test);
-    return ret >>> 0;
+    return wasm.test1(test) >>> 0;
 }
 
 const TestFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -72,8 +71,7 @@ export class Test {
      * @returns {Test}
      */
     static test1(test) {
-        const ret = wasm.test_test1(test);
-        return Test.__wrap(ret);
+        return Test.__wrap(wasm.test_test1(test));
     }
     /**
      * @param {number} test

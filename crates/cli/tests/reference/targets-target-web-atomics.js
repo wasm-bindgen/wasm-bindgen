@@ -35,8 +35,7 @@ function getStringFromWasm0(ptr, len) {
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 }
 
 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
@@ -81,8 +80,7 @@ function __wbg_get_imports(memory) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbg_random_e2b253f0e987bd7c = function() {
-        const ret = Math.random();
-        return ret;
+        return Math.random();
     };
     imports.wbg.__wbindgen_init_externref_table = function() {
         const table = wasm.__wbindgen_externrefs;

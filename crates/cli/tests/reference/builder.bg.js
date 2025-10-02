@@ -63,8 +63,7 @@ export class ClassBuilder {
      * @returns {ClassBuilder}
      */
     static builder() {
-        const ret = wasm.classbuilder_builder();
-        return ClassBuilder.__wrap(ret);
+        return ClassBuilder.__wrap(wasm.classbuilder_builder());
     }
 }
 if (Symbol.dispose) ClassBuilder.prototype[Symbol.dispose] = ClassBuilder.prototype.free;

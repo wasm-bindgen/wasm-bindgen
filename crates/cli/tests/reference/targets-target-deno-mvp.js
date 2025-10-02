@@ -4,15 +4,13 @@
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 }
 
 const imports = {
     __wbindgen_placeholder__: {
         __wbg_random_9526caf33df4270d: function() {
-            const ret = Math.random();
-            return ret;
+            return Math.random();
         },
     },
 

@@ -829,10 +829,10 @@ fn instruction(
                 (true, _) => panic!("deferred calls must have no results"),
                 (false, 0) => js.prelude(&format!("{call};")),
                 (false, n) => {
-                    js.prelude(&format!("const ret = {call};"));
                     if n == 1 {
-                        js.push("ret".to_string());
+                        js.push(call);
                     } else {
+                        js.prelude(&format!("const ret = {call};"));
                         for i in 0..n {
                             js.push(format!("ret[{i}]"));
                         }

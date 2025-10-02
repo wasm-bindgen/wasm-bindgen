@@ -12,8 +12,7 @@ let wasm_bindgen;
      * @returns {number}
      */
     __exports.add_that_might_fail = function(a, b) {
-        const ret = wasm.add_that_might_fail(a, b);
-        return ret >>> 0;
+        return wasm.add_that_might_fail(a, b) >>> 0;
     };
 
     const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
@@ -55,8 +54,7 @@ let wasm_bindgen;
         const imports = {};
         imports.wbg = {};
         imports.wbg.__wbg_random_9526caf33df4270d = function() {
-            const ret = Math.random();
-            return ret;
+            return Math.random();
         };
 
         return imports;

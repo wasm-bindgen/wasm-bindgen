@@ -52,8 +52,7 @@ export class Test {
         wasm.__wbg_test_free(ptr, 0);
     }
     constructor() {
-        const ret = wasm.test_new();
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = wasm.test_new() >>> 0;
         TestFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }

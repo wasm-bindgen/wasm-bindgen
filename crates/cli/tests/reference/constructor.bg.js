@@ -52,8 +52,7 @@ export class ClassConstructor {
         wasm.__wbg_classconstructor_free(ptr, 0);
     }
     constructor() {
-        const ret = wasm.classconstructor_new();
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = wasm.classconstructor_new() >>> 0;
         ClassConstructorFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }

@@ -8,8 +8,7 @@ export function __wbg_set_wasm(val) {
  * @returns {number}
  */
 export function const_pointer(input) {
-    const ret = wasm.const_pointer(input);
-    return ret >>> 0;
+    return wasm.const_pointer(input) >>> 0;
 }
 
 /**
@@ -17,8 +16,7 @@ export function const_pointer(input) {
  * @returns {number}
  */
 export function mut_pointer(input) {
-    const ret = wasm.mut_pointer(input);
-    return ret >>> 0;
+    return wasm.mut_pointer(input) >>> 0;
 }
 
 export function __wbindgen_init_externref_table() {

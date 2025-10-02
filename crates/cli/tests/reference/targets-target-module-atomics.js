@@ -29,8 +29,7 @@ function getStringFromWasm0(ptr, len) {
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 }
 
 const imports = {
@@ -39,8 +38,7 @@ const imports = {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_random_e2b253f0e987bd7c: function() {
-            const ret = Math.random();
-            return ret;
+            return Math.random();
         },
         __wbindgen_init_externref_table: function() {
             const table = wasm.__wbindgen_externrefs;

@@ -10,8 +10,7 @@ export function __wbg_set_wasm(val) {
  * @returns to whence I came
  */
 export function docme(arg) {
-    const ret = wasm.docme(arg);
-    return ret >>> 0;
+    return wasm.docme(arg) >>> 0;
 }
 
 /**
@@ -20,8 +19,7 @@ export function docme(arg) {
  * @returns {number}
  */
 export function i_has_docs(arg) {
-    const ret = wasm.i_has_docs(arg);
-    return ret >>> 0;
+    return wasm.i_has_docs(arg) >>> 0;
 }
 
 export function __wbindgen_init_externref_table() {

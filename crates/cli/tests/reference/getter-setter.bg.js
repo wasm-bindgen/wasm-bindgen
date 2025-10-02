@@ -113,8 +113,7 @@ export class Foo {
      * @returns {number}
      */
     get x() {
-        const ret = wasm.__wbg_get_foo_x(this.__wbg_ptr);
-        return ret >>> 0;
+        return wasm.__wbg_get_foo_x(this.__wbg_ptr) >>> 0;
     }
     /**
      * @param {number} arg0
@@ -126,8 +125,7 @@ export class Foo {
      * @returns {number | undefined}
      */
     get y() {
-        const ret = wasm.__wbg_get_foo_y(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+        return wasm.__wbg_get_foo_y(this.__wbg_ptr) === 0x100000001 ? undefined : wasm.__wbg_get_foo_y(this.__wbg_ptr);
     }
     /**
      * @param {number | null} [arg0]
@@ -139,8 +137,7 @@ export class Foo {
      * @returns {number | undefined}
      */
     get z() {
-        const ret = wasm.foo_z(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+        return wasm.foo_z(this.__wbg_ptr) === 0x100000001 ? undefined : wasm.foo_z(this.__wbg_ptr);
     }
     /**
      * @param {number | null} [z]
@@ -152,8 +149,7 @@ export class Foo {
      * @returns {number | undefined}
      */
     get lone_getter() {
-        const ret = wasm.foo_lone_getter(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+        return wasm.foo_lone_getter(this.__wbg_ptr) === 0x100000001 ? undefined : wasm.foo_lone_getter(this.__wbg_ptr);
     }
     /**
      * @param {number | null} [value]
@@ -166,8 +162,7 @@ export class Foo {
      * @returns {number}
      */
     get weird() {
-        const ret = wasm.foo_weird(this.__wbg_ptr);
-        return ret >>> 0;
+        return wasm.foo_weird(this.__wbg_ptr) >>> 0;
     }
     /**
      * But you must write strings.
@@ -186,8 +181,7 @@ export class Foo {
      * @returns {boolean | undefined}
      */
     static get x() {
-        const ret = wasm.foo_x_static();
-        return ret === 0xFFFFFF ? undefined : ret !== 0;
+        return wasm.foo_x_static() === 0xFFFFFF ? undefined : wasm.foo_x_static() !== 0;
     }
     /**
      * @param {boolean | null} [value]

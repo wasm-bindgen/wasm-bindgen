@@ -6,8 +6,7 @@ let wasm;
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
-    return ret >>> 0;
+    return wasm.add_that_might_fail(a, b) >>> 0;
 }
 
 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
@@ -49,8 +48,7 @@ function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
     imports.wbg.__wbg_random_9526caf33df4270d = function() {
-        const ret = Math.random();
-        return ret;
+        return Math.random();
     };
 
     return imports;

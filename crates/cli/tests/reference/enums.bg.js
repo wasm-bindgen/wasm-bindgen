@@ -38,8 +38,7 @@ function getStringFromWasm0(ptr, len) {
  * @returns {Color}
  */
 export function enum_echo(color) {
-    const ret = wasm.enum_echo(color);
-    return ret;
+    return wasm.enum_echo(color);
 }
 
 function isLikeNone(x) {
@@ -50,8 +49,7 @@ function isLikeNone(x) {
  * @returns {Color | undefined}
  */
 export function option_enum_echo(color) {
-    const ret = wasm.option_enum_echo(isLikeNone(color) ? 3 : color);
-    return ret === 3 ? undefined : ret;
+    return wasm.option_enum_echo(isLikeNone(color) ? 3 : color) === 3 ? undefined : wasm.option_enum_echo(isLikeNone(color) ? 3 : color);
 }
 
 /**
@@ -59,8 +57,7 @@ export function option_enum_echo(color) {
  * @returns {ColorName}
  */
 export function get_name(color) {
-    const ret = wasm.get_name(color);
-    return __wbindgen_enum_ColorName[ret];
+    return __wbindgen_enum_ColorName[wasm.get_name(color)];
 }
 
 /**
@@ -68,8 +65,7 @@ export function get_name(color) {
  * @returns {ColorName | undefined}
  */
 export function option_string_enum_echo(color) {
-    const ret = wasm.option_string_enum_echo(isLikeNone(color) ? 4 : ((__wbindgen_enum_ColorName.indexOf(color) + 1 || 4) - 1));
-    return __wbindgen_enum_ColorName[ret];
+    return __wbindgen_enum_ColorName[wasm.option_string_enum_echo(isLikeNone(color) ? 4 : ((__wbindgen_enum_ColorName.indexOf(color) + 1 || 4) - 1))];
 }
 
 /**
@@ -77,8 +73,7 @@ export function option_string_enum_echo(color) {
  * @returns {Ordering | undefined}
  */
 export function option_order(order) {
-    const ret = wasm.option_order(isLikeNone(order) ? 2 : order);
-    return ret === 2 ? undefined : ret;
+    return wasm.option_order(isLikeNone(order) ? 2 : order) === 2 ? undefined : wasm.option_order(isLikeNone(order) ? 2 : order);
 }
 
 /**

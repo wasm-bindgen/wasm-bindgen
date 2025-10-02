@@ -43,28 +43,23 @@ export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
 };
 
 export function __wbg_another_f4b9a21c6e8a4d1c(arg0) {
-    const ret = arg0.prop2;
-    return ret;
+    return arg0.prop2;
 };
 
 export function __wbg_b_bb1b582d09c61aba(arg0) {
-    const ret = arg0.a;
-    return ret;
+    return arg0.a;
 };
 
 export function __wbg_bar2_713391e46a0bb7be() {
-    const ret = Bar.bar2();
-    return ret;
+    return Bar.bar2();
 };
 
 export function __wbg_get_foo_8df4cafb04f0009f() {
-    const ret = Bar.get_foo();
-    return ret;
+    return Bar.get_foo();
 };
 
 export function __wbg_new_20883a5bbcc03d8a() {
-    const ret = new SomeClass();
-    return ret;
+    return new SomeClass();
 };
 
 export function __wbg_set_another_cde5169fcc608e26(arg0, arg1) {
@@ -92,13 +87,11 @@ export function __wbg_set_some_prop_4108a32b244b7d28(arg0, arg1) {
 };
 
 export function __wbg_signal_54e2df9a78183990(arg0) {
-    const ret = arg0.signal;
-    return ret;
+    return arg0.signal;
 };
 
 export function __wbg_some_prop_3c07d616a6648f3b(arg0) {
-    const ret = arg0.some_prop;
-    return ret;
+    return arg0.some_prop;
 };
 
 export function __wbindgen_init_externref_table() {
