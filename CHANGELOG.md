@@ -22,6 +22,9 @@
 * Fixed post-processing failures in case Std has debug assertions enabled.
   [#4705](https://github.com/wasm-bindgen/wasm-bindgen/pull/4705)
 
+* Fixed JS memory leak in `wasm_bindgen::Closure`.
+  [#4709](https://github.dev/wasm-bindgen/wasm-bindgen/pull/4709)
+
 ### Removed
 
 * Internal crate `wasm-bindgen-backend` will no longer be published.

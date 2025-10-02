@@ -44,21 +44,20 @@ jobs:
           tool: taplo-cli
       - run: taplo fmt --check
 
-  # Run `cargo check` over everything
-  check:
-    name: Check
+  # Run `cargo clippy` over everything
+  clippy:
+    name: Clippy (native)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@stable
       with:
-        components: rustfmt
-    - run: cargo check --all
-    - run: cargo check --no-default-features
+        components: clippy,rustfmt
+    - run: cargo clippy --no-deps --all --all-features -- -D warnings
 
-  # Run `cargo clippy` over everything
-  clippy:
-    name: Clippy
+  # Run `cargo clippy` over all Wasm crates
+  clippy_wasm:
+    name: Clippy (Wasm)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -66,36 +65,23 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rustfmt
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-cli-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-macro-support -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-shared -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-test -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-test-macro -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p typescript-tests -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p wasm-bindgen-webidl -- -D warnings
-    - run: cargo clippy --no-deps --all-features -p webidl-tests -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p wasm-bindgen-benchmark -- -D warnings
-
-  # Run `cargo clippy` over web-sys and js-sys crates
-  clippy_web_sys:
-    name: Clippy (web-sys)
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
-        components: clippy
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p js-sys --all-targets -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -p web-sys --all-targets -- -D warnings
+    - run: >
+        cargo clippy --no-deps --all --all-features
+        --target wasm32-unknown-unknown
+        --exclude wasm-bindgen-cli*
+        --exclude wasm-bindgen-*macro*
+        --exclude wasm-bindgen-webidl
+        -- -D warnings
 
   # Run `cargo clippy` over crates that support `no_std`
-  clippy_no_std:
-    name: Clippy `no_std`
+  clippy_wasm_no_std:
+    strategy:
+      matrix:
+        include:
+          - name: "no_std"
+          - name: "no_std + atomics"
+            flags: --config "target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics'"
+    name: Clippy (Wasm + ${{ matrix.name }})
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -103,55 +89,27 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p js-sys -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p web-sys -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-test -- -D warnings
-
-  # Run `cargo clippy` over crates that support `no_std` with `target_feature = "atomics"` support.
-  clippy_no_std_atomics:
-    name: Clippy `no_std` with `atomics`
-    runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: -Ctarget-feature=+atomics
-    steps:
-    - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        targets: wasm32-unknown-unknown
-        components: clippy,rust-src
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p js-sys -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p web-sys -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-futures -Zbuild-std=core,alloc -- -D warnings
-    - run: cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown -p wasm-bindgen-test -Zbuild-std=core,alloc -- -D warnings
-
-  # Run `cargo clippy` over the project
-  clippy_project:
-    name: Clippy (project)
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
-        components: clippy
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings
-    - run: cargo clippy --no-deps --all-features --target wasm32-unknown-unknown --tests -- -D warnings
-    - run: for i in examples/*/; do cd "$i"; cargo +stable clippy --no-deps --all-features --target wasm32-unknown-unknown -- -D warnings || exit 1; cd ../..; done
+    - run: >
+        cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown
+        -p wasm-bindgen
+        -p js-sys
+        -p web-sys
+        -p wasm-bindgen-futures
+        -p wasm-bindgen-test
+        ${{ matrix.flags }}
+        -- -D warnings
 
   test_wasm_bindgen:
     strategy:
       matrix:
         runs:
-          - name: "wasm-bindgen"
+          - name: default
             run: |
               cargo test --target wasm32-unknown-unknown
               cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures
-          - name: "wasm-bindgen (serde-serialize)"
+          - name: serde-serialize
             run: cargo test --target wasm32-unknown-unknown --features serde-serialize
-          - name: "wasm-bindgen (enable-interning)"
+          - name: enable-interning
             run: cargo test --target wasm32-unknown-unknown --features enable-interning
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
@@ -167,34 +125,15 @@ jobs:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
 
-  test_wasm_bindgen_envs:
+  test_wasm_bindgen_custom:
     strategy:
       matrix:
         envs:
-          - name: "externref"
-            env:
-              WASM_BINDGEN_EXTERNREF: 1
-          - name: "multi-value"
-            env:
-              WASM_BINDGEN_MULTI_VALUE: 1
-    name: "Run wasm-bindgen crate tests with ${{ matrix.envs.name }} feature"
-    runs-on: ubuntu-latest
-    env:
-      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      WASM_BINDGEN_EXTERNREF: ${{ matrix.envs.WASM_BINDGEN_EXTERNREF }}
-      WASM_BINDGEN_MULTI_VALUE: ${{ matrix.envs.WASM_BINDGEN_MULTI_VALUE }}
-    steps:
-    - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
-    - uses: actions/setup-node@v5
-      with:
-        node-version: '20'
-    - run: cargo test --target wasm32-unknown-unknown
-
-  test_threads:
-    name: "Run wasm-bindgen crate tests with multithreading"
+          - name: mvp
+            rustflags: -C target-cpu=mvp
+          - name: atomics
+            rustflags: -C target-feature=+atomics
+    name: "Run wasm-bindgen crate tests (${{ matrix.envs.name }})"
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
@@ -203,10 +142,11 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
-        components: clippy,rust-src
-    - run: |
-        RUSTFLAGS='-C target-feature=+atomics' \
-          cargo test --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+        components: rust-src
+    - uses: actions/setup-node@v5
+      with:
+        node-version: '20'
+    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
 
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.

@@ -198,15 +198,17 @@ function makeMutClosure(arg0, arg1, dtor, f) {
         try {
             return f(a, state.b, ...args);
         } finally {
-            if (--state.cnt === 0) {
-                state.dtor(a, state.b);
-                CLOSURE_DTORS.unregister(state);
-            } else {
-                state.a = a;
-            }
+            state.a = a;
+            real._wbg_cb_unref();
         }
     };
-    real.original = state;
+    real._wbg_cb_unref = () => {
+        if (--state.cnt === 0) {
+            state.dtor(state.a, state.b);
+            state.a = 0;
+            CLOSURE_DTORS.unregister(state);
+        }
+    };
     CLOSURE_DTORS.register(real, state, state);
     return real;
 }
@@ -225,16 +227,6 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg
 function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3);
 }
-
-export function __wbg___wbindgen_cb_drop_eb10308566512b88(arg0) {
-    const obj = arg0.original;
-    if (obj.cnt-- == 1) {
-        obj.a = 0;
-        return true;
-    }
-    const ret = false;
-    return ret;
-};
 
 export function __wbg___wbindgen_debug_string_99ef257a3ddda34d(arg0, arg1) {
     const ret = debugString(arg1);
@@ -256,6 +248,10 @@ export function __wbg___wbindgen_is_undefined_c4b71d073b92f3c5(arg0) {
 
 export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
+};
+
+export function __wbg__wbg_cb_unref_bcc21779e27a5356(arg0) {
+    arg0._wbg_cb_unref();
 };
 
 export function __wbg_call_13410aac570ffff7() { return handleError(function (arg0, arg1) {
