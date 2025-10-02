@@ -1,9 +1,8 @@
-use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
-use std::process;
 use std::process::Command;
+use std::{env, fs};
 
+use anyhow::bail;
 use anyhow::{Context, Error};
 
 use super::Cli;
@@ -150,8 +149,8 @@ pub fn execute(
         .context("failed to find or execute Node.js")?;
 
     if !status.success() {
-        process::exit(status.code().unwrap_or(1))
-    } else {
-        Ok(())
+        bail!("Node failed with exit_code {}", status.code().unwrap_or(1))
     }
+
+    Ok(())
 }

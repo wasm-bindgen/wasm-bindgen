@@ -203,9 +203,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             println!("{}: test", test.name);
         }
 
-        // Returning cleanly has the strange effect of outputting
-        // an additional empty line with spaces in it.
-        std::process::exit(0);
+        return Ok(());
     }
 
     let tmpdir = tempfile::tempdir()?;

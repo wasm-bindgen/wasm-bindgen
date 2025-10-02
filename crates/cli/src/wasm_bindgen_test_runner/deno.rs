@@ -1,8 +1,8 @@
+use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::{fs, process};
 
-use anyhow::{Context, Error};
+use anyhow::{bail, Context, Error};
 
 use super::Tests;
 use super::{node::SHARED_SETUP, Cli};
@@ -65,8 +65,8 @@ if (!ok) Deno.exit(1);"#,
         .status()?;
 
     if !status.success() {
-        process::exit(status.code().unwrap_or(1))
-    } else {
-        Ok(())
+        bail!("Deno failed with exit_code {}", status.code().unwrap_or(1))
     }
+
+    Ok(())
 }
