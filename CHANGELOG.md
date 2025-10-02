@@ -11,6 +11,9 @@
 * Added `new_with_value` and `grow_with_value` for `WebAssembly.Table`.
   [#4698](https://github.com/wasm-bindgen/wasm-bindgen/pull/4698)
 
+* Added better support for async stack traces when building in debug mode.
+  [#4711](https://github.com/wasm-bindgen/wasm-bindgen/pull/4711)
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
