@@ -126,7 +126,7 @@ where
         Err(e) => match e.kind() {
             // Passing --version and --help should not result in a failure.
             clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
-                eprint!("{}", e);
+                print!("{}", e);
                 return Ok(());
             }
             _ => bail!(e),
