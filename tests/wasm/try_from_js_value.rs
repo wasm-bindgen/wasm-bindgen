@@ -1,26 +1,17 @@
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::convert::TryFromJsValue;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
 fn f64_try_from_js_value() {
-    assert_eq!(
-        f64::try_from_js_value(JsValue::from_f64(42.5)),
-        Ok(42.5)
-    );
-    assert_eq!(
-        f64::try_from_js_value(JsValue::from_f64(0.0)),
-        Ok(0.0)
-    );
+    assert_eq!(f64::try_from_js_value(JsValue::from_f64(42.5)), Ok(42.5));
+    assert_eq!(f64::try_from_js_value(JsValue::from_f64(0.0)), Ok(0.0));
     assert_eq!(
         f64::try_from_js_value(JsValue::from_f64(-123.456)),
         Ok(-123.456)
     );
 
-    assert_eq!(
-        f64::try_from_js_value(JsValue::from_str("42.5")),
-        Ok(42.5)
-    );
+    assert_eq!(f64::try_from_js_value(JsValue::from_str("42.5")), Ok(42.5));
 
     assert!(f64::try_from_js_value(JsValue::symbol(None)).is_err());
 }
@@ -42,14 +33,8 @@ fn string_try_from_js_value() {
 
 #[wasm_bindgen_test]
 fn i64_try_from_js_value() {
-    assert_eq!(
-        i64::try_from_js_value(JsValue::from(42_i64)),
-        Ok(42_i64)
-    );
-    assert_eq!(
-        i64::try_from_js_value(JsValue::from(-42_i64)),
-        Ok(-42_i64)
-    );
+    assert_eq!(i64::try_from_js_value(JsValue::from(42_i64)), Ok(42_i64));
+    assert_eq!(i64::try_from_js_value(JsValue::from(-42_i64)), Ok(-42_i64));
     assert_eq!(
         i64::try_from_js_value(JsValue::from(i64::MIN)),
         Ok(i64::MIN)
@@ -68,14 +53,8 @@ fn i64_try_from_js_value() {
 
 #[wasm_bindgen_test]
 fn u64_try_from_js_value() {
-    assert_eq!(
-        u64::try_from_js_value(JsValue::from(42_u64)),
-        Ok(42_u64)
-    );
-    assert_eq!(
-        u64::try_from_js_value(JsValue::from(0_u64)),
-        Ok(0_u64)
-    );
+    assert_eq!(u64::try_from_js_value(JsValue::from(42_u64)), Ok(42_u64));
+    assert_eq!(u64::try_from_js_value(JsValue::from(0_u64)), Ok(0_u64));
     assert_eq!(
         u64::try_from_js_value(JsValue::from(u64::MAX)),
         Ok(u64::MAX)
@@ -90,10 +69,7 @@ fn u64_try_from_js_value() {
 
 #[wasm_bindgen_test]
 fn i128_try_from_js_value() {
-    assert_eq!(
-        i128::try_from_js_value(JsValue::from(42_i128)),
-        Ok(42_i128)
-    );
+    assert_eq!(i128::try_from_js_value(JsValue::from(42_i128)), Ok(42_i128));
     assert_eq!(
         i128::try_from_js_value(JsValue::from(-42_i128)),
         Ok(-42_i128)
@@ -119,14 +95,8 @@ fn i128_try_from_js_value() {
 
 #[wasm_bindgen_test]
 fn u128_try_from_js_value() {
-    assert_eq!(
-        u128::try_from_js_value(JsValue::from(42_u128)),
-        Ok(42_u128)
-    );
-    assert_eq!(
-        u128::try_from_js_value(JsValue::from(0_u128)),
-        Ok(0_u128)
-    );
+    assert_eq!(u128::try_from_js_value(JsValue::from(42_u128)), Ok(42_u128));
+    assert_eq!(u128::try_from_js_value(JsValue::from(0_u128)), Ok(0_u128));
     assert_eq!(
         u128::try_from_js_value(JsValue::from(u128::MAX)),
         Ok(u128::MAX)
