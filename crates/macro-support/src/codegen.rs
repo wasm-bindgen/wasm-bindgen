@@ -1145,6 +1145,16 @@ impl ToTokens for ast::ImportType {
                         unsafe { &*(val as *const JsValue as *const #rust_name) }
                     }
                 }
+
+                #[automatically_derived]
+                impl TryFromJsValue for #rust_name {
+                    type Error = JsValue;
+
+                    #[inline]
+                    fn try_from_js_value(obj: JsValue) -> #wasm_bindgen::__rt::core::result::Result<Self, JsValue> {
+                        obj.dyn_into()
+                    }
+                }
             };
         })
         .to_tokens(tokens);

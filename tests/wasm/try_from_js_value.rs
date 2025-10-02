@@ -2,6 +2,18 @@ use wasm_bindgen::convert::TryFromJsValue;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
+#[wasm_bindgen(module = "tests/wasm/try_from_js_value.js")]
+extern "C" {
+    type TryFromJsValueCustomType;
+    #[wasm_bindgen(constructor)]
+    fn new() -> TryFromJsValueCustomType;
+    #[wasm_bindgen(method)]
+    fn get_value(this: &TryFromJsValueCustomType) -> i32;
+
+    fn make_custom_type() -> JsValue;
+    fn make_plain_object() -> JsValue;
+}
+
 #[wasm_bindgen_test]
 fn f64_try_from_js_value() {
     assert_eq!(f64::try_from_js_value(JsValue::from_f64(42.5)), Ok(42.5));
@@ -148,4 +160,18 @@ fn option_try_from_js_value() {
 
     assert!(Option::<i64>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(Option::<String>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+}
+
+#[wasm_bindgen_test]
+fn imported_type_try_from_js_value() {
+    let custom = make_custom_type();
+    let result = TryFromJsValueCustomType::try_from_js_value(custom);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().get_value(), 42);
+
+    let plain_obj = make_plain_object();
+    assert!(TryFromJsValueCustomType::try_from_js_value(plain_obj).is_err());
+
+    assert!(TryFromJsValueCustomType::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+    assert!(TryFromJsValueCustomType::try_from_js_value(JsValue::NULL).is_err());
 }
