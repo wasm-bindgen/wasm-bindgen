@@ -929,7 +929,7 @@ impl JsCast for JsValue {
 }
 
 impl TryFromJsValue for JsValue {
-    type Error = core::convert::Infallible;
+    type Error = Infallible;
 
     fn try_from_js_value(val: JsValue) -> Result<Self, Self::Error> {
         Ok(val)
