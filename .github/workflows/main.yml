@@ -317,10 +317,10 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
     - uses: actions/setup-node@v5
       with:
-        node-version: 22
+        node-version: 24
     - uses: denoland/setup-deno@v2
       with:
-        deno-version: v1.x
+        deno-version: v2.x
     - run: npm install
       working-directory: examples
     - run: npm test --ignore-scripts
