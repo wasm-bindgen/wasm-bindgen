@@ -55,7 +55,7 @@ extern crate std;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::convert::TryFrom;
+use core::convert::{Infallible, TryFrom};
 use core::marker::PhantomData;
 use core::ops::{
     Add, BitAnd, BitOr, BitXor, Deref, DerefMut, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub,
@@ -912,8 +912,8 @@ where
     }
 }
 
+// everything is a `JsValue`!
 impl JsCast for JsValue {
-    // everything is a `JsValue`!
     #[inline]
     fn instanceof(_val: &JsValue) -> bool {
         true
@@ -925,6 +925,14 @@ impl JsCast for JsValue {
     #[inline]
     fn unchecked_from_js_ref(val: &JsValue) -> &Self {
         val
+    }
+}
+
+impl TryFromJsValue for JsValue {
+    type Error = core::convert::Infallible;
+
+    fn try_from_js_value(val: JsValue) -> Result<Self, Self::Error> {
+        Ok(val)
     }
 }
 
