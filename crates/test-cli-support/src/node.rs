@@ -6,7 +6,6 @@ use std::process::Command;
 
 use anyhow::{Context, Error};
 
-use crate::Cli;
 use crate::Tests;
 
 // depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
@@ -48,10 +47,14 @@ handlers.on_console_error = wasm.__wbgtest_console_error;
 pub fn execute(
     module: &str,
     tmpdir: &Path,
-    cli: Cli,
     tests: Tests,
     module_format: bool,
     coverage: PathBuf,
+    nocapture: bool,
+    include_ignored_tests: bool,
+    node_bin: &Option<PathBuf>,
+    node_path: &[PathBuf],
+    node_args: &Vec<String>,
 ) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"
@@ -95,9 +98,9 @@ pub fn execute(
             r"import fs from 'node:fs/promises'".to_string()
         },
         coverage = coverage.display(),
-        nocapture = cli.nocapture.clone(),
+        nocapture = nocapture,
         console_override = SHARED_SETUP,
-        args = cli.into_args(&tests),
+        args = tests.as_args(include_ignored_tests),
     );
 
     // Note that we're collecting *JS objects* that represent the functions to
@@ -127,24 +130,21 @@ pub fn execute(
     };
     fs::write(&js_path, js_to_execute).context("failed to write JS file")?;
 
-    // Augment `NODE_PATH` so things like `require("tests/my-custom.js")` work
-    // and Rust code can import from custom JS shims. This is a bit of a hack
-    // and should probably be removed at some point.
-    let path = env::var("NODE_PATH").unwrap_or_default();
-    let mut path = env::split_paths(&path).collect::<Vec<_>>();
-    path.push(env::current_dir().unwrap());
-    path.push(tmpdir.to_path_buf());
-    let extra_node_args = env::var("NODE_ARGS")
-        .unwrap_or_default()
-        .split(',')
-        .map(|s| s.to_string())
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>();
+    let path: Vec<_> = vec![env::current_dir().unwrap(), tmpdir.to_path_buf()]
+        .into_iter()
+        .chain(node_path.iter().cloned())
+        .collect();
 
-    let status = Command::new("node")
-        .env("NODE_PATH", env::join_paths(&path).unwrap())
+    let default_node = PathBuf::from("node");
+    let node = match node_bin {
+        Some(p) => p.as_path(),
+        None => default_node.as_path(),
+    };
+
+    let status = Command::new(node)
+        .env("NODE_PATH", env::join_paths(path).unwrap())
         .arg("--expose-gc")
-        .args(&extra_node_args)
+        .args(node_args)
         .arg(&js_path)
         .status()
         .context("failed to find or execute Node.js")?;

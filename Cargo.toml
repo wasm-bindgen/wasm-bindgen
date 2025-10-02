@@ -86,8 +86,10 @@ exclude = ["crates/msrv/resolver", "crates/msrv/lib", "crates/msrv/cli"]
 members = [
   "benchmarks",
   "crates/cli",
+  "crates/cli-support",
   "crates/js-sys",
   "crates/test",
+  "crates/test-cli-support",
   "crates/test/sample",
   "crates/typescript-tests",
   "crates/web-sys",
