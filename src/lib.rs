@@ -881,6 +881,34 @@ impl From<bool> for JsValue {
     }
 }
 
+impl TryFromJsValue for bool {
+    type Error = JsValue;
+
+    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+        match value.as_bool() {
+            Some(s) => Ok(s),
+            None => Err(value),
+        }
+    }
+}
+
+impl TryFromJsValue for char {
+    type Error = JsValue;
+
+    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+        match value.as_string() {
+            Some(s) => {
+                if s.len() == 1 {
+                    Ok(s.chars().nth(0).unwrap())
+                } else {
+                    Err(value)
+                }
+            }
+            None => Err(value),
+        }
+    }
+}
+
 impl<'a, T> From<&'a T> for JsValue
 where
     T: JsCast,
@@ -904,8 +932,8 @@ where
     }
 }
 
+// everything is a `JsValue`!
 impl JsCast for JsValue {
-    // everything is a `JsValue`!
     #[inline]
     fn instanceof(_val: &JsValue) -> bool {
         true
@@ -927,7 +955,17 @@ impl AsRef<JsValue> for JsValue {
     }
 }
 
-macro_rules! numbers {
+fn to_uint_32(v: JsValue) -> Result<u32, JsValue> {
+    f64::try_from(v).map(|n| {
+        if !n.is_finite() || n == 0.0 {
+            0
+        } else {
+            (n as i64) as u32
+        }
+    })
+}
+
+macro_rules! integers {
     ($($n:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
@@ -942,12 +980,50 @@ macro_rules! numbers {
                 JsValue::from_f64(n.into())
             }
         }
+
+        // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+        impl TryFromJsValue for $n {
+            type Error = JsValue;
+            #[inline]
+            fn try_from_js_value(val: JsValue) -> Result<$n, Self::Error> {
+                to_uint_32(val).map(|n| n as $n)
+            }
+        }
     )*)
 }
 
-numbers! { i8 u8 i16 u16 i32 u32 f32 f64 }
+integers! { i8 u8 i16 u16 i32 u32 }
 
-macro_rules! big_numbers {
+macro_rules! floats {
+    ($($n:ident)*) => ($(
+        impl PartialEq<$n> for JsValue {
+            #[inline]
+            fn eq(&self, other: &$n) -> bool {
+                self.as_f64() == Some(f64::from(*other))
+            }
+        }
+
+        impl From<$n> for JsValue {
+            #[inline]
+            fn from(n: $n) -> JsValue {
+                JsValue::from_f64(n.into())
+            }
+        }
+
+        // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+        impl TryFromJsValue for $n {
+            type Error = JsValue;
+            #[inline]
+            fn try_from_js_value(val: JsValue) -> Result<$n, Self::Error> {
+                f64::try_from(val).map(|n| n as $n)
+            }
+        }
+    )*)
+}
+
+floats! { f32 f64 }
+
+macro_rules! big_integers {
     ($($n:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
@@ -962,12 +1038,8 @@ macro_rules! big_numbers {
                 wbg_cast(arg)
             }
         }
-    )*)
-}
 
-macro_rules! try_from_for_num64 {
-    ($ty:ty) => {
-        impl TryFrom<JsValue> for $ty {
+        impl TryFrom<JsValue> for $n {
             type Error = JsValue;
 
             #[inline]
@@ -982,14 +1054,40 @@ macro_rules! try_from_for_num64 {
                     .ok_or(v)
             }
         }
-    };
+
+        // Almost follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+        // Except for String and Bool.
+        impl TryFromJsValue for $n {
+            type Error = JsValue;
+            #[inline]
+            fn try_from_js_value(val: JsValue) -> Result<$n, JsValue> {
+                match __wbindgen_bigint_get_as_i64(&val) {
+                    Some(n) => Ok(n as $n),
+                    None => Err(val)
+                }
+            }
+        }
+    )*)
 }
 
-try_from_for_num64!(i64);
-try_from_for_num64!(u64);
+big_integers! { i64 u64 }
 
-macro_rules! try_from_for_num128 {
+macro_rules! num128 {
     ($ty:ty, $hi_ty:ty) => {
+        impl PartialEq<$ty> for JsValue {
+            #[inline]
+            fn eq(&self, other: &$ty) -> bool {
+                self == &JsValue::from(*other)
+            }
+        }
+
+        impl From<$ty> for JsValue {
+            #[inline]
+            fn from(arg: $ty) -> JsValue {
+                wbg_cast(arg)
+            }
+        }
+
         impl TryFrom<JsValue> for $ty {
             type Error = JsValue;
 
@@ -1011,13 +1109,45 @@ macro_rules! try_from_for_num128 {
                 Ok(Self::from(hi) << 64 | Self::from(lo))
             }
         }
+
+        impl TryFromJsValue for $ty {
+            type Error = JsValue;
+
+            // This is a non-standard Wasm bindgen conversion, supported equally
+            fn try_from_js_value(val: JsValue) -> Result<$ty, JsValue> {
+                <$ty as TryFrom<JsValue>>::try_from(val)
+            }
+        }
     };
 }
 
-try_from_for_num128!(i128, i64);
-try_from_for_num128!(u128, u64);
+num128!(i128, i64);
 
-big_numbers! { i64 u64 i128 u128 }
+num128!(u128, u64);
+
+impl TryFromJsValue for () {
+    type Error = JsValue;
+
+    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+        if value.is_undefined() {
+            Ok(())
+        } else {
+            Err(value)
+        }
+    }
+}
+
+impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
+    type Error = T::Error;
+
+    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+        if value.is_undefined() || value.is_null() {
+            Ok(None)
+        } else {
+            T::try_from_js_value(value).map(Some)
+        }
+    }
+}
 
 // `usize` and `isize` have to be treated a bit specially, because we know that
 // they're 32-bit but the compiler conservatively assumes they might be bigger.
@@ -1047,6 +1177,24 @@ impl From<isize> for JsValue {
     #[inline]
     fn from(n: isize) -> Self {
         Self::from(n as i32)
+    }
+}
+
+// Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+impl TryFromJsValue for isize {
+    type Error = JsValue;
+    #[inline]
+    fn try_from_js_value(val: JsValue) -> Result<isize, Self::Error> {
+        f64::try_from(val).map(|n| n as isize)
+    }
+}
+
+// Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+impl TryFromJsValue for usize {
+    type Error = JsValue;
+    #[inline]
+    fn try_from_js_value(val: JsValue) -> Result<usize, Self::Error> {
+        f64::try_from(val).map(|n| n as usize)
     }
 }
 
