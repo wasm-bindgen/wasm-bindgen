@@ -1,5 +1,5 @@
 use std::env;
 
 fn main() -> anyhow::Result<()> {
-    wasm_bindgen_cli::wasm2es6js::run_cli_with_args(env::args())
+    wasm_bindgen_cli::wasm2es6js::run_cli_with_args(env::args_os())
 }
