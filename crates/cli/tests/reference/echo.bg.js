@@ -170,8 +170,7 @@ function getStringFromWasm0(ptr, len) {
  * @returns {number}
  */
 export function echo_u8(a) {
-    const ret = wasm.echo_u8(a);
-    return ret;
+    return wasm.echo_u8(a);
 }
 
 /**
@@ -179,8 +178,7 @@ export function echo_u8(a) {
  * @returns {number}
  */
 export function echo_i8(a) {
-    const ret = wasm.echo_i8(a);
-    return ret;
+    return wasm.echo_i8(a);
 }
 
 /**
@@ -188,8 +186,7 @@ export function echo_i8(a) {
  * @returns {number}
  */
 export function echo_u16(a) {
-    const ret = wasm.echo_u16(a);
-    return ret;
+    return wasm.echo_u16(a);
 }
 
 /**
@@ -197,8 +194,7 @@ export function echo_u16(a) {
  * @returns {number}
  */
 export function echo_i16(a) {
-    const ret = wasm.echo_i16(a);
-    return ret;
+    return wasm.echo_i16(a);
 }
 
 /**
@@ -206,8 +202,7 @@ export function echo_i16(a) {
  * @returns {number}
  */
 export function echo_u32(a) {
-    const ret = wasm.echo_u32(a);
-    return ret >>> 0;
+    return wasm.echo_u32(a) >>> 0;
 }
 
 /**
@@ -215,8 +210,7 @@ export function echo_u32(a) {
  * @returns {number}
  */
 export function echo_i32(a) {
-    const ret = wasm.echo_i32(a);
-    return ret;
+    return wasm.echo_i32(a);
 }
 
 /**
@@ -224,8 +218,7 @@ export function echo_i32(a) {
  * @returns {bigint}
  */
 export function echo_u64(a) {
-    const ret = wasm.echo_u64(a);
-    return BigInt.asUintN(64, ret);
+    return BigInt.asUintN(64, wasm.echo_u64(a));
 }
 
 /**
@@ -233,8 +226,7 @@ export function echo_u64(a) {
  * @returns {bigint}
  */
 export function echo_i64(a) {
-    const ret = wasm.echo_i64(a);
-    return ret;
+    return wasm.echo_i64(a);
 }
 
 /**
@@ -260,8 +252,7 @@ export function echo_i128(a) {
  * @returns {number}
  */
 export function echo_usize(a) {
-    const ret = wasm.echo_usize(a);
-    return ret >>> 0;
+    return wasm.echo_usize(a) >>> 0;
 }
 
 /**
@@ -269,8 +260,7 @@ export function echo_usize(a) {
  * @returns {number}
  */
 export function echo_isize(a) {
-    const ret = wasm.echo_isize(a);
-    return ret;
+    return wasm.echo_isize(a);
 }
 
 /**
@@ -278,8 +268,7 @@ export function echo_isize(a) {
  * @returns {number}
  */
 export function echo_f32(a) {
-    const ret = wasm.echo_f32(a);
-    return ret;
+    return wasm.echo_f32(a);
 }
 
 /**
@@ -287,8 +276,7 @@ export function echo_f32(a) {
  * @returns {number}
  */
 export function echo_f64(a) {
-    const ret = wasm.echo_f64(a);
-    return ret;
+    return wasm.echo_f64(a);
 }
 
 /**
@@ -296,8 +284,7 @@ export function echo_f64(a) {
  * @returns {boolean}
  */
 export function echo_bool(a) {
-    const ret = wasm.echo_bool(a);
-    return ret !== 0;
+    return wasm.echo_bool(a) !== 0;
 }
 
 function _assertChar(c) {
@@ -310,8 +297,7 @@ function _assertChar(c) {
 export function echo_char(a) {
     const char0 = a.codePointAt(0);
     _assertChar(char0);
-    const ret = wasm.echo_char(char0);
-    return String.fromCodePoint(ret);
+    return String.fromCodePoint(wasm.echo_char(char0));
 }
 
 /**
@@ -715,8 +701,7 @@ function _assertClass(instance, klass) {
 export function echo_struct(a) {
     _assertClass(a, Foo);
     var ptr0 = a.__destroy_into_raw();
-    const ret = wasm.echo_struct(ptr0);
-    return Foo.__wrap(ret);
+    return Foo.__wrap(wasm.echo_struct(ptr0));
 }
 
 /**
@@ -737,8 +722,7 @@ export function echo_vec_struct(a) {
  * @returns {number | undefined}
  */
 export function echo_option_u8(a) {
-    const ret = wasm.echo_option_u8(isLikeNone(a) ? 0xFFFFFF : a);
-    return ret === 0xFFFFFF ? undefined : ret;
+    return wasm.echo_option_u8(isLikeNone(a) ? 0xFFFFFF : a) === 0xFFFFFF ? undefined : wasm.echo_option_u8(isLikeNone(a) ? 0xFFFFFF : a);
 }
 
 /**
@@ -746,8 +730,7 @@ export function echo_option_u8(a) {
  * @returns {number | undefined}
  */
 export function echo_option_i8(a) {
-    const ret = wasm.echo_option_i8(isLikeNone(a) ? 0xFFFFFF : a);
-    return ret === 0xFFFFFF ? undefined : ret;
+    return wasm.echo_option_i8(isLikeNone(a) ? 0xFFFFFF : a) === 0xFFFFFF ? undefined : wasm.echo_option_i8(isLikeNone(a) ? 0xFFFFFF : a);
 }
 
 /**
@@ -755,8 +738,7 @@ export function echo_option_i8(a) {
  * @returns {number | undefined}
  */
 export function echo_option_u16(a) {
-    const ret = wasm.echo_option_u16(isLikeNone(a) ? 0xFFFFFF : a);
-    return ret === 0xFFFFFF ? undefined : ret;
+    return wasm.echo_option_u16(isLikeNone(a) ? 0xFFFFFF : a) === 0xFFFFFF ? undefined : wasm.echo_option_u16(isLikeNone(a) ? 0xFFFFFF : a);
 }
 
 /**
@@ -764,8 +746,7 @@ export function echo_option_u16(a) {
  * @returns {number | undefined}
  */
 export function echo_option_i16(a) {
-    const ret = wasm.echo_option_i16(isLikeNone(a) ? 0xFFFFFF : a);
-    return ret === 0xFFFFFF ? undefined : ret;
+    return wasm.echo_option_i16(isLikeNone(a) ? 0xFFFFFF : a) === 0xFFFFFF ? undefined : wasm.echo_option_i16(isLikeNone(a) ? 0xFFFFFF : a);
 }
 
 /**
@@ -773,8 +754,7 @@ export function echo_option_i16(a) {
  * @returns {number | undefined}
  */
 export function echo_option_u32(a) {
-    const ret = wasm.echo_option_u32(isLikeNone(a) ? 0x100000001 : (a) >>> 0);
-    return ret === 0x100000001 ? undefined : ret;
+    return wasm.echo_option_u32(isLikeNone(a) ? 0x100000001 : (a) >>> 0) === 0x100000001 ? undefined : wasm.echo_option_u32(isLikeNone(a) ? 0x100000001 : (a) >>> 0);
 }
 
 /**
@@ -782,8 +762,7 @@ export function echo_option_u32(a) {
  * @returns {number | undefined}
  */
 export function echo_option_i32(a) {
-    const ret = wasm.echo_option_i32(isLikeNone(a) ? 0x100000001 : (a) >> 0);
-    return ret === 0x100000001 ? undefined : ret;
+    return wasm.echo_option_i32(isLikeNone(a) ? 0x100000001 : (a) >> 0) === 0x100000001 ? undefined : wasm.echo_option_i32(isLikeNone(a) ? 0x100000001 : (a) >> 0);
 }
 
 /**
@@ -827,8 +806,7 @@ export function echo_option_i128(a) {
  * @returns {number | undefined}
  */
 export function echo_option_usize(a) {
-    const ret = wasm.echo_option_usize(isLikeNone(a) ? 0x100000001 : (a) >>> 0);
-    return ret === 0x100000001 ? undefined : ret;
+    return wasm.echo_option_usize(isLikeNone(a) ? 0x100000001 : (a) >>> 0) === 0x100000001 ? undefined : wasm.echo_option_usize(isLikeNone(a) ? 0x100000001 : (a) >>> 0);
 }
 
 /**
@@ -836,8 +814,7 @@ export function echo_option_usize(a) {
  * @returns {number | undefined}
  */
 export function echo_option_isize(a) {
-    const ret = wasm.echo_option_isize(isLikeNone(a) ? 0x100000001 : (a) >> 0);
-    return ret === 0x100000001 ? undefined : ret;
+    return wasm.echo_option_isize(isLikeNone(a) ? 0x100000001 : (a) >> 0) === 0x100000001 ? undefined : wasm.echo_option_isize(isLikeNone(a) ? 0x100000001 : (a) >> 0);
 }
 
 /**
@@ -845,8 +822,7 @@ export function echo_option_isize(a) {
  * @returns {number | undefined}
  */
 export function echo_option_f32(a) {
-    const ret = wasm.echo_option_f32(isLikeNone(a) ? 0x100000001 : Math.fround(a));
-    return ret === 0x100000001 ? undefined : ret;
+    return wasm.echo_option_f32(isLikeNone(a) ? 0x100000001 : Math.fround(a)) === 0x100000001 ? undefined : wasm.echo_option_f32(isLikeNone(a) ? 0x100000001 : Math.fround(a));
 }
 
 /**
@@ -863,8 +839,7 @@ export function echo_option_f64(a) {
  * @returns {boolean | undefined}
  */
 export function echo_option_bool(a) {
-    const ret = wasm.echo_option_bool(isLikeNone(a) ? 0xFFFFFF : a ? 1 : 0);
-    return ret === 0xFFFFFF ? undefined : ret !== 0;
+    return wasm.echo_option_bool(isLikeNone(a) ? 0xFFFFFF : a ? 1 : 0) === 0xFFFFFF ? undefined : wasm.echo_option_bool(isLikeNone(a) ? 0xFFFFFF : a ? 1 : 0) !== 0;
 }
 
 /**
@@ -874,8 +849,7 @@ export function echo_option_bool(a) {
 export function echo_option_char(a) {
     const char0 = isLikeNone(a) ? 0xFFFFFF : a.codePointAt(0);
     if (char0 !== 0xFFFFFF) { _assertChar(char0); }
-    const ret = wasm.echo_option_char(char0);
-    return ret === 0xFFFFFF ? undefined : String.fromCodePoint(ret);
+    return wasm.echo_option_char(char0) === 0xFFFFFF ? undefined : String.fromCodePoint(wasm.echo_option_char(char0));
 }
 
 /**
@@ -1176,8 +1150,7 @@ export function echo_option_struct(a) {
         _assertClass(a, Foo);
         ptr0 = a.__destroy_into_raw();
     }
-    const ret = wasm.echo_option_struct(ptr0);
-    return ret === 0 ? undefined : Foo.__wrap(ret);
+    return wasm.echo_option_struct(ptr0) === 0 ? undefined : Foo.__wrap(wasm.echo_option_struct(ptr0));
 }
 
 /**
@@ -1232,8 +1205,7 @@ export class Foo {
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
 
 export function __wbg___wbindgen_debug_string_99ef257a3ddda34d(arg0, arg1) {
-    const ret = debugString(arg1);
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const ptr1 = passStringToWasm0(debugString(arg1), wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
@@ -1241,8 +1213,7 @@ export function __wbg___wbindgen_debug_string_99ef257a3ddda34d(arg0, arg1) {
 
 export function __wbg___wbindgen_string_get_0f16a6ddddef376f(arg0, arg1) {
     const obj = arg1;
-    const ret = typeof(obj) === 'string' ? obj : undefined;
-    var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var ptr1 = isLikeNone(typeof(obj) === 'string' ? obj : undefined) ? 0 : passStringToWasm0(typeof(obj) === 'string' ? obj : undefined, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     var len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
@@ -1253,19 +1224,16 @@ export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
 };
 
 export function __wbg_foo_new(arg0) {
-    const ret = Foo.__wrap(arg0);
-    return ret;
+    return Foo.__wrap(arg0);
 };
 
 export function __wbg_foo_unwrap(arg0) {
-    const ret = Foo.__unwrap(arg0);
-    return ret;
+    return Foo.__unwrap(arg0);
 };
 
 export function __wbindgen_cast_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
+    return getStringFromWasm0(arg0, arg1);
 };
 
 export function __wbindgen_init_externref_table() {

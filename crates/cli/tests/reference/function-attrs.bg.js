@@ -219,8 +219,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
  * @returns {number} returns 1 if arg2 is true, or arg1 if arg2 is undefined or false
  */
 export function fn_with_attr(firstArg, secondArg) {
-    const ret = wasm.fn_with_attr(firstArg, secondArg);
-    return ret;
+    return wasm.fn_with_attr(firstArg, secondArg);
 }
 
 function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2) {
@@ -263,8 +262,7 @@ export class HoldsNumber {
      * @returns {number}
      */
     get inner() {
-        const ret = wasm.holdsnumber_get_inner(this.__wbg_ptr);
-        return ret;
+        return wasm.holdsnumber_get_inner(this.__wbg_ptr);
     }
     /**
      * Description for static_fn_with_attr
@@ -273,8 +271,7 @@ export class HoldsNumber {
      * @returns {HoldsNumber} returns an instance of HoldsNumber, holding arg1 if arg2 is undefined and holding arg2 if not
      */
     static static_fn_with_attr(firstArg, secondArg) {
-        const ret = wasm.holdsnumber_static_fn_with_attr(firstArg, secondArg);
-        return HoldsNumber.__wrap(ret);
+        return HoldsNumber.__wrap(wasm.holdsnumber_static_fn_with_attr(firstArg, secondArg));
     }
     /**
      * Description for method_with_attr
@@ -283,33 +280,28 @@ export class HoldsNumber {
      * @returns {number} returns arg1 if arg2 is true, or holding value of self if arg2 is undefined or false
      */
     method_with_attr(firstArg, secondArg) {
-        const ret = wasm.holdsnumber_method_with_attr(this.__wbg_ptr, firstArg, secondArg);
-        return ret;
+        return wasm.holdsnumber_method_with_attr(this.__wbg_ptr, firstArg, secondArg);
     }
 }
 if (Symbol.dispose) HoldsNumber.prototype[Symbol.dispose] = HoldsNumber.prototype.free;
 
 export function __wbg___wbindgen_debug_string_99ef257a3ddda34d(arg0, arg1) {
-    const ret = debugString(arg1);
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const ptr1 = passStringToWasm0(debugString(arg1), wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
 export function __wbg___wbindgen_is_falsy_03f4059e2ea4ee87(arg0) {
-    const ret = !arg0;
-    return ret;
+    return !arg0;
 };
 
 export function __wbg___wbindgen_is_function_8cee7dce3725ae74(arg0) {
-    const ret = typeof(arg0) === 'function';
-    return ret;
+    return typeof(arg0) === 'function';
 };
 
 export function __wbg___wbindgen_is_undefined_c4b71d073b92f3c5(arg0) {
-    const ret = arg0 === undefined;
-    return ret;
+    return arg0 === undefined;
 };
 
 export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
@@ -321,13 +313,11 @@ export function __wbg__wbg_cb_unref_bcc21779e27a5356(arg0) {
 };
 
 export function __wbg_call_13410aac570ffff7() { return handleError(function (arg0, arg1) {
-    const ret = arg0.call(arg1);
-    return ret;
+    return arg0.call(arg1);
 }, arguments) };
 
 export function __wbg_call_a5400b25a865cfd8() { return handleError(function (arg0, arg1, arg2) {
-    const ret = arg0.call(arg1, arg2);
-    return ret;
+    return arg0.call(arg1, arg2);
 }, arguments) };
 
 export function __wbg_new_2e3c58a15f39f5f9(arg0, arg1) {
@@ -342,16 +332,14 @@ export function __wbg_new_2e3c58a15f39f5f9(arg0, arg1) {
                 state0.a = a;
             }
         };
-        const ret = new Promise(cb0);
-        return ret;
+        return new Promise(cb0);
     } finally {
         state0.a = state0.b = 0;
     }
 };
 
 export function __wbg_new_no_args_254190557c45b4ec(arg0, arg1) {
-    const ret = new Function(getStringFromWasm0(arg0, arg1));
-    return ret;
+    return new Function(getStringFromWasm0(arg0, arg1));
 };
 
 export function __wbg_queueMicrotask_25d0739ac89e8c88(arg0) {
@@ -359,50 +347,41 @@ export function __wbg_queueMicrotask_25d0739ac89e8c88(arg0) {
 };
 
 export function __wbg_queueMicrotask_4488407636f5bf24(arg0) {
-    const ret = arg0.queueMicrotask;
-    return ret;
+    return arg0.queueMicrotask;
 };
 
 export function __wbg_resolve_4055c623acdd6a1b(arg0) {
-    const ret = Promise.resolve(arg0);
-    return ret;
+    return Promise.resolve(arg0);
 };
 
 export function __wbg_static_accessor_GLOBAL_8921f820c2ce3f12() {
-    const ret = typeof global === 'undefined' ? null : global;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+    return isLikeNone(typeof global === 'undefined' ? null : global) ? 0 : addToExternrefTable0(typeof global === 'undefined' ? null : global);
 };
 
 export function __wbg_static_accessor_GLOBAL_THIS_f0a4409105898184() {
-    const ret = typeof globalThis === 'undefined' ? null : globalThis;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+    return isLikeNone(typeof globalThis === 'undefined' ? null : globalThis) ? 0 : addToExternrefTable0(typeof globalThis === 'undefined' ? null : globalThis);
 };
 
 export function __wbg_static_accessor_SELF_995b214ae681ff99() {
-    const ret = typeof self === 'undefined' ? null : self;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+    return isLikeNone(typeof self === 'undefined' ? null : self) ? 0 : addToExternrefTable0(typeof self === 'undefined' ? null : self);
 };
 
 export function __wbg_static_accessor_WINDOW_cde3890479c675ea() {
-    const ret = typeof window === 'undefined' ? null : window;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+    return isLikeNone(typeof window === 'undefined' ? null : window) ? 0 : addToExternrefTable0(typeof window === 'undefined' ? null : window);
 };
 
 export function __wbg_then_e22500defe16819f(arg0, arg1) {
-    const ret = arg0.then(arg1);
-    return ret;
+    return arg0.then(arg1);
 };
 
 export function __wbindgen_cast_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [Externref], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
-    return ret;
+    return makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
 };
 
 export function __wbindgen_cast_0000000000000001(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
-    return ret;
+    return arg0;
 };
 
 export function __wbindgen_init_externref_table() {

@@ -70,13 +70,11 @@ export function __wbg_let_6f6af6103d3e2d91(arg0) {
 };
 
 export function __wbg_new_06a005f0311eb839() {
-    const ret = A.new();
-    return ret;
+    return A.new();
 };
 
 export function __wbg_new_27ac6aec351615ea() {
-    const ret = window.__TAURI__.menu.Menu.new();
-    return ret;
+    return window.__TAURI__.menu.Menu.new();
 };
 
 export function __wbg_new_f777371617c89b36() {
@@ -84,8 +82,7 @@ export function __wbg_new_f777371617c89b36() {
 };
 
 export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {
-    const ret = true;
-    return ret;
+    return true;
 };
 
 export function __wbindgen_init_externref_table() {

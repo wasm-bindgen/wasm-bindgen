@@ -80,8 +80,7 @@ export function result_i32() {
 }
 
 export function __wbg_Error_e17e777aac105295(arg0, arg1) {
-    const ret = Error(getStringFromWasm0(arg0, arg1));
-    return ret;
+    return Error(getStringFromWasm0(arg0, arg1));
 };
 
 export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
@@ -90,8 +89,7 @@ export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
 
 export function __wbindgen_cast_0000000000000000(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
-    return ret;
+    return arg0;
 };
 
 export function __wbindgen_init_externref_table() {

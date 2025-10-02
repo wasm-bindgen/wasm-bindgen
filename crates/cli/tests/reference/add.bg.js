@@ -9,8 +9,7 @@ export function __wbg_set_wasm(val) {
  * @returns {number}
  */
 export function add_u32(a, b) {
-    const ret = wasm.add_u32(a, b);
-    return ret >>> 0;
+    return wasm.add_u32(a, b) >>> 0;
 }
 
 /**
@@ -19,8 +18,7 @@ export function add_u32(a, b) {
  * @returns {number}
  */
 export function add_i32(a, b) {
-    const ret = wasm.add_i32(a, b);
-    return ret;
+    return wasm.add_i32(a, b);
 }
 
 export function __wbindgen_init_externref_table() {

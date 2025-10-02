@@ -66,8 +66,7 @@ exports.__wbg_catch_me_1d18acaa34acb005 = function() { return handleError(functi
 }, arguments) };
 
 exports.__wbg_get_c871386e44ba8c35 = function(arg0) {
-    const ret = arg0.get();
-    return ret;
+    return arg0.get();
 };
 
 exports.__wbg_my_function_597f96bc4719408a = function() {
@@ -75,8 +74,7 @@ exports.__wbg_my_function_597f96bc4719408a = function() {
 };
 
 exports.__wbg_new_c30895ccee9479d4 = function(arg0) {
-    const ret = new default1(arg0);
-    return ret;
+    return new default1(arg0);
 };
 
 exports.__wbg_no_catch_757175fbf9e08b9e = function() {
@@ -88,8 +86,7 @@ exports.__wbg_reload_b091d4dc4b1b3a74 = function() {
 };
 
 exports.__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
-    const ret = a.CONST;
-    return ret;
+    return a.CONST;
 };
 
 exports.__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
