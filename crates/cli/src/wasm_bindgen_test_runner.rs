@@ -113,7 +113,17 @@ where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
 {
-    let cli = Cli::try_parse_from(args)?;
+    let cli = match Cli::try_parse_from(args) {
+        Ok(a) => a,
+        Err(e) => match e.kind() {
+            // Passing --version and --help should not result in a failure.
+            clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                eprint!("{}", e);
+                return Ok(());
+            }
+            _ => bail!(e),
+        },
+    };
     rmain(cli)
 }
 

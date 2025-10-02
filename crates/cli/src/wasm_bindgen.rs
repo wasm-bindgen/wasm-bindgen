@@ -1,4 +1,4 @@
-use anyhow::Error;
+use anyhow::{bail, Error};
 use clap::{Parser, ValueEnum};
 use std::ffi::OsString;
 use std::path::PathBuf;
@@ -121,7 +121,17 @@ where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
 {
-    let args = Args::try_parse_from(args)?;
+    let args = match Args::try_parse_from(args) {
+        Ok(a) => a,
+        Err(e) => match e.kind() {
+            // Passing --version and --help should not result in a failure.
+            clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                eprint!("{}", e);
+                return Ok(());
+            }
+            _ => bail!(e),
+        },
+    };
     rmain(&args)
 }
 
