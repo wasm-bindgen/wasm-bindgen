@@ -1043,6 +1043,30 @@ try_from_for_num128!(u128, u64);
 
 big_numbers! { i64 u64 i128 u128 }
 
+impl TryFromJsValue for () {
+    type Error = JsValue;
+
+    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+        if value.is_undefined() {
+            Ok(())
+        } else {
+            Err(value)
+        }
+    }
+}
+
+impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
+    type Error = T::Error;
+
+    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+        if value.is_undefined() || value.is_null() {
+            Ok(None)
+        } else {
+            T::try_from_js_value(value).map(Some)
+        }
+    }
+}
+
 // `usize` and `isize` have to be treated a bit specially, because we know that
 // they're 32-bit but the compiler conservatively assumes they might be bigger.
 // So, we have to manually forward to the `u32`/`i32` versions.

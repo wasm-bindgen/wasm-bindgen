@@ -110,3 +110,42 @@ fn u128_try_from_js_value() {
     let above_max = JsValue::from(u128::MAX) + JsValue::from(1_i64);
     assert!(u128::try_from_js_value(above_max).is_err());
 }
+
+#[wasm_bindgen_test]
+fn unit_try_from_js_value() {
+    assert_eq!(<()>::try_from_js_value(JsValue::UNDEFINED), Ok(()));
+
+    assert!(<()>::try_from_js_value(JsValue::NULL).is_err());
+    assert!(<()>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+    assert!(<()>::try_from_js_value(JsValue::from_str("hello")).is_err());
+}
+
+#[wasm_bindgen_test]
+fn option_try_from_js_value() {
+    assert_eq!(
+        Option::<i64>::try_from_js_value(JsValue::UNDEFINED),
+        Ok(None)
+    );
+    assert_eq!(Option::<i64>::try_from_js_value(JsValue::NULL), Ok(None));
+    assert_eq!(
+        Option::<String>::try_from_js_value(JsValue::UNDEFINED),
+        Ok(None)
+    );
+    assert_eq!(Option::<String>::try_from_js_value(JsValue::NULL), Ok(None));
+
+    assert_eq!(
+        Option::<i64>::try_from_js_value(JsValue::from(42_i64)),
+        Ok(Some(42_i64))
+    );
+    assert_eq!(
+        Option::<String>::try_from_js_value(JsValue::from_str("hello")),
+        Ok(Some("hello".to_string()))
+    );
+    assert_eq!(
+        Option::<f64>::try_from_js_value(JsValue::from_f64(3.14)),
+        Ok(Some(3.14))
+    );
+
+    assert!(Option::<i64>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+    assert!(Option::<String>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+}
