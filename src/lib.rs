@@ -639,6 +639,14 @@ impl TryFrom<JsValue> for f64 {
     }
 }
 
+impl TryFromJsValue for f64 {
+    type Error = JsValue;
+
+    fn try_from_js_value(val: JsValue) -> Result<Self, Self::Error> {
+        f64::try_from(&val)
+    }
+}
+
 impl TryFrom<&JsValue> for f64 {
     type Error = JsValue;
 
@@ -982,6 +990,14 @@ macro_rules! try_from_for_num64 {
                     .ok_or(v)
             }
         }
+
+        impl TryFromJsValue for $ty {
+            type Error = JsValue;
+
+            fn try_from_js_value(v: JsValue) -> Result<Self, JsValue> {
+                Self::try_from(v)
+            }
+        }
     };
 }
 
@@ -1009,6 +1025,14 @@ macro_rules! try_from_for_num128 {
                 // If it fits, then our original number is in the 128-bit range.
                 let hi = <$hi_ty>::try_from(hi)?;
                 Ok(Self::from(hi) << 64 | Self::from(lo))
+            }
+        }
+
+        impl TryFromJsValue for $ty {
+            type Error = JsValue;
+
+            fn try_from_js_value(v: JsValue) -> Result<Self, JsValue> {
+                Self::try_from(v)
             }
         }
     };
