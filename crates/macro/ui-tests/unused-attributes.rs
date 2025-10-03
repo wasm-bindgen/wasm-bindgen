@@ -29,4 +29,7 @@ impl MyStruct {
     }
 }
 
+#[wasm_bindgen(wasm_bindgen = wasm_bindgen)]
+struct Foo;
+
 fn main() {}
