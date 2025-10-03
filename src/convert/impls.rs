@@ -9,139 +9,145 @@ use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
+use crate::describe::WasmDescribe;
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
 
-// Primitive types can always be passed over the ABI.
-impl<T: WasmPrimitive> WasmAbi for T {
-    type Prim1 = Self;
-    type Prim2 = ();
-    type Prim3 = ();
-    type Prim4 = ();
+// Any `WasmPrimitive` or a tuple of primitives (up to 4) should be a `WasmAbi`.
+macro_rules! wasm_abi_tuple {
+    ($($prim:ident)* | $($unbound:ident)*) => {
+        #[allow(non_snake_case, unused_parens)]
+        impl<$($prim: WasmPrimitive),*> WasmAbi for ($($prim),*) {
+            $(type $prim = $prim;)*
+            $(type $unbound = ();)*
+
+            #[inline]
+            fn split(self) -> (Self::Prim1, Self::Prim2, Self::Prim3, Self::Prim4) {
+                let ($($prim),*) = self;
+                $(let $unbound = ();)*
+                ($($prim,)* $($unbound,)*)
+            }
+
+            #[inline]
+            fn join(
+                $($prim: $prim,)*
+                $($unbound: (),)*
+            ) -> Self {
+                $(let () = $unbound;)*
+                ($($prim),*)
+            }
+        }
+    };
+}
+
+wasm_abi_tuple!(Prim1 | Prim2 Prim3 Prim4);
+wasm_abi_tuple!(Prim1 Prim2 | Prim3 Prim4);
+wasm_abi_tuple!(Prim1 Prim2 Prim3 | Prim4);
+wasm_abi_tuple!(Prim1 Prim2 Prim3 Prim4 |);
+
+// Anything that implements `WasmAbi` should naturally be also `IntoWasmAbi`/`FromWasmAbi`.
+impl<T: WasmAbi + WasmDescribe> IntoWasmAbi for T {
+    type Abi = T;
 
     #[inline]
-    fn split(self) -> (Self, (), (), ()) {
-        (self, (), (), ())
-    }
-
-    #[inline]
-    fn join(prim: Self, _: (), _: (), _: ()) -> Self {
-        prim
+    fn into_abi(self) -> Self::Abi {
+        self
     }
 }
 
-impl WasmAbi for i128 {
-    type Prim1 = u64;
-    type Prim2 = u64;
-    type Prim3 = ();
-    type Prim4 = ();
+impl<T: WasmAbi + WasmDescribe> FromWasmAbi for T {
+    type Abi = T;
 
     #[inline]
-    fn split(self) -> (u64, u64, (), ()) {
-        let low = self as u64;
-        let high = (self >> 64) as u64;
-        (low, high, (), ())
-    }
-
-    #[inline]
-    fn join(low: u64, high: u64, _: (), _: ()) -> Self {
-        ((high as u128) << 64 | low as u128) as i128
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        js
     }
 }
-impl WasmAbi for u128 {
-    type Prim1 = u64;
-    type Prim2 = u64;
-    type Prim3 = ();
-    type Prim4 = ();
+
+// 128-bit integers are represented as two 64-bit integers in the ABI
+impl IntoWasmAbi for u128 {
+    type Abi = (u64, u64);
 
     #[inline]
-    fn split(self) -> (u64, u64, (), ()) {
+    fn into_abi(self) -> Self::Abi {
         let low = self as u64;
         let high = (self >> 64) as u64;
-        (low, high, (), ())
+        (low, high)
     }
+}
+
+impl FromWasmAbi for u128 {
+    type Abi = (u64, u64);
 
     #[inline]
-    fn join(low: u64, high: u64, _: (), _: ()) -> Self {
+    unsafe fn from_abi((low, high): Self::Abi) -> Self {
         (high as u128) << 64 | low as u128
     }
 }
 
-impl<T: WasmAbi<Prim4 = ()>> WasmAbi for Option<T> {
-    /// Whether this `Option` is a `Some` value.
-    type Prim1 = u32;
-    type Prim2 = T::Prim1;
-    type Prim3 = T::Prim2;
-    type Prim4 = T::Prim3;
+impl IntoWasmAbi for i128 {
+    type Abi = <u128 as IntoWasmAbi>::Abi;
 
     #[inline]
-    fn split(self) -> (u32, T::Prim1, T::Prim2, T::Prim3) {
-        match self {
-            None => (
-                0,
-                Default::default(),
-                Default::default(),
-                Default::default(),
-            ),
-            Some(value) => {
-                let (prim1, prim2, prim3, ()) = value.split();
-                (1, prim1, prim2, prim3)
-            }
-        }
-    }
-
-    #[inline]
-    fn join(is_some: u32, prim1: T::Prim1, prim2: T::Prim2, prim3: T::Prim3) -> Self {
-        if is_some == 0 {
-            None
-        } else {
-            Some(T::join(prim1, prim2, prim3, ()))
-        }
+    fn into_abi(self) -> Self::Abi {
+        (self as u128).into_abi()
     }
 }
 
-macro_rules! type_wasm_native {
-    ($($t:tt as $c:tt)*) => ($(
-        impl IntoWasmAbi for $t {
-            type Abi = $c;
+impl FromWasmAbi for i128 {
+    type Abi = <u128 as FromWasmAbi>::Abi;
 
-            #[inline]
-            fn into_abi(self) -> $c { self as $c }
-        }
+    #[inline]
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        u128::from_abi(js) as i128
+    }
+}
 
-        impl FromWasmAbi for $t {
-            type Abi = $c;
-
-            #[inline]
-            unsafe fn from_abi(js: $c) -> Self { js as $t }
-        }
-
-        impl IntoWasmAbi for Option<$t> {
-            type Abi = Option<$c>;
+macro_rules! option_tagged {
+    ($($t:ty),*) => ($(
+        impl<Abi: WasmAbi<Prim4 = ()>> IntoWasmAbi for Option<$t>
+        where
+            $t: IntoWasmAbi<Abi = Abi>,
+        {
+            type Abi = (u32, Abi::Prim1, Abi::Prim2, Abi::Prim3);
 
             #[inline]
             fn into_abi(self) -> Self::Abi {
-                self.map(|v| v as $c)
+                match self {
+                    None => (
+                        0,
+                        Default::default(),
+                        Default::default(),
+                        Default::default(),
+                    ),
+                    Some(value) => {
+                        let (prim1, prim2, prim3, ()) = value.into_abi().split();
+                        (1, prim1, prim2, prim3)
+                    }
+                }
             }
         }
 
-        impl FromWasmAbi for Option<$t> {
-            type Abi = Option<$c>;
+
+        impl<Abi: WasmAbi<Prim4 = ()>> FromWasmAbi for Option<$t>
+        where
+            $t: FromWasmAbi<Abi = Abi>,
+        {
+            type Abi = (u32, Abi::Prim1, Abi::Prim2, Abi::Prim3);
 
             #[inline]
-            unsafe fn from_abi(js: Self::Abi) -> Self {
-                js.map(|v: $c| v as $t)
+            unsafe fn from_abi((is_some, prim1, prim2, prim3): Self::Abi) -> Self {
+                if is_some == 0 {
+                    None
+                } else {
+                    let abi = Abi::join(prim1, prim2, prim3, ());
+                    Some(<$t>::from_abi(abi))
+                }
             }
         }
-    )*)
+    )*);
 }
 
-type_wasm_native!(
-    i64 as i64
-    u64 as u64
-    i128 as i128
-    u128 as u128
-    f64 as f64
-);
+option_tagged!(i64, u64, f64, i128, u128);
 
 /// The sentinel value is 2^32 + 1 for 32-bit primitive types.
 ///
@@ -152,9 +158,9 @@ type_wasm_native!(
 /// `f32` can represent all integers 2^32+512*k exactly.
 const F64_ABI_OPTION_SENTINEL: f64 = 4294967297_f64;
 
-macro_rules! type_wasm_native_f64_option {
-    ($($t:tt as $c:tt)*) => ($(
-        impl IntoWasmAbi for $t {
+macro_rules! option_f64 {
+    ($($t:ty $(as $c:ty)?)*) => ($(
+        $(impl IntoWasmAbi for $t {
             type Abi = $c;
 
             #[inline]
@@ -166,14 +172,14 @@ macro_rules! type_wasm_native_f64_option {
 
             #[inline]
             unsafe fn from_abi(js: $c) -> Self { js as $t }
-        }
+        })?
 
         impl IntoWasmAbi for Option<$t> {
             type Abi = f64;
 
             #[inline]
             fn into_abi(self) -> Self::Abi {
-                self.map(|v| v as $c as f64).unwrap_or(F64_ABI_OPTION_SENTINEL)
+                self.map(|v| v as f64).unwrap_or(F64_ABI_OPTION_SENTINEL)
             }
         }
 
@@ -185,19 +191,19 @@ macro_rules! type_wasm_native_f64_option {
                 if js == F64_ABI_OPTION_SENTINEL {
                     None
                 } else {
-                    Some(js as $c as $t)
+                    Some(js as $t)
                 }
             }
         }
     )*)
 }
 
-type_wasm_native_f64_option!(
-    i32 as i32
+option_f64!(
+    i32
     isize as i32
-    u32 as u32
+    u32
     usize as u32
-    f32 as f32
+    f32
 );
 
 /// The sentinel value is 0xFF_FFFF for primitives with less than 32 bits.
@@ -509,62 +515,34 @@ impl<T: FromWasmAbi> FromWasmAbi for Clamped<T> {
     }
 }
 
-impl IntoWasmAbi for () {
-    type Abi = ();
-
-    #[inline]
-    fn into_abi(self) {
-        self
-    }
-}
-
-impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
-    type Prim1 = T::Prim1;
-    type Prim2 = T::Prim2;
-    // The order of primitives here is such that we can pop() the possible error
-    // first, deal with it and move on. Later primitives are popped off the
-    // stack first.
-    /// If this `Result` is an `Err`, the error value.
-    type Prim3 = u32;
-    /// Whether this `Result` is an `Err`.
-    type Prim4 = u32;
-
-    #[inline]
-    fn split(self) -> (T::Prim1, T::Prim2, u32, u32) {
-        match self {
-            Ok(value) => {
-                let (prim1, prim2, (), ()) = value.split();
-                (prim1, prim2, 0, 0)
-            }
-            Err(err) => (Default::default(), Default::default(), err, 1),
-        }
-    }
-
-    #[inline]
-    fn join(prim1: T::Prim1, prim2: T::Prim2, err: u32, is_err: u32) -> Self {
-        if is_err == 0 {
-            Ok(T::join(prim1, prim2, (), ()))
-        } else {
-            Err(err)
-        }
-    }
-}
-
 impl<T, E> ReturnWasmAbi for Result<T, E>
 where
     T: IntoWasmAbi,
     E: Into<JsValue>,
     T::Abi: WasmAbi<Prim3 = (), Prim4 = ()>,
 {
-    type Abi = Result<T::Abi, u32>;
+    /// The order of primitives here is such that we can pop() the possible error
+    /// first, deal with it and move on. Later primitives are popped off the
+    /// stack first.
+    type Abi = (
+        <T::Abi as WasmAbi>::Prim1,
+        <T::Abi as WasmAbi>::Prim2,
+        // If this `Result` is an `Err`, the error value.
+        u32,
+        // Whether this `Result` is an `Err`.
+        u32,
+    );
 
     #[inline]
     fn return_abi(self) -> Self::Abi {
         match self {
-            Ok(v) => Ok(v.into_abi()),
+            Ok(v) => {
+                let (prim1, prim2, (), ()) = v.into_abi().split();
+                (prim1, prim2, 0, 0)
+            }
             Err(e) => {
-                let jsval = e.into();
-                Err(jsval.into_abi())
+                let jsval = e.into().into_abi();
+                (Default::default(), Default::default(), jsval, 1)
             }
         }
     }
