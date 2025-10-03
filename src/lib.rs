@@ -968,7 +968,7 @@ fn to_uint_32(v: JsValue) -> Result<u32, JsValue> {
         if !n.is_finite() || n == 0.0 {
             0
         } else {
-            (n.trunc() as i64) as u32
+            (n as i64) as u32
         }
     })
 }
