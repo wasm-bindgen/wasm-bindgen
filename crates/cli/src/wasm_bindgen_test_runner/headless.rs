@@ -1,4 +1,4 @@
-use crate::shell::Shell;
+use super::shell::Shell;
 use anyhow::{bail, format_err, Context, Error};
 use log::{debug, warn};
 use rouille::url::Url;

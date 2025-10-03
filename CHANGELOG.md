@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added `run_cli_with_args` library functions to all `wasm_bindgen_cli` entrypoints.
+  [#4710](https://github.com/wasm-bindgen/wasm-bindgen/pull/4710)
+
 * Added `get_raw` and `set_raw` for `WebAssembly.Table`.
   [#4701](https://github.com/wasm-bindgen/wasm-bindgen/pull/4701)
 
@@ -86,7 +89,7 @@
 * Added support for arguments with spaces using shell-style quoting in webdriver `*_ARGS`
   environment variables to `wasm-bindgen-test`.
   [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
-  
+
 * Added ability to determine WebDriver JSON config location via
   `WASM_BINDGEN_TEST_WEBDRIVER_JSON` environment variable to
   `wasm-bindgen-test`.
@@ -96,7 +99,7 @@
   [#4635](https://github.com/wasm-bindgen/wasm-bindgen/pull/4635)
 
   [guide on debug information]: https://wasm-bindgen.github.io/wasm-bindgen/reference/debug-info.html
-  
+
 * New `--target=module` target for outputting source phase imports.
   [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
 

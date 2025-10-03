@@ -15,6 +15,7 @@ use anyhow::{bail, Context};
 use clap::Parser;
 use clap::ValueEnum;
 use std::env;
+use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
@@ -107,11 +108,26 @@ struct Test {
     ignored: bool,
 }
 
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
+pub fn run_cli_with_args<I, T>(args: I) -> anyhow::Result<()>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    let cli = match Cli::try_parse_from(args) {
+        Ok(a) => a,
+        Err(e) => match e.kind() {
+            // Passing --version and --help should not result in a failure.
+            clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                print!("{}", e);
+                return Ok(());
+            }
+            _ => bail!(e),
+        },
+    };
+    rmain(cli)
+}
 
-    let cli = Cli::parse();
-
+fn rmain(cli: Cli) -> anyhow::Result<()> {
     let shell = shell::Shell::new();
 
     let file_name = cli
@@ -187,9 +203,7 @@ fn main() -> anyhow::Result<()> {
             println!("{}: test", test.name);
         }
 
-        // Returning cleanly has the strange effect of outputting
-        // an additional empty line with spaces in it.
-        std::process::exit(0);
+        return Ok(());
     }
 
     let tmpdir = tempfile::tempdir()?;
