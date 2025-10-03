@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.102";
+pub const SCHEMA_VERSION: &str = "0.2.105";
 
 #[macro_export]
 macro_rules! shared_api {
