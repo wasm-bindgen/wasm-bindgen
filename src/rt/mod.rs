@@ -101,6 +101,30 @@ unsafe impl<T> Sync for ThreadLocalWrapper<T> {}
 #[cfg(not(target_feature = "atomics"))]
 unsafe impl<T> Send for ThreadLocalWrapper<T> {}
 
+// This macro is a hack to implement "generic" casts and reduce number of
+// boilerplate intrinsics. The implementation generates a no-op JS adapter that
+// simply takes an argument in one type, decodes it from the ABI, does nothing
+// with it on the JS side (by declaring function name as empty, so instead of
+// generating typical JS call that does `ret = foo(arg);` we end up with
+// just `ret = (arg);` and then encoding same value back with a different type.
+//
+// Someday we'll support generics in #[wasm_bindgen] macro, in which case
+// this can be replaced with a proper generic intrinsic.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! wbg_cast {
+    ($value:expr, $from:ty, $to:ty) => {{
+        #[$crate::prelude::wasm_bindgen(wasm_bindgen = $crate)]
+        extern "C" {
+            #[allow(unused)]
+            #[wasm_bindgen(js_name = "/* cast */")]
+            fn __wbindgen_cast(value: $from) -> $to;
+        }
+
+        __wbindgen_cast($value)
+    }};
+}
+
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.
 pub struct LazyCell<T, F = fn() -> T>(ThreadLocalWrapper<Lazy<T, F>>);
 
@@ -131,6 +155,82 @@ pub use LazyCell as LazyLock;
 pub struct LazyLock<T, F = fn() -> T> {
     state: AtomicU8,
     data: UnsafeCell<Data<T, F>>,
+}
+
+pub(crate) const JSIDX_OFFSET: u32 = 128; // keep in sync with js/mod.rs
+pub(crate) const JSIDX_UNDEFINED: u32 = JSIDX_OFFSET;
+pub(crate) const JSIDX_NULL: u32 = JSIDX_OFFSET + 1;
+pub(crate) const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
+pub(crate) const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
+pub(crate) const JSIDX_SLOT0: u32 = JSIDX_OFFSET + 4;
+pub(crate) const JSIDX_SLOT1: u32 = JSIDX_OFFSET + 5;
+pub(crate) const JSIDX_SLOT2: u32 = JSIDX_OFFSET + 6;
+pub(crate) const JSIDX_SLOT3: u32 = JSIDX_OFFSET + 7;
+pub(crate) const JSIDX_SLOT4: u32 = JSIDX_OFFSET + 8;
+pub(crate) const JSIDX_SLOT5: u32 = JSIDX_OFFSET + 9;
+pub(crate) const JSIDX_SLOT6: u32 = JSIDX_OFFSET + 10;
+pub(crate) const JSIDX_SLOT7: u32 = JSIDX_OFFSET + 11;
+pub(crate) const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 12;
+
+#[doc(hidden)]
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_UNDEFINED: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_UNDEFINED)));
+// #[doc(hidden)]
+// #[cfg_attr(target_feature = "atomics", thread_local)]
+// pub(crate) static JS_VALUE_NULL: LazyCell<Cell<JsValue>> =
+//     LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_NULL)));
+#[doc(hidden)]
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_TRUE: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_TRUE)));
+#[doc(hidden)]
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_FALSE: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_FALSE)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT0: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT0)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT1: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT1)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT2: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT2)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT3: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT3)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT4: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT4)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT5: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT5)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT6: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT6)));
+#[cfg_attr(target_feature = "atomics", thread_local)]
+pub(crate) static JS_VALUE_SLOT7: LazyCell<Cell<JsValue>> =
+    LazyCell::new(|| Cell::new(JsValue::_new(JSIDX_SLOT7)));
+
+pub(crate) fn get_value_slot(idx: u32) -> &'static JsValue {
+    unsafe {
+        match idx {
+            0 => &*(LazyCell::force(&JS_VALUE_SLOT0).as_ptr()),
+            1 => &*(LazyCell::force(&JS_VALUE_SLOT1).as_ptr()),
+            2 => &*(LazyCell::force(&JS_VALUE_SLOT2).as_ptr()),
+            3 => &*(LazyCell::force(&JS_VALUE_SLOT3).as_ptr()),
+            4 => &*(LazyCell::force(&JS_VALUE_SLOT4).as_ptr()),
+            5 => &*(LazyCell::force(&JS_VALUE_SLOT5).as_ptr()),
+            6 => &*(LazyCell::force(&JS_VALUE_SLOT6).as_ptr()),
+            7 => &*(LazyCell::force(&JS_VALUE_SLOT7).as_ptr()),
+            _ => panic!("invalid slot idx"),
+        }
+    }
+}
+
+pub fn reset_value_ref_slots() {
+    crate::__wbindgen_reset_slots()
 }
 
 #[cfg(target_feature = "atomics")]
