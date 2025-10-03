@@ -25,6 +25,9 @@
 * Fixed JS memory leak in `wasm_bindgen::Closure`.
   [#4709](https://github.dev/wasm-bindgen/wasm-bindgen/pull/4709)
 
+* Fixed warning when using `#[wasm_bindgen(wasm_bindgen=xxx)]` on struct.
+  [#4715](https://github.dev/wasm-bindgen/wasm-bindgen/pull/4715)
+
 ### Removed
 
 * Internal crate `wasm-bindgen-backend` will no longer be published.
