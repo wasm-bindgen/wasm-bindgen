@@ -9,7 +9,8 @@ use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{Clamped, JsError, JsValue, UnwrapThrowExt, __wbindgen_is_null_or_undefined};
+use crate::{JsUpcastRef, __rt};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -466,6 +467,20 @@ impl LongRefFromWasmAbi for JsValue {
     }
 }
 
+impl OptionIntoWasmAbi for JsValue {
+    #[inline]
+    fn none() -> u32 {
+        crate::__rt::JSIDX_NULL
+    }
+}
+
+impl OptionFromWasmAbi for JsValue {
+    #[inline]
+    fn is_none(js: &u32) -> bool {
+        unsafe { __wbindgen_is_null_or_undefined(*js) }
+    }
+}
+
 impl<T: OptionIntoWasmAbi> IntoWasmAbi for Option<T> {
     type Abi = T::Abi;
 
@@ -515,6 +530,20 @@ impl IntoWasmAbi for () {
     #[inline]
     fn into_abi(self) {
         self
+    }
+}
+
+impl JsUpcastRef for () {
+    fn upcast_ref(&self) -> &JsValue {
+        unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_UNDEFINED).as_ptr()) }
+    }
+}
+
+impl TryFromJsValue for () {
+    type Error = core::convert::Infallible;
+
+    fn try_from_js_value(_: JsValue) -> Result<Self, Self::Error> {
+        Ok(())
     }
 }
 
@@ -623,4 +652,141 @@ where
         );
     }
     result.into_boxed_slice()
+}
+
+impl<T> JsUpcastRef for Option<T>
+where
+    T: JsUpcastRef,
+{
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        match self {
+            Some(val) => val.upcast_ref(),
+            None => unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_UNDEFINED).as_ptr()) },
+        }
+    }
+}
+
+// `JsUpcastRef`` converts primitive references into JsValue
+// storing values into call-local fixed externref slots
+
+impl JsUpcastRef for i32 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u32 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for i64 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_bigint_new_into_slot(*self);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u64 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_bigint_new_into_slot(*self as i64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for f32 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for f64 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for bool {
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        if *self {
+            unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_TRUE).as_ptr()) }
+        } else {
+            unsafe { &*(__rt::LazyCell::force(&__rt::JS_VALUE_FALSE).as_ptr()) }
+        }
+    }
+}
+
+impl JsUpcastRef for char {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_char_new_into_slot(*self as u32);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for i8 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u8 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for i16 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
+}
+
+impl JsUpcastRef for u16 {
+    const USES_VALUE_SLOTS: bool = true;
+
+    #[inline]
+    fn upcast_ref(&self) -> &JsValue {
+        let slot_idx = crate::__wbindgen_number_new_into_slot(*self as f64);
+        __rt::get_value_slot(slot_idx)
+    }
 }

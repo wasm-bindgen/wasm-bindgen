@@ -1,4 +1,5 @@
 use crate::JsValue;
+use crate::__rt;
 
 use alloc::slice;
 use alloc::vec::Vec;
@@ -128,7 +129,7 @@ pub extern "C" fn __externref_table_alloc() -> usize {
 
 #[no_mangle]
 pub extern "C" fn __externref_table_dealloc(idx: usize) {
-    if idx < super::JSIDX_RESERVED as usize {
+    if idx < __rt::JSIDX_RESERVED as usize {
         return;
     }
     // clear this value from the table so while the table slot is un-allocated
