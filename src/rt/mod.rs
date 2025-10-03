@@ -605,7 +605,7 @@ static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(C
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
-    // debug_assert_eq!(GLOBAL_EXNDATA.0.get()[0], 0);
+    debug_assert_eq!(GLOBAL_EXNDATA.0.get()[0], 0);
     GLOBAL_EXNDATA.0.set([1, idx]);
 }
 
