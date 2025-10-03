@@ -1063,13 +1063,12 @@ macro_rules! big_integers {
             }
         }
 
-        // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+        // Almost follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+        // Except for String and Bool.
         impl TryFromJsValue for $n {
             type Error = JsValue;
             #[inline]
             fn try_from_js_value(val: JsValue) -> Result<$n, JsValue> {
-                // Modulus arithmetic in ToBigUint64 works for both signed and unsiged
-                // per https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobigint64.
                 match __wbindgen_bigint_get_as_i64(&val) {
                     Some(n) => Ok(n as $n),
                     None => Err(val)
