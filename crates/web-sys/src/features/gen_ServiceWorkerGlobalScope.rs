@@ -12,6 +12,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerGlobalScope`*"]
     pub type ServiceWorkerGlobalScope;
+    #[cfg(feature = "CookieStore")]
+    # [wasm_bindgen (structural , method , getter , js_class = "ServiceWorkerGlobalScope" , js_name = cookieStore)]
+    #[doc = "Getter for the `cookieStore` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/cookieStore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStore`, `ServiceWorkerGlobalScope`*"]
+    pub fn cookie_store(this: &ServiceWorkerGlobalScope) -> CookieStore;
+    # [wasm_bindgen (structural , method , getter , js_class = "ServiceWorkerGlobalScope" , js_name = oncookiechange)]
+    #[doc = "Getter for the `oncookiechange` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/oncookiechange)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerGlobalScope`*"]
+    pub fn oncookiechange(this: &ServiceWorkerGlobalScope) -> Option<::js_sys::Function>;
+    # [wasm_bindgen (structural , method , setter , js_class = "ServiceWorkerGlobalScope" , js_name = oncookiechange)]
+    #[doc = "Setter for the `oncookiechange` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/oncookiechange)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerGlobalScope`*"]
+    pub fn set_oncookiechange(this: &ServiceWorkerGlobalScope, value: Option<&::js_sys::Function>);
     #[cfg(feature = "Clients")]
     # [wasm_bindgen (structural , method , getter , js_class = "ServiceWorkerGlobalScope" , js_name = clients)]
     #[doc = "Getter for the `clients` field of this object."]
