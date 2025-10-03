@@ -1376,7 +1376,7 @@ wasm = wasmInstance.exports;
         self.global(
             "
             function _assertNum(n) {
-                if (typeof(n) !== 'number') throw new Error(`expected a number argument, found ${typeof(n)}`);
+                if (typeof n !== 'number') throw new Error(`expected a number argument, found ${typeof n}`);
             }
             ",
         );
@@ -1389,7 +1389,7 @@ wasm = wasmInstance.exports;
         self.global(
             "
             function _assertBigInt(n) {
-                if (typeof(n) !== 'bigint') throw new Error(`expected a bigint argument, found ${typeof(n)}`);
+                if (typeof n !== 'bigint') throw new Error(`expected a bigint argument, found ${typeof n}`);
             }
             ",
         );
@@ -1402,8 +1402,8 @@ wasm = wasmInstance.exports;
         self.global(
             "
             function _assertBoolean(n) {
-                if (typeof(n) !== 'boolean') {
-                    throw new Error(`expected a boolean argument, found ${typeof(n)}`);
+                if (typeof n !== 'boolean') {
+                    throw new Error(`expected a boolean argument, found ${typeof n}`);
                 }
             }
             ",
@@ -1422,7 +1422,7 @@ wasm = wasmInstance.exports;
 
         let debug = if self.config.debug {
             "
-                if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);
+                if (typeof arg !== 'string') throw new Error(`expected a string argument, found ${typeof arg}`);
             "
         } else {
             ""
@@ -2127,7 +2127,7 @@ wasm = wasmInstance.exports;
         let set_heap_next = if self.config.debug {
             String::from(
                 "
-                if (typeof(heap_next) !== 'number') throw new Error('corrupt heap');
+                if (typeof heap_next !== 'number') throw new Error('corrupt heap');
                 ",
             )
         } else {
@@ -2310,7 +2310,7 @@ wasm = wasmInstance.exports;
         self.global(
             "
             function _assertNonNull(n) {
-                if (typeof(n) !== 'number' || n === 0) throw new Error(`expected a number argument that is not 0, found ${n}`);
+                if (typeof n !== 'number' || n === 0) throw new Error(`expected a number argument that is not 0, found ${n}`);
             }
             ",
         );
@@ -2323,7 +2323,7 @@ wasm = wasmInstance.exports;
         self.global(
             "
             function _assertChar(c) {
-                if (typeof(c) === 'number' && (c >= 0x110000 || (c >= 0xD800 && c < 0xE000))) throw new Error(`expected a valid Unicode scalar value, found ${c}`);
+                if (typeof c === 'number' && (c >= 0x110000 || (c >= 0xD800 && c < 0xE000))) throw new Error(`expected a valid Unicode scalar value, found ${c}`);
             }
             ",
         );
@@ -3582,7 +3582,7 @@ wasm = wasmInstance.exports;
 
             Intrinsic::IsFunction => {
                 assert_eq!(args.len(), 1);
-                format!("typeof({}) === 'function'", args[0])
+                format!("typeof {} === 'function'", args[0])
             }
 
             Intrinsic::IsUndefined => {
@@ -3598,22 +3598,22 @@ wasm = wasmInstance.exports;
             Intrinsic::IsObject => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const val = {};\n", args[0]));
-                "typeof(val) === 'object' && val !== null".to_string()
+                "typeof val === 'object' && val !== null".to_string()
             }
 
             Intrinsic::IsSymbol => {
                 assert_eq!(args.len(), 1);
-                format!("typeof({}) === 'symbol'", args[0])
+                format!("typeof {} === 'symbol'", args[0])
             }
 
             Intrinsic::IsString => {
                 assert_eq!(args.len(), 1);
-                format!("typeof({}) === 'string'", args[0])
+                format!("typeof {} === 'string'", args[0])
             }
 
             Intrinsic::IsBigInt => {
                 assert_eq!(args.len(), 1);
-                format!("typeof({}) === 'bigint'", args[0])
+                format!("typeof {} === 'bigint'", args[0])
             }
 
             Intrinsic::Typeof => {
@@ -3766,25 +3766,25 @@ wasm = wasmInstance.exports;
             Intrinsic::NumberGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const obj = {};\n", args[0]));
-                "typeof(obj) === 'number' ? obj : undefined".to_string()
+                "typeof obj === 'number' ? obj : undefined".to_string()
             }
 
             Intrinsic::StringGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const obj = {};\n", args[0]));
-                "typeof(obj) === 'string' ? obj : undefined".to_string()
+                "typeof obj === 'string' ? obj : undefined".to_string()
             }
 
             Intrinsic::BooleanGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const v = {};\n", args[0]));
-                "typeof(v) === 'boolean' ? v : undefined".to_string()
+                "typeof v === 'boolean' ? v : undefined".to_string()
             }
 
             Intrinsic::BigIntGetAsI64 => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const v = {};\n", args[0]));
-                "typeof(v) === 'bigint' ? v : undefined".to_string()
+                "typeof v === 'bigint' ? v : undefined".to_string()
             }
 
             Intrinsic::Throw => {

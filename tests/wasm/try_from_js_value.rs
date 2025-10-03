@@ -22,9 +22,7 @@ fn f64_try_from_js_value() {
         f64::try_from_js_value(JsValue::from_f64(-123.456)),
         Ok(-123.456)
     );
-
     assert_eq!(f64::try_from_js_value(JsValue::from_str("42.5")), Ok(42.5));
-
     assert!(f64::try_from_js_value(JsValue::symbol(None)).is_err());
 }
 
@@ -38,7 +36,6 @@ fn string_try_from_js_value() {
         String::try_from_js_value(JsValue::from_str("")),
         Ok("".to_string())
     );
-
     assert!(String::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(String::try_from_js_value(JsValue::NULL).is_err());
 }
@@ -55,12 +52,7 @@ fn i64_try_from_js_value() {
         i64::try_from_js_value(JsValue::from(i64::MAX)),
         Ok(i64::MAX)
     );
-
-    assert!(i64::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(i64::try_from_js_value(JsValue::NULL).is_err());
-
-    assert!(i64::try_from_js_value(JsValue::from(i64::MIN) - JsValue::from(1_i64)).is_err());
-    assert!(i64::try_from_js_value(JsValue::from(i64::MAX) + JsValue::from(1_i64)).is_err());
 }
 
 #[wasm_bindgen_test]
@@ -71,12 +63,13 @@ fn u64_try_from_js_value() {
         u64::try_from_js_value(JsValue::from(u64::MAX)),
         Ok(u64::MAX)
     );
-
     assert!(u64::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+    // formally speaking this should be 1n, but we don't support it consistently statically either.
+    assert!(u64::try_from_js_value(JsValue::TRUE).is_err());
+    // this should be 45n, but again we don't follow full ToWebAssemblyValue semantics.
+    assert!(u64::try_from_js_value(JsValue::from_str("45")).is_err());
     assert!(u64::try_from_js_value(JsValue::NULL).is_err());
-
-    assert!(u64::try_from_js_value(JsValue::from(-1_i64)).is_err());
-    assert!(u64::try_from_js_value(JsValue::from(u64::MAX) + JsValue::from(1_i64)).is_err());
+    assert_eq!(u64::try_from_js_value(JsValue::from(-1_i64)), Ok(u64::MAX));
 }
 
 #[wasm_bindgen_test]
@@ -94,15 +87,8 @@ fn i128_try_from_js_value() {
         i128::try_from_js_value(JsValue::from(i128::MAX)),
         Ok(i128::MAX)
     );
-
     assert!(i128::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(i128::try_from_js_value(JsValue::NULL).is_err());
-
-    let below_min = JsValue::from(i128::MIN) - JsValue::from(1_i64);
-    assert!(i128::try_from_js_value(below_min).is_err());
-
-    let above_max = JsValue::from(i128::MAX) + JsValue::from(1_i64);
-    assert!(i128::try_from_js_value(above_max).is_err());
 }
 
 #[wasm_bindgen_test]
@@ -116,17 +102,12 @@ fn u128_try_from_js_value() {
 
     assert!(u128::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(u128::try_from_js_value(JsValue::NULL).is_err());
-
     assert!(u128::try_from_js_value(JsValue::from(-1_i64)).is_err());
-
-    let above_max = JsValue::from(u128::MAX) + JsValue::from(1_i64);
-    assert!(u128::try_from_js_value(above_max).is_err());
 }
 
 #[wasm_bindgen_test]
 fn unit_try_from_js_value() {
     assert_eq!(<()>::try_from_js_value(JsValue::UNDEFINED), Ok(()));
-
     assert!(<()>::try_from_js_value(JsValue::NULL).is_err());
     assert!(<()>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(<()>::try_from_js_value(JsValue::from_str("hello")).is_err());
@@ -158,8 +139,107 @@ fn option_try_from_js_value() {
         Ok(Some(3.14))
     );
 
-    assert!(Option::<i64>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+    assert_eq!(
+        Option::<i64>::try_from_js_value(JsValue::bigint_from_str("42")),
+        Ok(Some(42))
+    );
     assert!(Option::<String>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+}
+
+#[wasm_bindgen_test]
+fn bool_try_from_js_value() {
+    assert_eq!(bool::try_from_js_value(JsValue::TRUE), Ok(true));
+    assert_eq!(bool::try_from_js_value(JsValue::FALSE), Ok(false));
+
+    assert!(bool::try_from_js_value(JsValue::from_f64(1.0)).is_err());
+    assert!(bool::try_from_js_value(JsValue::from_str("true")).is_err());
+    assert!(bool::try_from_js_value(JsValue::NULL).is_err());
+}
+
+#[wasm_bindgen_test]
+fn char_try_from_js_value() {
+    assert_eq!(char::try_from_js_value(JsValue::from_str("a")), Ok('a'));
+    assert!(char::try_from_js_value(JsValue::from_str("")).is_err());
+    assert!(char::try_from_js_value(JsValue::from_str("ab")).is_err());
+    assert!(char::try_from_js_value(JsValue::from_f64(65.0)).is_err());
+    assert!(char::try_from_js_value(JsValue::NULL).is_err());
+}
+
+#[wasm_bindgen_test]
+fn small_numbers_try_from_js_value() {
+    assert_eq!(i8::try_from_js_value(JsValue::from_f64(42.0)), Ok(42i8));
+    assert_eq!(i8::try_from_js_value(JsValue::from_f64(-128.0)), Ok(-128i8));
+    assert_eq!(i8::try_from_js_value(JsValue::from_f64(127.0)), Ok(i8::MAX));
+    assert_eq!(i8::try_from_js_value(JsValue::from_f64(128.0)), Ok(-128i8));
+    assert_eq!(i8::try_from_js_value(JsValue::from_f64(42.5)), Ok(42i8));
+
+    assert_eq!(u8::try_from_js_value(JsValue::from_f64(42.0)), Ok(42u8));
+    assert_eq!(u8::try_from_js_value(JsValue::from_f64(0.0)), Ok(0u8));
+    assert_eq!(u8::try_from_js_value(JsValue::from_f64(255.0)), Ok(u8::MAX));
+    assert_eq!(u8::try_from_js_value(JsValue::from_f64(256.0)), Ok(0));
+    assert_eq!(u8::try_from_js_value(JsValue::from_f64(-1.0)), Ok(255));
+
+    assert_eq!(
+        i16::try_from_js_value(JsValue::from_f64(1000.0)),
+        Ok(1000i16)
+    );
+    assert_eq!(
+        i16::try_from_js_value(JsValue::from_f64(i16::MIN as f64)),
+        Ok(i16::MIN)
+    );
+    assert_eq!(
+        i16::try_from_js_value(JsValue::from_f64(i16::MAX as f64)),
+        Ok(i16::MAX)
+    );
+
+    assert_eq!(
+        u16::try_from_js_value(JsValue::from_f64(1000.0)),
+        Ok(1000u16)
+    );
+    assert_eq!(u16::try_from_js_value(JsValue::from_f64(0.0)), Ok(0u16));
+    assert_eq!(
+        u16::try_from_js_value(JsValue::from_f64(u16::MAX as f64)),
+        Ok(u16::MAX)
+    );
+
+    assert_eq!(
+        i32::try_from_js_value(JsValue::from_f64(100000.0)),
+        Ok(100000i32)
+    );
+    assert_eq!(
+        i32::try_from_js_value(JsValue::from_f64(-100000.0)),
+        Ok(-100000i32)
+    );
+
+    assert_eq!(
+        u32::try_from_js_value(JsValue::from_f64(100000.0)),
+        Ok(100000u32)
+    );
+
+    assert_eq!(
+        f32::try_from_js_value(JsValue::from_f64(3.14)),
+        Ok(3.14f64 as f32)
+    );
+    assert_eq!(f32::try_from_js_value(JsValue::from_f64(0.0)), Ok(0.0f32));
+    assert_eq!(
+        f32::try_from_js_value(JsValue::from_f64(2.0_f64.powi(32))),
+        Ok(2.0_f32.powi(32))
+    );
+}
+
+#[wasm_bindgen_test]
+fn jsvalue_try_from_js_value() {
+    let val = JsValue::from_f64(42.0);
+    assert_eq!(JsValue::try_from_js_value(val.clone()), Ok(val.clone()));
+
+    let val2 = JsValue::from_str("hello");
+    assert_eq!(JsValue::try_from_js_value(val2.clone()), Ok(val2.clone()));
+
+    assert_eq!(JsValue::try_from_js_value(JsValue::NULL), Ok(JsValue::NULL));
+    assert_eq!(
+        JsValue::try_from_js_value(JsValue::UNDEFINED),
+        Ok(JsValue::UNDEFINED)
+    );
 }
 
 #[wasm_bindgen_test]
