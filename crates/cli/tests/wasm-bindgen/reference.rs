@@ -143,7 +143,17 @@ fn runtest_targets_atomics() -> Result<()> {
     runtest_with_opts(test, Some("atomics"), |command| {
         command
             .env("RUSTUP_TOOLCHAIN", "nightly")
-            .env("RUSTFLAGS", "-C target-feature=+atomics")
+            .env(
+                "RUSTFLAGS",
+                "-Ctarget-feature=+atomics \
+                -Clink-args=--shared-memory \
+                -Clink-args=--max-memory=1073741824 \
+                -Clink-args=--import-memory \
+                -Clink-args=--export=__wasm_init_tls \
+                -Clink-args=--export=__tls_size \
+                -Clink-args=--export=__tls_align \
+                -Clink-args=--export=__tls_base",
+            )
             .arg("-Zbuild-std=std,panic_abort");
     })
 }

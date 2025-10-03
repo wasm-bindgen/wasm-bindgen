@@ -550,6 +550,9 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         }
         let attrs = BindgenAttrs::find(&mut self.attrs)?;
 
+        // the `wasm_bindgen` option has been used before
+        let _ = attrs.wasm_bindgen();
+
         let mut fields = Vec::new();
         let js_name = attrs
             .js_name()
