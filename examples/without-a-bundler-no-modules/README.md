@@ -7,7 +7,7 @@
 You can build the example locally with:
 
 ```
-$ wasm-pack build --target no-modules
+$ npm run build
 ```
 
 and then opening `index.html` in a browser should run the example!

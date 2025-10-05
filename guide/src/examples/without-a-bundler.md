@@ -39,7 +39,7 @@ Otherwise the rest of the deployment magic happens in `index.html`:
 > limitations. Instead, you can set up a quick development environment using
 > Python's built-in HTTP server:
 > ```sh
-> wasm-pack build --target web
+> npm run build
 > python3 -m http.server 8080
 > ```
 > If you don't have Python installed, you can also use [miniserve][miniserve] which

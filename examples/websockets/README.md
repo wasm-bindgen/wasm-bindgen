@@ -9,7 +9,7 @@ online][compiled]
 You can build the example locally with:
 
 ```
-$ wasm-pack build --target web
+$ npm run build
 ```
 
 Then serve the statics and navigate to `host:port`

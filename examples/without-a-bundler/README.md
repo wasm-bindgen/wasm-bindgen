@@ -7,7 +7,7 @@
 You can build the example locally with:
 
 ```
-$ wasm-pack build --target web
+$ npm run build
 ```
 
 Then serve this directory in your favourite webserver and navigate to `host:port`

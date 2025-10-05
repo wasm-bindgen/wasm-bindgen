@@ -2,7 +2,7 @@
   "scripts": {
     "build": "pnpm run -r build",
     "serve": "serve",
-    "pretest": "cargo build -p wasm-bindgen-cli --bin wasm-bindgen",
+    "pretest": "cargo build -p wasm-bindgen-cli --bin wasm-bindgen --bin cargo-wasm-bindgen",
     "test": "playwright test"
   },
   "dependencies": {
