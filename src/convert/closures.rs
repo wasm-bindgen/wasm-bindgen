@@ -2,7 +2,6 @@ use alloc::boxed::Box;
 use core::mem;
 
 use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
-use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{inform, WasmDescribe, FUNCTION};
@@ -32,12 +31,12 @@ macro_rules! closures {
         where
             Self: WasmDescribe,
         {
-            type Abi = WasmSlice;
+            type Abi = (u32, u32);
 
-            fn into_abi(self) -> WasmSlice {
+            fn into_abi(self) -> Self::Abi {
                 unsafe {
                     let (a, b): (usize, usize) = mem::transmute(self);
-                    WasmSlice { ptr: a as u32, len: b as u32 }
+                    (a as u32, b as u32)
                 }
             }
         }

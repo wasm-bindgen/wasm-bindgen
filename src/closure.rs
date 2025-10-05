@@ -11,7 +11,7 @@ use alloc::string::String;
 use core::fmt;
 use core::mem::{self, ManuallyDrop};
 
-use crate::convert::*;
+use crate::convert::{IntoWasmAbi, OptionIntoWasmAbi};
 use crate::describe::*;
 use crate::JsValue;
 use core::marker::PhantomData;
@@ -431,14 +431,11 @@ impl<T> IntoWasmAbi for OwnedClosure<T>
 where
     T: WasmClosure + ?Sized,
 {
-    type Abi = WasmSlice;
+    type Abi = (u32, u32);
 
-    fn into_abi(self) -> WasmSlice {
+    fn into_abi(self) -> Self::Abi {
         let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self)) };
-        WasmSlice {
-            ptr: a as u32,
-            len: b as u32,
-        }
+        (a as u32, b as u32)
     }
 }
 
