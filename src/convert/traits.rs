@@ -176,7 +176,15 @@ pub trait OptionFromWasmAbi: FromWasmAbi {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub unsafe trait WasmPrimitive: Default {}
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        message = "type `{Self}` is not supported by wasm-bindgen",
+        label = "`{Self}` cannot be converted to/from JavaScript in this position",
+        note = "if `{Self}` is meant to be imported from or exported to JavaScript, annotate it with the `#[wasm_bindgen]` attribute",
+    )
+)]
+pub unsafe trait WasmPrimitive: Default + WasmDescribe {}
 
 unsafe impl WasmPrimitive for u32 {}
 unsafe impl WasmPrimitive for i32 {}

@@ -9,7 +9,6 @@ use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
-use crate::describe::WasmDescribe;
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
 
 // Any `WasmPrimitive` or a tuple of primitives (up to 4) should be a `WasmAbi`.
@@ -45,7 +44,7 @@ wasm_abi_tuple!(Prim1 Prim2 Prim3 | Prim4);
 wasm_abi_tuple!(Prim1 Prim2 Prim3 Prim4 |);
 
 // Anything that implements `WasmAbi` should naturally be also `IntoWasmAbi`/`FromWasmAbi`.
-impl<T: WasmAbi + WasmDescribe> IntoWasmAbi for T {
+impl<T: WasmPrimitive> IntoWasmAbi for T {
     type Abi = T;
 
     #[inline]
@@ -54,7 +53,7 @@ impl<T: WasmAbi + WasmDescribe> IntoWasmAbi for T {
     }
 }
 
-impl<T: WasmAbi + WasmDescribe> FromWasmAbi for T {
+impl<T: WasmPrimitive> FromWasmAbi for T {
     type Abi = T;
 
     #[inline]
