@@ -90,20 +90,24 @@ impl Project {
         self
     }
 
-    fn wasm_bindgen(&mut self, args: &str) -> (Command, PathBuf) {
+    fn wasm_bindgen(&mut self, args: &str) -> anyhow::Result<PathBuf> {
         let output = self.root.join("pkg").join({
             let mut hasher = DefaultHasher::new();
             args.hash(&mut hasher);
             hasher.finish().to_string()
         });
         fs::create_dir_all(&output).unwrap();
-        let mut cmd = Command::cargo_bin("wasm-bindgen").unwrap();
-        cmd.arg("--out-dir").arg(&output);
-        cmd.arg(self.build());
-        for arg in args.split_whitespace() {
-            cmd.arg(arg);
-        }
-        (cmd, output)
+        wasm_bindgen_cli::wasm_bindgen::run_cli_with_args(
+            [
+                "wasm-bindgen".as_ref(),
+                "--out-dir".as_ref(),
+                output.as_os_str(),
+                self.build().as_os_str(),
+            ]
+            .into_iter()
+            .chain(args.split_whitespace().map(str::as_ref)),
+        )?;
+        Ok(output)
     }
 
     fn dep(&mut self, line: &str) -> &mut Project {
@@ -170,19 +174,19 @@ fn version_useful() {
 
 #[test]
 fn works_on_empty_project() {
-    let (mut cmd, _out_dir) = Project::new("works_on_empty_project")
+    Project::new("works_on_empty_project")
         .file(
             "src/lib.rs",
             r#"
             "#,
         )
-        .wasm_bindgen("");
-    cmd.assert().success();
+        .wasm_bindgen("")
+        .unwrap();
 }
 
 #[test]
 fn namespace_global_and_noglobal_works() {
-    let (mut cmd, _out_dir) = Project::new("namespace_global_and_noglobal_works")
+    Project::new("namespace_global_and_noglobal_works")
         .file(
             "src/lib.rs",
             r#"
@@ -204,13 +208,13 @@ fn namespace_global_and_noglobal_works() {
                 }
             "#,
         )
-        .wasm_bindgen("");
-    cmd.assert().success();
+        .wasm_bindgen("")
+        .unwrap();
 }
 
 #[test]
 fn one_export_works() {
-    let (mut cmd, _out_dir) = Project::new("one_export_works")
+    Project::new("one_export_works")
         .file(
             "src/lib.rs",
             r#"
@@ -219,13 +223,13 @@ fn one_export_works() {
                 pub fn foo() {}
             "#,
         )
-        .wasm_bindgen("");
-    cmd.assert().success();
+        .wasm_bindgen("")
+        .unwrap();
 }
 
 #[test]
 fn bin_crate_works() {
-    let (mut cmd, out_dir) = Project::new("bin_crate_works")
+    let out_dir = Project::new("bin_crate_works")
         .file(
             "src/main.rs",
             r#"
@@ -259,8 +263,9 @@ fn bin_crate_works() {
                 REPO_ROOT.display(),
             ),
         )
-        .wasm_bindgen("--target nodejs");
-    cmd.assert().success();
+        .wasm_bindgen("--target nodejs")
+        .unwrap();
+
     Command::new("node")
         .arg("bin_crate_works.js")
         .current_dir(out_dir)
@@ -343,8 +348,7 @@ fn bin_crate_works_without_name_section() {
     fs::write(wasm, contents).unwrap();
 
     // Then run wasm-bindgen on the result.
-    let (mut cmd, out_dir) = project.wasm_bindgen("--target nodejs");
-    cmd.assert().success();
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
 
     Command::new("node")
         .arg("bin_crate_works_without_name_section.js")
@@ -356,14 +360,15 @@ fn bin_crate_works_without_name_section() {
 
 #[test]
 fn default_module_path_target_web() {
-    let (mut cmd, out_dir) = Project::new("default_module_path_target_web")
+    let out_dir = Project::new("default_module_path_target_web")
         .file(
             "src/lib.rs",
             r#"
             "#,
         )
-        .wasm_bindgen("--target web");
-    cmd.assert().success();
+        .wasm_bindgen("--target web")
+        .unwrap();
+
     let contents = fs::read_to_string(out_dir.join("default_module_path_target_web.js")).unwrap();
     assert!(contents.contains(
         "\
@@ -387,14 +392,15 @@ async function __wbg_init(module_or_path) {
 
 #[test]
 fn default_module_path_target_no_modules() {
-    let (mut cmd, out_dir) = Project::new("default_module_path_target_no_modules")
+    let out_dir = Project::new("default_module_path_target_no_modules")
         .file(
             "src/lib.rs",
             r#"
             "#,
         )
-        .wasm_bindgen("--target no-modules");
-    cmd.assert().success();
+        .wasm_bindgen("--target no-modules")
+        .unwrap();
+
     let contents =
         fs::read_to_string(out_dir.join("default_module_path_target_no_modules.js")).unwrap();
     assert!(contents.contains(
@@ -425,14 +431,15 @@ fn default_module_path_target_no_modules() {
 
 #[test]
 fn omit_default_module_path_target_web() {
-    let (mut cmd, out_dir) = Project::new("omit_default_module_path_target_web")
+    let out_dir = Project::new("omit_default_module_path_target_web")
         .file(
             "src/lib.rs",
             r#"
             "#,
         )
-        .wasm_bindgen("--target web --omit-default-module-path");
-    cmd.assert().success();
+        .wasm_bindgen("--target web --omit-default-module-path")
+        .unwrap();
+
     let contents =
         fs::read_to_string(out_dir.join("omit_default_module_path_target_web.js")).unwrap();
     assert!(contents.contains(
@@ -456,14 +463,15 @@ async function __wbg_init(module_or_path) {
 
 #[test]
 fn omit_default_module_path_target_no_modules() {
-    let (mut cmd, out_dir) = Project::new("omit_default_module_path_target_no_modules")
+    let out_dir = Project::new("omit_default_module_path_target_no_modules")
         .file(
             "src/lib.rs",
             r#"
             "#,
         )
-        .wasm_bindgen("--target no-modules --omit-default-module-path");
-    cmd.assert().success();
+        .wasm_bindgen("--target no-modules --omit-default-module-path")
+        .unwrap();
+
     let contents =
         fs::read_to_string(out_dir.join("omit_default_module_path_target_no_modules.js")).unwrap();
     assert!(contents.contains(
@@ -487,7 +495,7 @@ fn omit_default_module_path_target_no_modules() {
 
 #[test]
 fn function_table_preserved() {
-    let (mut cmd, _out_dir) = Project::new("function_table_preserved")
+    Project::new("function_table_preserved")
         .file(
             "src/lib.rs",
             r#"
@@ -499,13 +507,13 @@ fn function_table_preserved() {
                 }
             "#,
         )
-        .wasm_bindgen("");
-    cmd.assert().success();
+        .wasm_bindgen("")
+        .unwrap();
 }
 
 #[test]
 fn function_table_preserved_for_stack_closures() {
-    let (mut cmd, _out_dir) = Project::new("function_table_preserved_for_stack_closures")
+    Project::new("function_table_preserved_for_stack_closures")
         .file(
             "src/lib.rs",
             r#"
@@ -525,13 +533,13 @@ fn function_table_preserved_for_stack_closures() {
                 }
             "#,
         )
-        .wasm_bindgen("");
-    cmd.assert().success();
+        .wasm_bindgen("")
+        .unwrap();
 }
 
 #[test]
 fn constructor_cannot_return_option_struct() {
-    let (mut cmd, _out_dir) = Project::new("constructor_cannot_return_option_struct")
+    Project::new("constructor_cannot_return_option_struct")
         .file(
             "src/lib.rs",
             r#"
@@ -549,6 +557,6 @@ fn constructor_cannot_return_option_struct() {
                 }
             "#,
         )
-        .wasm_bindgen("--target web");
-    cmd.assert().failure();
+        .wasm_bindgen("--target web")
+        .unwrap_err();
 }
