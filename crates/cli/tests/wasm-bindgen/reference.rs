@@ -222,9 +222,9 @@ fn runtest_with_opts(
             .find_map(|f| f.strip_prefix("--target="))
             .unwrap_or("bundler");
 
-        let (mut cmd, out_dir) =
-            project.wasm_bindgen(&format!("{flags} --out-name reference_test"));
-        cmd.assert().success();
+        let out_dir = project
+            .wasm_bindgen(&format!("{flags} --out-name reference_test"))
+            .unwrap();
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {
