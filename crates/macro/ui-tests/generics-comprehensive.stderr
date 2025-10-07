@@ -194,11 +194,6 @@ error[E0107]: struct takes 1 generic argument but 3 generic arguments were suppl
 155 |     pub type ValidMultipleParams<T, U, V>;
     |                                   ------ help: remove the unnecessary generic arguments
     |
-note: struct defined here, with 1 generic parameter: `T`
-   --> $RUST/core/src/marker.rs
-    |
-    | pub struct PhantomData<T: ?Sized>;
-    |            ^^^^^^^^^^^ -
     = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0690]: transparent struct needs at most one field with non-trivial size or alignment, but has 2
