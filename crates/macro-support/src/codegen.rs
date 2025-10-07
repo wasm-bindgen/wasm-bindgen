@@ -1435,13 +1435,19 @@ impl TryToTokens for ast::ImportFunction {
                     abi_ty = quote! { & #wasm_bindgen::JsValue };
                     convert_arg = quote! { #var.upcast_ref() };
                     let ty = &ref_ty.elem;
-                    generics.make_where_clause().predicates.push(parse_quote! { #ty: #wasm_bindgen::JsUpcastRef });
+                    generics
+                        .make_where_clause()
+                        .predicates
+                        .push(parse_quote! { #ty: #wasm_bindgen::JsUpcastRef });
                     generic_ref_slot_clear_traits.push(ty.clone());
                 } else {
                     // T    -> JsValue::IntoWasmAbi using into()
                     // A<T> -> JsValue::IntoWasmAbi using into()
                     abi_ty = quote! { #wasm_bindgen::JsValue };
-                    generics.make_where_clause().predicates.push(parse_quote! { #ty: Into<JsValue> });
+                    generics
+                        .make_where_clause()
+                        .predicates
+                        .push(parse_quote! { #ty: Into<JsValue> });
                     convert_arg = quote! { #var.into() };
                 }
             } else {
@@ -1486,7 +1492,9 @@ impl TryToTokens for ast::ImportFunction {
                     );
                 }
                 Some(ref ty) => {
-                    generics.make_where_clause().predicates
+                    generics
+                        .make_where_clause()
+                        .predicates
                         .push(parse_quote! { #ty: #wasm_bindgen::convert::FromWasmAbi });
                     convert_ret = quote! {
                         #wasm_bindgen::__rt::wbg_cast(#future)
@@ -1519,7 +1527,9 @@ impl TryToTokens for ast::ImportFunction {
                         // T -> JsValue (into())
                         //   -> JsValue::FromWasmAbi
                         // (returning references is not currently supported in wasm-bindgen)
-                        generics.make_where_clause().predicates
+                        generics
+                            .make_where_clause()
+                            .predicates
                             .push(parse_quote! { #ty: #wasm_bindgen::convert::FromWasmAbi });
                         abi_ret = quote! {
                             #wasm_bindgen::convert::WasmRet<<#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>::Abi>
@@ -1710,7 +1720,9 @@ impl TryToTokens for ast::ImportFunction {
                 let class_generic_refs: Vec<_> = class_generic_params.iter().collect();
                 let non_class_generic_refs: Vec<_> = non_class_generic_params.iter().collect();
 
-                for predicate in std::mem::take(&mut generics.make_where_clause().predicates).into_iter() {
+                for predicate in
+                    std::mem::take(&mut generics.make_where_clause().predicates).into_iter()
+                {
                     if let syn::WherePredicate::Type(type_predicate) = &predicate {
                         // Check LHS for class generics and non-class generics
                         let mut lhs_visitor = GenericNameVisitor::new(
@@ -1749,7 +1761,7 @@ impl TryToTokens for ast::ImportFunction {
                         .into_iter()
                         .filter(|param| match param {
                             syn::GenericParam::Type(type_param) => {
-                                !class_generic_params.contains(&&type_param.ident)
+                                !class_generic_params.contains(&type_param.ident)
                             }
                             _ => true,
                         })
