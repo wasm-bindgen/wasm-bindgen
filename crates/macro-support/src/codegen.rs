@@ -975,27 +975,29 @@ impl ToTokens for ast::ImportType {
             }
         };
 
-        let generic_defs;
-        let generics;
+        let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
+
+        // For struct definitions, we need generics with defaults, so use params directly
+        let struct_generics = if self.generics.params.is_empty() {
+            quote! {}
+        } else {
+            let params = &self.generics.params;
+            quote! { <#params> }
+        };
+
         let phantom;
         let phantom_init;
         let default_as_ref;
 
-        let where_clause = generics::where_clause(&self.generics);
-
         let generic_param_names = generics::generic_params(&self.generics);
         if !generic_param_names.is_empty() {
-            let params = &self.generics.params;
-            generic_defs = quote! { <#params> };
-            generics = quote! { <#(#generic_param_names),*> };
-
             phantom = quote! { _phantom: ::core::marker::PhantomData<#(#generic_param_names),*> };
             phantom_init = quote! { _phantom: ::core::marker::PhantomData };
 
             let jsvalue_tokens = generics::jsvalue_tokens_for_type_params(&self.generics);
             default_as_ref = quote! {
                 #[automatically_derived]
-                impl #generics AsRef<#rust_name<#(#jsvalue_tokens),*>> for #rust_name #generics #where_clause {
+                impl #impl_generics AsRef<#rust_name<#(#jsvalue_tokens),*>> for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn as_ref(&self) -> &#rust_name<#(#jsvalue_tokens),*> {
                         unsafe { core::mem::transmute(self) }
@@ -1003,8 +1005,6 @@ impl ToTokens for ast::ImportType {
                 }
             };
         } else {
-            generic_defs = quote! {};
-            generics = quote! {};
             phantom = quote! {};
             phantom_init = quote! {};
             default_as_ref = quote! {
@@ -1020,7 +1020,7 @@ impl ToTokens for ast::ImportType {
             #(#attrs)*
             #doc
             #[repr(transparent)]
-            #vis struct #rust_name #generic_defs #where_clause {
+            #vis struct #rust_name #struct_generics #where_clause {
                 obj: #internal_obj,
                 #phantom
             }
@@ -1035,14 +1035,14 @@ impl ToTokens for ast::ImportType {
                 use #wasm_bindgen::__rt::core;
 
                 #[automatically_derived]
-                impl #generics WasmDescribe for #rust_name #generics #where_clause {
+                impl #impl_generics WasmDescribe for #rust_name #ty_generics #where_clause {
                     fn describe() {
                         #description
                     }
                 }
 
                 #[automatically_derived]
-                impl #generics IntoWasmAbi for #rust_name #generics #where_clause {
+                impl #impl_generics IntoWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as IntoWasmAbi>::Abi;
 
                     #[inline]
@@ -1052,7 +1052,7 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #generics OptionIntoWasmAbi for #rust_name #generics #where_clause {
+                impl #impl_generics OptionIntoWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn none() -> Self::Abi {
                         0
@@ -1060,7 +1060,7 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl <'a, #(#generic_param_names),*> OptionIntoWasmAbi for &'a #rust_name #generics #where_clause {
+                impl <'a, #(#generic_param_names),*> OptionIntoWasmAbi for &'a #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn none() -> Self::Abi {
                         0
@@ -1068,7 +1068,7 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #generics FromWasmAbi for #rust_name #generics #where_clause {
+                impl #impl_generics FromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as FromWasmAbi>::Abi;
 
                     #[inline]
@@ -1081,13 +1081,13 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #generics OptionFromWasmAbi for #rust_name #generics #where_clause {
+                impl #impl_generics OptionFromWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn is_none(abi: &Self::Abi) -> bool { *abi == 0 }
                 }
 
                 #[automatically_derived]
-                impl <'a, #(#generic_param_names),*> IntoWasmAbi for &'a #rust_name #generics #where_clause {
+                impl <'a, #(#generic_param_names),*> IntoWasmAbi for &'a #rust_name #ty_generics #where_clause {
                     type Abi = <&'a JsValue as IntoWasmAbi>::Abi;
 
                     #[inline]
@@ -1097,9 +1097,9 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #generics RefFromWasmAbi for #rust_name #generics #where_clause {
+                impl #impl_generics RefFromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as RefFromWasmAbi>::Abi;
-                    type Anchor = core::mem::ManuallyDrop<#rust_name #generics>;
+                    type Anchor = core::mem::ManuallyDrop<#rust_name #ty_generics>;
 
                     #[inline]
                     unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
@@ -1112,9 +1112,9 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #generics LongRefFromWasmAbi for #rust_name #generics #where_clause {
+                impl #impl_generics LongRefFromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as LongRefFromWasmAbi>::Abi;
-                    type Anchor = #rust_name #generics;
+                    type Anchor = #rust_name #ty_generics;
 
                     #[inline]
                     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
@@ -1128,9 +1128,9 @@ impl ToTokens for ast::ImportType {
 
                 // TODO: remove this on the next major version
                 #[automatically_derived]
-                impl #generics From<JsValue> for #rust_name #generics #where_clause {
+                impl #impl_generics From<JsValue> for #rust_name #ty_generics #where_clause {
                     #[inline]
-                    fn from(obj: JsValue) -> #rust_name #generics {
+                    fn from(obj: JsValue) -> #rust_name #ty_generics {
                         #rust_name {
                             obj: obj.into(),
                             #phantom_init
@@ -1139,7 +1139,7 @@ impl ToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #generics AsRef<JsValue> for #rust_name #generics #where_clause {
+                impl #impl_generics AsRef<JsValue> for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn as_ref(&self) -> &JsValue { self.obj.as_ref() }
                 }
@@ -1147,15 +1147,15 @@ impl ToTokens for ast::ImportType {
                 #default_as_ref
 
                 #[automatically_derived]
-                impl #generics From<#rust_name #generics> for JsValue #where_clause {
+                impl #impl_generics From<#rust_name #ty_generics> for JsValue #where_clause {
                     #[inline]
-                    fn from(obj: #rust_name #generics) -> JsValue {
+                    fn from(obj: #rust_name #ty_generics) -> JsValue {
                         obj.obj.into()
                     }
                 }
 
                 #[automatically_derived]
-                impl #generics JsCast for #rust_name #generics #where_clause {
+                impl #impl_generics JsCast for #rust_name #ty_generics #where_clause {
                     fn instanceof(val: &JsValue) -> bool {
                         #[link(wasm_import_module = "__wbindgen_placeholder__")]
                         #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
@@ -1190,7 +1190,7 @@ impl ToTokens for ast::ImportType {
                     }
                 }
 
-                impl #generics JsObject for #rust_name #generics #where_clause {}
+                impl #impl_generics JsObject for #rust_name #ty_generics #where_clause {}
             };
         })
         .to_tokens(tokens);
@@ -1198,7 +1198,7 @@ impl ToTokens for ast::ImportType {
         if !no_deref {
             (quote! {
                 #[automatically_derived]
-                impl #generics #wasm_bindgen::__rt::core::ops::Deref for #rust_name #generics #where_clause {
+                impl #impl_generics #wasm_bindgen::__rt::core::ops::Deref for #rust_name #ty_generics #where_clause {
                     type Target = #internal_obj;
 
                     #[inline]
@@ -1213,16 +1213,16 @@ impl ToTokens for ast::ImportType {
         for superclass in self.extends.iter() {
             (quote! {
                 #[automatically_derived]
-                impl #generics From<#rust_name #generics> for #superclass #where_clause {
+                impl #impl_generics From<#rust_name #ty_generics> for #superclass #where_clause {
                     #[inline]
-                    fn from(obj: #rust_name #generics) -> #superclass {
+                    fn from(obj: #rust_name #ty_generics) -> #superclass {
                         use #wasm_bindgen::JsCast;
                         #superclass::unchecked_from_js(obj.into())
                     }
                 }
 
                 #[automatically_derived]
-                impl #generics AsRef<#superclass> for #rust_name #generics #where_clause {
+                impl #impl_generics AsRef<#superclass> for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn as_ref(&self) -> &#superclass {
                         use #wasm_bindgen::JsCast;
@@ -1396,13 +1396,6 @@ impl TryToTokens for ast::ImportFunction {
         generics::normalize_generics(&mut generics);
         let mut generic_ref_slot_clear_traits = Vec::new();
 
-        let where_predicates = &mut generics
-            .where_clause
-            .get_or_insert_with(|| syn::WhereClause {
-                where_token: syn::Token![where](Span::call_site()),
-                predicates: syn::punctuated::Punctuated::new(),
-            })
-            .predicates;
         let ret_ident = Ident::new("_ret", Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
@@ -1442,13 +1435,13 @@ impl TryToTokens for ast::ImportFunction {
                     abi_ty = quote! { & #wasm_bindgen::JsValue };
                     convert_arg = quote! { #var.upcast_ref() };
                     let ty = &ref_ty.elem;
-                    where_predicates.push(parse_quote! { #ty: #wasm_bindgen::JsUpcastRef });
+                    generics.make_where_clause().predicates.push(parse_quote! { #ty: #wasm_bindgen::JsUpcastRef });
                     generic_ref_slot_clear_traits.push(ty.clone());
                 } else {
                     // T    -> JsValue::IntoWasmAbi using into()
                     // A<T> -> JsValue::IntoWasmAbi using into()
                     abi_ty = quote! { #wasm_bindgen::JsValue };
-                    where_predicates.push(parse_quote! { #ty: Into<JsValue> });
+                    generics.make_where_clause().predicates.push(parse_quote! { #ty: Into<JsValue> });
                     convert_arg = quote! { #var.into() };
                 }
             } else {
@@ -1493,7 +1486,7 @@ impl TryToTokens for ast::ImportFunction {
                     );
                 }
                 Some(ref ty) => {
-                    where_predicates
+                    generics.make_where_clause().predicates
                         .push(parse_quote! { #ty: #wasm_bindgen::convert::FromWasmAbi });
                     convert_ret = quote! {
                         #wasm_bindgen::__rt::wbg_cast(#future)
@@ -1526,7 +1519,7 @@ impl TryToTokens for ast::ImportFunction {
                         // T -> JsValue (into())
                         //   -> JsValue::FromWasmAbi
                         // (returning references is not currently supported in wasm-bindgen)
-                        where_predicates
+                        generics.make_where_clause().predicates
                             .push(parse_quote! { #ty: #wasm_bindgen::convert::FromWasmAbi });
                         abi_ret = quote! {
                             #wasm_bindgen::convert::WasmRet<<#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>::Abi>
@@ -1652,18 +1645,18 @@ impl TryToTokens for ast::ImportFunction {
                 // So now we hoist those ones into the class impl generics from the function, removing
                 // them from the direct function generics.
 
-                // get the list of all function generic parameters
-                let mut all_generic_params = Vec::new();
-                for param in &generics.params {
-                    if let syn::GenericParam::Type(type_param) = param {
-                        all_generic_params.push(&type_param.ident);
-                    }
-                }
+                // get the list of all function generic parameters (collect into owned Idents)
+                let all_generic_params: Vec<_> = generics
+                    .params
+                    .iter()
+                    .filter_map(|param| match param {
+                        syn::GenericParam::Type(type_param) => Some(type_param.ident.clone()),
+                        _ => None,
+                    })
+                    .collect();
 
                 // get the list of generic parameter names that apply only to the base type struct
                 // from the first &Self<...> argument (already validated to be explicit during parsing)
-                let mut hoisted_predicates =
-                    syn::punctuated::Punctuated::<syn::WherePredicate, syn::Token![,]>::new();
                 let mut class_generic_params = Vec::new();
                 if let syn::Type::Path(syn::TypePath { path, .. }) = get_ty(class) {
                     if let Some(syn::PathSegment {
@@ -1679,7 +1672,7 @@ impl TryToTokens for ast::ImportFunction {
                             {
                                 let segment = &path.segments[0];
                                 if segment.arguments.is_empty() {
-                                    class_generic_params.push(&segment.ident);
+                                    class_generic_params.push(segment.ident.clone());
                                     continue;
                                 }
                             }
@@ -1702,27 +1695,33 @@ impl TryToTokens for ast::ImportFunction {
                 // Get non-class generics by filtering out class generics
                 let non_class_generic_params: Vec<_> = all_generic_params
                     .iter()
-                    .filter(|&&ident| !class_generic_params.contains(&ident))
+                    .filter(|ident| !class_generic_params.contains(ident))
                     .cloned()
                     .collect();
 
                 // remove all class generic names from the where clauses
+                let mut hoisted_predicates =
+                    syn::punctuated::Punctuated::<syn::WherePredicate, syn::Token![,]>::new();
                 let mut impl_where_clause = quote! {};
                 let mut kept_predicates =
                     syn::punctuated::Punctuated::<syn::WherePredicate, syn::Token![,]>::new();
 
-                for predicate in std::mem::take(where_predicates).into_iter() {
+                // Convert to references for visitor
+                let class_generic_refs: Vec<_> = class_generic_params.iter().collect();
+                let non_class_generic_refs: Vec<_> = non_class_generic_params.iter().collect();
+
+                for predicate in std::mem::take(&mut generics.make_where_clause().predicates).into_iter() {
                     if let syn::WherePredicate::Type(type_predicate) = &predicate {
                         // Check LHS for class generics and non-class generics
                         let mut lhs_visitor = GenericNameVisitor::new(
-                            &class_generic_params,
-                            Some(&non_class_generic_params),
+                            &class_generic_refs,
+                            Some(&non_class_generic_refs),
                         );
                         lhs_visitor.visit_type(&type_predicate.bounded_ty);
 
                         // Check RHS for non-class generics only
                         let mut rhs_visitor =
-                            GenericNameVisitor::new(&non_class_generic_params, None);
+                            GenericNameVisitor::new(&non_class_generic_refs, None);
                         for bound in &type_predicate.bounds {
                             rhs_visitor.visit_type_param_bound(bound);
                         }
@@ -1738,7 +1737,7 @@ impl TryToTokens for ast::ImportFunction {
                     }
                 }
 
-                *where_predicates = kept_predicates;
+                generics.make_where_clause().predicates = kept_predicates;
                 if !hoisted_predicates.is_empty() {
                     impl_where_clause = quote! { where #hoisted_predicates };
                 }
@@ -1763,8 +1762,7 @@ impl TryToTokens for ast::ImportFunction {
             }
         };
 
-        let generic_params = generics.to_token_stream();
-        let where_clause = generics::where_clause(&generics);
+        let (impl_generics, _ty_generics, where_clause) = generics.split_for_impl();
 
         let invocation = quote! {
             // This is due to `#[automatically_derived]` attribute cannot be
@@ -1773,7 +1771,7 @@ impl TryToTokens for ast::ImportFunction {
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #(#attrs)*
             #doc
-            #vis #maybe_async #maybe_unsafe fn #rust_name #generic_params (#me #(#arguments),*) #ret #where_clause {
+            #vis #maybe_async #maybe_unsafe fn #rust_name #impl_generics (#me #(#arguments),*) #ret #where_clause {
                 #extern_fn
 
                 unsafe {

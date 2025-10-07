@@ -1,5 +1,4 @@
-use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::visit::Visit;
 
 /// Helper visitor for generic parameter usage
@@ -124,14 +123,7 @@ impl<'a> Visit<'_> for GenericNameVisitor<'a> {
 
 /// Get the list of generic parameter identifier names
 pub(crate) fn generic_params(generics: &syn::Generics) -> Vec<&syn::Ident> {
-    generics
-        .params
-        .iter()
-        .filter_map(|param| match param {
-            syn::GenericParam::Type(type_param) => Some(&type_param.ident),
-            _ => None,
-        })
-        .collect()
+    generics.type_params().map(|tp| &tp.ident).collect()
 }
 
 pub(crate) fn uses_generic_params(ty: &syn::Type, generic_names: &Vec<&syn::Ident>) -> bool {
@@ -164,41 +156,11 @@ pub(crate) fn normalize_generics(generics: &mut syn::Generics) {
     }
 
     if !new_predicates.is_empty() {
-        if let Some(where_clause) = &mut generics.where_clause {
-            where_clause.predicates.extend(new_predicates);
-        } else {
-            generics.where_clause = Some(syn::WhereClause {
-                where_token: syn::Token![where](proc_macro2::Span::call_site()),
-                predicates: new_predicates,
-            });
-        }
+        generics
+            .make_where_clause()
+            .predicates
+            .extend(new_predicates);
     }
-}
-
-pub(crate) fn where_clause(generics: &syn::Generics) -> TokenStream {
-    let mut type_bounds: Vec<_> = generics
-        .params
-        .iter()
-        .filter_map(|param| match param {
-            syn::GenericParam::Type(syn::TypeParam { ident, bounds, .. }) => {
-                if !bounds.is_empty() {
-                    Some(quote! { #ident: #bounds })
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        })
-        .collect();
-
-    if let Some(syn::WhereClause { predicates, .. }) = &generics.where_clause {
-        type_bounds.extend(
-            predicates
-                .iter()
-                .map(|predicate| predicate.to_token_stream()),
-        );
-    }
-    quote! { where #(#type_bounds),* }
 }
 
 /// Returns JsValue tokens for each generic type parameter
