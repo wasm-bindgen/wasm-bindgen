@@ -1,7 +1,5 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
-const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
@@ -15,9 +13,6 @@ module.exports = {
             template: 'index.html'
         }),
         new MiniCssExtractPlugin(),
-        new WasmPackPlugin({
-            crateDirectory: __dirname
-        }),
     ],
     mode: 'development',
     experiments: {

@@ -1,7 +1,6 @@
 packages:
   - "*"
 catalog:
-  "@wasm-tool/wasm-pack-plugin": 1.5.0
   copy-webpack-plugin: ^13.0.1
   cross-env: ^10.0.0
   css-loader: ^6.11.0

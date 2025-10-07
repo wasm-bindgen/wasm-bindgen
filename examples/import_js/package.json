@@ -1,10 +1,10 @@
 {
   "scripts": {
+    "prebuild": "cargo wasm-bindgen build --out-dir pkg -- --manifest-path crate/Cargo.toml",
     "build": "webpack",
     "serve": "webpack serve"
   },
   "devDependencies": {
-    "@wasm-tool/wasm-pack-plugin": "catalog:",
     "html-webpack-plugin": "catalog:",
     "webpack": "catalog:",
     "webpack-cli": "catalog:",

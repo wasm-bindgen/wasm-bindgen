@@ -4,7 +4,6 @@
     "serve": "npm run build -- serve"
   },
   "devDependencies": {
-    "@wasm-tool/wasm-pack-plugin": "catalog:",
     "cross-env": "catalog:",
     "html-webpack-plugin": "catalog:",
     "webpack": "catalog:",
