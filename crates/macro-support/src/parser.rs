@@ -716,12 +716,13 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 }
                 _ => None,
             };
-            let Some((class, chaining_setter)) = valid_ty else {
+            if valid_ty.is_none() {
                 bail_span!(
                     class.pat_type.ty,
                     "first argument of method must be a shared reference"
                 )
-            };
+            }
+            let (class, chaining_setter) = valid_ty.unwrap();
             let class_name = match get_ty(class) {
                 syn::Type::Path(syn::TypePath {
                     qself: None,
