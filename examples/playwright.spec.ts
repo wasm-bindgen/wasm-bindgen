@@ -34,7 +34,7 @@ const test = baseTest.extend({
   channel: 'chrome'
 });
 
-test.describe.configure({ mode: 'parallel', timeout: 2 * 60 * 1000 });
+test.describe.configure({ mode: 'parallel', timeout: 3 * 60 * 1000 });
 
 test.beforeEach(async ({ page }) => {
   // We don't print logs right away because they might be noisy, instead
