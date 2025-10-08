@@ -144,3 +144,10 @@ exports.same_js_namespace_from_module = {
 
 exports["kebab-case"] = () => 42;
 exports["\"string'literal\nbreakers\r"] = () => 42;
+
+exports.ChainingFoo = class {};
+
+exports.test_chaining_setters = function(foo) {
+  assert.strictEqual(foo.name, 'test');
+  assert.strictEqual(foo.value, 42);
+};

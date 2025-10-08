@@ -207,6 +207,8 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     }
 
     let tmpdir = tempfile::tempdir()?;
+    let tmpdir_path = tmpdir.path();
+    // let tmpdir_path = tmpdir.keep();
 
     let module = "wasm-bindgen-test";
 
@@ -339,15 +341,15 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     b.debug(debug)
         .input_module(module, wasm)
         .emit_start(false)
-        .generate(&tmpdir)
+        .generate(tmpdir_path)
         .context("executing `wasm-bindgen` over the Wasm file")?;
     shell.clear();
 
     match test_mode {
         TestMode::Node { no_modules } => {
-            node::execute(module, tmpdir.path(), cli, tests, !no_modules, coverage)?
+            node::execute(module, tmpdir_path, cli, tests, !no_modules, coverage)?
         }
-        TestMode::Deno => deno::execute(module, tmpdir.path(), cli, tests)?,
+        TestMode::Deno => deno::execute(module, tmpdir_path, cli, tests)?,
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
         | TestMode::SharedWorker { .. }
@@ -362,7 +364,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
                 },
                 headless,
                 module,
-                tmpdir.path(),
+                tmpdir_path,
                 cli,
                 tests,
                 test_mode,

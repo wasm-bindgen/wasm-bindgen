@@ -282,6 +282,28 @@ extern "C" {
     fn set_property(this: &TypeThatIsNotDefined, val: u32);
 }
 
+#[wasm_bindgen(module = "tests/wasm/imports.js")]
+extern "C" {
+    type ChainingFoo;
+
+    #[wasm_bindgen(constructor)]
+    fn new() -> ChainingFoo;
+
+    #[wasm_bindgen(method, getter)]
+    fn name(this: &ChainingFoo) -> String;
+
+    #[wasm_bindgen(method, setter)]
+    fn set_name(this: ChainingFoo, name: String) -> ChainingFoo;
+
+    #[wasm_bindgen(method, getter)]
+    fn value(this: &ChainingFoo) -> i32;
+
+    #[wasm_bindgen(method, setter)]
+    fn set_value(this: ChainingFoo, val: i32) -> ChainingFoo;
+
+    fn test_chaining_setters(foo: &ChainingFoo);
+}
+
 #[wasm_bindgen_test]
 fn undefined_function_is_ok() {
     if !should_call_undefined_functions() {
@@ -316,6 +338,15 @@ fn pass_out_options_as_undefined() {
     receive_some_ref(Some(&v));
     receive_some_owned(Some(v.clone()));
     receive_some_owned(Some(v));
+}
+
+#[wasm_bindgen_test]
+fn chaining_setters() {
+    let foo = ChainingFoo::new()
+        .set_value(42)
+        .set_name("test".to_string());
+
+    test_chaining_setters(&foo);
 }
 
 #[wasm_bindgen_test]

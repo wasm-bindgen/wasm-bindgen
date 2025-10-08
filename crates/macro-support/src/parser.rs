@@ -660,7 +660,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
         )?;
         let catch = opts.catch().is_some();
         let variadic = opts.variadic().is_some();
-        let js_ret = if catch {
+        let mut js_ret = if catch {
             // TODO: this assumes a whole bunch:
             //
             // * The outer type is actually a `Result`
@@ -679,16 +679,48 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             let class = wasm.arguments.first().ok_or_else(|| {
                 err_span!(self, "imported methods must have at least one argument")
             })?;
-            let class = match get_ty(&class.pat_type.ty) {
+
+            // Extract the class type - can be either &Type or Type (for chaining setters)
+            let valid_ty = match get_ty(&class.pat_type.ty) {
                 syn::Type::Reference(syn::TypeReference {
                     mutability: None,
                     elem,
                     ..
-                }) => &**elem,
-                _ => bail_span!(
+                }) => Some((&**elem, None)),
+                ty @ syn::Type::Path(class_path) => {
+                    if let ast::OperationKind::Setter(s) = &operation_kind {
+                        let valid_ret =
+                            js_ret
+                                .as_ref()
+                                .map_or(false, |ret_ty| match get_ty(ret_ty) {
+                                    syn::Type::Path(syn::TypePath {
+                                        qself: None,
+                                        path: ret_path,
+                                    }) => {
+                                        extract_path_ident(&class_path.path).ok()
+                                            == extract_path_ident(ret_path).ok()
+                                    }
+                                    _ => false,
+                                });
+                        if !valid_ret {
+                            bail_span!(js_ret, "chained setters must return the own type");
+                        }
+                        js_ret = None;
+                        Some((ty, Some(s)))
+                    } else {
+                        bail_span!(
+                            class.pat_type.ty,
+                            "first argument of method must be a shared reference"
+                        )
+                    }
+                }
+                _ => None,
+            };
+            let Some((class, chaining_setter)) = valid_ty else {
+                bail_span!(
                     class.pat_type.ty,
                     "first argument of method must be a shared reference"
-                ),
+                )
             };
             let class_name = match get_ty(class) {
                 syn::Type::Path(syn::TypePath {
@@ -705,7 +737,9 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
 
             let kind = ast::MethodKind::Operation(ast::Operation {
                 is_static: false,
-                kind: operation_kind,
+                kind: chaining_setter
+                    .map(|s| ast::OperationKind::ChainingSetter(s.clone()))
+                    .unwrap_or(operation_kind),
             });
 
             ast::ImportFunctionKind::Method {

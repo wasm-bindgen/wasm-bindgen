@@ -609,7 +609,7 @@ fn from_ast_method_kind<'a>(
                     OperationKind::Getter(g.unwrap_or_else(|| function.infer_getter_property()))
                 }
                 ast::OperationKind::Regular => OperationKind::Regular,
-                ast::OperationKind::Setter(s) => {
+                ast::OperationKind::ChainingSetter(s) | ast::OperationKind::Setter(s) => {
                     let s = s.as_ref().map(|s| intern.intern_str(s));
                     OperationKind::Setter(match s {
                         Some(s) => s,

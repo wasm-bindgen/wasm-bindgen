@@ -241,6 +241,8 @@ pub enum OperationKind {
     Getter(Option<String>),
     /// A method for setting the value of the provided Ident or String
     Setter(Option<String>),
+    /// A chaining setter that takes self by value and returns Self
+    ChainingSetter(Option<String>),
     /// A dynamically intercepted getter
     IndexingGetter,
     /// A dynamically intercepted setter

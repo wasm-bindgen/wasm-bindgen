@@ -1316,15 +1316,18 @@ impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
         let mut class_ty = None;
         let mut is_method = false;
+        let mut is_chaining_setter = false;
         match self.kind {
             ast::ImportFunctionKind::Method {
                 ref ty, ref kind, ..
             } => {
                 if let ast::MethodKind::Operation(ast::Operation {
-                    is_static: false, ..
+                    is_static: false,
+                    kind: ref op_kind,
                 }) = kind
                 {
                     is_method = true;
+                    is_chaining_setter = matches!(op_kind, ast::OperationKind::ChainingSetter(_));
                 }
                 class_ty = Some(ty);
             }
@@ -1345,7 +1348,16 @@ impl TryToTokens for ast::ImportFunction {
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
 
         for (i, arg) in self.function.arguments.iter().enumerate() {
-            let ty = &arg.pat_type.ty;
+            let ty = if is_chaining_setter && i == 0 {
+                syn::Type::Reference(syn::TypeReference {
+                    and_token: Default::default(),
+                    lifetime: None,
+                    mutability: None,
+                    elem: arg.pat_type.ty.clone(),
+                })
+            } else {
+                (*arg.pat_type.ty).clone()
+            };
             let name = match &*arg.pat_type.pat {
                 syn::Pat::Ident(syn::PatIdent {
                     by_ref: None,
@@ -1366,7 +1378,11 @@ impl TryToTokens for ast::ImportFunction {
             abi_argument_names.extend(prim_names.iter().cloned());
 
             let var = if i == 0 && is_method {
-                quote! { self }
+                if is_chaining_setter {
+                    quote! { &self }
+                } else {
+                    quote! { self }
+                }
             } else {
                 arguments.push(quote! { #name: #ty });
                 quote! { #name }
@@ -1456,7 +1472,10 @@ impl TryToTokens for ast::ImportFunction {
             let doc_comment = &self.doc_comment;
             quote! { #[doc = #doc_comment] }
         };
-        let me = if is_method {
+        let me = if is_chaining_setter {
+            convert_ret = quote! { self };
+            quote! { self, }
+        } else if is_method {
             quote! { &self, }
         } else {
             quote!()
@@ -1550,7 +1569,32 @@ impl ToTokens for DescribeImport<'_> {
             ast::ImportKind::Type(_) => return,
             ast::ImportKind::Enum(_) => return,
         };
-        let argtys = f.function.arguments.iter().map(|arg| &arg.pat_type.ty);
+        let mut argtys: Vec<_> = f
+            .function
+            .arguments
+            .iter()
+            .map(|arg| arg.pat_type.ty.clone())
+            .collect();
+        let is_chaining_setter = matches!(
+            &f.kind,
+            ast::ImportFunctionKind::Method {
+                kind: ast::MethodKind::Operation(ast::Operation {
+                    kind: ast::OperationKind::ChainingSetter(_),
+                    ..
+                }),
+                ..
+            }
+        );
+        // For chaining setters, the first arg must be converted into a ref
+        if is_chaining_setter {
+            argtys[0] = Box::new(syn::Type::Reference(syn::TypeReference {
+                and_token: Default::default(),
+                lifetime: None,
+                mutability: None,
+                elem: argtys[0].clone(),
+            }))
+        }
+
         let nargs = f.function.arguments.len() as u32;
         let inform_ret = match &f.js_ret {
             Some(ref t) => quote! { <#t as WasmDescribe>::describe(); },
