@@ -41,6 +41,41 @@ be available in Rust as `the_dude.white_russians()`, and the latter is the
 setter which is accessible as `the_dude.set_white_russians(2)`. Note that both
 functions have a `this` argument as they're tagged with `method`.
 
+## Chaining Setters
+
+Setters can support method chaining by taking `this` as an owned reference and returning the same type:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Foo;
+
+    #[wasm_bindgen(constructor)]
+    fn new() -> Foo;
+
+    #[wasm_bindgen(method, setter)]
+    fn set_name(this: Foo, name: String) -> Foo;
+
+    #[wasm_bindgen(method, setter)]
+    fn set_value(this: Foo, value: u32) -> Foo;
+}
+```
+
+This enables method chaining in Rust:
+
+```rust
+let foo = Foo::new()
+    .set_name("Alice".to_string())
+    .set_value(42);
+```
+
+**How it works:** When a setter takes `this: T` (owned reference) and returns `-> T`,
+wasm-bindgen detects this as a chaining setter. Internally, the JavaScript setter
+is called with a borrowed reference (so JavaScript doesn't take ownership), but from Rust's
+perspective you're moving ownership through the chain. The same object flows through
+each setter call, enabling ergonomic method chaining while maintaining proper
+ownership semantics.
+
 Finally, you can also pass an argument to the `getter` and `setter`
 properties to configure what property is accessed. When the property is
 explicitly specified then there is no restriction on the method name. For
