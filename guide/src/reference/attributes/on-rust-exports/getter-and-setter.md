@@ -69,16 +69,16 @@ Setters can support method chaining by taking `self` by value and returning `Sel
 
 ```rust
 #[wasm_bindgen]
-pub struct Builder {
+pub struct User {
     name: String,
     age: i32,
 }
 
 #[wasm_bindgen]
-impl Builder {
+impl User {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Builder {
-        Builder {
+    pub fn new() -> User {
+        User {
             name: String::new(),
             age: 0,
         }
@@ -108,15 +108,26 @@ impl Builder {
 }
 ```
 
-This allows for ergonomic method chaining:
+This enables ergonomic method chaining in Rust:
 
-```js
-const builder = new Builder()
-    .set_name("Alice")
+```rust
+let user = User::new()
+    .set_name("Alice".to_string())
     .set_age(30);
 
-assert.equal(builder.name, "Alice");
-assert.equal(builder.age, 30);
+assert_eq!(user.name(), "Alice");
+assert_eq!(user.age(), 30);
+```
+
+While in JavaScript, these are still exported as regular setters:
+
+```js
+const user = new User();
+user.name = "Alice";
+user.age = 30;
+
+assert.equal(user.name, "Alice");
+assert.equal(user.age, 30);
 ```
 
 Chaining setters take ownership of `self` and return `Self`, while regular setters
