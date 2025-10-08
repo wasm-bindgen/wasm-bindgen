@@ -365,3 +365,69 @@ fn statics() {
     assert_eq!(FIELD.load(Ordering::Relaxed), 13);
     assert_eq!(STATIC_FIELD.load(Ordering::Relaxed), 14);
 }
+
+#[wasm_bindgen]
+pub struct Builder {
+    name: String,
+    age: i32,
+}
+
+#[wasm_bindgen]
+impl Builder {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Builder {
+        Builder {
+            name: String::new(),
+            age: 0,
+        }
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_name(mut self, value: String) -> Builder {
+        self.name = value;
+        self
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_age(mut self, value: i32) -> Builder {
+        self.age = value;
+        self
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn age(&self) -> i32 {
+        self.age
+    }
+}
+
+#[wasm_bindgen_test]
+fn test_chaining_setters() {
+    let builder = Builder::new().set_name("Alice".to_string()).set_age(30);
+
+    assert_eq!(builder.name(), "Alice");
+    assert_eq!(builder.age(), 30);
+}
+
+#[wasm_bindgen_test]
+fn test_partial_chaining() {
+    let builder = Builder::new().set_name("Bob".to_string());
+
+    assert_eq!(builder.name(), "Bob");
+    assert_eq!(builder.age(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_full_chain() {
+    let builder = Builder::new()
+        .set_age(25)
+        .set_name("Charlie".to_string())
+        .set_age(26);
+
+    assert_eq!(builder.name(), "Charlie");
+    assert_eq!(builder.age(), 26);
+}
