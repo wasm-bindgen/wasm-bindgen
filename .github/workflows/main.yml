@@ -278,7 +278,7 @@ jobs:
     - run: cd crates/web-sys && cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
     - run: git diff --exit-code
 
-  build_examples:
+  test_examples:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -289,45 +289,25 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
-    - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
-    - run: |
-        cargo install --path crates/cli --debug
-    - run: npm install -g pnpm@latest-10
-    # crete a workspace of all examples and install their dependencies at once
-    # sed is used to convert the literal "\n" to a newline character
-    - run: pnpm install
-      working-directory: examples
-    - run: pnpm run -r build
-      working-directory: examples
-    - uses: actions/upload-artifact@v4
-      with:
-        name: examples
-        path: examples/dist
-
-  test_examples:
-    needs:
-    - build_examples
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - uses: actions/download-artifact@v5
-      with:
-        name: examples
-        path: examples/dist
-    - uses: dtolnay/rust-toolchain@stable
     - uses: actions/setup-node@v5
       with:
         node-version: 24
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x
+    - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: npm install -g pnpm@latest-10
+    # create a workspace of all examples and install their dependencies at once
+    # sed is used to convert the literal "\n" to a newline character
     - run: pnpm install
       working-directory: examples
-    - run: npm test --ignore-scripts
+    - run: pnpm test
       working-directory: examples
-      env:
-        PREBUILT_EXAMPLES: 1
+    - uses: actions/upload-artifact@v4
+      if: github.ref == 'refs/heads/main'
+      with:
+        name: examples
+        path: examples/dist
 
   build_benchmarks:
     runs-on: ubuntu-latest
@@ -339,6 +319,7 @@ jobs:
     - run: cargo build --manifest-path benchmarks/Cargo.toml --release --target wasm32-unknown-unknown
     - run: cargo run -p wasm-bindgen-cli -- target/wasm32-unknown-unknown/release/wasm_bindgen_benchmark.wasm --out-dir benchmarks/pkg --target web
     - uses: actions/upload-artifact@v4
+      if: github.ref == 'refs/heads/main'
       with:
         name: benchmarks
         path: benchmarks
@@ -553,7 +534,7 @@ jobs:
       - dist_macos_x86_64
       - dist_macos_aarch64
       - dist_windows
-      - build_examples
+      - test_examples
       - build_benchmarks
     runs-on: ubuntu-latest
     steps:

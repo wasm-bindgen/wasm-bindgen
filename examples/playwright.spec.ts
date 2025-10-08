@@ -11,7 +11,7 @@ const exec = promisify(exec_);
 
 chdir(__dirname);
 
-const { PREBUILT_EXAMPLES, PATH } = env;
+const { PATH } = env;
 
 const test = baseTest.extend({
   baseURL: 'http://localhost',
@@ -61,26 +61,22 @@ test.beforeEach(async ({ page }) => {
   page.once('pageerror', throwWithLogs);
 });
 
-if (!PREBUILT_EXAMPLES) {
-  // Don't rely on the globally installed wasm-bindgen CLI to have the correct version.
-  // Instead, build it locally (see `pretest` in `package.json`) and add it to the `PATH`.
-  test.beforeAll(async () => {
-    // Add the prebuilt wasm-bindgen.exe from npm `pretest` step to the `PATH`.
-    const { stdout } = await exec('cargo metadata --format-version 1', {
-      maxBuffer: Infinity
-    });
-    const { target_directory } = JSON.parse(stdout);
-    env.PATH = join(target_directory, 'debug') + delimiter + PATH;
+// Don't rely on the globally installed wasm-bindgen CLI to have the correct version.
+// Instead, build it locally (see `pretest` in `package.json`) and add it to the `PATH`.
+test.beforeAll(async () => {
+  // Add the prebuilt wasm-bindgen.exe from npm `pretest` step to the `PATH`.
+  const { stdout } = await exec('cargo metadata --format-version 1', {
+    maxBuffer: Infinity
   });
-}
+  const { target_directory } = JSON.parse(stdout);
+  env.PATH = join(target_directory, 'debug') + delimiter + PATH;
+});
 
 for (const file of globSync('*/package.json')) {
   const dir = dirname(file);
 
   test(dir, async ({ page }) => {
-    if (!PREBUILT_EXAMPLES) {
-      await exec('npm run build', { cwd: dir, env });
-    }
+    await exec('npm run build', { cwd: dir, env });
 
     if (existsSync(`dist/${dir}/index.html`)) {
       await page.goto(`${dir}/index.html`, {
