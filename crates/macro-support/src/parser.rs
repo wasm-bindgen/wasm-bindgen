@@ -1601,11 +1601,8 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         } else {
             let is_static = method_self.is_none();
             let mut kind = operation_kind(&opts);
-
-            // Check for chaining setter: setter that returns Self
             if let ast::OperationKind::Setter(ref s) = kind {
                 if let Some(ref ret_ty) = function.ret {
-                    // Check if return type is Self (the class type)
                     if let syn::Type::Path(syn::TypePath { qself: None, path }) = &ret_ty.r#type {
                         if let Some(segment) = path.segments.last() {
                             if segment.ident == *class {
@@ -1615,7 +1612,6 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
                     }
                 }
             }
-
             ast::MethodKind::Operation(ast::Operation { is_static, kind })
         };
         program.exports.push(ast::Export {

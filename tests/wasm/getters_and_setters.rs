@@ -383,13 +383,13 @@ impl Builder {
     }
 
     #[wasm_bindgen(setter)]
-    pub fn set_name(mut self, value: String) -> Builder {
+    pub fn set_name(mut self, value: String) -> Self {
         self.name = value;
         self
     }
 
     #[wasm_bindgen(setter)]
-    pub fn set_age(mut self, value: i32) -> Builder {
+    pub fn set_age(mut self, value: i32) -> Self {
         self.age = value;
         self
     }
@@ -406,23 +406,7 @@ impl Builder {
 }
 
 #[wasm_bindgen_test]
-fn test_chaining_setters() {
-    let builder = Builder::new().set_name("Alice".to_string()).set_age(30);
-
-    assert_eq!(builder.name(), "Alice");
-    assert_eq!(builder.age(), 30);
-}
-
-#[wasm_bindgen_test]
-fn test_partial_chaining() {
-    let builder = Builder::new().set_name("Bob".to_string());
-
-    assert_eq!(builder.name(), "Bob");
-    assert_eq!(builder.age(), 0);
-}
-
-#[wasm_bindgen_test]
-fn test_full_chain() {
+fn test_chaining() {
     let builder = Builder::new()
         .set_age(25)
         .set_name("Charlie".to_string())

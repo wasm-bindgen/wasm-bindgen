@@ -62,3 +62,64 @@ The name for a `getter` is by default inferred from the function name it's
 attached to. The default name for a `setter` is the function's name minus the
 `set_` prefix, and if `set_` isn't a prefix of the function it's an error to not
 provide the name explicitly.
+
+## Chaining Setters
+
+Setters can support method chaining by taking `self` by value and returning `Self`.
+
+```rust
+#[wasm_bindgen]
+pub struct Builder {
+    name: String,
+    age: i32,
+}
+
+#[wasm_bindgen]
+impl Builder {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Builder {
+        Builder {
+            name: String::new(),
+            age: 0,
+        }
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_name(mut self, value: String) -> Self {
+        self.name = value;
+        self
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_age(mut self, value: i32) -> Self {
+        self.age = value;
+        self
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn age(&self) -> i32 {
+        self.age
+    }
+}
+```
+
+This allows for ergonomic method chaining:
+
+```js
+const builder = new Builder()
+    .set_name("Alice")
+    .set_age(30);
+
+assert.equal(builder.name, "Alice");
+assert.equal(builder.age, 30);
+```
+
+Chaining setters take ownership of `self` and return `Self`, while regular setters
+take `&mut self` or `&self` with no return value.
+
+The appropriate pattern is automatically detected based on the setter signature.
