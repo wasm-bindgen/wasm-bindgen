@@ -348,7 +348,7 @@ pub(crate) fn spawn(
         }
         response
     })
-    .map_err(|e| anyhow!("{}", e))?;
+    .map_err(|e| anyhow!("{e}"))?;
     return Ok(srv);
 
     fn try_asset(request: &Request, dir: &Path) -> Response {

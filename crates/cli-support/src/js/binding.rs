@@ -970,7 +970,7 @@ fn instruction(
                 AdapterType::I64 => ("setBigInt64", 8),
                 AdapterType::F32 => ("setFloat32", 4),
                 AdapterType::F64 => ("setFloat64", 8),
-                other => bail!("invalid aggregate return type {:?}", other),
+                other => bail!("invalid aggregate return type {other:?}"),
             };
             // Note that we always assume the return pointer is argument 0,
             // which is currently the case for LLVM.
@@ -989,7 +989,7 @@ fn instruction(
                 AdapterType::I64 => ("getBigInt64", 2),
                 AdapterType::F32 => ("getFloat32", 1),
                 AdapterType::F64 => ("getFloat64", 2),
-                other => bail!("invalid aggregate return type {:?}", other),
+                other => bail!("invalid aggregate return type {other:?}"),
             };
             let size = quads * 4;
             // Separate the offset and the scaled offset, because otherwise you don't guarantee

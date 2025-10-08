@@ -146,10 +146,7 @@ impl Bindgen {
     fn switch_mode(&mut self, mode: OutputMode, flag: &str) -> Result<(), Error> {
         match self.mode {
             OutputMode::Bundler { .. } => self.mode = mode,
-            _ => bail!(
-                "cannot specify `{}` with another output mode already specified",
-                flag
-            ),
+            _ => bail!("cannot specify `{flag}` with another output mode already specified"),
         }
         Ok(())
     }

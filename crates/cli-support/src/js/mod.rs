@@ -184,7 +184,7 @@ impl<'a> Context<'a> {
     ) -> Result<(), Error> {
         let definition_name = self.generate_identifier(export_name);
         if matches!(export, ExportJs::Class(_)) && definition_name != export_name {
-            bail!("cannot shadow already defined class `{}`", export_name);
+            bail!("cannot shadow already defined class `{export_name}`");
         }
 
         // write out comments
@@ -642,10 +642,7 @@ wasm = wasmInstance.exports;
         match &self.config.mode {
             OutputMode::NoModules { .. } => {
                 if let Some((module, _items)) = self.js_imports.iter().next() {
-                    bail!(
-                        "importing from `{}` isn't supported with `--target no-modules`",
-                        module
-                    );
+                    bail!("importing from `{module}` isn't supported with `--target no-modules`");
                 }
             }
 
@@ -852,10 +849,7 @@ wasm = wasmInstance.exports;
         for (i, extra) in extra_modules.iter().enumerate() {
             let imports = match &mut imports {
                 Some(list) => list,
-                None => bail!(
-                    "cannot import from modules (`{}`) with `--no-modules`",
-                    extra
-                ),
+                None => bail!("cannot import from modules (`{extra}`) with `--no-modules`"),
             };
             imports.push_str(&format!("import * as __wbg_star{i} from '{extra}';\n"));
             imports_init.push_str(&format!("imports['{extra}'] = __wbg_star{i};\n"));
@@ -2659,7 +2653,7 @@ wasm = wasmInstance.exports;
             JsImportName::Global { name } => {
                 let unique_name = self.generate_identifier(name);
                 if unique_name != *name {
-                    bail!("cannot import `{}` from two locations", name);
+                    bail!("cannot import `{name}` from two locations");
                 }
                 unique_name
             }
@@ -2978,7 +2972,7 @@ wasm = wasmInstance.exports;
                         let exported = require_class(&mut self.exported_classes, class);
 
                         if exported.has_constructor {
-                            bail!("found duplicate constructor for class `{}`", class);
+                            bail!("found duplicate constructor for class `{class}`");
                         }
 
                         exported.has_constructor = true;
@@ -3552,8 +3546,8 @@ wasm = wasmInstance.exports;
                         URL.createObjectURL(new Blob([val], { type: \"text/javascript\" }))"
                         .to_owned())
                 } else {
-                    Err(anyhow!("wasm-bindgen needs to be invoked with `--split-linked-modules`, because \"{}\" cannot be embedded.\n\
-                        See https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details.", path))
+                    Err(anyhow!("wasm-bindgen needs to be invoked with `--split-linked-modules`, because \"{path}\" cannot be embedded.\n\
+                        See https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details."))
                 }
             }
 
@@ -4063,9 +4057,8 @@ wasm = wasmInstance.exports;
             };
             if let Some((prev, _prev_version)) = self.npm_dependencies.get(name) {
                 bail!(
-                    "dependency on NPM package `{}` specified in two `package.json` files, \
+                    "dependency on NPM package `{name}` specified in two `package.json` files, \
                      which at the time is not allowed:\n  * {}\n  * {}",
-                    name,
                     path.display(),
                     prev.display(),
                 )
@@ -4366,8 +4359,7 @@ fn check_duplicated_getter_and_setter_names(
             && first_receiver.is_static() == second_receiver.is_static();
         if both_are_in_the_same_class && both_are_referencing_the_same_field {
             bail!(format!(
-                "There can be only one getter/setter definition for `{}` in `{}`",
-                first_field, first_class
+                "There can be only one getter/setter definition for `{first_field}` in `{first_class}`"
             ));
         }
         Ok(())

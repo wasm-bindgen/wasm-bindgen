@@ -258,7 +258,7 @@ impl Frame<'_> {
                     stack.push(match e.op {
                         BinaryOp::I32Sub => lhs - rhs,
                         BinaryOp::I32Add => lhs + rhs,
-                        op => bail!("invalid binary op {:?}", op),
+                        op => bail!("invalid binary op {op:?}"),
                     });
                 }
 
@@ -376,7 +376,7 @@ impl Frame<'_> {
                 // Note that LLVM may change over time to generate new
                 // instructions in debug mode, and we'll have to react to those
                 // sorts of changes as they arise.
-                s => bail!("unknown instruction {:?}", s),
+                s => bail!("unknown instruction {s:?}"),
             }
         }
 
