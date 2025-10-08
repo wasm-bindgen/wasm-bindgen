@@ -59,7 +59,7 @@ pub fn execute(
         {wasm};
 
         const nocapture = {nocapture};
-        {console_override}
+        {SHARED_SETUP}
 
         global.__wbg_test_invoke = f => f();
 
@@ -95,7 +95,6 @@ pub fn execute(
         },
         coverage = coverage.display(),
         nocapture = cli.nocapture.clone(),
-        console_override = SHARED_SETUP,
         args = cli.into_args(&tests),
     );
 

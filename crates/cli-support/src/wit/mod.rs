@@ -168,7 +168,7 @@ impl<'a> Context<'a> {
                 let [arg] = &signature.arguments[..] else {
                     bail!("Cast function must take exactly one argument");
                 };
-                let sig_comment = format!("{:?} -> {:?}", arg, &signature.ret);
+                let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
 
                 // Hash the descriptor string to produce a stable import name.
                 let mut hasher = DefaultHasher::default();

@@ -12,7 +12,7 @@ pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<()
         r#"import * as wasm from "./{module}.js";
 
         const nocapture = {nocapture};
-        {console_override}
+        {SHARED_SETUP}
 
         window.__wbg_test_invoke = f => f();
 
@@ -21,7 +21,6 @@ pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<()
         const tests = [];
     "#,
         nocapture = cli.nocapture.clone(),
-        console_override = SHARED_SETUP,
         args = cli.into_args(&tests),
     );
 

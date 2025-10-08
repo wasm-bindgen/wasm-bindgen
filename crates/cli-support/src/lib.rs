@@ -721,7 +721,7 @@ import source wasmModule from \"./{wasm_name}.wasm\";
                 ),
             )?;
         } else if gen.mode.esm_integration() {
-            let js_name = format!("{}_bg.{}", self.stem, extension);
+            let js_name = format!("{}_bg.{extension}", self.stem);
 
             let start = gen.start.as_deref().unwrap_or("");
 

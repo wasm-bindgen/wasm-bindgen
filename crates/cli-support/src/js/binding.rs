@@ -976,13 +976,8 @@ fn instruction(
             // which is currently the case for LLVM.
             let val = js.pop();
             let expr = format!(
-                "{}().{}({} + {} * {}, {}, true);",
-                mem,
-                method,
+                "{mem}().{method}({} + {size} * {offset}, {val}, true);",
                 js.arg(0),
-                size,
-                offset,
-                val,
             );
             js.prelude(&expr);
         }
@@ -1460,10 +1455,7 @@ fn instruction(
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{}({}, {} * {size}, {size});",
-                free,
-                ptr,
-                len,
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.push(format!("v{i}"))
@@ -1479,10 +1471,7 @@ fn instruction(
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{}({}, {} * {size}, {size});",
-                free,
-                ptr,
-                len,
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.prelude("}");
@@ -1517,8 +1506,7 @@ fn instruction(
             let val = js.pop();
             let present = js.pop();
             js.push(format!(
-                "{} === 0 ? undefined : {}",
-                present,
+                "{present} === 0 ? undefined : {}",
                 if *signed {
                     val
                 } else {
@@ -1619,7 +1607,7 @@ impl Invocation {
         match self {
             Invocation::Core { id, .. } => {
                 let name = cx.export_name_of(*id);
-                Ok(format!("wasm.{}({})", name, args.join(", ")))
+                Ok(format!("wasm.{name}({})", args.join(", ")))
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];

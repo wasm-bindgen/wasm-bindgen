@@ -1509,9 +1509,9 @@ wasm = wasmInstance.exports;
         );
 
         self.global(&format!(
-            "function {name}(arg, malloc, realloc) {{
+            "function {ret}(arg, malloc, realloc) {{
                 {debug}
-                {ascii}
+                {encode_as_ascii}
                 if (offset !== len) {{
                     if (offset !== 0) {{
                         arg = arg.slice(offset);
@@ -1527,10 +1527,6 @@ wasm = wasmInstance.exports;
                 WASM_VECTOR_LEN = offset;
                 return ptr;
             }}",
-            name = ret,
-            debug = debug,
-            ascii = encode_as_ascii,
-            mem = mem,
             debug_end = if self.config.debug {
                 "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
             } else {
@@ -2013,7 +2009,7 @@ wasm = wasmInstance.exports;
         }
         let mem = self.export_name_of(memory);
 
-        let cache = format!("cached{}Memory{}", kind, view.num);
+        let cache = format!("cached{kind}Memory{}", view.num);
         let resized_check = if self.module.memories.get(memory).shared {
             // When it's backed by a `SharedArrayBuffer`, growing the Wasm module's memory
             // doesn't detach old references; instead, it just leaves them pointing to a
@@ -2494,7 +2490,7 @@ wasm = wasmInstance.exports;
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
-                let memview_name = format!("get{}Memory", kind);
+                let memview_name = format!("get{kind}Memory");
                 if self.has_global(memview_name.as_str()) {
                     reset_statements.push(format!("cached{kind}Memory{num} = null;"));
                 }
@@ -3294,7 +3290,7 @@ wasm = wasmInstance.exports;
                     None => bail!("a function with no arguments cannot be variadic"),
                 };
                 if !args.is_empty() {
-                    format!("{}, ...{}", args.join(", "), last_arg)
+                    format!("{}, ...{last_arg}", args.join(", "))
                 } else {
                     format!("...{last_arg}")
                 }
@@ -3307,7 +3303,7 @@ wasm = wasmInstance.exports;
                         AuxValue::Bare(js) => self.import_name(js)?,
                         _ => bail!("invalid import set for constructor"),
                     };
-                    Ok(format!("new {}({})", js, variadic_args(args)?))
+                    Ok(format!("new {js}({})", variadic_args(args)?))
                 }
                 AdapterJsImportKind::Method => {
                     let descriptor = |anchor: &str, extra: &str, field: &str, which: &str| {
@@ -3338,22 +3334,21 @@ wasm = wasmInstance.exports;
                             descriptor(&class, "", field, "set")
                         }
                     };
-                    Ok(format!("{}.call({})", js, variadic_args(args)?))
+                    Ok(format!("{js}.call({})", variadic_args(args)?))
                 }
                 AdapterJsImportKind::Normal => {
                     let js = match val {
                         AuxValue::Bare(js) => self.import_name(js)?,
                         _ => bail!("invalid import set for free function"),
                     };
-                    Ok(format!("{}({})", js, variadic_args(args)?))
+                    Ok(format!("{js}({})", variadic_args(args)?))
                 }
             },
 
             AuxImport::ValueWithThis(class, name) => {
                 let class = self.import_name(class)?;
                 Ok(format!(
-                    "{}{}({})",
-                    class,
+                    "{class}{}({})",
                     property_accessor(name),
                     variadic_args(args)?
                 ))
@@ -3369,12 +3364,12 @@ wasm = wasmInstance.exports;
                     "\
                     let result;
                     try {{
-                        result = {} instanceof {};
+                        result = {} instanceof {js};
                     }} catch (_) {{
                         result = false;
                     }}
                     ",
-                    args[0], js,
+                    args[0],
                 )
                 .unwrap();
                 Ok("result".to_owned())
@@ -3416,8 +3411,7 @@ wasm = wasmInstance.exports;
                     None => bail!("structural method calls must have at least one argument"),
                 };
                 Ok(format!(
-                    "{}{}({})",
-                    receiver,
+                    "{receiver}{}({})",
                     property_accessor(name),
                     variadic_args(args)?
                 ))
@@ -3435,7 +3429,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 0);
                 let class = self.import_name(class)?;
-                Ok(format!("{}{}", class, property_accessor(field)))
+                Ok(format!("{class}{}", property_accessor(field)))
             }
 
             AuxImport::StructuralSetter(field) => {
@@ -3455,12 +3449,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 let class = self.import_name(class)?;
-                Ok(format!(
-                    "{}{} = {}",
-                    class,
-                    property_accessor(field),
-                    args[0]
-                ))
+                Ok(format!("{class}{} = {}", property_accessor(field), args[0]))
             }
 
             AuxImport::IndexingGetterOfClass(class) => {
@@ -3468,7 +3457,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 let class = self.import_name(class)?;
-                Ok(format!("{}[{}]", class, args[0]))
+                Ok(format!("{class}[{}]", args[0]))
             }
 
             AuxImport::IndexingGetterOfObject => {
@@ -3483,7 +3472,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 2);
                 let class = self.import_name(class)?;
-                Ok(format!("{}[{}] = {}", class, args[0], args[1]))
+                Ok(format!("{class}[{}] = {}", args[0], args[1]))
             }
 
             AuxImport::IndexingSetterOfObject => {
@@ -3498,7 +3487,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 let class = self.import_name(class)?;
-                Ok(format!("delete {}[{}]", class, args[0]))
+                Ok(format!("delete {class}[{}]", args[0]))
             }
 
             AuxImport::IndexingDeleterOfObject => {
@@ -3513,7 +3502,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 self.require_class_wrap(class);
-                Ok(format!("{}.__wrap({})", class, args[0]))
+                Ok(format!("{class}.__wrap({})", args[0]))
             }
 
             AuxImport::Intrinsic(intrinsic) => {
@@ -3573,7 +3562,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 self.require_class_unwrap(class);
-                Ok(format!("{}.__unwrap({})", class, args[0]))
+                Ok(format!("{class}.__unwrap({})", args[0]))
             }
         }
     }
@@ -3887,8 +3876,7 @@ wasm = wasmInstance.exports;
                     ",
                 );
                 format!(
-                    "heap.length - free_count - {} - {}",
-                    INITIAL_HEAP_OFFSET,
+                    "heap.length - free_count - {INITIAL_HEAP_OFFSET} - {}",
                     INITIAL_HEAP_VALUES.len(),
                 )
             }
@@ -3905,11 +3893,10 @@ wasm = wasmInstance.exports;
                 // returns `undefined` for types like `None` going out.
                 let mut base = format!(
                     "
-                      const table = wasm.{};
+                      const table = wasm.{name};
                       const offset = table.grow({});
                       table.set(0, undefined);
                     ",
-                    name,
                     INITIAL_HEAP_VALUES.len(),
                 );
                 for (i, value) in INITIAL_HEAP_VALUES.iter().enumerate() {

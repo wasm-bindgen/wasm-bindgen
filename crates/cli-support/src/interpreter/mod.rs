@@ -185,7 +185,7 @@ impl Interpreter {
 
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) {
         let func = module.funcs.get(id);
-        log::trace!("starting a call of {:?} {:?}", id, func.name);
+        log::trace!("starting a call of {id:?} {:?}", func.name);
         log::trace!("arguments {args:?}");
         let local = match &func.kind {
             walrus::FunctionKind::Local(l) => l,
