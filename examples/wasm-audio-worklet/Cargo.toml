@@ -13,6 +13,7 @@ console_log = "1"
 js-sys = { path = "../../crates/js-sys" }
 wasm-bindgen = { path = "../../" }
 wasm-bindgen-futures = { path = "../../crates/futures" }
+console_error_panic_hook = "0.1.7"
 
 [dependencies.web-sys]
 features = [
