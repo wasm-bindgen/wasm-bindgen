@@ -20,7 +20,11 @@ const test = baseTest.extend({
     // https://github.com/microsoft/playwright/issues/13968#issuecomment-1784041622
     await context.route('/**', (route, request) => {
       return route.fulfill({
-        path: join('dist', new URL(request.url()).pathname)
+        path: join('dist', new URL(request.url()).pathname),
+        headers: {
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+        },
       });
     });
 
