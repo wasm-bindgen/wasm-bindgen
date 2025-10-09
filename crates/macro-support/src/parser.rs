@@ -680,7 +680,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 err_span!(self, "imported methods must have at least one argument")
             })?;
 
-            // Extract the class type - can be either &Type or Type (for chaining setters)
+            // Extract the class type - can be &Type or Type (for by-value chaining setters)
             let valid_ty = match get_ty(&class.pat_type.ty) {
                 syn::Type::Reference(syn::TypeReference {
                     mutability: None,
@@ -1614,6 +1614,44 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             }
             ast::MethodKind::Operation(ast::Operation { is_static, kind })
         };
+
+        // For chaining setters on exports, detect &mut self -> &mut Self pattern
+        let mut function = function;
+        let mut method_kind = method_kind;
+        if let ast::MethodKind::Operation(ast::Operation {
+            kind: ast::OperationKind::Setter(ref s),
+            is_static,
+        }) = method_kind
+        {
+            if let (
+                Some(ast::MethodSelf::RefMutable),
+                Some(ast::FunctionReturnData {
+                    r#type:
+                        syn::Type::Reference(syn::TypeReference {
+                            mutability: Some(_),
+                            elem,
+                            ..
+                        }),
+                    ..
+                }),
+            ) = (method_self, &function.ret)
+            {
+                if let syn::Type::Path(syn::TypePath { qself: None, path }) = &**elem {
+                    if let Ok(ident) = extract_path_ident(path) {
+                        if ident == *class {
+                            // Update the kind to ChainingSetter
+                            method_kind = ast::MethodKind::Operation(ast::Operation {
+                                is_static,
+                                kind: ast::OperationKind::ChainingSetter(s.clone()),
+                            });
+                            // Remove return type so it behaves like a regular setter in JS
+                            function.ret = None;
+                        }
+                    }
+                }
+            }
+        }
+
         program.exports.push(ast::Export {
             comments,
             function,

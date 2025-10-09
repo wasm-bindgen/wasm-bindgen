@@ -578,6 +578,14 @@ impl TryToTokens for ast::Export {
         let name = &self.rust_name;
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
+        let is_chaining_setter = matches!(
+            &self.method_kind,
+            ast::MethodKind::Operation(ast::Operation {
+                kind: ast::OperationKind::ChainingSetter(_),
+                ..
+            })
+        );
+
         let receiver = match self.method_self {
             Some(ast::MethodSelf::ByValue) => {
                 let class = self.rust_class.as_ref().unwrap();
@@ -726,7 +734,7 @@ impl TryToTokens for ast::Export {
         // For an `async` function we always run it through `future_to_promise`
         // since we're returning a promise to JS, and this will implicitly
         // require that the function returns a `Future<Output = Result<...>>`
-        let (ret_ty, inner_ret_ty, ret_expr) = if self.function.r#async {
+        let (ret_ty, inner_ret_ty, mut ret_expr) = if self.function.r#async {
             if self.start {
                 (
                     quote! { () },
@@ -753,6 +761,10 @@ impl TryToTokens for ast::Export {
         } else {
             (quote! { #syn_ret }, quote! { #syn_ret }, quote! { #ret })
         };
+
+        if is_chaining_setter {
+            ret_expr = quote! { drop(#ret_expr) };
+        }
 
         let mut call = quote! {
             {

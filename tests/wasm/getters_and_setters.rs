@@ -25,6 +25,7 @@ extern "C" {
     fn test_getter_compute(x: GetterCompute);
     fn test_setter_compute(x: SetterCompute);
     fn test_statics(x: Statics);
+    fn test_chaining_setters_js(x: Builder);
 }
 
 // Each getter/setter combination is derived
@@ -383,13 +384,13 @@ impl Builder {
     }
 
     #[wasm_bindgen(setter)]
-    pub fn set_name(mut self, value: String) -> Self {
+    pub fn set_name(&mut self, value: String) -> &mut Self {
         self.name = value;
         self
     }
 
     #[wasm_bindgen(setter)]
-    pub fn set_age(mut self, value: i32) -> Self {
+    pub fn set_age(&mut self, value: i32) -> &mut Self {
         self.age = value;
         self
     }
@@ -407,11 +408,18 @@ impl Builder {
 
 #[wasm_bindgen_test]
 fn test_chaining() {
-    let builder = Builder::new()
+    let mut builder = Builder::new();
+    builder
         .set_age(25)
         .set_name("Charlie".to_string())
         .set_age(26);
 
     assert_eq!(builder.name(), "Charlie");
     assert_eq!(builder.age(), 26);
+}
+
+#[wasm_bindgen_test]
+fn test_chaining_from_js() {
+    let builder = Builder::new();
+    test_chaining_setters_js(builder);
 }

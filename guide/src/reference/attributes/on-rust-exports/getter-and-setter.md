@@ -65,7 +65,7 @@ provide the name explicitly.
 
 ## Chaining Setters
 
-Setters can support method chaining by taking `self` by value and returning `Self`.
+Setters can support method chaining by taking `&mut self` and returning `&mut Self`:
 
 ```rust
 #[wasm_bindgen]
@@ -85,13 +85,13 @@ impl User {
     }
 
     #[wasm_bindgen(setter)]
-    pub fn set_name(mut self, value: String) -> Self {
+    pub fn set_name(&mut self, value: String) -> &mut Self {
         self.name = value;
         self
     }
 
     #[wasm_bindgen(setter)]
-    pub fn set_age(mut self, value: i32) -> Self {
+    pub fn set_age(&mut self, value: i32) -> &mut Self {
         self.age = value;
         self
     }
@@ -111,8 +111,8 @@ impl User {
 This enables ergonomic method chaining in Rust:
 
 ```rust
-let user = User::new()
-    .set_name("Alice".to_string())
+let mut user = User::new();
+user.set_name("Alice".to_string())
     .set_age(30);
 
 assert_eq!(user.name(), "Alice");
@@ -129,8 +129,5 @@ user.age = 30;
 assert.equal(user.name, "Alice");
 assert.equal(user.age, 30);
 ```
-
-Chaining setters take ownership of `self` and return `Self`, while regular setters
-take `&mut self` or `&self` with no return value.
 
 The appropriate pattern is automatically detected based on the setter signature.

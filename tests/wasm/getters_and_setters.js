@@ -105,3 +105,15 @@ exports.test_statics = x => {
     x.field = 13;
     wasm.Statics.field = 14;
 }
+
+exports.test_chaining_setters_js = builder => {
+    // Verify that chaining setters work as regular setters in JS
+    assert.equal(builder.name, "");
+    assert.equal(builder.age, 0);
+
+    builder.name = "Bob";
+    builder.age = 42;
+
+    assert.equal(builder.name, "Bob");
+    assert.equal(builder.age, 42);
+}
