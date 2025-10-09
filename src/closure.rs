@@ -248,7 +248,9 @@ extern "C" {
 /// ```
 pub struct Closure<T: ?Sized> {
     js: JsClosure,
-    _marker: PhantomData<T>,
+     // careful: must be Box<T> not just T because unsized PhantomData
+     // seems to have weird interaction with Pin<>
+    _marker: PhantomData<Box<T>>,
 }
 
 impl<T> Closure<T>
