@@ -248,9 +248,13 @@ extern "C" {
 /// ```
 pub struct Closure<T: ?Sized> {
     js: JsClosure,
-     // careful: must be Box<T> not just T because unsized PhantomData
-     // seems to have weird interaction with Pin<>
+    // careful: must be Box<T> not just T because unsized PhantomData
+    // seems to have weird interaction with Pin<>
     _marker: PhantomData<Box<T>>,
+}
+
+fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
+    let _ = &mut *pin;
 }
 
 impl<T> Closure<T>
