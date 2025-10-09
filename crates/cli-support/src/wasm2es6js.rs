@@ -177,10 +177,10 @@ impl Output {
             push_index_identifier(set.len(), &mut name);
 
             js_imports.push_str(&format!(
-                "import * as import_{} from '{}';\n",
-                name, entry.module
+                "import * as import_{name} from '{}';\n",
+                entry.module
             ));
-            imports.push_str(&format!("'{}': import_{}, ", entry.module, name));
+            imports.push_str(&format!("'{}': import_{name}, ", entry.module));
         }
 
         for entry in self.module.exports.iter() {

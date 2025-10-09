@@ -146,10 +146,7 @@ impl Bindgen {
     fn switch_mode(&mut self, mode: OutputMode, flag: &str) -> Result<(), Error> {
         match self.mode {
             OutputMode::Bundler { .. } => self.mode = mode,
-            _ => bail!(
-                "cannot specify `{}` with another output mode already specified",
-                flag
-            ),
+            _ => bail!("cannot specify `{flag}` with another output mode already specified"),
         }
         Ok(())
     }
@@ -721,7 +718,7 @@ import source wasmModule from \"./{wasm_name}.wasm\";
                 ),
             )?;
         } else if gen.mode.esm_integration() {
-            let js_name = format!("{}_bg.{}", self.stem, extension);
+            let js_name = format!("{}_bg.{extension}", self.stem);
 
             let start = gen.start.as_deref().unwrap_or("");
 

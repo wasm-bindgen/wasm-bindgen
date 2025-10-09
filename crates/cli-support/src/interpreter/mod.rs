@@ -185,7 +185,7 @@ impl Interpreter {
 
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) {
         let func = module.funcs.get(id);
-        log::trace!("starting a call of {:?} {:?}", id, func.name);
+        log::trace!("starting a call of {id:?} {:?}", func.name);
         log::trace!("arguments {args:?}");
         let local = match &func.kind {
             walrus::FunctionKind::Local(l) => l,
@@ -258,7 +258,7 @@ impl Frame<'_> {
                     stack.push(match e.op {
                         BinaryOp::I32Sub => lhs - rhs,
                         BinaryOp::I32Add => lhs + rhs,
-                        op => bail!("invalid binary op {:?}", op),
+                        op => bail!("invalid binary op {op:?}"),
                     });
                 }
 
@@ -376,7 +376,7 @@ impl Frame<'_> {
                 // Note that LLVM may change over time to generate new
                 // instructions in debug mode, and we'll have to react to those
                 // sorts of changes as they arise.
-                s => bail!("unknown instruction {:?}", s),
+                s => bail!("unknown instruction {s:?}"),
             }
         }
 
