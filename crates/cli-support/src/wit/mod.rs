@@ -931,7 +931,10 @@ impl<'a> Context<'a> {
         result
     }
 
-    fn discriminated_union(&mut self, discriminated_union: &decode::DiscriminatedUnion<'_>) -> Result<(), Error> {
+    fn discriminated_union(
+        &mut self,
+        discriminated_union: &decode::DiscriminatedUnion<'_>,
+    ) -> Result<(), Error> {
         let aux = AuxDiscriminatedUnion {
             name: discriminated_union.name.to_string(),
             comments: concatenate_comments(&discriminated_union.comments),

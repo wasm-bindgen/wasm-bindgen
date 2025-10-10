@@ -11,7 +11,7 @@ extern "C" {
     fn js_expect_enum_none(x: Option<Color>);
     fn js_renamed_enum(b: RenamedEnum);
     fn js_enum_with_error_variant();
-   
+
     pub type FooCase;
     #[wasm_bindgen(js_name = makeFoo)]
     fn make_foo() -> FooCase;
