@@ -430,9 +430,8 @@ impl InterfaceMethod<'_> {
                     extra_args[0] = quote!( js_class = #name );
                 }
                 format!(
-                    "The `new {}(..)` constructor, creating a new \
-                     instance of `{0}`.\n\n{}",
-                    parent_name,
+                    "The `new {parent_name}(..)` constructor, creating a new \
+                     instance of `{parent_name}`.\n\n{}",
                     mdn_doc(&parent_js_name, Some(&parent_js_name))
                 )
             }
@@ -447,8 +446,7 @@ impl InterfaceMethod<'_> {
                     js_name
                 };
                 format!(
-                    "The `{}()` method.\n\n{}",
-                    js_name,
+                    "The `{js_name}()` method.\n\n{}",
                     mdn_doc(&parent_js_name, Some(method))
                 )
             }
@@ -578,7 +576,7 @@ impl Interface<'_> {
         let unstable_docs = maybe_unstable_docs(*unstable);
 
         let doc_comment = comment(
-            format!("The `{}` class.\n\n{}", name, mdn_doc(js_name, None)),
+            format!("The `{name}` class.\n\n{}", mdn_doc(js_name, None)),
             &get_features_doc(options, name.to_string()),
         );
 
@@ -957,9 +955,7 @@ impl Function<'_> {
         let js_namespace = raw_ident(&parent_js_name);
 
         let doc_comment = format!(
-            "The `{}.{}()` function.\n\n{}",
-            parent_js_name,
-            js_name,
+            "The `{parent_js_name}.{js_name}()` function.\n\n{}",
             mdn_doc(&parent_js_name, Some(js_name))
         );
 

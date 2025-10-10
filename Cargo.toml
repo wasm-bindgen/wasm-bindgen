@@ -80,6 +80,7 @@ new_without_default = "allow"
 overly_complex_bool_expr = "allow"
 too_many_arguments = "allow"
 type_complexity = "allow"
+uninlined_format_args = "warn"
 
 [workspace]
 exclude = ["crates/msrv/resolver", "crates/msrv/lib", "crates/msrv/cli"]

@@ -99,7 +99,7 @@ impl Sanitizer {
 
     fn sanitize(&mut self, s: &str) -> String {
         // Cast descriptors for closures contain unstable function indices, so we need to sanitize the hash.
-        let s = self.sanitize_one(&s, regex!(r"__wbindgen_cast_[0-9a-f]{16}"), |idx| {
+        let s = self.sanitize_one(s, regex!(r"__wbindgen_cast_[0-9a-f]{16}"), |idx| {
             format!("__wbindgen_cast_{idx:016x}")
         });
 
@@ -143,7 +143,17 @@ fn runtest_targets_atomics() -> Result<()> {
     runtest_with_opts(test, Some("atomics"), |command| {
         command
             .env("RUSTUP_TOOLCHAIN", "nightly")
-            .env("RUSTFLAGS", "-C target-feature=+atomics")
+            .env(
+                "RUSTFLAGS",
+                "-Ctarget-feature=+atomics \
+                -Clink-args=--shared-memory \
+                -Clink-args=--max-memory=1073741824 \
+                -Clink-args=--import-memory \
+                -Clink-args=--export=__wasm_init_tls \
+                -Clink-args=--export=__tls_size \
+                -Clink-args=--export=__tls_align \
+                -Clink-args=--export=__tls_base",
+            )
             .arg("-Zbuild-std=std,panic_abort");
     })
 }
@@ -212,9 +222,9 @@ fn runtest_with_opts(
             .find_map(|f| f.strip_prefix("--target="))
             .unwrap_or("bundler");
 
-        let (mut cmd, out_dir) =
-            project.wasm_bindgen(&format!("{flags} --out-name reference_test"));
-        cmd.assert().success();
+        let out_dir = project
+            .wasm_bindgen(&format!("{flags} --out-name reference_test"))
+            .unwrap();
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {

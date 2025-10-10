@@ -1,18 +1,18 @@
+use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::{fs, process};
 
-use anyhow::{Context, Error};
+use anyhow::{bail, Context, Error};
 
-use crate::Tests;
-use crate::{node::SHARED_SETUP, Cli};
+use super::Tests;
+use super::{node::SHARED_SETUP, Cli};
 
 pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"import * as wasm from "./{module}.js";
 
         const nocapture = {nocapture};
-        {console_override}
+        {SHARED_SETUP}
 
         window.__wbg_test_invoke = f => f();
 
@@ -21,7 +21,6 @@ pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<()
         const tests = [];
     "#,
         nocapture = cli.nocapture.clone(),
-        console_override = SHARED_SETUP,
         args = cli.into_args(&tests),
     );
 
@@ -65,8 +64,8 @@ if (!ok) Deno.exit(1);"#,
         .status()?;
 
     if !status.success() {
-        process::exit(status.code().unwrap_or(1))
-    } else {
-        Ok(())
+        bail!("Deno failed with exit_code {}", status.code().unwrap_or(1))
     }
+
+    Ok(())
 }

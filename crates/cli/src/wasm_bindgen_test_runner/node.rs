@@ -1,13 +1,12 @@
-use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
-use std::process;
 use std::process::Command;
+use std::{env, fs};
 
+use anyhow::bail;
 use anyhow::{Context, Error};
 
-use crate::Cli;
-use crate::Tests;
+use super::Cli;
+use super::Tests;
 
 // depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
 pub const SHARED_SETUP: &str = r#"
@@ -60,7 +59,7 @@ pub fn execute(
         {wasm};
 
         const nocapture = {nocapture};
-        {console_override}
+        {SHARED_SETUP}
 
         global.__wbg_test_invoke = f => f();
 
@@ -96,7 +95,6 @@ pub fn execute(
         },
         coverage = coverage.display(),
         nocapture = cli.nocapture.clone(),
-        console_override = SHARED_SETUP,
         args = cli.into_args(&tests),
     );
 
@@ -150,8 +148,8 @@ pub fn execute(
         .context("failed to find or execute Node.js")?;
 
     if !status.success() {
-        process::exit(status.code().unwrap_or(1))
-    } else {
-        Ok(())
+        bail!("Node failed with exit_code {}", status.code().unwrap_or(1))
     }
+
+    Ok(())
 }
