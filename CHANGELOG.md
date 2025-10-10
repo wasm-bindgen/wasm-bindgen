@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added `CookieStore` API.
+  [#4706](https://github.com/wasm-bindgen/wasm-bindgen/pull/4706)
+
 * Added `run_cli_with_args` library functions to all `wasm_bindgen_cli` entrypoints.
   [#4710](https://github.com/wasm-bindgen/wasm-bindgen/pull/4710)
 

@@ -12,6 +12,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub type Window;
+    #[cfg(feature = "CookieStore")]
+    # [wasm_bindgen (structural , method , getter , js_class = "Window" , js_name = cookieStore)]
+    #[doc = "Getter for the `cookieStore` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/cookieStore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStore`, `Window`*"]
+    pub fn cookie_store(this: &Window) -> CookieStore;
     # [wasm_bindgen (structural , method , getter , js_class = "Window" , js_name = window)]
     #[doc = "Getter for the `window` field of this object."]
     #[doc = ""]
