@@ -4,12 +4,6 @@ error: cannot export empty enums to JS
 4 | enum A {}
   | ^^^^^^^^^
 
-error: enum variants with associated data are not supported with #[wasm_bindgen]
- --> ui-tests/invalid-enums.rs:8:6
-  |
-8 |     D(u32),
-  |      ^^^^^
-
 error: C-style enums with #[wasm_bindgen] may only have numeric literal values that fit in a 32-bit integer as discriminants. Expressions or variables are not supported.
   --> ui-tests/invalid-enums.rs:13:9
    |
