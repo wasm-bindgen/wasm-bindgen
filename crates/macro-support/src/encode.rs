@@ -344,6 +344,9 @@ fn shared_import_kind<'a>(
         ast::ImportKind::String(f) => ImportKind::String(shared_import_string(f, intern)),
         ast::ImportKind::Type(f) => ImportKind::Type(shared_import_type(f, intern)),
         ast::ImportKind::Enum(f) => ImportKind::Enum(shared_import_enum(f, intern)),
+        ast::ImportKind::DiscriminatedUnion(f) => {
+            ImportKind::DiscriminatedUnion(shared_import_discriminated_enum(f, intern))
+        }
     })
 }
 
@@ -402,6 +405,30 @@ fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> Stri
             .js_namespace
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
+    }
+}
+
+fn shared_import_discriminated_enum<'a>(
+    i: &'a ast::DiscriminatedUnion,
+    _intern: &'a Interner,
+) -> DiscriminatedUnion<'a> {
+    let mut variant_strings = Vec::new();
+    let mut variant_type_cnt = 0;
+
+    for (idx, fields) in i.variant_fields.iter().enumerate() {
+        if fields.is_empty() {
+            variant_strings.push(&*i.variant_values[idx]);
+        } else {
+            variant_type_cnt += 1;
+        }
+    }
+
+    DiscriminatedUnion {
+        name: &i.js_name,
+        generate_typescript: i.generate_typescript,
+        variant_strings,
+        variant_type_cnt,
+        comments: i.comments.iter().map(|s| &**s).collect(),
     }
 }
 

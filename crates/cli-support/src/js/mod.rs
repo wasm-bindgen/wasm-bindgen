@@ -2,8 +2,8 @@ use crate::descriptor::VectorKind;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::{threads as threads_xform, unstart_start_function};
 use crate::wit::{
-    Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
-    AuxValue,
+    Adapter, AdapterId, AdapterJsImportKind, AuxDiscriminatedUnion, AuxExportedMethodKind,
+    AuxReceiverKind, AuxStringEnum, AuxValue,
 };
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
@@ -22,6 +22,7 @@ use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
 use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
 
 mod binding;
+pub(crate) use binding::{adapter2ts, TypePosition};
 
 pub struct Context<'a> {
     globals: String,
@@ -2942,6 +2943,9 @@ wasm = wasmInstance.exports;
         for (_, e) in crate::sorted_iter(&self.aux.string_enums) {
             self.generate_string_enum(e)?;
         }
+        for (_, e) in crate::sorted_iter(&self.aux.discriminated_unions) {
+            self.generate_discriminated_union(e)?;
+        }
 
         for s in self.aux.structs.iter() {
             self.generate_struct(s)?;
@@ -4199,6 +4203,31 @@ wasm = wasmInstance.exports;
 
     fn expose_string_enum(&mut self, string_enum_name: &str) {
         self.used_string_enums.insert(string_enum_name.to_string());
+    }
+
+    fn generate_discriminated_union(
+        &mut self,
+        discriminated_union: &AuxDiscriminatedUnion,
+    ) -> Result<(), Error> {
+        // Only generate TypeScript if requested and if this discriminated union is referenced
+        if discriminated_union.generate_typescript
+            && self
+                .typescript_refs
+                .contains(&TsReference::DiscriminatedUnion(
+                    discriminated_union.name.clone(),
+                ))
+        {
+            let docs = format_doc_comments(&discriminated_union.comments, None);
+            self.typescript.push_str(&docs);
+            self.typescript.push_str("type ");
+            self.typescript.push_str(&discriminated_union.name);
+            self.typescript.push_str(" = ");
+            self.typescript
+                .push_str(&discriminated_union.variants.join(" | "));
+            self.typescript.push_str(";\n");
+        }
+
+        Ok(())
     }
 
     fn generate_struct(&mut self, struct_: &AuxStruct) -> Result<(), Error> {
