@@ -322,6 +322,9 @@ fn shared_import_kind<'a>(
         ast::ImportKind::String(f) => ImportKind::String(shared_import_string(f, intern)),
         ast::ImportKind::Type(f) => ImportKind::Type(shared_import_type(f, intern)),
         ast::ImportKind::Enum(f) => ImportKind::Enum(shared_import_enum(f, intern)),
+        ast::ImportKind::DiscriminatedUnion(f) => {
+            ImportKind::DiscriminatedUnion(shared_import_discriminated_enum(f, intern))
+        }
     })
 }
 
@@ -375,6 +378,40 @@ fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> Stri
         name: &i.js_name,
         generate_typescript: i.generate_typescript,
         variant_values: i.variant_values.iter().map(|x| &**x).collect(),
+        comments: i.comments.iter().map(|s| &**s).collect(),
+    }
+}
+
+fn shared_import_discriminated_enum<'a>(
+    i: &'a ast::DiscriminatedUnion,
+    intern: &'a Interner,
+) -> DiscriminatedUnion<'a> {
+    // For each variant, extract the type name if it has associated data
+    let variant_types: Vec<Option<&'a str>> = i
+        .variant_fields
+        .iter()
+        .map(|fields| {
+            if fields.is_empty() {
+                // String-only variant (no associated data)
+                None
+            } else {
+                // Variant with associated data - convert the Rust type to a string
+                // The CLI will later convert this to TypeScript using the descriptor
+                let type_str = fields
+                    .iter()
+                    .map(|ty| quote::quote!(#ty).to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                Some(intern.intern_str(&type_str))
+            }
+        })
+        .collect();
+
+    DiscriminatedUnion {
+        name: &i.js_name,
+        generate_typescript: i.generate_typescript,
+        variant_values: i.variant_values.iter().map(|x| &**x).collect(),
+        variant_types,
         comments: i.comments.iter().map(|s| &**s).collect(),
     }
 }

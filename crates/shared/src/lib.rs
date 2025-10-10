@@ -59,6 +59,7 @@ macro_rules! shared_api {
             String(ImportString<'a>),
             Type(ImportType<'a>),
             Enum(StringEnum<'a>),
+            DiscriminatedUnion(DiscriminatedUnion<'a>),
         }
 
         struct ImportFunction<'a> {
@@ -114,6 +115,14 @@ macro_rules! shared_api {
         struct StringEnum<'a> {
             name: &'a str,
             variant_values: Vec<&'a str>,
+            comments: Vec<&'a str>,
+            generate_typescript: bool,
+        }
+
+        struct DiscriminatedUnion<'a> {
+            name: &'a str,
+            variant_values: Vec<&'a str>,
+            variant_types: Vec<Option<&'a str>>,
             comments: Vec<&'a str>,
             generate_typescript: bool,
         }

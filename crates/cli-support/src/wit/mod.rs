@@ -602,6 +602,7 @@ impl<'a> Context<'a> {
             decode::ImportKind::String(s) => self.import_string(s),
             decode::ImportKind::Type(t) => self.import_type(&import, t),
             decode::ImportKind::Enum(e) => self.string_enum(e),
+            decode::ImportKind::DiscriminatedUnion(e) => self.discriminated_union(e),
         }
     }
 
@@ -925,6 +926,37 @@ impl<'a> Context<'a> {
             .entry(aux.name.clone())
             .and_modify(|existing| {
                 result = Err(anyhow!("duplicate string enums:\n{existing:?}\n{aux:?}"));
+            })
+            .or_insert(aux);
+        result
+    }
+
+    fn discriminated_union(&mut self, discriminated_union: &decode::DiscriminatedUnion<'_>) -> Result<(), Error> {
+        let aux = AuxDiscriminatedUnion {
+            name: discriminated_union.name.to_string(),
+            comments: concatenate_comments(&discriminated_union.comments),
+            variant_values: discriminated_union
+                .variant_values
+                .iter()
+                .map(|v| v.to_string())
+                .collect(),
+            variant_types: discriminated_union
+                .variant_types
+                .iter()
+                .map(|v| v.map(|s| s.to_string()))
+                .collect(),
+            generate_typescript: discriminated_union.generate_typescript,
+        };
+        let mut result = Ok(());
+        self.aux
+            .discriminated_unions
+            .entry(aux.name.clone())
+            .and_modify(|existing| {
+                result = Err(anyhow!(
+                    "duplicate discriminated unions:\n{:?}\n{:?}",
+                    existing,
+                    aux
+                ));
             })
             .or_insert(aux);
         result

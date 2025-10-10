@@ -38,6 +38,9 @@ pub enum Descriptor {
         invalid: u32,
         hole: u32,
     },
+    DiscriminatedEnum {
+        name: String,
+    },
     RustStruct(String),
     Char,
     Option(Box<Descriptor>),
@@ -137,6 +140,10 @@ impl Descriptor {
                     invalid,
                     hole,
                 }
+            }
+            DISCRIMINATED_UNION => {
+                let name = get_string(data);
+                Descriptor::DiscriminatedEnum { name }
             }
             RUST_STRUCT => {
                 let name = get_string(data);

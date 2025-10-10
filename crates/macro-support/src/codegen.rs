@@ -915,6 +915,7 @@ impl TryToTokens for ast::ImportKind {
             ast::ImportKind::String(ref s) => s.to_tokens(tokens),
             ast::ImportKind::Type(ref t) => t.to_tokens(tokens),
             ast::ImportKind::Enum(ref e) => e.to_tokens(tokens),
+            ast::ImportKind::DiscriminatedUnion(ref e) => e.to_tokens(tokens),
         }
 
         Ok(())
@@ -1312,6 +1313,145 @@ impl ToTokens for ast::StringEnum {
     }
 }
 
+impl ToTokens for ast::DiscriminatedUnion {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let vis = &self.vis;
+        let enum_name = &self.name;
+        let wasm_bindgen = &self.wasm_bindgen;
+        let attrs = &self.rust_attrs;
+
+        // Separate string variants from discriminated variants
+        let (known_variants, fallback_variants): (Vec<_>, Vec<_>) = self
+            .variants
+            .iter()
+            .zip(&self.variant_fields)
+            .partition(|(_, fields)| fields.is_empty());
+
+        let known_variant_names: Vec<_> = known_variants.iter().map(|(v, _)| v).collect();
+        let known_variant_values: Vec<_> = known_variants
+            .iter()
+            .map(|(v, _)| {
+                let idx = self.variants.iter().position(|x| x == *v).unwrap();
+                &self.variant_values[idx]
+            })
+            .collect();
+
+        // Build enum definition with all variants
+        let fallback_variant_defs = fallback_variants.iter().map(|(name, fields)| {
+            let ty = &fields[0];
+            quote! { #name(#ty) }
+        });
+
+        let enum_def = quote! {
+            #(#known_variant_names,)*
+            #(#fallback_variant_defs,)*
+        };
+
+        // IntoWasmAbi - convert everything to JsValue
+        let known_into_arms: Vec<_> = known_variant_names
+            .iter()
+            .zip(&known_variant_values)
+            .map(|(vname, value)| {
+                quote! {
+                    #enum_name::#vname => #wasm_bindgen::JsValue::from_str(#value)
+                }
+            })
+            .collect();
+
+        let fallback_into_arms: Vec<_> = fallback_variants
+            .iter()
+            .map(|(name, _)| {
+                quote! {
+                    #enum_name::#name(value) => #wasm_bindgen::JsValue::from(value)
+                }
+            })
+            .collect();
+
+        // FromWasmAbi - successively try to match JsValue to each variant type
+        let known_from_arms: Vec<_> = known_variant_names
+            .iter()
+            .zip(&known_variant_values)
+            .map(|(vname, value)| {
+                quote! {
+                    if let Some(s) = js_value.as_string() {
+                        if s == #value {
+                            return #enum_name::#vname;
+                        }
+                    }
+                }
+            })
+            .collect();
+
+        let fallback_from_arms: Vec<_> = fallback_variants.iter().map(|(name, fields)| {
+            let ty = &fields[0];
+            quote! {
+                if let Ok(value) = <#ty as #wasm_bindgen::convert::TryFromJsValue>::try_from_js_value(js_value.clone()) {
+                    return #enum_name::#name(value);
+                }
+            }
+        }).collect();
+
+        let name_str = &self.js_name;
+        let name_len = name_str.len() as u32;
+        let name_chars = name_str.chars().map(u32::from);
+
+        (quote! {
+            #(#attrs)*
+            #vis enum #enum_name {
+                #enum_def
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::IntoWasmAbi for #enum_name {
+                type Abi = u32;
+
+                #[inline]
+                fn into_abi(self) -> u32 {
+                    let js_value: #wasm_bindgen::JsValue = match self {
+                        #(#known_into_arms,)*
+                        #(#fallback_into_arms,)*
+                    };
+                    #wasm_bindgen::convert::IntoWasmAbi::into_abi(js_value)
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::FromWasmAbi for #enum_name {
+                type Abi = u32;
+
+                #[inline]
+                unsafe fn from_abi(js: u32) -> Self {
+                    let js_value = <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>::from_abi(js);
+                    #(#known_from_arms)*
+                    #(#fallback_from_arms)*
+                    #wasm_bindgen::throw_str("invalid discriminated enum value")
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
+                fn describe() {
+                    use #wasm_bindgen::describe::*;
+                    inform(DISCRIMINATED_UNION);
+                    inform(#name_len);
+                    #(inform(#name_chars);)*
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::__rt::core::convert::From<#enum_name> for #wasm_bindgen::JsValue {
+                fn from(value: #enum_name) -> Self {
+                    match value {
+                        #(#known_into_arms,)*
+                        #(#fallback_into_arms,)*
+                    }
+                }
+            }
+        })
+        .to_tokens(tokens);
+    }
+}
+
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
         let mut class_ty = None;
@@ -1549,6 +1689,7 @@ impl ToTokens for DescribeImport<'_> {
             ast::ImportKind::String(_) => return,
             ast::ImportKind::Type(_) => return,
             ast::ImportKind::Enum(_) => return,
+            ast::ImportKind::DiscriminatedUnion(_) => return,
         };
         let argtys = f.function.arguments.iter().map(|arg| &arg.pat_type.ty);
         let nargs = f.function.arguments.len() as u32;
