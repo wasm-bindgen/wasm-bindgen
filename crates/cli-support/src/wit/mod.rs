@@ -946,9 +946,9 @@ impl<'a> Context<'a> {
         for idx in 0..discriminated_union.variant_type_cnt {
             let descriptor_name =
                 wasm_bindgen_shared::discriminated_union_variant(discriminated_union.name, idx);
-            let descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(||
+            let descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(|| {
                 anyhow!("discriminated union variant descriptor not found: {descriptor_name}")
-            )?;
+            })?;
 
             let mut builder = self.instruction_builder(false);
             builder.outgoing(&descriptor)?;
@@ -980,7 +980,9 @@ impl<'a> Context<'a> {
             .discriminated_unions
             .entry(aux.name.clone())
             .and_modify(|existing| {
-                result = Err(anyhow!("duplicate discriminated unions:\n{existing:?}\n{aux:?}"));
+                result = Err(anyhow!(
+                    "duplicate discriminated unions:\n{existing:?}\n{aux:?}"
+                ));
             })
             .or_insert(aux);
         result
