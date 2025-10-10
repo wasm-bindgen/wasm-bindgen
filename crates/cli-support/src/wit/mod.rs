@@ -939,7 +939,7 @@ impl<'a> Context<'a> {
 
         // Add all string variants
         for string_variant in discriminated_union.variant_strings.iter() {
-            variants.push(format!("\"{}\"", string_variant));
+            variants.push(format!("\"{string_variant}\""));
         }
 
         // Add all type variants by looking up their descriptors
