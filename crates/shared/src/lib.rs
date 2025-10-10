@@ -121,8 +121,8 @@ macro_rules! shared_api {
 
         struct DiscriminatedUnion<'a> {
             name: &'a str,
-            variant_values: Vec<&'a str>,
-            variant_types: Vec<Option<&'a str>>,
+            variant_strings: Vec<&'a str>,
+            variant_type_cnt: u32,
             comments: Vec<&'a str>,
             generate_typescript: bool,
         }
@@ -240,6 +240,14 @@ pub fn struct_field_set(struct_: &str, f: &str) -> String {
     name.extend(struct_.chars().flat_map(|s| s.to_lowercase()));
     name.push('_');
     name.push_str(f);
+    name
+}
+
+pub fn discriminated_union_variant(union_name: &str, variant_idx: u32) -> String {
+    let mut name = String::from("__wbg_discriminated_");
+    name.extend(union_name.chars().flat_map(|s| s.to_lowercase()));
+    name.push('_');
+    name.push_str(&variant_idx.to_string());
     name
 }
 

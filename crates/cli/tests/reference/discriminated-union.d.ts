@@ -2,7 +2,7 @@
 /* eslint-disable */
 export function echo_status(status: Status): Status;
 export function echo_response(response: ApiResponse): ApiResponse;
-type ApiResponse = "loading" | "empty" | string | ExportedStruct | ImportedType;
+type ApiResponse = "loading" | "empty" | string | ExportedStruct | any;
 type Status = "success" | "error" | string;
 export class ExportedStruct {
   free(): void;

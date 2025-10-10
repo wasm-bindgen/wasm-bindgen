@@ -384,34 +384,24 @@ fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> Stri
 
 fn shared_import_discriminated_enum<'a>(
     i: &'a ast::DiscriminatedUnion,
-    intern: &'a Interner,
+    _intern: &'a Interner,
 ) -> DiscriminatedUnion<'a> {
-    // For each variant, extract the type name if it has associated data
-    let variant_types: Vec<Option<&'a str>> = i
-        .variant_fields
-        .iter()
-        .map(|fields| {
-            if fields.is_empty() {
-                // String-only variant (no associated data)
-                None
-            } else {
-                // Variant with associated data - convert the Rust type to a string
-                // The CLI will later convert this to TypeScript using the descriptor
-                let type_str = fields
-                    .iter()
-                    .map(|ty| quote::quote!(#ty).to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                Some(intern.intern_str(&type_str))
-            }
-        })
-        .collect();
+    let mut variant_strings = Vec::new();
+    let mut variant_type_cnt = 0;
+
+    for (idx, fields) in i.variant_fields.iter().enumerate() {
+        if fields.is_empty() {
+            variant_strings.push(&*i.variant_values[idx]);
+        } else {
+            variant_type_cnt += 1;
+        }
+    }
 
     DiscriminatedUnion {
         name: &i.js_name,
         generate_typescript: i.generate_typescript,
-        variant_values: i.variant_values.iter().map(|x| &**x).collect(),
-        variant_types,
+        variant_strings,
+        variant_type_cnt,
         comments: i.comments.iter().map(|s| &**s).collect(),
     }
 }

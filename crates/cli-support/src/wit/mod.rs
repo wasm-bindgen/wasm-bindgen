@@ -935,19 +935,47 @@ impl<'a> Context<'a> {
         &mut self,
         discriminated_union: &decode::DiscriminatedUnion<'_>,
     ) -> Result<(), Error> {
+        let mut variants = Vec::new();
+
+        // Add all string variants
+        for string_variant in discriminated_union.variant_strings.iter() {
+            variants.push(format!("\"{}\"", string_variant));
+        }
+
+        // Add all type variants by looking up their descriptors
+        for idx in 0..discriminated_union.variant_type_cnt {
+            let descriptor_name =
+                wasm_bindgen_shared::discriminated_union_variant(discriminated_union.name, idx);
+            let descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(|| {
+                anyhow!(
+                    "discriminated union variant descriptor not found: {}",
+                    descriptor_name
+                )
+            })?;
+
+            let mut builder = self.instruction_builder(false);
+            builder.outgoing(&descriptor)?;
+            if builder.output.len() != 1 {
+                bail!(
+                    "Expected exactly one AdapterType for discriminated union variant, got {}",
+                    builder.output.len()
+                );
+            }
+            let adapter_type = &builder.output[0];
+            let mut ts_string = String::new();
+            crate::js::adapter2ts(
+                adapter_type,
+                crate::js::TypePosition::Return,
+                &mut ts_string,
+                None,
+            );
+            variants.push(ts_string);
+        }
+
         let aux = AuxDiscriminatedUnion {
             name: discriminated_union.name.to_string(),
             comments: concatenate_comments(&discriminated_union.comments),
-            variant_values: discriminated_union
-                .variant_values
-                .iter()
-                .map(|v| v.to_string())
-                .collect(),
-            variant_types: discriminated_union
-                .variant_types
-                .iter()
-                .map(|v| v.map(|s| s.to_string()))
-                .collect(),
+            variants,
             generate_typescript: discriminated_union.generate_typescript,
         };
         let mut result = Ok(());

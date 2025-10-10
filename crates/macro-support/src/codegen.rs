@@ -1395,6 +1395,17 @@ impl ToTokens for ast::DiscriminatedUnion {
         let name_len = name_str.len() as u32;
         let name_chars = name_str.chars().map(u32::from);
 
+        let mut string_variants = Vec::new();
+        let mut type_variants = Vec::new();
+        for (idx, fields) in self.variant_fields.iter().enumerate() {
+            if fields.is_empty() {
+                string_variants.push(&self.variant_values[idx]);
+            } else {
+                type_variants.push(&fields[0]);
+            }
+        }
+        let type_count = type_variants.len() as u32;
+
         (quote! {
             #(#attrs)*
             #vis enum #enum_name {
@@ -1428,6 +1439,7 @@ impl ToTokens for ast::DiscriminatedUnion {
                 }
             }
 
+            // Despite the generic implementation, we still encode the type information for TypeScript output
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
                 fn describe() {
@@ -1435,6 +1447,8 @@ impl ToTokens for ast::DiscriminatedUnion {
                     inform(DISCRIMINATED_UNION);
                     inform(#name_len);
                     #(inform(#name_chars);)*
+                    inform(#type_count);
+                    #(<#type_variants as WasmDescribe>::describe();)*
                 }
             }
 
@@ -1449,6 +1463,23 @@ impl ToTokens for ast::DiscriminatedUnion {
             }
         })
         .to_tokens(tokens);
+
+        // Generate descriptor exports for each type variant so cli-support can look them up
+        for (idx, ty) in type_variants.iter().enumerate() {
+            let descriptor_name = Ident::new(
+                &shared::discriminated_union_variant(name_str, idx as u32),
+                Span::call_site(),
+            );
+            Descriptor {
+                ident: &descriptor_name,
+                inner: quote! {
+                    <#ty as WasmDescribe>::describe();
+                },
+                attrs: vec![],
+                wasm_bindgen: &self.wasm_bindgen,
+            }
+            .to_tokens(tokens);
+        }
     }
 }
 

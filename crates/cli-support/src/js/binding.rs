@@ -1637,12 +1637,12 @@ impl Invocation {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum TypePosition {
+pub(crate) enum TypePosition {
     Argument,
     Return,
 }
 
-fn adapter2ts(
+pub(crate) fn adapter2ts(
     ty: &AdapterType,
     position: TypePosition,
     dst: &mut String,

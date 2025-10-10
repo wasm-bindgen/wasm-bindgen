@@ -91,7 +91,9 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::Enum { name, .. } => self.outgoing_i32(AdapterType::Enum(name.clone())),
             Descriptor::StringEnum { name, .. } => self.outgoing_string_enum(name),
-            Descriptor::DiscriminatedEnum { name } => self.outgoing_discriminated_enum(name)?,
+            Descriptor::DiscriminatedUnion { name, .. } => {
+                self.outgoing_discriminated_enum(name)?
+            }
 
             Descriptor::Char => {
                 self.instruction(
@@ -422,7 +424,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. }
-            | Descriptor::DiscriminatedEnum { .. }
+            | Descriptor::DiscriminatedUnion { .. }
             | Descriptor::RustStruct(_)
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)

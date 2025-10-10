@@ -21,6 +21,7 @@ use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
 use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
 
 mod binding;
+pub(crate) use binding::{adapter2ts, TypePosition};
 
 pub struct Context<'a> {
     globals: String,
@@ -4014,64 +4015,17 @@ wasm = wasmInstance.exports;
                     discriminated_union.name.clone(),
                 ))
         {
-            let mut variants = Vec::new();
-
-            // Iterate through both variant_values and variant_types together
-            for (value, ty_opt) in discriminated_union
-                .variant_values
-                .iter()
-                .zip(&discriminated_union.variant_types)
-            {
-                if let Some(ty) = ty_opt {
-                    // Variant with associated data - convert Rust type to TypeScript
-                    let ts_type = self.rust_type_to_typescript(ty);
-                    variants.push(ts_type);
-                } else {
-                    // String-only variant - add as string literal
-                    variants.push(format!("\"{value}\""));
-                }
-            }
-
             let docs = format_doc_comments(&discriminated_union.comments, None);
-            let type_expr = if variants.is_empty() {
-                "never".to_string()
-            } else {
-                variants.join(" | ")
-            };
-
             self.typescript.push_str(&docs);
             self.typescript.push_str("type ");
             self.typescript.push_str(&discriminated_union.name);
             self.typescript.push_str(" = ");
-            self.typescript.push_str(&type_expr);
+            self.typescript
+                .push_str(&discriminated_union.variants.join(" | "));
             self.typescript.push_str(";\n");
         }
 
         Ok(())
-    }
-
-    /// Convert a Rust type string to a TypeScript type string
-    fn rust_type_to_typescript(&self, rust_type: &str) -> String {
-        // Remove whitespace for easier matching
-        let ty = rust_type.replace(" ", "");
-
-        // Handle common Rust types
-        match ty.as_str() {
-            "String" | "str" | "&str" => "string".to_string(),
-            "bool" => "boolean".to_string(),
-            "u8" | "u16" | "u32" | "i8" | "i16" | "i32" | "f32" | "f64" => "number".to_string(),
-            "u64" | "i64" | "u128" | "i128" => "bigint".to_string(),
-            _ => {
-                // Check if it's an Option type
-                if ty.starts_with("Option<") {
-                    let inner = &ty[7..ty.len() - 1]; // Extract the inner type
-                    let inner_ts = self.rust_type_to_typescript(inner);
-                    return format!("{inner_ts} | undefined");
-                }
-                // For other types (like ExportedStruct, ImportedType), use them as-is
-                ty.clone()
-            }
-        }
     }
 
     fn generate_struct(&mut self, struct_: &AuxStruct) -> Result<(), Error> {

@@ -211,11 +211,8 @@ pub struct AuxDiscriminatedUnion {
     pub name: String,
     /// The copied Rust comments to forward to JS
     pub comments: String,
-    /// A list of string discriminant values (e.g., "success", "error")
-    pub variant_values: Vec<String>,
-    /// A list of types for variants with associated data (e.g., "String", "ExportedStruct")
-    /// This is `None` for string-only variants
-    pub variant_types: Vec<Option<String>>,
+    /// The list of variant types
+    pub variants: Vec<String>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
 }
