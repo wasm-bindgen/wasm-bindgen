@@ -4,7 +4,7 @@
  * The name of a color.
  */
 
-type ColorName = "green" | "yellow" | "red";
+export type ColorName = "green" | "yellow" | "red";
 
 /**
  * A color.

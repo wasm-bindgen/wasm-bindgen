@@ -109,6 +109,7 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::Enum { name, .. } => self.outgoing_i32(AdapterType::Enum(name.clone())),
             Descriptor::StringEnum { name, .. } => self.outgoing_string_enum(name),
+            Descriptor::DynamicUnion { name, .. } => self.outgoing_dynamic_union(name)?,
 
             Descriptor::Char => {
                 self.instruction(
@@ -361,6 +362,20 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::NamedExternref(name.clone()).option()],
                 );
             }
+            Descriptor::DynamicUnion {
+                name,
+                variant_types: _,
+            } => {
+                // Dynamic unions share the externref ABI; reuse the externref
+                // option lifting.
+                self.instruction(
+                    &[AdapterType::I32],
+                    Instruction::ExternrefLoadOwned {
+                        table_and_drop: None,
+                    },
+                    &[AdapterType::DynamicUnion(name.clone()).option()],
+                );
+            }
             Descriptor::I8 => self.out_option_sentinel32(AdapterType::S8),
             Descriptor::U8 => self.out_option_sentinel32(AdapterType::U8),
             Descriptor::I16 => self.out_option_sentinel32(AdapterType::S16),
@@ -499,6 +514,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. }
+            | Descriptor::DynamicUnion { .. }
             | Descriptor::RustStruct(_)
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)
@@ -667,6 +683,18 @@ impl InstructionBuilder<'_, '_> {
             },
             &[AdapterType::StringEnum(name.to_string())],
         );
+    }
+
+    fn outgoing_dynamic_union(&mut self, name: &str) -> Result<(), Error> {
+        // Dynamic unions use the JsValue ABI (externref).
+        self.instruction(
+            &[AdapterType::I32],
+            Instruction::ExternrefLoadOwned {
+                table_and_drop: None,
+            },
+            &[AdapterType::DynamicUnion(name.to_string())],
+        );
+        Ok(())
     }
 
     fn outgoing_i32(&mut self, output: AdapterType) {

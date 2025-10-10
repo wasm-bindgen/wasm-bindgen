@@ -14,10 +14,13 @@ exports.pass_enum_vec = () => {
 };
 
 exports.pass_invalid_enum_vec = () => {
+    let threw = false;
     try {
         wasm.consume_enum_vec(['not an enum value']);
     } catch (e) {
-        assert.match(e.message, /invalid enum value passed/)
-        assert.match(e.stack, /consume_enum_vec/)
+        threw = true;
+        assert.match(e.message, /array contains a value of the wrong type/);
+        assert.match(e.stack, /consume_enum_vec/);
     }
+    assert.ok(threw, 'expected consume_enum_vec to throw on a non-numeric element');
 };

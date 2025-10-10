@@ -61,6 +61,7 @@ macro_rules! shared_api {
             String(ImportString<'a>),
             Type(ImportType<'a>),
             Enum(StringEnum<'a>),
+            DynamicUnion(DynamicUnion<'a>),
         }
 
         struct ImportFunction<'a> {
@@ -119,6 +120,7 @@ macro_rules! shared_api {
             variant_values: Vec<&'a str>,
             comments: Vec<&'a str>,
             generate_typescript: bool,
+            private: bool,
             js_namespace: Option<Vec<&'a str>>,
         }
 
@@ -127,6 +129,17 @@ macro_rules! shared_api {
             Public,
             Private,
         }
+
+        struct DynamicUnion<'a> {
+            name: &'a str,
+            variant_strings: Vec<&'a str>,
+            variant_type_cnt: u32,
+            comments: Vec<&'a str>,
+            generate_typescript: bool,
+            private: bool,
+            fallback: bool,
+        }
+
 
         struct Export<'a> {
             class: Option<&'a str>,
@@ -308,6 +321,14 @@ pub fn struct_field_set(struct_: &str, f: &str) -> String {
     name.extend(struct_.chars().flat_map(|s| s.to_lowercase()));
     name.push('_');
     name.push_str(&export_name_suffix(f));
+    name
+}
+
+pub fn dynamic_union_variant(union_name: &str, variant_idx: u32) -> String {
+    let mut name = String::from("__wbg_dynamic_union_");
+    name.extend(union_name.chars().flat_map(|s| s.to_lowercase()));
+    name.push('_');
+    name.push_str(&variant_idx.to_string());
     name
 }
 

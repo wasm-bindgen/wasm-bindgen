@@ -49,6 +49,9 @@ pub struct WasmBindgenAux {
     /// Auxiliary information to go into JS/TypeScript bindings describing the
     /// exported string enums from Rust.
     pub string_enums: HashMap<String, AuxStringEnum>,
+    /// Auxiliary information to go into JS/TypeScript bindings describing the
+    /// exported dynamic unions from Rust.
+    pub dynamic_unions: HashMap<String, AuxDynamicUnion>,
 
     /// Auxiliary information to go into JS/TypeScript bindings describing the
     /// exported structs from Rust and their fields they've got exported.
@@ -234,11 +237,47 @@ pub struct AuxStringEnum {
     pub variant_values: Vec<String>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
+    /// Whether to suppress the `export` keyword on the generated TS type
+    /// alias.
+    pub private: bool,
     /// The namespace to export the enum through, if any
     /// Note: Currently unused as string enums don't generate exports,
     /// but kept for consistency and potential future use.
     #[allow(dead_code)]
     pub js_namespace: Option<Vec<String>>,
+}
+
+#[derive(Debug)]
+pub struct AuxDynamicUnion {
+    /// The name of this enum
+    pub name: String,
+    /// The copied Rust comments to forward to JS
+    pub comments: String,
+    /// The list of variants. Each variant is either a quoted string literal
+    /// (already wrapped in `"..."`) or an [`AdapterType`] whose TypeScript
+    /// rendering depends on the JS-context name map.
+    pub variants: Vec<AuxDynamicUnionVariant>,
+    /// Whether typescript bindings should be generated for this enum.
+    pub generate_typescript: bool,
+    /// Whether to suppress the `export` keyword on the generated TS type
+    /// alias.
+    pub private: bool,
+    /// Whether the last tuple variant acts as an unconditional fallback.
+    /// Currently informational on the cli-support side; the codegen on the
+    /// macro side already inlines the fallback into the generated
+    /// `from_abi` / `try_from_js_value` impls.
+    #[allow(dead_code)]
+    pub fallback: bool,
+}
+
+#[derive(Debug)]
+pub enum AuxDynamicUnionVariant {
+    /// A pre-rendered TypeScript fragment, used for string literal variants
+    /// like `"loading"` whose form does not depend on later name resolution.
+    Literal(String),
+    /// A variant whose TypeScript rendering must be deferred until JS
+    /// generation, when the name map for renamed types is available.
+    Type(crate::wit::AdapterType),
 }
 
 #[derive(Debug)]

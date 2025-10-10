@@ -5,8 +5,8 @@ use crate::transforms::{
 };
 use crate::wasm_conventions::get_memory;
 use crate::wit::{
-    Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
-    AuxValue,
+    Adapter, AdapterId, AdapterJsImportKind, AuxDynamicUnion, AuxExportedMethodKind,
+    AuxReceiverKind, AuxStringEnum, AuxValue,
 };
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
@@ -26,6 +26,7 @@ use wasm_bindgen_shared::escape_string;
 use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
 
 mod binding;
+pub(crate) use binding::{adapter2ts, TypePosition};
 
 macro_rules! region {
     ($ctx:expr, $name:literal, $code:block) => {
@@ -4172,6 +4173,14 @@ if (require('worker_threads').isMainThread) {{
         for (_, e) in crate::sorted_iter(&self.aux.string_enums) {
             self.generate_string_enum(e)?;
         }
+        // Dynamic unions can reference each other (a variant payload may
+        // itself be another dynamic union or a string enum). Walk the
+        // reference closure before emitting so that all transitively-
+        // referenced types get rendered.
+        self.expand_typescript_refs();
+        for (_, e) in crate::sorted_iter(&self.aux.dynamic_unions) {
+            self.generate_dynamic_union(e)?;
+        }
 
         for s in self.aux.structs.iter() {
             self.generate_struct(s)?;
@@ -5699,7 +5708,11 @@ addToLibrary({
             };
 
             self.typescript.push_str(&docs);
-            self.typescript.push_str("\ntype ");
+            self.typescript.push_str(if string_enum.private {
+                "\ntype "
+            } else {
+                "\nexport type "
+            });
             self.typescript.push_str(&string_enum.name);
             self.typescript.push_str(" = ");
             self.typescript.push_str(&type_expr);
@@ -5720,6 +5733,84 @@ addToLibrary({
 
     fn expose_string_enum(&mut self, string_enum_name: &str) {
         self.used_string_enums.insert(string_enum_name.to_string());
+    }
+
+    /// Walk every dynamic union's variant types and seed `typescript_refs`
+    /// with any transitively-referenced types. Iterates to a fixed point so
+    /// chains like `A -> B -> C` (where each variant references the next
+    /// dynamic union or string enum) are fully captured before TS rendering.
+    fn expand_typescript_refs(&mut self) {
+        loop {
+            let mut new_refs = HashSet::new();
+            for (name, du) in self.aux.dynamic_unions.iter() {
+                if !self
+                    .typescript_refs
+                    .contains(&TsReference::DynamicUnion(name.clone()))
+                {
+                    continue;
+                }
+                for variant in du.variants.iter() {
+                    if let crate::wit::AuxDynamicUnionVariant::Type(ty) = variant {
+                        let mut sink = String::new();
+                        adapter2ts(
+                            ty,
+                            TypePosition::Return,
+                            &mut sink,
+                            Some(&mut new_refs),
+                            &self.qualified_to_identifier,
+                        );
+                    }
+                }
+            }
+            let before = self.typescript_refs.len();
+            self.typescript_refs.extend(new_refs);
+            if self.typescript_refs.len() == before {
+                break;
+            }
+        }
+    }
+
+    fn generate_dynamic_union(&mut self, dynamic_union: &AuxDynamicUnion) -> Result<(), Error> {
+        use crate::wit::AuxDynamicUnionVariant;
+
+        // Only generate TypeScript if requested and if this dynamic union is referenced
+        if dynamic_union.generate_typescript
+            && self
+                .typescript_refs
+                .contains(&TsReference::DynamicUnion(dynamic_union.name.clone()))
+        {
+            let rendered: Vec<String> = dynamic_union
+                .variants
+                .iter()
+                .map(|variant| match variant {
+                    AuxDynamicUnionVariant::Literal(s) => s.clone(),
+                    AuxDynamicUnionVariant::Type(ty) => {
+                        let mut ts = String::new();
+                        adapter2ts(
+                            ty,
+                            TypePosition::Return,
+                            &mut ts,
+                            None,
+                            &self.qualified_to_identifier,
+                        );
+                        ts
+                    }
+                })
+                .collect();
+            let docs = format_doc_comments(&dynamic_union.comments, None);
+            self.typescript.push_str(&docs);
+            self.typescript.push_str(if dynamic_union.private {
+                "type "
+            } else {
+                "export type "
+            });
+            self.typescript.push_str(&dynamic_union.name);
+            self.typescript.push_str(" = ");
+            self.typescript.push_str(&rendered.join(" | "));
+            self.typescript.push_str(";\n");
+        }
+
+        Ok(())
     }
 
     fn generate_struct(&mut self, struct_: &AuxStruct) -> Result<(), Error> {

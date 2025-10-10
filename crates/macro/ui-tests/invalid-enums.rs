@@ -75,4 +75,26 @@ pub enum M {
     B = 2147483648, // i32::MAX + 1
 }
 
+// Dynamic union variant with named fields is rejected.
+#[wasm_bindgen]
+pub enum N {
+    A = "a",
+    Bad { x: u32 },
+}
+
+// Dynamic union variant with multiple unnamed fields is rejected.
+#[wasm_bindgen]
+pub enum O {
+    A = "a",
+    Bad(u32, u32),
+}
+
+// Mixing a tuple variant with a unit variant that has no string discriminant
+// is rejected (the unit variant cannot be classified).
+#[wasm_bindgen]
+pub enum P {
+    Bare,
+    Tuple(u32),
+}
+
 fn main() {}
