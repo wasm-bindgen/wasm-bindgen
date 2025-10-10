@@ -161,8 +161,10 @@ pub enum ImportKind {
     String(ImportString),
     /// Importing a type/class
     Type(ImportType),
-    /// Importing a JS enum
+    /// Importing a JS string enum
     Enum(StringEnum),
+    /// Importing a discriminated enum (with fallback variant support)
+    DiscriminatedUnion(DiscriminatedUnion),
 }
 
 /// A function being imported from JS
@@ -358,6 +360,32 @@ pub struct StringEnum {
     pub generate_typescript: bool,
     /// The namespace to export the enum through, if any
     pub js_namespace: Option<Vec<String>>,
+    /// Path to wasm_bindgen
+    pub wasm_bindgen: Path,
+}
+
+/// The metadata for a Discriminated Enum (wide ABI enum with primitive discriminant)
+#[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub struct DiscriminatedUnion {
+    /// The Rust enum's visibility
+    pub vis: syn::Visibility,
+    /// The Rust enum's identifiers
+    pub name: Ident,
+    /// The name of this enum in JS/TS code
+    pub js_name: String,
+    /// The Rust identifiers for the variants
+    pub variants: Vec<Ident>,
+    /// The JS string values of the known string variants
+    pub variant_values: Vec<String>,
+    /// The field types for each variant (empty for known string variants, one element for fallback variant)
+    pub variant_fields: Vec<Vec<syn::Type>>,
+    /// The doc comments on this enum, if any
+    pub comments: Vec<String>,
+    /// Attributes to apply to the Rust enum
+    pub rust_attrs: Vec<syn::Attribute>,
+    /// Whether to generate a typescript definition for this enum
+    pub generate_typescript: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }
@@ -560,6 +588,7 @@ impl ImportKind {
             ImportKind::String(_) => false,
             ImportKind::Type(_) => false,
             ImportKind::Enum(_) => false,
+            ImportKind::DiscriminatedUnion(_) => false,
         }
     }
 }

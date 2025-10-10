@@ -11,6 +11,10 @@ extern "C" {
     fn js_expect_enum_none(x: Option<Color>);
     fn js_renamed_enum(b: RenamedEnum);
     fn js_enum_with_error_variant();
+
+    pub type FooCase;
+    #[wasm_bindgen(js_name = makeFoo)]
+    fn make_foo() -> FooCase;
 }
 
 #[wasm_bindgen]
@@ -108,4 +112,106 @@ fn test_renamed_enum() {
 #[wasm_bindgen_test]
 fn test_enum_with_error_variant() {
     js_enum_with_error_variant();
+}
+
+// Exported struct for testing enum variants
+#[wasm_bindgen]
+#[derive(PartialEq, Debug)]
+pub struct Bar {
+    value: u32,
+}
+
+#[wasm_bindgen]
+impl Bar {
+    #[wasm_bindgen(constructor)]
+    pub fn new(value: u32) -> Bar {
+        Bar { value }
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn value(&self) -> u32 {
+        self.value
+    }
+}
+
+#[wasm_bindgen]
+pub enum StringEnumWithFallback {
+    Red = "red",
+    Green = "green",
+    Blue = "blue",
+    Another(FooCase),
+    AnotherOther(Bar),
+    AnotherColor(Color),
+    Wow(Option<u32>),
+    Wow2(Option<u64>),
+    Other(String),
+}
+
+#[wasm_bindgen]
+pub fn string_enum_fallback_roundtrip(e: StringEnumWithFallback) -> StringEnumWithFallback {
+    e
+}
+
+#[wasm_bindgen_test]
+fn test_string_enum_with_fallback() {
+    assert!(matches!(
+        string_enum_fallback_roundtrip(StringEnumWithFallback::Red),
+        StringEnumWithFallback::Red
+    ));
+
+    assert!(matches!(
+        string_enum_fallback_roundtrip(StringEnumWithFallback::Green),
+        StringEnumWithFallback::Green
+    ));
+
+    assert!(matches!(
+        string_enum_fallback_roundtrip(StringEnumWithFallback::Blue),
+        StringEnumWithFallback::Blue
+    ));
+
+    let foo = make_foo();
+    assert!(matches!(
+        string_enum_fallback_roundtrip(StringEnumWithFallback::Another(foo)),
+        StringEnumWithFallback::Another(_)
+    ));
+
+    let bar = Bar::new(42);
+    let result = string_enum_fallback_roundtrip(StringEnumWithFallback::AnotherOther(bar));
+
+    assert!(matches!(result, StringEnumWithFallback::AnotherOther(ref b) if b.value() == 42));
+
+    let result =
+        string_enum_fallback_roundtrip(StringEnumWithFallback::AnotherColor(Color::Yellow));
+    assert!(
+        matches!(result, StringEnumWithFallback::AnotherColor(color) if color == Color::Yellow)
+    );
+
+    assert!(
+        matches!(string_enum_fallback_roundtrip(StringEnumWithFallback::Other("custom".to_string())), StringEnumWithFallback::Other(s) if s == "custom")
+    );
+
+    assert!(
+        matches!(string_enum_fallback_roundtrip(StringEnumWithFallback::Other("yellow".to_string())),
+        StringEnumWithFallback::Other(s) if s == "yellow")
+    );
+
+    assert!(
+        matches!(string_enum_fallback_roundtrip(StringEnumWithFallback::Wow(Some(42))),
+        StringEnumWithFallback::Wow(Some(val)) if val == 42)
+    );
+
+    assert!(matches!(
+        string_enum_fallback_roundtrip(StringEnumWithFallback::Wow(None)),
+        StringEnumWithFallback::Wow(None)
+    ));
+
+    assert!(
+        matches!(string_enum_fallback_roundtrip(StringEnumWithFallback::Wow2(Some(99))),
+        StringEnumWithFallback::Wow2(Some(val)) if val == 99)
+    );
+
+    assert!(matches!(
+        string_enum_fallback_roundtrip(StringEnumWithFallback::Wow2(None)),
+        StringEnumWithFallback::Wow2(None)
+    ));
 }
