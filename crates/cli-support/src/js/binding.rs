@@ -86,10 +86,11 @@ pub struct JsFunction {
 
 /// A references to an (likely) exported symbol used in TS type expression.
 ///
-/// Right now, only string enum require this type of anaylsis.
+/// Right now, only string enum and discriminated unions require this type of analysis.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TsReference {
     StringEnum(String),
+    DiscriminatedUnion(String),
 }
 
 impl<'a, 'b> Builder<'a, 'b> {
@@ -1636,12 +1637,12 @@ impl Invocation {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum TypePosition {
+pub(crate) enum TypePosition {
     Argument,
     Return,
 }
 
-fn adapter2ts(
+pub(crate) fn adapter2ts(
     ty: &AdapterType,
     position: TypePosition,
     dst: &mut String,
@@ -1680,6 +1681,13 @@ fn adapter2ts(
         AdapterType::StringEnum(name) => {
             if let Some(refs) = refs {
                 refs.insert(TsReference::StringEnum(name.clone()));
+            }
+
+            dst.push_str(name);
+        }
+        AdapterType::DiscriminatedUnion(name) => {
+            if let Some(refs) = refs {
+                refs.insert(TsReference::DiscriminatedUnion(name.clone()));
             }
 
             dst.push_str(name);
