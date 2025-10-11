@@ -1436,7 +1436,7 @@ wasm = wasmInstance.exports;
         if !self.should_write_global(ret.to_string()) {
             return Ok(ret);
         }
-        self.expose_text_encoder()?;
+        self.expose_text_encoder(memory)?;
 
         let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
             const buf = cachedTextEncoder.encode(arg);
@@ -1464,7 +1464,18 @@ wasm = wasmInstance.exports;
                 ));
             }
             _ => {
-                self.global(polyfill_encode_into);
+                // Support audio worklets when able to spawn them.
+                if shared {
+                    self.global(&format!(
+                        "
+                        if (cachedTextEncoder) {{
+                            {polyfill_encode_into}
+                        }}
+                    "
+                    ));
+                } else {
+                    self.global(polyfill_encode_into);
+                }
             }
         }
 
@@ -1637,11 +1648,11 @@ wasm = wasmInstance.exports;
         Ok(ret)
     }
 
-    fn expose_text_encoder(&mut self) -> Result<(), Error> {
+    fn expose_text_encoder(&mut self, memory: MemoryId) -> Result<(), Error> {
         if !self.should_write_global("text_encoder") {
             return Ok(());
         }
-        self.expose_text_processor("const", "TextEncoder", "()", None)
+        self.expose_text_processor(memory, "const", "TextEncoder", "()", None)
     }
 
     fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) -> Result<(), Error> {
@@ -1656,6 +1667,7 @@ wasm = wasmInstance.exports;
         // `ignoreBOM` is needed so that the BOM will be preserved when sending a string from Rust to JS
         // `fatal` is needed to catch any weird encoding bugs when sending a string from Rust to JS
         self.expose_text_processor(
+            memory,
             "let",
             "TextDecoder",
             "('utf-8', { ignoreBOM: true, fatal: true })",
@@ -1672,11 +1684,6 @@ wasm = wasmInstance.exports;
                 // the limit.
                 // See MAX_SAFARI_DECODE_BYTES below for link to bug report.
 
-                let cached_text_processor = self.generate_cached_text_processor_init(
-                    "TextDecoder",
-                    "('utf-8', { ignoreBOM: true, fatal: true })",
-                );
-
                 // Maximum number of bytes Safari can handle for one TextDecoder is 2GiB (0x80000000 bytes)
                 // but empirically it seems to crash a bit before the end, so we remove 1MiB (0x100000 bytes)
                 // of margin.
@@ -1690,7 +1697,7 @@ wasm = wasmInstance.exports;
                     function decodeText(ptr, len) {{
                         numBytesDecoded += len;
                         if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {{
-                            {cached_text_processor}
+                            cachedTextDecoder = new TextDecoder('utf-8', {{ ignoreBOM: true, fatal: true }});
                             cachedTextDecoder.decode();
                             numBytesDecoded = len;
                         }}
@@ -1717,26 +1724,33 @@ wasm = wasmInstance.exports;
 
     fn expose_text_processor(
         &mut self,
+        memory: MemoryId,
         decl_kind: &str,
         s: &str,
         args: &str,
         init: Option<&str>,
     ) -> Result<(), Error> {
-        let cached_text_processor_init = self.generate_cached_text_processor_init(s, args);
-        // decl_kind is the kind of the declaration: let or const
-        // cached_text_processor_init is the rest of the statement for initializing a cached text processor
-        self.global(&format!("{decl_kind} {cached_text_processor_init}"));
-        if let Some(init) = init {
-            self.global(init);
+        // Audio worklets don't support `TextDe/Encoder`. When using audio worklets directly,
+        // users will have to make sure themselves not to use any corresponding APIs. But
+        // when spawning audio worklets, its fine to have `TextDe/Encoder` in a "normal worker"
+        // while not using corresponding APIs in the audio worklet itself.
+        if self.module.memories.get(memory).shared {
+            self.global(&format!(
+                "{decl_kind} cached{s} = (typeof {s} !== 'undefined' ? new {s}{args} : undefined);"
+            ));
+
+            if let Some(init) = init {
+                self.global(&format!("if (cached{s}) {init}"));
+            }
+        } else {
+            self.global(&format!("{decl_kind} cached{s} = new {s}{args};"));
+
+            if let Some(init) = init {
+                self.global(init);
+            }
         }
 
         Ok(())
-    }
-
-    /// Generates a partial text processor statement, everything except the declaration kind,
-    /// i.e. everything except for `const` or `let` which the caller needs to handle itself.
-    fn generate_cached_text_processor_init(&mut self, s: &str, args: &str) -> String {
-        format!("cached{s} = new {s}{args};")
     }
 
     fn expose_get_string_from_wasm(&mut self, memory: MemoryId) -> Result<MemView, Error> {
