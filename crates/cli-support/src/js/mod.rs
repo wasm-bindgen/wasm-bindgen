@@ -184,7 +184,7 @@ impl<'a> Context<'a> {
     ) -> Result<(), Error> {
         let definition_name = self.generate_identifier(export_name);
         if matches!(export, ExportJs::Class(_)) && definition_name != export_name {
-            bail!("cannot shadow already defined class `{}`", export_name);
+            bail!("cannot shadow already defined class `{export_name}`");
         }
 
         // write out comments
@@ -642,10 +642,7 @@ wasm = wasmInstance.exports;
         match &self.config.mode {
             OutputMode::NoModules { .. } => {
                 if let Some((module, _items)) = self.js_imports.iter().next() {
-                    bail!(
-                        "importing from `{}` isn't supported with `--target no-modules`",
-                        module
-                    );
+                    bail!("importing from `{module}` isn't supported with `--target no-modules`");
                 }
             }
 
@@ -852,10 +849,7 @@ wasm = wasmInstance.exports;
         for (i, extra) in extra_modules.iter().enumerate() {
             let imports = match &mut imports {
                 Some(list) => list,
-                None => bail!(
-                    "cannot import from modules (`{}`) with `--no-modules`",
-                    extra
-                ),
+                None => bail!("cannot import from modules (`{extra}`) with `--no-modules`"),
             };
             imports.push_str(&format!("import * as __wbg_star{i} from '{extra}';\n"));
             imports_init.push_str(&format!("imports['{extra}'] = __wbg_star{i};\n"));
@@ -1520,9 +1514,9 @@ wasm = wasmInstance.exports;
         );
 
         self.global(&format!(
-            "function {name}(arg, malloc, realloc) {{
+            "function {ret}(arg, malloc, realloc) {{
                 {debug}
-                {ascii}
+                {encode_as_ascii}
                 if (offset !== len) {{
                     if (offset !== 0) {{
                         arg = arg.slice(offset);
@@ -1538,10 +1532,6 @@ wasm = wasmInstance.exports;
                 WASM_VECTOR_LEN = offset;
                 return ptr;
             }}",
-            name = ret,
-            debug = debug,
-            ascii = encode_as_ascii,
-            mem = mem,
             debug_end = if self.config.debug {
                 "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
             } else {
@@ -2027,7 +2017,7 @@ wasm = wasmInstance.exports;
         }
         let mem = self.export_name_of(memory);
 
-        let cache = format!("cached{}Memory{}", kind, view.num);
+        let cache = format!("cached{kind}Memory{}", view.num);
         let resized_check = if self.module.memories.get(memory).shared {
             // When it's backed by a `SharedArrayBuffer`, growing the Wasm module's memory
             // doesn't detach old references; instead, it just leaves them pointing to a
@@ -2393,15 +2383,17 @@ wasm = wasmInstance.exports;
                     try {{
                         return f(a, state.b, ...args);
                     }} finally {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(a, state.b);
-                            CLOSURE_DTORS.unregister(state);
-                        }} else {{
-                            state.a = a;
-                        }}
+                        state.a = a;
+                        real._wbg_cb_unref();
                     }}
                 }};
-                real.original = state;
+                real._wbg_cb_unref = () => {{
+                    if (--state.cnt === 0) {{
+                        state.dtor(state.a, state.b);
+                        state.a = 0;
+                        CLOSURE_DTORS.unregister(state);
+                    }}
+                }};
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
@@ -2449,13 +2441,16 @@ wasm = wasmInstance.exports;
                     try {{
                         return f(state.a, state.b, ...args);
                     }} finally {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b); state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
-                        }}
+                        real._wbg_cb_unref();
                     }}
                 }};
-                real.original = state;
+                real._wbg_cb_unref = () => {{
+                    if (--state.cnt === 0) {{
+                        state.dtor(state.a, state.b);
+                        state.a = 0;
+                        CLOSURE_DTORS.unregister(state);
+                    }}
+                }};
                 CLOSURE_DTORS.register(real, state, state);
                 return real;
             }}
@@ -2503,7 +2498,7 @@ wasm = wasmInstance.exports;
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
-                let memview_name = format!("get{}Memory", kind);
+                let memview_name = format!("get{kind}Memory");
                 if self.has_global(memview_name.as_str()) {
                     reset_statements.push(format!("cached{kind}Memory{num} = null;"));
                 }
@@ -2672,7 +2667,7 @@ wasm = wasmInstance.exports;
             JsImportName::Global { name } => {
                 let unique_name = self.generate_identifier(name);
                 if unique_name != *name {
-                    bail!("cannot import `{}` from two locations", name);
+                    bail!("cannot import `{name}` from two locations");
                 }
                 unique_name
             }
@@ -2991,7 +2986,7 @@ wasm = wasmInstance.exports;
                         let exported = require_class(&mut self.exported_classes, class);
 
                         if exported.has_constructor {
-                            bail!("found duplicate constructor for class `{}`", class);
+                            bail!("found duplicate constructor for class `{class}`");
                         }
 
                         exported.has_constructor = true;
@@ -3303,7 +3298,7 @@ wasm = wasmInstance.exports;
                     None => bail!("a function with no arguments cannot be variadic"),
                 };
                 if !args.is_empty() {
-                    format!("{}, ...{}", args.join(", "), last_arg)
+                    format!("{}, ...{last_arg}", args.join(", "))
                 } else {
                     format!("...{last_arg}")
                 }
@@ -3316,7 +3311,7 @@ wasm = wasmInstance.exports;
                         AuxValue::Bare(js) => self.import_name(js)?,
                         _ => bail!("invalid import set for constructor"),
                     };
-                    Ok(format!("new {}({})", js, variadic_args(args)?))
+                    Ok(format!("new {js}({})", variadic_args(args)?))
                 }
                 AdapterJsImportKind::Method => {
                     let descriptor = |anchor: &str, extra: &str, field: &str, which: &str| {
@@ -3347,22 +3342,21 @@ wasm = wasmInstance.exports;
                             descriptor(&class, "", field, "set")
                         }
                     };
-                    Ok(format!("{}.call({})", js, variadic_args(args)?))
+                    Ok(format!("{js}.call({})", variadic_args(args)?))
                 }
                 AdapterJsImportKind::Normal => {
                     let js = match val {
                         AuxValue::Bare(js) => self.import_name(js)?,
                         _ => bail!("invalid import set for free function"),
                     };
-                    Ok(format!("{}({})", js, variadic_args(args)?))
+                    Ok(format!("{js}({})", variadic_args(args)?))
                 }
             },
 
             AuxImport::ValueWithThis(class, name) => {
                 let class = self.import_name(class)?;
                 Ok(format!(
-                    "{}{}({})",
-                    class,
+                    "{class}{}({})",
                     property_accessor(name),
                     variadic_args(args)?
                 ))
@@ -3378,12 +3372,12 @@ wasm = wasmInstance.exports;
                     "\
                     let result;
                     try {{
-                        result = {} instanceof {};
+                        result = {} instanceof {js};
                     }} catch (_) {{
                         result = false;
                     }}
                     ",
-                    args[0], js,
+                    args[0],
                 )
                 .unwrap();
                 Ok("result".to_owned())
@@ -3425,8 +3419,7 @@ wasm = wasmInstance.exports;
                     None => bail!("structural method calls must have at least one argument"),
                 };
                 Ok(format!(
-                    "{}{}({})",
-                    receiver,
+                    "{receiver}{}({})",
                     property_accessor(name),
                     variadic_args(args)?
                 ))
@@ -3444,7 +3437,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 0);
                 let class = self.import_name(class)?;
-                Ok(format!("{}{}", class, property_accessor(field)))
+                Ok(format!("{class}{}", property_accessor(field)))
             }
 
             AuxImport::StructuralSetter(field) => {
@@ -3464,12 +3457,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 let class = self.import_name(class)?;
-                Ok(format!(
-                    "{}{} = {}",
-                    class,
-                    property_accessor(field),
-                    args[0]
-                ))
+                Ok(format!("{class}{} = {}", property_accessor(field), args[0]))
             }
 
             AuxImport::IndexingGetterOfClass(class) => {
@@ -3477,7 +3465,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 let class = self.import_name(class)?;
-                Ok(format!("{}[{}]", class, args[0]))
+                Ok(format!("{class}[{}]", args[0]))
             }
 
             AuxImport::IndexingGetterOfObject => {
@@ -3492,7 +3480,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 2);
                 let class = self.import_name(class)?;
-                Ok(format!("{}[{}] = {}", class, args[0], args[1]))
+                Ok(format!("{class}[{}] = {}", args[0], args[1]))
             }
 
             AuxImport::IndexingSetterOfObject => {
@@ -3507,7 +3495,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 let class = self.import_name(class)?;
-                Ok(format!("delete {}[{}]", class, args[0]))
+                Ok(format!("delete {class}[{}]", args[0]))
             }
 
             AuxImport::IndexingDeleterOfObject => {
@@ -3522,7 +3510,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 self.require_class_wrap(class);
-                Ok(format!("{}.__wrap({})", class, args[0]))
+                Ok(format!("{class}.__wrap({})", args[0]))
             }
 
             AuxImport::Intrinsic(intrinsic) => {
@@ -3572,8 +3560,8 @@ wasm = wasmInstance.exports;
                         URL.createObjectURL(new Blob([val], { type: \"text/javascript\" }))"
                         .to_owned())
                 } else {
-                    Err(anyhow!("wasm-bindgen needs to be invoked with `--split-linked-modules`, because \"{}\" cannot be embedded.\n\
-                        See https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details.", path))
+                    Err(anyhow!("wasm-bindgen needs to be invoked with `--split-linked-modules`, because \"{path}\" cannot be embedded.\n\
+                        See https://wasm-bindgen.github.io/wasm-bindgen/reference/cli.html#--split-linked-modules for details."))
                 }
             }
 
@@ -3582,7 +3570,7 @@ wasm = wasmInstance.exports;
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
                 self.require_class_unwrap(class);
-                Ok(format!("{}.__unwrap({})", class, args[0]))
+                Ok(format!("{class}.__unwrap({})", args[0]))
             }
         }
     }
@@ -3789,16 +3777,6 @@ wasm = wasmInstance.exports;
                 args[0].clone()
             }
 
-            Intrinsic::CallbackDrop => {
-                assert_eq!(args.len(), 1);
-                prelude.push_str(&format!("const obj = {}.original;\n", args[0]));
-                prelude.push_str("if (obj.cnt-- == 1) {\n");
-                prelude.push_str("obj.a = 0;\n");
-                prelude.push_str("return true;\n");
-                prelude.push_str("}\n");
-                "false".to_string()
-            }
-
             Intrinsic::NumberGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const obj = {};\n", args[0]));
@@ -3906,8 +3884,7 @@ wasm = wasmInstance.exports;
                     ",
                 );
                 format!(
-                    "heap.length - free_count - {} - {}",
-                    INITIAL_HEAP_OFFSET,
+                    "heap.length - free_count - {INITIAL_HEAP_OFFSET} - {}",
                     INITIAL_HEAP_VALUES.len(),
                 )
             }
@@ -3924,11 +3901,10 @@ wasm = wasmInstance.exports;
                 // returns `undefined` for types like `None` going out.
                 let mut base = format!(
                     "
-                      const table = wasm.{};
+                      const table = wasm.{name};
                       const offset = table.grow({});
                       table.set(0, undefined);
                     ",
-                    name,
                     INITIAL_HEAP_VALUES.len(),
                 );
                 for (i, value) in INITIAL_HEAP_VALUES.iter().enumerate() {
@@ -4095,9 +4071,8 @@ wasm = wasmInstance.exports;
             };
             if let Some((prev, _prev_version)) = self.npm_dependencies.get(name) {
                 bail!(
-                    "dependency on NPM package `{}` specified in two `package.json` files, \
+                    "dependency on NPM package `{name}` specified in two `package.json` files, \
                      which at the time is not allowed:\n  * {}\n  * {}",
-                    name,
                     path.display(),
                     prev.display(),
                 )
@@ -4398,8 +4373,7 @@ fn check_duplicated_getter_and_setter_names(
             && first_receiver.is_static() == second_receiver.is_static();
         if both_are_in_the_same_class && both_are_referencing_the_same_field {
             bail!(format!(
-                "There can be only one getter/setter definition for `{}` in `{}`",
-                first_field, first_class
+                "There can be only one getter/setter definition for `{first_field}` in `{first_class}`"
             ));
         }
         Ok(())

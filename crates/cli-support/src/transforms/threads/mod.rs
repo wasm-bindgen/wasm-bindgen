@@ -150,22 +150,22 @@ impl ThreadCount {
 fn delete_synthetic_func(module: &mut Module, name: &str) -> Result<FunctionId, Error> {
     match delete_synthetic_export(module, name)? {
         walrus::ExportItem::Function(f) => Ok(f),
-        _ => bail!("`{}` must be a function", name),
+        _ => bail!("`{name}` must be a function"),
     }
 }
 
 fn delete_synthetic_global(module: &mut Module, name: &str) -> Result<u32, Error> {
     let id = match delete_synthetic_export(module, name)? {
         walrus::ExportItem::Global(g) => g,
-        _ => bail!("`{}` must be a global", name),
+        _ => bail!("`{name}` must be a global"),
     };
     let g = match module.globals.get(id).kind {
         walrus::GlobalKind::Local(g) => g,
-        walrus::GlobalKind::Import(_) => bail!("`{}` must not be an imported global", name),
+        walrus::GlobalKind::Import(_) => bail!("`{name}` must not be an imported global"),
     };
     match g {
         ConstExpr::Value(Value::I32(v)) => Ok(v as u32),
-        _ => bail!("`{}` was not an `i32` constant", name),
+        _ => bail!("`{name}` was not an `i32` constant"),
     }
 }
 
@@ -174,7 +174,7 @@ fn delete_synthetic_export(module: &mut Module, name: &str) -> Result<ExportItem
         .exports
         .iter()
         .find(|e| e.name == name)
-        .ok_or_else(|| anyhow!("failed to find `{}`", name))?;
+        .ok_or_else(|| anyhow!("failed to find `{name}`"))?;
     let ret = item.item;
     let id = item.id();
     module.exports.delete(id);
@@ -425,10 +425,10 @@ fn find_function(module: &Module, name: &str) -> Result<FunctionId, Error> {
         .exports
         .iter()
         .find(|e| e.name == name)
-        .ok_or_else(|| anyhow!("failed to find `{}`", name))?;
+        .ok_or_else(|| anyhow!("failed to find `{name}`"))?;
     match e.item {
         walrus::ExportItem::Function(f) => Ok(f),
-        _ => bail!("`{}` wasn't a function", name),
+        _ => bail!("`{name}` wasn't a function"),
     }
 }
 

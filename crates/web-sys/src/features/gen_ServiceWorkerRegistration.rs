@@ -12,6 +12,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerRegistration`*"]
     pub type ServiceWorkerRegistration;
+    #[cfg(feature = "CookieStoreManager")]
+    # [wasm_bindgen (structural , method , getter , js_class = "ServiceWorkerRegistration" , js_name = cookies)]
+    #[doc = "Getter for the `cookies` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/cookies)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreManager`, `ServiceWorkerRegistration`*"]
+    pub fn cookies(this: &ServiceWorkerRegistration) -> CookieStoreManager;
     #[cfg(feature = "ServiceWorker")]
     # [wasm_bindgen (structural , method , getter , js_class = "ServiceWorkerRegistration" , js_name = installing)]
     #[doc = "Getter for the `installing` field of this object."]

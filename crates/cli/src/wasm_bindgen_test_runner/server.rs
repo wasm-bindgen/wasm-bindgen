@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Context, Error};
 use rouille::{Request, Response, Server};
 
-use crate::{Cli, TestMode, Tests};
+use super::{Cli, TestMode, Tests};
 
 pub(crate) fn spawn(
     addr: &SocketAddr,
@@ -139,7 +139,7 @@ pub(crate) fn spawn(
                 self.on_console_info = __wbgtest_console_info;
                 self.on_console_warn = __wbgtest_console_warn;
                 self.on_console_error = __wbgtest_console_error;
-                
+
                 {args}
 
                 await cx.run(tests.map(s => wasm[s]));
@@ -348,7 +348,7 @@ pub(crate) fn spawn(
         }
         response
     })
-    .map_err(|e| anyhow!("{}", e))?;
+    .map_err(|e| anyhow!("{e}"))?;
     return Ok(srv);
 
     fn try_asset(request: &Request, dir: &Path) -> Response {

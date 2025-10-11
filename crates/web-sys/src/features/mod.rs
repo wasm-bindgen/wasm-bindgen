@@ -1482,6 +1482,69 @@ mod gen_ConvolverOptions;
 #[allow(unused_imports)]
 pub use gen_ConvolverOptions::*;
 
+#[cfg(feature = "CookieChangeEvent")]
+#[allow(non_snake_case)]
+mod gen_CookieChangeEvent;
+#[cfg(feature = "CookieChangeEvent")]
+#[allow(unused_imports)]
+pub use gen_CookieChangeEvent::*;
+
+#[cfg(feature = "CookieChangeEventInit")]
+#[allow(non_snake_case)]
+mod gen_CookieChangeEventInit;
+#[cfg(feature = "CookieChangeEventInit")]
+#[allow(unused_imports)]
+pub use gen_CookieChangeEventInit::*;
+
+#[cfg(feature = "CookieInit")]
+#[allow(non_snake_case)]
+mod gen_CookieInit;
+#[cfg(feature = "CookieInit")]
+#[allow(unused_imports)]
+pub use gen_CookieInit::*;
+
+#[cfg(feature = "CookieListItem")]
+#[allow(non_snake_case)]
+mod gen_CookieListItem;
+#[cfg(feature = "CookieListItem")]
+#[allow(unused_imports)]
+pub use gen_CookieListItem::*;
+
+#[cfg(feature = "CookieSameSite")]
+#[allow(non_snake_case)]
+mod gen_CookieSameSite;
+#[cfg(feature = "CookieSameSite")]
+#[allow(unused_imports)]
+pub use gen_CookieSameSite::*;
+
+#[cfg(feature = "CookieStore")]
+#[allow(non_snake_case)]
+mod gen_CookieStore;
+#[cfg(feature = "CookieStore")]
+#[allow(unused_imports)]
+pub use gen_CookieStore::*;
+
+#[cfg(feature = "CookieStoreDeleteOptions")]
+#[allow(non_snake_case)]
+mod gen_CookieStoreDeleteOptions;
+#[cfg(feature = "CookieStoreDeleteOptions")]
+#[allow(unused_imports)]
+pub use gen_CookieStoreDeleteOptions::*;
+
+#[cfg(feature = "CookieStoreGetOptions")]
+#[allow(non_snake_case)]
+mod gen_CookieStoreGetOptions;
+#[cfg(feature = "CookieStoreGetOptions")]
+#[allow(unused_imports)]
+pub use gen_CookieStoreGetOptions::*;
+
+#[cfg(feature = "CookieStoreManager")]
+#[allow(non_snake_case)]
+mod gen_CookieStoreManager;
+#[cfg(feature = "CookieStoreManager")]
+#[allow(unused_imports)]
+pub use gen_CookieStoreManager::*;
+
 #[cfg(feature = "Coordinates")]
 #[allow(non_snake_case)]
 mod gen_Coordinates;
@@ -2468,6 +2531,20 @@ mod gen_ExtTextureNorm16;
 #[cfg(feature = "ExtTextureNorm16")]
 #[allow(unused_imports)]
 pub use gen_ExtTextureNorm16::*;
+
+#[cfg(feature = "ExtendableCookieChangeEvent")]
+#[allow(non_snake_case)]
+mod gen_ExtendableCookieChangeEvent;
+#[cfg(feature = "ExtendableCookieChangeEvent")]
+#[allow(unused_imports)]
+pub use gen_ExtendableCookieChangeEvent::*;
+
+#[cfg(feature = "ExtendableCookieChangeEventInit")]
+#[allow(non_snake_case)]
+mod gen_ExtendableCookieChangeEventInit;
+#[cfg(feature = "ExtendableCookieChangeEventInit")]
+#[allow(unused_imports)]
+pub use gen_ExtendableCookieChangeEventInit::*;
 
 #[cfg(feature = "ExtendableEvent")]
 #[allow(non_snake_case)]

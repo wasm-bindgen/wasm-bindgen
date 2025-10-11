@@ -264,7 +264,7 @@ impl Transform<'_> {
                     "__wbindgen_externref_table_set_null" => {
                         self.intrinsic_map.insert(f, Intrinsic::TableSetNull);
                     }
-                    n => bail!("unknown intrinsic: {}", n),
+                    n => bail!("unknown intrinsic: {n}"),
                 }
             } else if import.module == "__wbindgen_placeholder__" {
                 match import.name.as_str() {

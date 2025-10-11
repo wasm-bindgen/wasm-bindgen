@@ -168,7 +168,7 @@ impl<'a> Context<'a> {
                 let [arg] = &signature.arguments[..] else {
                     bail!("Cast function must take exactly one argument");
                 };
-                let sig_comment = format!("{:?} -> {:?}", arg, &signature.ret);
+                let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
 
                 // Hash the descriptor string to produce a stable import name.
                 let mut hasher = DefaultHasher::default();
@@ -924,11 +924,7 @@ impl<'a> Context<'a> {
             .string_enums
             .entry(aux.name.clone())
             .and_modify(|existing| {
-                result = Err(anyhow!(
-                    "duplicate string enums:\n{:?}\n{:?}",
-                    existing,
-                    aux
-                ));
+                result = Err(anyhow!("duplicate string enums:\n{existing:?}\n{aux:?}"));
             })
             .or_insert(aux);
         result
@@ -958,7 +954,7 @@ impl<'a> Context<'a> {
             .enums
             .entry(aux.name.clone())
             .and_modify(|existing| {
-                result = Err(anyhow!("duplicate enums:\n{:?}\n{:?}", existing, aux));
+                result = Err(anyhow!("duplicate enums:\n{existing:?}\n{aux:?}"));
             })
             .or_insert(aux);
         result
@@ -1098,25 +1094,21 @@ impl<'a> Context<'a> {
             {
                 bail!(
                     "local JS snippets do not support vendor prefixes for \
-                     the import of `{}` with a polyfill of `{}`",
-                    item,
+                     the import of `{item}` with a polyfill of `{}`",
                     &vendor_prefixes[0]
                 );
             }
             if let Some(decode::ImportModule::RawNamed(module)) = &import.module {
                 bail!(
-                    "import of `{}` from `{}` has a polyfill of `{}` listed, but
+                    "import of `{item}` from `{module}` has a polyfill of `{}` listed, but
                      vendor prefixes aren't supported when importing from modules",
-                    item,
-                    module,
                     &vendor_prefixes[0],
                 );
             }
             if let Some(ns) = &import.js_namespace {
                 bail!(
-                    "import of `{}` through js namespace `{}` isn't supported \
+                    "import of `{item}` through js namespace `{}` isn't supported \
                      right now when it lists a polyfill",
-                    item,
                     ns.join(".")
                 );
             }
@@ -1181,7 +1173,7 @@ impl<'a> Context<'a> {
             }
             match import.kind {
                 walrus::ImportKind::Function(_) => {}
-                _ => bail!("import from `{}` was not a function", PLACEHOLDER_MODULE),
+                _ => bail!("import from `{PLACEHOLDER_MODULE}` was not a function"),
             }
 
             // These are special intrinsics which were handled in the descriptor
@@ -1208,10 +1200,7 @@ impl<'a> Context<'a> {
                 AdapterKind::Local { .. } => continue,
             };
             if !self.aux.import_map.contains_key(id) {
-                bail!(
-                    "import of `{}` doesn't have an import map item listed",
-                    name
-                );
+                bail!("import of `{name}` doesn't have an import map item listed");
             }
 
             imports_counted += 1;
@@ -1533,7 +1522,7 @@ fn verify_constructor_return(class: &str, ret: &Descriptor) -> Result<(), Error>
         | Descriptor::Option(_)
         | Descriptor::Enum { .. }
         | Descriptor::Unit => {
-            bail!("The constructor for class `{}` tries to return a JS primitive type, which would cause the return value to be ignored. Use a builder instead (remove the `constructor` attribute).", class);
+            bail!("The constructor for class `{class}` tries to return a JS primitive type, which would cause the return value to be ignored. Use a builder instead (remove the `constructor` attribute).");
         }
         Descriptor::Result(ref d) | Descriptor::Ref(ref d) | Descriptor::RefMut(ref d) => {
             verify_constructor_return(class, d)
@@ -1692,7 +1681,7 @@ impl StructUnpacker {
         let (quads, alignment) = match ty {
             AdapterType::I32 | AdapterType::U32 | AdapterType::F32 => (1, 1),
             AdapterType::I64 | AdapterType::U64 | AdapterType::F64 => (2, 2),
-            other => bail!("invalid aggregate return type {:?}", other),
+            other => bail!("invalid aggregate return type {other:?}"),
         };
         Ok(self.append(quads, alignment))
     }

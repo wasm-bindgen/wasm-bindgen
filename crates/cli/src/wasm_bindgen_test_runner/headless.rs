@@ -1,4 +1,4 @@
-use crate::shell::Shell;
+use super::shell::Shell;
 use anyhow::{bail, format_err, Context, Error};
 use log::{debug, warn};
 use rouille::url::Url;
@@ -597,7 +597,7 @@ impl Client {
         let result = response.into_string()?;
 
         if response_code != 200 {
-            bail!("non-200 response code: {}\n{}", response_code, result);
+            bail!("non-200 response code: {response_code}\n{result}");
         }
         debug!("got: {result}");
         Ok(result)

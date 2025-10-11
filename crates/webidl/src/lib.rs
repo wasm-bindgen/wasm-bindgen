@@ -112,7 +112,7 @@ fn parse_source(source: &str) -> Result<Vec<weedle::Definition<'_>>> {
         }
 
         Err(weedle::Err::Incomplete(needed)) => {
-            Err(anyhow::anyhow!("needed {:?} more bytes", needed))
+            Err(anyhow::anyhow!("needed {needed:?} more bytes"))
         }
     }
 }
