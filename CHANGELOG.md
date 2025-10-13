@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added ability to use `--keep-lld-exports` in `wasm-bindgen-test-runner` by setting the `WASM_BINDGEN_KEEP_LLD_EXPORTS` environment variable.
+  [#4736](https://github.com/wasm-bindgen/wasm-bindgen/pull/4736)
+
 * Added `CookieStore` API.
   [#4706](https://github.com/wasm-bindgen/wasm-bindgen/pull/4706)
 
