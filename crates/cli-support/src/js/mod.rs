@@ -874,8 +874,7 @@ wasm = wasmInstance.exports;
                 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
                 async function __wbg_load(module, imports) {{
-                    if (
-                        (typeof Response === 'function' && module instanceof Response) ||
+                    if ((typeof Response === 'function' && module instanceof Response) ||
                         (typeof Promise === 'function' && module instanceof Promise)) {{
                         if (typeof WebAssembly.instantiateStreaming === 'function') {{
                             try {{
@@ -897,7 +896,8 @@ wasm = wasmInstance.exports;
                             }}
                         }}
 
-                        const bytes = await module.arrayBuffer();
+                        const resp = await module;
+                        const bytes = await resp.arrayBuffer();
                         return await WebAssembly.instantiate(bytes, imports);
 
                     }} else {{
