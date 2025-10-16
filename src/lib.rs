@@ -957,7 +957,7 @@ impl AsRef<JsValue> for JsValue {
 
 fn to_uint_32(v: JsValue) -> Result<u32, JsValue> {
     f64::try_from(v).map(|n| {
-        if !n.is_finite() || n == 0.0 {
+        if n.is_infinite() {
             0
         } else {
             (n as i64) as u32
