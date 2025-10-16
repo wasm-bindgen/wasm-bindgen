@@ -1407,10 +1407,10 @@ wasm = wasmInstance.exports;
             let ident = self.generate_identifier(name);
             if ident == *name {
                 self.typescript
-                    .push_str(&format!("export declare const {name} = {ts_dst};\n"));
+                    .push_str(&format!("export declare const {name}: {ts_dst};\n"));
             } else {
                 self.typescript
-                    .push_str(&format!("declare const {ident} = {ts_dst};\n"));
+                    .push_str(&format!("declare const {ident}: {ts_dst};\n"));
                 self.typescript
                     .push_str(&format!("export {{ {ident} as {name} }}\n"));
             }

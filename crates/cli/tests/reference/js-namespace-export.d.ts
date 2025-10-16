@@ -50,29 +50,29 @@ export class Rectangle {
   width: number;
   height: number;
 }
-declare const default1 = {
+declare const default1: {
   Counter: typeof Counter,
   concat: typeof concat,
 };
 export { default1 as default }
-export declare const math = {
+export declare const math: {
   add: typeof add,
   divide: typeof divide,
   multiply: typeof multiply,
 };
-export declare const models = {
+export declare const models: {
   '3d': {
     Point3D: typeof Point3D,
   },
   Point: typeof Point,
 };
-export declare const types = {
+export declare const types: {
   Status: typeof Status,
   http: {
     HttpStatus: typeof HttpStatus,
   },
 };
-export declare const utils = {
+export declare const utils: {
   string: {
     uppercase: typeof uppercase,
   },
