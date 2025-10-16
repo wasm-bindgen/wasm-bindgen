@@ -22,7 +22,10 @@ fn f64_try_from_js_value() {
         f64::try_from_js_value(JsValue::from_f64(-123.456)),
         Ok(-123.456)
     );
-    assert_eq!(f64::try_from_js_value(JsValue::from_str("42.5")), Ok(42.5));
+    assert!(matches!(
+        f64::try_from_js_value(JsValue::from_str("42.5")),
+        Err(_)
+    ));
     assert!(f64::try_from_js_value(JsValue::symbol(None)).is_err());
 }
 
@@ -64,9 +67,7 @@ fn u64_try_from_js_value() {
         Ok(u64::MAX)
     );
     assert!(u64::try_from_js_value(JsValue::from_f64(42.0)).is_err());
-    // formally speaking this should be 1n, but we don't support it consistently statically either.
     assert!(u64::try_from_js_value(JsValue::TRUE).is_err());
-    // this should be 45n, but again we don't follow full ToWebAssemblyValue semantics.
     assert!(u64::try_from_js_value(JsValue::from_str("45")).is_err());
     assert!(u64::try_from_js_value(JsValue::NULL).is_err());
     assert_eq!(u64::try_from_js_value(JsValue::from(-1_i64)), Ok(u64::MAX));
@@ -254,4 +255,86 @@ fn imported_type_try_from_js_value() {
 
     assert!(TryFromJsValueCustomType::try_from_js_value(JsValue::from_f64(42.0)).is_err());
     assert!(TryFromJsValueCustomType::try_from_js_value(JsValue::NULL).is_err());
+}
+
+#[wasm_bindgen_test]
+fn numeric_types_reject_invalid_js_values() {
+    // Test that all numeric types reject boolean values (true/false)
+    assert!(i8::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(i8::try_from_js_value(JsValue::FALSE).is_err());
+    assert!(u8::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(u8::try_from_js_value(JsValue::FALSE).is_err());
+
+    assert!(i16::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(i16::try_from_js_value(JsValue::FALSE).is_err());
+    assert!(u16::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(u16::try_from_js_value(JsValue::FALSE).is_err());
+
+    assert!(i32::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(i32::try_from_js_value(JsValue::FALSE).is_err());
+    assert!(u32::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(u32::try_from_js_value(JsValue::FALSE).is_err());
+
+    assert!(i64::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(i64::try_from_js_value(JsValue::FALSE).is_err());
+
+    assert!(i128::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(i128::try_from_js_value(JsValue::FALSE).is_err());
+    assert!(u128::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(u128::try_from_js_value(JsValue::FALSE).is_err());
+
+    assert!(f32::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(f32::try_from_js_value(JsValue::FALSE).is_err());
+    assert!(f64::try_from_js_value(JsValue::TRUE).is_err());
+    assert!(f64::try_from_js_value(JsValue::FALSE).is_err());
+
+    assert!(i8::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(u8::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(i16::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(u16::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(i32::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(u32::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(i64::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(u64::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(i128::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(u128::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(f32::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(f64::try_from_js_value(JsValue::UNDEFINED).is_err());
+
+    assert!(i8::try_from_js_value(JsValue::NULL).is_err());
+    assert!(u8::try_from_js_value(JsValue::NULL).is_err());
+    assert!(i16::try_from_js_value(JsValue::NULL).is_err());
+    assert!(u16::try_from_js_value(JsValue::NULL).is_err());
+    assert!(i32::try_from_js_value(JsValue::NULL).is_err());
+    assert!(u32::try_from_js_value(JsValue::NULL).is_err());
+    assert!(i64::try_from_js_value(JsValue::NULL).is_err());
+    assert!(u64::try_from_js_value(JsValue::NULL).is_err());
+    assert!(i128::try_from_js_value(JsValue::NULL).is_err());
+    assert!(u128::try_from_js_value(JsValue::NULL).is_err());
+    assert!(f32::try_from_js_value(JsValue::NULL).is_err());
+    assert!(f64::try_from_js_value(JsValue::NULL).is_err());
+
+    assert!(i64::try_from_js_value(JsValue::from_f64(0.0)).is_err());
+    assert!(i64::try_from_js_value(JsValue::from_f64(25.0)).is_err());
+
+    assert!(i8::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(i8::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(u8::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(u8::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(i16::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(i16::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(u16::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(u16::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(i32::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(i32::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(u32::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(u32::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(i64::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(i64::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(i128::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(i128::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(u128::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(u128::try_from_js_value(JsValue::from_str("25")).is_err());
+    assert!(f32::try_from_js_value(JsValue::from_str("0")).is_err());
+    assert!(f32::try_from_js_value(JsValue::from_str("25")).is_err());
 }

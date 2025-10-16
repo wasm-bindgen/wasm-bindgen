@@ -955,14 +955,19 @@ impl AsRef<JsValue> for JsValue {
     }
 }
 
+// Loosely based on toInt32 in ecma-272 for abi semantics
+// with restriction that it only applies for numbers
 fn to_uint_32(v: JsValue) -> Result<u32, JsValue> {
-    f64::try_from(v).map(|n| {
-        if n.is_infinite() {
-            0
-        } else {
-            (n as i64) as u32
-        }
-    })
+    v.as_f64().map_or_else(
+        || Err(v),
+        |n| {
+            if n.is_infinite() {
+                Ok(0)
+            } else {
+                Ok((n as i64) as u32)
+            }
+        },
+    )
 }
 
 macro_rules! integers {
@@ -1010,12 +1015,11 @@ macro_rules! floats {
             }
         }
 
-        // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
         impl TryFromJsValue for $n {
             type Error = JsValue;
             #[inline]
             fn try_from_js_value(val: JsValue) -> Result<$n, Self::Error> {
-                f64::try_from(val).map(|n| n as $n)
+                val.as_f64().map_or_else(|| Err(val), |n| Ok(n as $n))
             }
         }
     )*)
@@ -1055,8 +1059,6 @@ macro_rules! big_integers {
             }
         }
 
-        // Almost follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
-        // Except for String and Bool.
         impl TryFromJsValue for $n {
             type Error = JsValue;
             #[inline]
@@ -1185,7 +1187,7 @@ impl TryFromJsValue for isize {
     type Error = JsValue;
     #[inline]
     fn try_from_js_value(val: JsValue) -> Result<isize, Self::Error> {
-        f64::try_from(val).map(|n| n as isize)
+        val.as_f64().map_or_else(|| Err(val), |n| Ok(n as isize))
     }
 }
 
@@ -1194,7 +1196,7 @@ impl TryFromJsValue for usize {
     type Error = JsValue;
     #[inline]
     fn try_from_js_value(val: JsValue) -> Result<usize, Self::Error> {
-        f64::try_from(val).map(|n| n as usize)
+        val.as_f64().map_or_else(|| Err(val), |n| Ok(n as usize))
     }
 }
 
