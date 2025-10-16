@@ -1402,7 +1402,7 @@ wasm = wasmInstance.exports;
             let NamespaceEntry::Namespace(ns) = ns else {
                 panic!("Unexpected top-level definition");
             };
-            let (ns_dst, ts_dst) = Self::write_namespace(ns, String::from(""))?;
+            let (ns_dst, ts_dst) = Self::write_namespace(ns, "")?;
             self.export_expr(name, &ns_dst);
             let ident = self.generate_identifier(name);
             if ident == *name {
@@ -1420,21 +1420,26 @@ wasm = wasmInstance.exports;
 
     fn write_namespace(
         namespace: &BTreeMap<String, NamespaceEntry>,
-        indent: String,
+        indent: &str,
     ) -> Result<(String, String), Error> {
         let mut ns_dst = String::from("{\n");
         let mut ts_dst = String::from("{\n");
         for (name, entry) in namespace {
+            let indent = format!("  {indent}");
             let (entry_js, entry_ts) = match entry {
-                NamespaceEntry::Namespace(ns) => Self::write_namespace(ns, format!("{indent}  "))?,
+                NamespaceEntry::Namespace(ns) => Self::write_namespace(ns, &indent)?,
                 NamespaceEntry::Definition(def) => (def.to_string(), format!("typeof {def}")),
             };
             if is_valid_ident(name) {
-                ns_dst.push_str(&format!("{indent}  {name}: {entry_js},\n"));
-                ts_dst.push_str(&format!("{indent}  {name}: {entry_ts},\n"));
+                if name == &entry_js {
+                    ns_dst.push_str(&format!("{indent}{name},\n"));
+                } else {
+                    ns_dst.push_str(&format!("{indent}{name}: {entry_js},\n"));
+                }
+                ts_dst.push_str(&format!("{indent}{name}: {entry_ts},\n"));
             } else {
-                ns_dst.push_str(&format!("{indent}  '{name}': {entry_js},\n"));
-                ts_dst.push_str(&format!("{indent}  '{name}': {entry_ts},\n"));
+                ns_dst.push_str(&format!("{indent}'{name}': {entry_js},\n"));
+                ts_dst.push_str(&format!("{indent}'{name}': {entry_ts},\n"));
             }
         }
         ns_dst.push_str(&format!("{indent}}}"));

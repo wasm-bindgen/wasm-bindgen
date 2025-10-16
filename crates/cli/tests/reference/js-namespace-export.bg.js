@@ -387,33 +387,33 @@ export class Rectangle {
 if (Symbol.dispose) Rectangle.prototype[Symbol.dispose] = Rectangle.prototype.free;
 
 export default {
-    Counter: Counter,
-    concat: concat,
+    Counter,
+    concat,
 };
 
 export const math = {
-    add: add,
-    divide: divide,
-    multiply: multiply,
+    add,
+    divide,
+    multiply,
 };
 
 export const models = {
     '3d': {
-        Point3D: Point3D,
+        Point3D,
     },
-    Point: Point,
+    Point,
 };
 
 export const types = {
-    Status: Status,
+    Status,
     http: {
-        HttpStatus: HttpStatus,
+        HttpStatus,
     },
 };
 
 export const utils = {
     string: {
-        uppercase: uppercase,
+        uppercase,
     },
 };
 
