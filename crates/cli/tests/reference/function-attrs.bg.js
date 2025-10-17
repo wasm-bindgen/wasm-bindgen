@@ -223,17 +223,17 @@ export function fn_with_attr(firstArg, secondArg) {
     return ret;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
-    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1) {
+    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1);
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2, arg3);
 }
 
 const HoldsNumberFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -347,7 +347,7 @@ export function __wbg_new_2e3c58a15f39f5f9(arg0, arg1) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, arg0, arg1);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000005(a, state0.b, arg0, arg1);
             } finally {
                 state0.a = a;
             }
@@ -373,7 +373,7 @@ export function __wbg_queueMicrotask_4488407636f5bf24(arg0) {
     return ret;
 };
 
-export function __wbg_resolve_4055c623acdd6a1b(arg0) {
+export function __wbg_resolve_5bb214f859194f10(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 };
@@ -385,7 +385,7 @@ export function __wbg_run_cf3390b0493d88cd(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, );
             } finally {
                 state0.a = a;
             }
@@ -417,18 +417,24 @@ export function __wbg_static_accessor_WINDOW_cde3890479c675ea() {
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_then_e22500defe16819f(arg0, arg1) {
+export function __wbg_then_55275667db35a062(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 6, function: Function { arguments: [Externref], shim_idx: 7, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000005, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
+export function __wbindgen_cast_0000000000000000(arg0) {
+    // Cast intrinsic for `Externref -> NamedExternref("Promise<any>")`.
+    const ret = arg0;
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000001(arg0) {
+export function __wbindgen_cast_0000000000000001(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 7, function: Function { arguments: [Externref], shim_idx: 8, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000006, wasm_bindgen__convert__closures_____invoke__h0000000000000003);
+    return ret;
+};
+
+export function __wbindgen_cast_0000000000000002(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return ret;

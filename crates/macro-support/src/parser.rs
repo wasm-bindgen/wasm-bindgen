@@ -9,12 +9,14 @@ use quote::ToTokens;
 use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
 use syn::spanned::Spanned;
+use syn::visit::Visit;
 use syn::visit_mut::VisitMut;
 use syn::Token;
 use syn::{ItemFn, Lit, MacroDelimiter, ReturnType};
 use wasm_bindgen_shared::identifier::is_valid_ident;
 
 use crate::ast::{self, ThreadLocal};
+use crate::generics::GenericNameVisitor;
 use crate::hash::ShortHash;
 use crate::ClassMarker;
 use crate::Diagnostic;
@@ -697,21 +699,27 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 }) => path,
                 _ => bail_span!(class, "first argument of method must be a path"),
             };
-            let class_name = extract_path_ident(class_name)?;
-            let class_name = opts
+            let class_name_str = opts
                 .js_class()
-                .map(|p| p.0.into())
-                .unwrap_or_else(|| class_name.to_string());
+                .map(|p| Ok(p.0.into()))
+                .unwrap_or_else(|| extract_path_ident(class_name, true).map(|i| i.to_string()))?;
 
             let kind = ast::MethodKind::Operation(ast::Operation {
                 is_static: false,
                 kind: operation_kind,
             });
 
+            let (generic_param_count, default_generic_param_count) =
+                program.import_type_generic_count(&class_name_str);
+            if generic_param_count - default_generic_param_count > 0 {
+                validate_self_generics(class_name, &self.sig.generics)?;
+            }
+
             ast::ImportFunctionKind::Method {
-                class: class_name,
+                class: class_name_str,
                 ty: class.clone(),
                 kind,
+                generic_param_count,
             }
         } else if let Some(cls) = opts.static_method_of() {
             let class = opts
@@ -736,7 +744,14 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 kind: operation_kind,
             });
 
-            ast::ImportFunctionKind::Method { class, ty, kind }
+            let (generic_param_count, _) = program.import_type_generic_count(&class);
+
+            ast::ImportFunctionKind::Method {
+                class,
+                ty,
+                kind,
+                generic_param_count,
+            }
         } else if opts.constructor().is_some() {
             let class = match js_ret {
                 Some(ref ty) => ty,
@@ -749,16 +764,19 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 }) => path,
                 _ => bail_span!(self, "return value of constructor must be a bare path"),
             };
-            let class_name = extract_path_ident(class_name)?;
+            let class_name = extract_path_ident(class_name, true)?;
             let class_name = opts
                 .js_class()
                 .map(|p| p.0.into())
                 .unwrap_or_else(|| class_name.to_string());
 
+            let (generic_param_count, _) = program.import_type_generic_count(&class_name);
+
             ast::ImportFunctionKind::Method {
                 class: class_name,
                 ty: class.clone(),
                 kind: ast::MethodKind::Constructor,
+                generic_param_count,
             }
         } else {
             ast::ImportFunctionKind::Normal
@@ -826,6 +844,8 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             }
         });
 
+        validate_generics(&self.sig.generics)?;
+
         let ret = ast::ImportKind::Function(ast::ImportFunction {
             function: wasm,
             assert_no_shim,
@@ -839,6 +859,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             doc_comment,
             wasm_bindgen: program.wasm_bindgen.clone(),
             wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
+            generics: self.sig.generics,
         });
         opts.check_used();
 
@@ -880,7 +901,10 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
                 _ => {}
             }
         }
+
         attrs.check_used();
+        validate_generics(&self.generics)?;
+
         Ok(ast::ImportKind::Type(ast::ImportType {
             vis: self.vis,
             attrs: self.attrs,
@@ -894,6 +918,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
             vendor_prefixes,
             no_deref,
             wasm_bindgen: program.wasm_bindgen.clone(),
+            generics: self.generics,
         }))
     }
 }
@@ -1085,10 +1110,13 @@ fn function_from_decl(
     if sig.variadic.is_some() {
         bail_span!(sig.variadic, "can't #[wasm_bindgen] variadic functions");
     }
-    if !sig.generics.params.is_empty() {
+
+    // For imported functions (Extern position), generics are supported and validated.
+    if matches!(position, FunctionPosition::Extern) {
+    } else if !sig.generics.params.is_empty() {
         bail_span!(
             sig.generics,
-            "can't #[wasm_bindgen] functions with lifetime or type parameters",
+            "can't #[wasm_bindgen] functions with lifetime or type parameters"
         );
     }
 
@@ -1499,7 +1527,7 @@ fn prepare_for_impl_recursion(
         other => bail_span!(other, "failed to parse this item as a known item"),
     };
 
-    let ident = extract_path_ident(class)?;
+    let ident = extract_path_ident(class, false)?;
 
     let js_class = impl_opts
         .js_class()
@@ -2183,11 +2211,22 @@ fn assert_no_lifetimes(sig: &syn::Signature) -> Result<(), Diagnostic> {
 }
 
 /// Extracts the last ident from the path
-fn extract_path_ident(path: &syn::Path) -> Result<Ident, Diagnostic> {
+/// If generics is enabled, generics are validated (lifetimes remain unsupported)
+fn extract_path_ident(path: &syn::Path, allow_generics: bool) -> Result<Ident, Diagnostic> {
     for segment in path.segments.iter() {
-        match segment.arguments {
+        match &segment.arguments {
             syn::PathArguments::None => {}
-            _ => bail_span!(path, "paths with type parameters are not supported yet"),
+            syn::PathArguments::AngleBracketed(_) => {
+                if !allow_generics {
+                    bail_span!(
+                        path,
+                        "paths with type parameters are not supported in this position"
+                    )
+                }
+            }
+            syn::PathArguments::Parenthesized(_) => {
+                bail_span!(path, "parenthesized paths are not supported yet")
+            }
         }
     }
 
@@ -2197,6 +2236,152 @@ fn extract_path_ident(path: &syn::Path) -> Result<Ident, Diagnostic> {
             bail_span!(path, "empty idents are not supported");
         }
     }
+}
+
+fn bail_generic_lifetime(span: impl Spanned + ToTokens) -> Result<(), Diagnostic> {
+    bail_span!(
+        span,
+        "lifetime bounds are unsupported in wasm-bindgen generics"
+    );
+}
+
+fn bail_generic_unsupported(span: impl Spanned + ToTokens) -> Result<(), Diagnostic> {
+    bail_span!(span, "unsupported in wasm-bindgen generics");
+}
+
+fn validate_generic_type_param_bound(bound: &syn::TypeParamBound) -> Result<(), Diagnostic> {
+    match bound {
+        syn::TypeParamBound::Trait(trait_bound) => {
+            if let Some(lifetimes) = &trait_bound.lifetimes {
+                bail_generic_lifetime(lifetimes)?;
+            }
+            if let syn::TraitBoundModifier::Maybe(question) = trait_bound.modifier {
+                bail_generic_unsupported(question)?;
+            }
+        }
+        syn::TypeParamBound::Lifetime(lifetime) => bail_generic_lifetime(lifetime)?,
+        syn::TypeParamBound::Verbatim(_) => {}
+        _ => {}
+    }
+    Ok(())
+}
+
+/// Validates generic type parameters and their bounds both for inline parameters and where clauses.
+/// Bails for const params and lifetimes which are not supported.
+fn validate_generics(generics: &syn::Generics) -> Result<(), Diagnostic> {
+    if let Some(where_clause) = &generics.where_clause {
+        for predicate in &where_clause.predicates {
+            match predicate {
+                syn::WherePredicate::Type(predicate_type) => {
+                    if let Some(lifetimes) = &predicate_type.lifetimes {
+                        bail_generic_lifetime(lifetimes)?;
+                    };
+                    predicate_type
+                        .bounds
+                        .iter()
+                        .try_for_each(validate_generic_type_param_bound)?;
+                }
+                syn::WherePredicate::Lifetime(lifetime) => bail_generic_lifetime(lifetime)?,
+                _ => bail_generic_unsupported(predicate)?,
+            }
+        }
+    }
+
+    for param in &generics.params {
+        match param {
+            syn::GenericParam::Lifetime(lifetime_param) => {
+                bail_generic_unsupported(lifetime_param)?;
+            }
+            syn::GenericParam::Type(type_param) => {
+                type_param
+                    .bounds
+                    .iter()
+                    .try_for_each(validate_generic_type_param_bound)?;
+            }
+            syn::GenericParam::Const(const_param) => bail_generic_unsupported(const_param)?,
+        }
+    }
+
+    Ok(())
+}
+
+/// For method generics, we constrain method support by validating that the self arg is of the form
+/// &ClassName<A, B, C> where A, B and C are simple identifier generic parameters.
+/// We already validated generic parameters are not lifetimes or const.
+/// Then we further validate that for the full set of generic parameters, Z, A, B, C, D, the trait
+/// bounds on the class generics are fully disjoint. That is, that for any trait bound containing
+/// any of the type generics A, B or C, it will not contain any Z and D so that we can hoist these
+/// bounds to the impl clause during code generation.
+fn validate_self_generics(
+    class_name: &syn::Path,
+    fn_generics: &syn::Generics,
+) -> Result<(), Diagnostic> {
+    let mut class_generic_idents = Vec::new();
+    if let Some(syn::PathSegment {
+        arguments: syn::PathArguments::AngleBracketed(gen_args),
+        ..
+    }) = class_name.segments.last()
+    {
+        for gen_arg in &gen_args.args {
+            if let syn::GenericArgument::Type(syn::Type::Path(type_path)) = &gen_arg {
+                if type_path.qself.is_none() && type_path.path.segments.len() == 1 {
+                    let segment = &type_path.path.segments[0];
+                    if segment.arguments.is_empty() {
+                        class_generic_idents.push(&segment.ident);
+                        continue;
+                    }
+                }
+            }
+            bail_validate_self_generics(gen_arg)?;
+        }
+    } else {
+        bail_validate_self_generics(class_name)?;
+    }
+
+    let mut fn_generic_idents = Vec::new();
+    for param in &fn_generics.params {
+        if let syn::GenericParam::Type(type_param) = param {
+            fn_generic_idents.push(&type_param.ident);
+        }
+    }
+
+    // Remove class generics from function generics to get non-class generics
+    let non_class_generic_idents: Vec<_> = fn_generic_idents
+        .iter()
+        .filter(|&&fn_ident| !class_generic_idents.contains(&fn_ident))
+        .cloned()
+        .collect();
+
+    if let Some(where_clause) = &fn_generics.where_clause {
+        for predicate in &where_clause.predicates {
+            if let syn::WherePredicate::Type(type_predicate) = predicate {
+                // Check LHS (bounded type)
+                let mut lhs_visitor =
+                    GenericNameVisitor::new(&class_generic_idents, Some(&non_class_generic_idents));
+                lhs_visitor.visit_type(&type_predicate.bounded_ty);
+
+                // Check RHS (bounds)
+                let mut rhs_visitor = GenericNameVisitor::new(&class_generic_idents, None);
+                for bound in &type_predicate.bounds {
+                    rhs_visitor.visit_type_param_bound(bound);
+                }
+
+                // Validate: if LHS has class generics, RHS cannot have non-class generics
+                if lhs_visitor.found_a && !lhs_visitor.found_b && rhs_visitor.found_b {
+                    bail_span!(
+                        type_predicate,
+                        "trait bounds on class generics cannot reference function generics"
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn bail_validate_self_generics(span: impl Spanned + ToTokens) -> Result<(), Diagnostic> {
+    bail_span!(span, "first argument of method must provide generic identifier arguments for all import type generic parameters");
 }
 
 pub fn reset_attrs_used() {
