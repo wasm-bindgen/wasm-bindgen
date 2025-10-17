@@ -2850,6 +2850,13 @@ pub mod Math {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc)
         #[wasm_bindgen(js_namespace = Math)]
         pub fn trunc(x: f64) -> f64;
+
+        /// The `Math.PI` property represents the ratio of the circumference of a circle to its diameter,
+        /// approximately 3.14159.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/PI)
+        #[wasm_bindgen(thread_local_v2, js_namespace = Math)]
+        pub static PI: f64;
     }
 }
 
