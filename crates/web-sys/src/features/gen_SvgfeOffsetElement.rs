@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGFEOffsetElement , typescript_type = "SVGFEOffsetElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgfeOffsetElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEOffsetElement)"]
@@ -77,3 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`, `SvgfeOffsetElement`*"]
     pub fn result(this: &SvgfeOffsetElement) -> SvgAnimatedString;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgfeOffsetElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgfeOffsetElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgfeOffsetElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgfeOffsetElement {}

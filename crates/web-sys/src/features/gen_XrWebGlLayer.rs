@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = XrLayer , extends = EventTarget , extends = :: js_sys :: Object , js_name = XRWebGLLayer , typescript_type = "XRWebGLLayer")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `XrWebGlLayer` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer)"]
@@ -189,3 +189,9 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_viewport(this: &XrWebGlLayer, view: &XrView) -> Option<XrViewport>;
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<XrLayer> for XrWebGlLayer {}
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for XrWebGlLayer {}

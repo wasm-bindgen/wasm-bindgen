@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = IdbRequest , extends = EventTarget , extends = :: js_sys :: Object , js_name = IDBOpenDBRequest , typescript_type = "IDBOpenDBRequest")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `IdbOpenDbRequest` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBOpenDBRequest)"]
@@ -41,3 +41,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IdbOpenDbRequest`*"]
     pub fn set_onupgradeneeded(this: &IdbOpenDbRequest, value: Option<&::js_sys::Function>);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<IdbRequest> for IdbOpenDbRequest {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for IdbOpenDbRequest {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = InputEvent , typescript_type = "InputEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `InputEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/InputEvent)"]
@@ -67,3 +67,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
     pub fn get_target_ranges(this: &InputEvent) -> ::js_sys::Array;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<UiEvent> for InputEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for InputEvent {}

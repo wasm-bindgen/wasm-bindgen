@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = IdbCursor , extends = :: js_sys :: Object , js_name = IDBCursorWithValue , typescript_type = "IDBCursorWithValue")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `IdbCursorWithValue` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBCursorWithValue)"]
@@ -20,3 +20,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IdbCursorWithValue`*"]
     pub fn value(this: &IdbCursorWithValue) -> Result<::wasm_bindgen::JsValue, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<IdbCursor> for IdbCursorWithValue {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = FileReader , typescript_type = "FileReader")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `FileReader` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReader)"]
@@ -191,3 +191,5 @@ impl FileReader {
     #[doc = "*This API requires the following crate features to be activated: `FileReader`*"]
     pub const DONE: u16 = 2u64 as u16;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for FileReader {}

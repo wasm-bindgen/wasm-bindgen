@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = PerformanceResourceTiming , extends = PerformanceEntry , extends = :: js_sys :: Object , js_name = PerformanceNavigationTiming , typescript_type = "PerformanceNavigationTiming")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `PerformanceNavigationTiming` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming)"]
@@ -91,3 +91,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceNavigationTiming`*"]
     pub fn to_json(this: &PerformanceNavigationTiming) -> ::js_sys::Object;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<PerformanceResourceTiming> for PerformanceNavigationTiming {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<PerformanceEntry> for PerformanceNavigationTiming {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGeometryElement , extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGPathElement , typescript_type = "SVGPathElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgPathElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathElement)"]
@@ -36,3 +36,15 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPathElement`*"]
     pub fn get_path_seg_at_length(this: &SvgPathElement, distance: f32) -> u32;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgGeometryElement> for SvgPathElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgPathElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgPathElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgPathElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgPathElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgPathElement {}

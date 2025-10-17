@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = CookieChangeEvent , typescript_type = "CookieChangeEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CookieChangeEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CookieChangeEvent)"]
@@ -45,3 +45,5 @@ extern "C" {
         event_init_dict: &CookieChangeEventInit,
     ) -> Result<CookieChangeEvent, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for CookieChangeEvent {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AnimationTimeline , extends = :: js_sys :: Object , js_name = DocumentTimeline , typescript_type = "DocumentTimeline")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `DocumentTimeline` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentTimeline)"]
@@ -29,3 +29,5 @@ extern "C" {
     pub fn new_with_options(options: &DocumentTimelineOptions)
         -> Result<DocumentTimeline, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AnimationTimeline> for DocumentTimeline {}

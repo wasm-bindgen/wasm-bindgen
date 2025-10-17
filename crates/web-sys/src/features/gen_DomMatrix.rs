@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = DomMatrixReadOnly , extends = :: js_sys :: Object , js_name = DOMMatrix , typescript_type = "DOMMatrix")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `DomMatrix` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMMatrix)"]
@@ -618,3 +618,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomMatrix`*"]
     pub fn translate_self_with_tz(this: &DomMatrix, tx: f64, ty: f64, tz: f64) -> DomMatrix;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<DomMatrixReadOnly> for DomMatrix {}

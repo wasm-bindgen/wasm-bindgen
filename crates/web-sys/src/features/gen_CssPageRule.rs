@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssRule , extends = :: js_sys :: Object , js_name = CSSPageRule , typescript_type = "CSSPageRule")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CssPageRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPageRule)"]
@@ -21,3 +21,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssPageRule`, `CssStyleDeclaration`*"]
     pub fn style(this: &CssPageRule) -> CssStyleDeclaration;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<CssRule> for CssPageRule {}

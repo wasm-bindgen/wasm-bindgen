@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MouseEvent , extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = MouseScrollEvent , typescript_type = "MouseScrollEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `MouseScrollEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent)"]
@@ -320,3 +320,9 @@ impl MouseScrollEvent {
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`*"]
     pub const VERTICAL_AXIS: i32 = 2u64 as i32;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<MouseEvent> for MouseScrollEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<UiEvent> for MouseScrollEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for MouseScrollEvent {}

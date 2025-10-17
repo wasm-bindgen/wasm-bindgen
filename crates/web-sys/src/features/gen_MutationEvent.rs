@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MutationEvent , typescript_type = "MutationEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `MutationEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent)"]
@@ -173,3 +173,5 @@ impl MutationEvent {
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub const REMOVAL: u16 = 3u64 as u16;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for MutationEvent {}

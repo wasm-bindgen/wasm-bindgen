@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGStyleElement , typescript_type = "SVGStyleElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgStyleElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStyleElement)"]
@@ -77,3 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StyleSheet`, `SvgStyleElement`*"]
     pub fn sheet(this: &SvgStyleElement) -> Option<StyleSheet>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgStyleElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgStyleElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgStyleElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgStyleElement {}

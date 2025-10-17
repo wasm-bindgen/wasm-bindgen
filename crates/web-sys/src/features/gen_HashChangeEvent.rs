@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = HashChangeEvent , typescript_type = "HashChangeEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HashChangeEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent)"]
@@ -102,3 +102,5 @@ extern "C" {
         new_url_arg: &str,
     );
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for HashChangeEvent {}

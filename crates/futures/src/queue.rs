@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen]
-    fn queueMicrotask(closure: &Closure<dyn FnMut(JsValue)>);
+    fn queueMicrotask(closure: &Closure<dyn FnMut(JsValue) -> Result<(), JsValue>>);
 
     type Global;
 
@@ -53,7 +53,7 @@ impl QueueState {
 pub(crate) struct Queue {
     state: Rc<QueueState>,
     promise: Promise,
-    closure: Closure<dyn FnMut(JsValue)>,
+    closure: Closure<dyn FnMut(JsValue) -> Result<(), JsValue>>,
     has_queue_microtask: bool,
 }
 
@@ -67,7 +67,7 @@ impl Queue {
             if self.has_queue_microtask {
                 queueMicrotask(&self.closure);
             } else {
-                let _ = self.promise.then(&self.closure);
+                let _ = self.promise.then_map(&self.closure);
             }
         }
     }
@@ -100,7 +100,10 @@ impl Queue {
 
                 // This closure will only be called on the next microtask event
                 // tick
-                Closure::new(move |_| state.run_all())
+                Closure::new(move |_| {
+                    state.run_all();
+                    Ok(())
+                })
             },
 
             state,

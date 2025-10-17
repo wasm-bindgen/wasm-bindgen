@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MidiPort , extends = EventTarget , extends = :: js_sys :: Object , js_name = MIDIInput , typescript_type = "MIDIInput")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `MidiInput` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInput)"]
@@ -27,3 +27,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MidiInput`*"]
     pub fn set_onmidimessage(this: &MidiInput, value: Option<&::js_sys::Function>);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<MidiPort> for MidiInput {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for MidiInput {}

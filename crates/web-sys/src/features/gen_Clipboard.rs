@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = Clipboard , typescript_type = "Clipboard")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `Clipboard` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard)"]
@@ -56,3 +56,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Clipboard`*"]
     pub fn write_text(this: &Clipboard, data: &str) -> ::js_sys::Promise;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for Clipboard {}

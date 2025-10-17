@@ -10,9 +10,10 @@ use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{inform, WasmDescribe, FUNCTION};
-use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
+use crate::__rt::marker::ErasableGeneric;
+use crate::throw_str;
 #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
 use core::panic::AssertUnwindSafe;
 
@@ -47,6 +48,98 @@ macro_rules! closures {
     // while `|var_with_ref_type: &A|` makes it use the higher-order generic as expected.
     (@closure ($($ty:ty),*) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
+    // To track argument types on the closure itself, we must do arity-based assignment
+    (@assign_types) => {
+        type Arg1 = ();
+        type Arg2 = ();
+        type Arg3 = ();
+        type Arg4 = ();
+        type Arg5 = ();
+        type Arg6 = ();
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = ();
+        type Arg3 = ();
+        type Arg4 = ();
+        type Arg5 = ();
+        type Arg6 = ();
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = ();
+        type Arg4 = ();
+        type Arg5 = ();
+        type Arg6 = ();
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident $t3:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = $t3;
+        type Arg4 = ();
+        type Arg5 = ();
+        type Arg6 = ();
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident $t3:ident $t4:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = $t3;
+        type Arg4 = $t4;
+        type Arg5 = ();
+        type Arg6 = ();
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = $t3;
+        type Arg4 = $t4;
+        type Arg5 = $t5;
+        type Arg6 = ();
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident $t6:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = $t3;
+        type Arg4 = $t4;
+        type Arg5 = $t5;
+        type Arg6 = $t6;
+        type Arg7 = ();
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident $t6:ident $t7:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = $t3;
+        type Arg4 = $t4;
+        type Arg5 = $t5;
+        type Arg6 = $t6;
+        type Arg7 = $t7;
+        type Arg8 = ();
+    };
+    (@assign_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident $t6:ident $t7:ident $t8:ident) => {
+        type Arg1 = $t1;
+        type Arg2 = $t2;
+        type Arg3 = $t3;
+        type Arg4 = $t4;
+        type Arg5 = $t5;
+        type Arg6 = $t6;
+        type Arg7 = $t7;
+        type Arg8 = $t8;
+    };
+
     (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
         where
@@ -60,6 +153,15 @@ macro_rules! closures {
                     WasmSlice { ptr: a as u32, len: b as u32 }
                 }
             }
+        }
+
+        unsafe impl<'a, $($var,)* R> ErasableGeneric for &'a $($mut)? (dyn $Fn $FnArgs -> R + 'a)
+        where
+            Self: WasmDescribe,
+            $($var: ErasableGeneric,)*
+            R: ErasableGeneric,
+        {
+            type Repr = &'a (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'a);
         }
 
         // Generate invoke function that checks unwind_safe flag when unwinding is available
@@ -143,6 +245,8 @@ macro_rules! closures {
             Self: WasmDescribe,
         {
             const IS_MUT: bool = $is_mut;
+            type Ret = R;
+            closures!(@assign_types $($var)*);
         }
 
         impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T

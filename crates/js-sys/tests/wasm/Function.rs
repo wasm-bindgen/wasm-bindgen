@@ -1,6 +1,8 @@
 use js_sys::*;
+use wasm_bindgen::convert::Upcast;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::Undefined;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen]
@@ -34,7 +36,7 @@ fn apply() {
         .with(ArrayPrototype::push)
         .apply(&arr, &args)
         .unwrap();
-    assert_eq!(Array::from(&arr).length(), 1);
+    assert_eq!(Array::from_iterable(&arr).unwrap().length(), 1);
 }
 
 #[wasm_bindgen(module = "tests/wasm/Function.js")]
@@ -44,7 +46,11 @@ extern "C" {
     fn list() -> Function;
     fn add_arguments() -> Function;
     fn call_function(f: &Function) -> JsValue;
+    #[wasm_bindgen(js_name = call_function)]
+    fn call_function_num(f: &Function<Number>) -> Number;
     fn call_function_arg(f: &Function, arg0: JsValue) -> JsValue;
+    #[wasm_bindgen(js_name = call_function_arg)]
+    fn call_function_arg_num(f: &Function<Number, Number>, arg0: Number) -> Number;
     fn sum_many_arguments() -> Function;
     fn test_context() -> JsValue;
     fn multiply_sum() -> Function;
@@ -72,7 +78,12 @@ fn bind1() {
     let a_list = list();
     let prepended_list = a_list.bind1(&JsValue::NULL, &JsValue::from(2));
 
-    assert_eq!(Array::from(&call_function(&prepended_list)).pop(), 2);
+    assert_eq!(
+        Array::from_iterable(&call_function(&prepended_list))
+            .unwrap()
+            .pop(),
+        2
+    );
 
     let adder = add_arguments();
     let add_42 = adder.bind1(&JsValue::NULL, &JsValue::from(42));
@@ -86,7 +97,7 @@ fn bind2() {
     let a_list = list();
     let prepended_list = a_list.bind2(&JsValue::NULL, &JsValue::from(2), &JsValue::from(3));
 
-    let arr = Array::from(&call_function(&prepended_list));
+    let arr = Array::from_iterable(&call_function(&prepended_list)).unwrap();
 
     assert_eq!(arr.pop(), 3);
     assert_eq!(arr.pop(), 2);
@@ -107,7 +118,7 @@ fn bind3() {
         &JsValue::from(4),
     );
 
-    let arr = Array::from(&call_function(&prepended_list));
+    let arr = Array::from_iterable(&call_function(&prepended_list)).unwrap();
 
     assert_eq!(arr.pop(), 4);
     assert_eq!(arr.pop(), 3);
@@ -344,4 +355,71 @@ fn call9() {
         )
         .unwrap();
     assert_eq!(result, 450);
+}
+
+#[wasm_bindgen_test]
+fn generic_function_new() {
+    let f: BoundedFunction<Number> = Function::new_no_args_typed("return 42");
+    assert_eq!(call_function_num(f.upcast_ref()), 42);
+}
+
+#[wasm_bindgen_test]
+fn generic_function_new1() {
+    let f = Function::new_with_args_typed("x", "return x * 2");
+    assert_eq!(call_function_arg_num(&f, Number::from(21)), 42);
+}
+
+#[wasm_bindgen_test]
+fn generic_function_new2() {
+    let f = Function::<Number, Number, Number>::new_with_args_typed("x, y", "return x + y");
+    let result = f
+        .call2(&JsValue::NULL, &Number::from(10), &Number::from(32))
+        .unwrap();
+    assert_eq!(result, 42);
+}
+
+#[wasm_bindgen_test]
+fn closure_to_function_covariance() {
+    let closure: Closure<dyn Fn() -> u32> = Closure::new(|| -> u32 { 42 });
+    let func: Function<Number> = Function::from_closure(closure).upcast();
+
+    let result = call_function_num(&func);
+    assert_eq!(result.value_of(), 42.0);
+
+    let closure_i32: Closure<dyn Fn() -> i32> = Closure::new(|| -> i32 { -100 });
+    let func_i32: Function<Number> = Function::from_closure(closure_i32).upcast();
+
+    let result_i32 = call_function_num(&func_i32);
+    assert_eq!(result_i32.value_of(), -100.0);
+
+    let closure_f64: Closure<dyn Fn() -> f64> = Closure::new(|| -> f64 { 3.14 });
+    let func_f64: Function<Number> = Function::from_closure(closure_f64).upcast();
+
+    let result_f64 = call_function_num(&func_f64);
+    assert_eq!(result_f64.value_of(), 3.14);
+}
+
+#[wasm_bindgen_test]
+fn function_returning_array_of_functions() {
+    let outer: BoundedFunction<Array<BoundedFunction<Number>>> =
+        BoundedFunction::new_no_args_typed("return [function() { return 42; }]");
+
+    let outer_cast: BoundedFunction<Array<BoundedFunction<JsValue>>> = outer.upcast();
+
+    let arr = outer_cast.call(&JsValue::NULL).unwrap();
+    assert_eq!(arr.length(), 1);
+}
+
+#[wasm_bindgen_test]
+fn function_accepting_array_of_functions() {
+    let outer: BoundedFunction<Number, Array<BoundedFunction<Number, Array<i32>>>> =
+        Function::new_with_args_typed("funcs", "return funcs[0]([1, 2])");
+
+    let arr: Array<BoundedFunction<Number, Array<Number>>> = Array::new_typed();
+    let f: BoundedFunction<Number, Array<Number>> =
+        Function::new_with_args_typed("x", "return x.length");
+    arr.push(&f);
+
+    let result2 = outer.call(&Undefined::UNDEFINED, &arr).unwrap();
+    assert_eq!(result2.value_of(), 2.0);
 }

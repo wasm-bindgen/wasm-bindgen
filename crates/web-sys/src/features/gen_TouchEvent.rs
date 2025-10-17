@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = TouchEvent , typescript_type = "TouchEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `TouchEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent)"]
@@ -271,3 +271,7 @@ extern "C" {
         changed_touches: Option<&TouchList>,
     );
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<UiEvent> for TouchEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for TouchEvent {}

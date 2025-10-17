@@ -8,6 +8,8 @@
 > To generate getters/setters for non-`Copy` public fields, use `#[wasm_bindgen(getter_with_clone)]` for the struct
 > or [implement getters/setters manually](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-rust-exports/getter-and-setter.html).
 
+Exported functions can use [generic JavaScript types](./generics.md) with concrete type parameters (like `Promise<Number>`), but cannot have their own generic type parameters.
+
 ## Example Rust Usage
 
 ```rust

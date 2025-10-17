@@ -198,3 +198,37 @@ Closure::<dyn FnMut()>::wrap(Box::new(|| {}))
 // ✅ Correct — use type annotation on binding
 let closure: Closure<dyn FnMut()> = Closure::wrap(Box::new(|| {}));
 ```
+
+## Converting Closures to Typed Functions
+
+The `js_sys::Function::from_closure()` method provides type-safe conversion from `Closure` to typed `Function` with comprehensive covariance support:
+
+```rust
+use js_sys::{Function, Number, JsString};
+use wasm_bindgen::prelude::*;
+
+// Rust primitives automatically convert to JS types (casting covariance)
+let closure: Closure<dyn Fn() -> u32> = Closure::new(|| 42);
+let func: Function<Number> = Function::from_closure(closure);
+
+// String types convert to JsString
+let str_closure: Closure<dyn Fn() -> String> = Closure::new(|| "hello".to_string());
+let str_func: Function<JsString> = Function::from_closure(str_closure);
+
+// Generic covariance also applies
+let js_closure: Closure<dyn Fn() -> Number> = Closure::new(|| Number::from(42));
+let typed_func: Function<Number> = Function::from_closure(js_closure);
+let general_func: Function<JsValue> = typed_func.upcast();
+```
+
+This supports two forms of covariance:
+
+1. **Casting covariance**: Rust primitives → JS types
+   - Numeric primitives (`u32`, `i32`, `f64`, etc.) → `Number`
+   - String types (`String`, `&str`, `char`) → `JsString`
+
+2. **Generic covariance**: Typed JS values → wider JS types
+   - `Function<Number>` → `Function<JsValue>`
+   - `Function<T>` → `Function<U>` when `T: Upcast<U>`
+
+Both can be combined: `Closure<dyn Fn() -> u32>` → `Function<Number>` → `Function<JsValue>`

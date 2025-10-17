@@ -6,15 +6,17 @@
 
 #![allow(clippy::fn_to_numeric_cast)]
 
+use alloc::boxed::Box;
+use alloc::string::String;
+use core::fmt;
+use core::mem::{self, ManuallyDrop};
+
+use crate::__rt::marker::ErasableGeneric;
 use crate::convert::*;
 use crate::describe::*;
 use crate::JsValue;
 use crate::__rt::marker::MaybeUnwindSafe;
-use alloc::boxed::Box;
-use alloc::string::String;
-use core::fmt;
 use core::marker::PhantomData;
-use core::mem;
 use core::panic::AssertUnwindSafe;
 
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
@@ -247,6 +249,7 @@ extern "C" {
 ///     // here or return some sort of handle to JS!
 /// }
 /// ```
+///
 pub struct Closure<T: ?Sized> {
     js: JsClosure,
     // careful: must be Box<T> not just T because unsized PhantomData
@@ -572,7 +575,6 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
-        use core::mem::ManuallyDrop;
         let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self)) };
         WasmSlice {
             ptr: a as u32,
@@ -601,7 +603,6 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
-        use core::mem::ManuallyDrop;
         let (a, b): (usize, usize) =
             unsafe { mem::transmute_copy(&ManuallyDrop::new(self.closure)) };
         // Pack unwind_safe into most significant bit (bit 31) of vtable
@@ -685,10 +686,28 @@ where
 #[doc(hidden)]
 pub unsafe trait WasmClosure: WasmDescribe {
     const IS_MUT: bool;
+    type Ret;
+    type Arg1;
+    type Arg2;
+    type Arg3;
+    type Arg4;
+    type Arg5;
+    type Arg6;
+    type Arg7;
+    type Arg8;
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     const IS_MUT: bool = T::IS_MUT;
+    type Ret = T::Ret;
+    type Arg1 = T::Arg1;
+    type Arg2 = T::Arg2;
+    type Arg3 = T::Arg3;
+    type Arg4 = T::Arg4;
+    type Arg5 = T::Arg5;
+    type Arg6 = T::Arg6;
+    type Arg7 = T::Arg7;
+    type Arg8 = T::Arg8;
 }
 
 /// An internal trait for the `Closure` type.
@@ -704,4 +723,39 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
     fn unsize(self: Box<Self>) -> Box<T> {
         self
     }
+}
+
+unsafe impl<T: ?Sized> ErasableGeneric for Closure<T> {
+    type Repr = Closure<JsValue>;
+}
+
+/// Upcast implementation for Closure respecting function type safety.
+///
+///   `R1` can be used where one returning `R2` is expected. Example: a closure
+///   returning `i32` can be used where `Number` is expected (i32 is a valid Number).
+///
+/// - **Argument types are contravariant**: If `A2: Upcast<A1>`, then a closure
+///   accepting `A1` can be used where one accepting `A2` is expected. Example:
+///   a closure taking `Number` can be used where `i32` is expected (it can handle
+///   any Number, including those that are valid i32 values).
+///
+/// This prevents unsound conversions like:
+/// - `Closure<Fn(i32)>` → `Closure<Fn(Number)>` — JS might pass NaN/Infinity/floats
+/// - `Closure<Fn() -> Number>` → `Closure<Fn() -> i32>` — might return non-integers
+impl<T, U> Upcast<Closure<U>> for Closure<T>
+where
+    T: WasmClosure + ?Sized,
+    U: WasmClosure + ?Sized,
+    // Return type is covariant (normal direction)
+    <T as WasmClosure>::Ret: Upcast<<U as WasmClosure>::Ret>,
+    // Argument types are contravariant (reversed direction)
+    <U as WasmClosure>::Arg1: Upcast<<T as WasmClosure>::Arg1>,
+    <U as WasmClosure>::Arg2: Upcast<<T as WasmClosure>::Arg2>,
+    <U as WasmClosure>::Arg3: Upcast<<T as WasmClosure>::Arg3>,
+    <U as WasmClosure>::Arg4: Upcast<<T as WasmClosure>::Arg4>,
+    <U as WasmClosure>::Arg5: Upcast<<T as WasmClosure>::Arg5>,
+    <U as WasmClosure>::Arg6: Upcast<<T as WasmClosure>::Arg6>,
+    <U as WasmClosure>::Arg7: Upcast<<T as WasmClosure>::Arg7>,
+    <U as WasmClosure>::Arg8: Upcast<<T as WasmClosure>::Arg8>,
+{
 }

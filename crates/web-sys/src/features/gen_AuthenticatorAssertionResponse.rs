@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AuthenticatorResponse , extends = :: js_sys :: Object , js_name = AuthenticatorAssertionResponse , typescript_type = "AuthenticatorAssertionResponse")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `AuthenticatorAssertionResponse` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AuthenticatorAssertionResponse)"]
@@ -47,3 +47,5 @@ extern "C" {
         this: &AuthenticatorAssertionResponse,
     ) -> Option<::js_sys::ArrayBuffer>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AuthenticatorResponse> for AuthenticatorAssertionResponse {}

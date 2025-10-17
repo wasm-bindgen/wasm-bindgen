@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Worker , extends = EventTarget , extends = :: js_sys :: Object , js_name = ChromeWorker , typescript_type = "ChromeWorker")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `ChromeWorker` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ChromeWorker)"]
@@ -20,3 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ChromeWorker`*"]
     pub fn new(script_url: &str) -> Result<ChromeWorker, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Worker> for ChromeWorker {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for ChromeWorker {}

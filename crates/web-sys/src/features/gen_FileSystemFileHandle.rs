@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = FileSystemHandle , extends = :: js_sys :: Object , js_name = FileSystemFileHandle , typescript_type = "FileSystemFileHandle")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `FileSystemFileHandle` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle)"]
@@ -45,3 +45,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemFileHandle`*"]
     pub fn get_file(this: &FileSystemFileHandle) -> ::js_sys::Promise;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<FileSystemHandle> for FileSystemFileHandle {}

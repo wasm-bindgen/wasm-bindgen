@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MIDIMessageEvent , typescript_type = "MIDIMessageEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `MidiMessageEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIMessageEvent)"]
@@ -38,3 +38,5 @@ extern "C" {
         event_init_dict: &MidiMessageEventInit,
     ) -> Result<MidiMessageEvent, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for MidiMessageEvent {}

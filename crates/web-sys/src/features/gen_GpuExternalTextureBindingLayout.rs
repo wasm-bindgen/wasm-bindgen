@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUExternalTextureBindingLayout)]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `GpuExternalTextureBindingLayout` dictionary."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureBindingLayout`*"]

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGForeignObjectElement , typescript_type = "SVGForeignObjectElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgForeignObjectElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGForeignObjectElement)"]
@@ -45,3 +45,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgForeignObjectElement`*"]
     pub fn height(this: &SvgForeignObjectElement) -> SvgAnimatedLength;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgForeignObjectElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgForeignObjectElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgForeignObjectElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgForeignObjectElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgForeignObjectElement {}

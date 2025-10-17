@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = GPUUncapturedErrorEvent , typescript_type = "GPUUncapturedErrorEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `GpuUncapturedErrorEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUUncapturedErrorEvent)"]
@@ -44,3 +44,6 @@ extern "C" {
         gpu_uncaptured_error_event_init_dict: &GpuUncapturedErrorEventInit,
     ) -> Result<GpuUncapturedErrorEvent, JsValue>;
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for GpuUncapturedErrorEvent {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = ExtendableEvent , extends = Event , extends = :: js_sys :: Object , js_name = NotificationEvent , typescript_type = "NotificationEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `NotificationEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NotificationEvent)"]
@@ -32,3 +32,7 @@ extern "C" {
         event_init_dict: &NotificationEventInit,
     ) -> Result<NotificationEvent, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<ExtendableEvent> for NotificationEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for NotificationEvent {}

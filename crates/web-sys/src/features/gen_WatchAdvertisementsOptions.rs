@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WatchAdvertisementsOptions)]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `WatchAdvertisementsOptions` dictionary."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WatchAdvertisementsOptions`*"]

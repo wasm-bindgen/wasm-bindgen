@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = PannerNode , typescript_type = "PannerNode")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `PannerNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PannerNode)"]
@@ -217,3 +217,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PannerNode`*"]
     pub fn set_velocity(this: &PannerNode, x: f64, y: f64, z: f64);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AudioNode> for PannerNode {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for PannerNode {}

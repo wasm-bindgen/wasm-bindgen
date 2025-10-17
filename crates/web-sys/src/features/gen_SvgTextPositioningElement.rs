@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgTextContentElement , extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGTextPositioningElement , typescript_type = "SVGTextPositioningElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgTextPositioningElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTextPositioningElement)"]
@@ -53,3 +53,15 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumberList`, `SvgTextPositioningElement`*"]
     pub fn rotate(this: &SvgTextPositioningElement) -> SvgAnimatedNumberList;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgTextContentElement> for SvgTextPositioningElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgTextPositioningElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgTextPositioningElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgTextPositioningElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgTextPositioningElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgTextPositioningElement {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = VisualViewport , typescript_type = "VisualViewport")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `VisualViewport` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport)"]
@@ -104,3 +104,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VisualViewport`*"]
     pub fn set_onscrollend(this: &VisualViewport, value: Option<&::js_sys::Function>);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for VisualViewport {}

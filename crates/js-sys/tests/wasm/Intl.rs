@@ -26,7 +26,7 @@ fn get_canonical_locales() {
 
 #[wasm_bindgen_test]
 fn collator() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
 
     let c = Intl::Collator::new(&locales, &opts);
@@ -39,7 +39,7 @@ fn collator() {
 
 #[wasm_bindgen_test]
 fn collator_inheritance() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
     let c = Intl::Collator::new(&locales, &opts);
 
@@ -50,7 +50,7 @@ fn collator_inheritance() {
 
 #[wasm_bindgen_test]
 fn date_time_format() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
     let epoch = Date::new(&JsValue::from(0));
 
@@ -65,7 +65,7 @@ fn date_time_format() {
 
 #[wasm_bindgen_test]
 fn date_time_format_inheritance() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
     let c = Intl::DateTimeFormat::new(&locales, &opts);
 
@@ -76,7 +76,7 @@ fn date_time_format_inheritance() {
 
 #[wasm_bindgen_test]
 fn number_format() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
 
     let n = Intl::NumberFormat::new(&locales, &opts);
@@ -90,7 +90,7 @@ fn number_format() {
 
 #[wasm_bindgen_test]
 fn number_format_inheritance() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
     let n = Intl::NumberFormat::new(&locales, &opts);
 
@@ -101,7 +101,7 @@ fn number_format_inheritance() {
 
 #[wasm_bindgen_test]
 fn plural_rules() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
 
     let r = Intl::PluralRules::new(&locales, &opts);
@@ -114,7 +114,7 @@ fn plural_rules() {
 
 #[wasm_bindgen_test]
 fn relative_time_format() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
 
     let c = Intl::RelativeTimeFormat::new(&locales, &opts);
@@ -134,7 +134,7 @@ fn relative_time_format() {
 
 #[wasm_bindgen_test]
 fn plural_rules_inheritance() {
-    let locales = Array::of1(&JsValue::from("en-US"));
+    let locales = Array::of(&[JsValue::from("en-US")]);
     let opts = Object::new();
     let r = Intl::PluralRules::new(&locales, &opts);
 

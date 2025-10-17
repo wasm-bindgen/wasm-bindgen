@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (vendor_prefix = webkit , extends = BaseAudioContext , extends = EventTarget , extends = :: js_sys :: Object , js_name = AudioContext , typescript_type = "AudioContext")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `AudioContext` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext)"]
@@ -551,3 +551,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioContext`*"]
     pub fn resume(this: &AudioContext) -> Result<::js_sys::Promise, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<BaseAudioContext> for AudioContext {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for AudioContext {}

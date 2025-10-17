@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = DeviceOrientationEvent , typescript_type = "DeviceOrientationEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `DeviceOrientationEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent)"]
@@ -147,3 +147,5 @@ extern "C" {
         absolute: bool,
     );
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for DeviceOrientationEvent {}

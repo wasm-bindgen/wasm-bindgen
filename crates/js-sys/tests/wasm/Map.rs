@@ -1,5 +1,5 @@
 use js_sys::*;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
@@ -94,4 +94,118 @@ fn map_inheritance() {
     assert!(map.is_instance_of::<Map>());
     assert!(map.is_instance_of::<Object>());
     let _: &Object = map.as_ref();
+}
+
+#[wasm_bindgen_test]
+fn new_typed() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    assert_eq!(map.size(), 0);
+}
+
+#[wasm_bindgen_test]
+fn typed_get_set() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    let key = JsString::from("test_key");
+    let value = JsString::from("test_value");
+    map.set(&key, &value);
+    assert_eq!(map.get(&key), "test_value");
+    assert_eq!(map.size(), 1);
+}
+
+#[wasm_bindgen_test]
+fn typed_has() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    let key = JsString::from("my_key");
+    assert!(!map.has(&key));
+    map.set(&key, &JsString::from("value"));
+    assert!(map.has(&key));
+}
+
+#[wasm_bindgen_test]
+fn typed_delete() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    let key = JsString::from("delete_me");
+    map.set(&key, &JsString::from("val"));
+    assert!(map.has(&key));
+    assert!(map.delete(&key));
+    assert!(!map.has(&key));
+    assert!(!map.delete(&key));
+}
+
+#[wasm_bindgen_test]
+fn typed_clear() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    map.set(&JsString::from("a"), &JsString::from("1"));
+    map.set(&JsString::from("b"), &JsString::from("2"));
+    assert_eq!(map.size(), 2);
+    map.clear();
+    assert_eq!(map.size(), 0);
+}
+
+#[wasm_bindgen_test]
+fn typed_values_iterator() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    map.set(&JsString::from("a"), &JsString::from("one"));
+    map.set(&JsString::from("b"), &JsString::from("two"));
+    map.set(&JsString::from("c"), &JsString::from("three"));
+
+    let values: Vec<JsString> = map.values().into_iter().map(|v| v.unwrap()).collect();
+    assert_eq!(values.len(), 3);
+    assert!(values.iter().any(|v| *v == "one"));
+    assert!(values.iter().any(|v| *v == "two"));
+    assert!(values.iter().any(|v| *v == "three"));
+}
+
+#[wasm_bindgen_test]
+fn typed_entries_iterator() {
+    let map = Map::new_typed();
+    map.set(&JsString::from("k1"), &JsString::from("v1"));
+    map.set(&JsString::from("k2"), &JsString::from("v2"));
+
+    let entries = map.entries_typed();
+    let entries2: Iterator<ArrayTuple<JsString, JsValue>> = entries.unchecked_into();
+
+    let mut count = 0;
+    for result in entries2.into_iter() {
+        let arr = result.unwrap();
+        assert_eq!(arr.length(), 2);
+        count += 1;
+    }
+    assert_eq!(count, 2);
+}
+
+#[wasm_bindgen_test]
+fn new_from_entries() {
+    let entries: Array<ArrayTuple<JsString, JsString>> = Array::new_typed();
+    entries.push(&ArrayTuple::new2(
+        &JsString::from("a"),
+        &JsString::from("1"),
+    ));
+    entries.push(&ArrayTuple::new2(
+        &JsString::from("b"),
+        &JsString::from("2"),
+    ));
+    entries.push(&ArrayTuple::new2(
+        &JsString::from("c"),
+        &JsString::from("3"),
+    ));
+
+    let map: Map<JsString, JsString> = Map::new_from_entries(&entries);
+    assert_eq!(map.size(), 3);
+    assert_eq!(map.get(&JsString::from("a")), "1");
+    assert_eq!(map.get(&JsString::from("b")), "2");
+    assert_eq!(map.get(&JsString::from("c")), "3");
+}
+
+#[wasm_bindgen_test]
+fn typed_try_for_each() {
+    let map: Map<JsString, JsString> = Map::new_typed();
+    map.set(&JsString::from("a"), &JsString::from("1"));
+    map.set(&JsString::from("b"), &JsString::from("2"));
+
+    let mut keys = Vec::new();
+    map.for_each(&mut |key: JsString, _value: JsString| {
+        keys.push(key);
+    });
+    assert_eq!(keys.len(), 2);
 }

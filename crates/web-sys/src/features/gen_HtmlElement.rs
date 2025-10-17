@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLElement , typescript_type = "HTMLElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HtmlElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement)"]
@@ -1647,3 +1647,9 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn toggle_popover_with_force(this: &HtmlElement, force: bool) -> Result<bool, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for HtmlElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for HtmlElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlElement {}

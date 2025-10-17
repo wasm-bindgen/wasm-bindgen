@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MediaStream , extends = EventTarget , extends = :: js_sys :: Object , js_name = CanvasCaptureMediaStream , typescript_type = "CanvasCaptureMediaStream")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CanvasCaptureMediaStream` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasCaptureMediaStream)"]
@@ -28,3 +28,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CanvasCaptureMediaStream`*"]
     pub fn request_frame(this: &CanvasCaptureMediaStream);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<MediaStream> for CanvasCaptureMediaStream {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for CanvasCaptureMediaStream {}

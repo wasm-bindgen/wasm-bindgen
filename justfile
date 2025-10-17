@@ -12,6 +12,11 @@ test:
     just test-wasm-bindgen
     just test-wasm-bindgen-unwind
     just test-wasm-bindgen-futures
+    just test-js-sys
+    just test-web-sys
+    just test-webidl
+    just test-webidl-tests
+    just test-webidl-tests-compat
 
 test-cli *ARGS="":
     cargo test -p wasm-bindgen-cli {{ARGS}} > /tmp/test-cli.log 2>&1 || (cat /tmp/test-cli.log && exit 1)
@@ -39,6 +44,24 @@ test-wasm-bindgen-unwind *ARGS="":
 
 test-wasm-bindgen-futures *ARGS="":
     NODE_ARGS="--stack-trace-limit=100" RUST_BACKTRACE=1 cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures {{ARGS}}
+
+test-js-sys *ARGS="":
+    cargo test -p js-sys --target wasm32-unknown-unknown {{ARGS}}
+
+test-web-sys *ARGS="":
+    cargo test -p web-sys --target wasm32-unknown-unknown --all-features {{ARGS}}
+
+test-web-idl *ARGS="":
+    cargo test -p wasm-bindgen-webidl {{ARGS}}
+
+test-web-idl-tests *ARGS="":
+    cargo test -p webidl-tests --target wasm32-unknown-unknown {{ARGS}}
+
+test-web-idl-tests-compat *ARGS="":
+    cargo test -p webidl-tests --target wasm32-unknown-unknown --features idl-generics-compat {{ARGS}}
+
+generate-web-sys:
+    cargo run --release --package wasm-bindgen-webidl -- crates/web-sys/webidls crates/web-sys/src/features
 
 bench:
     cargo bench --target wasm32-unknown-unknown

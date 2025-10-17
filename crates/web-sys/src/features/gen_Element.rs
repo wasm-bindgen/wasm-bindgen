@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = Element , typescript_type = "Element")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `Element` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element)"]
@@ -2212,3 +2212,7 @@ extern "C" {
         nodes_7: &str,
     );
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for Element {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for Element {}

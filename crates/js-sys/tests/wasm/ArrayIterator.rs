@@ -11,7 +11,7 @@ fn keys() {
     array.push(&JsValue::from(4));
     array.push(&JsValue::from(5));
 
-    let new_array = Array::from(&array.keys().into());
+    let new_array = Array::from_iterable(&array.keys()).unwrap();
 
     let mut result = Vec::new();
     new_array.for_each(&mut |i, _, _| result.push(i.as_f64().unwrap()));
@@ -27,7 +27,8 @@ fn entries() {
     array.push(&JsValue::from(4));
     array.push(&JsValue::from(5));
 
-    let new_array = Array::from(&array.entries().into());
+    #[allow(deprecated)]
+    let new_array = Array::from_iterable(&array.entries()).unwrap();
 
     new_array.for_each(&mut |a, i, _| {
         assert!(a.is_object());

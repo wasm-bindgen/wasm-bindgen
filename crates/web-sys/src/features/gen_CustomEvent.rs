@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = CustomEvent , typescript_type = "CustomEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CustomEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent)"]
@@ -77,3 +77,5 @@ extern "C" {
         detail: &::wasm_bindgen::JsValue,
     );
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for CustomEvent {}
