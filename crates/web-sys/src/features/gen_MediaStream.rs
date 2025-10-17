@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = MediaStream , typescript_type = "MediaStream")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `MediaStream` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)"]
@@ -135,3 +135,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaStream`, `MediaStreamTrack`*"]
     pub fn remove_track(this: &MediaStream, track: &MediaStreamTrack);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for MediaStream {}

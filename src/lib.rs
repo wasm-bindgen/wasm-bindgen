@@ -52,17 +52,17 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+use crate::convert::{TryFromJsValue, Upcast, VectorIntoWasmAbi};
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::convert::TryFrom;
+use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{
     Add, BitAnd, BitOr, BitXor, Deref, DerefMut, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub,
 };
 use core::ptr::NonNull;
-
-use crate::convert::{TryFromJsValue, VectorIntoWasmAbi};
 
 const _: () = {
     /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
@@ -111,6 +111,7 @@ macro_rules! externs {
 /// ```
 pub mod prelude {
     pub use crate::closure::Closure;
+    pub use crate::convert::Upcast; // provides upcast() and upcast_ref()
     pub use crate::JsCast;
     pub use crate::JsValue;
     pub use crate::UnwrapThrowExt;
@@ -133,6 +134,10 @@ mod externref;
 #[cfg(wbg_reference_types)]
 use externref::__wbindgen_externref_heap_live_count;
 
+pub use crate::__rt::marker::{ErasableGeneric, Promising};
+pub use crate::convert::AsUpcast;
+pub use wasm_bindgen_macro::{Upcast, UpcastCore};
+
 mod cast;
 pub use crate::cast::JsCast;
 
@@ -153,6 +158,16 @@ use __rt::wbg_cast;
 pub struct JsValue {
     idx: u32,
     _marker: PhantomData<*mut u8>, // not at all threadsafe
+}
+
+unsafe impl ErasableGeneric for JsValue {
+    type Repr = JsValue;
+}
+
+impl Upcast<JsValue> for JsValue {}
+
+impl Promising for JsValue {
+    type Resolution = JsValue;
 }
 
 impl JsValue {
@@ -1159,6 +1174,72 @@ impl TryFromJsValue for usize {
     #[inline]
     fn try_from_js_value_ref(val: &JsValue) -> Option<usize> {
         val.as_f64().map(|n| n as usize)
+    }
+}
+
+// Undefined
+#[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
+extern "C" {
+    #[wasm_bindgen(is_type_of = JsValue::is_undefined, typescript_type = "undefined")]
+    #[derive(Clone, PartialEq)]
+    pub type Undefined;
+}
+
+impl Undefined {
+    /// The undefined constant.
+    pub const UNDEFINED: Undefined = unsafe { core::mem::transmute(JsValue::UNDEFINED) };
+}
+
+impl Eq for Undefined {}
+
+impl Default for Undefined {
+    fn default() -> Self {
+        Self::UNDEFINED
+    }
+}
+
+impl fmt::Debug for Undefined {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("undefined")
+    }
+}
+
+impl fmt::Display for Undefined {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("undefined")
+    }
+}
+
+// Null
+#[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
+extern "C" {
+    #[wasm_bindgen(is_type_of = JsValue::is_null, typescript_type = "null")]
+    #[derive(Clone, PartialEq)]
+    pub type Null;
+}
+
+impl Null {
+    /// The null constant.
+    pub const NULL: Null = unsafe { core::mem::transmute(JsValue::NULL) };
+}
+
+impl Eq for Null {}
+
+impl Default for Null {
+    fn default() -> Self {
+        Self::NULL
+    }
+}
+
+impl fmt::Debug for Null {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("null")
+    }
+}
+
+impl fmt::Display for Null {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("null")
     }
 }
 

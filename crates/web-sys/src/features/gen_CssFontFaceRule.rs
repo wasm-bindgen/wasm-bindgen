@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssRule , extends = :: js_sys :: Object , js_name = CSSFontFaceRule , typescript_type = "CSSFontFaceRule")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CssFontFaceRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSFontFaceRule)"]
@@ -21,3 +21,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssFontFaceRule`, `CssStyleDeclaration`*"]
     pub fn style(this: &CssFontFaceRule) -> CssStyleDeclaration;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<CssRule> for CssFontFaceRule {}

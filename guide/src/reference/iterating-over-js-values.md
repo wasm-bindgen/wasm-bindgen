@@ -17,6 +17,8 @@ completed, or throws an error. That is, `js_sys::Iterator` represents an object
 that implements [the duck-typed JavaScript iteration
 protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols).
 
+`js_sys::Iterator` and `js_sys::AsyncIterator` also support [erasable generic type parameters](./types/generics.md) like `Iterator<T>` and `AsyncIterator<T>`, allowing you to document the expected type of values yielded by the iterator. The generic type is erased at the ABI boundary, but provides type safety and documentation in your Rust code.
+
 `js_sys::Iterator` can be converted into a Rust iterator either by reference
 (into
 [`js_sys::Iter<'a>`](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Iter.html))

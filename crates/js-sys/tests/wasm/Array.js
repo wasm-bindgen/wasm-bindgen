@@ -5,3 +5,14 @@ exports.populate_array = function(arr, start, len) {
     arr[i] = isBigInt ? BigInt(start + i) : start + i;
   }
 };
+
+// Create an async iterable for testing Array.fromAsync
+exports.createAsyncIterable = function(values) {
+  return {
+    async *[Symbol.asyncIterator]() {
+      for (const value of values) {
+        yield value;
+      }
+    }
+  };
+};

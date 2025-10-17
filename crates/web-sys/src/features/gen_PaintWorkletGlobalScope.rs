@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = WorkletGlobalScope , extends = :: js_sys :: Object , js_name = PaintWorkletGlobalScope , typescript_type = "PaintWorkletGlobalScope")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `PaintWorkletGlobalScope` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaintWorkletGlobalScope)"]
@@ -24,3 +24,5 @@ extern "C" {
         paint_ctor: &::js_sys::Function,
     );
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<WorkletGlobalScope> for PaintWorkletGlobalScope {}

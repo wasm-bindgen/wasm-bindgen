@@ -5,6 +5,7 @@ error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
   | ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `A`
   |
   = help: the following other types implement trait `IntoWasmAbi`:
+            &'a Undefined
             &'a [MaybeUninit<f32>]
             &'a [MaybeUninit<f64>]
             &'a [MaybeUninit<i16>]
@@ -12,7 +13,6 @@ error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
             &'a [MaybeUninit<i64>]
             &'a [MaybeUninit<i8>]
             &'a [MaybeUninit<isize>]
-            &'a [MaybeUninit<u16>]
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -23,6 +23,7 @@ error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
   |                   ^ the trait `IntoWasmAbi` is not implemented for `A`
   |
   = help: the following other types implement trait `IntoWasmAbi`:
+            &'a Undefined
             &'a [MaybeUninit<f32>]
             &'a [MaybeUninit<f64>]
             &'a [MaybeUninit<i16>]
@@ -30,5 +31,4 @@ error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
             &'a [MaybeUninit<i64>]
             &'a [MaybeUninit<i8>]
             &'a [MaybeUninit<isize>]
-            &'a [MaybeUninit<u16>]
           and $N others

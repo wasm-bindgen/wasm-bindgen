@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = XrReferenceSpace , extends = XrSpace , extends = EventTarget , extends = :: js_sys :: Object , js_name = XRBoundedReferenceSpace , typescript_type = "XRBoundedReferenceSpace")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `XrBoundedReferenceSpace` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRBoundedReferenceSpace)"]
@@ -28,3 +28,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bounds_geometry(this: &XrBoundedReferenceSpace) -> ::js_sys::Array;
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<XrReferenceSpace> for XrBoundedReferenceSpace {}
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<XrSpace> for XrBoundedReferenceSpace {}
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for XrBoundedReferenceSpace {}

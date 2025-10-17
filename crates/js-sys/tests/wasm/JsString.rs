@@ -50,6 +50,14 @@ fn code_point_at() {
 }
 
 #[wasm_bindgen_test]
+fn try_code_point_at() {
+    assert_eq!(JsString::from("ABC").try_code_point_at(0), Some(65)); // 'A'
+    assert_eq!(JsString::from("ABC").try_code_point_at(1), Some(66)); // 'B'
+    assert_eq!(JsString::from("ABC").try_code_point_at(2), Some(67)); // 'C'
+    assert_eq!(JsString::from("ABC").try_code_point_at(42), None);
+}
+
+#[wasm_bindgen_test]
 fn concat() {
     // TODO: Implement ability to receive multiple optional arguments
     let s = JsString::from("Hello ").concat(&"World".into());
@@ -565,13 +573,13 @@ fn value_of() {
 #[wasm_bindgen_test]
 fn raw() {
     let call_site = Object::new();
-    let raw = Array::of3(&"foo".into(), &"bar".into(), &"123".into());
+    let raw: Array<JsValue> = Array::of(&["foo".into(), "bar".into(), "123".into()]);
     Reflect::set(call_site.as_ref(), &"raw".into(), &raw.into()).unwrap();
     assert_eq!(
         JsString::raw_2(&call_site, "5", "JavaScript").unwrap(),
         "foo5barJavaScript123"
     );
-    let substitutions = Array::of2(&"5".into(), &"JavaScript".into());
+    let substitutions: Array<JsValue> = Array::of(&["5".into(), "JavaScript".into()]);
     assert_eq!(
         JsString::raw(&call_site, &substitutions).unwrap(),
         "foo5barJavaScript123"

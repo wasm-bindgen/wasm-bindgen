@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssRule , extends = :: js_sys :: Object , js_name = CSSKeyframeRule , typescript_type = "CSSKeyframeRule")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CssKeyframeRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframeRule)"]
@@ -35,3 +35,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframeRule`, `CssStyleDeclaration`*"]
     pub fn style(this: &CssKeyframeRule) -> CssStyleDeclaration;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<CssRule> for CssKeyframeRule {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = DelayNode , typescript_type = "DelayNode")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `DelayNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DelayNode)"]
@@ -40,3 +40,7 @@ extern "C" {
         options: &DelayOptions,
     ) -> Result<DelayNode, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AudioNode> for DelayNode {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for DelayNode {}
