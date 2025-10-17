@@ -350,9 +350,11 @@ impl<T: WasmAbi> WasmRet<T> {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait TryFromJsValue: Sized {
-    /// The type returned in the event of a conversion error.
-    type Error;
+    /// Performs the conversion.
+    fn try_from_js_value(value: JsValue) -> Result<Self, JsValue> {
+        Self::try_from_js_value_ref(&value).ok_or(value)
+    }
 
     /// Performs the conversion.
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error>;
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self>;
 }
