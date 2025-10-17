@@ -1,0 +1,214 @@
+error: invalid `dyn` keyword
+   --> ui-tests/generics-comprehensive.rs:116:33
+    |
+116 |     pub type TypeTraitObject<T: dyn Clone>;
+    |                                 ^^^
+    |
+    = help: `dyn` is only needed at the start of a trait `+`-separated list
+help: remove this keyword
+    |
+116 -     pub type TypeTraitObject<T: dyn Clone>;
+116 +     pub type TypeTraitObject<T: Clone>;
+    |
+
+error: expected trait bound, found `impl Trait` type
+   --> ui-tests/generics-comprehensive.rs:119:31
+    |
+114 | extern "C" {
+    |            - while parsing this item list starting here
+...
+119 |     pub type TypeImplTrait<T: impl Clone>;
+    |                               ^^^^^^^^^^ not a trait
+...
+129 | }
+    | - the item list ends here
+    |
+help: use the trait bounds directly
+    |
+119 -     pub type TypeImplTrait<T: impl Clone>;
+119 +     pub type TypeImplTrait<T: Clone>;
+    |
+
+error: lifetime bounds are unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:14:39
+   |
+14 |     pub type TypeBoundWithLifetime<T: 'static + Clone>;
+   |                                       ^^^^^^^
+
+error: lifetime bounds are unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:17:39
+   |
+17 |     pub type TypeHigherRankedBound<T: for<'a> Fn(&'a str)>;
+   |                                       ^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:23:32
+   |
+23 |     pub type TypeMaybeSized<T: ?Sized>;
+   |                                ^
+
+error: lifetime bounds are unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:37:49
+   |
+37 |     pub type TypeWhereLifetimeBound<T> where T: 'static;
+   |                                                 ^^^^^^^
+
+error: lifetime bounds are unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:46:45
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                             ^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:54:33
+   |
+54 |     pub type TypeSingleLifetime<'a>;
+   |                                 ^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:57:36
+   |
+57 |     pub type TypeMultipleLifetimes<'a, 'b, T>;
+   |                                    ^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:60:33
+   |
+60 |     pub type TypeLifetimeBounds<'a: 'b, 'b, T>;
+   |                                 ^^^^^^
+
+error: it is currently not sound to use lifetimes in function signatures
+  --> ui-tests/generics-comprehensive.rs:63:26
+   |
+63 |     pub fn func_lifetime<'a, T>(x: &'a T) -> &'a T;
+   |                          ^^
+
+error: it is currently not sound to use lifetimes in function signatures
+  --> ui-tests/generics-comprehensive.rs:63:37
+   |
+63 |     pub fn func_lifetime<'a, T>(x: &'a T) -> &'a T;
+   |                                     ^^
+
+error: it is currently not sound to use lifetimes in function signatures
+  --> ui-tests/generics-comprehensive.rs:63:47
+   |
+63 |     pub fn func_lifetime<'a, T>(x: &'a T) -> &'a T;
+   |                                               ^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:66:33
+   |
+66 |     pub type TypeStaticLifetime<'static, T>;
+   |                                 ^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:74:29
+   |
+74 |     pub type TypeConstParam<const N: usize>;
+   |                             ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:77:32
+   |
+77 |     pub type TypeMultipleConst<const N: usize, const M: i32>;
+   |                                ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:80:36
+   |
+80 |     pub type TypeMixedConstType<T, const N: usize>;
+   |                                    ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:83:29
+   |
+83 |     pub fn func_const_param<const N: usize>() -> [u8; N];
+   |                             ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:86:28
+   |
+86 |     pub type TypeConstBool<const B: bool>;
+   |                            ^^^^^^^^^^^^^
+
+error: first argument of method must provide generic identifier arguments for all import type generic parameters
+  --> ui-tests/generics-comprehensive.rs:96:43
+   |
+96 |     pub fn method_missing_generics(this: &GenericClass) -> u32;
+   |                                           ^^^^^^^^^^^^
+
+error: expected identifier, found keyword `dyn`
+   --> ui-tests/generics-comprehensive.rs:116:33
+    |
+116 |     pub type TypeTraitObject<T: dyn Clone>;
+    |                                 ^^^
+
+error: lifetime bounds are unsupported in wasm-bindgen generics
+   --> ui-tests/generics-comprehensive.rs:139:9
+    |
+139 |         for<'b> T: Fn(&'b str) -> &'b str;
+    |         ^^^^^^^
+
+error: it is currently not sound to use lifetimes in function signatures
+   --> ui-tests/generics-comprehensive.rs:142:28
+    |
+142 |     pub fn func_everything<'a, T: Clone, const N: usize>(x: &'a T) -> [T; N]
+    |                            ^^
+
+error: it is currently not sound to use lifetimes in function signatures
+   --> ui-tests/generics-comprehensive.rs:144:12
+    |
+144 |         T: 'a + Send;
+    |            ^^
+
+error: it is currently not sound to use lifetimes in function signatures
+   --> ui-tests/generics-comprehensive.rs:142:62
+    |
+142 |     pub fn func_everything<'a, T: Clone, const N: usize>(x: &'a T) -> [T; N]
+    |                                                              ^^
+
+error[E0412]: cannot find type `GenericClass` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:32
+    |
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |                                ^^^^^^^^^^^^ not found in this scope
+
+error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:45
+    |
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |                                             ^ not found in this scope
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:48
+    |
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |                                                ^ not found in this scope
+
+error[E0107]: struct takes 1 generic argument but 3 generic arguments were supplied
+   --> ui-tests/generics-comprehensive.rs:149:1
+    |
+149 | #[wasm_bindgen]
+    | ^^^^^^^^^^^^^^^ expected 1 generic argument
+...
+155 |     pub type ValidMultipleParams<T, U, V>;
+    |                                   ------ help: remove the unnecessary generic arguments
+    |
+note: struct defined here, with 1 generic parameter: `T`
+   --> $RUST/core/src/marker.rs
+    |
+    | pub struct PhantomData<T: PointeeSized>;
+    |            ^^^^^^^^^^^ -
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0690]: transparent struct needs at most one field with non-trivial size or alignment, but has 2
+   --> ui-tests/generics-comprehensive.rs:149:1
+    |
+149 | #[wasm_bindgen]
+    | ^^^^^^^^^^^^^^^
+    | |
+    | needs at most one field with non-trivial size or alignment, but has 2
+    | this field has non-zero size or requires alignment
+    | this field has non-zero size or requires alignment
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
