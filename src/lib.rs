@@ -62,7 +62,8 @@ use core::ops::{
 };
 use core::ptr::NonNull;
 
-use crate::convert::{TryFromJsValue, VectorIntoWasmAbi};
+use crate::__rt::marker::AnyType;
+use crate::convert::{FromWasmAbi, TryFromJsValue, VectorIntoWasmAbi};
 
 const _: () = {
     /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
@@ -112,7 +113,9 @@ macro_rules! externs {
 pub mod prelude {
     pub use crate::closure::Closure;
     pub use crate::JsCast;
+    pub use crate::JsRef;
     pub use crate::JsValue;
+    pub use crate::ToJs;
     pub use crate::UnwrapThrowExt;
     #[doc(hidden)]
     pub use wasm_bindgen_macro::__wasm_bindgen_class_marker;
@@ -144,15 +147,136 @@ pub use cache::intern::{intern, unintern};
 pub mod __rt;
 use __rt::wbg_cast;
 
+/// Trait for types that can be used as generic parameters to `JsRef<T>`.
+///
+/// This trait is automatically implemented for any type that implements both
+/// `TryFromJsValue` and `Into<JsValue>`. It serves as a bound for the generic
+/// type parameter in `JsRef<T>`, ensuring type safety for JavaScript values.
+///
+/// ## Implementors
+///
+/// All JavaScript types from `js-sys` and `web-sys` implement this trait, as well as
+/// primitive Rust types that have conversions to/from JavaScript values (e.g., `String`,
+/// `bool`, `u32`, `f64`, etc.).
+///
+/// ## Examples
+///
+/// ```rust,ignore
+/// use wasm_bindgen::prelude::*;
+/// use js_sys::JsString;
+///
+/// // JsString wrapped as typed JsRef
+/// let typed: JsRef<JsString> = JsRef::to_js(JsString::from("hello"));
+///
+/// // Primitive types also work
+/// let num: JsRef<u32> = JsRef::to_js(42u32);
+/// let text: JsRef<String> = JsRef::to_js_as("world");
+/// ```
 /// Representation of an object owned by JS.
 ///
 /// A `JsValue` doesn't actually live in Rust right now but actually in a table
 /// owned by the `wasm-bindgen` generated JS glue code. Eventually the ownership
 /// will transfer into Wasm directly and this will likely become more efficient,
 /// but for now it may be slightly slow.
-pub struct JsValue {
+///
+/// ## Generic Type Parameter
+///
+/// `JsRef<T>` is a generic wrapper around JavaScript values with compile-time type information.
+/// The type parameter `T` represents the expected JavaScript type, providing type safety at the
+/// Rust level while maintaining zero-cost abstractions.
+///
+/// ### Type Safety Model
+///
+/// `JsRef::to_js(value: T) -> JsRef<T>` creates a typed JsValue and uses unchecked
+/// JsValue::from semantics. Validation is therefore performed on unwrapping when calling
+/// either `.from_js()` or `.try_from_js()`. For values that need conversion, use
+/// `JsRef::to_js_as(value)` which accepts any value implementing `Into<T>`.
+///
+/// Casting from JsRef<T> to JsRef<U> may be performed via `.cast_unchecked<U>()`.
+///
+/// To convert from `JsRef<T>` to JsValue, use `.into_value()` (consumes), `.as_value()` (borrows),
+/// or `.to_value()` (clones). Use `.as_ref()` for dereferencing to `&JsValue`.
+///
+/// ### Examples
+///
+/// ```rust,ignore
+/// use wasm_bindgen::prelude::*;
+/// use wasm_bindgen::JsRef;
+/// use js_sys::JsString;
+///
+/// // Untyped JsValue
+/// let untyped = JsValue::from_str("hello");
+///
+/// // Typed JsRef with compile-time type information
+/// let typed: JsRef<String> = JsRef::to_js_as("hello");
+///
+/// // Runtime type conversion and checking via `from_js()`
+/// let inner: String = typed.from_js(); // Panics on incorrect type
+///
+/// // Safe type conversion and checking via `try_from_js()`
+/// if let Ok(inner) = typed.try_from_js() {
+///   // Successfully converted from JS value to Rust string
+/// }
+/// ```
+///
+/// ### Type Casting Between JsRef Types
+///
+/// ```rust,ignore
+/// use wasm_bindgen::prelude::*;
+/// use wasm_bindgen::JsRef;
+/// use js_sys::{JsString, Object};
+///
+/// let typed_string: JsRef<String> = JsRef::to_js_as("test");
+///
+/// // Checked cast to another type via into_value() into JsValue then JsCast
+/// let Ok(str): Result<JsString, _> = typed_string.into_value().dyn_into()? else {
+///   panic!("Invalid input");
+/// };
+///
+/// assert_eq!(&str, "test");
+///
+/// // Unchecked cast (zero-cost, but unsafe if types don't match)
+/// let typed_string: JsRef<String> = JsRef::to_js_as("test2");
+/// let typed_jsstring: JsRef<JsString> = typed_string.cast_unchecked();
+/// // Works here, but would have paniced if the value had not been a string.
+/// let str: JsString = typed_jsstring.from_js();
+/// ```
+///
+/// ### Working with Generic Functions
+///
+/// ```rust,no_run
+/// # use wasm_bindgen::prelude::*;
+/// # use wasm_bindgen::{JsRef, JsCast};
+/// # use wasm_bindgen::convert::TryFromJsValue;
+/// fn process_typed<T>(value: JsRef<T>) -> JsRef<T>
+/// where
+///     T: TryFromJsValue + Into<JsValue> + JsCast,
+/// {
+///     // Methods on untyped JsValue require the as_ref() conversion
+///     assert!(!value.as_ref().is_undefined());
+///     value
+/// }
+/// ```
+pub struct JsRef<T = AnyType> {
     idx: u32,
     _marker: PhantomData<*mut u8>, // not at all threadsafe
+    _ty: PhantomData<T>,
+}
+
+pub type JsAny = JsRef<AnyType>;
+pub type JsValue = JsAny;
+
+/// Convenience trait to convert to a `JsRef<T>` for `T`
+pub trait ToJs {
+    fn to_js(self) -> JsRef<Self>
+    where
+        Self: Sized + Into<JsValue>;
+}
+
+impl<T: Into<JsValue>> ToJs for T {
+    fn to_js(self) -> JsRef<Self> {
+        JsRef::to_js(self)
+    }
 }
 
 impl JsValue {
@@ -173,6 +297,7 @@ impl JsValue {
         JsValue {
             idx,
             _marker: PhantomData,
+            _ty: PhantomData,
         }
     }
 
@@ -522,20 +647,23 @@ impl JsValue {
     }
 }
 
-impl PartialEq for JsValue {
+impl<T, U> PartialEq<JsRef<U>> for JsRef<T> {
     /// Compares two `JsValue`s for equality, using the `===` operator in JS.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality)
     #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        __wbindgen_jsval_eq(self, other)
+    fn eq(&self, other: &JsRef<U>) -> bool {
+        __wbindgen_jsval_eq(
+            unsafe { &*(self as *const JsRef<T> as *const JsValue) },
+            unsafe { &*(other as *const JsRef<U> as *const JsValue) },
+        )
     }
 }
 
-impl PartialEq<bool> for JsValue {
+impl<T> PartialEq<bool> for JsRef<T> {
     #[inline]
     fn eq(&self, other: &bool) -> bool {
-        self.as_bool() == Some(*other)
+        unsafe { core::mem::transmute::<&JsRef<T>, &JsValue>(self) }.as_bool() == Some(*other)
     }
 }
 
@@ -623,6 +751,158 @@ impl Not for &JsValue {
 }
 
 forward_deref_unop!(impl Not, not for JsValue);
+
+impl<T: Into<JsValue>> JsRef<T> {
+    /// Create a typed `JsRef<T>` from a value of type `T`.
+    ///
+    /// This method requires the value to be exactly of type `T`. The value is converted
+    /// to a JavaScript value via `Into<JsValue>`. Type validation can be performed
+    /// later using `try_from_js()` or `from_js()`.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use wasm_bindgen::JsRef;
+    /// use js_sys::JsString;
+    ///
+    /// // Create from a Rust String
+    /// let typed: JsRef<String> = JsRef::to_js(String::from("hello"));
+    ///
+    /// // Create from a JsString
+    /// let typed: JsRef<JsString> = JsRef::to_js(JsString::from("world"));
+    /// ```
+    #[inline]
+    pub fn to_js(from: T) -> Self {
+        unsafe { core::mem::transmute(from.into()) }
+    }
+    /// Create a typed `JsRef<T>` from a value that converts through `T`.
+    ///
+    /// This method accepts any value `U` that implements `Into<T>`, converts it to `T`,
+    /// then wraps it as a `JsRef<T>`. The value is converted to a JavaScript value via
+    /// `T`'s `Into<JsValue>` implementation.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use wasm_bindgen::JsRef;
+    /// use js_sys::JsString;
+    ///
+    /// // Create a &str through JsString
+    /// let typed = JsRef::<JsString>::to_js_as("hello");
+    ///
+    /// // Create with type annotation
+    /// let typed: JsRef<JsString> = JsRef::to_js_as("world");
+    /// ```
+    #[inline]
+    pub fn to_js_as(from: impl Into<T>) -> Self {
+        unsafe { core::mem::transmute(from.into().into()) }
+    }
+}
+
+impl<T> JsRef<T> {
+    /// Convert a `JsRef<T>` into an untyped `JsValue`.
+    ///
+    /// This is a zero-cost operation that removes the type parameter, converting
+    /// to the default `JsValue` (implemented using the default marker `JsValue`).
+    #[inline]
+    pub fn into_value(self) -> JsValue {
+        unsafe { core::mem::transmute(self) }
+    }
+
+    /// Borrow a `&JsRef<T>` as an untyped `&JsValue`.
+    ///
+    /// This is a zero-cost operation that removes the type parameter, converting
+    /// to the default `JsValue` (implemented using the default marker `JsValue`).
+    #[inline]
+    pub fn as_value(&self) -> &JsValue {
+        unsafe { core::mem::transmute(self) }
+    }
+
+    /// Clone a `&JsRef<T>` into an untyped `JsValue`.
+    ///
+    /// This is a cloning operation that removes the type parameter, converting
+    /// to the default `JsValue` (implemented using the default marker `JsValue`).
+    #[inline]
+    pub fn to_value(&self) -> JsValue {
+        unsafe { core::mem::transmute(self.clone()) }
+    }
+
+    /// Perform an unchecked cast from `JsRef<T>` to `JsRef<U>`.
+    ///
+    /// This is a zero-cost operation that changes the type parameter without any
+    /// runtime validation. Use with caution - incorrect usage may cause runtime errors.
+    #[inline]
+    pub fn cast_unchecked<U>(self) -> JsRef<U> {
+        unsafe { core::mem::transmute(self) }
+    }
+
+    /// Perform an unchecked ref cast from `&JsRef<T>` to `&JsRef<U>`.
+    ///
+    /// This is a zero-cost operation that changes the type parameter without any
+    /// runtime validation. Use with caution - incorrect usage may cause runtime errors.
+    #[inline]
+    pub fn cast_ref_unchecked<U>(&self) -> &JsRef<U> {
+        unsafe { core::mem::transmute::<&JsRef<T>, &JsRef<U>>(self) }
+    }
+}
+
+impl<T: TryFromJsValue> JsRef<T> {
+    /// Try to extract the Rust value from JS Value, checking the type at runtime.
+    ///
+    /// Instead of using fallible unwrap semantics, this instead uses the fallible
+    /// runtime conversion semantics of the internal TryFromJsValue trait.
+    ///
+    /// Returns `Ok(T)` if the value is of the correct JS type, otherwise returns
+    /// an error containing the original value.
+    #[inline]
+    pub fn try_from_js(self) -> Result<T, JsValue> {
+        T::try_from_js_value(unsafe { core::mem::transmute::<JsRef<T>, JsValue>(self) })
+    }
+
+    /// Try to extract the Rust value from JS Value by reference, checking the type at runtime.
+    ///
+    /// Returns `Ok(T)` if the value is of the correct JS type, otherwise returns
+    /// `None`.
+    #[inline]
+    pub fn try_from_js_ref(&self) -> Option<T> {
+        T::try_from_js_value_ref(unsafe { core::mem::transmute::<&JsRef<T>, &JsValue>(self) })
+    }
+}
+
+impl<T: FromWasmAbi> JsRef<T> {
+    /// Extract the Rust value from the JS Value via `wbg_cast`.
+    ///
+    /// This uses `wbg_cast` internally, which performs runtime type validation
+    /// in debug mode but may skip checks in release mode for performance.
+    /// If the underlying JavaScript value is not actually of type `T`, the behavior
+    /// may panic in debug mode or cause runtime errors in release mode.
+    ///
+    /// For guaranteed runtime type checking, use `try_from_js()` instead.
+    #[inline]
+    pub fn from_js(self) -> T {
+        wbg_cast::<JsValue, T>(unsafe { core::mem::transmute::<JsRef<T>, JsValue>(self) })
+    }
+
+    /// Extract the Rust value from the JS Value reference.
+    ///
+    /// This uses `wbg_cast` internally. See `from_js()` for details on type checking behavior.
+    #[inline]
+    pub fn from_js_ref(&self) -> T {
+        wbg_cast::<&JsValue, T>(unsafe { core::mem::transmute::<&JsRef<T>, &JsValue>(self) })
+    }
+}
+
+impl<T: Into<JsValue> + Default> Default for JsRef<T> {
+    fn default() -> Self {
+        unsafe { core::mem::transmute(T::default().into()) }
+    }
+}
+
+impl<T> AsRef<JsValue> for JsRef<T> {
+    fn as_ref(&self) -> &JsValue {
+        unsafe { &*(self as *const JsRef<T> as *const JsValue) }
+    }
+}
 
 impl TryFrom<JsValue> for f64 {
     type Error = JsValue;
@@ -927,13 +1207,6 @@ impl JsCast for JsValue {
     #[inline]
     fn unchecked_from_js_ref(val: &JsValue) -> &Self {
         val
-    }
-}
-
-impl AsRef<JsValue> for JsValue {
-    #[inline]
-    fn as_ref(&self) -> &JsValue {
-        self
     }
 }
 
@@ -1265,20 +1538,26 @@ externs! {
     }
 }
 
-impl Clone for JsValue {
+impl<T> Clone for JsRef<T> {
     #[inline]
-    fn clone(&self) -> JsValue {
-        JsValue::_new(unsafe { __wbindgen_object_clone_ref(self.idx) })
+    fn clone(&self) -> JsRef<T> {
+        unsafe { core::mem::transmute(JsValue::_new(__wbindgen_object_clone_ref(self.idx))) }
     }
 }
 
-impl core::fmt::Debug for JsValue {
+impl<T> core::fmt::Debug for JsRef<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "JsValue({})", self.as_debug_string())
+        let base: &JsValue = unsafe { core::mem::transmute(self) };
+        let type_name = core::any::type_name::<T>();
+        if type_name.ends_with("::AnyType") {
+            write!(f, "JsValue({})", base.as_debug_string())
+        } else {
+            write!(f, "JsRef<{type_name}>({})", base.as_debug_string())
+        }
     }
 }
 
-impl Drop for JsValue {
+impl<T> Drop for JsRef<T> {
     #[inline]
     fn drop(&mut self) {
         unsafe {

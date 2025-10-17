@@ -1,55 +1,55 @@
-error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: FromWasmAbi` is not satisfied
+error[E0277]: the trait bound `Result<JsRef, JsRef>: FromWasmAbi` is not satisfied
  --> ui-tests/missing-catch.rs:6:12
   |
 3 | #[wasm_bindgen]
   | --------------- in this procedural macro expansion
 ...
 6 |     pub fn foo() -> Result<JsValue, JsValue>;
-  |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
+  |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<JsRef, JsRef>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
             *const T
             *mut T
             Box<[T]>
             Clamped<T>
+            JsRef<T>
             NonNull<T>
             Option<*const T>
             Option<*mut T>
-            Option<T>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: FromWasmAbi` is not satisfied
+error[E0277]: the trait bound `Result<JsRef, JsRef>: FromWasmAbi` is not satisfied
  --> ui-tests/missing-catch.rs:3:1
   |
 3 | #[wasm_bindgen]
-  | ^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
+  | ^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<JsRef, JsRef>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
             *const T
             *mut T
             Box<[T]>
             Clamped<T>
+            JsRef<T>
             NonNull<T>
             Option<*const T>
             Option<*mut T>
-            Option<T>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: FromWasmAbi` is not satisfied
+error[E0277]: the trait bound `Result<JsRef, JsRef>: FromWasmAbi` is not satisfied
  --> ui-tests/missing-catch.rs:6:21
   |
 6 |     pub fn foo() -> Result<JsValue, JsValue>;
-  |                     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
+  |                     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<JsRef, JsRef>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
             *const T
             *mut T
             Box<[T]>
             Clamped<T>
+            JsRef<T>
             NonNull<T>
             Option<*const T>
             Option<*mut T>
-            Option<T>
           and $N others
