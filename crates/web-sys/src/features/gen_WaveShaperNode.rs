@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = WaveShaperNode , typescript_type = "WaveShaperNode")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `WaveShaperNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WaveShaperNode)"]
@@ -77,3 +77,7 @@ extern "C" {
         options: &WaveShaperOptions,
     ) -> Result<WaveShaperNode, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AudioNode> for WaveShaperNode {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for WaveShaperNode {}

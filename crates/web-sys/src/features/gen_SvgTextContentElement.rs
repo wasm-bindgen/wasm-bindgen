@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGTextContentElement , typescript_type = "SVGTextContentElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgTextContentElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTextContentElement)"]
@@ -128,3 +128,13 @@ impl SvgTextContentElement {
     #[doc = "*This API requires the following crate features to be activated: `SvgTextContentElement`*"]
     pub const LENGTHADJUST_SPACINGANDGLYPHS: u16 = 2u64 as u16;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgTextContentElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgTextContentElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgTextContentElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgTextContentElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgTextContentElement {}

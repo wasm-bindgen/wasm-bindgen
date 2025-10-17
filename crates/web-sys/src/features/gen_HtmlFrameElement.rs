@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLFrameElement , typescript_type = "HTMLFrameElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HtmlFrameElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement)"]
@@ -141,3 +141,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn set_margin_width(this: &HtmlFrameElement, value: &str);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlFrameElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for HtmlFrameElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for HtmlFrameElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlFrameElement {}

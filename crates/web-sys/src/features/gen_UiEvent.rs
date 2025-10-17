@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = UIEvent , typescript_type = "UIEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `UiEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent)"]
@@ -161,3 +161,5 @@ impl UiEvent {
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub const SCROLL_PAGE_DOWN: i32 = 32768u64 as i32;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for UiEvent {}

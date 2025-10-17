@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = EventSource , typescript_type = "EventSource")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `EventSource` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource)"]
@@ -115,3 +115,5 @@ impl EventSource {
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub const CLOSED: u16 = 2u64 as u16;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for EventSource {}

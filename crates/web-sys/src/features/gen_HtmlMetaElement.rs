@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLMetaElement , typescript_type = "HTMLMetaElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HtmlMetaElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMetaElement)"]
@@ -69,3 +69,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlMetaElement`*"]
     pub fn set_scheme(this: &HtmlMetaElement, value: &str);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlMetaElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for HtmlMetaElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for HtmlMetaElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlMetaElement {}

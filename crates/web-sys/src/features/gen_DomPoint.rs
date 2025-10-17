@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = DomPointReadOnly , extends = :: js_sys :: Object , js_name = DOMPoint , typescript_type = "DOMPoint")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `DomPoint` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPoint)"]
@@ -124,3 +124,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPoint`, `DomPointInit`*"]
     pub fn from_point_with_other(other: &DomPointInit) -> DomPoint;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<DomPointReadOnly> for DomPoint {}

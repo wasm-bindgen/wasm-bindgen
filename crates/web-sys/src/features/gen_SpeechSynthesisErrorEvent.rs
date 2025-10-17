@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SpeechSynthesisEvent , extends = Event , extends = :: js_sys :: Object , js_name = SpeechSynthesisErrorEvent , typescript_type = "SpeechSynthesisErrorEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SpeechSynthesisErrorEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisErrorEvent)"]
@@ -32,3 +32,7 @@ extern "C" {
         event_init_dict: &SpeechSynthesisErrorEventInit,
     ) -> Result<SpeechSynthesisErrorEvent, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SpeechSynthesisEvent> for SpeechSynthesisErrorEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for SpeechSynthesisErrorEvent {}

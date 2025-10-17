@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = StyleSheet , extends = :: js_sys :: Object , js_name = CSSStyleSheet , typescript_type = "CSSStyleSheet")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CssStyleSheet` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet)"]
@@ -75,3 +75,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
     pub fn replace_sync(this: &CssStyleSheet, text: &str) -> Result<(), JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<StyleSheet> for CssStyleSheet {}

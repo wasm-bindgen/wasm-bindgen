@@ -9,6 +9,12 @@
   with panic=unwind on nightly, with the `std` feature.
   [#4790](https://github.com/wasm-bindgen/wasm-bindgen/pull/4790)
 
+* Added support for erasable generic type parameters on imported JavaScript types,
+  using sound type erasure in JS bindgen boundary. Includes updated js-sys bindings
+  with generic implementations for many standard JS types and functions including
+  `Array<T>`, `Promise<T>`, `Map<K, V>`, `Iterator<T>`, and more.
+  [#4876](https://github.com/wasm-bindgen/wasm-bindgen/pull/4876)
+
 * Added support for passing `&[JsValue]` slices from Rust to JavaScript functions.
   [#4872](https://github.com/wasm-bindgen/wasm-bindgen/pull/4872)
 
@@ -22,6 +28,9 @@
 
 * Added [Window Management API](https://w3c.github.io/window-management/).
   [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
+
+* Forward worker errors to test output in the test runner.
+  [#4855](https://github.com/wasm-bindgen/wasm-bindgen/pull/4855)
 
 ### Changed
 
@@ -56,9 +65,6 @@
   [#4879](https://github.com/wasm-bindgen/wasm-bindgen/pull/4879)
 
 ### Fixed
-
-* Forward worker errors to test output in the test runner.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
 
 * Fix: Include doc comments in TypeScript definitions for classes
   [#4858](https://github.com/wasm-bindgen/wasm-bindgen/pull/4858)

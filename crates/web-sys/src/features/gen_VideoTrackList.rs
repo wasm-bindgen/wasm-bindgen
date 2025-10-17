@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = VideoTrackList , typescript_type = "VideoTrackList")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `VideoTrackList` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoTrackList)"]
@@ -85,3 +85,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoTrack`, `VideoTrackList`*"]
     pub fn get(this: &VideoTrackList, index: u32) -> Option<VideoTrack>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for VideoTrackList {}

@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MediaDeviceInfo , extends = :: js_sys :: Object , js_name = InputDeviceInfo , typescript_type = "InputDeviceInfo")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `InputDeviceInfo` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/InputDeviceInfo)"]
@@ -29,3 +29,6 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_capabilities(this: &InputDeviceInfo) -> MediaTrackCapabilities;
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<MediaDeviceInfo> for InputDeviceInfo {}

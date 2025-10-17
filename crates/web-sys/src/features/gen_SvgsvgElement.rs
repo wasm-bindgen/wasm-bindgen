@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGSVGElement , typescript_type = "SVGSVGElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgsvgElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGSVGElement)"]
@@ -262,3 +262,13 @@ impl SvgsvgElement {
     #[doc = "*This API requires the following crate features to be activated: `SvgsvgElement`*"]
     pub const SVG_ZOOMANDPAN_MAGNIFY: u16 = 2u64 as u16;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgsvgElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgsvgElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgsvgElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgsvgElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgsvgElement {}

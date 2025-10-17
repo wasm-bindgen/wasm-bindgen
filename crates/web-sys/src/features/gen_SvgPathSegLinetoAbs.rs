@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = SvgPathSeg , extends = :: js_sys :: Object , js_name = SVGPathSegLinetoAbs , typescript_type = "SVGPathSegLinetoAbs")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgPathSegLinetoAbs` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSegLinetoAbs)"]
@@ -41,3 +41,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSegLinetoAbs`*"]
     pub fn set_y(this: &SvgPathSegLinetoAbs, value: f32);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgPathSeg> for SvgPathSegLinetoAbs {}

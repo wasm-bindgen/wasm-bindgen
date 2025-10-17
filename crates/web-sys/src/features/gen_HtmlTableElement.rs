@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLTableElement , typescript_type = "HTMLTableElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HtmlTableElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement)"]
@@ -276,3 +276,11 @@ extern "C" {
         index: i32,
     ) -> Result<HtmlElement, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlTableElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for HtmlTableElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for HtmlTableElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlTableElement {}

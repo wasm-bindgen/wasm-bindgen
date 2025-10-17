@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGFEComponentTransferElement , typescript_type = "SVGFEComponentTransferElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SvgfeComponentTransferElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEComponentTransferElement)"]
@@ -61,3 +61,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`, `SvgfeComponentTransferElement`*"]
     pub fn result(this: &SvgfeComponentTransferElement) -> SvgAnimatedString;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgfeComponentTransferElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for SvgfeComponentTransferElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for SvgfeComponentTransferElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgfeComponentTransferElement {}

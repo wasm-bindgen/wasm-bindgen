@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = AudioScheduledSourceNode , typescript_type = "AudioScheduledSourceNode")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `AudioScheduledSourceNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioScheduledSourceNode)"]
@@ -55,3 +55,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioScheduledSourceNode`*"]
     pub fn stop_with_when(this: &AudioScheduledSourceNode, when: f64) -> Result<(), JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AudioNode> for AudioScheduledSourceNode {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for AudioScheduledSourceNode {}

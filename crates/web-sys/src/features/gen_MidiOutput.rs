@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MidiPort , extends = EventTarget , extends = :: js_sys :: Object , js_name = MIDIOutput , typescript_type = "MIDIOutput")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `MidiOutput` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIOutput)"]
@@ -38,3 +38,7 @@ extern "C" {
         timestamp: f64,
     ) -> Result<(), JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<MidiPort> for MidiOutput {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for MidiOutput {}
