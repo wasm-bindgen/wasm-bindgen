@@ -45,7 +45,7 @@ async fn run_async() -> Result<(), JsValue> {
 fn bind(this: &JsValue, func_name: &str) -> Result<(), JsValue> {
     let property_key = JsValue::from(func_name);
     let orig_func = Reflect::get(this, &property_key)?.dyn_into::<Function>()?;
-    let func = orig_func.bind(this);
+    let func = orig_func.bind0(this);
     if !Reflect::set(this, &property_key, &func)? {
         return Err(JsValue::from("failed to set property"));
     }

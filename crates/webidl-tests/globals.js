@@ -371,7 +371,7 @@ global.UndefinedMethod = class UndefinedMethod {
   }
 };
 
-global.NullableMethod = class NullableMethod {
+global.JsOptionMethod = class JsOptionMethod {
   constructor() { }
   opt(a) {
     if (a == undefined) {
@@ -517,6 +517,9 @@ global.TestPromises = class {
   stringPromise() {
     return new Promise(r => r("abc"));
   }
+  anyPromise() {
+    return new Promise(r => r({ foo: "bar", num: 42 }));
+  }
 };
 
 global.SignatureStability = class {
@@ -526,5 +529,147 @@ global.SignatureStability = class {
     } else {
       return options.mode || "safe";
     }
+  }
+};
+
+global.TestSingleIterable = class {
+  constructor() {
+    this.items = ['item0', 'item1', 'item2'];
+  }
+
+  get length() {
+    return this.items.length;
+  }
+
+  // Indexed property getter
+  [Symbol.for('wasm-bindgen-indexed-getter')](index) {
+    return this.items[index];
+  }
+
+  entries() {
+    return this.items.values();
+  }
+
+  keys() {
+    return this.items.keys();
+  }
+
+  values() {
+    return this.items.values();
+  }
+
+  forEach(callback, thisArg) {
+    return this.items.forEach(callback, thisArg);
+  }
+};
+
+global.TestDoubleIterable = class {
+  constructor() {
+    this.data = new Map([
+      ['key1', 10],
+      ['key2', 20],
+      ['key3', 30]
+    ]);
+  }
+
+  entries() {
+    return this.data.entries();
+  }
+
+  keys() {
+    return this.data.keys();
+  }
+
+  values() {
+    return this.data.values();
+  }
+
+  forEach(callback, thisArg) {
+    return this.data.forEach(callback, thisArg);
+  }
+};
+
+global.TestRecord = class {
+  constructor() {
+    this.lastSetRecord = null;
+  }
+
+  getNumberRecord() {
+    return {
+      a: 1,
+      b: 2,
+      c: 3
+    };
+  }
+
+  getStringRecord() {
+    return {
+      x: 'hello',
+      y: 'world',
+      z: 'test'
+    };
+  }
+
+  setRecord(data) {
+    this.lastSetRecord = data;
+  }
+};
+
+global.TestCallbacks = class {
+  constructor() { }
+
+  invokeVoidCallback(callback) {
+    callback();
+  }
+
+  invokeNumberCallback(callback, value) {
+    callback(value);
+  }
+
+  invokeStringTransformer(callback, input) {
+    return callback(input);
+  }
+
+  invokeBinaryOp(callback, a, b) {
+    return callback(a, b);
+  }
+
+  invokeObjectCallback(callback, data) {
+    callback(data);
+  }
+
+  invokeSequenceCallback(callback, input) {
+    return callback(input);
+  }
+};
+
+// Upcast test classes
+global.BaseType = class BaseType {
+  constructor() {
+    this.value = "";
+  }
+};
+
+global.ChildType = class ChildType extends global.BaseType {
+  constructor() {
+    super();
+    this.childValue = 0;
+  }
+};
+
+global.GrandChildType = class GrandChildType extends global.ChildType {
+  constructor() {
+    super();
+    this.grandChildValue = false;
+  }
+};
+
+global.UpcastTest = class UpcastTest {
+  static processBase(obj) {
+    return obj.value;
+  }
+
+  static processChild(obj) {
+    return obj.value;
   }
 };

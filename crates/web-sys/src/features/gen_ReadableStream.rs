@@ -63,13 +63,6 @@ extern "C" {
         this: &ReadableStream,
         reason: &::wasm_bindgen::JsValue,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = entries)]
-    #[doc = "The `entries()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/entries)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
-    pub fn entries(this: &ReadableStream) -> ::js_sys::AsyncIterator;
     # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = getReader)]
     #[doc = "The `getReader()` method."]
     #[doc = ""]
@@ -88,13 +81,6 @@ extern "C" {
         this: &ReadableStream,
         options: &ReadableStreamGetReaderOptions,
     ) -> ::js_sys::Object;
-    # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = keys)]
-    #[doc = "The `keys()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/keys)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
-    pub fn keys(this: &ReadableStream) -> ::js_sys::AsyncIterator;
     #[cfg(feature = "ReadableWritablePair")]
     # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = pipeThrough)]
     #[doc = "The `pipeThrough()` method."]
@@ -142,6 +128,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
     pub fn tee(this: &ReadableStream) -> ::js_sys::Array;
+    # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = entries)]
+    #[doc = "The `entries()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/entries)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
+    pub fn entries(this: &ReadableStream) -> ::js_sys::AsyncIterator;
+    # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = keys)]
+    #[doc = "The `keys()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/keys)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
+    pub fn keys(this: &ReadableStream) -> ::js_sys::AsyncIterator;
     # [wasm_bindgen (method , structural , js_class = "ReadableStream" , js_name = values)]
     #[doc = "The `values()` method."]
     #[doc = ""]

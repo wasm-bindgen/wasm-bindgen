@@ -12,18 +12,37 @@ fn regexp_inheritance() {
 
 #[wasm_bindgen_test]
 fn exec() {
-    let re = RegExp::new("quick\\s(brown).+?(jumps)", "ig");
-    let result = re.exec("The Quick Brown Fox Jumps Over The Lazy Dog");
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let re = RegExp::new("quick\\s(brown).+?(jumps)", "ig");
+        let result = re.exec("The Quick Brown Fox Jumps Over The Lazy Dog");
 
-    let mut v = vec![];
-    result.unwrap().for_each(&mut |x, _, _| v.push(x));
+        let mut v = vec![];
+        result.unwrap().for_each(&mut |x, _, _| v.push(x));
 
-    assert_eq!(v[0], "Quick Brown Fox Jumps");
-    assert_eq!(v[1], "Brown");
-    assert_eq!(v[2], "Jumps");
+        assert_eq!(v[0], "Quick Brown Fox Jumps");
+        assert_eq!(v[1], "Brown");
+        assert_eq!(v[2], "Jumps");
 
-    let result = re.exec("foo");
-    assert!(result.is_none());
+        let result = re.exec("foo");
+        assert!(result.is_none());
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let re = RegExp::new("quick\\s(brown).+?(jumps)", "ig");
+        let result = re.exec("The Quick Brown Fox Jumps Over The Lazy Dog");
+
+        let m = result.unwrap();
+        // Access via typed getters
+        assert_eq!(m.get(0).unwrap(), "Quick Brown Fox Jumps");
+        assert_eq!(m.get(1).unwrap(), "Brown");
+        assert_eq!(m.get(2).unwrap(), "Jumps");
+        assert_eq!(m.index(), 4);
+        assert_eq!(m.input(), "The Quick Brown Fox Jumps Over The Lazy Dog");
+
+        let result = re.exec("foo");
+        assert!(result.is_none());
+    }
 }
 
 #[wasm_bindgen_test]
@@ -115,7 +134,7 @@ fn n1_to_n9() {
 fn new() {
     let re = RegExp::new("foo", "");
     let re = RegExp::new_regexp(&re, "g");
-    assert_eq!(re.to_string(), "/foo/g");
+    assert_eq!(re.to_js_string(), "/foo/g");
 }
 
 #[wasm_bindgen_test]
@@ -147,6 +166,7 @@ fn test() {
     assert!(!re.test("bar"));
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn to_string() {
     let re = RegExp::new("a+b+c", "g");

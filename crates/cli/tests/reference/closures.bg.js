@@ -11,17 +11,17 @@ export function delayed_callback() {
 export function use_stack_callback(a) {
     wasm.use_stack_callback(a);
 }
-export function __wbg___wbindgen_is_undefined_9e4d92534c42d778(arg0) {
+export function __wbg___wbindgen_is_undefined_3679905e8f57a270(arg0) {
     const ret = arg0 === undefined;
     return ret;
 }
-export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
+export function __wbg___wbindgen_throw_87f103313805936e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg__wbg_cb_unref_d9b87ff7982e3b21(arg0) {
+export function __wbg__wbg_cb_unref_5a8d896fb5691d88(arg0) {
     arg0._wbg_cb_unref();
 }
-export function __wbg_forEach_a2bfcdf179e573de(arg0, arg1, arg2) {
+export function __wbg_forEach_6dadaa82d2703e8f(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = (arg0, arg1, arg2) => {
@@ -48,10 +48,10 @@ export function __wbg_instanceof_Window_ed49b2db8df90359(arg0) {
     const ret = result;
     return ret;
 }
-export function __wbg_log_6b5ca2e6124b2808(arg0) {
+export function __wbg_log_2809e6dcd455ba66(arg0) {
     console.log(arg0);
 }
-export function __wbg_setTimeout_681abd84926a4da3() { return handleError(function (arg0, arg1) {
+export function __wbg_setTimeout_17682fe8e7b4255f() { return handleError(function (arg0, arg1) {
     const ret = arg0.setTimeout(arg1);
     return ret;
 }, arguments); }

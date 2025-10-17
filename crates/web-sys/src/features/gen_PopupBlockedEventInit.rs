@@ -62,6 +62,16 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
     #[wasm_bindgen(method, setter = "popupWindowName")]
     pub fn set_popup_window_name(this: &PopupBlockedEventInit, val: &str);
+    #[doc = "Get the `popupWindowURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, getter = "popupWindowURI")]
+    pub fn get_popup_window_uri(this: &PopupBlockedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Change the `popupWindowURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, setter = "popupWindowURI")]
+    pub fn set_popup_window_uri(this: &PopupBlockedEventInit, val: Option<&str>);
     #[cfg(feature = "Window")]
     #[doc = "Get the `requestingWindow` field of this object."]
     #[doc = ""]
@@ -107,6 +117,11 @@ impl PopupBlockedEventInit {
     #[deprecated = "Use `set_popup_window_name()` instead."]
     pub fn popup_window_name(&mut self, val: &str) -> &mut Self {
         self.set_popup_window_name(val);
+        self
+    }
+    #[deprecated = "Use `set_popup_window_uri()` instead."]
+    pub fn popup_window_uri(&mut self, val: Option<&str>) -> &mut Self {
+        self.set_popup_window_uri(val);
         self
     }
     #[cfg(feature = "Window")]

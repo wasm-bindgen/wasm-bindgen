@@ -16,6 +16,7 @@ wasm-bindgen = { path = '../..' }
 wasm-bindgen-futures = { path = '../futures' }
 
 [build-dependencies]
+env_logger = "0.11"
 wasm-bindgen-webidl = { path = "../webidl" }
 
 [dev-dependencies]
@@ -26,4 +27,7 @@ name = 'wasm'
 path = 'main.rs'
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(web_sys_unstable_apis)'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+  'cfg(web_sys_unstable_apis)',
+  'cfg(wbg_next_unstable)',
+] }

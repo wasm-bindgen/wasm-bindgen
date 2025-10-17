@@ -129,4 +129,20 @@ extern "C" {
         key: &CryptoKey,
         key_id: f64,
     ) -> ::js_sys::Promise;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "BigInt", feature = "CryptoKey",))]
+    # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
+    #[doc = "The `setEncryptionKey()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/setEncryptionKey)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BigInt`, `CryptoKey`, `SFrameTransform`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_encryption_key_with_big_int(
+        this: &SFrameTransform,
+        key: &CryptoKey,
+        key_id: &::js_sys::BigInt,
+    ) -> ::js_sys::Promise;
 }

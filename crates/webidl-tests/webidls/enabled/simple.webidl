@@ -31,7 +31,7 @@ interface UndefinedMethod {
 };
 
 [Constructor()]
-interface NullableMethod {
+interface JsOptionMethod {
   octet? opt(short? a);
 };
 

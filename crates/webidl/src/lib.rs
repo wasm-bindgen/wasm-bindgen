@@ -12,27 +12,26 @@ emitted for the types and methods described in the WebIDL.
 mod constants;
 mod first_pass;
 mod generator;
-mod idl_type;
 mod traverse;
 mod util;
+mod wbg_type;
 
-use crate::first_pass::{CallbackInterfaceData, OperationData};
+use crate::first_pass::OperationData;
 use crate::first_pass::{FirstPass, FirstPassRecord, InterfaceData, OperationId};
 use crate::generator::{
     Const, Dictionary, DictionaryField, Enum, EnumVariant, Function, Interface, InterfaceAttribute,
     InterfaceAttributeKind, InterfaceMethod, Namespace, NamespaceAttribute, NamespaceAttributeKind,
 };
-use crate::idl_type::ToIdlType;
 use crate::traverse::TraverseType;
 use crate::util::{
     camel_case_ident, get_rust_deprecated, getter_throws, is_structural, is_type_unstable,
     optional_return_ty, read_dir, rust_ident, setter_throws, shouty_snake_case_ident,
     snake_case_ident, throws, webidl_const_v_to_backend_const_v, TypePosition,
 };
+use crate::wbg_type::ToWbgType;
 use anyhow::Context;
 use anyhow::Result;
 use constants::UNFLATTENED_ATTRIBUTES;
-use idl_type::{IdentifierType, IdlType};
 use proc_macro2::{Ident, TokenStream};
 use quote::ToTokens;
 use sourcefile::SourceFile;
@@ -42,10 +41,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fmt, iter};
+use wbg_type::{IdentifierType, WbgType};
 use weedle::attribute::ExtendedAttributeList;
 use weedle::common::Identifier;
 use weedle::dictionary::DictionaryMember;
-use weedle::interface::InterfaceMember;
 use weedle::Parse;
 
 /// Mark stable attributes that have unstable overrides with the same name.
@@ -95,10 +94,12 @@ fn mark_stable_methods_with_unstable_overrides(methods: &mut [InterfaceMethod]) 
 }
 
 /// Options to configure the conversion process
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Options {
-    /// Whether to generate cfg features or not
+    /// Whether to generate per-type cfg features (`#[cfg(feature = "TypeName")]`)
     pub features: bool,
+    /// Whether to generate the next major unstable generics output
+    pub next_unstable: bool,
 }
 
 #[derive(Default)]
@@ -129,7 +130,7 @@ impl fmt::Display for WebIDLParseError {
 
 impl std::error::Error for WebIDLParseError {}
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) enum ApiStability {
     #[default]
     Stable,
@@ -164,7 +165,10 @@ fn parse(
     unstable_source: &str,
     options: Options,
 ) -> Result<BTreeMap<String, Program>> {
-    let mut first_pass_record: FirstPassRecord = Default::default();
+    let mut first_pass_record = FirstPassRecord {
+        options,
+        ..Default::default()
+    };
 
     let definitions = parse_source(webidl_source)?;
     definitions.first_pass(&mut first_pass_record, ApiStability::Stable)?;
@@ -193,47 +197,27 @@ fn parse(
     for (js_name, e) in first_pass_record.enums.iter() {
         let name = rust_ident(&camel_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_enum(&options, program, name, js_name, e);
+        first_pass_record.append_enum(program, name, js_name, e);
     }
     for (js_name, d) in first_pass_record.dictionaries.iter() {
         let name = rust_ident(&camel_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_dictionary(
-            &options,
-            program,
-            name,
-            js_name.to_string(),
-            d,
-            &unstable_types,
-        );
+        first_pass_record.append_dictionary(program, name, js_name.to_string(), d, &unstable_types);
     }
     for (js_name, n) in first_pass_record.namespaces.iter() {
         let name = rust_ident(&snake_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_ns(&options, program, name, js_name.to_string(), n);
+        first_pass_record.append_ns(program, name, js_name.to_string(), n);
     }
     for (js_name, d) in first_pass_record.interfaces.iter() {
         let name = rust_ident(&camel_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_interface(
-            &options,
-            program,
-            name,
-            js_name.to_string(),
-            &unstable_types,
-            d,
-        );
+        first_pass_record.append_interface(program, name, js_name.to_string(), &unstable_types, d);
     }
-    for (js_name, d) in first_pass_record.callback_interfaces.iter() {
+    for (js_name, data) in first_pass_record.callback_interfaces.iter() {
         let name = rust_ident(&camel_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_callback_interface(
-            &options,
-            program,
-            name,
-            js_name.to_string(),
-            d,
-        );
+        first_pass_record.append_callback_interface(program, name, js_name, data);
     }
 
     Ok(types)
@@ -277,9 +261,105 @@ pub fn compile(
 }
 
 impl<'src> FirstPassRecord<'src> {
+    fn append_callback_interface(
+        &self,
+        program: &mut Program,
+        name: Ident,
+        js_name: &str,
+        data: &first_pass::CallbackInterfaceData,
+    ) {
+        use quote::quote;
+
+        // In next_unstable mode, don't generate callback interface dict types
+        // They are replaced with typed callbacks
+        if self.options.next_unstable {
+            return;
+        }
+
+        let features_doc = if self.options.features {
+            format!(
+                "\n\n*This API requires the following crate features to be activated: `{name}`*",
+            )
+        } else {
+            String::new()
+        };
+
+        let type_doc = format!("The `{js_name}` dictionary.{features_doc}");
+        let new_doc = format!("Construct a new `{js_name}`.{features_doc}");
+
+        // Generate getter/setter/builder for callback interfaces with a method
+        let (extern_methods, impl_methods) = if let Some(method_name) = data.method_name {
+            let getter_name = rust_ident(&format!("get_{}", snake_case_ident(method_name)));
+            let setter_name = rust_ident(&format!("set_{}", snake_case_ident(method_name)));
+            let builder_name = rust_ident(&snake_case_ident(method_name));
+
+            let getter_doc =
+                format!("Get the `{method_name}` field of this object.{features_doc}",);
+            let setter_doc =
+                format!("Change the `{method_name}` field of this object.{features_doc}",);
+
+            let extern_methods = quote! {
+                #[doc = #getter_doc]
+                #[wasm_bindgen(method, getter = #method_name)]
+                pub fn #getter_name(this: &#name) -> Option<::js_sys::Function>;
+
+                #[doc = #setter_doc]
+                #[wasm_bindgen(method, setter = #method_name)]
+                pub fn #setter_name(this: &#name, val: &::js_sys::Function);
+            };
+
+            let deprecated_msg = format!("Use `{setter_name}()` instead.");
+            let impl_methods = quote! {
+                #[deprecated = #deprecated_msg]
+                pub fn #builder_name(&mut self, val: &::js_sys::Function) -> &mut Self {
+                    self.#setter_name(val);
+                    self
+                }
+            };
+
+            (extern_methods, impl_methods)
+        } else {
+            (quote! {}, quote! {})
+        };
+
+        let tokens = quote! {
+            #![allow(unused_imports)]
+            #![allow(clippy::all)]
+            use super::*;
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(extends = ::js_sys::Object, js_name = #name)]
+                #[derive(Debug, Clone, PartialEq, Eq)]
+                #[doc = #type_doc]
+                pub type #name;
+
+                #extern_methods
+            }
+
+            impl #name {
+                #[doc = #new_doc]
+                pub fn new() -> Self {
+                    #[allow(unused_mut)]
+                    let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+                    ret
+                }
+
+                #impl_methods
+            }
+
+            impl Default for #name {
+                fn default() -> Self {
+                    Self::new()
+                }
+            }
+        };
+        tokens.to_tokens(&mut program.tokens);
+    }
+
     fn append_enum(
         &self,
-        options: &Options,
         program: &mut Program,
         name: Ident,
         js_name: &str,
@@ -313,7 +393,7 @@ impl<'src> FirstPassRecord<'src> {
             variants,
             unstable,
         }
-        .generate(options)
+        .generate(&self.options)
         .to_tokens(&mut program.tokens);
     }
 
@@ -321,7 +401,6 @@ impl<'src> FirstPassRecord<'src> {
     // https://www.w3.org/TR/WebIDL-1/#idl-dictionaries
     fn append_dictionary(
         &self,
-        options: &Options,
         program: &mut Program,
         name: Ident,
         js_name: String,
@@ -360,7 +439,7 @@ impl<'src> FirstPassRecord<'src> {
             unstable,
             deprecated,
         }
-        .generate(options)
+        .generate(&self.options)
         .to_tokens(&mut program.tokens);
     }
 
@@ -438,16 +517,16 @@ impl<'src> FirstPassRecord<'src> {
             false => is_type_unstable(&field.type_, unstable_types),
         };
 
-        let idl_type = field.type_.to_idl_type(self);
+        let wbg_type = field.type_.to_wbg_type(self);
 
-        let is_js_value_ref_option_type = match &idl_type {
-            idl_type::IdlType::Nullable(ty) => match **ty {
-                idl_type::IdlType::Any => true,
-                IdlType::FrozenArray(ref _idl_type) | IdlType::Sequence(ref _idl_type) => true,
-                idl_type::IdlType::Union(ref types) => !types.iter().all(|idl_type| {
+        let is_js_value_ref_option_type = match &wbg_type {
+            wbg_type::WbgType::JsOption(ty) => match **ty {
+                wbg_type::WbgType::Any => true,
+                WbgType::FrozenArray(ref _wbg_type) | WbgType::Sequence(ref _wbg_type) => true,
+                wbg_type::WbgType::Union(ref types) => !types.iter().all(|wbg_type| {
                     matches!(
-                        idl_type,
-                        IdlType::Identifier {
+                        wbg_type,
+                        WbgType::Identifier {
                             ty: IdentifierType::Interface(..),
                             ..
                         }
@@ -459,14 +538,16 @@ impl<'src> FirstPassRecord<'src> {
         };
 
         // use argument position now as we're just binding setters
-        let ty = idl_type
-            .to_syn_type(TypePosition::Argument, false)
-            .unwrap_or(None)?;
+        // Use compat mode for dictionary fields (they don't typically use generics)
+        let ty = wbg_type
+            .to_syn_type(TypePosition::Argument, false, true)
+            .ok()
+            .flatten()?;
 
-        let mut return_ty = idl_type
-            .to_syn_type(TypePosition::Return, false)
-            .unwrap()
-            .unwrap();
+        let mut return_ty = wbg_type
+            .to_syn_type(TypePosition::Return, false, true)
+            .ok()
+            .flatten()?;
 
         if field.required.is_none() {
             return_ty = optional_return_ty(return_ty);
@@ -523,7 +604,6 @@ impl<'src> FirstPassRecord<'src> {
 
     fn append_ns(
         &'src self,
-        options: &Options,
         program: &mut Program,
         name: Ident,
         js_name: String,
@@ -556,7 +636,7 @@ impl<'src> FirstPassRecord<'src> {
                 functions,
                 unstable,
             }
-            .generate(options)
+            .generate(&self.options)
             .to_tokens(&mut program.tokens);
         }
     }
@@ -567,9 +647,10 @@ impl<'src> FirstPassRecord<'src> {
         member: first_pass::ConstNamespaceData<'src>,
         unstable: bool,
     ) {
-        let idl_type = member.definition.const_type.to_idl_type(self);
-        let ty = idl_type
-            .to_syn_type(TypePosition::Return, false)
+        let wbg_type = member.definition.const_type.to_wbg_type(self);
+        // Constants don't need generics
+        let ty = wbg_type
+            .to_syn_type(TypePosition::Return, false, true)
             .unwrap()
             .unwrap();
 
@@ -611,7 +692,8 @@ impl<'src> FirstPassRecord<'src> {
                 name: x.name,
                 js_name: x.js_name,
                 arguments: x.arguments,
-                ret_ty: x.ret_ty,
+                variadic_type: x.variadic_type,
+                ret_wbg_ty: x.ret_wbg_ty,
                 catch: x.catch,
                 variadic: x.variadic,
                 unstable: false,
@@ -631,8 +713,8 @@ impl<'src> FirstPassRecord<'src> {
 
         let ty = definition
             .type_
-            .to_idl_type(self)
-            .to_syn_type(TypePosition::Return, false)
+            .to_wbg_type(self)
+            .to_syn_type(TypePosition::Return, false, self.options.next_unstable)
             .unwrap_or(None);
 
         let js_name = definition.identifier.0.to_string();
@@ -656,9 +738,10 @@ impl<'src> FirstPassRecord<'src> {
         member: &'src weedle::interface::ConstMember<'src>,
         unstable: bool,
     ) {
-        let idl_type = member.const_type.to_idl_type(self);
-        let ty = idl_type
-            .to_syn_type(TypePosition::Return, false)
+        let wbg_type = member.const_type.to_wbg_type(self);
+        // Constants don't need generics
+        let ty = wbg_type
+            .to_syn_type(TypePosition::Return, false, true)
             .unwrap()
             .unwrap();
 
@@ -677,7 +760,6 @@ impl<'src> FirstPassRecord<'src> {
 
     fn append_interface(
         &self,
-        options: &Options,
         program: &mut Program,
         name: Ident,
         js_name: String,
@@ -780,18 +862,24 @@ impl<'src> FirstPassRecord<'src> {
         // changing `undefined` to `PerformanceMark` for Performance.mark).
         mark_stable_methods_with_unstable_overrides(&mut methods);
 
+        // Add custom methods (e.g., maplike/setlike iterators)
+        // Generator will produce both compat and non-compat output
+        for (_, method) in data.custom_methods.iter() {
+            methods.push(method.clone());
+        }
+
         Interface {
-            name,
-            js_name,
-            deprecated,
+            name: name.clone(),
+            js_name: js_name.clone(),
+            deprecated: deprecated.clone(),
             has_interface,
-            parents,
+            parents: parents.clone(),
             consts,
             attributes,
             methods,
             unstable,
         }
-        .generate(options)
+        .generate(&self.options)
         .to_tokens(&mut program.tokens);
     }
 
@@ -823,8 +911,8 @@ impl<'src> FirstPassRecord<'src> {
 
         let ty = type_
             .type_
-            .to_idl_type(self)
-            .to_syn_type(TypePosition::Return, false)
+            .to_wbg_type(self)
+            .to_syn_type(TypePosition::Return, false, true)
             .unwrap_or(None);
 
         // Skip types which can't be converted
@@ -845,7 +933,7 @@ impl<'src> FirstPassRecord<'src> {
         }
 
         if !readonly {
-            let idls = type_.type_.to_idl_type(self).flatten(attrs.as_ref());
+            let idls = type_.type_.to_wbg_type(self).flatten(attrs.as_ref());
             let any_different_type = idls.len() > 1;
 
             if any_different_type
@@ -856,8 +944,8 @@ impl<'src> FirstPassRecord<'src> {
             {
                 let ty = type_
                     .type_
-                    .to_idl_type(self)
-                    .to_syn_type(TypePosition::Argument, true)
+                    .to_wbg_type(self)
+                    .to_syn_type(TypePosition::Argument, true, true)
                     .unwrap_or(None);
 
                 // Skip types which can't be converted
@@ -878,7 +966,7 @@ impl<'src> FirstPassRecord<'src> {
             }
 
             for (idl, ty) in idls.into_iter().filter_map(|idl| {
-                idl.to_syn_type(TypePosition::Argument, false)
+                idl.to_syn_type(TypePosition::Argument, false, true)
                     .ok()
                     .flatten()
                     .map(|ty| (idl, ty))
@@ -938,75 +1026,15 @@ impl<'src> FirstPassRecord<'src> {
                     && old_method
                         .arguments
                         .iter()
-                        .map(|(_, idl, wb)| (idl.orig(), wb))
-                        .eq(method.arguments.iter().map(|(_, idl, wb)| (idl.orig(), wb)))
+                        .map(|(_, wbg_ty)| wbg_ty)
+                        .eq(method.arguments.iter().map(|(_, wbg_ty)| wbg_ty))
                     // Allow if one is stable and one is unstable with different return types
-                    && (old_method.unstable == method.unstable || old_method.ret_ty == method.ret_ty)
+                    && (old_method.unstable == method.unstable || old_method.ret_wbg_ty == method.ret_wbg_ty)
             });
             if !dominated {
                 methods.push(method);
             }
         }
-    }
-
-    fn append_callback_interface(
-        &self,
-        options: &Options,
-        program: &mut Program,
-        name: Ident,
-        js_name: String,
-        item: &CallbackInterfaceData<'src>,
-    ) {
-        assert_eq!(js_name, item.definition.identifier.0);
-
-        let mut fields = Vec::new();
-
-        for member in item.definition.members.body.iter() {
-            match member {
-                InterfaceMember::Operation(op) => {
-                    let identifier = match op.identifier {
-                        Some(i) => i.0,
-                        None => continue,
-                    };
-                    let pos = TypePosition::Argument;
-
-                    fields.push(DictionaryField {
-                        required: false,
-                        name: snake_case_ident(identifier),
-                        js_name: identifier.to_string(),
-                        ty: idl_type::IdentifierType::Callback
-                            .to_syn_type(pos, false)
-                            .unwrap()
-                            .unwrap(),
-                        return_ty: optional_return_ty(
-                            idl_type::IdentifierType::Callback
-                                .to_syn_type(TypePosition::Return, false)
-                                .unwrap()
-                                .unwrap(),
-                        ),
-                        is_js_value_ref_option_type: false,
-                        unstable: false,
-                        deprecated: get_rust_deprecated(&item.definition.attributes),
-                    })
-                }
-                _ => {
-                    log::warn!(
-                        "skipping callback interface member on {}",
-                        item.definition.identifier.0
-                    );
-                }
-            }
-        }
-
-        Dictionary {
-            name,
-            js_name,
-            fields,
-            unstable: false,
-            deprecated: None,
-        }
-        .generate(options)
-        .to_tokens(&mut program.tokens);
     }
 }
 
@@ -1025,7 +1053,7 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
     let source = read_source_from_path(&from.join("enabled"))?;
     let unstable_source = read_source_from_path(&from.join("unstable"))?;
 
-    let features = parse_webidl(generate_features, source, unstable_source)?;
+    let features = parse_webidl(options, source, unstable_source)?;
 
     if to.exists() {
         fs::remove_dir_all(to).context("Removing features directory")?;
@@ -1113,14 +1141,10 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
     }
 
     fn parse_webidl(
-        generate_features: bool,
+        options: Options,
         enabled: SourceFile,
         unstable: SourceFile,
     ) -> Result<BTreeMap<String, Feature>> {
-        let options = Options {
-            features: generate_features,
-        };
-
         match compile(&enabled.contents, &unstable.contents, options) {
             Ok(features) => Ok(features),
             Err(e) => {
@@ -1162,7 +1186,10 @@ mod tests {
             };
         "#;
 
-        let options = Options { features: false };
+        let options = Options {
+            features: false,
+            next_unstable: true,
+        };
         let result = compile(webidl, "", options).unwrap();
 
         // Check that the css namespace was generated
@@ -1204,7 +1231,10 @@ mod tests {
             };
         "#;
 
-        let options = Options { features: false };
+        let options = Options {
+            features: false,
+            next_unstable: true,
+        };
         let result = compile(webidl, "", options).unwrap();
 
         // Check that the namespace was generated

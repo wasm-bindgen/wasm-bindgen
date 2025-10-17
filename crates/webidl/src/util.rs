@@ -22,7 +22,7 @@ use crate::constants::{
 };
 use crate::first_pass::{FirstPassRecord, OperationData, OperationId, Signature};
 use crate::generator::{ConstValue, InterfaceMethod, InterfaceMethodKind};
-use crate::idl_type::{IdentifierType, IdlType, ToIdlType};
+use crate::wbg_type::{IdentifierType, ToWbgType, WbgType};
 use crate::Options;
 use syn::parse_quote;
 
@@ -123,7 +123,7 @@ pub(crate) fn array(base_ty: &str, pos: TypePosition, immutable: bool) -> syn::T
                 /*mutable =*/ !immutable,
             )
         }
-        TypePosition::Return => vec_ty(ident_ty(raw_ident(base_ty))),
+        TypePosition::Return | TypePosition::Callback => vec_ty(ident_ty(raw_ident(base_ty))),
     }
 }
 
@@ -217,11 +217,56 @@ pub(crate) fn option_ty(t: syn::Type) -> syn::Type {
     ty.into()
 }
 
+/// Check if a type is `::wasm_bindgen::JsValue`
+pub(crate) fn is_js_value(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        let segments: Vec<_> = type_path.path.segments.iter().collect();
+        if segments.len() == 2 {
+            return segments[0].ident == "wasm_bindgen" && segments[1].ident == "JsValue";
+        }
+    }
+    false
+}
+
+/// From `base_path` and `T` create `base_path<T>`, unless T is JsValue (then just return base)
+/// For example: `js_sys::Array` + `i32` → `js_sys::Array<i32>`
+/// But: `js_sys::Promise` + `JsValue` → `js_sys::Promise`
+pub(crate) fn generic_ty(base: syn::Type, type_arg: syn::Type) -> syn::Type {
+    // If inner type is JsValue, omit the generic (JsValue is the default)
+    if is_js_value(&type_arg) {
+        return base;
+    }
+
+    // Extract the path from the base type
+    let mut path = match base {
+        syn::Type::Path(type_path) => type_path.path,
+        _ => panic!("Expected TypePath for generic base, got {base:?}"),
+    };
+
+    // Add generic argument to the last segment
+    if let Some(last_seg) = path.segments.last_mut() {
+        last_seg.arguments =
+            syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
+                colon2_token: None,
+                lt_token: Default::default(),
+                args: FromIterator::from_iter(vec![syn::GenericArgument::Type(type_arg)]),
+                gt_token: Default::default(),
+            });
+    }
+
+    syn::Type::Path(syn::TypePath { qself: None, path })
+}
+
 /// Possible positions for a type in a function signature.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TypePosition {
+    /// Function argument position
     Argument,
+    /// Function return position
     Return,
+    /// Callback/closure position (primitives → JS types like Number, Boolean, JsString)
+    /// Because we can't know if callback is return or arg, must support covariant and contravariant usage.
+    Callback,
 }
 
 impl<'src> FirstPassRecord<'src> {
@@ -249,9 +294,9 @@ impl<'src> FirstPassRecord<'src> {
             fn pass<'src>(
                 this: &FirstPassRecord<'src>,
                 id: &'src OperationId<'_>,
-                signatures: &mut Vec<(&Signature<'src>, Vec<Option<IdlType<'src>>>)>,
+                signatures: &mut Vec<(&Signature<'src>, Vec<Option<WbgType<'src>>>)>,
                 signature: &'src Signature<'_>,
-                mut idl_args: Vec<Option<IdlType<'src>>>,
+                mut idl_args: Vec<Option<WbgType<'src>>>,
             ) {
                 for (i, arg) in signature.args.iter().enumerate().skip(idl_args.len()) {
                     if arg.optional {
@@ -267,7 +312,7 @@ impl<'src> FirstPassRecord<'src> {
                         }
                     }
 
-                    let idl_type = arg.ty.to_idl_type(this);
+                    let idl_type = arg.ty.to_wbg_type(this);
                     let idl_type = this.maybe_adjust(arg.attributes, idl_type, id);
                     idl_args.push(Some(idl_type));
                 }
@@ -284,7 +329,7 @@ impl<'src> FirstPassRecord<'src> {
         #[derive(Clone)]
         struct ExpandedSig<'a> {
             orig: &'a Signature<'a>,
-            args: Vec<Option<IdlType<'a>>>,
+            args: Vec<Option<WbgType<'a>>>,
         }
 
         let mut actual_signatures = Vec::new();
@@ -332,7 +377,6 @@ impl<'src> FirstPassRecord<'src> {
                 }
             }
         }
-
         let (js_name, kind, force_structural, force_throws) = match id {
             // Constructors aren't annotated with `[Throws]` extended attributes
             // (how could they be, since they themselves are extended
@@ -378,7 +422,7 @@ impl<'src> FirstPassRecord<'src> {
             // TODO: overloads probably never change return types, so we should
             //       do this much earlier to avoid all the above work if
             //       possible.
-            let ret_ty = signature.orig.ret.to_idl_type(self);
+            let ret_ty = signature.orig.ret.to_wbg_type(self);
 
             let mut rust_name = snake_case_ident(js_name);
             let mut first = true;
@@ -394,6 +438,7 @@ impl<'src> FirstPassRecord<'src> {
                 let mut any_different_type = false;
                 let mut any_different = false;
                 let arg_name = signature.orig.args[i].name;
+
                 for other in actual_signatures.iter() {
                     if other.orig.args.get(i).map(|s| s.name) == Some(arg_name)
                         && !ptr::eq(signature, other)
@@ -455,12 +500,12 @@ impl<'src> FirstPassRecord<'src> {
                 // All indexing getters should return optional values (or
                 // otherwise be marked with catch).
                 match ret_ty {
-                    IdlType::Nullable(_) => ret_ty,
+                    WbgType::JsOption(_) => ret_ty,
                     ref ty => {
                         if catch {
                             ret_ty
                         } else {
-                            IdlType::Nullable(Box::new(ty.clone()))
+                            WbgType::JsOption(Box::new(ty.clone()))
                         }
                     }
                 }
@@ -476,28 +521,26 @@ impl<'src> FirstPassRecord<'src> {
                     .unwrap_or(false);
 
             fn idl_arguments<'a: 'b, 'b>(
-                args: impl Iterator<Item = (String, &'b IdlType<'a>)>,
-            ) -> Option<Vec<(Ident, IdlType<'a>, syn::Type)>> {
+                args: impl Iterator<Item = (String, &'b WbgType<'a>)>,
+            ) -> Option<Vec<(Ident, WbgType<'a>)>> {
                 let mut output = vec![];
 
                 for (name, idl_type) in args {
-                    let ty = match idl_type.to_syn_type(TypePosition::Argument, false) {
-                        Ok(ty) => ty.unwrap(),
-                        Err(_) => {
-                            return None;
-                        }
-                    };
+                    // Check that the type can be converted (use compat mode for validation)
+                    if idl_type
+                        .to_syn_type(TypePosition::Argument, false, true)
+                        .is_err()
+                    {
+                        return None;
+                    }
 
-                    output.push((
-                        rust_ident(&snake_case_ident(&name[..])),
-                        idl_type.clone(),
-                        ty,
-                    ));
+                    output.push((rust_ident(&snake_case_ident(&name[..])), idl_type.clone()));
                 }
 
                 Some(output)
             }
 
+            // Store WbgType for arguments - conversion happens during code generation
             let arguments =
                 idl_arguments(signature.args.iter().zip(&signature.orig.args).filter_map(
                     |(idl_type, orig_arg)| {
@@ -522,33 +565,28 @@ impl<'src> FirstPassRecord<'src> {
             let unstable = unstable || signature.orig.stability.is_unstable() || has_unstable_args;
 
             if let Some(arguments) = arguments {
-                if let Ok(ret_ty) = ret_ty.to_syn_type(TypePosition::Return, false) {
-                    let mut rust_name = rust_name.clone();
+                let mut rust_name = rust_name.clone();
 
-                    if let Some(map) =
-                        type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name))
-                    {
-                        if let Some(fixed) = map.get(rust_name.as_str()) {
-                            rust_name = fixed.to_string();
-                        }
+                if let Some(map) = type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name)) {
+                    if let Some(fixed) = map.get(rust_name.as_str()) {
+                        rust_name = fixed.to_string();
                     }
-
-                    ret.push(InterfaceMethod {
-                        name: rust_ident(&rust_name),
-                        js_name: js_name.to_string(),
-                        deprecated: deprecated.clone(),
-                        arguments,
-                        variadic_type: None,
-                        ret_ty,
-                        kind: kind.clone(),
-                        is_static,
-                        structural,
-                        catch,
-                        variadic,
-                        unstable,
-                        has_unstable_override: false,
-                    });
                 }
+                ret.push(InterfaceMethod {
+                    name: rust_ident(&rust_name),
+                    js_name: js_name.to_string(),
+                    deprecated: deprecated.clone(),
+                    arguments,
+                    variadic_type: None,
+                    ret_wbg_ty: Some(ret_ty.clone()),
+                    kind: kind.clone(),
+                    is_static,
+                    structural,
+                    catch,
+                    variadic,
+                    unstable,
+                    has_unstable_override: false,
+                });
             }
 
             if !variadic {
@@ -570,33 +608,30 @@ impl<'src> FirstPassRecord<'src> {
                 );
 
                 if let Some(arguments) = arguments {
-                    if let Ok(ret_ty) = ret_ty.to_syn_type(TypePosition::Return, false) {
-                        let mut rust_name = format!("{}_{i}", &rust_name);
+                    let mut rust_name = format!("{}_{i}", &rust_name);
 
-                        if let Some(map) =
-                            type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name))
-                        {
-                            if let Some(fixed) = map.get(rust_name.as_str()) {
-                                rust_name = fixed.to_string();
-                            }
+                    if let Some(map) =
+                        type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name))
+                    {
+                        if let Some(fixed) = map.get(rust_name.as_str()) {
+                            rust_name = fixed.to_string();
                         }
-
-                        ret.push(InterfaceMethod {
-                            name: rust_ident(&rust_name),
-                            js_name: js_name.to_string(),
-                            deprecated: deprecated.clone(),
-                            arguments,
-                            variadic_type: Some(last_idl_type.clone()),
-                            kind: kind.clone(),
-                            ret_ty,
-                            is_static,
-                            structural,
-                            catch,
-                            variadic: false,
-                            unstable,
-                            has_unstable_override: false,
-                        });
                     }
+                    ret.push(InterfaceMethod {
+                        name: rust_ident(&rust_name),
+                        js_name: js_name.to_string(),
+                        deprecated: deprecated.clone(),
+                        arguments,
+                        variadic_type: Some(last_idl_type.clone()),
+                        kind: kind.clone(),
+                        ret_wbg_ty: Some(ret_ty.clone()),
+                        is_static,
+                        structural,
+                        catch,
+                        variadic: false,
+                        unstable,
+                        has_unstable_override: false,
+                    });
                 }
             }
         }
@@ -617,9 +652,9 @@ impl<'src> FirstPassRecord<'src> {
     fn maybe_adjust<'a>(
         &self,
         attributes: &'src Option<ExtendedAttributeList<'src>>,
-        mut idl_type: IdlType<'a>,
+        mut idl_type: WbgType<'a>,
         id: &'a OperationId,
-    ) -> IdlType<'a> {
+    ) -> WbgType<'a> {
         if has_named_attribute(attributes.as_ref(), "AllowShared") {
             flag_slices_allow_shared(&mut idl_type)
         }
@@ -648,9 +683,9 @@ pub fn is_type_unstable(ty: &weedle::types::Type, unstable_types: &HashSet<Ident
     }
 }
 
-fn is_idl_type_unstable(ty: &IdlType, unstable_types: &HashSet<Identifier>) -> bool {
+fn is_idl_type_unstable(ty: &WbgType, unstable_types: &HashSet<Identifier>) -> bool {
     match ty {
-        IdlType::Identifier {
+        WbgType::Identifier {
             ty: IdentifierType::Dictionary(name) | IdentifierType::Interface(name),
             ..
         } => unstable_types.contains(&Identifier(name)),
@@ -733,21 +768,21 @@ pub fn throws(attrs: &Option<ExtendedAttributeList>) -> bool {
     has_named_attribute(attrs.as_ref(), "Throws")
 }
 
-fn arg_throws(ty: &IdlType<'_>) -> bool {
+fn arg_throws(ty: &WbgType<'_>) -> bool {
     match ty {
-        IdlType::DataView { allow_shared }
-        | IdlType::Int8Array { allow_shared, .. }
-        | IdlType::Uint8Array { allow_shared, .. }
-        | IdlType::Uint8ClampedArray { allow_shared, .. }
-        | IdlType::Int16Array { allow_shared, .. }
-        | IdlType::Uint16Array { allow_shared, .. }
-        | IdlType::Int32Array { allow_shared, .. }
-        | IdlType::Uint32Array { allow_shared, .. }
-        | IdlType::Float32Array { allow_shared, .. }
-        | IdlType::Float64Array { allow_shared, .. }
-        | IdlType::ArrayBufferView { allow_shared, .. }
-        | IdlType::BufferSource { allow_shared, .. }
-        | IdlType::Identifier {
+        WbgType::DataView { allow_shared }
+        | WbgType::Int8Array { allow_shared, .. }
+        | WbgType::Uint8Array { allow_shared, .. }
+        | WbgType::Uint8ClampedArray { allow_shared, .. }
+        | WbgType::Int16Array { allow_shared, .. }
+        | WbgType::Uint16Array { allow_shared, .. }
+        | WbgType::Int32Array { allow_shared, .. }
+        | WbgType::Uint32Array { allow_shared, .. }
+        | WbgType::Float32Array { allow_shared, .. }
+        | WbgType::Float64Array { allow_shared, .. }
+        | WbgType::ArrayBufferView { allow_shared, .. }
+        | WbgType::BufferSource { allow_shared, .. }
+        | WbgType::Identifier {
             ty:
                 IdentifierType::Int8Slice { allow_shared, .. }
                 | IdentifierType::Uint8Slice { allow_shared, .. }
@@ -760,8 +795,8 @@ fn arg_throws(ty: &IdlType<'_>) -> bool {
                 | IdentifierType::Float64Slice { allow_shared, .. },
             ..
         } => !allow_shared,
-        IdlType::Nullable(item) => arg_throws(item),
-        IdlType::Union(list) => list.iter().any(arg_throws),
+        WbgType::JsOption(item) => arg_throws(item),
+        WbgType::Union(list) => list.iter().any(arg_throws),
         // catch-all for everything else like Object
         _ => false,
     }
@@ -797,25 +832,25 @@ pub fn setter_throws(
     has_named_attribute(attrs.as_ref(), "SetterThrows")
 }
 
-fn flag_slices_immutable(ty: &mut IdlType) {
+fn flag_slices_immutable(ty: &mut WbgType) {
     match ty {
-        IdlType::Int8Array { immutable, .. }
-        | IdlType::Uint8Array { immutable, .. }
-        | IdlType::Uint8ClampedArray { immutable, .. }
-        | IdlType::Int16Array { immutable, .. }
-        | IdlType::Uint16Array { immutable, .. }
-        | IdlType::Int32Array { immutable, .. }
-        | IdlType::Uint32Array { immutable, .. }
-        | IdlType::Float32Array { immutable, .. }
-        | IdlType::Float64Array { immutable, .. }
-        | IdlType::ArrayBufferView { immutable, .. }
-        | IdlType::BufferSource { immutable, .. }
-        | IdlType::Identifier {
+        WbgType::Int8Array { immutable, .. }
+        | WbgType::Uint8Array { immutable, .. }
+        | WbgType::Uint8ClampedArray { immutable, .. }
+        | WbgType::Int16Array { immutable, .. }
+        | WbgType::Uint16Array { immutable, .. }
+        | WbgType::Int32Array { immutable, .. }
+        | WbgType::Uint32Array { immutable, .. }
+        | WbgType::Float32Array { immutable, .. }
+        | WbgType::Float64Array { immutable, .. }
+        | WbgType::ArrayBufferView { immutable, .. }
+        | WbgType::BufferSource { immutable, .. }
+        | WbgType::Identifier {
             ty: IdentifierType::AllowSharedBufferSource { immutable },
             ..
         } => *immutable = true,
-        IdlType::Nullable(item) => flag_slices_immutable(item),
-        IdlType::Union(list) => {
+        WbgType::JsOption(item) => flag_slices_immutable(item),
+        WbgType::Union(list) => {
             for item in list {
                 flag_slices_immutable(item);
             }
@@ -825,30 +860,30 @@ fn flag_slices_immutable(ty: &mut IdlType) {
     }
 }
 
-fn flag_slices_allow_shared(ty: &mut IdlType) {
+fn flag_slices_allow_shared(ty: &mut WbgType) {
     match ty {
-        IdlType::DataView { allow_shared }
-        | IdlType::Int8Array { allow_shared, .. }
-        | IdlType::Uint8Array { allow_shared, .. }
-        | IdlType::Uint8ClampedArray { allow_shared, .. }
-        | IdlType::Int16Array { allow_shared, .. }
-        | IdlType::Uint16Array { allow_shared, .. }
-        | IdlType::Int32Array { allow_shared, .. }
-        | IdlType::Uint32Array { allow_shared, .. }
-        | IdlType::Float32Array { allow_shared, .. }
-        | IdlType::Float64Array { allow_shared, .. }
-        | IdlType::ArrayBufferView { allow_shared, .. }
-        | IdlType::BufferSource { allow_shared, .. } => *allow_shared = true,
-        IdlType::Nullable(item) => flag_slices_allow_shared(item),
-        IdlType::FrozenArray(item) => flag_slices_allow_shared(item),
-        IdlType::Sequence(item) => flag_slices_allow_shared(item),
-        IdlType::ObservableArray(item) => flag_slices_allow_shared(item),
-        IdlType::Promise(item) => flag_slices_allow_shared(item),
-        IdlType::Record(item1, item2) => {
+        WbgType::DataView { allow_shared }
+        | WbgType::Int8Array { allow_shared, .. }
+        | WbgType::Uint8Array { allow_shared, .. }
+        | WbgType::Uint8ClampedArray { allow_shared, .. }
+        | WbgType::Int16Array { allow_shared, .. }
+        | WbgType::Uint16Array { allow_shared, .. }
+        | WbgType::Int32Array { allow_shared, .. }
+        | WbgType::Uint32Array { allow_shared, .. }
+        | WbgType::Float32Array { allow_shared, .. }
+        | WbgType::Float64Array { allow_shared, .. }
+        | WbgType::ArrayBufferView { allow_shared, .. }
+        | WbgType::BufferSource { allow_shared, .. } => *allow_shared = true,
+        WbgType::JsOption(item) => flag_slices_allow_shared(item),
+        WbgType::FrozenArray(item) => flag_slices_allow_shared(item),
+        WbgType::Sequence(item) => flag_slices_allow_shared(item),
+        WbgType::ObservableArray(item) => flag_slices_allow_shared(item),
+        WbgType::Promise(item) => flag_slices_allow_shared(item),
+        WbgType::Record(item1, item2) => {
             flag_slices_allow_shared(item1);
             flag_slices_allow_shared(item2);
         }
-        IdlType::Union(list) => {
+        WbgType::Union(list) => {
             for item in list {
                 flag_slices_allow_shared(item);
             }

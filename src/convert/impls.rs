@@ -4,10 +4,14 @@ use core::char;
 use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
+use crate::__rt::marker::ErasableGeneric;
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
-use crate::convert::TryFromJsValue;
-use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
-use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
+use crate::convert::{
+    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
+    RefFromWasmAbi, ReturnWasmAbi, TryFromJsValue, UpcastFrom,
+};
+use crate::sys::Promising;
+use crate::sys::{JsOption, Undefined};
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt, __wbindgen_object_is_undefined};
 
 // Primitive types can always be passed over the ABI.
@@ -131,6 +135,10 @@ macro_rules! type_wasm_native {
                 js.map(|v: $c| v as $t)
             }
         }
+
+        impl UpcastFrom<$t> for JsValue {}
+        impl UpcastFrom<$t> for JsOption<JsValue> {}
+        impl UpcastFrom<$t> for $t {}
     )*)
 }
 
@@ -141,6 +149,11 @@ type_wasm_native!(
     u128 as u128
     f64 as f64
 );
+
+impl UpcastFrom<u64> for u128 {}
+impl UpcastFrom<u64> for JsOption<u128> {}
+impl UpcastFrom<i64> for i128 {}
+impl UpcastFrom<i64> for JsOption<i128> {}
 
 /// The sentinel value is 2^32 + 1 for 32-bit primitive types.
 ///
@@ -167,6 +180,14 @@ macro_rules! type_wasm_native_f64_option {
             unsafe fn from_abi(js: $c) -> Self { js as $t }
         }
 
+        unsafe impl ErasableGeneric for $t {
+            type Repr = $t;
+        }
+
+        impl Promising for $t {
+            type Resolution = $t;
+        }
+
         impl IntoWasmAbi for Option<$t> {
             type Abi = f64;
 
@@ -188,6 +209,10 @@ macro_rules! type_wasm_native_f64_option {
                 }
             }
         }
+
+        impl UpcastFrom<$t> for JsValue {}
+        impl UpcastFrom<$t> for JsOption<JsValue> {}
+        impl UpcastFrom<$t> for $t {}
     )*)
 }
 
@@ -198,6 +223,42 @@ type_wasm_native_f64_option!(
     usize as u32
     f32 as f32
 );
+
+#[cfg(target_pointer_width = "32")]
+impl UpcastFrom<isize> for i32 {}
+#[cfg(target_pointer_width = "32")]
+impl UpcastFrom<isize> for JsOption<i32> {}
+
+impl UpcastFrom<isize> for i64 {}
+impl UpcastFrom<isize> for JsOption<i64> {}
+impl UpcastFrom<isize> for i128 {}
+impl UpcastFrom<isize> for JsOption<i128> {}
+
+impl UpcastFrom<i32> for isize {}
+impl UpcastFrom<i32> for JsOption<isize> {}
+impl UpcastFrom<i32> for i64 {}
+impl UpcastFrom<i32> for JsOption<i64> {}
+impl UpcastFrom<i32> for i128 {}
+impl UpcastFrom<i32> for JsOption<i128> {}
+
+impl UpcastFrom<u32> for usize {}
+impl UpcastFrom<u32> for JsOption<usize> {}
+impl UpcastFrom<u32> for u64 {}
+impl UpcastFrom<u32> for JsOption<u64> {}
+impl UpcastFrom<u32> for u128 {}
+impl UpcastFrom<u32> for JsOption<u128> {}
+
+#[cfg(target_pointer_width = "32")]
+impl UpcastFrom<usize> for u32 {}
+#[cfg(target_pointer_width = "32")]
+impl UpcastFrom<usize> for JsOption<u32> {}
+impl UpcastFrom<usize> for u64 {}
+impl UpcastFrom<usize> for JsOption<u64> {}
+impl UpcastFrom<usize> for u128 {}
+impl UpcastFrom<usize> for JsOption<u128> {}
+
+impl UpcastFrom<f32> for f64 {}
+impl UpcastFrom<f32> for JsOption<f64> {}
 
 /// The sentinel value is 0xFF_FFFF for primitives with less than 32 bits.
 ///
@@ -231,10 +292,54 @@ macro_rules! type_abi_as_u32 {
             #[inline]
             fn is_none(js: &u32) -> bool { *js == U32_ABI_OPTION_SENTINEL }
         }
+
+        unsafe impl ErasableGeneric for $t {
+            type Repr = $t;
+        }
+
+        impl Promising for $t {
+            type Resolution = $t;
+        }
+
+        impl UpcastFrom<$t> for JsValue {}
+        impl UpcastFrom<$t> for JsOption<JsValue> {}
+        impl UpcastFrom<$t> for $t {}
     )*)
 }
 
 type_abi_as_u32!(i8 u8 i16 u16);
+
+impl UpcastFrom<i8> for i16 {}
+impl UpcastFrom<i8> for JsOption<i16> {}
+impl UpcastFrom<i8> for i32 {}
+impl UpcastFrom<i8> for JsOption<i32> {}
+impl UpcastFrom<i8> for i64 {}
+impl UpcastFrom<i8> for JsOption<i64> {}
+impl UpcastFrom<i8> for i128 {}
+impl UpcastFrom<i8> for JsOption<i128> {}
+
+impl UpcastFrom<u8> for u16 {}
+impl UpcastFrom<u8> for JsOption<u16> {}
+impl UpcastFrom<u8> for u32 {}
+impl UpcastFrom<u8> for JsOption<u32> {}
+impl UpcastFrom<u8> for u64 {}
+impl UpcastFrom<u8> for JsOption<u64> {}
+impl UpcastFrom<u8> for u128 {}
+impl UpcastFrom<u8> for JsOption<u128> {}
+
+impl UpcastFrom<i16> for i32 {}
+impl UpcastFrom<i16> for JsOption<i32> {}
+impl UpcastFrom<i16> for i64 {}
+impl UpcastFrom<i16> for JsOption<i64> {}
+impl UpcastFrom<i16> for i128 {}
+impl UpcastFrom<i16> for JsOption<i128> {}
+
+impl UpcastFrom<u16> for u32 {}
+impl UpcastFrom<u16> for JsOption<u32> {}
+impl UpcastFrom<u16> for u64 {}
+impl UpcastFrom<u16> for JsOption<u64> {}
+impl UpcastFrom<u16> for u128 {}
+impl UpcastFrom<u16> for JsOption<u128> {}
 
 impl IntoWasmAbi for bool {
     type Abi = u32;
@@ -267,6 +372,18 @@ impl OptionFromWasmAbi for bool {
         *js == U32_ABI_OPTION_SENTINEL
     }
 }
+
+unsafe impl ErasableGeneric for bool {
+    type Repr = bool;
+}
+
+impl Promising for bool {
+    type Resolution = bool;
+}
+
+impl UpcastFrom<bool> for JsValue {}
+impl UpcastFrom<bool> for JsOption<JsValue> {}
+impl UpcastFrom<bool> for bool {}
 
 impl IntoWasmAbi for char {
     type Abi = u32;
@@ -301,6 +418,18 @@ impl OptionFromWasmAbi for char {
     }
 }
 
+unsafe impl ErasableGeneric for char {
+    type Repr = char;
+}
+
+impl Promising for char {
+    type Resolution = char;
+}
+
+impl UpcastFrom<char> for JsValue {}
+impl UpcastFrom<char> for JsOption<JsValue> {}
+impl UpcastFrom<char> for char {}
+
 impl<T> IntoWasmAbi for *const T {
     type Abi = u32;
 
@@ -319,6 +448,13 @@ impl<T> FromWasmAbi for *const T {
     }
 }
 
+unsafe impl<T: ErasableGeneric> ErasableGeneric for *const T {
+    type Repr = *const T::Repr;
+}
+
+impl<T, Target> UpcastFrom<*const T> for *const Target where Target: UpcastFrom<T> {}
+impl<T, Target> UpcastFrom<*const T> for JsOption<*const Target> where Target: UpcastFrom<T> {}
+
 impl<T> IntoWasmAbi for Option<*const T> {
     type Abi = f64;
 
@@ -328,6 +464,13 @@ impl<T> IntoWasmAbi for Option<*const T> {
             .unwrap_or(F64_ABI_OPTION_SENTINEL)
     }
 }
+
+unsafe impl<T: ErasableGeneric> ErasableGeneric for Option<T> {
+    type Repr = Option<<T as ErasableGeneric>::Repr>;
+}
+
+impl<T, Target> UpcastFrom<Option<T>> for Option<Target> where Target: UpcastFrom<T> {}
+impl<T, Target> UpcastFrom<Option<T>> for JsOption<Option<Target>> where Target: UpcastFrom<T> {}
 
 impl<T> FromWasmAbi for Option<*const T> {
     type Abi = f64;
@@ -511,6 +654,10 @@ impl<T: OptionFromWasmAbi> FromWasmAbi for Option<T> {
     }
 }
 
+impl<T: OptionIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising for Option<T> {
+    type Resolution = Option<<T as Promising>::Resolution>;
+}
+
 impl<T: IntoWasmAbi> IntoWasmAbi for Clamped<T> {
     type Abi = T::Abi;
 
@@ -536,6 +683,24 @@ impl IntoWasmAbi for () {
     fn into_abi(self) {
         self
     }
+}
+
+impl FromWasmAbi for () {
+    type Abi = ();
+
+    #[inline]
+    unsafe fn from_abi(_js: ()) {}
+}
+
+impl Promising for () {
+    type Resolution = Undefined;
+}
+
+impl UpcastFrom<()> for JsValue {}
+impl UpcastFrom<()> for () {}
+
+unsafe impl ErasableGeneric for () {
+    type Repr = ();
 }
 
 impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
@@ -590,6 +755,31 @@ where
     }
 }
 
+unsafe impl<T: ErasableGeneric, E: ErasableGeneric> ErasableGeneric for Result<T, E> {
+    type Repr = Result<<T as ErasableGeneric>::Repr, <E as ErasableGeneric>::Repr>;
+}
+
+impl<T: ErasableGeneric + Promising, E: ErasableGeneric> Promising for Result<T, E> {
+    type Resolution = Result<<T as Promising>::Resolution, E>;
+}
+
+impl<T, E, TargetT, TargetE> UpcastFrom<Result<T, E>> for Result<TargetT, TargetE>
+where
+    TargetT: UpcastFrom<T>,
+    TargetE: UpcastFrom<E>,
+{
+}
+impl<T, E, TargetT, TargetE> UpcastFrom<Result<T, E>> for JsOption<Result<TargetT, TargetE>>
+where
+    TargetT: UpcastFrom<T>,
+    TargetE: UpcastFrom<E>,
+{
+}
+
+unsafe impl ErasableGeneric for JsError {
+    type Repr = JsValue;
+}
+
 impl IntoWasmAbi for JsError {
     type Abi = <JsValue as IntoWasmAbi>::Abi;
 
@@ -597,6 +787,14 @@ impl IntoWasmAbi for JsError {
         self.value.into_abi()
     }
 }
+
+impl Promising for JsError {
+    type Resolution = JsError;
+}
+
+impl UpcastFrom<JsError> for JsValue {}
+impl UpcastFrom<JsError> for JsOption<JsValue> {}
+impl UpcastFrom<JsError> for JsError {}
 
 /// # ⚠️ Unstable
 ///

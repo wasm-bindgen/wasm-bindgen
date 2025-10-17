@@ -26,7 +26,7 @@ fn array_iterator_values() {
     if !is_array_values_supported() {
         return;
     }
-    let array = Array::new();
+    let array: Array<JsValue> = Array::new();
     array.push(&8.into());
     array.push(&3.into());
     array.push(&2.into());

@@ -16,7 +16,7 @@ fn unstable_overload_is_available_with_flag() {
     let sig = SignatureStability::new().unwrap();
 
     let mut options = SignatureStabilityOptions::new();
-    options.mode(SignatureStabilityMode::Fast);
+    options.set_mode(SignatureStabilityMode::Fast);
 
     let result = sig.process_with_options(&options);
     assert_eq!(result, "fast");

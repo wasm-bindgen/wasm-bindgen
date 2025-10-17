@@ -5,6 +5,12 @@
 
 ### Added
 
+* Added support for erasable generic type parameters on imported JavaScript types,
+  using sound type erasure in JS bindgen boundary. Includes updated js-sys bindings
+  with generic implementations for many standard JS types and functions including
+  `Array<T>`, `Promise<T>`, `Map<K, V>`, `Iterator<T>`, and more.
+  [#4876](https://github.com/wasm-bindgen/wasm-bindgen/pull/4876)
+
 * Implement `#[wasm_bindgen(catch)]` exception handling directly in Wasm using
   `WebAssembly.JSTag` when Wasm exception handling is available. This generates
   smaller and faster code by avoiding JavaScript `handleError` wrapper functions.

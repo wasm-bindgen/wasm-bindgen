@@ -8,14 +8,14 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
+            ()
             *const T
             *mut T
             AssertUnwindSafe<T>
             Box<[T]>
             Clamped<T>
+            JsOption<T>
             NonNull<T>
-            Option<*const T>
-            Option<*mut T>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -26,14 +26,14 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   | ^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
+            ()
             *const T
             *mut T
             AssertUnwindSafe<T>
             Box<[T]>
             Clamped<T>
+            JsOption<T>
             NonNull<T>
-            Option<*const T>
-            Option<*mut T>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -44,12 +44,12 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   |                     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
+            ()
             *const T
             *mut T
             AssertUnwindSafe<T>
             Box<[T]>
             Clamped<T>
+            JsOption<T>
             NonNull<T>
-            Option<*const T>
-            Option<*mut T>
           and $N others

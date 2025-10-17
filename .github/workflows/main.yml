@@ -260,12 +260,20 @@ jobs:
             run: cargo test --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --all-features
             env:
               RUSTFLAGS: --cfg=web_sys_unstable_apis
+          - name: "web-sys (next-unstable, all features)"
+            run: cargo test --manifest-path crates/web-sys/Cargo.toml --target wasm32-unknown-unknown --all-features
+            env:
+              RUSTFLAGS: --cfg=web_sys_unstable_apis --cfg=wbg_next_unstable
           - name: "js-sys"
             run: cargo test -p js-sys --features=unsafe-eval --target wasm32-unknown-unknown
           - name: "js-sys (unstable)"
             run: cargo test -p js-sys --features=unsafe-eval --target wasm32-unknown-unknown
             env:
               RUSTFLAGS: --cfg=js_sys_unstable_apis
+          - name: "js-sys (next-unstable)"
+            run: cargo test -p js-sys --features=unsafe-eval --target wasm32-unknown-unknown
+            env:
+              RUSTFLAGS: --cfg=js_sys_unstable_apis --cfg=wbg_next_unstable
           - name: "wasm-bindgen-webidl"
             run: cargo test -p wasm-bindgen-webidl
           - name: "webidl-tests"
@@ -276,12 +284,18 @@ jobs:
             run: cargo test -p webidl-tests --target wasm32-unknown-unknown
             env:
               RUSTFLAGS: --cfg=web_sys_unstable_apis
+          - name: "webidl-tests (next)"
+            run: cargo test -p webidl-tests --target wasm32-unknown-unknown
+            env:
+              RUSTFLAGS: --cfg=web_sys_unstable_apis --cfg=wbg_next_unstable
+              WBG_NEXT_UNSTABLE: "1"
           - name: "typescript-tests"
             run: cd crates/typescript-tests && ./run.sh
     name: "Run ${{ matrix.runs.name }} tests (with geckodriver)"
     env:
       RUSTFLAGS: ${{ matrix.runs.env.RUSTFLAGS }}
       WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE: ${{ matrix.runs.env.WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE }}
+      WBG_NEXT_UNSTABLE: ${{ matrix.runs.env.WBG_NEXT_UNSTABLE }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6

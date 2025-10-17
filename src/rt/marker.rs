@@ -48,3 +48,95 @@ impl<T: UnwindSafe + ?Sized> MaybeUnwindSafe for T {}
 
 #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
 impl<T: ?Sized> MaybeUnwindSafe for T {}
+
+/// Private marker trait for erasable generics - types with this trait have the same
+/// repr for all generic param values, and can therefore be transmuted on
+/// the singular Repr type representation on ABI boundaries.
+///
+/// # Safety
+/// This type must only be implemented on types known to be repr equivalent
+/// to their Repr type.
+// #[cfg_attr(
+//     wbg_diagnostic,
+//     diagnostic::on_unimplemented(
+//         label = "generic parameter is not a valid Wasm Bindgen ErasableGeneric type",
+//         note = "\nRecommendation: Add the direct `: wasm_bindgen::JsGeneric` convenience trait bound for JsValue generics, instead of `ErasableGeneric`.\n",
+//     )
+// )]
+pub unsafe trait ErasableGeneric {
+    /// The singular concrete type that all generic variants can be transmuted on
+    type Repr: 'static;
+}
+
+unsafe impl<T: ErasableGeneric> ErasableGeneric for &mut T {
+    type Repr = &'static mut T::Repr;
+}
+
+unsafe impl<T: ErasableGeneric> ErasableGeneric for &T {
+    type Repr = &'static T::Repr;
+}
+
+/// Trait bound marker for types that are passed as an own generic type.
+/// Encapsulating the ErasableGeneric invariant that must be maintained, that
+/// the repr of the type is the type of the concrete target type repr.
+/// This is useful to provide simple debuggable trait bounds for codegen.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        message = "Unable to call function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
+        label = "passed concrete generic type does not match the expected generic repr type",
+        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
+    )
+)]
+pub trait ErasableGenericOwn<ConcreteTarget>: ErasableGeneric {}
+
+impl<T, ConcreteTarget> ErasableGenericOwn<ConcreteTarget> for T
+where
+    ConcreteTarget: ErasableGeneric,
+    T: ErasableGeneric<Repr = <ConcreteTarget as ErasableGeneric>::Repr>,
+{
+}
+
+/// Trait bound marker for types that are passed as a borrowed generic type.
+/// Encapsulating the ErasableGeneric invariant that must be maintained, that
+/// the repr of the type is the type of the concrete target type repr.
+/// This is useful to provide simple debuggable trait bounds for codegen.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        message = "Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
+        label = "concrete generic type does not match the expected generic repr type",
+        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
+    )
+)]
+pub trait ErasableGenericBorrow<Target: ?Sized> {}
+
+impl<'a, T: ?Sized + 'a, ConcreteTarget: ?Sized + 'static> ErasableGenericBorrow<ConcreteTarget>
+    for T
+where
+    &'static ConcreteTarget: ErasableGeneric,
+    &'a T: ErasableGeneric<Repr = <&'static ConcreteTarget as ErasableGeneric>::Repr>,
+{
+}
+
+/// Trait bound marker for types that are passed as a mutable borrowed generic type.
+/// Encapsulating the ErasableGeneric invariant that must be maintained, that
+/// the repr of the type is the type of the concrete target type repr.
+/// This is useful to provide simple debuggable trait bounds for codegen.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        message = "Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
+        label = "concrete generic type does not match the expected generic repr type",
+        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
+    )
+)]
+pub trait ErasableGenericBorrowMut<Target: ?Sized> {}
+
+impl<'a, T: ?Sized + 'a, ConcreteTarget: ?Sized + 'static> ErasableGenericBorrowMut<ConcreteTarget>
+    for T
+where
+    &'static mut ConcreteTarget: ErasableGeneric,
+    &'a mut T: ErasableGeneric<Repr = <&'static mut ConcreteTarget as ErasableGeneric>::Repr>,
+{
+}

@@ -83,6 +83,7 @@ fn to_string_tag() {
     test_to_string_tag(&Symbol::to_string_tag());
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn for_() {
     let foo = JsValue::from(Symbol::for_("foo"));
@@ -107,6 +108,7 @@ fn key_for() {
     assert!(Symbol::key_for(&gensym(JsValue::undefined())).is_undefined());
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn to_string() {
     assert_eq!(Symbol::iterator().to_string(), "Symbol(Symbol.iterator)");
@@ -118,6 +120,7 @@ fn to_string() {
     assert_eq!(gensym("desc".into()).to_string(), "Symbol(desc)");
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn unscopables() {
     assert_eq!(

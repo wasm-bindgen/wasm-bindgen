@@ -6,25 +6,17 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     # [wasm_bindgen (extends = :: js_sys :: Object , js_name = FileSystemEntryCallback)]
     #[derive(Debug, Clone, PartialEq, Eq)]
-    #[doc = "The `FileSystemEntryCallback` dictionary."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
+    #[doc = "The `FileSystemEntryCallback` dictionary.\n\n*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
     pub type FileSystemEntryCallback;
-    #[doc = "Get the `handleEvent` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
+    #[doc = "Get the `handleEvent` field of this object.\n\n*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
     #[wasm_bindgen(method, getter = "handleEvent")]
     pub fn get_handle_event(this: &FileSystemEntryCallback) -> Option<::js_sys::Function>;
-    #[doc = "Change the `handleEvent` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
+    #[doc = "Change the `handleEvent` field of this object.\n\n*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
     #[wasm_bindgen(method, setter = "handleEvent")]
     pub fn set_handle_event(this: &FileSystemEntryCallback, val: &::js_sys::Function);
 }
 impl FileSystemEntryCallback {
-    #[doc = "Construct a new `FileSystemEntryCallback`."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
+    #[doc = "Construct a new `FileSystemEntryCallback`.\n\n*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

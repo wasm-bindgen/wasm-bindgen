@@ -15,6 +15,9 @@ struct Opt {
     #[clap(long)]
     no_features: bool,
 
+    #[clap(long)]
+    next_unstable: bool,
+
     cargo_toml_path: Option<PathBuf>,
 }
 
@@ -24,11 +27,15 @@ fn main() -> Result<()> {
     let opt = Opt::parse();
 
     let features = !opt.no_features;
+    let next_unstable = opt.next_unstable;
 
     let generated_features = wasm_bindgen_webidl::generate(
         &opt.input_dir,
         &opt.output_dir,
-        wasm_bindgen_webidl::Options { features },
+        wasm_bindgen_webidl::Options {
+            features,
+            next_unstable,
+        },
     )?;
 
     if let Some(cargo_toml_path) = opt.cargo_toml_path {

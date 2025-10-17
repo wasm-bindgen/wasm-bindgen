@@ -108,14 +108,24 @@ try {
 
 ## Closures
 
-All `Closure`, `ScopedClosure`, and `ImmediateClosure` variants catch panics when
-built with `panic=unwind`. This includes `Closure::new`, `Closure::wrap`, `Closure::once`,
-`ScopedClosure::borrow`, `ScopedClosure::borrow_mut`, `ImmediateClosure::new`, and
-`ImmediateClosure::new_immutable`. When a panic occurs inside a closure invoked from
-JavaScript, the panic is caught and thrown as a `PanicError` exception.
+When built with `panic=unwind`, certain `ScopedClosure` and `ImmediateClosure` constructors
+catch panics and convert them to JavaScript `PanicError` exceptions. The panic-catching
+constructors are:
 
-Like exported functions, catching panics in closures requires the closure to
-satisfy the `UnwindSafe` trait.
+- `Closure::own`, `Closure::once`, `Closure::once_into_js`
+- `Closure::borrow`, `Closure::borrow_mut`
+- `Closure::wrap_assert_unwind_safe`
+- `ImmediateClosure::new`, `ImmediateClosure::new_immutable`
+- `ImmediateClosure::wrap_assert_unwind_safe`, `ImmediateClosure::wrap_immutable_assert_unwind_safe`
+
+The `*_aborting` variants (`own_aborting`, `once_wrap`, `borrow_aborting`, `borrow_mut_aborting`,
+`wrap_aborting`, `wrap_immutable_aborting`, etc.) do NOT catch panics and will abort if the
+closure panics. These variants also don't require the `MaybeUnwindSafe` bound.
+
+Note: `Closure::new` is an alias for `own_aborting` and does NOT catch panics.
+
+Catching panics in closures requires the closure to satisfy the `UnwindSafe` trait,
+or you can use the `*_assert_unwind_safe` variants which skip this check.
 
 ```rust
 use wasm_bindgen::prelude::*;

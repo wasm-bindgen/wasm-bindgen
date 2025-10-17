@@ -12,6 +12,11 @@ test:
     just test-wasm-bindgen
     just test-wasm-bindgen-unwind
     just test-wasm-bindgen-futures
+    just test-js-sys
+    just test-web-sys
+    just test-webidl
+    just test-webidl-tests
+    just test-webidl-tests-compat
 
 test-cli *ARGS="":
     cargo test -p wasm-bindgen-cli {{ARGS}} > /tmp/test-cli.log 2>&1 || (cat /tmp/test-cli.log && exit 1)
@@ -66,6 +71,33 @@ test-wasm-bindgen-futures *ARGS="":
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures {{ARGS}}
+
+test-js-sys *ARGS="":
+    cargo test -p js-sys --target wasm32-unknown-unknown {{ARGS}}
+
+test-js-sys-next *ARGS="":
+    RUSTFLAGS="--cfg=js_sys_unstable_apis" cargo test -p js-sys --target wasm32-unknown-unknown {{ARGS}}
+
+test-web-sys *ARGS="":
+    cargo test -p web-sys --target wasm32-unknown-unknown --all-features {{ARGS}}
+
+test-web-sys-next *ARGS="":
+    RUSTFLAGS="--cfg=wbg_next_unstable" cargo test -p web-sys --target wasm32-unknown-unknown --all-features {{ARGS}}
+
+test-web-idl *ARGS="":
+    cargo test -p wasm-bindgen-webidl {{ARGS}}
+
+test-web-idl-tests *ARGS="":
+    cargo test -p webidl-tests --target wasm32-unknown-unknown {{ARGS}}
+
+test-web-idl-tests-next *ARGS="":
+    WBG_NEXT_UNSTABLE=1 RUSTFLAGS="--cfg=wbg_next_unstable --cfg=web_sys_unstable_apis" cargo test -p webidl-tests --target wasm32-unknown-unknown {{ARGS}}
+
+generate-web-sys:
+    RUST_LOG=warn cargo run --release --package wasm-bindgen-webidl -- crates/web-sys/webidls crates/web-sys/src/features
+
+generate-web-sys-next:
+    RUST_LOG=warn cargo run --release --package wasm-bindgen-webidl -- crates/web-sys/webidls crates/web-sys/src/features --next-unstable
 
 bench:
     cargo bench --target wasm32-unknown-unknown

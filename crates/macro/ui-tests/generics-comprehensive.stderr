@@ -1,0 +1,405 @@
+error: invalid `dyn` keyword
+   --> ui-tests/generics-comprehensive.rs:116:33
+    |
+116 |     pub type TypeTraitObject<T: dyn Clone>;
+    |                                 ^^^
+    |
+    = help: `dyn` is only needed at the start of a trait `+`-separated list
+help: remove this keyword
+    |
+116 -     pub type TypeTraitObject<T: dyn Clone>;
+116 +     pub type TypeTraitObject<T: Clone>;
+    |
+
+error: expected trait bound, found `impl Trait` type
+   --> ui-tests/generics-comprehensive.rs:119:31
+    |
+114 | extern "C" {
+    |            - while parsing this item list starting here
+...
+119 |     pub type TypeImplTrait<T: impl Clone>;
+    |                               ^^^^^^^^^^ not a trait
+...
+129 | }
+    | - the item list ends here
+    |
+help: use the trait bounds directly
+    |
+119 -     pub type TypeImplTrait<T: impl Clone>;
+119 +     pub type TypeImplTrait<T: Clone>;
+    |
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:23:32
+   |
+23 |     pub type TypeMaybeSized<T: ?Sized>;
+   |                                ^
+
+error: cannot return references in #[wasm_bindgen] imports yet
+  --> ui-tests/generics-comprehensive.rs:63:46
+   |
+63 |     pub fn func_lifetime<'a, T>(x: &'a T) -> &'a T;
+   |                                              ^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:74:29
+   |
+74 |     pub type TypeConstParam<const N: usize>;
+   |                             ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:77:32
+   |
+77 |     pub type TypeMultipleConst<const N: usize, const M: i32>;
+   |                                ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:80:36
+   |
+80 |     pub type TypeMixedConstType<T, const N: usize>;
+   |                                    ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:83:29
+   |
+83 |     pub fn func_const_param<const N: usize>() -> [u8; N];
+   |                             ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+  --> ui-tests/generics-comprehensive.rs:86:28
+   |
+86 |     pub type TypeConstBool<const B: bool>;
+   |                            ^^^^^^^^^^^^^
+
+error: expected identifier, found keyword `dyn`
+   --> ui-tests/generics-comprehensive.rs:116:33
+    |
+116 |     pub type TypeTraitObject<T: dyn Clone>;
+    |                                 ^^^
+
+error: unsupported in wasm-bindgen generics
+   --> ui-tests/generics-comprehensive.rs:136:48
+    |
+136 |     pub type TypeEverything<'a, T: Clone + 'a, const N: usize>
+    |                                                ^^^^^^^^^^^^^^
+
+error: unsupported in wasm-bindgen generics
+   --> ui-tests/generics-comprehensive.rs:142:42
+    |
+142 |     pub fn func_everything<'a, T: Clone, const N: usize>(x: &'a T) -> [T; N]
+    |                                          ^^^^^^^^^^^^^^
+
+error[E0496]: lifetime name `'a` shadows a lifetime name that is already in scope
+  --> ui-tests/generics-comprehensive.rs:46:49
+   |
+28 | #[wasm_bindgen]
+   | --------------- first declared here
+...
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                 ^^ lifetime `'a` already in scope
+
+error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:102:62
+    |
+102 |     pub fn method_extra_bounds<V: Clone>(this: &GenericClass<T, U>, v: V) -> u32;
+    |                                -                             ^ help: a type parameter with a similar name exists: `V`
+    |                                |
+    |                                similarly named type parameter `V` defined here
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:102:65
+    |
+102 |     pub fn method_extra_bounds<V: Clone>(this: &GenericClass<T, U>, v: V) -> u32;
+    |                                -                                ^ help: a type parameter with a similar name exists: `V`
+    |                                |
+    |                                similarly named type parameter `V` defined here
+
+error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:107:9
+    |
+105 |     pub fn method_where_clause_mixing<V>(this: &GenericClass<T, U>, v: V) -> u32
+    |                                       - similarly named type parameter `V` defined here
+106 |     where
+107 |         T: Clone,
+    |         ^ help: a type parameter with a similar name exists: `V`
+
+error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:105:62
+    |
+105 |     pub fn method_where_clause_mixing<V>(this: &GenericClass<T, U>, v: V) -> u32
+    |                                       -                      ^ help: a type parameter with a similar name exists: `V`
+    |                                       |
+    |                                       similarly named type parameter `V` defined here
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:105:65
+    |
+105 |     pub fn method_where_clause_mixing<V>(this: &GenericClass<T, U>, v: V) -> u32
+    |                                       -                         ^ help: a type parameter with a similar name exists: `V`
+    |                                       |
+    |                                       similarly named type parameter `V` defined here
+
+error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:45
+    |
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |                                             ^ not found in this scope
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:48
+    |
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |                                                ^ not found in this scope
+
+error[E0277]: the trait bound `__UpcastTarget0: Clone` is not satisfied
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ the trait `Clone` is not implemented for `__UpcastTarget0`
+   |
+note: required by a bound in `TypeSimpleWhere`
+  --> ui-tests/generics-comprehensive.rs:31:42
+   |
+31 |     pub type TypeSimpleWhere<T> where T: Clone;
+   |                                          ^^^^^ required by this bound in `TypeSimpleWhere`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider further restricting type parameter `__UpcastTarget0` with trait `Clone`
+   |
+28 | #[wasm_bindgen], __UpcastTarget0: std::clone::Clone
+   |                ++++++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `__UpcastTarget0: Clone` is not satisfied
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ the trait `Clone` is not implemented for `__UpcastTarget0`
+   |
+note: required by a bound in `TypeMultipleWhere`
+  --> ui-tests/generics-comprehensive.rs:34:47
+   |
+34 |     pub type TypeMultipleWhere<T, U> where T: Clone, U: Send;
+   |                                               ^^^^^ required by this bound in `TypeMultipleWhere`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider further restricting type parameter `__UpcastTarget0` with trait `Clone`
+   |
+28 | #[wasm_bindgen], __UpcastTarget0: std::clone::Clone
+   |                ++++++++++++++++++++++++++++++++++++
+
+error[E0277]: `__UpcastTarget1` cannot be sent between threads safely
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ `__UpcastTarget1` cannot be sent between threads safely
+   |
+note: required by a bound in `TypeMultipleWhere`
+  --> ui-tests/generics-comprehensive.rs:34:57
+   |
+34 |     pub type TypeMultipleWhere<T, U> where T: Clone, U: Send;
+   |                                                         ^^^^ required by this bound in `TypeMultipleWhere`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider further restricting type parameter `__UpcastTarget1` with trait `Send`
+   |
+28 | #[wasm_bindgen], __UpcastTarget1: std::marker::Send
+   |                ++++++++++++++++++++++++++++++++++++
+
+error[E0277]: `wasm_bindgen::JsValue` is not an iterator
+  --> ui-tests/generics-comprehensive.rs:40:45
+   |
+40 |     pub type TypeWhereAssocType<T> where T: Iterator<Item = u32>;
+   |                                             ^^^^^^^^^^^^^^^^^^^^ `wasm_bindgen::JsValue` is not an iterator
+   |
+   = help: the trait `Iterator` is not implemented for `wasm_bindgen::JsValue`
+
+error[E0277]: `wasm_bindgen::JsValue` is not an iterator
+  --> ui-tests/generics-comprehensive.rs:40:14
+   |
+40 |     pub type TypeWhereAssocType<T> where T: Iterator<Item = u32>;
+   |              ^^^^^^^^^^^^^^^^^^ `wasm_bindgen::JsValue` is not an iterator
+   |
+   = help: the trait `Iterator` is not implemented for `wasm_bindgen::JsValue`
+note: required by a bound in `TypeWhereAssocType`
+  --> ui-tests/generics-comprehensive.rs:40:45
+   |
+40 |     pub type TypeWhereAssocType<T> where T: Iterator<Item = u32>;
+   |                                             ^^^^^^^^^^^^^^^^^^^^ required by this bound in `TypeWhereAssocType`
+
+error[E0277]: `wasm_bindgen::JsValue` is not an iterator
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ `wasm_bindgen::JsValue` is not an iterator
+   |
+   = help: the trait `Iterator` is not implemented for `wasm_bindgen::JsValue`
+note: required by a bound in `TypeWhereAssocType`
+  --> ui-tests/generics-comprehensive.rs:40:54
+   |
+40 |     pub type TypeWhereAssocType<T> where T: Iterator<Item = u32>;
+   |                                                      ^^^^^^^^^^ required by this bound in `TypeWhereAssocType`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: `__UpcastTarget0` is not an iterator
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ `__UpcastTarget0` is not an iterator
+   |
+note: required by a bound in `TypeWhereAssocType`
+  --> ui-tests/generics-comprehensive.rs:40:45
+   |
+40 |     pub type TypeWhereAssocType<T> where T: Iterator<Item = u32>;
+   |                                             ^^^^^^^^^^^^^^^^^^^^ required by this bound in `TypeWhereAssocType`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider further restricting type parameter `__UpcastTarget0` with trait `Iterator`
+   |
+28 | #[wasm_bindgen], __UpcastTarget0: std::iter::Iterator
+   |                ++++++++++++++++++++++++++++++++++++++
+
+error[E0277]: expected a `Fn(&'a str)` closure, found `T`
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ expected an `Fn(&'a str)` closure, found `T`
+   |
+   = note: expected a closure with signature `for<'a> fn(&'a str)`
+              found a closure with signature `fn(&'a str)`
+note: required by a bound in `TypeWhereHigherRanked`
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^ required by this bound in `TypeWhereHigherRanked`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ lifetime mismatch
+   |
+   = note: expected associated type `<T as FnOnce<(&'a str,)>>::Output`
+              found associated type `<T as FnOnce<(&'a str,)>>::Output`
+note: the required lifetime does not necessarily outlive the lifetime `'a` as defined here
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^
+note: the lifetime requirement is introduced here
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ lifetime mismatch
+   |
+   = note: expected associated type `<T as FnOnce<(&'a str,)>>::Output`
+              found associated type `<T as FnOnce<(&'a str,)>>::Output`
+note: the lifetime `'a` as defined here doesn't meet the lifetime requirements
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^
+note: the lifetime requirement is introduced here
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: expected a `Fn(&'a str)` closure, found `wasm_bindgen::JsValue`
+  --> ui-tests/generics-comprehensive.rs:46:14
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |              ^^^^^^^^^^^^^^^^^^^^^ expected an `Fn(&'a str)` closure, found `wasm_bindgen::JsValue`
+   |
+   = help: the trait `for<'a> Fn(&'a str)` is not implemented for `wasm_bindgen::JsValue`
+note: required by a bound in `TypeWhereHigherRanked`
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^ required by this bound in `TypeWhereHigherRanked`
+
+error[E0277]: expected a `FnOnce(&'a str)` closure, found `wasm_bindgen::JsValue`
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ expected an `FnOnce(&'a str)` closure, found `wasm_bindgen::JsValue`
+   |
+   = help: the trait `for<'a> FnOnce(&'a str)` is not implemented for `wasm_bindgen::JsValue`
+note: required by a bound in `TypeWhereHigherRanked`
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^ required by this bound in `TypeWhereHigherRanked`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: expected a `Fn(&'a str)` closure, found `__UpcastTarget0`
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ expected an `Fn(&'a str)` closure, found `__UpcastTarget0`
+   |
+note: required by a bound in `TypeWhereHigherRanked`
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^ required by this bound in `TypeWhereHigherRanked`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider further restricting type parameter `__UpcastTarget0` with trait `Fn`
+   |
+28 | #[wasm_bindgen], __UpcastTarget0: for<'a> Fn(&'a str)
+   |                ++++++++++++++++++++++++++++++++++++++
+
+error[E0277]: `wasm_bindgen::JsValue` is not an iterator
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ `wasm_bindgen::JsValue` is not an iterator
+   |
+   = help: the trait `Iterator` is not implemented for `wasm_bindgen::JsValue`
+note: required by a bound in `TypeWhereAssocType`
+  --> ui-tests/generics-comprehensive.rs:40:45
+   |
+40 |     pub type TypeWhereAssocType<T> where T: Iterator<Item = u32>;
+   |                                             ^^^^^^^^^^^^^^^^^^^^ required by this bound in `TypeWhereAssocType`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: expected a `Fn(&'a str)` closure, found `wasm_bindgen::JsValue`
+  --> ui-tests/generics-comprehensive.rs:28:1
+   |
+28 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ expected an `Fn(&'a str)` closure, found `wasm_bindgen::JsValue`
+   |
+   = help: the trait `for<'a> Fn(&'a str)` is not implemented for `wasm_bindgen::JsValue`
+note: required by a bound in `TypeWhereHigherRanked`
+  --> ui-tests/generics-comprehensive.rs:46:56
+   |
+46 |     pub type TypeWhereHigherRanked<T> where for<'a> T: Fn(&'a str);
+   |                                                        ^^^^^^^^^^^ required by this bound in `TypeWhereHigherRanked`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+  --> ui-tests/generics-comprehensive.rs:91:1
+   |
+91 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^
+   | |
+   | expected `&GenericClass<String>`, found `&GenericClass`
+   | arguments to this function are incorrect
+   |
+   = note: expected reference `&GenericClass<String>`
+              found reference `&GenericClass<wasm_bindgen::JsValue>`
+help: the return type of this call is `&GenericClass` due to the type of the argument passed
+  --> ui-tests/generics-comprehensive.rs:91:1
+   |
+91 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ this argument influences the return type of `into_abi`
+note: method defined here
+  --> $WORKSPACE/src/convert/traits.rs
+   |
+   |     fn into_abi(self) -> Self::Abi;
+   |        ^^^^^^^^
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

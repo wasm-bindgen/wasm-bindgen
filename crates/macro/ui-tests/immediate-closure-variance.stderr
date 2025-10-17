@@ -1,0 +1,33 @@
+error[E0271]: type mismatch resolving `<ImmediateClosure<'_, dyn FnMut() -> Number> as ErasableGeneric>::Repr == &ImmediateClosure<'static, dyn FnMut() -> u32>`
+  --> ui-tests/immediate-closure-variance.rs:11:68
+   |
+11 |     let _bad: &ImmediateClosure<dyn FnMut() -> Number> = immediate.upcast_ref();
+   |                                                                    ^^^^^^^^^^ expected `u32`, found `JsValue`
+   |
+   = note: expected reference `&'static wasm_bindgen::prelude::ImmediateClosure<'static, (dyn FnMut() -> u32 + 'static)>`
+              found reference `&'static wasm_bindgen::prelude::ImmediateClosure<'static, (dyn FnMut() -> JsValue + 'static)>`
+note: required by a bound in `upcast_ref`
+  --> $WORKSPACE/src/convert/traits.rs
+   |
+   |     fn upcast_ref(&self) -> &T
+   |        ---------- required by a bound in this associated function
+...
+   |         T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Upcast::upcast_ref`
+
+error[E0271]: type mismatch resolving `<ImmediateClosure<'_, dyn FnMut(u32)> as ErasableGeneric>::Repr == &ImmediateClosure<'static, dyn FnMut(JsValue)>`
+  --> ui-tests/immediate-closure-variance.rs:17:63
+   |
+17 |     let _bad2: &ImmediateClosure<dyn FnMut(u32)> = immediate2.upcast_ref();
+   |                                                               ^^^^^^^^^^ expected `&ImmediateClosure<'_, dyn FnMut(...)>`, found `&ImmediateClosure<'_, dyn FnMut(u32)>`
+   |
+   = note: expected reference `&'static wasm_bindgen::prelude::ImmediateClosure<'static, (dyn FnMut(JsValue) + 'static)>`
+              found reference `&'static wasm_bindgen::prelude::ImmediateClosure<'static, (dyn FnMut(u32) + 'static)>`
+note: required by a bound in `upcast_ref`
+  --> $WORKSPACE/src/convert/traits.rs
+   |
+   |     fn upcast_ref(&self) -> &T
+   |        ---------- required by a bound in this associated function
+...
+   |         T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Upcast::upcast_ref`

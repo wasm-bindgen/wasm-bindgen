@@ -6,25 +6,17 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     # [wasm_bindgen (extends = :: js_sys :: Object , js_name = EventListener)]
     #[derive(Debug, Clone, PartialEq, Eq)]
-    #[doc = "The `EventListener` dictionary."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EventListener`*"]
+    #[doc = "The `EventListener` dictionary.\n\n*This API requires the following crate features to be activated: `EventListener`*"]
     pub type EventListener;
-    #[doc = "Get the `handleEvent` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EventListener`*"]
+    #[doc = "Get the `handleEvent` field of this object.\n\n*This API requires the following crate features to be activated: `EventListener`*"]
     #[wasm_bindgen(method, getter = "handleEvent")]
     pub fn get_handle_event(this: &EventListener) -> Option<::js_sys::Function>;
-    #[doc = "Change the `handleEvent` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EventListener`*"]
+    #[doc = "Change the `handleEvent` field of this object.\n\n*This API requires the following crate features to be activated: `EventListener`*"]
     #[wasm_bindgen(method, setter = "handleEvent")]
     pub fn set_handle_event(this: &EventListener, val: &::js_sys::Function);
 }
 impl EventListener {
-    #[doc = "Construct a new `EventListener`."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EventListener`*"]
+    #[doc = "Construct a new `EventListener`.\n\n*This API requires the following crate features to be activated: `EventListener`*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

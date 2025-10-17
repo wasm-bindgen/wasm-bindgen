@@ -483,6 +483,23 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn set_value(this: &HtmlInputElement, value: &str);
+    # [wasm_bindgen (structural , catch , method , getter , js_class = "HTMLInputElement" , js_name = valueAsDate)]
+    #[doc = "Getter for the `valueAsDate` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/valueAsDate)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn value_as_date(this: &HtmlInputElement) -> Result<Option<::js_sys::Date>, JsValue>;
+    # [wasm_bindgen (structural , catch , method , setter , js_class = "HTMLInputElement" , js_name = valueAsDate)]
+    #[doc = "Setter for the `valueAsDate` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/valueAsDate)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn set_value_as_date(
+        this: &HtmlInputElement,
+        value: Option<&::js_sys::Date>,
+    ) -> Result<(), JsValue>;
     # [wasm_bindgen (structural , method , getter , js_class = "HTMLInputElement" , js_name = valueAsNumber)]
     #[doc = "Getter for the `valueAsNumber` field of this object."]
     #[doc = ""]

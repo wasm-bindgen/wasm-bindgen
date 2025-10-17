@@ -171,7 +171,7 @@ fn webassembly_instance() {
 
     // Has expected exports.
     let exports = instance.exports();
-    assert!(Reflect::has(exports.as_ref(), &"exported_func".into()).unwrap());
+    assert!(Reflect::has_str(exports.as_ref(), &"exported_func".into()).unwrap());
 }
 
 #[wasm_bindgen_test]
