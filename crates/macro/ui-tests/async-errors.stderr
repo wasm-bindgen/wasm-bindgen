@@ -30,9 +30,9 @@ error[E0277]: the trait bound `wasm_bindgen::JsValue: From<BadType>` is not sati
              `wasm_bindgen::JsValue` implements `From<&str>`
              `wasm_bindgen::JsValue` implements `From<*const T>`
              `wasm_bindgen::JsValue` implements `From<*mut T>`
+             `wasm_bindgen::JsValue` implements `From<AnyType>`
              `wasm_bindgen::JsValue` implements `From<Array>`
              `wasm_bindgen::JsValue` implements `From<ArrayBuffer>`
-             `wasm_bindgen::JsValue` implements `From<BigInt64Array>`
            and $N others
    = note: required for `BadType` to implement `Into<wasm_bindgen::JsValue>`
    = note: required for `BadType` to implement `IntoJsResult`
