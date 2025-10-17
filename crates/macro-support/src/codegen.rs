@@ -950,7 +950,7 @@ impl ToTokens for ast::ImportType {
             }
         } else {
             quote! {
-                JsValue::describe()
+                #wasm_bindgen::JsValue::describe()
             }
         };
 
