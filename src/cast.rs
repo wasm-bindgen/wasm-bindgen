@@ -155,14 +155,14 @@ where
     fn unchecked_from_js_ref(val: &JsValue) -> &Self;
 }
 
-impl<T> TryFromJsValue for T
-where
-    T: JsCast,
-{
-    type Error = JsValue;
+impl<T: JsCast> TryFromJsValue for T {
+    #[inline]
+    fn try_from_js_value(val: JsValue) -> Result<Self, JsValue> {
+        val.dyn_into()
+    }
 
     #[inline]
-    fn try_from_js_value(val: JsValue) -> Result<Self, Self::Error> {
-        val.dyn_into()
+    fn try_from_js_value_ref(val: &JsValue) -> Option<Self> {
+        val.clone().dyn_into().ok()
     }
 }

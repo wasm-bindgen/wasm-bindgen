@@ -70,7 +70,7 @@ fn u64_try_from_js_value() {
     assert!(u64::try_from_js_value(JsValue::TRUE).is_err());
     assert!(u64::try_from_js_value(JsValue::from_str("45")).is_err());
     assert!(u64::try_from_js_value(JsValue::NULL).is_err());
-    assert_eq!(u64::try_from_js_value(JsValue::from(-1_i64)), Ok(u64::MAX));
+    assert!(u64::try_from_js_value(JsValue::from(-1_i64)).is_err());
 }
 
 #[wasm_bindgen_test]
