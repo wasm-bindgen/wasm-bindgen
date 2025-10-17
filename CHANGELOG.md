@@ -26,6 +26,9 @@
 * Added better support for async stack traces when building in debug mode.
   [#4711](https://github.com/wasm-bindgen/wasm-bindgen/pull/4711)
 
+* Extended support for `TryFromJsValue` trait implementations.
+  [#4714](https://github.com/wasm-bindgen/wasm-bindgen/pull/4714)
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.

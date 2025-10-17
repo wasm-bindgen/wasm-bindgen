@@ -331,6 +331,15 @@ impl<T: WasmAbi> WasmRet<T> {
 /// into a Rust type. It is used by the [`wasm_bindgen`](wasm_bindgen_macro::wasm_bindgen)
 /// proc-macro to allow conversion to user types.
 ///
+/// The semantics of this trait for various types are designed to provide a runtime
+/// analog of the static semantics implemented by the IntoWasmAbi function bindgen,
+/// with the exception that conversions are constrained to not cast invalid types.
+///
+/// For example, where the Wasm static semantics will permit `foo(x: i32)` when passed
+/// from JS `foo("5")` to treat that as `foo(5)`, this trait will instead throw. Apart
+/// from these reduced type conversion cases, behaviours should otherwise match the
+/// static semantics.
+///
 /// Types implementing this trait must specify their conversion logic from
 /// [`JsValue`] to the Rust type, handling any potential errors that may occur
 /// during the conversion process.

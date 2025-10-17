@@ -1,4 +1,4 @@
-use crate::JsValue;
+use crate::{convert::TryFromJsValue, JsValue};
 
 /// A trait for checked and unchecked casting between JS types.
 ///
@@ -153,4 +153,16 @@ where
     /// This is intended to be an internal implementation detail, you likely
     /// won't need to call this.
     fn unchecked_from_js_ref(val: &JsValue) -> &Self;
+}
+
+impl<T> TryFromJsValue for T
+where
+    T: JsCast,
+{
+    type Error = JsValue;
+
+    #[inline]
+    fn try_from_js_value(val: JsValue) -> Result<Self, Self::Error> {
+        val.dyn_into()
+    }
 }
