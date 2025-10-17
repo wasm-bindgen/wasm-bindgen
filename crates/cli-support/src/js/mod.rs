@@ -874,7 +874,8 @@ wasm = wasmInstance.exports;
                 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
                 async function __wbg_load(module, imports) {{
-                    if (typeof Response === 'function' && module instanceof Response) {{
+                    if ((typeof Response === 'function' && module instanceof Response) ||
+                        (typeof Promise === 'function' && module instanceof Promise)) {{
                         if (typeof WebAssembly.instantiateStreaming === 'function') {{
                             try {{
                                 return await WebAssembly.instantiateStreaming(module, imports);
@@ -895,7 +896,8 @@ wasm = wasmInstance.exports;
                             }}
                         }}
 
-                        const bytes = await module.arrayBuffer();
+                        const resp = await module;
+                        const bytes = await resp.arrayBuffer();
                         return await WebAssembly.instantiate(bytes, imports);
 
                     }} else {{
@@ -967,7 +969,7 @@ wasm = wasmInstance.exports;
                         module_or_path = fetch(module_or_path);
                     }}
 
-                    const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
+                    const {{ instance, module }} = await __wbg_load(module_or_path, imports);
 
                     return __wbg_finalize_init(instance, module{init_stack_size_arg});
                 }}
