@@ -4,7 +4,9 @@ error[E0308]: mismatched types
 3 | #[wasm_bindgen]
   | ^^^^^^^^^^^^^^^
   | |
-  | expected `JsString`, found `JsValue`
+  | expected `JsString`, found `JsRef`
   | expected `JsString` because of return type
   |
+  = note: expected struct `JsString`
+             found struct `JsRef`
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
