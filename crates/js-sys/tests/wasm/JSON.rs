@@ -195,3 +195,45 @@ fn stringify_with_replacer_and_space_error() {
     let err_msg: String = From::from(err.message());
     assert!(err_msg.contains("rust really rocks"));
 }
+
+#[wasm_bindgen_test]
+fn stringify_with_replacer_func_typed() {
+    let obj = Object::new();
+    Reflect::set(obj.as_ref(), &JsValue::from("a"), &JsValue::from(1)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("b"), &JsValue::from(2)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("c"), &JsValue::from(3)).unwrap();
+
+    // Replacer function that doubles numbers
+    let output: String = JSON::stringify_with_replacer_func(
+        &JsValue::from(obj),
+        &mut |_key: JsString, value: JsValue| -> Result<Option<JsValue>, JsValue> {
+            if let Some(n) = value.as_f64() {
+                Ok(Some(JsValue::from(n * 2.0)))
+            } else {
+                Ok(Some(value))
+            }
+        },
+        None,
+    )
+    .unwrap()
+    .into();
+    assert_eq!(output, "{\"a\":2,\"b\":4,\"c\":6}");
+}
+
+#[wasm_bindgen_test]
+fn stringify_with_replacer_list_typed() {
+    let obj = Object::new();
+    Reflect::set(obj.as_ref(), &JsValue::from("a"), &JsValue::from(1)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("b"), &JsValue::from(2)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("c"), &JsValue::from(3)).unwrap();
+
+    // Only include "a" and "c" in output
+    let output: String = JSON::stringify_with_replacer_list(
+        &JsValue::from(obj),
+        vec!["a".to_string(), "c".to_string()],
+        None,
+    )
+    .unwrap()
+    .into();
+    assert_eq!(output, "{\"a\":1,\"c\":3}");
+}

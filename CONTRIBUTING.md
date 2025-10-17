@@ -20,6 +20,7 @@ Run individual tests (all accept test names as args):
 - `just test-macro` - Run macro tests
 - `just test-macro-support` - Run macro support tests
 - `just test-ui` - Run UI tests for macros
+- `just test-js-sys` - Run the JS Sys tests
 
 To inspect failed generated tests for `just test-wasm-bindgen`, set `WASM_BINDGEN_KEEP_TEST_BUILD=1` to retain the temporary folder for test output.
 

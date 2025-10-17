@@ -238,12 +238,12 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4);
 }
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -530,12 +530,12 @@ function __wbg_get_imports() {
     imports["./reference_test_bg.js"].__wbg__wbg_cb_unref_87dfb5aaa0cbcea7 = function(arg0) {
         arg0._wbg_cb_unref();
     };
-    imports["./reference_test_bg.js"].__wbg_call_3020136f7a2d6e44 = function() { return handleError(function (arg0, arg1, arg2) {
-        const ret = arg0.call(arg1, arg2);
+    imports["./reference_test_bg.js"].__wbg_call_1a2784c136287cfa = function() { return handleError(function (arg0, arg1) {
+        const ret = arg0.call(arg1);
         return ret;
     }, arguments) };
-    imports["./reference_test_bg.js"].__wbg_call_abb4ff46ce38be40 = function() { return handleError(function (arg0, arg1) {
-        const ret = arg0.call(arg1);
+    imports["./reference_test_bg.js"].__wbg_call_8b6a1ddc356729fc = function() { return handleError(function (arg0, arg1, arg2) {
+        const ret = arg0.call(arg1, arg2);
         return ret;
     }, arguments) };
     imports["./reference_test_bg.js"].__wbg_constructor_8ac4184a07e5c62b = function(arg0) {
@@ -549,7 +549,7 @@ function __wbg_get_imports() {
     imports["./reference_test_bg.js"].__wbg_error_baba35349fd8e13c = function(arg0, arg1) {
         console.error(getStringFromWasm0(arg0, arg1));
     };
-    imports["./reference_test_bg.js"].__wbg_forEach_fdfa9a663e9c9a9e = function(arg0, arg1, arg2) {
+    imports["./reference_test_bg.js"].__wbg_forEach_a4bb7c18699b2a61 = function(arg0, arg1, arg2) {
         try {
             var state0 = {a: arg1, b: arg2};
             var cb0 = (arg0, arg1, arg2) => {
@@ -707,7 +707,7 @@ function __wbg_get_imports() {
         getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
         getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
-    imports["./reference_test_bg.js"].__wbg_then_4f95312d68691235 = function(arg0, arg1) {
+    imports["./reference_test_bg.js"].__wbg_then_84bf0ccdca910f4d = function(arg0, arg1) {
         const ret = arg0.then(arg1);
         return ret;
     };
@@ -716,14 +716,14 @@ function __wbg_get_imports() {
         const ret = getStringFromWasm0(arg0, arg1);
         return ret;
     };
-    imports["./reference_test_bg.js"].__wbindgen_cast_0000000000000001 = function(arg0) {
-        // Cast intrinsic for `F64 -> Externref`.
-        const ret = arg0;
-        return ret;
-    };
-    imports["./reference_test_bg.js"].__wbindgen_cast_0000000000000002 = function(arg0, arg1) {
+    imports["./reference_test_bg.js"].__wbindgen_cast_0000000000000001 = function(arg0, arg1) {
         // Cast intrinsic for `Closure(Closure { dtor_idx: 9, function: Function { arguments: [Externref], shim_idx: 10, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
         const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000008, wasm_bindgen__convert__closures_____invoke__h0000000000000003);
+        return ret;
+    };
+    imports["./reference_test_bg.js"].__wbindgen_cast_0000000000000002 = function(arg0) {
+        // Cast intrinsic for `F64 -> Externref`.
+        const ret = arg0;
         return ret;
     };
     imports["./reference_test_bg.js"].__wbindgen_init_externref_table = function() {

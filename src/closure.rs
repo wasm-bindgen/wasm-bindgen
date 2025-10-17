@@ -11,6 +11,7 @@ use alloc::string::String;
 use core::fmt;
 use core::mem::{self, ManuallyDrop};
 
+use crate::__rt::marker::ErasableGeneric;
 use crate::convert::*;
 use crate::describe::*;
 use crate::JsValue;
@@ -246,6 +247,7 @@ extern "C" {
 ///     // here or return some sort of handle to JS!
 /// }
 /// ```
+///
 pub struct Closure<T: ?Sized> {
     js: JsClosure,
     // careful: must be Box<T> not just T because unsized PhantomData
@@ -525,4 +527,8 @@ pub unsafe trait WasmClosure: WasmDescribe {
 #[doc(hidden)]
 pub trait IntoWasmClosure<T: ?Sized> {
     fn unsize(self: Box<Self>) -> Box<T>;
+}
+
+unsafe impl<T: ?Sized> ErasableGeneric for Closure<T> {
+    type Repr = Closure<JsValue>;
 }

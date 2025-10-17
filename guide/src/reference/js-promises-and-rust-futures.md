@@ -26,20 +26,25 @@ Here we can see how converting a `Promise` to Rust creates a `impl Future<Output
 a successful promise becomes `Ok` and an erroneous promise becomes `Err`.
 
 You can also import a JS async function directly with a `extern "C"` block, and
-the promise will be converted to a future automatically. For now the return type
-must be `JsValue` or no return at all:
+the promise will be converted to a future automatically. The return type can be 
+`JsValue`, no return at all, or `Result` and `Option` types to primitives or
+types supporting [JsCast] conversions:
 
 ```rust
 #[wasm_bindgen]
 extern "C" {
     async fn async_func_1_ret_number() -> JsValue;
     async fn async_func_2();
+    async fn async_func_3_ret_string() -> JsString;
+    async fn async_func_4_ret_array() -> Uint8Array;
 }
 
 async fn get_from_js() -> f64 {
     async_func_1_ret_number().await.as_f64().unwrap_or(0.0)
 }
 ```
+
+[JsCast]: https://docs.rs/wasm-bindgen/*/wasm_bindgen/trait.JsCast.html
 
 The `async` can be combined with the `catch` attribute to manage errors from the
 JS promise:
@@ -123,3 +128,34 @@ The current crate on crates.io, `wasm-bindgen-futures 0.4.*`, supports
 
 If you're using the `Future` trait from the `futures` `0.1.*` crate then you'll
 want to use the `0.3.*` track of `wasm-bindgen-futures` on crates.io.
+
+## Using Generic Promise Types
+
+Promises also support [erasable generic type parameters](./types/generics.md):
+
+```rust
+use js_sys::{Promise, Number, Array, JsString};
+use wasm_bindgen_futures::JsFuture;
+
+#[wasm_bindgen]
+extern "C" {
+    // Import a function returning a typed promise
+    fn fetchNumbers() -> Promise<Array<Number>>;
+}
+
+async fn process_numbers() -> Result<f64, JsValue> {
+    // The promise type documents that it resolves to Array<Number>
+    let promise: Promise<Array<Number>> = fetchNumbers();
+    let result = JsFuture::from(promise).await?;
+
+    // Cast to the documented type
+    let numbers: Array<Number> = result.unchecked_into();
+
+    // Process the typed array
+    let mut sum = 0.0;
+    for i in 0..numbers.length() {
+        sum += numbers.get(i).value_of();
+    }
+    Ok(sum)
+}
+```

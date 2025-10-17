@@ -4,6 +4,8 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Yes | Yes | No | Yes | No | No | Any JavaScript value |
 
+`JsValue` is also the default representation for many [erasable generic types](./generics.md) at the ABI boundary.
+
 ## `&[JsValue]` slices
 
 You can pass `&[JsValue]` slices from Rust to JavaScript. The slice is passed as

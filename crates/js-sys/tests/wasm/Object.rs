@@ -162,6 +162,32 @@ fn get_own_property_descriptors() {
 }
 
 #[wasm_bindgen_test]
+fn property_descriptor_get_value() {
+    let desc: js_sys::PropertyDescriptor<Number> =
+        js_sys::PropertyDescriptor::new_value(&Number::from(42));
+    let value: Option<Number> = desc.get_value();
+    assert!(value.is_some());
+    assert_eq!(value.unwrap().value_of(), 42.0);
+}
+
+#[wasm_bindgen_test]
+fn property_descriptor_get_set() {
+    let desc: js_sys::PropertyDescriptor<Number> = js_sys::PropertyDescriptor::new();
+
+    // Create and set a getter function
+    let getter: Function<Number> = Function::new("return 123");
+    desc.set_get(getter.clone());
+    let retrieved_getter = desc.get_get();
+    assert!(retrieved_getter.is_some());
+
+    // Create and set a setter function
+    let setter: FunctionArgs<Number> = Function::new1("x", "");
+    desc.set_set(setter.clone());
+    let retrieved_setter = desc.get_set();
+    assert!(retrieved_setter.is_some());
+}
+
+#[wasm_bindgen_test]
 fn get_own_property_names() {
     let names = Object::get_own_property_names(&foo_42());
     assert_eq!(names.length(), 1);
@@ -307,4 +333,38 @@ fn value_of() {
     assert_eq!(a, a2);
     assert_ne!(a, b);
     assert_ne!(a2, b);
+}
+
+#[wasm_bindgen_test]
+fn entries_typed() {
+    let obj: Object<JsString> = Reflect::construct(&Function::new_no_args(""), &Array::new())
+        .unwrap()
+        .unchecked_into();
+    Reflect::set(&obj, &"a".into(), &JsString::from("1").into()).unwrap();
+    Reflect::set(&obj, &"b".into(), &JsString::from("2").into()).unwrap();
+
+    // entries_typed returns Array<ArrayTuple<JsString, T>>
+    let entries = Object::entries_typed(&obj);
+    assert_eq!(entries.length(), 2);
+
+    // Each entry is [key, value] array
+    let first: Array = entries.get(0).unchecked_into();
+    assert_eq!(first.length(), 2);
+}
+
+#[wasm_bindgen_test]
+fn from_entries_typed() {
+    let entries: Array<ArrayTuple<JsString, JsString>> = Array::new_typed();
+    entries.push(&ArrayTuple::new2(
+        &JsString::from("foo"),
+        &JsString::from("bar"),
+    ));
+    entries.push(&ArrayTuple::new2(
+        &JsString::from("baz"),
+        &JsString::from("qux"),
+    ));
+
+    let obj: Object<JsString> = Object::from_entries_typed(&entries).unwrap();
+    assert_eq!(Reflect::get(&obj, &"foo".into()).unwrap(), "bar");
+    assert_eq!(Reflect::get(&obj, &"baz".into()).unwrap(), "qux");
 }

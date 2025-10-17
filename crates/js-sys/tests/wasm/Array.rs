@@ -206,7 +206,12 @@ fn delete() {
 #[wasm_bindgen_test]
 fn filter() {
     let array = js_array!["a", "c", "x", "n"];
-    assert!(array.filter(&mut |x, _, _| x.as_f64().is_some()).length() == 0);
+    assert!(
+        array
+            .filter(&mut |x: JsValue, _, _| { x.as_f64().is_some() })
+            .length()
+            == 0
+    );
 
     let array = js_array![1, 2, 3, 4];
     assert_eq!(

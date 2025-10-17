@@ -345,3 +345,27 @@ fn call9() {
         .unwrap();
     assert_eq!(result, 450);
 }
+
+#[wasm_bindgen_test]
+fn generic_function_new() {
+    // Test Function::new with JsValue return type
+    let f = Function::new::<JsValue>("return 42");
+    assert_eq!(call_function(&f), 42);
+}
+
+#[wasm_bindgen_test]
+fn generic_function_new1() {
+    // Test Function::new1 with JsValue types
+    let f = Function::new1::<JsValue, JsValue>("x", "return x * 2");
+    assert_eq!(call_function_arg(&f, JsValue::from(21)), 42);
+}
+
+#[wasm_bindgen_test]
+fn generic_function_new2() {
+    // Test Function::new2 with JsValue types
+    let f = Function::new2::<JsValue, JsValue, JsValue>("x", "y", "return x + y");
+    let result = f
+        .call2(&JsValue::NULL, &JsValue::from(10), &JsValue::from(32))
+        .unwrap();
+    assert_eq!(result, 42);
+}
