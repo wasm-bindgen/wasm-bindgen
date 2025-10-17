@@ -22,12 +22,6 @@ error: first argument of method must be a path
 14 |     fn f3(x: &&u32);
    |               ^^^^
 
-error: paths with type parameters are not supported yet
-  --> ui-tests/invalid-imports.rs:20:15
-   |
-20 |     fn f4(x: &Bar<T>);
-   |               ^^^^^^
-
 error: first argument of method must be a path
   --> ui-tests/invalid-imports.rs:22:15
    |

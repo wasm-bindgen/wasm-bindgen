@@ -53,6 +53,32 @@ impl Default for Program {
 }
 
 impl Program {
+    /// Returns the generic parameter count of the given type name,
+    /// along with the number of parameters that permit defaults
+    /// (guaranteed to be <= the first number).
+    pub fn import_type_generic_count(&self, type_name: &str) -> (usize, usize) {
+        self.imports
+            .iter()
+            .find_map(|import| match &import.kind {
+                ImportKind::Type(import_type) if import_type.rust_name == type_name => {
+                    let total_count = import_type.generics.params.len();
+                    let mut default_count = 0;
+                    for param in import_type.generics.params.iter().rev() {
+                        if let syn::GenericParam::Type(type_param) = param {
+                            if type_param.default.is_some() {
+                                default_count += 1;
+                                continue;
+                            }
+                        };
+                        break;
+                    }
+                    Some((total_count, default_count))
+                }
+                _ => None,
+            })
+            .unwrap_or((0, 0))
+    }
+
     /// Name of the link function for a specific linked module
     pub fn link_function_name(&self, idx: usize) -> String {
         let hash = match &self.linked_modules[idx] {
@@ -196,6 +222,8 @@ pub struct ImportFunction {
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures
     pub wasm_bindgen_futures: Path,
+    /// Generic parameters as validated simple type parameters for this function
+    pub generics: syn::Generics,
 }
 
 /// The type of a function being imported
@@ -210,6 +238,8 @@ pub enum ImportFunctionKind {
         ty: syn::Type,
         /// The kind of method this is
         kind: MethodKind,
+        /// The number of generic params defined by the class type itself
+        generic_param_count: usize,
     },
     /// A standard function
     Normal,
@@ -334,6 +364,8 @@ pub struct ImportType {
     pub no_deref: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
+    /// Validated generics
+    pub generics: syn::Generics,
 }
 
 /// The metadata for a String Enum

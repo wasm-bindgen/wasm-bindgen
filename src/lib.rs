@@ -62,7 +62,7 @@ use core::ops::{
 };
 use core::ptr::NonNull;
 
-use crate::__rt::marker::AnyType;
+use crate::__rt::marker::{AnyType, GenericType};
 use crate::convert::{FromWasmAbi, TryFromJsValue, VectorIntoWasmAbi};
 
 const _: () = {
@@ -265,6 +265,7 @@ pub struct JsRef<T = AnyType> {
 
 pub type JsAny = JsRef<AnyType>;
 pub type JsValue = JsAny;
+impl<T> GenericType for JsRef<T> {}
 
 /// Convenience trait to convert to a `JsRef<T>` for `T`
 pub trait ToJs {

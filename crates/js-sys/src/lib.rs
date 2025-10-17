@@ -33,9 +33,11 @@ use core::mem::MaybeUninit;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
 use core::str;
 use core::str::FromStr;
+use wasm_bindgen::__rt::marker::AnyType;
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 
 pub use wasm_bindgen;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, JsRef};
 
 // When adding new imports:
 //
@@ -308,14 +310,18 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Array;
 
+    /// Creates a new empty generic type array.
+    // #[wasm_bindgen(constructor)]
+    // pub fn new_t<T>() -> Array<T>;
+
     /// Creates a new array with the specified length (elements are initialized to `undefined`).
     #[wasm_bindgen(constructor)]
     pub fn new_with_length(len: u32) -> Array;
 
     /// Retrieves the element at the index, counting from the end if negative
     /// (returns `undefined` if the index is out of range).
-    #[wasm_bindgen(method)]
-    pub fn at(this: &Array, index: i32) -> JsValue;
+    // #[wasm_bindgen(method)]
+    // pub fn at<T>(this: &Array<T>, index: i32) -> T;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     #[wasm_bindgen(method, structural, indexing_getter)]
@@ -331,7 +337,7 @@ extern "C" {
     ///
     /// This does not resize the array, the array will still be the same length.
     #[wasm_bindgen(method, structural, indexing_deleter)]
-    pub fn delete(this: &Array, index: u32);
+    pub fn delete<T>(this: &Array, index: u32);
 
     /// The `Array.from()` method creates a new, shallow-copied `Array` instance
     /// from an array-like or iterable object.
@@ -609,6 +615,12 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn sort(this: &Array) -> Array;
 
+    /// The `sort()` method with a custom compare function.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
+    #[wasm_bindgen(method, js_name = sort)]
+    pub fn sort_by(this: &Array, compare_fn: &Function) -> Array;
+
     /// The `splice()` method changes the contents of an array by removing existing elements and/or
     /// adding new elements.
     ///
@@ -618,11 +630,38 @@ extern "C" {
 
     /// The `toLocaleString()` method returns a string representing the elements of the array.
     /// The elements are converted to Strings using their toLocaleString methods and these
-    /// Strings are separated by a locale-specific String (such as a comma “,”).
+    /// Strings are separated by a locale-specific String (such as a comma ",").
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string(this: &Array, locales: &JsValue, options: &JsValue) -> JsString;
+
+    /// The `toReversed()` method returns a new array with the elements in reversed order,
+    /// without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toReversed)
+    #[wasm_bindgen(method, js_name = toReversed)]
+    pub fn to_reversed(this: &Array) -> Array;
+
+    /// The `toSorted()` method returns a new array with the elements sorted in ascending order,
+    /// without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
+    #[wasm_bindgen(method, js_name = toSorted)]
+    pub fn to_sorted(this: &Array) -> Array;
+
+    /// The `toSorted()` method with a custom compare function.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
+    #[wasm_bindgen(method, js_name = toSorted)]
+    pub fn to_sorted_by(this: &Array, compare_fn: &Function) -> Array;
+
+    /// The `toSpliced()` method returns a new array with some elements removed and/or
+    /// replaced at a given index, without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced)
+    #[wasm_bindgen(method, js_name = toSpliced)]
+    pub fn to_spliced(this: &Array, start: u32, delete_count: u32) -> Array;
 
     /// The `toString()` method returns a string representing the specified array
     /// and its elements.
@@ -637,6 +676,13 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)
     #[wasm_bindgen(method)]
     pub fn unshift(this: &Array, value: &JsValue) -> u32;
+
+    /// The `with()` method returns a new array with the element at the given index
+    /// replaced with the given value, without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with)
+    #[wasm_bindgen(method, js_name = with)]
+    pub fn with(this: &Array, index: u32, value: &JsValue) -> Array;
 }
 
 /// Iterator returned by `Array::into_iter`
@@ -1982,7 +2028,11 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call1(this: &Function, context: &JsValue, arg1: &JsValue) -> Result<JsValue, JsValue>;
+    pub fn call1<T>(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsRef<T>,
+    ) -> Result<JsValue, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4652,7 +4702,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiateStreaming)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = instantiateStreaming)]
-        pub fn instantiate_streaming(response: &Promise, imports: &Object) -> Promise;
+        pub fn instantiate_streaming(response: &JsValue, imports: &Object) -> Promise;
 
         /// The `WebAssembly.validate()` function validates a given typed
         /// array of WebAssembly binary code, returning whether the bytes
@@ -6171,6 +6221,12 @@ pub mod Intl {
     }
 }
 
+/// Promising trait used to represent that a function may return V or Promise<V>
+pub trait Promising<T> {}
+
+impl<T: IntoWasmAbi> Promising<T> for T {}
+impl<T: IntoWasmAbi> Promising<T> for Promise<T> {}
+
 // Promise
 #[wasm_bindgen]
 extern "C" {
@@ -6181,7 +6237,7 @@ extern "C" {
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>")]
     #[derive(Clone, Debug)]
-    pub type Promise;
+    pub type Promise<T = AnyType>;
 
     /// Creates a new `Promise` with the provided executor `cb`
     ///
@@ -6202,6 +6258,25 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(cb: &mut dyn FnMut(Function, Function)) -> Promise;
 
+    /// Creates a new `Promise` with the provided executor `cb`
+    ///
+    /// The `cb` is a function that is passed with the arguments `resolve` and
+    /// `reject`. The `cb` function is executed immediately by the `Promise`
+    /// implementation, passing `resolve` and `reject` functions (the executor
+    /// is called before the `Promise` constructor even returns the created
+    /// object). The `resolve` and `reject` functions, when called, resolve or
+    /// reject the promise, respectively. The executor normally initiates
+    /// some asynchronous work, and then, once that completes, either calls
+    /// the `resolve` function to resolve the promise or else rejects it if an
+    /// error occurred.
+    ///
+    /// If an error is thrown in the executor function, the promise is rejected.
+    /// The return value of the executor is ignored.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+    #[wasm_bindgen(constructor)]
+    pub fn new_t<T>(cb: &mut dyn FnMut(Function, Function)) -> Promise<T>;
+
     /// The `Promise.all(iterable)` method returns a single `Promise` that
     /// resolves when all of the promises in the iterable argument have resolved
     /// or when the iterable argument contains no promises. It rejects with the
@@ -6217,7 +6292,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[wasm_bindgen(static_method_of = Promise, js_name = allSettled)]
-    pub fn all_settled(obj: &JsValue) -> Promise;
+    pub fn all_settled(obj: Object) -> Promise;
 
     /// The `Promise.any(iterable)` method returns a single `Promise` that
     /// resolves when any of the promises in the iterable argument have resolved
@@ -6251,7 +6326,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/resolve)
     #[wasm_bindgen(static_method_of = Promise)]
-    pub fn resolve(obj: &JsValue) -> Promise;
+    pub fn resolve<T>(obj: &JsRef<T>) -> Promise<T>;
 
     /// The `catch()` method returns a `Promise` and deals with rejected cases
     /// only.  It behaves the same as calling `Promise.prototype.then(undefined,
@@ -6260,22 +6335,44 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch)
     #[wasm_bindgen(method)]
-    pub fn catch(this: &Promise, cb: &Closure<dyn FnMut(JsValue)>) -> Promise;
+    pub fn catch<T>(this: &Promise<T>, cb: &Closure<dyn FnMut(JsValue)>) -> Promise;
+
+    /// Same as `catch`, but returning a result to become the new Promise value.
+    #[wasm_bindgen(method)]
+    pub fn catch_map<T, U, R: Promising<U>>(
+        this: &Promise<T>,
+        cb: &Closure<dyn FnMut(T) -> Result<R, JsValue>>,
+    ) -> Promise<U>;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
     /// callback functions for the success and failure cases of the `Promise`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[wasm_bindgen(method)]
-    pub fn then(this: &Promise, cb: &Closure<dyn FnMut(JsValue)>) -> Promise;
+    pub fn then<T>(this: &Promise<T>, cb: &Closure<dyn FnMut(JsRef<T>)>) -> Promise;
 
     /// Same as `then`, only with both arguments provided.
     #[wasm_bindgen(method, js_name = then)]
-    pub fn then2(
-        this: &Promise,
-        resolve: &Closure<dyn FnMut(JsValue)>,
+    pub fn then2<T>(
+        this: &Promise<T>,
+        resolve: &Closure<dyn FnMut(JsRef<T>)>,
         reject: &Closure<dyn FnMut(JsValue)>,
     ) -> Promise;
+
+    /// Same as `then`, but returning a result to become the new Promise value.
+    #[wasm_bindgen(method, js_name = then)]
+    pub fn map<T: FromWasmAbi, U: IntoWasmAbi, R: Promising<U>>(
+        this: &Promise<T>,
+        cb: &Closure<dyn FnMut(T) -> R>,
+    ) -> Promise<U>;
+
+    /// Same as `then`, but with two arguments and returning a result to become the new Promise value.
+    #[wasm_bindgen(method, js_name = then)]
+    pub fn map2<T: FromWasmAbi, U: IntoWasmAbi, R: Promising<U>>(
+        this: &Promise<T>,
+        resolve: &Closure<dyn FnMut(T) -> R>,
+        reject: &Closure<dyn FnMut(JsValue) -> R>,
+    ) -> Promise<U>;
 
     /// The `finally()` method returns a `Promise`. When the promise is settled,
     /// whether fulfilled or rejected, the specified callback function is

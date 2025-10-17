@@ -11,6 +11,7 @@ use alloc::string::String;
 use core::fmt;
 use core::mem::{self, ManuallyDrop};
 
+use crate::__rt::marker::{AnyType, GenericType};
 use crate::convert::*;
 use crate::describe::*;
 use crate::JsValue;
@@ -246,7 +247,7 @@ extern "C" {
 ///     // here or return some sort of handle to JS!
 /// }
 /// ```
-pub struct Closure<T: ?Sized> {
+pub struct Closure<T: ?Sized = AnyType> {
     js: JsClosure,
     // careful: must be Box<T> not just T because unsized PhantomData
     // seems to have weird interaction with Pin<>
@@ -526,3 +527,5 @@ pub unsafe trait WasmClosure: WasmDescribe {
 pub trait IntoWasmClosure<T: ?Sized> {
     fn unsize(self: Box<Self>) -> Box<T>;
 }
+
+impl<T: ?Sized> GenericType for Closure<T> {}
