@@ -170,7 +170,6 @@ use __rt::wbg_cast;
 /// let num: JsValue<u32> = JsValue::new(42u32);
 /// let text: JsValue<String> = JsValue::from_typed("world");
 /// ```
-
 /// Representation of an object owned by JS.
 ///
 /// A `JsValue` doesn't actually live in Rust right now but actually in a table
@@ -851,7 +850,7 @@ impl<T: FromWasmAbi> JsVal<T> {
     /// For runtime type checking, use `try_unwrap()` instead.
     #[inline]
     pub fn unwrap(self) -> T {
-        wbg_cast::<JsValue, T>(unsafe { core::mem::transmute(self) })
+        wbg_cast::<JsValue, T>(unsafe { core::mem::transmute::<JsVal<T>, JsValue>(self) })
     }
 
     /// Extract the Rust value from the JS Value, checking the type at runtime.
@@ -859,7 +858,7 @@ impl<T: FromWasmAbi> JsVal<T> {
     /// Panics if the value is not of type T.
     #[inline]
     pub fn unwrap_ref(&self) -> T {
-        wbg_cast::<&JsValue, T>(unsafe { core::mem::transmute(self) })
+        wbg_cast::<&JsValue, T>(unsafe { core::mem::transmute::<&JsVal<T>, &JsValue>(self) })
     }
 }
 
