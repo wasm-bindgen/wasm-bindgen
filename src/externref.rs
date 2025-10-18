@@ -1,4 +1,5 @@
 use crate::JsValue;
+use crate::__rt;
 
 use alloc::slice;
 use alloc::vec::Vec;
@@ -118,8 +119,8 @@ fn internal_error(_msg: &str) -> ! {
 // Management of `externref` is always thread local since an `externref` value
 // can't cross threads in wasm. Indices as a result are always thread-local.
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static HEAP_SLAB: crate::__rt::ThreadLocalWrapper<RefCell<Slab>> =
-    crate::__rt::ThreadLocalWrapper(RefCell::new(Slab::new()));
+static HEAP_SLAB: __rt::ThreadLocalWrapper<RefCell<Slab>> =
+    __rt::ThreadLocalWrapper(RefCell::new(Slab::new()));
 
 #[no_mangle]
 pub extern "C" fn __externref_table_alloc() -> usize {
@@ -128,7 +129,7 @@ pub extern "C" fn __externref_table_alloc() -> usize {
 
 #[no_mangle]
 pub extern "C" fn __externref_table_dealloc(idx: usize) {
-    if idx < super::JSIDX_RESERVED as usize {
+    if idx < __rt::JSIDX_RESERVED as usize {
         return;
     }
     // clear this value from the table so while the table slot is un-allocated

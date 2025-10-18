@@ -155,25 +155,18 @@ pub struct JsValue {
     _marker: PhantomData<*mut u8>, // not at all threadsafe
 }
 
-const JSIDX_OFFSET: u32 = 128; // keep in sync with js/mod.rs
-const JSIDX_UNDEFINED: u32 = JSIDX_OFFSET;
-const JSIDX_NULL: u32 = JSIDX_OFFSET + 1;
-const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
-const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
-const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 4;
-
 impl JsValue {
     /// The `null` JS value constant.
-    pub const NULL: JsValue = JsValue::_new(JSIDX_NULL);
+    pub const NULL: JsValue = JsValue::_new(__rt::JSIDX_NULL);
 
     /// The `undefined` JS value constant.
-    pub const UNDEFINED: JsValue = JsValue::_new(JSIDX_UNDEFINED);
+    pub const UNDEFINED: JsValue = JsValue::_new(__rt::JSIDX_UNDEFINED);
 
     /// The `true` JS value constant.
-    pub const TRUE: JsValue = JsValue::_new(JSIDX_TRUE);
+    pub const TRUE: JsValue = JsValue::_new(__rt::JSIDX_TRUE);
 
     /// The `false` JS value constant.
-    pub const FALSE: JsValue = JsValue::_new(JSIDX_FALSE);
+    pub const FALSE: JsValue = JsValue::_new(__rt::JSIDX_FALSE);
 
     #[inline]
     const fn _new(idx: u32) -> JsValue {
@@ -1289,12 +1282,16 @@ impl Drop for JsValue {
     fn drop(&mut self) {
         unsafe {
             // We definitely should never drop anything in the stack area
-            debug_assert!(self.idx >= JSIDX_OFFSET, "free of stack slot {}", self.idx);
+            debug_assert!(
+                self.idx >= __rt::JSIDX_OFFSET,
+                "free of stack slot {}",
+                self.idx
+            );
 
             // Otherwise if we're not dropping one of our reserved values,
             // actually call the intrinsic. See #1054 for eventually removing
             // this branch.
-            if self.idx >= JSIDX_RESERVED {
+            if self.idx >= __rt::JSIDX_RESERVED {
                 __wbindgen_object_drop_ref(self.idx);
             }
         }
