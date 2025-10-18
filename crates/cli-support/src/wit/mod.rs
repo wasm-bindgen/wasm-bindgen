@@ -144,6 +144,12 @@ impl<'a> Context<'a> {
             Descriptor::Unit,
             AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
         )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_is_null_or_undefined",
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Boolean,
+            AuxImport::Intrinsic(Intrinsic::IsNullOrUndefined),
+        )?;
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
