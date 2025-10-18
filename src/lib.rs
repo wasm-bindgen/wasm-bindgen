@@ -813,7 +813,7 @@ impl<T> JsVal<T> {
     /// runtime validation. Use with caution - incorrect usage may cause runtime errors.
     #[inline]
     pub fn cast_ref_unchecked<U>(&self) -> &JsVal<U> {
-        unsafe { core::mem::transmute(&self) }
+        unsafe { core::mem::transmute::<&JsVal<T>, &JsVal<U>>(self) }
     }
 }
 

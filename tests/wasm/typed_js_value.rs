@@ -84,20 +84,15 @@ fn typed_js_value_unwrap_success() {
 }
 
 #[wasm_bindgen_test]
+#[should_panic(expected = "expected a string argument, found number")]
 fn typed_js_value_unwrap_unchecked_behavior() {
-    // unwrap() uses wbg_cast which is an unchecked cast - it doesn't validate types
-    // This test demonstrates that unwrap() will succeed even with wrong types
+    // unwrap() uses wbg_cast which does perform runtime validation
+    // This test demonstrates that unwrap() will panic when types don't match
     let num_val = JsVal::wrap(42);
-    let typed: JsVal<JsString> = unsafe { core::mem::transmute(num_val) };
+    let typed: JsVal<String> = unsafe { core::mem::transmute(num_val) };
 
-    // This succeeds even though the value is not actually a JsString
-    let result: JsString = typed.unwrap();
-    let as_jsvalue: JsValue = result.into();
-
-    // The returned value is actually the number 42, not a string
-    // unwrap() doesn't do runtime type checking - it's an unchecked cast
-    assert!(!as_jsvalue.is_string());
-    assert_eq!(as_jsvalue.as_f64(), Some(42.0));
+    // This will panic because wbg_cast validates the type at runtime
+    let _result: String = typed.unwrap();
 }
 
 #[wasm_bindgen_test]
@@ -384,10 +379,10 @@ fn typed_to_untyped_ref_passing() {
 fn untyped_to_typed_function_passing() {
     // Cast untyped JsValue to typed JsVal<JsString> to pass to typed function
     let untyped = JsValue::from_str("test");
-    //  let typed_ref: &JsVal<JsString> = untyped.cast_ref_unchecked();
-    //  let result = js_accepts_typed_ref(typed_ref);
-    //  assert!(result.is_string());
-    //  assert_eq!(result.as_string().unwrap(), "test");
+    let typed_ref: &JsVal<JsString> = untyped.cast_ref_unchecked();
+    let result = js_accepts_typed_ref(typed_ref);
+    assert!(result.is_string());
+    assert_eq!(result.as_string().unwrap(), "test");
 
     // Cast untyped JsValue to typed JsVal<JsString> by value
     let typed_val: JsVal<JsString> = untyped.cast_unchecked();
