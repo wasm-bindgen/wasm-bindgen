@@ -3609,6 +3609,11 @@ wasm = wasmInstance.exports;
                 format!("{} === null", args[0])
             }
 
+            Intrinsic::IsNullOrUndefined => {
+                assert_eq!(args.len(), 1);
+                format!("{} == null", args[0])
+            }
+
             Intrinsic::IsObject => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const val = {};\n", args[0]));
