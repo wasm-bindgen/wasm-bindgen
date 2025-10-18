@@ -9,7 +9,7 @@ use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{Clamped, JsError, JsType, JsVal, JsValue, UnwrapThrowExt};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -417,7 +417,7 @@ impl<T> OptionFromWasmAbi for NonNull<T> {
     }
 }
 
-impl IntoWasmAbi for JsValue {
+impl<T: JsType> IntoWasmAbi for JsVal<T> {
     type Abi = u32;
 
     #[inline]
@@ -428,16 +428,16 @@ impl IntoWasmAbi for JsValue {
     }
 }
 
-impl FromWasmAbi for JsValue {
+impl<T: JsType> FromWasmAbi for JsVal<T> {
     type Abi = u32;
 
     #[inline]
-    unsafe fn from_abi(js: u32) -> JsValue {
-        JsValue::_new(js)
+    unsafe fn from_abi(js: u32) -> JsVal<T> {
+        core::mem::transmute(JsValue::_new(js))
     }
 }
 
-impl IntoWasmAbi for &JsValue {
+impl<T: JsType> IntoWasmAbi for &JsVal<T> {
     type Abi = u32;
 
     #[inline]
@@ -446,19 +446,19 @@ impl IntoWasmAbi for &JsValue {
     }
 }
 
-impl RefFromWasmAbi for JsValue {
+impl<T: JsType> RefFromWasmAbi for JsVal<T> {
     type Abi = u32;
-    type Anchor = ManuallyDrop<JsValue>;
+    type Anchor = ManuallyDrop<JsVal<T>>;
 
     #[inline]
     unsafe fn ref_from_abi(js: u32) -> Self::Anchor {
-        ManuallyDrop::new(JsValue::_new(js))
+        ManuallyDrop::new(core::mem::transmute::<JsValue, JsVal<T>>(JsValue::_new(js)))
     }
 }
 
-impl LongRefFromWasmAbi for JsValue {
+impl<T: JsType> LongRefFromWasmAbi for JsVal<T> {
     type Abi = u32;
-    type Anchor = JsValue;
+    type Anchor = JsVal<T>;
 
     #[inline]
     unsafe fn long_ref_from_abi(js: u32) -> Self::Anchor {

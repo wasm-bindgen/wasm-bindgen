@@ -24,40 +24,42 @@ For accessing properties on untyped JavaScript values, see the documentation on 
 {{#include ../../../../examples/guide-supported-types-examples/js_value.js}}
 ```
 
-## Typed `JsValue<T>` Variant
+## Typed `JsVal<T>` Variant
 
-`JsValue` supports an optional generic type parameter `JsValue<T>` that provides compile-time type information while maintaining the same runtime representation. This is useful when you want to track what type of JavaScript value you're working with at the Rust type level, while retaining ABI semantics of JsValue (which is after all just an `externref` in Wasm).
+`JsVal<T>` is a generic variant of `JsValue` that provides compile-time type information while maintaining the same runtime representation. This is useful when you want to track what type of JavaScript value you're working with at the Rust type level, while retaining ABI semantics of JsValue (which is after all just an `externref` in Wasm). Note that `JsValue` is a type alias for `JsVal<AnyType>`.
 
-To create a typed `JsValue<T>`, use `JsValue::new()` or `JsValue::from_typed()` with any value that can be converted to `JsValue`. On creation, Rust values will be converted into JS values where necessary. To convert back into a Rust value, use the `try_unwrap()` or `unwrap()` method, which also performs runtime validation to ensure the type matches. `cast_unchecked()` may also be used for zero-cost conversions between `JsValue<T>` types when you're certain of the underlying type, or use the `JsCast` trait's `dyn_into()` method for runtime-checked conversions.
+To create a typed `JsVal<T>`, use `JsVal::new()` or `JsVal::from_typed()` with any value that can be converted to `JsValue`. On creation, Rust values will be converted into JS values where necessary. To convert back into a Rust value, use the `try_unwrap()` or `unwrap()` method, which also performs runtime validation to ensure the type matches. `cast_unchecked()` may also be used for zero-cost conversions between `JsVal<T>` types when you're certain of the underlying type, or use the `JsCast` trait's `dyn_into()` method for runtime-checked conversions.
 
-Typed `JsValue<T>` can be converted back into `JsValue` via `upcast()`. `cast_unchecked()` may be used to convert between `JsValue<T>` and `JsValue<U>`.
+Typed `JsVal<T>` can be converted back into `JsValue` via `upcast()`. `cast_unchecked()` may be used to convert between `JsVal<T>` and `JsVal<U>`.
 
 ### Example: Creating and Using Typed Values
 
 ```rust
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsVal;
 use js_sys::JsString;
 
 // Create typed values from any Into<JsValue>
-let typed: JsValue<String> = JsValue::new(String::from("hello"));
+let typed: JsVal<String> = JsVal::new(String::from("hello"));
 
 // Extract the inner value with runtime checking
 let inner = typed.try_unwrap()?;
 
 // Convert to untyped JsValue
-let typed: JsValue<JsString> = JsValue::new(JsString::from("world"));
-let untyped: JsValue = js_typed.upcast();
+let typed: JsVal<JsString> = JsVal::new(JsString::from("world"));
+let untyped: JsValue = typed.upcast();
 ```
 
 ### Example: Type Casting
 
 ```rust
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsVal;
 use js_sys::JsString;
 
 // Unchecked cast (zero-cost, but unsafe if types don't match)
 let untyped = JsValue::from_str("hello");
-let typed: JsValue<String> = untyped.cast_unchecked();
+let typed: JsVal<String> = untyped.cast_unchecked();
 
 // The typed value can be unwrapped without a type hint to get the JS value
 let js_string = typed.unwrap();
