@@ -157,6 +157,17 @@ fn option_try_from_js_value() {
 }
 
 #[wasm_bindgen_test]
+fn try_from_js_value_ref() {
+    let val = JsValue::from(42_i64);
+    assert_eq!(i64::try_from_js_value_ref(&val), Some(42_i64));
+    assert_eq!(
+        String::try_from_js_value_ref(&JsValue::from_str("hello")),
+        Some("hello".to_string())
+    );
+    assert_eq!(bool::try_from_js_value_ref(&JsValue::TRUE), Some(true));
+}
+
+#[wasm_bindgen_test]
 fn bool_try_from_js_value() {
     assert_eq!(bool::try_from_js_value(JsValue::TRUE), Ok(true));
     assert_eq!(bool::try_from_js_value(JsValue::FALSE), Ok(false));
