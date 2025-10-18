@@ -93,6 +93,13 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
     unsafe { To::from_abi(breaks_if_inlined::<From, To>(prim1, prim2, prim3, prim4).join()) }
 }
 
+pub(crate) const JSIDX_OFFSET: u32 = 128; // keep in sync with js/mod.rs
+pub(crate) const JSIDX_UNDEFINED: u32 = JSIDX_OFFSET;
+pub(crate) const JSIDX_NULL: u32 = JSIDX_OFFSET + 1;
+pub(crate) const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
+pub(crate) const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
+pub(crate) const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 4;
+
 pub(crate) struct ThreadLocalWrapper<T>(pub(crate) T);
 
 #[cfg(not(target_feature = "atomics"))]
