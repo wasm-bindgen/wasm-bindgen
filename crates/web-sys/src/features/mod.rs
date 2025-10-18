@@ -1265,6 +1265,20 @@ mod gen_ColorSpaceConversion;
 #[allow(unused_imports)]
 pub use gen_ColorSpaceConversion::*;
 
+#[cfg(feature = "CommandEvent")]
+#[allow(non_snake_case)]
+mod gen_CommandEvent;
+#[cfg(feature = "CommandEvent")]
+#[allow(unused_imports)]
+pub use gen_CommandEvent::*;
+
+#[cfg(feature = "CommandEventInit")]
+#[allow(non_snake_case)]
+mod gen_CommandEventInit;
+#[cfg(feature = "CommandEventInit")]
+#[allow(unused_imports)]
+pub use gen_CommandEventInit::*;
+
 #[cfg(feature = "Comment")]
 #[allow(non_snake_case)]
 mod gen_Comment;
