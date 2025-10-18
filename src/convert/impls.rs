@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::char;
-use core::fmt::Debug;
 use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
@@ -600,10 +599,7 @@ pub fn js_value_vector_into_abi<T: Into<JsValue>>(
 /// documentation for more details.
 pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     js: <Box<[JsValue]> as FromWasmAbi>::Abi,
-) -> Box<[T]>
-where
-    T::Error: Debug,
-{
+) -> Box<[T]> {
     let js_vals = <Vec<JsValue> as FromWasmAbi>::from_abi(js);
 
     let mut result = Vec::with_capacity(js_vals.len());
