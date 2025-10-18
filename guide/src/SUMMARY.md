@@ -86,6 +86,7 @@
     - [On Rust Exports](./reference/attributes/on-rust-exports/index.md)
       - [`constructor`](./reference/attributes/on-rust-exports/constructor.md)
       - [`js_name = Blah`](./reference/attributes/on-rust-exports/js_name.md)
+      - [`js_namespace`](./reference/attributes/on-rust-exports/js_namespace.md)
       - [`js_class = Blah`](./reference/attributes/on-rust-exports/js_class.md)
       - [`readonly`](./reference/attributes/on-rust-exports/readonly.md)
       - [`skip`](./reference/attributes/on-rust-exports/skip.md)

@@ -82,6 +82,8 @@ pub struct Export {
     pub function: Function,
     /// The class name in JS this is attached to
     pub js_class: Option<String>,
+    /// The namespace to export the item through, if any
+    pub js_namespace: Option<Vec<String>>,
     /// The kind (static, named, regular)
     pub method_kind: MethodKind,
     /// The type of `self` (either `self`, `&self`, or `&mut self`)
@@ -350,6 +352,8 @@ pub struct StringEnum {
     pub rust_attrs: Vec<syn::Attribute>,
     /// Whether to generate a typescript definition for this enum
     pub generate_typescript: bool,
+    /// The namespace to export the enum through, if any
+    pub js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }
@@ -424,6 +428,8 @@ pub struct Struct {
     pub is_inspectable: bool,
     /// Whether to generate a typescript definition for this struct
     pub generate_typescript: bool,
+    /// The namespace to export the struct through, if any
+    pub js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }
@@ -481,6 +487,8 @@ pub struct Enum {
     pub hole: u32,
     /// Whether to generate a typescript definition for this enum
     pub generate_typescript: bool,
+    /// The namespace to export the enum through, if any
+    pub js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }
