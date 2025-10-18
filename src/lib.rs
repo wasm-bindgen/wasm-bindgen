@@ -63,7 +63,7 @@ use core::ops::{
 use core::ptr::NonNull;
 
 use crate::__rt::marker::AnyType;
-use crate::convert::{TryFromJsValue, VectorIntoWasmAbi};
+use crate::convert::{FromWasmAbi, TryFromJsValue, VectorIntoWasmAbi};
 
 const _: () = {
     /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
@@ -170,30 +170,6 @@ use __rt::wbg_cast;
 /// let num: JsValue<u32> = JsValue::new(42u32);
 /// let text: JsValue<String> = JsValue::from_typed("world");
 /// ```
-pub trait JsType: TryFromJsValue + Into<JsValue> {}
-
-// Blanket implementation for any JS type
-impl<T> JsType for T where T: TryFromJsValue + Into<JsValue> {}
-
-// JsValue.try_unwrap() fails because we don't have a type.
-impl TryFromJsValue for AnyType {
-    type Error = JsValue;
-
-    fn try_from_js_value(val: JsValue) -> Result<Self, Self::Error> {
-        Err(val)
-    }
-}
-
-// `JsValue::new(JsValue)` is `JsValue::new(JsValue)`, which requires
-// AnyType to implement Into<JsValue>.
-// This is an unfortunate but necessary specialization to anchor the type
-// constraints. As a result, From<T> for JsVal<T> is not implemented,
-// and instead we rely on `JsVal<T>::new(t: T)`.
-impl From<AnyType> for JsValue {
-    fn from(_: AnyType) -> Self {
-        JsValue::undefined()
-    }
-}
 
 /// Representation of an object owned by JS.
 ///
@@ -279,7 +255,7 @@ impl From<AnyType> for JsValue {
 ///     value
 /// }
 /// ```
-pub struct JsVal<T: JsType = AnyType> {
+pub struct JsVal<T = AnyType> {
     idx: u32,
     _marker: PhantomData<*mut u8>, // not at all threadsafe
     _ty: PhantomData<T>,
@@ -658,7 +634,7 @@ impl JsValue {
     }
 }
 
-impl<T: JsType, U: JsType> PartialEq<JsVal<U>> for JsVal<T> {
+impl<T, U> PartialEq<JsVal<U>> for JsVal<T> {
     /// Compares two `JsValue`s for equality, using the `===` operator in JS.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality)
@@ -671,7 +647,7 @@ impl<T: JsType, U: JsType> PartialEq<JsVal<U>> for JsVal<T> {
     }
 }
 
-impl<T: JsType> PartialEq<bool> for JsVal<T> {
+impl<T> PartialEq<bool> for JsVal<T> {
     #[inline]
     fn eq(&self, other: &bool) -> bool {
         unsafe { core::mem::transmute::<&JsVal<T>, &JsValue>(self) }.as_bool() == Some(*other)
@@ -763,76 +739,54 @@ impl Not for &JsValue {
 
 forward_deref_unop!(impl Not, not for JsValue);
 
-impl<T: JsType> JsVal<T> {
-    /// Extract the Rust value from the JS Value, checking the type at runtime.
+impl<T: Into<JsValue>> JsVal<T> {
+    /// Create a typed `JsVal<T>` from a value of type `T`.
     ///
-    /// Panics if the value is not of type T. This consumes the `JsVal<T>` and
-    /// returns the underlying typed value after runtime validation.
-    #[inline]
-    pub fn unwrap(self) -> T {
-        T::try_from_js_value(unsafe { core::mem::transmute::<JsVal<T>, JsValue>(self) })
-            .unwrap_or_else(|_| {
-                panic!(
-                    "JsVal<{}>::unwrap called on value of wrong type",
-                    core::any::type_name::<T>()
-                )
-            })
-    }
-
-    /// Try to extract the Rust value from JS Value, checking the type at runtime.
+    /// This method requires the value to be exactly of type `T`. The value is converted
+    /// to a JavaScript value via `Into<JsValue>`. Type validation can be performed
+    /// later using `try_unwrap()`.
     ///
-    /// Returns `Ok(T)` if the value is of the correct JS type, otherwise returns
-    /// an error containing the validation failure details.
-    #[inline]
-    pub fn try_unwrap(self) -> Result<T, <T as TryFromJsValue>::Error> {
-        T::try_from_js_value(unsafe { core::mem::transmute::<JsVal<T>, JsValue>(self) })
-    }
-
-    // TODO: Once https://github.com/wasm-bindgen/wasm-bindgen/pull/4750 lands.
-    // /// Extract the Rust value from the JS Value by reference, checking the type at runtime.
-    // ///
-    // /// Panics if the value is not of type T. This borrows the `JsVal<T>` and
-    // /// returns the underlying typed value after runtime validation.
-    // #[inline]
-    // pub fn unwrap_ref(&self) -> T {
-    //     T::try_from_js_value_ref(unsafe {
-    //         core::mem::transmute::<&JsVal<T>, &JsValue>(self)
-    //     })
-    //     .unwrap_or_else(|| {
-    //         panic!(
-    //             "JsVal<{}>::unwrap_ref called on value of wrong type",
-    //             core::any::type_name::<T>()
-    //         )
-    //     })
-    // }
-
-    // /// Try to extract the Rust value from JS Value by reference, checking the type at runtime.
-    // ///
-    // /// Returns `Ok(T)` if the value is of the correct JS type, otherwise returns
-    // /// `None`.
-    // #[inline]
-    // pub fn try_unwrap_ref(&self) -> Option<T> {
-    //     T::try_from_js_value_ref(unsafe {
-    //         core::mem::transmute::<&JsVal<T>, &JsValue>(self)
-    //     })
-    // }
-
-    /// Create a new typed `JsVal<T>` from a value that implements `JsType`.
+    /// # Examples
     ///
-    /// This performs an unchecked conversion - the type is trusted at creation time
-    /// and validation only occurs when calling `unwrap()` or `try_unwrap()`.
+    /// ```ignore
+    /// use wasm_bindgen::JsVal;
+    /// use js_sys::JsString;
+    ///
+    /// // Create from a Rust String
+    /// let typed: JsVal<String> = JsVal::wrap(String::from("hello"));
+    ///
+    /// // Create from a JsString
+    /// let typed: JsVal<JsString> = JsVal::wrap(JsString::from("world"));
+    /// ```
     #[inline]
-    pub fn new(from: T) -> Self {
+    pub fn wrap(from: T) -> Self {
         unsafe { core::mem::transmute(from.into()) }
     }
+}
 
+impl<T> JsVal<T> {
     /// Create a new typed `JsVal<T>` from any value that converts to `JsValue`.
     ///
-    /// This allows creating a typed `JsVal<T>` from types that don't implement `JsType`,
-    /// such as `&str`, by using their `Into<JsValue>` implementation. The type `T` is
-    /// not validated at creation time - use `unwrap()` or `try_unwrap()` for validation.
+    /// This method requires a type annotation to specify `T`, and accepts any value
+    /// that implements `Into<JsValue>`. This is useful when the input type differs
+    /// from the target type parameter, such as creating `JsVal<String>` from `&str`.
+    ///
+    /// The type `T` is not validated at creation time - use `try_unwrap()` for
+    /// runtime type validation.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use wasm_bindgen::JsVal;
+    ///
+    /// // Type annotation required - creates JsVal<String> from &str
+    /// let typed: JsVal<String> = JsVal::new("hello");
+    ///
+    /// // Can also be used with explicit types
+    /// let typed: JsVal<u32> = JsVal::new(42);
+    /// ```
     #[inline]
-    pub fn from_typed<U: Into<JsValue>>(from: U) -> Self {
+    pub fn new(from: impl Into<JsValue>) -> Self {
         unsafe { core::mem::transmute(from.into()) }
     }
 
@@ -850,18 +804,72 @@ impl<T: JsType> JsVal<T> {
     /// This is a zero-cost operation that changes the type parameter without any
     /// runtime validation. Use with caution - incorrect usage may cause runtime errors.
     #[inline]
-    pub fn cast_unchecked<U: JsType>(self) -> JsVal<U> {
+    pub fn cast_unchecked<U>(self) -> JsVal<U> {
         unsafe { core::mem::transmute(self) }
+    }
+
+    /// Perform an unchecked ref cast from `&JsVal<T>` to `&JsVal<U>`.
+    ///
+    /// This is a zero-cost operation that changes the type parameter without any
+    /// runtime validation. Use with caution - incorrect usage may cause runtime errors.
+    #[inline]
+    pub fn cast_ref_unchecked<U>(&self) -> &JsVal<U> {
+        unsafe { core::mem::transmute(&self) }
     }
 }
 
-impl<T: JsType + Default> Default for JsVal<T> {
+impl<T: TryFromJsValue> JsVal<T> {
+    /// Try to extract the Rust value from JS Value, checking the type at runtime.
+    ///
+    /// Returns `Ok(T)` if the value is of the correct JS type, otherwise returns
+    /// an error containing the validation failure details.
+    #[inline]
+    pub fn try_unwrap(self) -> Result<T, <T as TryFromJsValue>::Error> {
+        T::try_from_js_value(unsafe { core::mem::transmute::<JsVal<T>, JsValue>(self) })
+    }
+
+    // TODO: Once https://github.com/wasm-bindgen/wasm-bindgen/pull/4750 lands.
+    // /// Try to extract the Rust value from JS Value by reference, checking the type at runtime.
+    // ///
+    // /// Returns `Ok(T)` if the value is of the correct JS type, otherwise returns
+    // /// `None`.
+    // #[inline]
+    // pub fn try_unwrap_ref(&self) -> Option<T> {
+    //     T::try_from_js_value_ref(unsafe {
+    //         core::mem::transmute::<&JsVal<T>, &JsValue>(self)
+    //     })
+    // }
+}
+
+impl<T: FromWasmAbi> JsVal<T> {
+    /// Extract the Rust value from the JS Value via unchecked cast.
+    ///
+    /// This uses `wbg_cast` internally, which performs an unchecked conversion.
+    /// If the underlying JavaScript value is not actually of type `T`, the behavior
+    /// is undefined and may cause runtime errors when the value is used.
+    ///
+    /// For runtime type checking, use `try_unwrap()` instead.
+    #[inline]
+    pub fn unwrap(self) -> T {
+        wbg_cast::<JsValue, T>(unsafe { core::mem::transmute(self) })
+    }
+
+    /// Extract the Rust value from the JS Value, checking the type at runtime.
+    ///
+    /// Panics if the value is not of type T.
+    #[inline]
+    pub fn unwrap_ref(&self) -> T {
+        wbg_cast::<&JsValue, T>(unsafe { core::mem::transmute(self) })
+    }
+}
+
+impl<T: Into<JsValue> + Default> Default for JsVal<T> {
     fn default() -> Self {
         unsafe { core::mem::transmute(T::default().into()) }
     }
 }
 
-impl<T: JsType> AsRef<JsValue> for JsVal<T> {
+impl<T> AsRef<JsValue> for JsVal<T> {
     fn as_ref(&self) -> &JsValue {
         unsafe { &*(self as *const JsVal<T> as *const JsValue) }
     }
@@ -1535,14 +1543,14 @@ externs! {
     }
 }
 
-impl<T: JsType> Clone for JsVal<T> {
+impl<T> Clone for JsVal<T> {
     #[inline]
     fn clone(&self) -> JsVal<T> {
         unsafe { core::mem::transmute(JsValue::_new(__wbindgen_object_clone_ref(self.idx))) }
     }
 }
 
-impl<T: JsType> core::fmt::Debug for JsVal<T> {
+impl<T> core::fmt::Debug for JsVal<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         let base: &JsValue = unsafe { core::mem::transmute(self) };
         let type_name = core::any::type_name::<T>();
@@ -1554,7 +1562,7 @@ impl<T: JsType> core::fmt::Debug for JsVal<T> {
     }
 }
 
-impl<T: JsType> Drop for JsVal<T> {
+impl<T> Drop for JsVal<T> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
