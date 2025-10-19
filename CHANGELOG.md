@@ -29,6 +29,9 @@
 * Extended support for `TryFromJsValue` trait implementations.
   [#4714](https://github.com/wasm-bindgen/wasm-bindgen/pull/4714)
 
+* New `JsValue.is_null_or_undefined()` method and intrinsic.
+  [#4751](https://github.com/wasm-bindgen/wasm-bindgen/pull/4751)
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
