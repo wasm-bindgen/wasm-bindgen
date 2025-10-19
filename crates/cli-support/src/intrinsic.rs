@@ -42,6 +42,7 @@ intrinsics! {
         IsFunction = "__wbindgen_is_function",
         IsUndefined = "__wbindgen_is_undefined",
         IsNull = "__wbindgen_is_null",
+        IsNullOrUndefined = "__wbindgen_is_null_or_undefined",
         IsObject = "__wbindgen_is_object",
         IsSymbol = "__wbindgen_is_symbol",
         IsString = "__wbindgen_is_string",

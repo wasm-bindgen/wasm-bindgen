@@ -145,6 +145,15 @@ fn option_try_from_js_value() {
         Ok(Some(42))
     );
     assert!(Option::<String>::try_from_js_value(JsValue::from_f64(42.0)).is_err());
+
+    assert_eq!(
+        Option::<JsValue>::try_from_js_value(JsValue::NULL),
+        Ok(None)
+    );
+    assert_eq!(
+        Option::<JsValue>::try_from_js_value(JsValue::from_str("test")),
+        Ok(Some(JsValue::from_str("test")))
+    );
 }
 
 #[wasm_bindgen_test]
