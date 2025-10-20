@@ -86,7 +86,7 @@ pub struct JsFunction {
 
 /// A references to an (likely) exported symbol used in TS type expression.
 ///
-/// Right now, only string enum require this type of anaylsis.
+/// Right now, only string enum require this type of analysis.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TsReference {
     StringEnum(String),
