@@ -32,6 +32,8 @@
 * New `JsValue.is_null_or_undefined()` method and intrinsic.
   [#4751](https://github.com/wasm-bindgen/wasm-bindgen/pull/4751)
 
+* Support for `Option<JsValue>` in ABI conversions.
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
