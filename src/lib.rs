@@ -889,15 +889,11 @@ impl TryFromJsValue for bool {
 
 impl TryFromJsValue for char {
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
-        match value.as_string() {
-            Some(s) => {
-                if s.len() == 1 {
-                    Some(s.chars().nth(0).unwrap())
-                } else {
-                    None
-                }
-            }
-            None => None,
+        let s= value.as_string()?;
+        if s.len() == 1 {
+            Some(s.chars().nth(0).unwrap())
+        } else {
+            None
         }
     }
 }
@@ -1089,12 +1085,8 @@ macro_rules! num128 {
             // This is a non-standard Wasm bindgen conversion, supported equally
             fn try_from_js_value_ref(v: &JsValue) -> Option<$ty> {
                 // Truncate the bigint to 64 bits, this will give us the lower part.
-                let lo = match __wbindgen_bigint_get_as_i64(&v) {
-                    // The lower part must be interpreted as unsigned in both i128 and u128.
-                    Some(lo) => lo as u64,
-                    // Not a bigint.
-                    None => return None,
-                };
+                // The lower part must be interpreted as unsigned in both i128 and u128.
+                let lo = __wbindgen_bigint_get_as_i64(&v)? as u64;                
                 // Now we know it's a bigint, so we can safely use `>> 64n` without
                 // worrying about a JS exception on type mismatch.
                 let hi = v >> JsValue::from(64_u64);
