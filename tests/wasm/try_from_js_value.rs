@@ -70,7 +70,7 @@ fn u64_try_from_js_value() {
     assert!(u64::try_from_js_value(JsValue::TRUE).is_err());
     assert!(u64::try_from_js_value(JsValue::from_str("45")).is_err());
     assert!(u64::try_from_js_value(JsValue::NULL).is_err());
-    assert_eq!(u64::try_from_js_value(JsValue::from(-1_i64)), Ok(u64::MAX));
+    assert!(u64::try_from_js_value(JsValue::from(-1_i64)).is_err());
 }
 
 #[wasm_bindgen_test]
@@ -154,6 +154,17 @@ fn option_try_from_js_value() {
         Option::<JsValue>::try_from_js_value(JsValue::from_str("test")),
         Ok(Some(JsValue::from_str("test")))
     );
+}
+
+#[wasm_bindgen_test]
+fn try_from_js_value_ref() {
+    let val = JsValue::from(42_i64);
+    assert_eq!(i64::try_from_js_value_ref(&val), Some(42_i64));
+    assert_eq!(
+        String::try_from_js_value_ref(&JsValue::from_str("hello")),
+        Some("hello".to_string())
+    );
+    assert_eq!(bool::try_from_js_value_ref(&JsValue::TRUE), Some(true));
 }
 
 #[wasm_bindgen_test]

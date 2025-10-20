@@ -381,10 +381,7 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::TryFromJsValue for #name {
-                type Error = #wasm_bindgen::JsValue;
-
-                fn try_from_js_value(value: #wasm_bindgen::JsValue)
-                    -> #wasm_bindgen::__rt::core::result::Result<Self, Self::Error> {
+                fn try_from_js_value(value: #wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::result::Result<Self, #wasm_bindgen::JsValue> {
                     let idx = #wasm_bindgen::convert::IntoWasmAbi::into_abi(&value);
 
                     #[link(wasm_import_module = "__wbindgen_placeholder__")]
@@ -411,6 +408,9 @@ impl ToTokens for ast::Struct {
                             )
                         }
                     }
+                }
+                fn try_from_js_value_ref(value: &#wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::option::Option<Self> {
+                    Self::try_from_js_value(value.clone()).ok()
                 }
             }
 
@@ -1655,16 +1655,13 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::TryFromJsValue for #enum_name {
-                type Error = #wasm_bindgen::JsValue;
-
-                fn try_from_js_value(value: #wasm_bindgen::JsValue)
-                    -> #wasm_bindgen::__rt::core::result::Result<Self, <#enum_name as #wasm_bindgen::convert::TryFromJsValue>::Error> {
+                fn try_from_js_value_ref(value: &#wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::option::Option<Self> {
                     use #wasm_bindgen::__rt::core::convert::TryFrom;
-                    let js = f64::try_from(&value)? as #underlying;
+                    let js = f64::try_from(value).ok()? as #underlying;
 
-                    #wasm_bindgen::__rt::core::result::Result::Ok(
+                    #wasm_bindgen::__rt::core::option::Option::Some(
                         #(#try_from_cast_clauses else)* {
-                            return #wasm_bindgen::__rt::core::result::Result::Err(value)
+                            return #wasm_bindgen::__rt::core::option::Option::None;
                         }
                     )
                 }

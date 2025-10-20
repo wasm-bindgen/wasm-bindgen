@@ -869,13 +869,8 @@ impl TryFrom<JsValue> for String {
 }
 
 impl TryFromJsValue for String {
-    type Error = JsValue;
-
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
-        match value.as_string() {
-            Some(s) => Ok(s),
-            None => Err(value),
-        }
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        value.as_string()
     }
 }
 
@@ -887,29 +882,18 @@ impl From<bool> for JsValue {
 }
 
 impl TryFromJsValue for bool {
-    type Error = JsValue;
-
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
-        match value.as_bool() {
-            Some(s) => Ok(s),
-            None => Err(value),
-        }
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        value.as_bool()
     }
 }
 
 impl TryFromJsValue for char {
-    type Error = JsValue;
-
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
-        match value.as_string() {
-            Some(s) => {
-                if s.len() == 1 {
-                    Ok(s.chars().nth(0).unwrap())
-                } else {
-                    Err(value)
-                }
-            }
-            None => Err(value),
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        let s = value.as_string()?;
+        if s.len() == 1 {
+            Some(s.chars().nth(0).unwrap())
+        } else {
+            None
         }
     }
 }
@@ -962,17 +946,14 @@ impl AsRef<JsValue> for JsValue {
 
 // Loosely based on toInt32 in ecma-272 for abi semantics
 // with restriction that it only applies for numbers
-fn to_uint_32(v: JsValue) -> Result<u32, JsValue> {
-    v.as_f64().map_or_else(
-        || Err(v),
-        |n| {
-            if n.is_infinite() {
-                Ok(0)
-            } else {
-                Ok((n as i64) as u32)
-            }
-        },
-    )
+fn to_uint_32(v: &JsValue) -> Option<u32> {
+    v.as_f64().map(|n| {
+        if n.is_infinite() {
+            0
+        } else {
+            (n as i64) as u32
+        }
+    })
 }
 
 macro_rules! integers {
@@ -993,9 +974,8 @@ macro_rules! integers {
 
         // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
         impl TryFromJsValue for $n {
-            type Error = JsValue;
             #[inline]
-            fn try_from_js_value(val: JsValue) -> Result<$n, Self::Error> {
+            fn try_from_js_value_ref(val: &JsValue) -> Option<$n> {
                 to_uint_32(val).map(|n| n as $n)
             }
         }
@@ -1021,10 +1001,9 @@ macro_rules! floats {
         }
 
         impl TryFromJsValue for $n {
-            type Error = JsValue;
             #[inline]
-            fn try_from_js_value(val: JsValue) -> Result<$n, Self::Error> {
-                val.as_f64().map_or_else(|| Err(val), |n| Ok(n as $n))
+            fn try_from_js_value_ref(val: &JsValue) -> Option<$n> {
+                val.as_f64().map(|n| n as $n)
             }
         }
     )*)
@@ -1053,24 +1032,22 @@ macro_rules! big_integers {
 
             #[inline]
             fn try_from(v: JsValue) -> Result<Self, JsValue> {
-                __wbindgen_bigint_get_as_i64(&v)
-                    // Reinterpret bits; ABI-wise this is safe to do and allows us to avoid
-                    // having separate intrinsics per signed/unsigned types.
-                    .map(|as_i64| as_i64 as Self)
-                    // Double-check that we didn't truncate the bigint to 64 bits.
-                    .filter(|as_self| v == *as_self)
-                    // Not a bigint or not in range.
-                    .ok_or(v)
+                Self::try_from_js_value(v)
             }
         }
 
         impl TryFromJsValue for $n {
-            type Error = JsValue;
             #[inline]
-            fn try_from_js_value(val: JsValue) -> Result<$n, JsValue> {
-                match __wbindgen_bigint_get_as_i64(&val) {
-                    Some(n) => Ok(n as $n),
-                    None => Err(val)
+            fn try_from_js_value_ref(val: &JsValue) -> Option<$n> {
+                let as_i64 = __wbindgen_bigint_get_as_i64(&val)?;
+                // Reinterpret bits; ABI-wise this is safe to do and allows us to avoid
+                // having separate intrinsics per signed/unsigned types.
+                let as_self = as_i64 as $n;
+                // Double-check that we didn't truncate the bigint to 64 bits.
+                if val == &as_self {
+                    Some(as_self)
+                } else {
+                    None
                 }
             }
         }
@@ -1100,29 +1077,22 @@ macro_rules! num128 {
 
             #[inline]
             fn try_from(v: JsValue) -> Result<Self, JsValue> {
+                Self::try_from_js_value(v)
+            }
+        }
+
+        impl TryFromJsValue for $ty {
+            // This is a non-standard Wasm bindgen conversion, supported equally
+            fn try_from_js_value_ref(v: &JsValue) -> Option<$ty> {
                 // Truncate the bigint to 64 bits, this will give us the lower part.
-                let lo = match __wbindgen_bigint_get_as_i64(&v) {
-                    // The lower part must be interpreted as unsigned in both i128 and u128.
-                    Some(lo) => lo as u64,
-                    // Not a bigint.
-                    None => return Err(v),
-                };
+                // The lower part must be interpreted as unsigned in both i128 and u128.
+                let lo = __wbindgen_bigint_get_as_i64(&v)? as u64;
                 // Now we know it's a bigint, so we can safely use `>> 64n` without
                 // worrying about a JS exception on type mismatch.
                 let hi = v >> JsValue::from(64_u64);
                 // The high part is the one we want checked against a 64-bit range.
                 // If it fits, then our original number is in the 128-bit range.
-                let hi = <$hi_ty>::try_from(hi)?;
-                Ok(Self::from(hi) << 64 | Self::from(lo))
-            }
-        }
-
-        impl TryFromJsValue for $ty {
-            type Error = JsValue;
-
-            // This is a non-standard Wasm bindgen conversion, supported equally
-            fn try_from_js_value(val: JsValue) -> Result<$ty, JsValue> {
-                <$ty as TryFrom<JsValue>>::try_from(val)
+                <$hi_ty>::try_from_js_value_ref(&hi).map(|hi| Self::from(hi) << 64 | Self::from(lo))
             }
         }
     };
@@ -1133,25 +1103,21 @@ num128!(i128, i64);
 num128!(u128, u64);
 
 impl TryFromJsValue for () {
-    type Error = JsValue;
-
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
         if value.is_undefined() {
-            Ok(())
+            Some(())
         } else {
-            Err(value)
+            None
         }
     }
 }
 
 impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
-    type Error = T::Error;
-
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
         if value.is_null_or_undefined() {
-            Ok(None)
+            Some(None)
         } else {
-            T::try_from_js_value(value).map(Some)
+            T::try_from_js_value_ref(value).map(Some)
         }
     }
 }
@@ -1189,19 +1155,17 @@ impl From<isize> for JsValue {
 
 // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
 impl TryFromJsValue for isize {
-    type Error = JsValue;
     #[inline]
-    fn try_from_js_value(val: JsValue) -> Result<isize, Self::Error> {
-        val.as_f64().map_or_else(|| Err(val), |n| Ok(n as isize))
+    fn try_from_js_value_ref(val: &JsValue) -> Option<isize> {
+        val.as_f64().map(|n| n as isize)
     }
 }
 
 // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
 impl TryFromJsValue for usize {
-    type Error = JsValue;
     #[inline]
-    fn try_from_js_value(val: JsValue) -> Result<usize, Self::Error> {
-        val.as_f64().map_or_else(|| Err(val), |n| Ok(n as usize))
+    fn try_from_js_value_ref(val: &JsValue) -> Option<usize> {
+        val.as_f64().map(|n| n as usize)
     }
 }
 
