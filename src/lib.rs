@@ -889,7 +889,7 @@ impl TryFromJsValue for bool {
 
 impl TryFromJsValue for char {
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
-        let s= value.as_string()?;
+        let s = value.as_string()?;
         if s.len() == 1 {
             Some(s.chars().nth(0).unwrap())
         } else {
@@ -1086,7 +1086,7 @@ macro_rules! num128 {
             fn try_from_js_value_ref(v: &JsValue) -> Option<$ty> {
                 // Truncate the bigint to 64 bits, this will give us the lower part.
                 // The lower part must be interpreted as unsigned in both i128 and u128.
-                let lo = __wbindgen_bigint_get_as_i64(&v)? as u64;                
+                let lo = __wbindgen_bigint_get_as_i64(&v)? as u64;
                 // Now we know it's a bigint, so we can safely use `>> 64n` without
                 // worrying about a JS exception on type mismatch.
                 let hi = v >> JsValue::from(64_u64);
