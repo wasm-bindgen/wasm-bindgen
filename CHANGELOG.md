@@ -32,7 +32,8 @@
 * New `JsValue.is_null_or_undefined()` method and intrinsic.
   [#4751](https://github.com/wasm-bindgen/wasm-bindgen/pull/4751)
 
-* Support for `Option<JsValue>` in ABI conversions.
+* Support for `Option<JsValue>` in function arguments and return.
+  [#4752](https://github.com/wasm-bindgen/wasm-bindgen/pull/4752)
 
 ### Fixed
 
