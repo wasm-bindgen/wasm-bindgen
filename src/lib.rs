@@ -369,7 +369,7 @@ impl JsValue {
     /// Tests whether this JS value is `null` or `undefined`
     #[inline]
     pub fn is_null_or_undefined(&self) -> bool {
-        unsafe { __wbindgen_is_null_or_undefined(self.idx) }
+        unsafe { __wbindgen_object_is_null_or_undefined(self.idx) }
     }
 
     /// Tests whether the type of this JS value is `symbol`
@@ -1107,7 +1107,7 @@ impl TryFromJsValue for () {
 
 impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
-        if value.is_null_or_undefined() {
+        if value.is_undefined() {
             Some(None)
         } else {
             T::try_from_js_value_ref(value).map(Some)
@@ -1257,7 +1257,8 @@ externs! {
     extern "C" {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
-        fn __wbindgen_is_null_or_undefined(idx: u32) -> bool;
+        fn __wbindgen_object_is_null_or_undefined(idx: u32) -> bool;
+        fn __wbindgen_object_is_undefined(idx: u32) -> bool;
 
         fn __wbindgen_describe(v: u32) -> ();
         fn __wbindgen_describe_cast(func: *const (), prims: *const ()) -> *const ();
