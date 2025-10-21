@@ -120,12 +120,18 @@ fn option_try_from_js_value() {
         Option::<i64>::try_from_js_value(JsValue::UNDEFINED),
         Ok(None)
     );
-    assert_eq!(Option::<i64>::try_from_js_value(JsValue::NULL), Ok(None));
+    assert_eq!(
+        Option::<i64>::try_from_js_value(JsValue::NULL),
+        Err(JsValue::NULL)
+    );
     assert_eq!(
         Option::<String>::try_from_js_value(JsValue::UNDEFINED),
         Ok(None)
     );
-    assert_eq!(Option::<String>::try_from_js_value(JsValue::NULL), Ok(None));
+    assert_eq!(
+        Option::<String>::try_from_js_value(JsValue::NULL),
+        Err(JsValue::NULL)
+    );
 
     assert_eq!(
         Option::<i64>::try_from_js_value(JsValue::from(42_i64)),
@@ -148,7 +154,7 @@ fn option_try_from_js_value() {
 
     assert_eq!(
         Option::<JsValue>::try_from_js_value(JsValue::NULL),
-        Ok(None)
+        Ok(Some(JsValue::NULL))
     );
     assert_eq!(
         Option::<JsValue>::try_from_js_value(JsValue::from_str("test")),

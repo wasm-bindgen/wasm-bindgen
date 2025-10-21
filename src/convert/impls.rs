@@ -8,7 +8,7 @@ use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{Clamped, JsError, JsValue, UnwrapThrowExt, __wbindgen_object_is_undefined};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -462,6 +462,20 @@ impl LongRefFromWasmAbi for JsValue {
     #[inline]
     unsafe fn long_ref_from_abi(js: u32) -> Self::Anchor {
         Self::from_abi(js)
+    }
+}
+
+impl OptionIntoWasmAbi for JsValue {
+    #[inline]
+    fn none() -> u32 {
+        crate::__rt::JSIDX_UNDEFINED
+    }
+}
+
+impl OptionFromWasmAbi for JsValue {
+    #[inline]
+    fn is_none(js: &u32) -> bool {
+        unsafe { __wbindgen_object_is_undefined(*js) }
     }
 }
 
