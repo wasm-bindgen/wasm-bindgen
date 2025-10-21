@@ -94,10 +94,10 @@ where
     task::Task::spawn(future);
 }
 
-struct Inner<T: FromWasmAbi = AnyType> {
-    result: Option<Result<T, JsValue>>,
+struct Inner<T = AnyType> {
+    result: Option<Result<JsRef<T>, JsValue>>,
     task: Option<Waker>,
-    callbacks: Option<(Closure<dyn FnMut(T)>, Closure<dyn FnMut(JsValue)>)>,
+    callbacks: Option<(Closure<dyn FnMut(JsRef<T>)>, Closure<dyn FnMut(JsValue)>)>,
 }
 
 /// A Rust `Future` backed by a JavaScript `Promise`.
@@ -108,19 +108,19 @@ struct Inner<T: FromWasmAbi = AnyType> {
 /// with the JavaScript `Promise`.
 ///
 /// Currently this type is constructed with `JsFuture::from`.
-pub struct JsFuture<T: FromWasmAbi = AnyType> {
+pub struct JsFuture<T = AnyType> {
     inner: Rc<RefCell<Inner<T>>>,
 }
 
-impl<T: FromWasmAbi> GenericType for JsFuture<T> {}
+impl<T> GenericType for JsFuture<T> {}
 
-impl<T: FromWasmAbi> fmt::Debug for JsFuture<T> {
+impl<T> fmt::Debug for JsFuture<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
     }
 }
 
-impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
+impl<T: 'static> From<Promise<T>> for JsFuture<T> {
     fn from(js: Promise<T>) -> JsFuture<T> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
@@ -143,7 +143,7 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
             callbacks: None,
         }));
 
-        fn finish<T: FromWasmAbi>(state: &RefCell<Inner<T>>, val: Result<T, JsValue>) {
+        fn finish<T>(state: &RefCell<Inner<T>>, val: Result<JsRef<T>, JsValue>) {
             let task = {
                 let mut state = state.borrow_mut();
                 assert!(
@@ -170,7 +170,7 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
 
         let resolve = {
             let state = state.clone();
-            Closure::once(move |val: T| finish(&*state, Ok(val)))
+            Closure::once(move |val: JsRef<T>| finish(&*state, Ok(val)))
         };
 
         let reject = {
@@ -178,7 +178,7 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
             Closure::once(move |val| finish(&*state, Err(val)))
         };
 
-        let _ = js.map2(&resolve, &reject);
+        let _ = js.then2(&resolve, &reject);
 
         state.borrow_mut().callbacks = Some((resolve, reject));
 
@@ -187,7 +187,7 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
 }
 
 impl<T: FromWasmAbi> Future for JsFuture<T> {
-    type Output = Result<T, JsValue>;
+    type Output = Result<JsRef<T>, JsValue>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         let mut inner = self.inner.borrow_mut();

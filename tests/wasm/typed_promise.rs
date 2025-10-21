@@ -16,13 +16,13 @@ async fn test_typed_promise_basic() {
     let promise = Promise::resolve(&42i32.to_js());
     checkPromise(&promise).await.unwrap();
 
-    let out: i32 = JsFuture::from(promise.clone()).await.unwrap();
+    let out: i32 = JsFuture::from(promise.clone()).await.unwrap().from_js();
     assert_eq!(out, 42);
 
     // Use map with typed closure
     let closure = Closure::new(|num: i32| (num + 1) as f64);
     let result_promise: Promise<f64> = promise.map(&closure);
-    let out: f64 = JsFuture::from(result_promise).await.unwrap();
+    let out: f64 = JsFuture::from(result_promise).await.unwrap().from_js();
     assert_eq!(out, 43.0);
 
     // Alternative: cast and use typed promise
@@ -34,7 +34,7 @@ async fn test_typed_promise_basic() {
     let string_promise: Promise<JsString> =
         Promise::resolve(&JsString::from("test")).unchecked_into();
     let typed_future: JsFuture<_> = string_promise.into();
-    let result: JsString = typed_future.await.unwrap();
+    let result: JsString = typed_future.await.unwrap().from_js();
 
     assert_eq!(result.as_string(), Some("test".to_string()));
 }
@@ -79,7 +79,7 @@ async fn test_typed_promise_different_types() {
     let result_promise = typed_promise.map(&closure);
 
     let typed_future: JsFuture<_> = result_promise.into();
-    let result: f64 = typed_future.await.unwrap();
+    let result: f64 = typed_future.await.unwrap().from_js();
     assert_eq!(result, 6.3);
 
     let promise = Promise::resolve(&JsValue::from(true));
@@ -88,7 +88,7 @@ async fn test_typed_promise_different_types() {
     let result_promise = typed_promise.map(&closure);
 
     let typed_future: JsFuture<JsString> = result_promise.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result.as_string(), Some("yes".to_string()));
 }
 
@@ -159,12 +159,12 @@ pub fn rust_process_typed_promise(promise: Promise<i32>) -> Promise<i32> {
 async fn test_typed_promise_exports() {
     let typed_promise = rust_create_typed_number_promise(21);
     let typed_future: JsFuture<i32> = typed_promise.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result, 42);
 
     let typed_promise = rust_create_typed_string_promise("hello");
     let typed_future: JsFuture<JsString> = typed_promise.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result.as_string(), Some("Rust: hello".to_string()));
 }
 
@@ -174,7 +174,7 @@ async fn test_typed_promise_processing() {
     let processed_typed = rust_process_typed_promise(original_typed);
 
     let typed_future: JsFuture<i32> = processed_typed.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result, 120);
 }
 
@@ -182,12 +182,12 @@ async fn test_typed_promise_processing() {
 async fn test_typed_promise_imports() {
     let typed_promise = create_typed_number_promise(15);
     let typed_future: JsFuture<i32> = typed_promise.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result, 30);
 
     let typed_promise = create_typed_string_promise("world");
     let typed_future: JsFuture<JsString> = typed_promise.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result.as_string(), Some("JS: world".to_string()));
 }
 
@@ -199,7 +199,7 @@ async fn test_typed_promise_round_trip() {
 
     let final_typed = rust_process_typed_promise(js_processed);
 
-    let result: i32 = JsFuture::from(final_typed).await.unwrap();
+    let result: i32 = JsFuture::from(final_typed).await.unwrap().from_js();
 
     assert_eq!(result, 310);
 }
@@ -226,7 +226,7 @@ async fn test_typed_future_to_promise_async_computation() {
 
     let typed_promise = future_to_promise_typed(future);
     let typed_future: JsFuture<i32> = typed_promise.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result, 40);
 }
 
@@ -238,6 +238,6 @@ async fn test_typed_future_to_promise_chaining() {
     let closure = Closure::new(|num: i32| num * 10);
     let chained = typed_promise.map(&closure);
     let typed_future: JsFuture<i32> = chained.into();
-    let result = typed_future.await.unwrap();
+    let result = typed_future.await.unwrap().from_js();
     assert_eq!(result, 50);
 }
