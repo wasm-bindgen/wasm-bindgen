@@ -47,6 +47,7 @@ use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 use js_sys::Promise;
+use wasm_bindgen::__rt::marker::{AnyType, GenericType};
 use wasm_bindgen::prelude::*;
 
 mod queue;
@@ -92,10 +93,10 @@ where
     task::Task::spawn(future);
 }
 
-struct Inner {
-    result: Option<Result<JsValue, JsValue>>,
+struct Inner<T = AnyType> {
+    result: Option<Result<JsRef<T>, JsValue>>,
     task: Option<Waker>,
-    callbacks: Option<(Closure<dyn FnMut(JsValue)>, Closure<dyn FnMut(JsValue)>)>,
+    callbacks: Option<(Closure<dyn FnMut(JsRef<T>)>, Closure<dyn FnMut(JsValue)>)>,
 }
 
 /// A Rust `Future` backed by a JavaScript `Promise`.
@@ -106,18 +107,20 @@ struct Inner {
 /// with the JavaScript `Promise`.
 ///
 /// Currently this type is constructed with `JsFuture::from`.
-pub struct JsFuture {
-    inner: Rc<RefCell<Inner>>,
+pub struct JsFuture<T = AnyType> {
+    inner: Rc<RefCell<Inner<T>>>,
 }
 
-impl fmt::Debug for JsFuture {
+impl<T> GenericType for JsFuture<T> {}
+
+impl<T> fmt::Debug for JsFuture<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
     }
 }
 
-impl From<Promise> for JsFuture {
-    fn from(js: Promise) -> JsFuture {
+impl<T: 'static> From<Promise<T>> for JsFuture<T> {
+    fn from(js: Promise<T>) -> JsFuture<T> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
         // assuming that JS engines will unconditionally invoke precisely one of
@@ -133,17 +136,20 @@ impl From<Promise> for JsFuture {
         // have to be self-contained. Through the `Closure::once` and some
         // `Rc`-trickery we can arrange for both instances of `Closure`, and the
         // `Rc`, to all be destroyed once the first one is called.
-        let state = Rc::new(RefCell::new(Inner {
+        let state = Rc::new(RefCell::new(Inner::<T> {
             result: None,
             task: None,
             callbacks: None,
         }));
 
-        fn finish(state: &RefCell<Inner>, val: Result<JsValue, JsValue>) {
+        fn finish<T>(state: &RefCell<Inner<T>>, val: Result<JsRef<T>, JsValue>) {
             let task = {
                 let mut state = state.borrow_mut();
-                debug_assert!(state.callbacks.is_some());
-                debug_assert!(state.result.is_none());
+                assert!(
+                    state.callbacks.is_some(),
+                    "finish: callbacks should be Some"
+                );
+                assert!(state.result.is_none(), "finish: result should be None");
 
                 // First up drop our closures as they'll never be invoked again and
                 // this is our chance to clean up their state.
@@ -163,12 +169,12 @@ impl From<Promise> for JsFuture {
 
         let resolve = {
             let state = state.clone();
-            Closure::once(move |val| finish(&state, Ok(val)))
+            Closure::once(move |val: JsRef<T>| finish(&*state, Ok(val)))
         };
 
         let reject = {
             let state = state.clone();
-            Closure::once(move |val| finish(&state, Err(val)))
+            Closure::once(move |val| finish(&*state, Err(val)))
         };
 
         let _ = js.then2(&resolve, &reject);
@@ -179,8 +185,8 @@ impl From<Promise> for JsFuture {
     }
 }
 
-impl Future for JsFuture {
-    type Output = Result<JsValue, JsValue>;
+impl<T> Future for JsFuture<T> {
+    type Output = Result<JsRef<T>, JsValue>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         let mut inner = self.inner.borrow_mut();
@@ -217,13 +223,13 @@ impl Future for JsFuture {
 /// If the `future` provided panics then the returned `Promise` **will not
 /// resolve**. Instead it will be a leaked promise. This is an unfortunate
 /// limitation of Wasm currently that's hoped to be fixed one day!
-pub fn future_to_promise<F>(future: F) -> Promise
+pub fn future_to_promise<F, T>(future: F) -> Promise<T>
 where
-    F: Future<Output = Result<JsValue, JsValue>> + 'static,
+    F: Future<Output = Result<JsRef<T>, JsValue>> + 'static,
 {
     let mut future = Some(future);
 
-    Promise::new(&mut |resolve, reject| {
+    Promise::new_t(&mut |resolve, reject| {
         let future = future.take().unwrap_throw();
 
         spawn_local(async move {
@@ -238,3 +244,29 @@ where
         });
     })
 }
+
+// /// Converts a Rust `Future` into a JavaScript `Promise`.
+// ///
+// /// Like [`future_to_promise`], but handling the type conversion
+// /// of the future output type to the promise generic type.
+// pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
+// where
+//     F: Future<Output = Result<JsRef<T>, JsValue>> + 'static
+// {
+//     let mut future = Some(future);
+
+//     Promise::new_t(&mut |resolve, reject| {
+//         let future = future.take().unwrap_throw();
+
+//         spawn_local(async move {
+//             match future.await {
+//                 Ok(val) => {
+//                     resolve.call1(&JsValue::undefined(), &val).unwrap_throw();
+//                 }
+//                 Err(val) => {
+//                     reject.call1(&JsValue::undefined(), &val).unwrap_throw();
+//                 }
+//             }
+//         });
+//     })
+// }
