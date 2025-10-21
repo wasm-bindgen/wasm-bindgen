@@ -88,6 +88,7 @@ macro_rules! shared_api {
 
         enum OperationKind<'a> {
             Regular,
+            RegularThis,
             Getter(&'a str),
             Setter(&'a str),
             IndexingGetter,

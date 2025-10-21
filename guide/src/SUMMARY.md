@@ -92,6 +92,7 @@
       - [`skip_jsdoc`](./reference/attributes/on-rust-exports/skip_jsdoc.md)
       - [`start`](./reference/attributes/on-rust-exports/start.md)
       - [`main`](./reference/attributes/on-rust-exports/main.md)
+      - [`this`](./reference/attributes/on-rust-exports/this.md)
       - [`typescript_custom_section`](./reference/attributes/on-rust-exports/typescript_custom_section.md)
       - [`getter` and `setter`](./reference/attributes/on-rust-exports/getter-and-setter.md)
       - [`inspectable`](./reference/attributes/on-rust-exports/inspectable.md)
