@@ -2028,7 +2028,11 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call1(this: &Function, context: &JsValue, arg1: &JsValue) -> Result<JsValue, JsValue>;
+    pub fn call1<T>(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsRef<T>,
+    ) -> Result<JsValue, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.

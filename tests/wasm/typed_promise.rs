@@ -1,7 +1,7 @@
 use js_sys::{JsString, Promise};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::{future_to_promise_typed, JsFuture};
+use wasm_bindgen_futures::{future_to_promise, JsFuture};
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/typed_promise.js")]
@@ -207,7 +207,7 @@ async fn test_typed_promise_round_trip() {
 #[wasm_bindgen_test]
 async fn test_typed_future_to_promise_error() {
     let future = async { Err(JsValue::from("future failed")) };
-    let typed_promise: Promise<i32> = future_to_promise_typed(future);
+    let typed_promise: Promise<i32> = future_to_promise(future);
 
     let typed_future: JsFuture<i32> = typed_promise.into();
     let result = typed_future.await;
@@ -221,10 +221,10 @@ async fn test_typed_future_to_promise_async_computation() {
     let future = async {
         let base = 10i32;
         let multiplier = 4i32;
-        Ok(base * multiplier)
+        Ok((base * multiplier).to_js())
     };
 
-    let typed_promise = future_to_promise_typed(future);
+    let typed_promise = future_to_promise(future);
     let typed_future: JsFuture<i32> = typed_promise.into();
     let result = typed_future.await.unwrap().from_js();
     assert_eq!(result, 40);
@@ -232,8 +232,8 @@ async fn test_typed_future_to_promise_async_computation() {
 
 #[wasm_bindgen_test]
 async fn test_typed_future_to_promise_chaining() {
-    let future = async { Ok(5i32) };
-    let typed_promise = future_to_promise_typed(future);
+    let future = async { Ok(5i32.to_js()) };
+    let typed_promise = future_to_promise(future);
 
     let closure = Closure::new(|num: i32| num * 10);
     let chained = typed_promise.map(&closure);

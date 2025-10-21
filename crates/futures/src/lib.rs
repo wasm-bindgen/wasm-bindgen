@@ -48,7 +48,6 @@ use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 use js_sys::Promise;
 use wasm_bindgen::__rt::marker::{AnyType, GenericType};
-use wasm_bindgen::convert::FromWasmAbi;
 use wasm_bindgen::prelude::*;
 
 mod queue;
@@ -186,7 +185,7 @@ impl<T: 'static> From<Promise<T>> for JsFuture<T> {
     }
 }
 
-impl<T: FromWasmAbi> Future for JsFuture<T> {
+impl<T> Future for JsFuture<T> {
     type Output = Result<JsRef<T>, JsValue>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
@@ -224,13 +223,13 @@ impl<T: FromWasmAbi> Future for JsFuture<T> {
 /// If the `future` provided panics then the returned `Promise` **will not
 /// resolve**. Instead it will be a leaked promise. This is an unfortunate
 /// limitation of Wasm currently that's hoped to be fixed one day!
-pub fn future_to_promise<F>(future: F) -> Promise
+pub fn future_to_promise<F, T>(future: F) -> Promise<T>
 where
-    F: Future<Output = Result<JsValue, JsValue>> + 'static,
+    F: Future<Output = Result<JsRef<T>, JsValue>> + 'static,
 {
     let mut future = Some(future);
 
-    Promise::new(&mut |resolve, reject| {
+    Promise::new_t(&mut |resolve, reject| {
         let future = future.take().unwrap_throw();
 
         spawn_local(async move {
@@ -246,30 +245,28 @@ where
     })
 }
 
-/// Converts a Rust `Future` into a JavaScript `Promise`.
-///
-/// Like [`future_to_promise`], but handling the type conversion
-/// of the future output type to the promise generic type.
-pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
-where
-    F: Future<Output = Result<T, JsValue>> + 'static,
-    T: Into<JsValue>,
-{
-    let mut future = Some(future);
+// /// Converts a Rust `Future` into a JavaScript `Promise`.
+// ///
+// /// Like [`future_to_promise`], but handling the type conversion
+// /// of the future output type to the promise generic type.
+// pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
+// where
+//     F: Future<Output = Result<JsRef<T>, JsValue>> + 'static
+// {
+//     let mut future = Some(future);
 
-    Promise::new_t(&mut |resolve, reject| {
-        let future = future.take().unwrap_throw();
+//     Promise::new_t(&mut |resolve, reject| {
+//         let future = future.take().unwrap_throw();
 
-        spawn_local(async move {
-            match future.await {
-                Ok(val) => {
-                    let js_val = val.into();
-                    resolve.call1(&JsValue::undefined(), &js_val).unwrap_throw();
-                }
-                Err(val) => {
-                    reject.call1(&JsValue::undefined(), &val).unwrap_throw();
-                }
-            }
-        });
-    })
-}
+//         spawn_local(async move {
+//             match future.await {
+//                 Ok(val) => {
+//                     resolve.call1(&JsValue::undefined(), &val).unwrap_throw();
+//                 }
+//                 Err(val) => {
+//                     reject.call1(&JsValue::undefined(), &val).unwrap_throw();
+//                 }
+//             }
+//         });
+//     })
+// }

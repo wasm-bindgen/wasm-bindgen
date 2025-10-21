@@ -150,6 +150,7 @@ pub(crate) fn uses_generic_params(ty: &syn::Type, generic_names: &Vec<&syn::Iden
     visitor.found_a
 }
 
+// TODO: (1) this should be recursive, (2) this should erase all of <A, B, C, ...> if any of A/B/C are generic.
 pub(crate) fn strip_local_generic_args(
     ty: &syn::Type,
     generic_names: &Vec<&syn::Ident>,
