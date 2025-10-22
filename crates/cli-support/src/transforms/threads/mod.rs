@@ -159,12 +159,12 @@ fn delete_synthetic_global(module: &mut Module, name: &str) -> Result<u32, Error
         walrus::ExportItem::Global(g) => g,
         _ => bail!("`{name}` must be a global"),
     };
-    let g = match module.globals.get(id).kind {
+    let g = match &module.globals.get(id).kind {
         walrus::GlobalKind::Local(g) => g,
         walrus::GlobalKind::Import(_) => bail!("`{name}` must not be an imported global"),
     };
     match g {
-        ConstExpr::Value(Value::I32(v)) => Ok(v as u32),
+        ConstExpr::Value(Value::I32(v)) => Ok(*v as u32),
         _ => bail!("`{name}` was not an `i32` constant"),
     }
 }

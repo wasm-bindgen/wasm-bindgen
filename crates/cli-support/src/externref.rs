@@ -407,7 +407,7 @@ pub fn force_contiguous_elements(module: &mut Module) -> Result<()> {
                 }
                 // If we find a function, then we either start a new block or
                 // push it onto the existing block.
-                _ => block.get_or_insert(Vec::new()).push(*expr),
+                _ => block.get_or_insert(Vec::new()).push(expr.clone()),
             }
         }
 

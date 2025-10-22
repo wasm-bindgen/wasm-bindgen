@@ -90,6 +90,7 @@ fn module_export_types(module: &Module, mut export: impl FnMut(&str, &str)) {
             walrus::ExportItem::Memory(_) => export(&entry.name, "WebAssembly.Memory"),
             walrus::ExportItem::Table(_) => export(&entry.name, "WebAssembly.Table"),
             walrus::ExportItem::Global(_) => continue,
+            walrus::ExportItem::Tag(_) => export(&entry.name, "WebAssembly.Tag"),
         };
     }
 }
