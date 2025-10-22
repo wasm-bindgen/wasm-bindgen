@@ -695,6 +695,25 @@ wasm = wasmInstance.exports;
         };
 
         push_with_newline(&imports);
+
+        // Generate reexport statements
+        for (adapter_id, export_name) in &self.aux.reexports {
+            let import_name = self.import_name(match self.aux.import_map.get(adapter_id) {
+                Some(
+                    AuxImport::Value(AuxValue::Bare(js))
+                    | AuxImport::Instanceof(js)
+                    | AuxImport::Static { js, .. },
+                ) => js,
+                Some(_) | None => continue,
+            })?;
+            let export_name = if export_name.is_empty() {
+                import_name.to_string()
+            } else {
+                export_name.to_string()
+            };
+            self.export(&export_name, ExportJs::Expression(&import_name), None)?;
+        }
+
         push_with_newline(&self.imports_post);
 
         // Emit all our exports from this module
@@ -2922,6 +2941,18 @@ wasm = wasmInstance.exports;
                 AdapterKind::Local { instructions } => instructions,
             };
             self.generate_adapter(id, adapter, instrs, kind)?;
+        }
+
+        // Ensure all imports for reexports are defined
+        for adapter_id in self.aux.reexports.keys() {
+            self.import_name(match self.aux.import_map.get(adapter_id) {
+                Some(
+                    AuxImport::Value(AuxValue::Bare(js))
+                    | AuxImport::Instanceof(js)
+                    | AuxImport::Static { js, .. },
+                ) => js,
+                Some(_) | None => continue,
+            })?;
         }
 
         let mut pairs = self.aux.export_map.iter().collect::<Vec<_>>();

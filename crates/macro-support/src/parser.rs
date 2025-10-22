@@ -176,6 +176,7 @@ macro_rules! attrgen {
             (readonly, false, Readonly(Span)),
             (js_name, false, JsName(Span, String, Span)),
             (js_class, false, JsClass(Span, String, Span)),
+            (reexport, false, Reexport(Span, Option<String>)),
             (inspectable, false, Inspectable(Span)),
             (is_type_of, false, IsTypeOf(Span, syn::Expr)),
             (extends, false, Extends(Span, syn::Path)),
@@ -771,6 +772,15 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
         } else {
             ast::ImportFunctionKind::Normal
         };
+
+        // Validate that reexport is not used on methods/constructors/static methods
+        if opts.reexport().is_some() && matches!(kind, ast::ImportFunctionKind::Method { .. }) {
+            return Err(Diagnostic::span_error(
+                self.sig.ident.span(),
+                "`reexport` cannot be used on methods, constructors, or static methods. \
+                Use `reexport` on the type import instead.",
+            ));
+        }
 
         let shim = {
             let ns = match kind {
@@ -1658,6 +1668,7 @@ fn string_enum(
     program.imports.push(ast::Import {
         module: None,
         js_namespace: None,
+        reexport: None,
         kind: ast::ImportKind::Enum(ast::StringEnum {
             vis: enum_.vis,
             name: enum_.ident,
@@ -1962,11 +1973,13 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                     let mut item: syn::ItemStatic =
                         syn::parse(v.into()).expect("only foreign functions/types allowed for now");
                     let item_opts = BindgenAttrs::find(&mut item.attrs)?;
+                    let reexport = item_opts.reexport().map(|s| s.clone().unwrap_or_default());
                     let kind = item.convert((program, item_opts, &ctx.module))?;
 
                     program.imports.push(ast::Import {
                         module: None,
                         js_namespace: None,
+                        reexport,
                         kind,
                     });
 
@@ -1983,6 +1996,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .or(ctx.js_namespace)
             .map(|s| s.0);
         let module = ctx.module;
+        let reexport = item_opts.reexport().map(|s| s.clone().unwrap_or_default());
 
         let kind = match self {
             syn::ForeignItem::Fn(f) => f.convert((program, item_opts, &module))?,
@@ -2041,6 +2055,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
         program.imports.push(ast::Import {
             module,
             js_namespace,
+            reexport,
             kind,
         });
 
