@@ -4198,6 +4198,7 @@ wasm = wasmInstance.exports;
             Memory(_) => Some("memory"),
             Global(g) => self.module.globals.get(g).name.as_deref(),
             Tag(t) => {
+                // TODO: update to use tag.name, when supported in Walrus 24.1
                 let tag = self.module.tags.get(t);
                 match &tag.kind {
                     walrus::TagKind::Import(import_id) => {
