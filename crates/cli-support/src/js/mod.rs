@@ -4197,16 +4197,7 @@ wasm = wasmInstance.exports;
             Table(table) => self.module.tables.get(table).name.as_deref(),
             Memory(_) => Some("memory"),
             Global(g) => self.module.globals.get(g).name.as_deref(),
-            Tag(t) => {
-                // TODO: update to use tag.name, when supported in Walrus 24.1
-                let tag = self.module.tags.get(t);
-                match &tag.kind {
-                    walrus::TagKind::Import(import_id) => {
-                        Some(self.module.imports.get(*import_id).name.as_str())
-                    }
-                    walrus::TagKind::Local => None,
-                }
-            }
+            Tag(t) => self.module.tags.get(t).name.as_deref(),
         }
         .unwrap_or("__wbindgen_export");
         let name = self.generate_identifier(&to_valid_ident(name));
