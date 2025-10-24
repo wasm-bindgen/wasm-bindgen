@@ -53,6 +53,9 @@ pub struct Context<'a> {
     /// function signatures, etc.
     typescript_refs: HashSet<TsReference>,
 
+    /// TypeScript function declarations.
+    typescript_function_exports: Vec<TsFunctionExport>,
+
     /// String enums that are used internally by the generated bindings.
     ///
     /// This tracks which string enums are used independently from whether their
@@ -133,6 +136,14 @@ enum ExportJs<'a> {
     Expression(&'a str),
 }
 
+/// A TypeScript function export declaration.
+struct TsFunctionExport {
+    /// The name of the exported function
+    name: String,
+    /// The complete TypeScript declaration for this function
+    declaration: String,
+}
+
 const INITIAL_HEAP_VALUES: &[&str] = &["undefined", "null", "true", "false"];
 // Must be kept in sync with `src/lib.rs` of the `wasm-bindgen` crate
 const INITIAL_HEAP_OFFSET: usize = 128;
@@ -154,6 +165,7 @@ impl<'a> Context<'a> {
             defined_identifiers: Default::default(),
             wasm_import_definitions: Default::default(),
             typescript_refs: Default::default(),
+            typescript_function_exports: Default::default(),
             used_string_enums: Default::default(),
             exported_classes: Some(Default::default()),
             config,
@@ -2781,6 +2793,16 @@ wasm = wasmInstance.exports;
             self.generate_adapter(id, adapter, instrs, kind)?;
         }
 
+        // Sort and emit TypeScript function exports for deterministic output.
+        // This ensures that the TypeScript declarations are consistent regardless
+        // of compiler settings (like codegen units) while preserving the JS export
+        // order as defined in the source code.
+        self.typescript_function_exports
+            .sort_by(|a, b| a.name.cmp(&b.name));
+        for export in &self.typescript_function_exports {
+            self.typescript.push_str(&export.declaration);
+        }
+
         let mut pairs = self.aux.export_map.iter().collect::<Vec<_>>();
         pairs.sort_by_key(|(k, _)| *k);
         check_duplicated_getter_and_setter_names(&pairs)?;
@@ -2796,7 +2818,14 @@ wasm = wasmInstance.exports;
             self.generate_struct(s)?;
         }
 
-        self.typescript.push_str(&self.aux.extra_typescript);
+        // Emit custom TypeScript sections, sorted for deterministic output
+        // across different compilation units
+        let mut custom_sections: Vec<_> = self.aux.extra_typescript.iter().collect();
+        custom_sections.sort();
+        for section in custom_sections {
+            self.typescript.push_str(section);
+            self.typescript.push_str("\n\n");
+        }
 
         for path in self.aux.package_jsons.iter() {
             self.process_package_json(path)?;
@@ -2968,11 +2997,17 @@ wasm = wasmInstance.exports;
                 match &export.kind {
                     AuxExportKind::Function(name) => {
                         if let Some(ts_sig) = ts_sig {
-                            self.typescript.push_str(&ts_docs);
-                            self.typescript.push_str("export function ");
-                            self.typescript.push_str(name);
-                            self.typescript.push_str(ts_sig);
-                            self.typescript.push_str(";\n");
+                            // Collect TypeScript function declarations for sorting
+                            let mut ts_decl = String::new();
+                            ts_decl.push_str(&ts_docs);
+                            ts_decl.push_str("export function ");
+                            ts_decl.push_str(name);
+                            ts_decl.push_str(ts_sig);
+                            ts_decl.push_str(";\n");
+                            self.typescript_function_exports.push(TsFunctionExport {
+                                name: name.clone(),
+                                declaration: ts_decl,
+                            });
                         }
 
                         self.export(
