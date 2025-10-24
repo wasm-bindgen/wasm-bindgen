@@ -1,0 +1,18 @@
+{
+  "name": "without-a-bundler",
+  "type": "module",
+  "collaborators": [
+    "The wasm-bindgen Developers"
+  ],
+  "version": "0.0.0",
+  "files": [
+    "without_a_bundler_bg.wasm",
+    "without_a_bundler.js",
+    "without_a_bundler.d.ts"
+  ],
+  "main": "without_a_bundler.js",
+  "types": "without_a_bundler.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
