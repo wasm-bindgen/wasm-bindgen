@@ -23,5 +23,5 @@ web-sys = { path = "../../web-sys", default-features = false }
 
 # Pinned sub-dependencies for MSRV
 bumpalo = "=3.12.0"
-quote = "=1.0.40"
 proc-macro2 = "=1.0.101"
+quote = "=1.0.40"
