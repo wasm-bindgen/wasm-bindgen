@@ -5,6 +5,14 @@
 
 ### Added
 
+### Fixed
+
+### Removed
+
+## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
+
+### Added
+
 * Added `Math::PI` binding to `js_sys`, exposing the ECMAScript `Math.PI` constant.
   [#4748](https://github.com/wasm-bindgen/wasm-bindgen/pull/4748)
 

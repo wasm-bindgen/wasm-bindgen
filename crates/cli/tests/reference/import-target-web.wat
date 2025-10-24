@@ -12,7 +12,7 @@
   (import "foo-raw" "bar_from_foo_raw" (func (;1;) (type 0)))
   (import "pure-extern" "extern_fn" (func (;2;) (type 0)))
   (import "tests/wasm/imports.js" "bar_from_foo" (func (;3;) (type 0)))
-  (import "wbg" "__wbg___wbindgen_throw_451ec1a8469d7eb6" (func (;4;) (type 6)))
+  (import "wbg" "__wbg___wbindgen_throw_b855445ff6a94295" (func (;4;) (type 6)))
   (import "wbg" "__wbg_catch_me_1d18acaa34acb005" (func (;5;) (type 0)))
   (import "wbg" "__wbg_get_c871386e44ba8c35" (func (;6;) (type 8)))
   (import "wbg" "__wbg_my_function_597f96bc4719408a" (func (;7;) (type 0)))

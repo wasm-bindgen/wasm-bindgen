@@ -57,7 +57,7 @@ export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
 }
 
-export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
+export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
