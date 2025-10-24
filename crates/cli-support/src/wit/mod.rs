@@ -608,20 +608,26 @@ impl<'a> Context<'a> {
     }
 
     fn import(&mut self, import: decode::Import<'_>) -> Result<(), Error> {
-        match &import.kind {
-            decode::ImportKind::Function(f) => self.import_function(&import, f),
-            decode::ImportKind::Static(s) => self.import_static(&import, s),
-            decode::ImportKind::String(s) => self.import_string(s),
-            decode::ImportKind::Type(t) => self.import_type(&import, t),
-            decode::ImportKind::Enum(e) => self.string_enum(e),
+        let id = match &import.kind {
+            decode::ImportKind::Function(f) => self.import_function(&import, f)?,
+            decode::ImportKind::Static(s) => self.import_static(&import, s)?,
+            decode::ImportKind::String(s) => self.import_string(s)?,
+            decode::ImportKind::Type(t) => self.import_type(&import, t)?,
+            decode::ImportKind::Enum(e) => self.string_enum(e)?,
+        };
+        if let Some(id) = id {
+            if let Some(reexport_name) = &import.reexport {
+                self.aux.reexports.insert(id, reexport_name.clone());
+            }
         }
+        Ok(())
     }
 
     fn import_function(
         &mut self,
         import: &decode::Import<'_>,
         function: &decode::ImportFunction<'_>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<AdapterId>, Error> {
         let decode::ImportFunction {
             shim,
             catch,
@@ -633,10 +639,10 @@ impl<'a> Context<'a> {
         } = function;
         let (import_id, _id) = match self.function_imports.get(*shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
         let descriptor = match self.descriptors.remove(*shim) {
-            None => return Ok(()),
+            None => return Ok(None),
             Some(d) => d.unwrap_function(),
         };
 
@@ -719,7 +725,7 @@ impl<'a> Context<'a> {
         }
 
         self.aux.import_map.insert(id, import);
-        Ok(())
+        Ok(Some(id))
     }
 
     /// The `bool` returned indicates whether the imported value should be
@@ -830,14 +836,14 @@ impl<'a> Context<'a> {
         &mut self,
         import: &decode::Import<'_>,
         static_: &decode::ImportStatic<'_>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<AdapterId>, Error> {
         let (import_id, _id) = match self.function_imports.get(static_.shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
         let descriptor = match self.descriptors.remove(static_.shim) {
-            None => return Ok(()),
+            None => return Ok(None),
             Some(d) => d,
         };
         let optional = matches!(descriptor, Descriptor::Option(_));
@@ -860,13 +866,16 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::Static { js, optional });
-        Ok(())
+        Ok(Some(id))
     }
 
-    fn import_string(&mut self, string: &decode::ImportString<'_>) -> Result<(), Error> {
+    fn import_string(
+        &mut self,
+        string: &decode::ImportString<'_>,
+    ) -> Result<Option<AdapterId>, Error> {
         let (import_id, _id) = match self.function_imports.get(string.shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
         // Register the signature of this imported shim
@@ -886,17 +895,17 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::String(string.string.to_owned()));
-        Ok(())
+        Ok(None)
     }
 
     fn import_type(
         &mut self,
         import: &decode::Import<'_>,
         type_: &decode::ImportType<'_>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<AdapterId>, Error> {
         let (import_id, _id) = match self.function_imports.get(type_.instanceof_shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
         // Register the signature of this imported shim
@@ -917,10 +926,13 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::Instanceof(import));
-        Ok(())
+        Ok(Some(id))
     }
 
-    fn string_enum(&mut self, string_enum: &decode::StringEnum<'_>) -> Result<(), Error> {
+    fn string_enum(
+        &mut self,
+        string_enum: &decode::StringEnum<'_>,
+    ) -> Result<Option<AdapterId>, Error> {
         let aux = AuxStringEnum {
             name: string_enum.name.to_string(),
             comments: concatenate_comments(&string_enum.comments),
@@ -931,7 +943,7 @@ impl<'a> Context<'a> {
                 .collect(),
             generate_typescript: string_enum.generate_typescript,
         };
-        let mut result = Ok(());
+        let mut result = Ok(None);
         self.aux
             .string_enums
             .entry(aux.name.clone())
