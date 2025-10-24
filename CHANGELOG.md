@@ -35,6 +35,10 @@
 * Support for `Option<JsValue>` in function arguments and return.
   [#4752](https://github.com/wasm-bindgen/wasm-bindgen/pull/4752)
 
+* Support for `WASM_BINDGEN_KEEP_TEST_BUILD=1` environment variable
+  to retain build files when using the test runner.
+  [#4758](https://github.com/wasm-bindgen/wasm-bindgen/pull/4758)
+
 ### Fixed
 
 * Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
