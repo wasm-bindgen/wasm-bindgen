@@ -159,6 +159,7 @@ macro_rules! attrgen {
             (catch, false, Catch(Span)),
             (constructor, false, Constructor(Span)),
             (method, false, Method(Span)),
+            (r#this, false, This(Span)),
             (static_method_of, false, StaticMethodOf(Span, Ident)),
             (js_namespace, false, JsNamespace(Span, JsNamespace, Vec<Span>)),
             (module, true, Module(Span, String, Span)),
@@ -1365,6 +1366,13 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                 let rust_name = f.sig.ident.clone();
                 let start = opts.start().is_some();
 
+                if opts.this().is_some() && f.sig.inputs.is_empty() {
+                    bail_span!(
+                        &f.sig.inputs,
+                        "functions taking a 'this' argument must have at least one parameter"
+                    );
+                }
+
                 program.exports.push(ast::Export {
                     comments,
                     function: f.convert((opts, args_attrs))?,
@@ -1550,6 +1558,15 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         }
 
         let opts = BindgenAttrs::find(&mut self.attrs)?;
+
+        if opts.this().is_some() {
+            bail_span!(
+                &self.sig.ident,
+                "#[wasm_bindgen(this)] cannot be used on impl block methods; \
+                 it is only valid on free functions"
+            );
+        }
+
         let comments = extract_doc_comments(&self.attrs);
         let args_attrs: Vec<FnArgAttrs> = extract_args_attrs(&mut self.sig)?;
         let (function, method_self) = function_from_decl(
@@ -2232,6 +2249,9 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
 
 fn operation_kind(opts: &BindgenAttrs) -> ast::OperationKind {
     let mut operation_kind = ast::OperationKind::Regular;
+    if opts.this().is_some() {
+        operation_kind = ast::OperationKind::RegularThis;
+    }
     if let Some(g) = opts.getter() {
         operation_kind = ast::OperationKind::Getter(g.clone());
     }

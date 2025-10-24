@@ -124,6 +124,9 @@ pub enum AuxExportKind {
     /// A free function that's just listed on the exported module
     Function(String),
 
+    /// A free function that receives JS `this` as its first parameter
+    FunctionThis(String),
+
     /// A function that's used to create an instance of a class. The function
     /// actually return just an integer which is put on an JS object currently.
     Constructor(String),

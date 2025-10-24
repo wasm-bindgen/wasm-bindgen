@@ -2894,6 +2894,9 @@ wasm = wasmInstance.exports;
                 ret_desc = &export.fn_ret_desc;
                 match &export.kind {
                     AuxExportKind::Function(_) => {}
+                    AuxExportKind::FunctionThis(_) => {
+                        builder.classless_this();
+                    }
                     AuxExportKind::Constructor(class) => builder.constructor(class),
                     AuxExportKind::Method { receiver, .. } => match receiver {
                         AuxReceiverKind::None => {}
@@ -2966,7 +2969,7 @@ wasm = wasmInstance.exports;
                 let ts_docs = format_doc_comments(&export.comments, ts_doc_opts);
 
                 match &export.kind {
-                    AuxExportKind::Function(name) => {
+                    AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) => {
                         if let Some(ts_sig) = ts_sig {
                             self.typescript.push_str(&ts_docs);
                             self.typescript.push_str("export function ");

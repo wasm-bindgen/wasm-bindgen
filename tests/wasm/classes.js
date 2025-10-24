@@ -255,3 +255,20 @@ exports.js_test_class_defined_in_macro = () => {
     macroClass.a = 5;
     assert.strictEqual(macroClass.a, 5);
 };
+
+exports.js_classless_this = () => {
+    const obj1 = { number: 42 };
+    const result1 = wasm.classless_this_get_number.call(obj1);
+    assert.strictEqual(result1, 42);
+
+    const obj2 = { count: 10 };
+    const result2 = wasm.classless_this_add.call(obj2, 5);
+    assert.strictEqual(result2, 15);
+
+    const result3 = wasm.classless_this_add.apply(obj2, [7]);
+    assert.strictEqual(result3, 17);
+
+    const obj3 = { test: 'value' };
+    const result4 = wasm.classless_this_consume_jsvalue.call(obj3);
+    assert.strictEqual(result4, true);
+};

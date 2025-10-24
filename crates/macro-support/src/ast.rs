@@ -237,6 +237,8 @@ pub struct Operation {
 pub enum OperationKind {
     /// A standard method, nothing special
     Regular,
+    /// A free function that receives JS `this` as its first parameter
+    RegularThis,
     /// A method for getting the value of the provided Ident or String
     Getter(Option<String>),
     /// A method for setting the value of the provided Ident or String
