@@ -4186,6 +4186,7 @@ wasm = wasmInstance.exports;
             (Table(a), Table(b)) => a == b,
             (Memory(a), Memory(b)) => a == b,
             (Global(a), Global(b)) => a == b,
+            (Tag(a), Tag(b)) => a == b,
             _ => false,
         });
         if let Some(export) = export {
@@ -4196,6 +4197,7 @@ wasm = wasmInstance.exports;
             Table(table) => self.module.tables.get(table).name.as_deref(),
             Memory(_) => Some("memory"),
             Global(g) => self.module.globals.get(g).name.as_deref(),
+            Tag(t) => self.module.tags.get(t).name.as_deref(),
         }
         .unwrap_or("__wbindgen_export");
         let name = self.generate_identifier(&to_valid_ident(name));

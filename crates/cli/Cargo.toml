@@ -45,7 +45,7 @@ serde_json = "1.0"
 shlex = "1"
 tempfile = "3.0"
 ureq = { version = "2.7", default-features = false, features = ["brotli", "gzip"] }
-walrus = "0.23"
+walrus = "0.24.2"
 wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.104" }
 
 [dev-dependencies]
