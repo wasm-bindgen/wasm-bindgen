@@ -568,6 +568,7 @@ impl<'a> Context<'a> {
                 args,
                 asyncness: export.function.asyncness,
                 kind,
+                js_namespace: export.js_namespace.clone(),
                 generate_typescript: export.function.generate_typescript,
                 generate_jsdoc: export.function.generate_jsdoc,
                 variadic: export.function.variadic,
@@ -930,6 +931,7 @@ impl<'a> Context<'a> {
                 .map(|v| v.to_string())
                 .collect(),
             generate_typescript: string_enum.generate_typescript,
+            js_namespace: string_enum.js_namespace.clone(),
         };
         let mut result = Ok(());
         self.aux
@@ -960,6 +962,7 @@ impl<'a> Context<'a> {
                 })
                 .collect(),
             generate_typescript: enum_.generate_typescript,
+            js_namespace: enum_.js_namespace.clone(),
         };
         let mut result = Ok(());
         self.aux
@@ -1003,6 +1006,7 @@ impl<'a> Context<'a> {
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Getter,
                     },
+                    js_namespace: None,
                     generate_typescript: field.generate_typescript,
                     generate_jsdoc: field.generate_jsdoc,
                     variadic: false,
@@ -1037,6 +1041,7 @@ impl<'a> Context<'a> {
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Setter,
                     },
+                    js_namespace: None,
                     generate_typescript: field.generate_typescript,
                     generate_jsdoc: field.generate_jsdoc,
                     variadic: false,
@@ -1050,6 +1055,7 @@ impl<'a> Context<'a> {
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
+            js_namespace: struct_.js_namespace.clone(),
         };
         self.aux.structs.push(aux);
 
