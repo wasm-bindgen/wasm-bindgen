@@ -57,7 +57,7 @@ exports.exported = function() {
     }
 };
 
-exports.__wbg___wbindgen_throw_451ec1a8469d7eb6 = function(arg0, arg1) {
+exports.__wbg___wbindgen_throw_b855445ff6a94295 = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
