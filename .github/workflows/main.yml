@@ -543,7 +543,7 @@ jobs:
     permissions:
       contents: write #  to push changes in repo (jamesives/github-pages-deploy-action)
 
-    if: github.repository == 'wasm-bindgen/wasm-bindgen' && github.ref == 'refs/heads/main'
+    if: github.repository == 'wasm-bindgen/wasm-bindgen' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     needs:
       - doc_api
       - doc_book
