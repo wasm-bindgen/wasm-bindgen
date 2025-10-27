@@ -42,3 +42,8 @@ exports.js_renamed_enum = b => {
 exports.js_enum_with_error_variant = () => {
     assert.strictEqual(wasm.EnumWithErrorVariant.Error, 2);
 };
+
+// Helper to create a Foo object for testing
+exports.makeFoo = () => {
+    return { type: 'Foo', data: 'test' };
+};

@@ -91,6 +91,9 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::Enum { name, .. } => self.outgoing_i32(AdapterType::Enum(name.clone())),
             Descriptor::StringEnum { name, .. } => self.outgoing_string_enum(name),
+            Descriptor::DiscriminatedUnion { name, .. } => {
+                self.outgoing_discriminated_enum(name)?
+            }
 
             Descriptor::Char => {
                 self.instruction(
@@ -421,6 +424,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. }
+            | Descriptor::DiscriminatedUnion { .. }
             | Descriptor::RustStruct(_)
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)
@@ -586,6 +590,18 @@ impl InstructionBuilder<'_, '_> {
             },
             &[AdapterType::StringEnum(name.to_string())],
         );
+    }
+
+    fn outgoing_discriminated_enum(&mut self, name: &str) -> Result<(), Error> {
+        // DiscriminatedEnum uses JsValue ABI (externref)
+        self.instruction(
+            &[AdapterType::I32],
+            Instruction::ExternrefLoadOwned {
+                table_and_drop: None,
+            },
+            &[AdapterType::DiscriminatedUnion(name.to_string())],
+        );
+        Ok(())
     }
 
     fn outgoing_i32(&mut self, output: AdapterType) {
