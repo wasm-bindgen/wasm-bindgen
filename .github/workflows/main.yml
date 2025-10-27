@@ -344,7 +344,7 @@ jobs:
         path: benchmarks
 
   dist_linux_x86_64_musl:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -363,7 +363,7 @@ jobs:
         path: "target/x86_64-unknown-linux-musl/release/wasm*"
 
   dist_linux_aarch64_gnu:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -381,7 +381,7 @@ jobs:
         path: "target/aarch64-unknown-linux-gnu/release/wasm*"
 
   dist_linux_aarch64_musl:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v5
@@ -397,7 +397,7 @@ jobs:
         path: "target/aarch64-unknown-linux-musl/release/wasm*"
 
   dist_macos_x86_64:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
@@ -413,7 +413,7 @@ jobs:
         path: "target/x86_64-apple-darwin/release/wasm*"
 
   dist_macos_aarch64:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
@@ -428,7 +428,7 @@ jobs:
         path: "target/release/wasm*"
 
   dist_windows:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v5
@@ -442,7 +442,7 @@ jobs:
         path: "target/release/wasm*"
 
   doc_book:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -456,7 +456,7 @@ jobs:
         path: guide/book/html
 
   doc_api:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
