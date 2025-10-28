@@ -1,4 +1,4 @@
-(module $reference_test.wasm
+(module $getter_setter_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (result i32)))
   (type (;2;) (func (param i32)))
@@ -9,7 +9,7 @@
   (type (;7;) (func (param i32 i32 i32)))
   (type (;8;) (func (param i32 i32 i32 i32) (result i32)))
   (type (;9;) (func (param i32 f64)))
-  (import "./reference_test_bg.js" "__wbg_wbindgenthrow_4c11a24fca429ccf" (func (;0;) (type 5)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_b855445ff6a94295" (func (;0;) (type 5)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
   (func $__wbg_foo_free (;2;) (type 5) (param i32 i32))
   (func $__wbg_get_foo_x (;3;) (type 3) (param i32) (result i32))
@@ -26,7 +26,7 @@
   (func $foo_set_x_static (;14;) (type 2) (param i32))
   (func $__wbindgen_malloc (;15;) (type 6) (param i32 i32) (result i32))
   (func $__wbindgen_realloc (;16;) (type 8) (param i32 i32 i32 i32) (result i32))
-  (table (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_foo_free" (func $__wbg_foo_free))
@@ -42,7 +42,7 @@
   (export "foo_set_weird" (func $foo_set_weird))
   (export "foo_x_static" (func $foo_x_static))
   (export "foo_set_x_static" (func $foo_set_x_static))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_externrefs" (table $__wbindgen_externrefs))
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_realloc" (func $__wbindgen_realloc))
   (export "__wbindgen_start" (func 1))

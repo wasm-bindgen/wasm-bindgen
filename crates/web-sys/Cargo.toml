@@ -12,7 +12,7 @@ name = "web-sys"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/web-sys"
 rust-version = "1.57"
-version = "0.3.80"
+version = "0.3.82"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -23,8 +23,8 @@ doctest = false
 test = false
 
 [dependencies]
-js-sys = { path = '../js-sys', version = '=0.3.80', default-features = false }
-wasm-bindgen = { path = "../..", version = "=0.2.103", default-features = false }
+js-sys = { path = '../js-sys', version = '=0.3.82', default-features = false }
+wasm-bindgen = { path = "../..", version = "=0.2.105", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 futures = "0.3"
@@ -257,6 +257,15 @@ ContextAttributes2d = []
 ConvertCoordinateOptions = []
 ConvolverNode = ["AudioNode", "EventTarget"]
 ConvolverOptions = []
+CookieChangeEvent = ["Event"]
+CookieChangeEventInit = []
+CookieInit = []
+CookieListItem = []
+CookieSameSite = []
+CookieStore = ["EventTarget"]
+CookieStoreDeleteOptions = []
+CookieStoreGetOptions = []
+CookieStoreManager = []
 Coordinates = []
 CountQueuingStrategy = []
 Credential = []
@@ -398,6 +407,8 @@ ExtSRgb = []
 ExtShaderTextureLod = []
 ExtTextureFilterAnisotropic = []
 ExtTextureNorm16 = []
+ExtendableCookieChangeEvent = ["Event", "ExtendableEvent"]
+ExtendableCookieChangeEventInit = []
 ExtendableEvent = ["Event"]
 ExtendableEventInit = []
 ExtendableMessageEvent = ["Event", "ExtendableEvent"]

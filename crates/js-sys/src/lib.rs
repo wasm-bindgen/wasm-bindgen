@@ -2850,6 +2850,13 @@ pub mod Math {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc)
         #[wasm_bindgen(js_namespace = Math)]
         pub fn trunc(x: f64) -> f64;
+
+        /// The `Math.PI` property represents the ratio of the circumference of a circle to its diameter,
+        /// approximately 3.14159.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/PI)
+        #[wasm_bindgen(thread_local_v2, js_namespace = Math)]
+        pub static PI: f64;
     }
 }
 
@@ -4812,6 +4819,13 @@ pub mod WebAssembly {
         #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
         pub fn new(table_descriptor: &Object) -> Result<Table, JsValue>;
 
+        /// The `WebAssembly.Table()` constructor creates a new `Table` object
+        /// of the given size and element type.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table)
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
+        pub fn new_with_value(table_descriptor: &Object, value: JsValue) -> Result<Table, JsValue>;
+
         /// The length prototype property of the `WebAssembly.Table` object
         /// returns the length of the table, i.e. the number of elements in the
         /// table.
@@ -4827,6 +4841,13 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn get(this: &Table, index: u32) -> Result<Function, JsValue>;
 
+        /// The `get()` prototype method of the `WebAssembly.Table()` object
+        /// retrieves a function reference stored at a given index.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/get)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = get)]
+        pub fn get_raw(this: &Table, index: u32) -> Result<JsValue, JsValue>;
+
         /// The `grow()` prototype method of the `WebAssembly.Table` object
         /// increases the size of the `Table` instance by a specified number of
         /// elements.
@@ -4835,12 +4856,31 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn grow(this: &Table, additional_capacity: u32) -> Result<u32, JsValue>;
 
+        /// The `grow()` prototype method of the `WebAssembly.Table` object
+        /// increases the size of the `Table` instance by a specified number of
+        /// elements.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/grow)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = grow)]
+        pub fn grow_with_value(
+            this: &Table,
+            additional_capacity: u32,
+            value: JsValue,
+        ) -> Result<u32, JsValue>;
+
         /// The `set()` prototype method of the `WebAssembly.Table` object mutates a
         /// reference stored at a given index to a different value.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/set)
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn set(this: &Table, index: u32, function: &Function) -> Result<(), JsValue>;
+
+        /// The `set()` prototype method of the `WebAssembly.Table` object mutates a
+        /// reference stored at a given index to a different value.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/set)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = set)]
+        pub fn set_raw(this: &Table, index: u32, value: &JsValue) -> Result<(), JsValue>;
     }
 
     // WebAssembly.Tag

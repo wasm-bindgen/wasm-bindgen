@@ -54,12 +54,12 @@ let wasm_bindgen;
     function __wbg_get_imports() {
         const imports = {};
         imports.wbg = {};
-        imports.wbg.__wbg_random_8be0a899673d8681 = function() {
+        imports.wbg.__wbg_random_ae0b2256206ad108 = function() {
             const ret = Math.random();
             return ret;
         };
         imports.wbg.__wbindgen_init_externref_table = function() {
-            const table = wasm.__wbindgen_export_0;
+            const table = wasm.__wbindgen_externrefs;
             const offset = table.grow(4);
             table.set(0, undefined);
             table.set(offset + 0, undefined);
@@ -70,10 +70,6 @@ let wasm_bindgen;
         };
 
         return imports;
-    }
-
-    function __wbg_init_memory(imports, memory) {
-
     }
 
     function __wbg_finalize_init(instance, module) {
@@ -98,8 +94,6 @@ let wasm_bindgen;
         }
 
         const imports = __wbg_get_imports();
-
-        __wbg_init_memory(imports);
 
         if (!(module instanceof WebAssembly.Module)) {
             module = new WebAssembly.Module(module);
@@ -130,8 +124,6 @@ let wasm_bindgen;
         if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
             module_or_path = fetch(module_or_path);
         }
-
-        __wbg_init_memory(imports);
 
         const { instance, module } = await __wbg_load(await module_or_path, imports);
 

@@ -13,14 +13,6 @@ default = [
   "web-sys/default",
   "wasm-bindgen-test/default",
 ]
-msrv = ["wasm-bindgen/msrv"]
-std = [
-  "wasm-bindgen/std",
-  "js-sys/std",
-  "wasm-bindgen-futures/std",
-  "web-sys/std",
-  "wasm-bindgen-test/std",
-]
 
 [dependencies]
 js-sys = { path = "../../js-sys", default-features = false }
@@ -28,3 +20,8 @@ wasm-bindgen = { path = "../../../", default-features = false }
 wasm-bindgen-futures = { path = "../../futures", default-features = false }
 wasm-bindgen-test = { path = "../../test", default-features = false }
 web-sys = { path = "../../web-sys", default-features = false }
+
+# Pinned sub-dependencies for MSRV
+bumpalo = "=3.12.0"
+proc-macro2 = "=1.0.101"
+quote = "=1.0.40"

@@ -5,11 +5,90 @@
 
 ### Added
 
+### Fixed
+
+### Removed
+
+## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
+
+### Added
+
+* Added `Math::PI` binding to `js_sys`, exposing the ECMAScript `Math.PI` constant.
+  [#4748](https://github.com/wasm-bindgen/wasm-bindgen/pull/4748)
+
+* Added ability to use `--keep-lld-exports` in `wasm-bindgen-test-runner` by setting the `WASM_BINDGEN_KEEP_LLD_EXPORTS` environment variable.
+  [#4736](https://github.com/wasm-bindgen/wasm-bindgen/pull/4736)
+
+* Added `CookieStore` API.
+  [#4706](https://github.com/wasm-bindgen/wasm-bindgen/pull/4706)
+
+* Added `run_cli_with_args` library functions to all `wasm_bindgen_cli` entrypoints.
+  [#4710](https://github.com/wasm-bindgen/wasm-bindgen/pull/4710)
+
+* Added `get_raw` and `set_raw` for `WebAssembly.Table`.
+  [#4701](https://github.com/wasm-bindgen/wasm-bindgen/pull/4701)
+
+* Added `new_with_value` and `grow_with_value` for `WebAssembly.Table`.
+  [#4698](https://github.com/wasm-bindgen/wasm-bindgen/pull/4698)
+
+* Added better support for async stack traces when building in debug mode.
+  [#4711](https://github.com/wasm-bindgen/wasm-bindgen/pull/4711)
+
+* Extended support for `TryFromJsValue` trait implementations.
+  [#4714](https://github.com/wasm-bindgen/wasm-bindgen/pull/4714)
+
+* New `JsValue.is_null_or_undefined()` method and intrinsic.
+  [#4751](https://github.com/wasm-bindgen/wasm-bindgen/pull/4751)
+
+* Support for `Option<JsValue>` in function arguments and return.
+  [#4752](https://github.com/wasm-bindgen/wasm-bindgen/pull/4752)
+
+* Support for `WASM_BINDGEN_KEEP_TEST_BUILD=1` environment variable
+  to retain build files when using the test runner.
+  [#4758](https://github.com/wasm-bindgen/wasm-bindgen/pull/4758)
+
+### Fixed
+
+* Fixed multithreading JS output for targets `bundler`, `deno` and `module`.
+  [#4685](https://github.com/wasm-bindgen/wasm-bindgen/pull/4685)
+
+* Fixed `TextDe/Encoder` detection for audio worklet use-cases.
+  [#4703](https://github.com/wasm-bindgen/wasm-bindgen/pull/4703)
+
+* Fixed post-processing failures in case Std has debug assertions enabled.
+  [#4705](https://github.com/wasm-bindgen/wasm-bindgen/pull/4705)
+
+* Fixed JS memory leak in `wasm_bindgen::Closure`.
+  [#4709](https://github.dev/wasm-bindgen/wasm-bindgen/pull/4709)
+
+* Fixed warning when using `#[wasm_bindgen(wasm_bindgen=xxx)]` on struct.
+  [#4715](https://github.dev/wasm-bindgen/wasm-bindgen/pull/4715)
+
+### Removed
+
+* Internal crate `wasm-bindgen-backend` will no longer be published.
+  [#4696](https://github.com/wasm-bindgen/wasm-bindgen/pull/4696)
+
+## [0.2.104](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.103...0.2.104)
+
+### Added
+
 * Added bindings for `WeakRef`.
   [#4659](https://github.com/wasm-bindgen/wasm-bindgen/pull/4659)
 
 * Support `Symbol.dispose` methods by default, when it is supported in the environment.
   [#4666](https://github.com/wasm-bindgen/wasm-bindgen/pull/4666)
+
+* Added `aarch64-unknown-linux-musl` release artifacts.
+  [#4668](https://github.com/wasm-bindgen/wasm-bindgen/pull/4668)
+
+### Changed
+
+* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
+  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
+
+* Deprecate the `msrv` crate feature. MSRV detection is now always on.
+  [#4675](https://github.com/wasm-bindgen/wasm-bindgen/pull/4675)
 
 ### Fixed
 
@@ -22,10 +101,8 @@
 * Quote names containing colons in generated .d.ts.
   [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
 
-### Changed
-
-* Unconditionally use the global `TextEncoder`/`TextDecoder` for string encoding/decoding. The Node.js output now requires a minimum of Node.js v11.
-  [#4670](https://github.com/wasm-bindgen/wasm-bindgen/pull/4670)
+* Fixed compilation failures on Rust v1.82 and v1.83.
+  [#4675](https://github.com/wasm-bindgen/wasm-bindgen/pull/4675)
 
 --------------------------------------------------------------------------------
 
@@ -48,7 +125,7 @@
 * Added support for arguments with spaces using shell-style quoting in webdriver `*_ARGS`
   environment variables to `wasm-bindgen-test`.
   [#4433](https://github.com/wasm-bindgen/wasm-bindgen/pull/4433)
-  
+
 * Added ability to determine WebDriver JSON config location via
   `WASM_BINDGEN_TEST_WEBDRIVER_JSON` environment variable to
   `wasm-bindgen-test`.
@@ -58,9 +135,14 @@
   [#4635](https://github.com/wasm-bindgen/wasm-bindgen/pull/4635)
 
   [guide on debug information]: https://wasm-bindgen.github.io/wasm-bindgen/reference/debug-info.html
-  
+
 * New `--target=module` target for outputting source phase imports.
   [#4638](https://github.com/wasm-bindgen/wasm-bindgen/pull/4638)
+
+### Changed
+
+* Hidden deprecated options from the `wasm-bindgen --help` docs.
+  [#4646](https://github.com/wasm-bindgen/wasm-bindgen/pull/4646)
 
 ### Fixed
 
@@ -69,11 +151,6 @@
 
 * Fix crash caused by allocations during `TypedArray` interactions.
   [#4622](https://github.com/wasm-bindgen/wasm-bindgen/pull/4622)
-
-### Changed
-
-* Hidden deprecated options from the `wasm-bindgen --help` docs.
-  [#4646](https://github.com/wasm-bindgen/wasm-bindgen/pull/4646)
 
 --------------------------------------------------------------------------------
 

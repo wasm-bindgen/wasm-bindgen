@@ -1,7 +1,7 @@
 use crate::descriptor::VectorKind;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
-use walrus::{FunctionId, ImportId, RefType, TypedCustomSectionId};
+use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
 
 #[derive(Default, Debug)]
 pub struct NonstandardWitSection {
@@ -16,7 +16,7 @@ pub struct NonstandardWitSection {
     pub implements: Vec<(ImportId, FunctionId, AdapterId)>,
 
     /// A list of adapter functions and the names they're exported under.
-    pub exports: Vec<(String, AdapterId)>,
+    pub exports: Vec<(ExportId, AdapterId)>,
 }
 
 pub type NonstandardWitSectionId = TypedCustomSectionId<NonstandardWitSection>;
@@ -108,8 +108,6 @@ pub enum Instruction {
     CallAdapter(AdapterId),
     /// Call an exported function in the core module
     CallExport(walrus::ExportId),
-    /// Call an element in the function table of the core module
-    CallTableElement(u32),
 
     /// Gets an argument by its index.
     ArgGet(u32),
@@ -333,7 +331,7 @@ pub enum Instruction {
         adapter: AdapterId,
         nargs: usize,
         mutable: bool,
-        dtor_idx_if_persistent: Option<u32>,
+        dtor_if_persistent: Option<walrus::ExportId>,
     },
     /// pops two i32 data pointers, pushes a vector view
     View {

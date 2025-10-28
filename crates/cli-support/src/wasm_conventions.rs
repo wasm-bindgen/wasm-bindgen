@@ -127,7 +127,7 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId>
             None => continue,
         }
     }
-    bail!("failed to find `{}` in function table", idx);
+    bail!("failed to find `{idx}` in function table");
 }
 
 pub fn get_start(module: &mut Module) -> Result<FunctionId, Option<FunctionId>> {

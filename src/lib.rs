@@ -14,14 +14,6 @@
 //! This feature currently enables the `std` feature, meaning that it is not
 //! compatible with `no_std` environments.
 //!
-//! ### `msrv` (default)
-//!
-//! Enables Rust language features that require a higher MSRV. Enabling this
-//! feature on older compilers will NOT result in a compilation error, the newer
-//! language features will simply not be used.
-//!
-//! When compiling with Rust v1.78 or later, this feature enables better error messages for invalid methods on structs and enums.
-//!
 //! ### `std` (default)
 //!
 //! Enabling this feature will make the crate depend on the Rust standard library.
@@ -136,9 +128,9 @@ pub mod convert;
 pub mod describe;
 mod link;
 
-#[cfg(target_feature = "reference-types")]
+#[cfg(wbg_reference_types)]
 mod externref;
-#[cfg(target_feature = "reference-types")]
+#[cfg(wbg_reference_types)]
 use externref::__wbindgen_externref_heap_live_count;
 
 mod cast;
@@ -163,25 +155,18 @@ pub struct JsValue {
     _marker: PhantomData<*mut u8>, // not at all threadsafe
 }
 
-const JSIDX_OFFSET: u32 = 128; // keep in sync with js/mod.rs
-const JSIDX_UNDEFINED: u32 = JSIDX_OFFSET;
-const JSIDX_NULL: u32 = JSIDX_OFFSET + 1;
-const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;
-const JSIDX_FALSE: u32 = JSIDX_OFFSET + 3;
-const JSIDX_RESERVED: u32 = JSIDX_OFFSET + 4;
-
 impl JsValue {
     /// The `null` JS value constant.
-    pub const NULL: JsValue = JsValue::_new(JSIDX_NULL);
+    pub const NULL: JsValue = JsValue::_new(__rt::JSIDX_NULL);
 
     /// The `undefined` JS value constant.
-    pub const UNDEFINED: JsValue = JsValue::_new(JSIDX_UNDEFINED);
+    pub const UNDEFINED: JsValue = JsValue::_new(__rt::JSIDX_UNDEFINED);
 
     /// The `true` JS value constant.
-    pub const TRUE: JsValue = JsValue::_new(JSIDX_TRUE);
+    pub const TRUE: JsValue = JsValue::_new(__rt::JSIDX_TRUE);
 
     /// The `false` JS value constant.
-    pub const FALSE: JsValue = JsValue::_new(JSIDX_FALSE);
+    pub const FALSE: JsValue = JsValue::_new(__rt::JSIDX_FALSE);
 
     #[inline]
     const fn _new(idx: u32) -> JsValue {
@@ -380,6 +365,11 @@ impl JsValue {
     #[inline]
     pub fn is_undefined(&self) -> bool {
         __wbindgen_is_undefined(self)
+    }
+    /// Tests whether this JS value is `null` or `undefined`
+    #[inline]
+    pub fn is_null_or_undefined(&self) -> bool {
+        unsafe { __wbindgen_object_is_null_or_undefined(self.idx) }
     }
 
     /// Tests whether the type of this JS value is `symbol`
@@ -872,13 +862,8 @@ impl TryFrom<JsValue> for String {
 }
 
 impl TryFromJsValue for String {
-    type Error = JsValue;
-
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error> {
-        match value.as_string() {
-            Some(s) => Ok(s),
-            None => Err(value),
-        }
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        value.as_string()
     }
 }
 
@@ -886,6 +871,23 @@ impl From<bool> for JsValue {
     #[inline]
     fn from(s: bool) -> JsValue {
         JsValue::from_bool(s)
+    }
+}
+
+impl TryFromJsValue for bool {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        value.as_bool()
+    }
+}
+
+impl TryFromJsValue for char {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        let s = value.as_string()?;
+        if s.len() == 1 {
+            Some(s.chars().nth(0).unwrap())
+        } else {
+            None
+        }
     }
 }
 
@@ -912,8 +914,8 @@ where
     }
 }
 
+// everything is a `JsValue`!
 impl JsCast for JsValue {
-    // everything is a `JsValue`!
     #[inline]
     fn instanceof(_val: &JsValue) -> bool {
         true
@@ -935,7 +937,19 @@ impl AsRef<JsValue> for JsValue {
     }
 }
 
-macro_rules! numbers {
+// Loosely based on toInt32 in ecma-272 for abi semantics
+// with restriction that it only applies for numbers
+fn to_uint_32(v: &JsValue) -> Option<u32> {
+    v.as_f64().map(|n| {
+        if n.is_infinite() {
+            0
+        } else {
+            (n as i64) as u32
+        }
+    })
+}
+
+macro_rules! integers {
     ($($n:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
@@ -950,12 +964,47 @@ macro_rules! numbers {
                 JsValue::from_f64(n.into())
             }
         }
+
+        // Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+        impl TryFromJsValue for $n {
+            #[inline]
+            fn try_from_js_value_ref(val: &JsValue) -> Option<$n> {
+                to_uint_32(val).map(|n| n as $n)
+            }
+        }
     )*)
 }
 
-numbers! { i8 u8 i16 u16 i32 u32 f32 f64 }
+integers! { i8 u8 i16 u16 i32 u32 }
 
-macro_rules! big_numbers {
+macro_rules! floats {
+    ($($n:ident)*) => ($(
+        impl PartialEq<$n> for JsValue {
+            #[inline]
+            fn eq(&self, other: &$n) -> bool {
+                self.as_f64() == Some(f64::from(*other))
+            }
+        }
+
+        impl From<$n> for JsValue {
+            #[inline]
+            fn from(n: $n) -> JsValue {
+                JsValue::from_f64(n.into())
+            }
+        }
+
+        impl TryFromJsValue for $n {
+            #[inline]
+            fn try_from_js_value_ref(val: &JsValue) -> Option<$n> {
+                val.as_f64().map(|n| n as $n)
+            }
+        }
+    )*)
+}
+
+floats! { f32 f64 }
+
+macro_rules! big_integers {
     ($($n:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
@@ -970,62 +1019,101 @@ macro_rules! big_numbers {
                 wbg_cast(arg)
             }
         }
+
+        impl TryFrom<JsValue> for $n {
+            type Error = JsValue;
+
+            #[inline]
+            fn try_from(v: JsValue) -> Result<Self, JsValue> {
+                Self::try_from_js_value(v)
+            }
+        }
+
+        impl TryFromJsValue for $n {
+            #[inline]
+            fn try_from_js_value_ref(val: &JsValue) -> Option<$n> {
+                let as_i64 = __wbindgen_bigint_get_as_i64(&val)?;
+                // Reinterpret bits; ABI-wise this is safe to do and allows us to avoid
+                // having separate intrinsics per signed/unsigned types.
+                let as_self = as_i64 as $n;
+                // Double-check that we didn't truncate the bigint to 64 bits.
+                if val == &as_self {
+                    Some(as_self)
+                } else {
+                    None
+                }
+            }
+        }
     )*)
 }
 
-macro_rules! try_from_for_num64 {
-    ($ty:ty) => {
-        impl TryFrom<JsValue> for $ty {
-            type Error = JsValue;
+big_integers! { i64 u64 }
 
+macro_rules! num128 {
+    ($ty:ty, $hi_ty:ty) => {
+        impl PartialEq<$ty> for JsValue {
             #[inline]
-            fn try_from(v: JsValue) -> Result<Self, JsValue> {
-                __wbindgen_bigint_get_as_i64(&v)
-                    // Reinterpret bits; ABI-wise this is safe to do and allows us to avoid
-                    // having separate intrinsics per signed/unsigned types.
-                    .map(|as_i64| as_i64 as Self)
-                    // Double-check that we didn't truncate the bigint to 64 bits.
-                    .filter(|as_self| v == *as_self)
-                    // Not a bigint or not in range.
-                    .ok_or(v)
+            fn eq(&self, other: &$ty) -> bool {
+                self == &JsValue::from(*other)
             }
         }
-    };
-}
 
-try_from_for_num64!(i64);
-try_from_for_num64!(u64);
+        impl From<$ty> for JsValue {
+            #[inline]
+            fn from(arg: $ty) -> JsValue {
+                wbg_cast(arg)
+            }
+        }
 
-macro_rules! try_from_for_num128 {
-    ($ty:ty, $hi_ty:ty) => {
         impl TryFrom<JsValue> for $ty {
             type Error = JsValue;
 
             #[inline]
             fn try_from(v: JsValue) -> Result<Self, JsValue> {
+                Self::try_from_js_value(v)
+            }
+        }
+
+        impl TryFromJsValue for $ty {
+            // This is a non-standard Wasm bindgen conversion, supported equally
+            fn try_from_js_value_ref(v: &JsValue) -> Option<$ty> {
                 // Truncate the bigint to 64 bits, this will give us the lower part.
-                let lo = match __wbindgen_bigint_get_as_i64(&v) {
-                    // The lower part must be interpreted as unsigned in both i128 and u128.
-                    Some(lo) => lo as u64,
-                    // Not a bigint.
-                    None => return Err(v),
-                };
+                // The lower part must be interpreted as unsigned in both i128 and u128.
+                let lo = __wbindgen_bigint_get_as_i64(&v)? as u64;
                 // Now we know it's a bigint, so we can safely use `>> 64n` without
                 // worrying about a JS exception on type mismatch.
                 let hi = v >> JsValue::from(64_u64);
                 // The high part is the one we want checked against a 64-bit range.
                 // If it fits, then our original number is in the 128-bit range.
-                let hi = <$hi_ty>::try_from(hi)?;
-                Ok(Self::from(hi) << 64 | Self::from(lo))
+                <$hi_ty>::try_from_js_value_ref(&hi).map(|hi| Self::from(hi) << 64 | Self::from(lo))
             }
         }
     };
 }
 
-try_from_for_num128!(i128, i64);
-try_from_for_num128!(u128, u64);
+num128!(i128, i64);
 
-big_numbers! { i64 u64 i128 u128 }
+num128!(u128, u64);
+
+impl TryFromJsValue for () {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        if value.is_undefined() {
+            Some(())
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        if value.is_undefined() {
+            Some(None)
+        } else {
+            T::try_from_js_value_ref(value).map(Some)
+        }
+    }
+}
 
 // `usize` and `isize` have to be treated a bit specially, because we know that
 // they're 32-bit but the compiler conservatively assumes they might be bigger.
@@ -1058,6 +1146,22 @@ impl From<isize> for JsValue {
     }
 }
 
+// Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+impl TryFromJsValue for isize {
+    #[inline]
+    fn try_from_js_value_ref(val: &JsValue) -> Option<isize> {
+        val.as_f64().map(|n| n as isize)
+    }
+}
+
+// Follows semantics of https://www.w3.org/TR/wasm-js-api-2/#towebassemblyvalue
+impl TryFromJsValue for usize {
+    #[inline]
+    fn try_from_js_value_ref(val: &JsValue) -> Option<usize> {
+        val.as_f64().map(|n| n as usize)
+    }
+}
+
 // Intrinsics that are simply JS function bindings and can be self-hosted via the macro.
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
 extern "C" {
@@ -1087,7 +1191,7 @@ extern "C" {
 // standard wasm-bindgen ABI conversions.
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate, raw_module = "__wbindgen_placeholder__")]
 extern "C" {
-    #[cfg(not(target_feature = "reference-types"))]
+    #[cfg(not(wbg_reference_types))]
     fn __wbindgen_externref_heap_live_count() -> u32;
 
     fn __wbindgen_is_null(js: &JsValue) -> bool;
@@ -1133,8 +1237,6 @@ extern "C" {
     fn __wbindgen_throw(msg: &str) /* -> ! */;
     fn __wbindgen_rethrow(js: JsValue) /* -> ! */;
 
-    fn __wbindgen_cb_drop(js: &JsValue) -> bool;
-
     fn __wbindgen_jsval_eq(a: &JsValue, b: &JsValue) -> bool;
     fn __wbindgen_jsval_loose_eq(a: &JsValue, b: &JsValue) -> bool;
 
@@ -1155,6 +1257,8 @@ externs! {
     extern "C" {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
+        fn __wbindgen_object_is_null_or_undefined(idx: u32) -> bool;
+        fn __wbindgen_object_is_undefined(idx: u32) -> bool;
 
         fn __wbindgen_describe(v: u32) -> ();
         fn __wbindgen_describe_cast(func: *const (), prims: *const ()) -> *const ();
@@ -1179,12 +1283,16 @@ impl Drop for JsValue {
     fn drop(&mut self) {
         unsafe {
             // We definitely should never drop anything in the stack area
-            debug_assert!(self.idx >= JSIDX_OFFSET, "free of stack slot {}", self.idx);
+            debug_assert!(
+                self.idx >= __rt::JSIDX_OFFSET,
+                "free of stack slot {}",
+                self.idx
+            );
 
             // Otherwise if we're not dropping one of our reserved values,
             // actually call the intrinsic. See #1054 for eventually removing
             // this branch.
-            if self.idx >= JSIDX_RESERVED {
+            if self.idx >= __rt::JSIDX_RESERVED {
                 __wbindgen_object_drop_ref(self.idx);
             }
         }

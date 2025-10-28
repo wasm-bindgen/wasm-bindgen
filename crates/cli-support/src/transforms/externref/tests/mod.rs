@@ -17,8 +17,7 @@ fn runtest(test: &Test) -> Result<String> {
     let mut walrus = ModuleConfig::new()
         .generate_producers_section(false)
         .parse(&wasm)?;
-    let mut cx = super::Context::default();
-    cx.prepare(&mut walrus)?;
+    let mut cx = super::Context::new(&mut walrus)?;
     for directive in test.directives.iter() {
         match &directive.kind {
             DirectiveKind::Export(name) => {
@@ -36,9 +35,6 @@ fn runtest(test: &Test) -> Result<String> {
                     .find(|e| e.module == *module && e.name == *field)
                     .ok_or_else(|| anyhow!("failed to find export"))?;
                 cx.import_xform(import.id(), &directive.args, directive.ret_externref);
-            }
-            DirectiveKind::Table(idx) => {
-                cx.table_element_xform(*idx, &directive.args, directive.ret_externref);
             }
         }
     }
@@ -74,7 +70,6 @@ struct Directive {
 enum DirectiveKind {
     Import(String, String),
     Export(String),
-    Table(u32),
 }
 
 impl Test {
@@ -164,12 +159,9 @@ impl<'a> Parse<'a> for Directive {
         let kind = if parser.peek::<kw::import>()? {
             parser.parse::<kw::import>()?;
             DirectiveKind::Import(parser.parse()?, parser.parse()?)
-        } else if parser.peek::<kw::export>()? {
+        } else {
             parser.parse::<kw::export>()?;
             DirectiveKind::Export(parser.parse()?)
-        } else {
-            parser.parse::<kw::table>()?;
-            DirectiveKind::Table(parser.parse()?)
         };
         let mut args = Vec::new();
         parser.parens(|p| {

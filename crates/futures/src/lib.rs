@@ -40,7 +40,6 @@
 
 extern crate alloc;
 
-use alloc::boxed::Box;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::fmt;
@@ -90,7 +89,7 @@ pub fn spawn_local<F>(future: F)
 where
     F: Future<Output = ()> + 'static,
 {
-    task::Task::spawn(Box::pin(future));
+    task::Task::spawn(future);
 }
 
 struct Inner {

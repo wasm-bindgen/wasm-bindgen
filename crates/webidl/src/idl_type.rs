@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
+use crate::util::{ident_ty, leading_colon_path_ty, raw_ident, rust_ident};
 use proc_macro2::{Ident, Span};
-use wasm_bindgen_backend::util::{ident_ty, leading_colon_path_ty, raw_ident, rust_ident};
 use weedle::attribute::{ExtendedAttribute, ExtendedAttributeList};
 use weedle::common::Identifier;
 use weedle::term;

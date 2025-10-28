@@ -1,23 +1,8 @@
 import { default as default1 } from 'tests/wasm/import_class.js';
 import * as import0 from 'tests/wasm/imports.js'
 import * as import1 from 'foo-raw'
-import * as import2 from './snippets/reference-test-ddc0ab9a51c9d25f/inline0.js'
+import * as import2 from './snippets/import_reftest-a82831e16a4c30f1/inline0.js'
 import * as import3 from 'pure-extern'
-
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_export_2.set(idx, obj);
-    return idx;
-}
-
-function handleError(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        const idx = addToExternrefTable0(e);
-        wasm.__wbindgen_exn_store(idx);
-    }
-}
 
 let cachedUint8ArrayMemory0 = null;
 
@@ -41,8 +26,23 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_externrefs.set(idx, obj);
+    return idx;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
+}
+
 function takeFromExternrefTable0(idx) {
-    const value = wasm.__wbindgen_export_2.get(idx);
+    const value = wasm.__wbindgen_externrefs.get(idx);
     wasm.__externref_table_dealloc(idx);
     return value;
 }
@@ -56,38 +56,38 @@ export function exported() {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg_catchme_f7d87ea824a61e87: function() { return handleError(function () {
+        __wbg___wbindgen_throw_b855445ff6a94295: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
             catch_me();
         }, arguments) },
-        __wbg_get_56ba567010fb9959: function(arg0) {
+        __wbg_get_c871386e44ba8c35: function(arg0) {
             const ret = arg0.get();
             return ret;
         },
-        __wbg_myfunction_8c7b624429f78550: function() {
+        __wbg_my_function_597f96bc4719408a: function() {
             b.my_function();
         },
-        __wbg_new_d21827b66c7fd25d: function(arg0) {
+        __wbg_new_c30895ccee9479d4: function(arg0) {
             const ret = new default1(arg0);
             return ret;
         },
-        __wbg_nocatch_be850a8dddd9599d: function() {
+        __wbg_no_catch_757175fbf9e08b9e: function() {
             no_catch();
         },
-        __wbg_reload_84c12f152ad689f0: function() {
+        __wbg_reload_b091d4dc4b1b3a74: function() {
             window.location.reload();
         },
-        __wbg_static_accessor_CONST_9e9d5ae758197645: function() {
+        __wbg_static_accessor_CONST_85b96acb48be57e1: function() {
             const ret = a.CONST;
             return ret;
         },
-        __wbg_wbindgenthrow_4c11a24fca429ccf: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
-        },
-        __wbg_write_c2ce0ce33a6087d5: function(arg0, arg1) {
+        __wbg_write_691fc0d693f0c7b5: function(arg0, arg1) {
             window.document.write(getStringFromWasm0(arg0, arg1));
         },
         __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_export_2;
+            const table = wasm.__wbindgen_externrefs;
             const offset = table.grow(4);
             table.set(0, undefined);
             table.set(offset + 0, undefined);
@@ -97,26 +97,12 @@ const imports = {
             ;
         },
     },
-    'tests/wasm/imports.js': import0,  'foo-raw': import1,  './snippets/reference-test-ddc0ab9a51c9d25f/inline0.js': import2,  'pure-extern': import3,
+    'tests/wasm/imports.js': import0,  'foo-raw': import1,  './snippets/import_reftest-a82831e16a4c30f1/inline0.js': import2,  'pure-extern': import3,
 };
 
-const wasm_url = new URL('reference_test_bg.wasm', import.meta.url);
-let wasmCode = '';
-switch (wasm_url.protocol) {
-    case 'file:':
-    wasmCode = await Deno.readFile(wasm_url);
-    break
-    case 'https:':
-    case 'http:':
-    wasmCode = await (await fetch(wasm_url)).arrayBuffer();
-    break
-    default:
-    throw new Error(`Unsupported protocol: ${wasm_url.protocol}`);
-}
-
-const wasmInstance = (await WebAssembly.instantiate(wasmCode, imports)).instance;
-const wasm = wasmInstance.exports;
-export const __wasm = wasm;
+const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
+const wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports)).instance.exports;
+export { wasm as __wasm };
 
 wasm.__wbindgen_start();
 

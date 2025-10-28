@@ -268,3 +268,10 @@ fn trunc() {
     assert_eq!(Math::trunc(0.123), 0.);
     assert_eq!(Math::trunc(-0.123), 0.);
 }
+
+#[wasm_bindgen_test]
+fn pi() {
+    Math::PI.with(|pi| {
+        assert_eq!(*pi, std::f64::consts::PI);
+    });
+}

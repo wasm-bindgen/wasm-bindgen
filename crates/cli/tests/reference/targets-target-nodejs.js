@@ -1,24 +1,23 @@
 
 let imports = {};
 imports['__wbindgen_placeholder__'] = module.exports;
-let wasm;
 /**
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
-module.exports.add_that_might_fail = function(a, b) {
+exports.add_that_might_fail = function(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 };
 
-module.exports.__wbg_random_8be0a899673d8681 = function() {
+exports.__wbg_random_ae0b2256206ad108 = function() {
     const ret = Math.random();
     return ret;
 };
 
-module.exports.__wbindgen_init_externref_table = function() {
-    const table = wasm.__wbindgen_export_0;
+exports.__wbindgen_init_externref_table = function() {
+    const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
     table.set(0, undefined);
     table.set(offset + 0, undefined);
@@ -28,13 +27,10 @@ module.exports.__wbindgen_init_externref_table = function() {
     ;
 };
 
-const path = require('path').join(__dirname, 'reference_test_bg.wasm');
-const bytes = require('fs').readFileSync(path);
-
-const wasmModule = new WebAssembly.Module(bytes);
-const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-wasm = wasmInstance.exports;
-module.exports.__wasm = wasm;
+const wasmPath = `${__dirname}/reference_test_bg.wasm`;
+const wasmBytes = require('fs').readFileSync(wasmPath);
+const wasmModule = new WebAssembly.Module(wasmBytes);
+const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
 

@@ -4,19 +4,20 @@ use std::str::Chars;
 use std::{char, iter};
 
 use ast::OperationKind;
-use backend::ast::{self, ThreadLocal};
-use backend::util::{ident_ty, ShortHash};
-use backend::Diagnostic;
 use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use quote::ToTokens;
-use shared::identifier::is_valid_ident;
 use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
 use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
+use syn::Token;
 use syn::{ItemFn, Lit, MacroDelimiter, ReturnType};
+use wasm_bindgen_shared::identifier::is_valid_ident;
 
+use crate::ast::{self, ThreadLocal};
+use crate::hash::ShortHash;
 use crate::ClassMarker;
+use crate::Diagnostic;
 
 thread_local!(static ATTRS: AttributeParseState = Default::default());
 
@@ -549,6 +550,9 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         }
         let attrs = BindgenAttrs::find(&mut self.attrs)?;
 
+        // the `wasm_bindgen` option has been used before
+        let _ = attrs.wasm_bindgen();
+
         let mut fields = Vec::new();
         let js_name = attrs
             .js_name()
@@ -586,8 +590,8 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             };
 
             let comments = extract_doc_comments(&field.attrs);
-            let getter = shared::struct_field_get(&js_name, &js_field_name);
-            let setter = shared::struct_field_set(&js_name, &js_field_name);
+            let getter = wasm_bindgen_shared::struct_field_get(&js_name, &js_field_name);
+            let setter = wasm_bindgen_shared::struct_field_set(&js_name, &js_field_name);
 
             fields.push(ast::StructField {
                 rust_name: member,
@@ -714,7 +718,18 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 .js_class()
                 .map(|p| p.0.into())
                 .unwrap_or_else(|| cls.to_string());
-            let ty = ident_ty(cls.clone());
+
+            let ty = syn::Type::Path(syn::TypePath {
+                qself: None,
+                path: syn::Path {
+                    leading_colon: None,
+                    segments: std::iter::once(syn::PathSegment {
+                        ident: cls.clone(),
+                        arguments: syn::PathArguments::None,
+                    })
+                    .collect(),
+                },
+            });
 
             let kind = ast::MethodKind::Operation(ast::Operation {
                 is_static: true,
@@ -759,7 +774,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 "__wbg_{}_{}",
                 wasm.name
                     .chars()
-                    .filter(|c| c.is_ascii_alphanumeric())
+                    .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
                     .collect::<String>(),
                 ShortHash(data)
             )
@@ -1200,23 +1215,21 @@ fn function_from_decl(
         }
     }
 
-    let (name, name_span, renamed_via_js_name) =
-        if let Some((js_name, js_name_span)) = opts.js_name() {
-            let kind = operation_kind(opts);
-            let prefix = match kind {
-                OperationKind::Setter(_) => "set_",
-                _ => "",
-            };
-            (format!("{}{}", prefix, js_name), js_name_span, true)
-        } else {
-            (decl_name.unraw().to_string(), decl_name.span(), false)
+    let (name, name_span) = if let Some((js_name, js_name_span)) = opts.js_name() {
+        let kind = operation_kind(opts);
+        let prefix = match kind {
+            OperationKind::Setter(_) => "set_",
+            _ => "",
         };
+        (format!("{}{}", prefix, js_name), js_name_span)
+    } else {
+        (decl_name.unraw().to_string(), decl_name.span())
+    };
 
     Ok((
         ast::Function {
             name_span,
             name,
-            renamed_via_js_name,
             rust_attrs: attrs,
             rust_vis: vis,
             r#unsafe: sig.unsafety.is_some(),
@@ -2020,10 +2033,10 @@ pub fn module_from_opts(
             errors.push(Diagnostic::span_error(span, msg));
         }
         Some(ast::ImportModule::RawNamed(name.to_string(), span))
-    } else if let Some((js, span)) = opts.inline_js() {
+    } else if let Some((js, _span)) = opts.inline_js() {
         let i = program.inline_js.len();
         program.inline_js.push(js.to_string());
-        Some(ast::ImportModule::Inline(i, span))
+        Some(ast::ImportModule::Inline(i))
     } else {
         None
     };

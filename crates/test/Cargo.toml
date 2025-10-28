@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-test"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.57"
-version = "0.3.53"
+version = "0.3.55"
 
 [features]
 default = ["std"]
@@ -15,10 +15,10 @@ std = ["wasm-bindgen/std", "js-sys/std", "wasm-bindgen-futures/std"]
 
 [dependencies]
 gg-alloc = { version = "1.0", optional = true }
-js-sys = { path = '../js-sys', version = '=0.3.80', default-features = false }
-wasm-bindgen = { path = '../..', version = '=0.2.103', default-features = false }
-wasm-bindgen-futures = { path = '../futures', version = '=0.4.53', default-features = false }
-wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.53' }
+js-sys = { path = '../js-sys', version = '=0.3.82', default-features = false }
+wasm-bindgen = { path = '../..', version = '=0.2.105', default-features = false }
+wasm-bindgen-futures = { path = '../futures', version = '=0.4.55', default-features = false }
+wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.55' }
 
 [target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
 minicov = "0.3"

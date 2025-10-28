@@ -4,7 +4,7 @@ use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
-use anyhow::{anyhow, bail, Error};
+use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::str;
@@ -28,8 +28,6 @@ struct Context<'a> {
     function_exports: HashMap<String, (ExportId, FunctionId)>,
     /// All of the Wasm module's imported functions.
     function_imports: HashMap<String, (ImportId, FunctionId)>,
-    /// A map from the signature of a function in the function table to its adapter, if we've already created it.
-    table_adapters: HashMap<Function, AdapterId>,
     memory: Option<MemoryId>,
     vendor_prefixes: HashMap<String, Vec<String>>,
     unique_crate_identifier: &'a str,
@@ -59,7 +57,6 @@ pub fn process(
         aux: Default::default(),
         function_exports: Default::default(),
         function_imports: Default::default(),
-        table_adapters: Default::default(),
         vendor_prefixes: Default::default(),
         descriptors: Default::default(),
         unique_crate_identifier: "",
@@ -147,6 +144,18 @@ impl<'a> Context<'a> {
             Descriptor::Unit,
             AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
         )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_object_is_null_or_undefined",
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Boolean,
+            AuxImport::Intrinsic(Intrinsic::ObjectIsNullOrUndefined),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_object_is_undefined",
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Boolean,
+            AuxImport::Intrinsic(Intrinsic::ObjectIsUndefined),
+        )?;
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
@@ -166,16 +175,12 @@ impl<'a> Context<'a> {
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
 
-            // If any closures exist we need to prevent the function table from
-            // getting gc'd
-            self.aux.function_table = self.module.tables.main_function_table()?;
-
             for (descriptor, orig_func_ids) in cast_imports {
                 let signature = descriptor.unwrap_function();
                 let [arg] = &signature.arguments[..] else {
                     bail!("Cast function must take exactly one argument");
                 };
-                let sig_comment = format!("{:?} -> {:?}", arg, &signature.ret);
+                let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
 
                 // Hash the descriptor string to produce a stable import name.
                 let mut hasher = DefaultHasher::default();
@@ -278,7 +283,11 @@ impl<'a> Context<'a> {
                 // actually a `main` function. Unfortunately, there doesn't seem to be any 100%
                 // reliable way to make sure that it is, but we can at least rule out any
                 // `#[wasm_bindgen]` exported functions.
-                let unknown = !self.adapters.exports.iter().any(|(name, _)| name == "main");
+                let unknown = !self
+                    .adapters
+                    .exports
+                    .iter()
+                    .any(|(export_id, _)| *export_id == export.id());
                 name_matches && type_matches && unknown
             })
             .map(|(_, func)| func.id());
@@ -927,11 +936,7 @@ impl<'a> Context<'a> {
             .string_enums
             .entry(aux.name.clone())
             .and_modify(|existing| {
-                result = Err(anyhow!(
-                    "duplicate string enums:\n{:?}\n{:?}",
-                    existing,
-                    aux
-                ));
+                result = Err(anyhow!("duplicate string enums:\n{existing:?}\n{aux:?}"));
             })
             .or_insert(aux);
         result
@@ -961,7 +966,7 @@ impl<'a> Context<'a> {
             .enums
             .entry(aux.name.clone())
             .and_modify(|existing| {
-                result = Err(anyhow!("duplicate enums:\n{:?}\n{:?}", existing, aux));
+                result = Err(anyhow!("duplicate enums:\n{existing:?}\n{aux:?}"));
             })
             .or_insert(aux);
         result
@@ -1101,25 +1106,21 @@ impl<'a> Context<'a> {
             {
                 bail!(
                     "local JS snippets do not support vendor prefixes for \
-                     the import of `{}` with a polyfill of `{}`",
-                    item,
+                     the import of `{item}` with a polyfill of `{}`",
                     &vendor_prefixes[0]
                 );
             }
             if let Some(decode::ImportModule::RawNamed(module)) = &import.module {
                 bail!(
-                    "import of `{}` from `{}` has a polyfill of `{}` listed, but
+                    "import of `{item}` from `{module}` has a polyfill of `{}` listed, but
                      vendor prefixes aren't supported when importing from modules",
-                    item,
-                    module,
                     &vendor_prefixes[0],
                 );
             }
             if let Some(ns) = &import.js_namespace {
                 bail!(
-                    "import of `{}` through js namespace `{}` isn't supported \
+                    "import of `{item}` through js namespace `{}` isn't supported \
                      right now when it lists a polyfill",
-                    item,
                     ns.join(".")
                 );
             }
@@ -1184,7 +1185,7 @@ impl<'a> Context<'a> {
             }
             match import.kind {
                 walrus::ImportKind::Function(_) => {}
-                _ => bail!("import from `{}` was not a function", PLACEHOLDER_MODULE),
+                _ => bail!("import from `{PLACEHOLDER_MODULE}` was not a function"),
             }
 
             // These are special intrinsics which were handled in the descriptor
@@ -1211,10 +1212,7 @@ impl<'a> Context<'a> {
                 AdapterKind::Local { .. } => continue,
             };
             if !self.aux.import_map.contains_key(id) {
-                bail!(
-                    "import of `{}` doesn't have an import map item listed",
-                    name
-                );
+                bail!("import of `{name}` doesn't have an import map item listed");
             }
 
             imports_counted += 1;
@@ -1225,16 +1223,14 @@ impl<'a> Context<'a> {
             bail!("import map is larger than the number of imports");
         }
 
-        // Make sure the export map and export adapters map contain the same
-        // number of entries.
-        for (_, id) in self.adapters.exports.iter() {
-            if !self.aux.export_map.contains_key(id) {
-                bail!("adapters map has an entry that the export map does not");
-            }
-        }
-
-        if self.adapters.exports.len() != self.aux.export_map.len() {
-            bail!("export map and export adapters map have different sizes");
+        // Make sure all entries in the export map have an adapter.
+        // The adapter may not be in the statically known exports list if it's
+        // generated by us from a closure table entry.
+        for id in self.aux.export_map.keys() {
+            ensure!(
+                self.adapters.adapters.contains_key(id),
+                "export map has an entry that the adapters map does not"
+            );
         }
 
         Ok(())
@@ -1336,67 +1332,17 @@ impl<'a> Context<'a> {
         export: ExportId,
         signature: Function,
     ) -> Result<AdapterId, Error> {
-        let export = self.module.exports.get(export);
-        let name = export.name.clone();
-        // Do the actual heavy lifting elsewhere to generate the `binding`.
-        let call = Instruction::CallExport(export.id());
-        let id = self.register_export_adapter(call, signature)?;
-        self.adapters.exports.push((name, id));
-        Ok(id)
-    }
-
-    fn table_element_adapter(
-        &mut self,
-        idx: u32,
-        mut signature: Function,
-    ) -> Result<AdapterId, Error> {
-        fn strip_externref_names(descriptor: &mut Descriptor) {
-            match descriptor {
-                Descriptor::NamedExternref(_) => *descriptor = Descriptor::Externref,
-
-                Descriptor::Function(function) => strip_function_externref_names(function),
-                Descriptor::Closure(closure) => {
-                    strip_function_externref_names(&mut closure.function)
-                }
-                Descriptor::Ref(descriptor)
-                | Descriptor::RefMut(descriptor)
-                | Descriptor::Slice(descriptor)
-                | Descriptor::Vector(descriptor)
-                | Descriptor::Option(descriptor)
-                | Descriptor::Result(descriptor) => strip_externref_names(descriptor),
-
-                _ => {}
-            }
+        // Same export might be requested multiple times due to codegen-units.
+        // Check if we already have an adapter for it.
+        if let Some((_, id)) = self
+            .adapters
+            .exports
+            .iter()
+            .find(|(export_id, _)| *export_id == export)
+        {
+            return Ok(*id);
         }
 
-        fn strip_function_externref_names(descriptor: &mut Function) {
-            descriptor
-                .arguments
-                .iter_mut()
-                .for_each(strip_externref_names);
-            strip_externref_names(&mut descriptor.ret);
-            descriptor.inner_ret.as_mut().map(strip_externref_names);
-        }
-
-        // We don't care about the names of externrefs here; we only care whether
-        // the compiler will actually keep them as separate functions.
-        strip_function_externref_names(&mut signature);
-
-        if let Some(&id) = self.table_adapters.get(&signature) {
-            return Ok(id);
-        }
-        let call = Instruction::CallTableElement(idx);
-        // like above, largely just defer the work elsewhere
-        let id = self.register_export_adapter(call, signature.clone())?;
-        self.table_adapters.insert(signature, id);
-        Ok(id)
-    }
-
-    fn register_export_adapter(
-        &mut self,
-        call: Instruction,
-        signature: Function,
-    ) -> Result<AdapterId, Error> {
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
         for arg in signature.arguments.iter() {
@@ -1451,7 +1397,7 @@ impl<'a> Context<'a> {
         }
         instructions.extend(args.instructions);
         instructions.push(InstructionData {
-            instr: call,
+            instr: Instruction::CallExport(export),
             stack_change: StackChange::Unknown,
         });
         if uses_retptr {
@@ -1470,12 +1416,16 @@ impl<'a> Context<'a> {
         }
         instructions.extend(ret.instructions);
 
-        Ok(ret.cx.adapters.append(
+        let id = ret.cx.adapters.append(
             args.input,
             ret.output,
             inner_ret_output,
             AdapterKind::Local { instructions },
-        ))
+        );
+
+        self.adapters.exports.push((export, id));
+
+        Ok(id)
     }
 
     fn instruction_builder<'b>(&'b mut self, return_position: bool) -> InstructionBuilder<'b, 'a> {
@@ -1584,7 +1534,7 @@ fn verify_constructor_return(class: &str, ret: &Descriptor) -> Result<(), Error>
         | Descriptor::Option(_)
         | Descriptor::Enum { .. }
         | Descriptor::Unit => {
-            bail!("The constructor for class `{}` tries to return a JS primitive type, which would cause the return value to be ignored. Use a builder instead (remove the `constructor` attribute).", class);
+            bail!("The constructor for class `{class}` tries to return a JS primitive type, which would cause the return value to be ignored. Use a builder instead (remove the `constructor` attribute).");
         }
         Descriptor::Result(ref d) | Descriptor::Ref(ref d) | Descriptor::RefMut(ref d) => {
             verify_constructor_return(class, d)
@@ -1743,7 +1693,7 @@ impl StructUnpacker {
         let (quads, alignment) = match ty {
             AdapterType::I32 | AdapterType::U32 | AdapterType::F32 => (1, 1),
             AdapterType::I64 | AdapterType::U64 | AdapterType::F64 => (2, 2),
-            other => bail!("invalid aggregate return type {:?}", other),
+            other => bail!("invalid aggregate return type {other:?}"),
         };
         Ok(self.append(quads, alignment))
     }

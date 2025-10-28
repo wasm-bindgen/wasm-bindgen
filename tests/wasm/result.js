@@ -74,7 +74,7 @@ exports.call_string_ok = function() {
 
 exports.call_string_err = function() {
     // the behaviour of Result<String, _> is so finicky that it's not obvious
-    // how to to reproduce reliably but also pass the test suite.
+    // how to reproduce reliably but also pass the test suite.
     assert.throws(() => e = wasm.return_string_err(), e => {
         // one thing we can do (uncomment to test)
         // is to throw an error in here.

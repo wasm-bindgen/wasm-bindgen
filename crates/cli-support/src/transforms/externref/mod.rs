@@ -16,21 +16,18 @@
 //! `externref` and valid Wasm modules going out which use `externref` at the fringes.
 
 use anyhow::{anyhow, bail, Context as _, Error};
-use std::cmp;
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::mem;
+use std::collections::{HashMap, HashSet};
 
 use crate::wasm_conventions;
-use walrus::{ir::*, ElementItems, RefType};
+use walrus::{ir::*, RefType};
 use walrus::{ConstExpr, FunctionId, GlobalId, Module, TableId, ValType};
-use walrus::{ElementId, ExportId, ImportId, InstrLocId, TypeId};
+use walrus::{ExportId, ImportId, InstrLocId, TypeId};
 
 // must be kept in sync with src/lib.rs and EXTERNREF_HEAP_START
 const DEFAULT_MIN: u64 = 128;
 
 /// State of the externref pass, used to collect information while bindings are
 /// generated and used eventually to actually execute the entire pass.
-#[derive(Default)]
 pub struct Context {
     // Functions within the module that we're gonna be wrapping, organized by
     // type. The `Function` contains information about what arguments/return
@@ -38,21 +35,8 @@ pub struct Context {
     imports: HashMap<ImportId, Function>,
     exports: HashMap<ExportId, Function>,
 
-    // List of functions we're transforming that are present in the function
-    // table. Each index here is an index into the function table, and the
-    // `Function` describes how we're transforming it.
-    new_elements: Vec<(u32, Function)>,
-
-    // When wrapping closures with new shims, this is the index of the next
-    // table entry that we'll be handing out.
-    new_element_offset: u32,
-
-    // Map of the existing function table, keyed by offset and contains the
-    // final offset plus the element segment used to initialized that range.
-    elements: BTreeMap<u32, ElementId>,
-
     // The externref table we'll be using, injected after construction
-    table: Option<TableId>,
+    table: TableId,
 
     // If the bulk memory proposal is enabled.
     bulk_memory: bool,
@@ -103,50 +87,25 @@ impl Context {
     /// Executed first very early over a Wasm module, used to learn about how
     /// large the function table is so we know what indexes to hand out when
     /// we're appending entries.
-    pub fn prepare(&mut self, module: &mut Module) -> Result<(), Error> {
+    pub fn new(module: &mut Module) -> Result<Self, Error> {
         // Insert reference types to the target features section.
         wasm_conventions::insert_target_feature(module, "reference-types")
             .context("failed to parse `target_features` custom section")?;
 
-        self.bulk_memory = matches!(
-            wasm_conventions::target_feature(module, "bulk-memory"),
-            Ok(true)
-        );
+        let table = module
+            .tables
+            .add_local(false, DEFAULT_MIN, None, RefType::Externref);
 
-        // Figure out what the maximum index of functions pointers are. We'll
-        // be adding new entries to the function table later (maybe) so
-        // precalculate this ahead of time.
-        if let Some(t) = module.tables.main_function_table()? {
-            let t = module.tables.get(t);
-            for id in t.elem_segments.iter() {
-                let elem = module.elements.get(*id);
-                let offset = match &elem.kind {
-                    walrus::ElementKind::Active { offset, .. } => offset,
-                    _ => continue,
-                };
-                let offset = match offset {
-                    walrus::ConstExpr::Value(Value::I32(n)) => *n as u32,
-                    other => bail!("invalid offset for segment of function table {:?}", other),
-                };
-                let len = match &elem.items {
-                    ElementItems::Functions(items) => items.len(),
-                    ElementItems::Expressions(_, items) => items.len(),
-                };
-                let max = offset + len as u32;
-                self.new_element_offset = cmp::max(self.new_element_offset, max);
-                self.elements.insert(offset, *id);
-            }
-        }
+        module.tables.get_mut(table).name = Some("__wbindgen_externrefs".to_string());
 
-        // Add in an externref table to the module, which we'll be using for
-        // our transform below.
-        self.table = Some(
-            module
-                .tables
-                .add_local(false, DEFAULT_MIN, None, RefType::Externref),
-        );
-
-        Ok(())
+        Ok(Self {
+            imports: Default::default(),
+            exports: Default::default(),
+            bulk_memory: wasm_conventions::target_feature(module, "bulk-memory").unwrap_or(false),
+            // Add in an externref table to the module, which we'll be using for
+            // our transform below.
+            table,
+        })
     }
 
     /// Store information about an imported function that needs to be
@@ -177,21 +136,6 @@ impl Context {
         self
     }
 
-    /// Store information about a function pointer that needs to be transformed.
-    /// The actual transformation happens later during `run`. Returns an index
-    /// that the new wrapped function pointer will be injected at.
-    pub fn table_element_xform(
-        &mut self,
-        idx: u32,
-        externref: &[(usize, bool)],
-        ret_externref: bool,
-    ) -> Option<u32> {
-        self.function(externref, ret_externref).map(|f| {
-            self.new_elements.push((idx, f));
-            self.new_elements.len() as u32 + self.new_element_offset - 1
-        })
-    }
-
     fn function(&self, externref: &[(usize, bool)], ret_externref: bool) -> Option<Function> {
         if !ret_externref && externref.is_empty() {
             return None;
@@ -203,7 +147,7 @@ impl Context {
     }
 
     pub fn run(&mut self, module: &mut Module) -> Result<Meta, Error> {
-        let table = self.table.unwrap();
+        let table = self.table;
 
         // Inject a stack pointer global which will be used for managing the
         // stack on the externref table.
@@ -296,8 +240,6 @@ impl Transform<'_> {
         assert!(self.cx.imports.is_empty());
         self.process_exports(module)?;
         assert!(self.cx.exports.is_empty());
-        self.process_elements(module)?;
-        assert!(self.cx.new_elements.is_empty());
 
         // Perform all instruction transformations to rewrite calls between
         // functions and make sure everything is still hooked up right.
@@ -322,7 +264,7 @@ impl Transform<'_> {
                     "__wbindgen_externref_table_set_null" => {
                         self.intrinsic_map.insert(f, Intrinsic::TableSetNull);
                     }
-                    n => bail!("unknown intrinsic: {}", n),
+                    n => bail!("unknown intrinsic: {n}"),
                 }
             } else if import.module == "__wbindgen_placeholder__" {
                 match import.name.as_str() {
@@ -377,7 +319,6 @@ impl Transform<'_> {
 
             let (shim, externref_ty) = self.append_shim(
                 f,
-                &import.name,
                 func,
                 &mut module.types,
                 &mut module.funcs,
@@ -405,7 +346,6 @@ impl Transform<'_> {
             };
             let (shim, _externref_ty) = self.append_shim(
                 f,
-                &export.name,
                 function,
                 &mut module.types,
                 &mut module.funcs,
@@ -416,69 +356,9 @@ impl Transform<'_> {
         Ok(())
     }
 
-    fn process_elements(&mut self, module: &mut Module) -> Result<(), Error> {
-        let table = match module.tables.main_function_table()? {
-            Some(t) => t,
-            None => return Ok(()),
-        };
-        let table = module.tables.get_mut(table);
-
-        // Create shims for all our functions and append them all to the segment
-        // which places elements at the end.
-        let mut new_segment = Vec::new();
-        for (idx, function) in mem::take(&mut self.cx.new_elements) {
-            let (&offset, &orig_element) = self
-                .cx
-                .elements
-                .range(..=idx)
-                .next_back()
-                .ok_or(anyhow!("failed to find segment defining index {}", idx))?;
-
-            let target = match &module.elements.get(orig_element).items {
-                ElementItems::Functions(items) => items[(idx - offset) as usize],
-                ElementItems::Expressions(_, items) => {
-                    if let ConstExpr::RefFunc(target) = items[(idx - offset) as usize] {
-                        target
-                    } else {
-                        bail!("function index {} not present in element segment", idx)
-                    }
-                }
-            };
-
-            let (shim, _externref_ty) = self.append_shim(
-                target,
-                &format!("closure{idx}"),
-                function,
-                &mut module.types,
-                &mut module.funcs,
-                &mut module.locals,
-            )?;
-            new_segment.push(ConstExpr::RefFunc(shim));
-        }
-
-        // ... and next update the limits of the table in case any are listed.
-        let new_max = self.cx.new_element_offset + new_segment.len() as u32;
-        table.initial = cmp::max(table.initial, u64::from(new_max));
-        if let Some(max) = table.maximum {
-            table.maximum = Some(cmp::max(max, u64::from(new_max)));
-        }
-        let kind = walrus::ElementKind::Active {
-            table: table.id(),
-            offset: ConstExpr::Value(Value::I32(self.cx.new_element_offset as i32)),
-        };
-        let segment = module.elements.add(
-            kind,
-            ElementItems::Expressions(RefType::Funcref, new_segment),
-        );
-        table.elem_segments.insert(segment);
-
-        Ok(())
-    }
-
     fn append_shim(
         &mut self,
         shim_target: FunctionId,
-        name: &str,
         mut func: Function,
         types: &mut walrus::ModuleTypes,
         funcs: &mut walrus::ModuleFunctions,
@@ -696,6 +576,11 @@ impl Transform<'_> {
         // with a fresh type we've been calculating so far. Give the function a
         // nice name for debugging and then we're good to go!
         let id = builder.finish(params, funcs);
+        let name = funcs
+            .get(shim_target)
+            .name
+            .as_deref()
+            .unwrap_or("<unknown>");
         let name = format!("{name} externref shim");
         funcs.get_mut(id).name = Some(name);
         self.shims.insert(id);

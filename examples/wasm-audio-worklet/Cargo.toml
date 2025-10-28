@@ -9,6 +9,7 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [dependencies]
+console_error_panic_hook = "0.1.7"
 console_log = "1"
 js-sys = { path = "../../crates/js-sys" }
 wasm-bindgen = { path = "../../" }

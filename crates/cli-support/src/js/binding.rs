@@ -86,7 +86,7 @@ pub struct JsFunction {
 
 /// A references to an (likely) exported symbol used in TS type expression.
 ///
-/// Right now, only string enum require this type of anaylsis.
+/// Right now, only string enum require this type of analysis.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TsReference {
     StringEnum(String),
@@ -784,7 +784,6 @@ fn instruction(
 
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
-        | Instruction::CallTableElement(_)
         | Instruction::DeferFree { .. } => {
             let invoc = Invocation::from(instr, js.cx.module)?;
             let (mut params, results) = invoc.params_results(js.cx);
@@ -971,19 +970,14 @@ fn instruction(
                 AdapterType::I64 => ("setBigInt64", 8),
                 AdapterType::F32 => ("setFloat32", 4),
                 AdapterType::F64 => ("setFloat64", 8),
-                other => bail!("invalid aggregate return type {:?}", other),
+                other => bail!("invalid aggregate return type {other:?}"),
             };
             // Note that we always assume the return pointer is argument 0,
             // which is currently the case for LLVM.
             let val = js.pop();
             let expr = format!(
-                "{}().{}({} + {} * {}, {}, true);",
-                mem,
-                method,
+                "{mem}().{method}({} + {size} * {offset}, {val}, true);",
                 js.arg(0),
-                size,
-                offset,
-                val,
             );
             js.prelude(&expr);
         }
@@ -995,7 +989,7 @@ fn instruction(
                 AdapterType::I64 => ("getBigInt64", 2),
                 AdapterType::F32 => ("getFloat32", 1),
                 AdapterType::F64 => ("getFloat64", 2),
-                other => bail!("invalid aggregate return type {:?}", other),
+                other => bail!("invalid aggregate return type {other:?}"),
             };
             let size = quads * 4;
             // Separate the offset and the scaled offset, because otherwise you don't guarantee
@@ -1395,16 +1389,16 @@ fn instruction(
             adapter,
             nargs,
             mutable,
-            dtor_idx_if_persistent,
+            dtor_if_persistent,
         } => {
             let b = js.pop();
             let a = js.pop();
-            let wrapper = js.cx.adapter_name(*adapter);
+            let wrapper = js.cx.export_adapter_name(*adapter);
 
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership
             // integration.
-            if let Some(dtor) = dtor_idx_if_persistent {
+            if let Some(dtor) = dtor_if_persistent {
                 let make_closure = if *mutable {
                     js.cx.expose_make_mut_closure()?;
                     "makeMutClosure"
@@ -1413,7 +1407,9 @@ fn instruction(
                     "makeClosure"
                 };
 
-                js.push(format!("{make_closure}({a}, {b}, {dtor}, {wrapper})"));
+                let dtor = &js.cx.module.exports.get(*dtor).name;
+
+                js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
             } else {
                 let i = js.tmp();
                 js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
@@ -1459,10 +1455,7 @@ fn instruction(
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{}({}, {} * {size}, {size});",
-                free,
-                ptr,
-                len,
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.push(format!("v{i}"))
@@ -1478,10 +1471,7 @@ fn instruction(
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{}({}, {} * {size}, {size});",
-                free,
-                ptr,
-                len,
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.prelude("}");
@@ -1516,8 +1506,7 @@ fn instruction(
             let val = js.pop();
             let present = js.pop();
             js.push(format!(
-                "{} === 0 ? undefined : {}",
-                present,
+                "{present} === 0 ? undefined : {}",
                 if *signed {
                     val
                 } else {
@@ -1587,13 +1576,6 @@ impl Invocation {
                 _ => panic!("can only call exported function"),
             },
 
-            // The function table never changes right now, so we can statically
-            // look up the desired function.
-            CallTableElement(idx) => {
-                let id = crate::wasm_conventions::get_function_table_entry(module, *idx)?;
-                Invocation::Core { id, defer: false }
-            }
-
             CallAdapter(id) => Invocation::Adapter(*id),
 
             // this function is only called for the above instructions
@@ -1625,7 +1607,7 @@ impl Invocation {
         match self {
             Invocation::Core { id, .. } => {
                 let name = cx.export_name_of(*id);
-                Ok(format!("wasm.{}({})", name, args.join(", ")))
+                Ok(format!("wasm.{name}({})", args.join(", ")))
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];
