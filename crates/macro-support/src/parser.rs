@@ -1604,12 +1604,11 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             ));
         }
 
-        let js_namespace = opts.js_namespace().map(|(ns, _)| ns.0);
         program.exports.push(ast::Export {
             comments,
             function,
             js_class: Some(js_class.to_string()),
-            js_namespace,
+            js_namespace: None,
             method_kind,
             method_self,
             rust_class: Some(class.clone()),
