@@ -628,8 +628,8 @@ impl<'a> Context<'a> {
             decode::ImportKind::Enum(e) => self.string_enum(e)?,
         };
         if let Some(id) = id {
-            if let Some(reexport_name) = &import.reexport {
-                self.aux.reexports.insert(id, reexport_name.clone());
+            if let Some(reexport_name) = import.reexport {
+                self.aux.reexports.insert(id, reexport_name);
             }
         }
         Ok(())

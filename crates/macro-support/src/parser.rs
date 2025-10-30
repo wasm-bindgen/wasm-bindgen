@@ -1973,7 +1973,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                     let mut item: syn::ItemStatic =
                         syn::parse(v.into()).expect("only foreign functions/types allowed for now");
                     let item_opts = BindgenAttrs::find(&mut item.attrs)?;
-                    let reexport = item_opts.reexport().map(|s| s.clone().unwrap_or_default());
+                    let reexport = item_opts.reexport().cloned();
                     let kind = item.convert((program, item_opts, &ctx.module))?;
 
                     program.imports.push(ast::Import {
@@ -1996,7 +1996,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .or(ctx.js_namespace)
             .map(|s| s.0);
         let module = ctx.module;
-        let reexport = item_opts.reexport().map(|s| s.clone().unwrap_or_default());
+        let reexport = item_opts.reexport().cloned();
 
         let kind = match self {
             syn::ForeignItem::Fn(f) => f.convert((program, item_opts, &module))?,

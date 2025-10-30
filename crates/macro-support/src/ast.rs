@@ -121,8 +121,8 @@ pub struct Import {
     pub module: Option<ImportModule>,
     /// The namespace to access the item through, if any
     pub js_namespace: Option<Vec<String>>,
-    /// If Some, this import should be re-exported with the given name (or original name if empty string)
-    pub reexport: Option<String>,
+    /// If Some, this import should be re-exported with the optional given name
+    pub reexport: Option<Option<String>>,
     /// The type of item being imported
     pub kind: ImportKind,
 }

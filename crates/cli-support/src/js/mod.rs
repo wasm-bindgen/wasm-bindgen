@@ -706,12 +706,8 @@ wasm = wasmInstance.exports;
                 ) => js,
                 Some(_) | None => continue,
             })?;
-            let export_name = if export_name.is_empty() {
-                import_name.to_string()
-            } else {
-                export_name.to_string()
-            };
-            self.export(&export_name, ExportJs::Expression(&import_name), None)?;
+            let export_name = export_name.as_ref().unwrap_or(&import_name);
+            self.export(export_name, ExportJs::Expression(&import_name), None)?;
         }
 
         push_with_newline(&self.imports_post);
