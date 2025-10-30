@@ -47,6 +47,15 @@ export function option_order(order) {
 }
 
 /**
+ * @param {ColorName | null} [color]
+ * @returns {ColorName | undefined}
+ */
+export function option_string_enum_echo(color) {
+    const ret = wasm.option_string_enum_echo(isLikeNone(color) ? 4 : ((__wbindgen_enum_ColorName.indexOf(color) + 1 || 4) - 1));
+    return __wbindgen_enum_ColorName[ret];
+}
+
+/**
  * @param {Color} color
  * @returns {ColorName}
  */
@@ -71,15 +80,6 @@ export function option_enum_echo(color) {
 export function enum_echo(color) {
     const ret = wasm.enum_echo(color);
     return ret;
-}
-
-/**
- * @param {ColorName | null} [color]
- * @returns {ColorName | undefined}
- */
-export function option_string_enum_echo(color) {
-    const ret = wasm.option_string_enum_echo(isLikeNone(color) ? 4 : ((__wbindgen_enum_ColorName.indexOf(color) + 1 || 4) - 1));
-    return __wbindgen_enum_ColorName[ret];
 }
 
 /**
