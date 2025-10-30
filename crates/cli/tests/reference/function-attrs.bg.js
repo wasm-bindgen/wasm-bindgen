@@ -264,11 +264,13 @@ export class HoldsNumber {
         wasm.__wbg_holdsnumber_free(ptr, 0);
     }
     /**
-     * Inner value
-     * @returns {number}
+     * Description for method_with_attr
+     * @param {number} firstArg - some number
+     * @param {boolean | undefined} secondArg
+     * @returns {number} returns arg1 if arg2 is true, or holding value of self if arg2 is undefined or false
      */
-    get inner() {
-        const ret = wasm.holdsnumber_get_inner(this.__wbg_ptr);
+    method_with_attr(firstArg, secondArg) {
+        const ret = wasm.holdsnumber_method_with_attr(this.__wbg_ptr, firstArg, secondArg);
         return ret;
     }
     /**
@@ -282,13 +284,11 @@ export class HoldsNumber {
         return HoldsNumber.__wrap(ret);
     }
     /**
-     * Description for method_with_attr
-     * @param {number} firstArg - some number
-     * @param {boolean | undefined} secondArg
-     * @returns {number} returns arg1 if arg2 is true, or holding value of self if arg2 is undefined or false
+     * Inner value
+     * @returns {number}
      */
-    method_with_attr(firstArg, secondArg) {
-        const ret = wasm.holdsnumber_method_with_attr(this.__wbg_ptr, firstArg, secondArg);
+    get inner() {
+        const ret = wasm.holdsnumber_get_inner(this.__wbg_ptr);
         return ret;
     }
 }
