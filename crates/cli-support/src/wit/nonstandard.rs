@@ -80,6 +80,8 @@ pub struct AuxExport {
     pub asyncness: bool,
     /// What kind of function this is and where it shows up
     pub kind: AuxExportKind,
+    /// The namespace to export the item through, if any
+    pub js_namespace: Option<Vec<String>>,
     /// Whether typescript bindings should be generated for this export.
     pub generate_typescript: bool,
     /// Whether jsdoc comments should be generated for this export.
@@ -191,6 +193,8 @@ pub struct AuxEnum {
     pub variants: Vec<(String, i64, String)>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
+    /// The namespace to export the enum through, if any
+    pub js_namespace: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -203,6 +207,11 @@ pub struct AuxStringEnum {
     pub variant_values: Vec<String>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
+    /// The namespace to export the enum through, if any
+    /// Note: Currently unused as string enums don't generate exports,
+    /// but kept for consistency and potential future use.
+    #[allow(dead_code)]
+    pub js_namespace: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -215,6 +224,8 @@ pub struct AuxStruct {
     pub is_inspectable: bool,
     /// Whether typescript bindings should be generated for this struct.
     pub generate_typescript: bool,
+    /// The namespace to export the struct through, if any
+    pub js_namespace: Option<Vec<String>>,
 }
 
 /// All possible types of imports that can be imported by a Wasm module.
