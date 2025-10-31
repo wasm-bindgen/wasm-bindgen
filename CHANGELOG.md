@@ -5,13 +5,16 @@
 
 ### Added
 
-* Added typed `this` support in the first argument in free function exports via a new `#[wasm_bindgen(this)]` attribute.
+* Added typed `this` support in the first argument in free function exports via
+  a new `#[wasm_bindgen(this)]` attribute.
   [#4757](https://github.com/wasm-bindgen/wasm-bindgen/pull/4757)
 
-* Added `reexport` attribute for imports to support ES module-style re-exports, with optional renaming.
+* Added `reexport` attribute for imports to support re-exporting imported types,
+  with optional renaming.
   [#4759](https://github.com/wasm-bindgen/wasm-bindgen/pull/4759)
 
-* Added `js_namespace` attribute on exported types, mirroring the import semantics to enable arbitrarily nested exported interface objects.
+* Added `js_namespace` attribute on exported types, mirroring the import
+  semantics to enable arbitrarily nested exported interface objects.
   [#4744](https://github.com/wasm-bindgen/wasm-bindgen/pull/4744)
 
 ### Fixed
