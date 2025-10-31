@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         components: rustfmt
     - run: cargo fmt --all -- --check
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         components: clippy,rustfmt
     - run: cargo clippy --no-deps --all --all-features -- -D warnings
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rustfmt
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
         components: clippy
@@ -117,7 +117,7 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v6
@@ -195,7 +195,7 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v6
@@ -249,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
         components: rustfmt
@@ -272,7 +272,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         components: rustfmt
     - run: cd crates/web-sys && cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
@@ -286,7 +286,7 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rust-src
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
@@ -314,7 +314,7 @@ jobs:
       with:
         name: examples
         path: examples/dist
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
     - uses: actions/setup-node@v6
       with:
         node-version: 24
@@ -333,7 +333,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
     - run: cargo build --manifest-path benchmarks/Cargo.toml --release --target wasm32-unknown-unknown
@@ -348,7 +348,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: x86_64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
@@ -367,7 +367,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: aarch64-unknown-linux-gnu
     - run: sudo apt update -y && sudo apt install gcc-aarch64-linux-gnu -y
@@ -385,7 +385,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: aarch64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
@@ -401,7 +401,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: x86_64-apple-darwin
     - run: cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-apple-darwin --release
@@ -417,7 +417,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
@@ -432,7 +432,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
     - run: cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
         RUSTFLAGS: -Ctarget-feature=+crt-static
@@ -615,7 +615,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: "gh-release/*.tar.gz*"
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       if: startsWith(github.ref, 'refs/tags/')
     - run: rustc publish.rs
       if: startsWith(github.ref, 'refs/tags/')
