@@ -78,6 +78,7 @@
       - [`module = "blah"`](./reference/attributes/on-js-imports/module.md)
       - [`raw_module = "blah"`](./reference/attributes/on-js-imports/raw_module.md)
       - [`no_deref`](./reference/attributes/on-js-imports/no_deref.md)
+      - [`reexport`](./reference/attributes/on-js-imports/reexport.md)
       - [`static_method_of = Blah`](./reference/attributes/on-js-imports/static_method_of.md)
       - [`structural`](./reference/attributes/on-js-imports/structural.md)
       - [`typescript_type`](./reference/attributes/on-js-imports/typescript_type.md)

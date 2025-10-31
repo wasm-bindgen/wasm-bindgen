@@ -278,6 +278,7 @@ fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<
             .map(|m| shared_module(m, intern, false))
             .transpose()?,
         js_namespace: i.js_namespace.clone(),
+        reexport: i.reexport.clone(),
         kind: shared_import_kind(&i.kind, intern)?,
     })
 }

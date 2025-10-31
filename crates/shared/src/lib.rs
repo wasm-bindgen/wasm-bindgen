@@ -39,6 +39,7 @@ macro_rules! shared_api {
         struct Import<'a> {
             module: Option<ImportModule<'a>>,
             js_namespace: Option<Vec<String>>,
+            reexport: Option<Option<String>>,
             kind: ImportKind<'a>,
         }
 
