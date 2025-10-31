@@ -257,11 +257,11 @@ pub struct Closure<T: ?Sized> {
 // be accessed from multiple threads. The Send/Sync bounds on T ensure that the
 // closure's captured data would be safe to send in a truly multi-threaded context,
 // maintaining Rust's safety guarantees. The JsClosure reference itself is made
-// Send/Sync through the unsafe-single-threaded-traits feature.
-#[cfg(feature = "unsafe-single-threaded-traits")]
+// Send/Sync through the unsafe_single_threaded_traits cfg.
+#[cfg(unsafe_single_threaded_traits)]
 unsafe impl<T: ?Sized> Send for Closure<T> {}
 
-#[cfg(feature = "unsafe-single-threaded-traits")]
+#[cfg(unsafe_single_threaded_traits)]
 unsafe impl<T: ?Sized> Sync for Closure<T> {}
 
 fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {

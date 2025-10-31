@@ -114,11 +114,11 @@ pub struct JsFuture {
 // However, in single-threaded WebAssembly environments, this is safe because
 // the Rc cannot actually be accessed from multiple threads. The Inner struct
 // contains JsValue and Closure, which are both made Send by the
-// unsafe-single-threaded-traits feature.
-#[cfg(feature = "unsafe-single-threaded-traits")]
+// unsafe_single_threaded_traits cfg.
+#[cfg(unsafe_single_threaded_traits)]
 unsafe impl Send for JsFuture {}
 
-#[cfg(feature = "unsafe-single-threaded-traits")]
+#[cfg(unsafe_single_threaded_traits)]
 unsafe impl Sync for JsFuture {}
 
 impl fmt::Debug for JsFuture {

@@ -28,12 +28,6 @@ serde-serialize = ["serde", "serde_json", "std"]
 spans = []
 std = []
 
-# UNSAFE: Enables Send and Sync implementations for JS types (JsValue, Closure, etc.)
-# This is only safe in single-threaded WebAssembly environments where JavaScript
-# values cannot actually be accessed from multiple threads. Using this with
-# threading features (atomics, shared memory) is not supported and will fail to compile.
-unsafe-single-threaded-traits = ["wasm-bindgen-futures/unsafe-single-threaded-traits"]
-
 # Whether or not the `#[wasm_bindgen]` macro is strict and generates an error on
 # all unused attributes
 strict-macro = ["wasm-bindgen-macro/strict-macro"]
@@ -78,6 +72,7 @@ workspace = true
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_unstable_test_coverage)',
   'cfg(xxx_debug_only_print_generated_code)',
+  'cfg(unsafe_single_threaded_traits)',
 ] }
 
 [workspace.lints.clippy]

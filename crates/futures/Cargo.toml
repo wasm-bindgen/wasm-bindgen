@@ -27,7 +27,6 @@ wasm-bindgen = { path = "../..", version = '=0.2.105', default-features = false 
 default = ["std"]
 futures-core-03-stream = ['futures-core']
 std = ["wasm-bindgen/std", "js-sys/std", "web-sys/std"]
-unsafe-single-threaded-traits = ["wasm-bindgen/unsafe-single-threaded-traits"]
 
 [target.'cfg(target_feature = "atomics")'.dependencies]
 web-sys = { path = "../web-sys", version = "=0.3.82", default-features = false, features = [

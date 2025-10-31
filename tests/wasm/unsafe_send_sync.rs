@@ -1,9 +1,9 @@
-//! Tests for the unsafe-single-threaded-traits feature
+//! Tests for the unsafe_single_threaded_traits cfg
 //!
-//! This test file verifies that when the feature is enabled, JS types
+//! This test file verifies that when the cfg is enabled, JS types
 //! become Send and Sync, allowing futures to be Send.
 
-#![cfg(feature = "unsafe-single-threaded-traits")]
+#![cfg(unsafe_single_threaded_traits)]
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;

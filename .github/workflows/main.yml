@@ -112,7 +112,7 @@ jobs:
           - name: enable-interning
             run: cargo test --target wasm32-unknown-unknown --features enable-interning
           - name: unsafe-single-threaded-traits
-            run: cargo test --target wasm32-unknown-unknown --features unsafe-single-threaded-traits
+            run: RUSTFLAGS="--cfg unsafe_single_threaded_traits" cargo test --target wasm32-unknown-unknown
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:
