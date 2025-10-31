@@ -2,8 +2,8 @@
 
 [View full source code][code] or [view the compiled example online][online]
 
-[online]: https://rustwasm.github.io/wasm-bindgen/exbuild/hello_world/
-[code]: https://github.com/rustwasm/wasm-bindgen/tree/master/examples/hello_world
+[online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/hello_world/
+[code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/hello_world
 
 This is the "Hello, world!" example of `#[wasm_bindgen]` showing how to set up
 a project, export a function to JS, call it from JS, and then call the `alert`

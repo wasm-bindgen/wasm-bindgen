@@ -38,7 +38,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Serial`, `WorkerNavigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn serial(this: &WorkerNavigator) -> Serial;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Usb")]
@@ -50,7 +50,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Usb`, `WorkerNavigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn usb(this: &WorkerNavigator) -> Usb;
     # [wasm_bindgen (structural , method , getter , js_class = "WorkerNavigator" , js_name = hardwareConcurrency)]
     #[doc = "Getter for the `hardwareConcurrency` field of this object."]
@@ -68,7 +68,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WorkerNavigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device_memory(this: &WorkerNavigator) -> f64;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Gpu")]
@@ -80,7 +80,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Gpu`, `WorkerNavigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn gpu(this: &WorkerNavigator) -> Gpu;
     # [wasm_bindgen (structural , catch , method , getter , js_class = "WorkerNavigator" , js_name = appCodeName)]
     #[doc = "Getter for the `appCodeName` field of this object."]
@@ -148,7 +148,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `LockManager`, `WorkerNavigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn locks(this: &WorkerNavigator) -> LockManager;
     # [wasm_bindgen (structural , method , getter , js_class = "WorkerNavigator" , js_name = onLine)]
     #[doc = "Getter for the `onLine` field of this object."]
@@ -175,7 +175,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NavigatorUaData`, `WorkerNavigator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn user_agent_data(this: &WorkerNavigator) -> NavigatorUaData;
     # [wasm_bindgen (method , structural , js_class = "WorkerNavigator" , js_name = taintEnabled)]
     #[doc = "The `taintEnabled()` method."]

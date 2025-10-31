@@ -8,7 +8,6 @@ use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::punctuated::Punctuated;
-use wasm_bindgen_backend::util::{ident_ty, raw_ident, rust_ident};
 use weedle::attribute::{
     ExtendedAttribute, ExtendedAttributeIdent, ExtendedAttributeList, ExtendedAttributeNoArgs,
     IdentifierOrString,
@@ -25,6 +24,7 @@ use crate::first_pass::{FirstPassRecord, OperationData, OperationId, Signature};
 use crate::generator::{ConstValue, InterfaceMethod, InterfaceMethodKind};
 use crate::idl_type::{IdentifierType, IdlType, ToIdlType};
 use crate::Options;
+use syn::parse_quote;
 
 /// For variadic operations an overload with a `js_sys::Array` argument is generated alongside with
 /// `operation_name_0`, `operation_name_1`, `operation_name_2`, ..., `operation_name_n` overloads
@@ -107,11 +107,11 @@ pub fn optional_return_ty(ty: syn::Type) -> syn::Type {
 
 // Returns a link to MDN
 pub fn mdn_doc(class: &str, method: Option<&str>) -> String {
-    let mut link = format!("https://developer.mozilla.org/en-US/docs/Web/API/{}", class);
+    let mut link = format!("https://developer.mozilla.org/en-US/docs/Web/API/{class}");
     if let Some(method) = method {
-        link.push_str(&format!("/{}", method));
+        link.push_str(&format!("/{method}"));
     }
-    format!("[MDN Documentation]({})", link)
+    format!("[MDN Documentation]({link})")
 }
 
 // Array type is borrowed for arguments (`&mut [T]` or `&[T]`) and owned for return value (`Vec<T>`).
@@ -147,10 +147,10 @@ pub fn webidl_const_v_to_backend_const_v(v: &ConstValueLit) -> ConstValue {
                 }
                 let text = &text[offset..];
                 let n = u64::from_str_radix(text, base)
-                    .unwrap_or_else(|_| panic!("literal too big: {}", orig_text));
+                    .unwrap_or_else(|_| panic!("literal too big: {orig_text}"));
                 if negative {
                     let n = if n > (i64::MIN as u64).wrapping_neg() {
-                        panic!("literal too big: {}", orig_text)
+                        panic!("literal too big: {orig_text}")
                     } else {
                         n.wrapping_neg() as i64
                     };
@@ -233,7 +233,7 @@ impl<'src> FirstPassRecord<'src> {
         data: &'src OperationData<'src>,
         unstable: bool,
         unstable_types: &HashSet<Identifier>,
-    ) -> Vec<InterfaceMethod> {
+    ) -> Vec<InterfaceMethod<'_>> {
         let is_static = data.is_static;
 
         // First up, prune all signatures that reference unsupported arguments.
@@ -561,12 +561,12 @@ impl<'src> FirstPassRecord<'src> {
                                 .as_ref()
                                 .map(|idl_type| (orig_arg.name.to_string(), idl_type))
                         })
-                        .chain((1..=i).map(|j| (format!("{}_{}", last_name, j), last_idl_type))),
+                        .chain((1..=i).map(|j| (format!("{last_name}_{j}"), last_idl_type))),
                 );
 
                 if let Some(arguments) = arguments {
                     if let Ok(ret_ty) = ret_ty.to_syn_type(TypePosition::Return, false) {
-                        let mut rust_name = format!("{}_{}", &rust_name, i);
+                        let mut rust_name = format!("{}_{i}", &rust_name);
 
                         if let Some(map) =
                             type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name))
@@ -836,6 +836,7 @@ fn flag_slices_allow_shared(ty: &mut IdlType) {
         IdlType::Nullable(item) => flag_slices_allow_shared(item),
         IdlType::FrozenArray(item) => flag_slices_allow_shared(item),
         IdlType::Sequence(item) => flag_slices_allow_shared(item),
+        IdlType::ObservableArray(item) => flag_slices_allow_shared(item),
         IdlType::Promise(item) => flag_slices_allow_shared(item),
         IdlType::Record(item1, item2) => {
             flag_slices_allow_shared(item1);
@@ -857,13 +858,12 @@ pub fn required_doc_string(options: &Options, features: &BTreeSet<String>) -> Op
     }
     let list = features
         .iter()
-        .map(|ident| format!("`{}`", ident))
+        .map(|ident| format!("`{ident}`"))
         .collect::<Vec<_>>()
         .join(", ");
     Some(format!(
         "\n\n*This API requires the following crate features \
-         to be activated: {}*",
-        list,
+         to be activated: {list}*",
     ))
 }
 
@@ -922,10 +922,80 @@ pub fn nullable(mut ty: weedle::types::Type) -> weedle::types::Type {
         Type::Single(SingleType::NonAny(NonAnyType::ArrayBufferView(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::BufferSource(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::FrozenArrayType(mb))) => make_nullable(mb),
+        Type::Single(SingleType::NonAny(NonAnyType::ObservableArrayType(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::RecordType(mb))) => make_nullable(mb),
         Type::Single(SingleType::NonAny(NonAnyType::Identifier(mb))) => make_nullable(mb),
         Type::Union(mb) => make_nullable(mb),
     }
 
     ty
+}
+
+/// Check whether a given `&str` is a Rust keyword
+#[rustfmt::skip]
+fn is_rust_keyword(name: &str) -> bool {
+    matches!(name,
+        "abstract" | "alignof" | "as" | "become" | "box" | "break" | "const" | "continue"
+        | "crate" | "do" | "else" | "enum" | "extern" | "false" | "final" | "fn" | "for" | "if"
+        | "impl" | "in" | "let" | "loop" | "macro" | "match" | "mod" | "move" | "mut"
+        | "offsetof" | "override" | "priv" | "proc" | "pub" | "pure" | "ref" | "return"
+        | "Self" | "self" | "sizeof" | "static" | "struct" | "super" | "trait" | "true"
+        | "type" | "typeof" | "unsafe" | "unsized" | "use" | "virtual" | "where" | "while"
+        | "yield" | "bool" | "_"
+    )
+}
+
+/// Create an `Ident`, possibly mangling it if it conflicts with a Rust keyword.
+pub fn rust_ident(name: &str) -> Ident {
+    if name.is_empty() {
+        panic!("tried to create empty Ident (from \"\")");
+    } else if is_rust_keyword(name) {
+        Ident::new(&format!("{name}_"), proc_macro2::Span::call_site())
+
+    // we didn't historically have `async` in the `is_rust_keyword` list above,
+    // so for backwards compatibility reasons we need to generate an `async`
+    // identifier as well, but we'll be sure to use a raw identifier to ease
+    // compatibility with the 2018 edition.
+    //
+    // Note, though, that `proc-macro` doesn't support a normal way to create a
+    // raw identifier. To get around that we do some wonky parsing to
+    // roundaboutly create one.
+    } else if name == "async" {
+        let ident = "r#async"
+            .parse::<proc_macro2::TokenStream>()
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap();
+        match ident {
+            proc_macro2::TokenTree::Ident(i) => i,
+            _ => unreachable!(),
+        }
+    } else if name.chars().next().unwrap().is_ascii_digit() {
+        Ident::new(&format!("N{name}"), proc_macro2::Span::call_site())
+    } else {
+        Ident::new(name, proc_macro2::Span::call_site())
+    }
+}
+
+/// Create an `Ident` without checking to see if it conflicts with a Rust
+/// keyword.
+pub fn raw_ident(name: &str) -> Ident {
+    Ident::new(name, proc_macro2::Span::call_site())
+}
+
+/// Create a global path type from the given segments. For example an iterator
+/// yielding the idents `[foo, bar, baz]` will result in the path type
+/// `::foo::bar::baz`.
+pub fn leading_colon_path_ty<I>(segments: I) -> syn::Type
+where
+    I: IntoIterator<Item = Ident>,
+{
+    let segments = segments.into_iter();
+    parse_quote!(::#(#segments)::*)
+}
+
+/// Create a path type with a single segment from a given Identifier
+pub fn ident_ty(ident: Ident) -> syn::Type {
+    parse_quote!(#ident)
 }

@@ -43,6 +43,7 @@
   - [Working with Duck-Typed Interfaces](./reference/working-with-duck-typed-interfaces.md)
   - [Command Line Interface](./reference/cli.md)
   - [Optimizing for Size](./reference/optimize-size.md)
+  - [Debug information](./reference/debug-info.md)
   - [Supported Rust Targets](./reference/rust-targets.md)
   - [Supported Browsers](./reference/browser-support.md)
   - [Support for Weak References](./reference/weak-references.md)
@@ -133,4 +134,5 @@
     - [Logging](./contributing/web-sys/logging.md)
     - [Supporting More Web APIs](./contributing/web-sys/supporting-more-web-apis.md)
   - [Publishing](./contributing/publishing.md)
+  - [Governance](./contributing/governance.md)
   - [Team](./contributing/team.md)

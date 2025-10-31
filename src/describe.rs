@@ -8,56 +8,12 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{Clamped, JsError, JsObject, JsValue};
+use crate::{Clamped, JsCast, JsError, JsValue};
 use cfg_if::cfg_if;
 
-macro_rules! tys {
-    ($($a:ident)*) => (tys! { @ ($($a)*) 0 });
-    (@ () $v:expr) => {};
-    (@ ($a:ident $($b:ident)*) $v:expr) => {
-        pub const $a: u32 = $v;
-        tys!(@ ($($b)*) $v+1);
-    }
-}
+pub use wasm_bindgen_shared::tys::*;
 
-// NB: this list must be kept in sync with `crates/cli-support/src/descriptor.rs`
-tys! {
-    I8
-    U8
-    I16
-    U16
-    I32
-    U32
-    I64
-    U64
-    I128
-    U128
-    F32
-    F64
-    BOOLEAN
-    FUNCTION
-    CLOSURE
-    CACHED_STRING
-    STRING
-    REF
-    REFMUT
-    LONGREF
-    SLICE
-    VECTOR
-    EXTERNREF
-    NAMED_EXTERNREF
-    ENUM
-    STRING_ENUM
-    RUST_STRUCT
-    CHAR
-    OPTIONAL
-    RESULT
-    UNIT
-    CLAMPED
-    NONNULL
-}
-
-#[inline(always)] // see the wasm-interpreter crate
+#[inline(always)] // see the wasm-interpreter module
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 pub fn inform(a: u32) {
     unsafe { super::__wbindgen_describe(a) }
@@ -173,15 +129,7 @@ cfg_if! {
     }
 }
 
-impl WasmDescribeVector for JsValue {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        JsValue::describe();
-    }
-}
-
-impl<T: JsObject> WasmDescribeVector for T {
+impl<T: JsCast + WasmDescribe> WasmDescribeVector for T {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
         inform(VECTOR);

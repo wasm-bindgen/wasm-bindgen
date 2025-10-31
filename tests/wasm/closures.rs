@@ -654,3 +654,21 @@ fn named_externref_no_duplicate_adapter() {
     externref_call(&Closure::new(|a| assert_eq!(a, 1)));
     named_externref_call(&Closure::new(|a| assert_eq!(a, 1)));
 }
+
+#[wasm_bindgen_test]
+fn closure_does_not_leak() {
+    let initial = wasm_bindgen::externref_heap_live_count();
+    let dropped = Rc::new(Cell::new(false));
+    let mut dropper = Dropper(dropped.clone());
+    drop(Closure::new(move || {
+        // just ensure that `dropper` is moved into the closure environment
+        // (we can't use it by value because it's not a FnOnce closure)
+        let _ = &mut dropper;
+    }));
+    assert_eq!(
+        wasm_bindgen::externref_heap_live_count(),
+        initial,
+        "JS closure not dropped"
+    );
+    assert!(dropped.get(), "Rust closure not dropped");
+}

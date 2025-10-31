@@ -152,6 +152,15 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js = JsBuilder::new(self.cx, debug_name);
         if let Some(consumes_self) = self.method {
             let _ = params.next();
+            if js.cx.config.generate_reset_state {
+                js.prelude(
+                    "
+                    if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+                        throw new Error('Invalid stale object from previous Wasm instance');
+                    }
+                    ",
+                );
+            }
             if js.cx.config.debug {
                 js.prelude(
                     "if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');",
@@ -168,7 +177,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             let arg = match args_data {
                 Some(list) => list[i].clone(),
                 None => AuxFunctionArgumentData {
-                    name: format!("arg{}", i),
+                    name: format!("arg{i}"),
                     ty_override: None,
                     desc: None,
                 },
@@ -203,14 +212,13 @@ impl<'a, 'b> Builder<'a, 'b> {
         assert_eq!(
             js.stack.len(),
             adapter.results.len(),
-            "stack size mismatch for {}",
-            debug_name
+            "stack size mismatch for {debug_name}"
         );
         match js.stack.len() {
             0 => {}
             1 => {
                 let val = js.pop();
-                js.prelude(&format!("return {};", val));
+                js.prelude(&format!("return {val};"));
             }
 
             // TODO: this should be pretty trivial to support (commented out
@@ -420,7 +428,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 }
             }
             if asyncness {
-                ret = format!("Promise<{}>", ret);
+                ret = format!("Promise<{ret}>");
             }
             ts.push_str(&ret);
             ts_ret = Some(ret);
@@ -519,7 +527,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         if let Some(ts) = ret_ty_override.as_ref().or(ts_ret.as_ref()) {
             // skip if type is void and there is no description
             if ts != "void" || ret_desc.is_some() {
-                ret.push_str(&format!("@returns {{{}}}", ts));
+                ret.push_str(&format!("@returns {{{ts}}}"));
             }
             // append return description
             if let Some(v) = ret_desc {
@@ -615,7 +623,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn assert_class(&mut self, arg: &str, class: &str, import_deps: &mut HashSet<String>) {
         self.cx.expose_assert_class(import_deps);
-        self.prelude(&format!("_assertClass({}, {});", arg, class));
+        self.prelude(&format!("_assertClass({arg}, {class});"));
     }
 
     fn assert_number(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
@@ -623,7 +631,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_num(import_deps);
-        self.prelude(&format!("_assertNum({});", arg));
+        self.prelude(&format!("_assertNum({arg});"));
     }
 
     fn assert_bigint(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
@@ -631,7 +639,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bigint(import_deps);
-        self.prelude(&format!("_assertBigInt({});", arg));
+        self.prelude(&format!("_assertBigInt({arg});"));
     }
 
     fn assert_bool(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
@@ -639,7 +647,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bool(import_deps);
-        self.prelude(&format!("_assertBoolean({});", arg));
+        self.prelude(&format!("_assertBoolean({arg});"));
     }
 
     fn assert_optional_number(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
@@ -647,19 +655,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_is_like_none(import_deps);
-        self.prelude(&format!("if (!isLikeNone({})) {{", arg));
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
         self.assert_number(arg, import_deps);
         self.prelude("}");
     }
 
     fn assert_non_null(&mut self, arg: &str) {
         self.cx.expose_assert_non_null();
-        self.prelude(&format!("_assertNonNull({});", arg));
+        self.prelude(&format!("_assertNonNull({arg});"));
     }
 
     fn assert_char(&mut self, arg: &str) {
         self.cx.expose_assert_char();
-        self.prelude(&format!("_assertChar({});", arg));
+        self.prelude(&format!("_assertChar({arg});"));
     }
 
     fn assert_optional_bigint(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
@@ -667,7 +675,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_is_like_none(import_deps);
-        self.prelude(&format!("if (!isLikeNone({})) {{", arg));
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
         self.assert_bigint(arg, import_deps);
         self.prelude("}");
     }
@@ -677,23 +685,31 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_is_like_none(import_deps);
-        self.prelude(&format!("if (!isLikeNone({})) {{", arg));
         self.assert_bool(arg, import_deps);
         self.prelude("}");
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
-        if !self.cx.config.debug {
-            return;
+        if self.cx.config.generate_reset_state {
+            // Under reset state, we need comprehensive validation
+            self.prelude(&format!(
+                "\
+                if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
+                    throw new Error('Invalid stale object from previous Wasm instance');
+                }}
+                "
+            ));
         }
-        self.prelude(&format!(
-            "\
-                if ({0}.__wbg_ptr === 0) {{
+        if self.cx.config.debug {
+            // Debug mode only checks for moved values
+            self.prelude(&format!(
+                "\
+                if ({arg}.__wbg_ptr === 0) {{
                     throw new Error('Attempt to use a moved value');
                 }}
-            ",
-            arg,
-        ));
+                ",
+            ));
+        }
     }
 
     fn string_to_memory(
@@ -712,17 +728,12 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             None => String::new(),
         };
         self.prelude(&format!(
-            "const ptr{i} = {f}({0}, wasm.{malloc}{realloc});",
-            val,
-            i = i,
-            f = pass,
-            malloc = malloc,
-            realloc = realloc,
+            "const ptr{i} = {pass}({val}, wasm.{malloc}{realloc});",
         ));
-        self.prelude(&format!("const len{} = WASM_VECTOR_LEN;", i));
-        self.push(format!("ptr{}", i));
-        self.push(format!("len{}", i));
-        import_deps.insert(format!("'${}'", pass));
+        self.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
+        self.push(format!("ptr{i}"));
+        self.push(format!("len{i}"));
+        import_deps.insert(format!("'${pass}'"));
         Ok(())
     }
 }
@@ -776,10 +787,8 @@ fn instruction(
             js.push(arg);
         }
 
-        Instruction::CallCore(_)
-        | Instruction::CallExport(_)
+        Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
-        | Instruction::CallTableElement(_)
         | Instruction::DeferFree { .. } => {
             let invoc = Invocation::from(instr, js.cx.module)?;
             let (mut params, results) = invoc.params_results(js.cx);
@@ -820,17 +829,17 @@ fn instruction(
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    js.finally(&format!("{};", call));
+                    js.finally(&format!("{call};"));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => js.prelude(&format!("{};", call)),
+                (false, 0) => js.prelude(&format!("{call};")),
                 (false, n) => {
-                    js.prelude(&format!("const ret = {};", call));
+                    js.prelude(&format!("const ret = {call};"));
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {
                         for i in 0..n {
-                            js.push(format!("ret[{}]", i));
+                            js.push(format!("ret[{i}]"));
                         }
                     }
                 }
@@ -848,7 +857,7 @@ fn instruction(
                 // When converting to a JS number we need to specially handle the `u32`
                 // case because if the high bit is set then it comes out as a negative
                 // number, but we want to switch that to an unsigned representation.
-                js.push(format!("{} >>> 0", val))
+                js.push(format!("{val} >>> 0"))
             } else {
                 js.push(val)
             }
@@ -939,7 +948,7 @@ fn instruction(
             let len = js.pop();
             let ptr = js.pop();
             let get = js.cx.expose_get_string_from_wasm(*mem)?;
-            js.push(format!("{}({}, {})", get, ptr, len));
+            js.push(format!("{get}({ptr}, {len})"));
         }
 
         Instruction::StringToMemory {
@@ -953,10 +962,9 @@ fn instruction(
         Instruction::Retptr { size } => {
             js.cx.inject_stack_pointer_shim()?;
             js.prelude(&format!(
-                "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{});",
-                size
+                "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{size});"
             ));
-            js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({});", size));
+            js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({size});"));
             js.stack.push("retptr".to_string());
         }
 
@@ -967,28 +975,19 @@ fn instruction(
                 AdapterType::I64 => ("setBigInt64", 8),
                 AdapterType::F32 => ("setFloat32", 4),
                 AdapterType::F64 => ("setFloat64", 8),
-                other => bail!("invalid aggregate return type {:?}", other),
+                other => bail!("invalid aggregate return type {other:?}"),
             };
             // Note that we always assume the return pointer is argument 0,
             // which is currently the case for LLVM.
             let val = js.pop();
             let mut expr = format!(
-                "{}().{}({} + {} * {}, {}, true);",
-                mem,
-                method,
+                "{mem}().{method}({} + {size} * {offset}, {val}, true);",
                 js.arg(0),
-                size,
-                offset,
-                val,
             );
             if matches!(js.cx.config.mode, OutputMode::Emscripten) {
                 expr = format!(
-                    "HEAP_DATA_VIEW.{}({} + {} * {}, {}, true);",
-                    method,
+                    "HEAP_DATA_VIEW.{method}({} + {size} * {offset}, {val}, true);",
                     js.arg(0),
-                    size,
-                    offset,
-                    val,
                 );
             }
             js.prelude(&expr);
@@ -1001,7 +1000,7 @@ fn instruction(
                 AdapterType::I64 => ("getBigInt64", 2),
                 AdapterType::F32 => ("getFloat32", 1),
                 AdapterType::F64 => ("getFloat64", 2),
-                other => bail!("invalid aggregate return type {:?}", other),
+                other => bail!("invalid aggregate return type {other:?}"),
             };
             let size = quads * 4;
             // Separate the offset and the scaled offset, because otherwise you don't guarantee
@@ -1010,20 +1009,14 @@ fn instruction(
             // If we're loading from the return pointer then we must have pushed
             // it earlier, and we always push the same value, so load that value
             // here
-            let mut expr = format!(
-                "{}().{}(retptr + {} * {}, true)",
-                mem, method, size, scaled_offset
-            );
+            let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
 
             if matches!(js.cx.config.mode, OutputMode::Emscripten) {
-                expr = format!(
-                    "HEAP_DATA_VIEW.{}(retptr + {} * {}, true)",
-                    method, size, scaled_offset
-                );
+                expr = format!("HEAP_DATA_VIEW.{method}(retptr + {size} * {scaled_offset}, true)");
             }
 
-            js.prelude(&format!("var r{} = {};", offset, expr));
-            js.push(format!("r{}", offset));
+            js.prelude(&format!("var r{offset} = {expr};"));
+            js.push(format!("r{offset}"));
         }
 
         Instruction::I32FromBool => {
@@ -1045,14 +1038,14 @@ fn instruction(
         Instruction::I32FromExternrefOwned => {
             js.cx.expose_add_heap_object();
             let val = js.pop();
-            js.push(format!("addHeapObject({})", val));
+            js.push(format!("addHeapObject({val})"));
         }
 
         Instruction::I32FromExternrefBorrow => {
             js.cx.expose_borrowed_objects(import_deps);
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
-            js.push(format!("addBorrowedObject({})", val));
+            js.push(format!("addBorrowedObject({val})"));
             js.finally("heap[stack_pointer++] = undefined;");
         }
 
@@ -1061,28 +1054,28 @@ fn instruction(
             js.assert_class(&val, class, import_deps);
             js.assert_not_moved(&val);
             let i = js.tmp();
-            js.prelude(&format!("var ptr{} = {}.__destroy_into_raw();", i, val));
-            js.push(format!("ptr{}", i));
+            js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
+            js.push(format!("ptr{i}"));
         }
 
         Instruction::I32FromExternrefRustBorrow { class } => {
             let val = js.pop();
             js.assert_class(&val, class, import_deps);
             js.assert_not_moved(&val);
-            js.push(format!("{}.__wbg_ptr", val));
+            js.push(format!("{val}.__wbg_ptr"));
         }
 
         Instruction::I32FromOptionRust { class } => {
             let val = js.pop();
             js.cx.expose_is_like_none(import_deps);
             let i = js.tmp();
-            js.prelude(&format!("let ptr{} = 0;", i));
-            js.prelude(&format!("if (!isLikeNone({0})) {{", val));
+            js.prelude(&format!("let ptr{i} = 0;"));
+            js.prelude(&format!("if (!isLikeNone({val})) {{"));
             js.assert_class(&val, class, import_deps);
             js.assert_not_moved(&val);
-            js.prelude(&format!("ptr{} = {}.__destroy_into_raw();", i, val));
+            js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
             js.prelude("}");
-            js.push(format!("ptr{}", i));
+            js.push(format!("ptr{i}"));
         }
 
         Instruction::I32FromOptionExternref { table_and_alloc } => {
@@ -1090,14 +1083,12 @@ fn instruction(
             js.cx.expose_is_like_none(import_deps);
             match table_and_alloc {
                 Some((table, alloc)) => {
-                    let alloc = js
-                        .cx
-                        .expose_add_to_externref_table(*table, *alloc, import_deps)?;
-                    js.push(format!("isLikeNone({0}) ? 0 : {1}({0})", val, alloc));
+                    let alloc = js.cx.expose_add_to_externref_table(*table, *alloc, import_deps)?;
+                    js.push(format!("isLikeNone({val}) ? 0 : {alloc}({val})"));
                 }
                 None => {
                     js.cx.expose_add_heap_object();
-                    js.push(format!("isLikeNone({0}) ? 0 : addHeapObject({0})", val));
+                    js.push(format!("isLikeNone({val}) ? 0 : addHeapObject({val})"));
                 }
             }
         }
@@ -1106,14 +1097,14 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none(import_deps);
             js.assert_optional_number(&val, import_deps);
-            js.push(format!("isLikeNone({0}) ? 0xFFFFFF : {0}", val));
+            js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val}"));
         }
 
         Instruction::I32FromOptionBool => {
             let val = js.pop();
             js.cx.expose_is_like_none(import_deps);
             js.assert_optional_bool(&val, import_deps);
-            js.push(format!("isLikeNone({0}) ? 0xFFFFFF : {0} ? 1 : 0", val));
+            js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val} ? 1 : 0"));
         }
 
         Instruction::I32FromOptionChar => {
@@ -1121,8 +1112,7 @@ fn instruction(
             let i = js.tmp();
             js.cx.expose_is_like_none(import_deps);
             js.prelude(&format!(
-                "const char{i} = isLikeNone({0}) ? 0xFFFFFF : {0}.codePointAt(0);",
-                val
+                "const char{i} = isLikeNone({val}) ? 0xFFFFFF : {val}.codePointAt(0);"
             ));
             let val = format!("char{i}");
             js.cx.expose_assert_char();
@@ -1136,7 +1126,7 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none(import_deps);
             js.assert_optional_number(&val, import_deps);
-            js.push(format!("isLikeNone({0}) ? {1} : {0}", val, hole));
+            js.push(format!("isLikeNone({val}) ? {hole} : {val}"));
         }
 
         Instruction::F64FromOptionSentinelInt { signed } => {
@@ -1185,12 +1175,12 @@ fn instruction(
             } else {
                 js.assert_optional_number(&val, import_deps);
             }
-            js.push(format!("!isLikeNone({0})", val));
+            js.push(format!("!isLikeNone({val})"));
             js.push(format!(
                 "isLikeNone({val}) ? {zero} : {val}",
                 zero = if *ty == ValType::I64 {
                     // We can't use bigint literals for now. See:
-                    // https://github.com/rustwasm/wasm-bindgen/issues/4246
+                    // https://github.com/wasm-bindgen/wasm-bindgen/issues/4246
                     "BigInt(0)"
                 } else {
                     "0"
@@ -1205,17 +1195,11 @@ fn instruction(
                 .pass_to_wasm_function(kind.clone(), *mem, import_deps)?;
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!(
-                "const ptr{i} = {f}({0}, wasm.{malloc});",
-                val,
-                i = i,
-                f = func,
-                malloc = malloc,
-            ));
-            js.prelude(&format!("const len{} = WASM_VECTOR_LEN;", i));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
-            import_deps.insert(format!("'${}'", func));
+            js.prelude(&format!("const ptr{i} = {func}({val}, wasm.{malloc});",));
+            js.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
+            import_deps.insert(format!("'${func}'"));
         }
 
         Instruction::UnwrapResult { table_and_drop } => {
@@ -1241,9 +1225,6 @@ fn instruction(
                     throw {take_object}({err});
                 }}
                 ",
-                take_object = take_object,
-                is_err = is_err,
-                err = err,
             ));
         }
 
@@ -1270,15 +1251,9 @@ fn instruction(
                     throw {take_object}({err});
                 }}
                 ",
-                take_object = take_object,
-                is_err = is_err,
-                err = err,
-                i = i,
-                ptr = ptr,
-                len = len,
             ));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
         }
 
         Instruction::OptionString {
@@ -1296,17 +1271,12 @@ fn instruction(
                 None => String::new(),
             };
             js.prelude(&format!(
-                "var ptr{i} = isLikeNone({0}) ? 0 : {f}({0}, wasm.{malloc}{realloc});",
-                val,
-                i = i,
-                f = func,
-                malloc = malloc,
-                realloc = realloc,
+                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, wasm.{malloc}{realloc});",
             ));
-            js.prelude(&format!("var len{} = WASM_VECTOR_LEN;", i));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
-            import_deps.insert(format!("'${}'", func));
+            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
+            import_deps.insert(format!("'${func}'"));
         }
 
         Instruction::OptionVector { kind, mem, malloc } => {
@@ -1318,16 +1288,12 @@ fn instruction(
             let malloc = js.cx.export_name_of(*malloc);
             let val = js.pop();
             js.prelude(&format!(
-                "var ptr{i} = isLikeNone({0}) ? 0 : {f}({0}, wasm.{malloc});",
-                val,
-                i = i,
-                f = func,
-                malloc = malloc,
+                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, wasm.{malloc});",
             ));
-            js.prelude(&format!("var len{} = WASM_VECTOR_LEN;", i));
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
-            import_deps.insert(format!("'${}'", func));
+            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
+            import_deps.insert(format!("'${func}'"));
         }
 
         Instruction::MutableSliceToMemory { kind, malloc, mem } => {
@@ -1338,17 +1304,11 @@ fn instruction(
                 .pass_to_wasm_function(kind.clone(), *mem, import_deps)?;
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!(
-                "var ptr{i} = {f}({val}, wasm.{malloc});",
-                val = val,
-                i = i,
-                f = func,
-                malloc = malloc,
-            ));
-            js.prelude(&format!("var len{} = WASM_VECTOR_LEN;", i));
+            js.prelude(&format!("var ptr{i} = {func}({val}, wasm.{malloc});",));
+            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             // Then pass it the pointer and the length of where we copied it.
-            js.push(format!("ptr{}", i));
-            js.push(format!("len{}", i));
+            js.push(format!("ptr{i}"));
+            js.push(format!("len{i}"));
             // Then we give Wasm a reference to the original typed array, so that it can
             // update it with modifications made on the Wasm side before returning.
             js.push(val);
@@ -1357,7 +1317,7 @@ fn instruction(
 
         Instruction::BoolFromI32 => {
             let val = js.pop();
-            js.push(format!("{} !== 0", val));
+            js.push(format!("{val} !== 0"));
         }
 
         Instruction::ExternrefLoadOwned { table_and_drop } => {
@@ -1370,29 +1330,46 @@ fn instruction(
                 "takeObject".to_string()
             };
             let val = js.pop();
-            js.push(format!("{}({})", take_object, val));
+            js.push(format!("{take_object}({val})"));
         }
 
         Instruction::StringFromChar => {
             let val = js.pop();
-            js.push(format!("String.fromCodePoint({})", val));
+            js.push(format!("String.fromCodePoint({val})"));
         }
 
         Instruction::RustFromI32 { class } => {
             let val = js.pop();
             match constructor {
                 Some(name) if name == class => {
+                    let (ptr_assignment, register_data) = if js.cx.config.generate_reset_state {
+                        (
+                            format!(
+                                "\
+                                this.__wbg_ptr = {val} >>> 0;
+                                this.__wbg_inst = __wbg_instance_id;
+                                "
+                            ),
+                            format!("{{ ptr: {val} >>> 0, instance: __wbg_instance_id }}"),
+                        )
+                    } else {
+                        (
+                            format!("this.__wbg_ptr = {val} >>> 0;"),
+                            "this.__wbg_ptr".to_string(),
+                        )
+                    };
+
                     js.prelude(&format!(
                         "
-                        this.__wbg_ptr = {val} >>> 0;
-                        {name}Finalization.register(this, this.__wbg_ptr, this);
+                        {ptr_assignment}
+                        {name}Finalization.register(this, {register_data}, this);
                         "
                     ));
                     js.push(String::from("this"));
                 }
                 Some(_) | None => {
                     js.cx.require_class_wrap(class);
-                    js.push(format!("{}.__wrap({})", class, val));
+                    js.push(format!("{class}.__wrap({val})"));
                 }
             }
         }
@@ -1401,10 +1378,7 @@ fn instruction(
             assert!(constructor.is_none());
             let val = js.pop();
             js.cx.require_class_wrap(class);
-            js.push(format!(
-                "{0} === 0 ? undefined : {1}.__wrap({0})",
-                val, class,
-            ));
+            js.push(format!("{val} === 0 ? undefined : {class}.__wrap({val})",));
         }
 
         Instruction::CachedStringLoad {
@@ -1421,75 +1395,85 @@ fn instruction(
                 .cx
                 .expose_get_cached_string_from_wasm(*mem, *table, import_deps)?;
 
-            js.prelude(&format!("var v{} = {}({}, {});", tmp, get, ptr, len));
+            js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
             if *owned {
                 let free = js.cx.export_name_of(*free);
                 js.prelude(&format!(
-                    "if ({ptr} !== 0) {{ wasm.{}({ptr}, {len}, 1); }}",
-                    free,
-                    ptr = ptr,
-                    len = len,
+                    "if ({ptr} !== 0) {{ wasm.{free}({ptr}, {len}, 1); }}",
                 ));
             }
 
-            js.push(format!("v{}", tmp));
+            js.push(format!("v{tmp}"));
         }
 
         Instruction::TableGet => {
             let val = js.pop();
             js.cx.expose_get_object(import_deps);
-            js.push(format!("getObject({})", val));
+            js.push(format!("getObject({val})"));
         }
 
-        Instruction::StackClosure {
+        Instruction::Closure {
             adapter,
             nargs,
             mutable,
+            dtor_if_persistent,
         } => {
-            let i = js.tmp();
             let b = js.pop();
             let a = js.pop();
-            js.prelude(&format!("var state{} = {{a: {}, b: {}}};", i, a, b));
-            let args = (0..*nargs)
-                .map(|i| format!("arg{}", i))
-                .collect::<Vec<_>>()
-                .join(", ");
-            let wrapper = js.cx.adapter_name(*adapter);
-            import_deps.insert(format!("'${}'", wrapper));
-            if *mutable {
-                // Mutable closures need protection against being called
-                // recursively, so ensure that we clear out one of the
-                // internal pointers while it's being invoked.
-                js.prelude(&format!(
-                    "var cb{i} = ({args}) => {{
-                        const a = state{i}.a;
-                        state{i}.a = 0;
-                        try {{
-                            return {name}(a, state{i}.b, {args});
-                        }} finally {{
-                            state{i}.a = a;
-                        }}
-                    }};",
-                    i = i,
-                    args = args,
-                    name = wrapper,
-                ));
-            } else {
-                js.prelude(&format!(
-                    "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
-                    i = i,
-                    args = args,
-                    wrapper = wrapper,
-                ));
-            }
+            let wrapper = js.cx.export_adapter_name(*adapter);
+            import_deps.insert(format!("'${wrapper}'"));
 
-            // Make sure to null out our internal pointers when we return
-            // back to Rust to ensure that any lingering references to the
-            // closure will fail immediately due to null pointers passed in
-            // to Rust.
-            js.finally(&format!("state{}.a = state{0}.b = 0;", i));
-            js.push(format!("cb{}", i));
+            // TODO: further merge the heap and stack closure handling as
+            // they're almost identical (by nature) except for ownership
+            // integration.
+            if let Some(dtor) = dtor_if_persistent {
+                let make_closure = if *mutable {
+                    js.cx.expose_make_mut_closure()?;
+                    "makeMutClosure"
+                } else {
+                    js.cx.expose_make_closure()?;
+                    "makeClosure"
+                };
+
+                let dtor = &js.cx.module.exports.get(*dtor).name;
+
+                js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
+            } else {
+                let i = js.tmp();
+                js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
+                let args = (0..*nargs)
+                    .map(|i| format!("arg{i}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                if *mutable {
+                    // Mutable closures need protection against being called
+                    // recursively, so ensure that we clear out one of the
+                    // internal pointers while it's being invoked.
+                    js.prelude(&format!(
+                        "var cb{i} = ({args}) => {{
+                            const a = state{i}.a;
+                            state{i}.a = 0;
+                            try {{
+                                return {wrapper}(a, state{i}.b, {args});
+                            }} finally {{
+                                state{i}.a = a;
+                            }}
+                        }};",
+                    ));
+                } else {
+                    js.prelude(&format!(
+                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                    ));
+                }
+
+                // Make sure to null out our internal pointers when we return
+                // back to Rust to ensure that any lingering references to the
+                // closure will fail immediately due to null pointers passed in
+                // to Rust.
+                js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+                js.push(format!("cb{i}"));
+            }
         }
 
         Instruction::VectorLoad { kind, mem, free } => {
@@ -1500,15 +1484,12 @@ fn instruction(
                 .expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
-            js.prelude(&format!("var v{} = {}({}, {}).slice();", i, f, ptr, len));
+            js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{}({}, {} * {size}, {size});",
-                free,
-                ptr,
-                len,
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
-            js.push(format!("v{}", i))
+            js.push(format!("v{i}"))
         }
 
         Instruction::OptionVectorLoad { kind, mem, free } => {
@@ -1519,59 +1500,46 @@ fn instruction(
                 .expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
-            js.prelude(&format!("let v{};", i));
-            js.prelude(&format!("if ({} !== 0) {{", ptr));
-            js.prelude(&format!("v{} = {}({}, {}).slice();", i, f, ptr, len));
+            js.prelude(&format!("let v{i};"));
+            js.prelude(&format!("if ({ptr} !== 0) {{"));
+            js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{}({}, {} * {size}, {size});",
-                free,
-                ptr,
-                len,
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.prelude("}");
-            js.push(format!("v{}", i));
+            js.push(format!("v{i}"));
         }
 
         Instruction::View { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js
-                .cx
-                .expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
-            js.push(format!("{f}({ptr}, {len})", ptr = ptr, len = len, f = f));
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
+            js.push(format!("{f}({ptr}, {len})"));
         }
 
         Instruction::OptionView { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js
-                .cx
-                .expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
-            js.push(format!(
-                "{ptr} === 0 ? undefined : {f}({ptr}, {len})",
-                ptr = ptr,
-                len = len,
-                f = f
-            ));
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
+            js.push(format!("{ptr} === 0 ? undefined : {f}({ptr}, {len})"));
         }
 
         Instruction::OptionF64Sentinel => {
             let val = js.pop();
-            js.push(format!("{0} === 0x100000001 ? undefined : {0}", val));
+            js.push(format!("{val} === 0x100000001 ? undefined : {val}"));
         }
 
         Instruction::OptionU32Sentinel => {
             let val = js.pop();
-            js.push(format!("{0} === 0xFFFFFF ? undefined : {0}", val));
+            js.push(format!("{val} === 0xFFFFFF ? undefined : {val}"));
         }
 
         Instruction::ToOptionNative { ty, signed } => {
             let val = js.pop();
             let present = js.pop();
             js.push(format!(
-                "{} === 0 ? undefined : {}",
-                present,
+                "{present} === 0 ? undefined : {}",
                 if *signed {
                     val
                 } else {
@@ -1586,20 +1554,19 @@ fn instruction(
 
         Instruction::OptionBoolFromI32 => {
             let val = js.pop();
-            js.push(format!("{0} === 0xFFFFFF ? undefined : {0} !== 0", val));
+            js.push(format!("{val} === 0xFFFFFF ? undefined : {val} !== 0"));
         }
 
         Instruction::OptionCharFromI32 => {
             let val = js.pop();
             js.push(format!(
-                "{0} === 0xFFFFFF ? undefined : String.fromCodePoint({0})",
-                val,
+                "{val} === 0xFFFFFF ? undefined : String.fromCodePoint({val})",
             ));
         }
 
         Instruction::OptionEnumFromI32 { hole } => {
             let val = js.pop();
-            js.push(format!("{0} === {1} ? undefined : {0}", val, hole));
+            js.push(format!("{val} === {hole} ? undefined : {val}"));
         }
 
         Instruction::I32FromNonNull => {
@@ -1612,12 +1579,12 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none(import_deps);
             js.assert_optional_number(&val, import_deps);
-            js.push(format!("isLikeNone({0}) ? 0 : {0}", val));
+            js.push(format!("isLikeNone({val}) ? 0 : {val}"));
         }
 
         Instruction::OptionNonNullFromI32 => {
             let val = js.pop();
-            js.push(format!("{0} === 0 ? undefined : {0} >>> 0", val));
+            js.push(format!("{val} === 0 ? undefined : {val} >>> 0"));
         }
     }
     Ok(())
@@ -1632,11 +1599,6 @@ impl Invocation {
     fn from(instr: &Instruction, module: &Module) -> Result<Invocation, Error> {
         use Instruction::*;
         Ok(match instr {
-            CallCore(f) => Invocation::Core {
-                id: *f,
-                defer: false,
-            },
-
             DeferFree { free, .. } => Invocation::Core {
                 id: *free,
                 defer: true,
@@ -1646,16 +1608,6 @@ impl Invocation {
                 walrus::ExportItem::Function(id) => Invocation::Core { id, defer: false },
                 _ => panic!("can only call exported function"),
             },
-
-            // The function table never changes right now, so we can statically
-            // look up the desired function.
-            CallTableElement(idx) => {
-                let entry = wasm_bindgen_wasm_conventions::get_function_table_entry(module, *idx)?;
-                let id = entry
-                    .func
-                    .ok_or_else(|| anyhow!("function table wasn't filled in a {}", idx))?;
-                Invocation::Core { id, defer: false }
-            }
 
             CallAdapter(id) => Invocation::Adapter(*id),
 
@@ -1689,7 +1641,7 @@ impl Invocation {
         match self {
             Invocation::Core { id, .. } => {
                 let name = cx.export_name_of(*id);
-                Ok(format!("wasm.{}({})", name, args.join(", ")))
+                Ok(format!("wasm.{name}({})", args.join(", ")))
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];

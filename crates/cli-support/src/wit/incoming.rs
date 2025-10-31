@@ -31,13 +31,11 @@ impl InstructionBuilder<'_, '_> {
         assert_eq!(
             input_before + 1,
             self.input.len(),
-            "didn't push an input {:?}",
-            arg
+            "didn't push an input {arg:?}"
         );
         assert!(
             output_before < self.output.len(),
-            "didn't push more outputs {:?}",
-            arg
+            "didn't push more outputs {arg:?}"
         );
         Ok(())
     }
@@ -146,7 +144,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!("unsupported argument type for calling Rust function from JS {:?}", arg)
+                    format_err!("unsupported argument type for calling Rust function from JS {arg:?}")
                 })?;
                 self.instruction(
                     &[AdapterType::Vector(kind.clone())],
@@ -166,8 +164,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Result(_) |
             // Always behind a `Ref`
             Descriptor::Slice(_) => bail!(
-                "unsupported argument type for calling Rust function from JS: {:?}",
-                arg
+                "unsupported argument type for calling Rust function from JS: {arg:?}"
             ),
 
             // nothing to do
@@ -227,8 +224,7 @@ impl InstructionBuilder<'_, '_> {
                 // received in Rust.
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
-                        "unsupported argument type for calling Rust function from JS {:?}",
-                        arg
+                        "unsupported argument type for calling Rust function from JS {arg:?}"
                     )
                 })?;
                 if mutable {
@@ -259,8 +255,7 @@ impl InstructionBuilder<'_, '_> {
                 }
             }
             _ => bail!(
-                "unsupported reference argument type for calling Rust function from JS: {:?}",
-                arg
+                "unsupported reference argument type for calling Rust function from JS: {arg:?}"
             ),
         }
         Ok(())
@@ -373,8 +368,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
-                        "unsupported optional slice type for calling Rust function from JS {:?}",
-                        arg
+                        "unsupported optional slice type for calling Rust function from JS {arg:?}"
                     )
                 })?;
                 let malloc = self.cx.malloc()?;
@@ -393,8 +387,7 @@ impl InstructionBuilder<'_, '_> {
             ),
 
             _ => bail!(
-                "unsupported optional argument type for calling Rust function from JS: {:?}",
-                arg
+                "unsupported optional argument type for calling Rust function from JS: {arg:?}"
             ),
         }
         Ok(())

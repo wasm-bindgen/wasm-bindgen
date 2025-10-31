@@ -1,8 +1,10 @@
-use crate::descriptor::Descriptor;
+use crate::descriptor::{Descriptor, Function};
+use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, format_err, Error};
-use walrus::ValType;
+use walrus::{ExportId, ValType};
+use wasm_bindgen_shared::identifier::to_valid_ident;
 
 impl InstructionBuilder<'_, '_> {
     /// Processes one more `Descriptor` as an argument to a JS function that
@@ -141,8 +143,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
-                        "unsupported argument type for calling JS function from Rust {:?}",
-                        arg
+                        "unsupported argument type for calling JS function from Rust {arg:?}"
                     )
                 })?;
                 let mem = self.cx.memory()?;
@@ -161,10 +162,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Option(d) => self.outgoing_option(d)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
-            Descriptor::Function(_) | Descriptor::Closure(_) | Descriptor::Slice(_) => bail!(
-                "unsupported argument type for calling JS function from Rust: {:?}",
-                arg
-            ),
+            Descriptor::Function(_) | Descriptor::Slice(_) => {
+                bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
+            }
 
             // nothing to do
             Descriptor::Unit => {}
@@ -173,6 +173,10 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::ClampedU8 => unreachable!(),
 
             Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
+
+            Descriptor::Closure(d) => {
+                self.outgoing_function(d.mutable, &d.function, Some(d.dtor_idx))?
+            }
         }
         Ok(())
     }
@@ -205,8 +209,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Slice(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
-                        "unsupported argument type for calling JS function from Rust {:?}",
-                        arg
+                        "unsupported argument type for calling JS function from Rust {arg:?}"
                     )
                 })?;
                 let mem = self.cx.memory()?;
@@ -221,31 +224,60 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Function(descriptor) => {
-                // synthesize the a/b arguments that aren't present in the
-                // signature from wasm-bindgen but are present in the Wasm file.
-                let mut descriptor = (**descriptor).clone();
-                let nargs = descriptor.arguments.len();
-                descriptor.arguments.insert(0, Descriptor::I32);
-                descriptor.arguments.insert(0, Descriptor::I32);
-                let adapter = self
-                    .cx
-                    .table_element_adapter(descriptor.shim_idx, descriptor)?;
-                self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
-                    Instruction::StackClosure {
-                        adapter,
-                        nargs,
-                        mutable,
-                    },
-                    &[AdapterType::Function],
-                );
+                self.outgoing_function(mutable, descriptor, None)?;
             }
 
             _ => bail!(
-                "unsupported reference argument type for calling JS function from Rust: {:?}",
-                arg
+                "unsupported reference argument type for calling JS function from Rust: {arg:?}"
             ),
         }
+        Ok(())
+    }
+
+    // The function table never changes right now, so we can statically
+    // look up the desired function.
+    fn export_table_element(&mut self, idx: u32) -> ExportId {
+        let module = &mut *self.cx.module;
+        let func_id = get_function_table_entry(module, idx).unwrap();
+        if let Some(export) = module
+            .exports
+            .iter()
+            .find(|e| matches!(e.item, walrus::ExportItem::Function(id) if id == func_id))
+        {
+            return export.id();
+        }
+        let name = match &module.funcs.get(func_id).name {
+            Some(name) => to_valid_ident(name),
+            None => format!("__wasm_bindgen_func_elem_{}", func_id.index()),
+        };
+        module.exports.add(&name, func_id)
+    }
+
+    fn outgoing_function(
+        &mut self,
+        mutable: bool,
+        descriptor: &Function,
+        dtor_if_persistent: Option<u32>,
+    ) -> Result<(), Error> {
+        let mut descriptor = descriptor.clone();
+        // synthesize the a/b arguments that aren't present in the
+        // signature from wasm-bindgen but are present in the Wasm file.
+        let nargs = descriptor.arguments.len();
+        descriptor.arguments.insert(0, Descriptor::I32);
+        descriptor.arguments.insert(0, Descriptor::I32);
+        let shim = self.export_table_element(descriptor.shim_idx);
+        let dtor_if_persistent = dtor_if_persistent.map(|i| self.export_table_element(i));
+        let adapter = self.cx.export_adapter(shim, descriptor)?;
+        self.instruction(
+            &[AdapterType::I32, AdapterType::I32],
+            Instruction::Closure {
+                adapter,
+                nargs,
+                mutable,
+                dtor_if_persistent,
+            },
+            &[AdapterType::Function],
+        );
         Ok(())
     }
 
@@ -340,8 +372,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::String | Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
-                        "unsupported optional slice type for calling JS function from Rust {:?}",
-                        arg
+                        "unsupported optional slice type for calling JS function from Rust {arg:?}"
                     )
                 })?;
                 let mem = self.cx.memory()?;
@@ -364,8 +395,7 @@ impl InstructionBuilder<'_, '_> {
             ),
 
             _ => bail!(
-                "unsupported optional argument type for calling JS function from Rust: {:?}",
-                arg
+                "unsupported optional argument type for calling JS function from Rust: {arg:?}"
             ),
         }
         Ok(())
@@ -499,10 +529,9 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Function(_)
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
-            | Descriptor::Result(_) => bail!(
-                "unsupported Result type for returning from exported Rust function: {:?}",
-                arg
-            ),
+            | Descriptor::Result(_) => {
+                bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
+            }
         }
         Ok(())
     }
@@ -529,8 +558,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::String | Descriptor::Slice(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
-                        "unsupported optional slice type for calling JS function from Rust {:?}",
-                        arg
+                        "unsupported optional slice type for calling JS function from Rust {arg:?}"
                     )
                 })?;
                 let mem = self.cx.memory()?;
@@ -544,8 +572,7 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             _ => bail!(
-                "unsupported optional ref argument type for calling JS function from Rust: {:?}",
-                arg
+                "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
         }
         Ok(())

@@ -1,8 +1,7 @@
 use crate::descriptor::VectorKind;
-use crate::wit::{AuxImport, WasmBindgenAux};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
-use walrus::{FunctionId, ImportId, RefType, TypedCustomSectionId};
+use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
 
 #[derive(Default, Debug)]
 pub struct NonstandardWitSection {
@@ -17,7 +16,7 @@ pub struct NonstandardWitSection {
     pub implements: Vec<(ImportId, FunctionId, AdapterId)>,
 
     /// A list of adapter functions and the names they're exported under.
-    pub exports: Vec<(String, AdapterId)>,
+    pub exports: Vec<(ExportId, AdapterId)>,
 }
 
 pub type NonstandardWitSectionId = TypedCustomSectionId<NonstandardWitSection>;
@@ -99,8 +98,6 @@ pub enum AdapterType {
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
-    /// Calls a function by its id.
-    CallCore(walrus::FunctionId),
     /// Call the deallocation function.
     DeferFree {
         free: walrus::FunctionId,
@@ -111,8 +108,6 @@ pub enum Instruction {
     CallAdapter(AdapterId),
     /// Call an exported function in the core module
     CallExport(walrus::ExportId),
-    /// Call an element in the function table of the core module
-    CallTableElement(u32),
 
     /// Gets an argument by its index.
     ArgGet(u32),
@@ -332,10 +327,11 @@ pub enum Instruction {
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure
-    StackClosure {
+    Closure {
         adapter: AdapterId,
         nargs: usize,
         mutable: bool,
+        dtor_if_persistent: Option<walrus::ExportId>,
     },
     /// pops two i32 data pointers, pushes a vector view
     View {
@@ -424,7 +420,7 @@ impl NonstandardWitSection {
     ///
     /// Returns `true` if any adapters were deleted, or `false` if the adapters
     /// did not change.
-    pub fn gc(&mut self, aux: &WasmBindgenAux) -> bool {
+    pub fn gc(&mut self) -> bool {
         // Populate the live set with the exports, implements directives, and
         // anything transitively referenced by those adapters.
         let mut live = HashSet::new();
@@ -433,11 +429,6 @@ impl NonstandardWitSection {
         }
         for (_, _, id) in self.implements.iter() {
             self.add_live(*id, &mut live);
-        }
-        for import in aux.import_map.values() {
-            if let AuxImport::Closure { adapter, .. } = import {
-                self.add_live(*adapter, &mut live);
-            }
         }
 
         // And now that we have the live set we can filter out our list of
@@ -457,7 +448,7 @@ impl NonstandardWitSection {
         };
         for instr in instructions {
             match instr.instr {
-                Instruction::StackClosure { adapter, .. } | Instruction::CallAdapter(adapter) => {
+                Instruction::Closure { adapter, .. } | Instruction::CallAdapter(adapter) => {
                     self.add_live(adapter, live);
                 }
                 _ => {}
@@ -471,7 +462,7 @@ impl walrus::CustomSection for NonstandardWitSection {
         "nonstandard wit section"
     }
 
-    fn data(&self, _: &walrus::IdsToIndices) -> Cow<[u8]> {
+    fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
 
@@ -485,7 +476,7 @@ impl walrus::CustomSection for NonstandardWitSection {
             };
             for instr in instrs {
                 match instr.instr {
-                    DeferFree { free: f, .. } | CallCore(f) => {
+                    DeferFree { free: f, .. } => {
                         roots.push_func(f);
                     }
                     StoreRetptr { mem, .. }

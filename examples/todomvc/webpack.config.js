@@ -7,7 +7,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 module.exports = {
     entry: './index.js',
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, '..', 'dist', 'todomvc'),
         filename: 'index.js',
     },
     plugins: [
@@ -16,7 +16,7 @@ module.exports = {
         }),
         new MiniCssExtractPlugin(),
         new WasmPackPlugin({
-            crateDirectory: path.resolve(__dirname, ".")
+            crateDirectory: __dirname
         }),
     ],
     mode: 'development',

@@ -1,52 +1,7 @@
 use std::char;
 
 use wasm_bindgen_shared::identifier::is_valid_ident;
-
-macro_rules! tys {
-    ($($a:ident)*) => (tys! { @ ($($a)*) 0 });
-    (@ () $v:expr) => {};
-    (@ ($a:ident $($b:ident)*) $v:expr) => {
-        const $a: u32 = $v;
-        tys!(@ ($($b)*) $v+1);
-    }
-}
-
-// NB: this list must be kept in sync with `src/describe.rs`
-tys! {
-    I8
-    U8
-    I16
-    U16
-    I32
-    U32
-    I64
-    U64
-    I128
-    U128
-    F32
-    F64
-    BOOLEAN
-    FUNCTION
-    CLOSURE
-    CACHED_STRING
-    STRING
-    REF
-    REFMUT
-    LONGREF
-    SLICE
-    VECTOR
-    EXTERNREF
-    NAMED_EXTERNREF
-    ENUM
-    STRING_ENUM
-    RUST_STRUCT
-    CHAR
-    OPTIONAL
-    RESULT
-    UNIT
-    CLAMPED
-    NONNULL
-}
+use wasm_bindgen_shared::tys::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Descriptor {
@@ -101,7 +56,6 @@ pub struct Function {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Closure {
-    pub shim_idx: u32,
     pub dtor_idx: u32,
     pub function: Function,
     pub mutable: bool,
@@ -128,7 +82,7 @@ pub enum VectorKind {
 impl Descriptor {
     pub fn decode(mut data: &[u32]) -> Descriptor {
         let descriptor = Descriptor::_decode(&mut data, false);
-        assert!(data.is_empty(), "remaining data {:?}", data);
+        assert!(data.is_empty(), "remaining data {data:?}");
         descriptor
     }
 
@@ -196,7 +150,7 @@ impl Descriptor {
             UNIT => Descriptor::Unit,
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
-            other => panic!("unknown descriptor: {}", other),
+            other => panic!("unknown descriptor: {other}"),
         }
     }
 
@@ -204,13 +158,6 @@ impl Descriptor {
         match self {
             Descriptor::Function(f) => *f,
             _ => panic!("not a function"),
-        }
-    }
-
-    pub fn unwrap_closure(self) -> Closure {
-        match self {
-            Descriptor::Closure(s) => *s,
-            _ => panic!("not a closure"),
         }
     }
 
@@ -263,12 +210,14 @@ fn get_string(data: &mut &[u32]) -> String {
 
 impl Closure {
     fn decode(data: &mut &[u32]) -> Closure {
-        let shim_idx = get(data);
         let dtor_idx = get(data);
-        let mutable = get(data) == REFMUT;
+        let mutable = match get(data) {
+            0 => false,
+            1 => true,
+            other => panic!("expected bool value, got {other}"),
+        };
         assert_eq!(get(data), FUNCTION);
         Closure {
-            shim_idx,
             dtor_idx,
             mutable,
             function: Function::decode(data),
@@ -309,9 +258,9 @@ impl VectorKind {
             VectorKind::Externref => "any[]".to_string(),
             VectorKind::NamedExternref(ref name) => {
                 if is_valid_ident(name.as_str()) {
-                    format!("{}[]", name)
+                    format!("{name}[]")
                 } else {
-                    format!("({})[]", name)
+                    format!("({name})[]")
                 }
             }
         }

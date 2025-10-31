@@ -136,6 +136,10 @@ pub fn wasm_bindgen_test(
                 quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none", target_os = "emscripten"))), #ignore)] }
             )
         }
+    } else {
+        tokens.extend(quote! {
+            #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), allow(dead_code))]
+        });
     }
 
     tokens.extend(leading_tokens);

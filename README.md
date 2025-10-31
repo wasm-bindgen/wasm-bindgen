@@ -7,18 +7,18 @@
   </p>
 
   <p>
-    <a href="https://github.com/rustwasm/wasm-bindgen/actions/workflows/main.yml?query=branch%3Amain"><img src="https://github.com/rustwasm/wasm-bindgen/actions/workflows/main.yml/badge.svg?branch=main" alt="Build Status" /></a>
+    <a href="https://github.com/wasm-bindgen/wasm-bindgen/actions/workflows/main.yml?query=branch%3Amain"><img src="https://github.com/wasm-bindgen/wasm-bindgen/actions/workflows/main.yml/badge.svg?branch=main" alt="Build Status" /></a>
     <a href="https://crates.io/crates/wasm-bindgen"><img src="https://img.shields.io/crates/v/wasm-bindgen.svg?style=flat-square" alt="Crates.io version" /></a>
     <a href="https://crates.io/crates/wasm-bindgen"><img src="https://img.shields.io/crates/d/wasm-bindgen.svg?style=flat-square" alt="Download" /></a>
     <a href="https://docs.rs/wasm-bindgen"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
   </p>
 
   <h3>
-    <a href="https://rustwasm.github.io/wasm-bindgen/">Guide (main branch)</a>
+    <a href="https://wasm-bindgen.github.io/wasm-bindgen/">Guide (main branch)</a>
     <span> | </span>
     <a href="https://docs.rs/wasm-bindgen">API Docs</a>
     <span> | </span>
-    <a href="https://github.com/rustwasm/wasm-bindgen/blob/master/CONTRIBUTING.md">Contributing</a>
+    <a href="https://github.com/wasm-bindgen/wasm-bindgen/blob/master/CONTRIBUTING.md">Contributing</a>
     <span> | </span>
     <a href="https://discord.gg/xMZ7CCY">Chat</a>
   </h3>
@@ -35,7 +35,7 @@ cargo install wasm-bindgen-cli
 ```
 
 Or, you can download it from the
-[release page](https://github.com/rustwasm/wasm-bindgen/releases).
+[release page](https://github.com/wasm-bindgen/wasm-bindgen/releases).
 
 If you have [`cargo-binstall`](https://crates.io/crates/cargo-binstall) installed,
 then you can install the pre-built artifacts by running:
@@ -96,10 +96,7 @@ greet("World!");
 
 ## Guide
 
-[**📚 Read the `wasm-bindgen` guide here! 📚**](https://rustwasm.github.io/docs/wasm-bindgen/)
-
-You can find general documentation about using Rust and WebAssembly together
-[here](https://rustwasm.github.io/docs).
+[**📚 Read the `wasm-bindgen` guide here! 📚**](https://wasm-bindgen.github.io/wasm-bindgen/)
 
 ## API Docs
 
@@ -112,7 +109,7 @@ You can find general documentation about using Rust and WebAssembly together
 
 Libraries that are released on [crates.io](https://crates.io) have a MSRV of v1.57. Changes to the MSRV will be accompanied by a minor version bump.
 
-CLI tools and their corresponding support libraries have a MSRV of v1.76. Changes to the MSRV will be accompanied by a patch version bump.
+CLI tools and their corresponding support libraries have a MSRV of v1.82. Changes to the MSRV will be accompanied by a patch version bump.
 
 ## License
 
@@ -127,11 +124,10 @@ at your option.
 
 ## Contribution
 
-**[See the "Contributing" section of the guide for information on
-hacking on `wasm-bindgen`!][contributing]**
+**[See the "Contributing" section of the guide for information on hacking on `wasm-bindgen`!][contributing]**
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this project by you, as defined in the Apache-2.0 license,
 shall be dual licensed as above, without any additional terms or conditions.
 
-[contributing]: https://rustwasm.github.io/docs/wasm-bindgen/contributing/index.html
+[contributing]: https://wasm-bindgen.github.io/wasm-bindgen/contributing/index.html

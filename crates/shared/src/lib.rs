@@ -1,13 +1,19 @@
 #![doc(html_root_url = "https://docs.rs/wasm-bindgen-shared/0.2")]
+#![no_std]
+
+extern crate alloc;
+
+use alloc::string::{String, ToString};
 
 pub mod identifier;
 #[cfg(test)]
 mod schema_hash_approval;
+pub mod tys;
 
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.100";
+pub const SCHEMA_VERSION: &str = "0.2.105";
 
 #[macro_export]
 macro_rules! shared_api {

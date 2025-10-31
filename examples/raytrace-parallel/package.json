@@ -1,0 +1,6 @@
+{
+	"scripts": {
+		"build": "wasm-pack build --target no-modules --out-dir ../dist/raytrace-parallel . -Zbuild-std=std,panic_abort --config \"target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics -Clink-args=--shared-memory -Clink-args=--max-memory=1073741824 -Clink-args=--import-memory -Clink-args=--export=__wasm_init_tls -Clink-args=--export=__tls_size -Clink-args=--export=__tls_align -Clink-args=--export=__tls_base'\"",
+		"postbuild": "node ../cp-dist.mjs index.html index.js worker.js"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"type": "module",
+	"scripts": {
+		"build:nodejs": "wasm-pack build --target nodejs --out-dir ../dist/nodejs_and_deno/nodejs",
+		"build:deno": "wasm-pack build --target deno --out-dir ../dist/nodejs_and_deno/deno",
+		"prebuild:experimental-nodejs-module": "cargo-cp-artifact -a cdylib node_and_deno ../dist/nodejs_and_deno/experimental-nodejs-module/node_and_deno.wasm -- cargo build --message-format=json --target wasm32-unknown-unknown",
+		"build:experimental-nodejs-module": "cd ../dist/nodejs_and_deno/experimental-nodejs-module && wasm-bindgen node_and_deno.wasm --target experimental-nodejs-module --out-dir .",
+		"build:esm-integration": "wasm-pack build --out-dir ../dist/nodejs_and_deno/esm-integration",
+		"build": "pnpm /^build:/",
+		"test:nodejs": "node test.js nodejs",
+		"test:nodejs:esm-integration": "node test.js esm-integration",
+		"test:deno": "deno run --allow-read test.js deno",
+		"test:deno:esm-integration": "deno run --allow-read test.js esm-integration",
+		"test:experimental-nodejs-module": "node test.js experimental-nodejs-module",
+		"test": "pnpm /^test:/"
+	},
+	"devDependencies": {
+		"cargo-cp-artifact": "^0.1.9"
+	}
+}
