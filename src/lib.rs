@@ -25,6 +25,34 @@
 //! All warnings the `#[wasm_bindgen]` macro emits are turned into hard errors.
 //! This mainly affects unused attribute options.
 //!
+//! ## Configuration Options
+//!
+//! ### `unsafe_single_threaded_traits`
+//!
+//! **UNSAFE:** This configuration enables `Send` and `Sync` implementations for JS types
+//! (`JsValue`, `Closure`, `JsFuture`, etc.), which are normally `!Send` and `!Sync`.
+//!
+//! This is only safe in single-threaded WebAssembly environments where JavaScript values
+//! cannot actually be accessed from multiple threads. This configuration allows futures
+//! that capture JS values to be `Send`, which is required by many async runtimes even in
+//! single-threaded contexts.
+//!
+//! **Important:** This configuration cannot be used with the `atomics` target feature.
+//! Using both will result in a compile error.
+//!
+//! To enable this configuration, set the `RUSTFLAGS` environment variable when building:
+//!
+//! ```bash
+//! RUSTFLAGS="--cfg unsafe_single_threaded_traits" cargo build --target wasm32-unknown-unknown
+//! ```
+//!
+//! Or in `.cargo/config.toml`:
+//!
+//! ```toml
+//! [target.wasm32-unknown-unknown]
+//! rustflags = ["--cfg", "unsafe_single_threaded_traits"]
+//! ```
+//!
 //! ### Deprecated features
 //!
 //! #### `serde-serialize`
@@ -47,6 +75,15 @@
     allow(internal_features)
 )]
 #![doc(html_root_url = "https://docs.rs/wasm-bindgen/0.2")]
+
+// Compile-time check: unsafe_single_threaded_traits is incompatible with atomics
+#[cfg(all(unsafe_single_threaded_traits, target_feature = "atomics"))]
+compile_error!(
+    "The `unsafe_single_threaded_traits` cfg cannot be used with the `atomics` target feature. \
+     This configuration assumes a single-threaded WebAssembly environment where JS values are never \
+     accessed from multiple threads. \
+     \n\nTo enable this configuration, set RUSTFLAGS='--cfg unsafe_single_threaded_traits' when building."
+);
 
 extern crate alloc;
 #[cfg(feature = "std")]
@@ -154,6 +191,18 @@ pub struct JsValue {
     idx: u32,
     _marker: PhantomData<*mut u8>, // not at all threadsafe
 }
+
+// SAFETY: In single-threaded WebAssembly environments, JS values cannot actually
+// be accessed from multiple threads. This unsafe implementation allows JsValue to
+// be Send/Sync when the `unsafe_single_threaded_traits` cfg is enabled, which
+// is validated at compile time to ensure atomics/threading are not used.
+// This enables futures that capture JS values to be Send, which is required by
+// many async runtimes even in single-threaded contexts.
+#[cfg(unsafe_single_threaded_traits)]
+unsafe impl Send for JsValue {}
+
+#[cfg(unsafe_single_threaded_traits)]
+unsafe impl Sync for JsValue {}
 
 impl JsValue {
     /// The `null` JS value constant.
