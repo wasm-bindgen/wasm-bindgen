@@ -1160,7 +1160,7 @@ fn function_from_decl(
             syn::FnArg::Typed(mut c) => {
                 // typical arguments like foo: u32
                 replace_colliding_arg(&mut c);
-                c.ty = Box::new(replace_self(*c.ty));
+                *c.ty = replace_self(*c.ty);
                 arguments.push(c);
             }
             syn::FnArg::Receiver(r) => {
@@ -2350,14 +2350,13 @@ fn main(program: &ast::Program, mut f: ItemFn, tokens: &mut TokenStream) -> Resu
 
     let r#return = f.sig.output;
     f.sig.output = ReturnType::Default;
-    let body = f.block;
+    let body = f.block.as_ref();
 
     let wasm_bindgen = &program.wasm_bindgen;
     let wasm_bindgen_futures = &program.wasm_bindgen_futures;
 
     if f.sig.asyncness.take().is_some() {
-        f.block = Box::new(
-            syn::parse2(quote::quote! {
+        *f.block = syn::parse2(quote::quote! {
                 {
                     async fn __wasm_bindgen_generated_main() #r#return #body
                     #wasm_bindgen_futures::spawn_local(
@@ -2369,20 +2368,17 @@ fn main(program: &ast::Program, mut f: ItemFn, tokens: &mut TokenStream) -> Resu
                     )
                 }
             })
-            .unwrap(),
-        );
+            .unwrap();
     } else {
-        f.block = Box::new(
-            syn::parse2(quote::quote! {
-                {
-                    fn __wasm_bindgen_generated_main() #r#return #body
-                    use #wasm_bindgen::__rt::Main;
-                    let __ret = __wasm_bindgen_generated_main();
-                    (&mut &mut &mut #wasm_bindgen::__rt::MainWrapper(Some(__ret))).__wasm_bindgen_main()
-                }
-            })
-            .unwrap(),
-        );
+        *f.block = syn::parse2(quote::quote! {
+            {
+                fn __wasm_bindgen_generated_main() #r#return #body
+                use #wasm_bindgen::__rt::Main;
+                let __ret = __wasm_bindgen_generated_main();
+                (&mut &mut &mut #wasm_bindgen::__rt::MainWrapper(Some(__ret))).__wasm_bindgen_main()
+            }
+        })
+        .unwrap();
     }
 
     f.to_tokens(tokens);
