@@ -108,6 +108,9 @@ pub fn execute(
     js_to_execute.push_str(
         "
         main(tests)
+            .then(() => {
+                exit(0);
+            })
             .catch(e => {
                 console.error(e);
                 exit(1);
