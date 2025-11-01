@@ -7,6 +7,9 @@
 
 ### Fixed
 
+* Fixed node test harness getting stuck after tests completed.
+  [#4776](https://github.com/wasm-bindgen/wasm-bindgen/pull/4776)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
