@@ -62,6 +62,9 @@ pub struct Context<'a> {
 
     exported_classes: Option<BTreeMap<String, ExportedClass>>,
 
+    /// Namespace exports
+    namespace_exports: BTreeMap<String, NamespaceEntry>,
+
     /// A map of the name of npm dependencies we've loaded so far to the path
     /// they're defined in as well as their version specification.
     pub npm_dependencies: HashMap<String, (PathBuf, String)>,
@@ -81,6 +84,18 @@ pub struct Context<'a> {
     threads_enabled: bool,
 }
 
+/// Namespaces can point to other namespaces or definitions
+enum NamespaceEntry {
+    Namespace(BTreeMap<String, NamespaceEntry>),
+    Definition(String),
+}
+
+impl Default for NamespaceEntry {
+    fn default() -> Self {
+        Self::Namespace(Default::default())
+    }
+}
+
 #[derive(Default)]
 struct ExportedClass {
     comments: String,
@@ -98,6 +113,8 @@ struct ExportedClass {
     readable_properties: Vec<String>,
     /// Map from field to information about those fields
     typescript_fields: HashMap<FieldLocation, FieldInfo>,
+    /// The namespace to export the class through, if any
+    js_namespace: Option<Vec<String>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -156,6 +173,7 @@ impl<'a> Context<'a> {
             typescript_refs: Default::default(),
             used_string_enums: Default::default(),
             exported_classes: Some(Default::default()),
+            namespace_exports: Default::default(),
             config,
             threads_enabled: threads_xform::is_enabled(module),
             module,
@@ -176,9 +194,54 @@ impl<'a> Context<'a> {
         self.exposed_globals.as_ref().unwrap().contains(name)
     }
 
+    fn export_id(&mut self, export_name: &str, id: &str) {
+        match self.config.mode {
+            OutputMode::Node { module: false } => {
+                self.global(&format!("exports.{export_name} = {id};\n"))
+            }
+            OutputMode::NoModules { .. } => {
+                self.global(&format!("__exports.{export_name} = {id};\n"))
+            }
+            OutputMode::Bundler { .. }
+            | OutputMode::Node { module: true }
+            | OutputMode::Web
+            | OutputMode::Module
+            | OutputMode::Deno => {
+                if id == export_name {
+                    self.global(&format!("export {{ {id} }};\n"))
+                } else {
+                    self.global(&format!("export {{ {id} as {export_name} }};\n"))
+                }
+            }
+        };
+    }
+
+    fn export_expr(&mut self, export_name: &str, expr: &str) {
+        match self.config.mode {
+            OutputMode::Node { module: false } => {
+                self.global(&format!("exports.{export_name} = {expr};\n"))
+            }
+            OutputMode::NoModules { .. } => {
+                self.global(&format!("__exports.{export_name} = {expr};\n"))
+            }
+            OutputMode::Bundler { .. }
+            | OutputMode::Node { module: true }
+            | OutputMode::Web
+            | OutputMode::Module
+            | OutputMode::Deno => {
+                if export_name == "default" {
+                    self.global(&format!("export default {expr};\n"))
+                } else {
+                    self.global(&format!("export const {export_name} = {expr};\n"))
+                }
+            }
+        };
+    }
+
     fn export(
         &mut self,
         export_name: &str,
+        namespace: Option<&Vec<String>>,
         export: ExportJs,
         comments: Option<&str>,
     ) -> Result<(), Error> {
@@ -192,49 +255,65 @@ impl<'a> Context<'a> {
             self.globals.push_str(c);
         }
 
-        let global = match self.config.mode {
-            OutputMode::Node { module: false } => match export {
-                ExportJs::Class(class) => {
-                    format!("{class}\nexports.{export_name} = {export_name};\n")
-                }
-                ExportJs::Function(expr) | ExportJs::Expression(expr) => {
-                    format!("exports.{export_name} = {expr};\n")
-                }
-            },
-            OutputMode::NoModules { .. } => match export {
-                ExportJs::Class(class) => {
-                    format!("{class}\n__exports.{export_name} = {export_name};\n")
-                }
-                ExportJs::Function(expr) | ExportJs::Expression(expr) => {
-                    format!("__exports.{export_name} = {expr};\n")
-                }
-            },
-            OutputMode::Bundler { .. }
-            | OutputMode::Node { module: true }
-            | OutputMode::Web
-            | OutputMode::Module
-            | OutputMode::Deno => match export {
-                ExportJs::Class(class) => {
-                    assert_eq!(export_name, definition_name);
-                    format!("export {class}\n")
-                }
+        // exported through namespace if namespaced (grouped and exported later)
+        if let Some(ns) = namespace {
+            define_namespace_export(
+                &mut self.namespace_exports,
+                ns,
+                export_name,
+                definition_name.to_string(),
+            )?;
+            // just define the local directly for namespace inclusion
+            match export {
+                ExportJs::Class(class) => self.global(&format!("{class}\n")),
                 ExportJs::Function(function) => {
                     let body = function.strip_prefix("function").unwrap();
-                    if export_name == definition_name {
-                        format!("export function {export_name}{body}\n")
-                    } else {
-                        format!(
-                            "function {definition_name}{body}\nexport {{ {definition_name} as {export_name} }};\n",
-                        )
-                    }
+                    self.global(&format!("function {definition_name}{body}\n"));
                 }
                 ExportJs::Expression(expr) => {
+                    self.global(&format!("const {export_name} = {expr};\n"))
+                }
+            }
+            return Ok(());
+        }
+
+        // write out direct export declarations
+        match export {
+            ExportJs::Class(class) => match self.config.mode {
+                OutputMode::NoModules { .. } | OutputMode::Node { module: false } => {
+                    self.global(&format!("{class}\n"));
+                    self.export_expr(export_name, export_name);
+                }
+                OutputMode::Bundler { .. }
+                | OutputMode::Node { module: true }
+                | OutputMode::Web
+                | OutputMode::Module
+                | OutputMode::Deno => {
                     assert_eq!(export_name, definition_name);
-                    format!("export const {export_name} = {expr};\n")
+                    self.global(&format!("export {class}\n"));
                 }
             },
-        };
-        self.global(&global);
+            ExportJs::Function(function) => match self.config.mode {
+                OutputMode::Node { module: false } | OutputMode::NoModules { .. } => {
+                    self.export_expr(export_name, function)
+                }
+                OutputMode::Bundler { .. }
+                | OutputMode::Node { module: true }
+                | OutputMode::Web
+                | OutputMode::Module
+                | OutputMode::Deno => {
+                    let body = function.strip_prefix("function").unwrap();
+                    if export_name == definition_name {
+                        self.global(&format!("export function {export_name}{body}\n"));
+                    } else {
+                        self.global(&format!("declare function {definition_name}{body}\n"));
+                        self.export_id(export_name, &definition_name);
+                    }
+                }
+            },
+            ExportJs::Expression(expr) => self.export_expr(export_name, expr),
+        }
+
         Ok(())
     }
 
@@ -246,6 +325,9 @@ impl<'a> Context<'a> {
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
         self.write_classes()?;
+
+        // Write out all namespaces exports
+        self.write_namespaces()?;
 
         // Initialization is just flat out tricky and not something we
         // understand super well. To try to handle various issues that have come
@@ -1011,7 +1093,11 @@ wasm = wasmInstance.exports;
 
     fn write_class(&mut self, name: &str, class: &ExportedClass) -> Result<(), Error> {
         let mut dst = format!("class {name} {{\n");
-        let mut ts_dst = format!("export {dst}");
+        let mut ts_dst = if class.js_namespace.is_none() {
+            format!("export {dst}")
+        } else {
+            format!("declare {dst}")
+        };
 
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
@@ -1177,7 +1263,12 @@ wasm = wasmInstance.exports;
             "
         ));
 
-        self.export(name, ExportJs::Class(&dst), Some(&class.comments))?;
+        self.export(
+            name,
+            class.js_namespace.as_ref(),
+            ExportJs::Class(&dst),
+            Some(&class.comments),
+        )?;
 
         if class.generate_typescript {
             self.typescript.push_str(&class.comments);
@@ -1303,6 +1394,57 @@ wasm = wasmInstance.exports;
                 }
             };
         }
+    }
+
+    fn write_namespaces(&mut self) -> Result<(), Error> {
+        let namespaces = std::mem::take(&mut self.namespace_exports);
+        for (name, ns) in &namespaces {
+            let NamespaceEntry::Namespace(ns) = ns else {
+                panic!("Unexpected top-level definition");
+            };
+            let (ns_dst, ts_dst) = Self::write_namespace(ns, "")?;
+            self.export_expr(name, &ns_dst);
+            let ident = self.generate_identifier(name);
+            if ident == *name {
+                self.typescript
+                    .push_str(&format!("export declare const {name}: {ts_dst};\n"));
+            } else {
+                self.typescript
+                    .push_str(&format!("declare const {ident}: {ts_dst};\n"));
+                self.typescript
+                    .push_str(&format!("export {{ {ident} as {name} }}\n"));
+            }
+        }
+        Ok(())
+    }
+
+    fn write_namespace(
+        namespace: &BTreeMap<String, NamespaceEntry>,
+        indent: &str,
+    ) -> Result<(String, String), Error> {
+        let mut ns_dst = String::from("{\n");
+        let mut ts_dst = String::from("{\n");
+        for (name, entry) in namespace {
+            let indent = format!("  {indent}");
+            let (entry_js, entry_ts) = match entry {
+                NamespaceEntry::Namespace(ns) => Self::write_namespace(ns, &indent)?,
+                NamespaceEntry::Definition(def) => (def.to_string(), format!("typeof {def}")),
+            };
+            if is_valid_ident(name) {
+                if name == &entry_js {
+                    ns_dst.push_str(&format!("{indent}{name},\n"));
+                } else {
+                    ns_dst.push_str(&format!("{indent}{name}: {entry_js},\n"));
+                }
+                ts_dst.push_str(&format!("{indent}{name}: {entry_ts},\n"));
+            } else {
+                ns_dst.push_str(&format!("{indent}'{name}': {entry_js},\n"));
+                ts_dst.push_str(&format!("{indent}'{name}': {entry_ts},\n"));
+            }
+        }
+        ns_dst.push_str(&format!("{indent}}}"));
+        ts_dst.push_str(&format!("{indent}}}"));
+        Ok((ns_dst, ts_dst))
     }
 
     fn expose_drop_ref(&mut self) {
@@ -2563,6 +2705,7 @@ wasm = wasmInstance.exports;
 
         self.export(
             "__wbg_reset_state",
+            None,
             ExportJs::Function(&format!("function{function_body}")),
             None,
         )?;
@@ -2894,6 +3037,9 @@ wasm = wasmInstance.exports;
                 ret_desc = &export.fn_ret_desc;
                 match &export.kind {
                     AuxExportKind::Function(_) => {}
+                    AuxExportKind::FunctionThis(_) => {
+                        builder.classless_this();
+                    }
                     AuxExportKind::Constructor(class) => builder.constructor(class),
                     AuxExportKind::Method { receiver, .. } => match receiver {
                         AuxReceiverKind::None => {}
@@ -2966,10 +3112,14 @@ wasm = wasmInstance.exports;
                 let ts_docs = format_doc_comments(&export.comments, ts_doc_opts);
 
                 match &export.kind {
-                    AuxExportKind::Function(name) => {
+                    AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) => {
                         if let Some(ts_sig) = ts_sig {
                             self.typescript.push_str(&ts_docs);
-                            self.typescript.push_str("export function ");
+                            if export.js_namespace.is_none() {
+                                self.typescript.push_str("export function ");
+                            } else {
+                                self.typescript.push_str("declare function ");
+                            }
                             self.typescript.push_str(name);
                             self.typescript.push_str(ts_sig);
                             self.typescript.push_str(";\n");
@@ -2977,6 +3127,7 @@ wasm = wasmInstance.exports;
 
                         self.export(
                             name,
+                            export.js_namespace.as_ref(),
                             ExportJs::Function(&format!("function{code}")),
                             Some(&js_docs),
                         )?;
@@ -3932,8 +4083,13 @@ wasm = wasmInstance.exports;
         if enum_.generate_typescript {
             self.typescript
                 .push_str(&format_doc_comments(&enum_.comments, None));
-            self.typescript
-                .push_str(&format!("export enum {} {{", enum_.name));
+            if enum_.js_namespace.is_none() {
+                self.typescript
+                    .push_str(&format!("export enum {} {{", enum_.name));
+            } else {
+                self.typescript
+                    .push_str(&format!("declare enum {} {{", enum_.name));
+            }
         }
         for (name, value, comments) in enum_.variants.iter() {
             let variant_docs = if comments.is_empty() {
@@ -3973,6 +4129,7 @@ wasm = wasmInstance.exports;
 
         self.export(
             &enum_.name,
+            enum_.js_namespace.as_ref(),
             ExportJs::Expression(&format!("Object.freeze({{\n{variants}}})")),
             Some(&docs),
         )?;
@@ -4028,6 +4185,7 @@ wasm = wasmInstance.exports;
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
+        class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         Ok(())
     }
 
@@ -4217,6 +4375,7 @@ wasm = wasmInstance.exports;
     }
 
     fn generate_identifier(&mut self, name: &str) -> String {
+        let name = to_valid_ident(name);
         let cnt = self
             .defined_identifiers
             .entry(name.to_string())
@@ -4466,6 +4625,26 @@ fn format_doc_comments(comments: &str, js_doc_comments: Option<String>) -> Strin
     } else {
         format!("/**\n{body}{doc} */\n")
     }
+}
+
+fn define_namespace_export(
+    namespaces: &mut BTreeMap<String, NamespaceEntry>,
+    ns_path: &[String],
+    name: &str,
+    def: String,
+) -> Result<(), Error> {
+    let ns = match namespaces.entry(ns_path[0].to_string()).or_default() {
+        NamespaceEntry::Namespace(ns) => ns,
+        NamespaceEntry::Definition(_) => {
+            bail!("Cannot define {name} as both a namespace and a definition")
+        }
+    };
+    if ns_path.len() > 1 {
+        define_namespace_export(ns, &ns_path[1..], name, def)?;
+        return Ok(());
+    };
+    ns.insert(name.to_string(), NamespaceEntry::Definition(def));
+    Ok(())
 }
 
 fn require_class<'a>(

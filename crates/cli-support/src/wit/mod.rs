@@ -509,6 +509,11 @@ impl<'a> Context<'a> {
             self.add_start_function(id)?;
         }
 
+        let classless_this = matches!(
+            &export.method_kind,
+            decode::MethodKind::Operation(op) if matches!(op.kind, decode::OperationKind::RegularThis)
+        );
+
         let kind = match export.class {
             Some(class) => {
                 let class = class.to_string();
@@ -544,7 +549,13 @@ impl<'a> Context<'a> {
                     }
                 }
             }
-            None => AuxExportKind::Function(export.function.name.to_string()),
+            _ => {
+                if classless_this {
+                    AuxExportKind::FunctionThis(export.function.name.to_string())
+                } else {
+                    AuxExportKind::Function(export.function.name.to_string())
+                }
+            }
         };
 
         let args = Some(
@@ -568,6 +579,7 @@ impl<'a> Context<'a> {
                 args,
                 asyncness: export.function.asyncness,
                 kind,
+                js_namespace: export.js_namespace.clone(),
                 generate_typescript: export.function.generate_typescript,
                 generate_jsdoc: export.function.generate_jsdoc,
                 variadic: export.function.variadic,
@@ -751,6 +763,10 @@ impl<'a> Context<'a> {
                 }
             }
 
+            decode::OperationKind::RegularThis => {
+                bail!("RegularThis operation kind should only appear on exports, not imports")
+            }
+
             decode::OperationKind::Getter(field) => {
                 if structural {
                     if op.is_static {
@@ -930,6 +946,7 @@ impl<'a> Context<'a> {
                 .map(|v| v.to_string())
                 .collect(),
             generate_typescript: string_enum.generate_typescript,
+            js_namespace: string_enum.js_namespace.clone(),
         };
         let mut result = Ok(());
         self.aux
@@ -960,6 +977,7 @@ impl<'a> Context<'a> {
                 })
                 .collect(),
             generate_typescript: enum_.generate_typescript,
+            js_namespace: enum_.js_namespace.clone(),
         };
         let mut result = Ok(());
         self.aux
@@ -1003,6 +1021,7 @@ impl<'a> Context<'a> {
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Getter,
                     },
+                    js_namespace: None,
                     generate_typescript: field.generate_typescript,
                     generate_jsdoc: field.generate_jsdoc,
                     variadic: false,
@@ -1037,6 +1056,7 @@ impl<'a> Context<'a> {
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Setter,
                     },
+                    js_namespace: None,
                     generate_typescript: field.generate_typescript,
                     generate_jsdoc: field.generate_jsdoc,
                     variadic: false,
@@ -1050,6 +1070,7 @@ impl<'a> Context<'a> {
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
+            js_namespace: struct_.js_namespace.clone(),
         };
         self.aux.structs.push(aux);
 

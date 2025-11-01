@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         components: rustfmt
     - run: cargo fmt --all -- --check
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         components: clippy,rustfmt
     - run: cargo clippy --no-deps --all --all-features -- -D warnings
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rustfmt
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
         components: clippy
@@ -117,10 +117,10 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
       with:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
@@ -143,7 +143,7 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
       with:
         node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
@@ -157,7 +157,7 @@ jobs:
   #   - uses: actions/checkout@v5
   #   - run: rustup update --no-self-update stable && rustup default stable
   #   - run: rustup target add wasm32-unknown-unknown
-  #   - uses: actions/setup-node@v5
+  #   - uses: actions/setup-node@v6
   #     with:
   #       node-version: '20'
   #   - run: cargo test --target wasm32-unknown-unknown
@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
       with:
         node-version: 'lts/*'
     - run: npm i -g typescript
@@ -195,10 +195,10 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
       with:
         node-version: '20'
     - run: cargo test
@@ -249,11 +249,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
         components: rustfmt
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
       with:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
@@ -272,7 +272,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         components: rustfmt
     - run: cd crates/web-sys && cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
@@ -286,7 +286,7 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rust-src
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
@@ -299,7 +299,7 @@ jobs:
       working-directory: examples
     - run: pnpm run -r build
       working-directory: examples
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: examples
         path: examples/dist
@@ -310,12 +310,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: examples
         path: examples/dist
-    - uses: dtolnay/rust-toolchain@stable
-    - uses: actions/setup-node@v5
+    - uses: dtolnay/rust-toolchain@1.90
+    - uses: actions/setup-node@v6
       with:
         node-version: 24
     - uses: denoland/setup-deno@v2
@@ -333,12 +333,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
     - run: cargo build --manifest-path benchmarks/Cargo.toml --release --target wasm32-unknown-unknown
     - run: cargo run -p wasm-bindgen-cli -- target/wasm32-unknown-unknown/release/wasm_bindgen_benchmark.wasm --out-dir benchmarks/pkg --target web
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: benchmarks
         path: benchmarks
@@ -348,7 +348,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: x86_64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
@@ -357,7 +357,7 @@ jobs:
         strip -g target/x86_64-unknown-linux-musl/release/wasm-bindgen
         strip -g target/x86_64-unknown-linux-musl/release/wasm-bindgen-test-runner
         strip -g target/x86_64-unknown-linux-musl/release/wasm2es6js
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: dist_linux_x86_64_musl
         path: "target/x86_64-unknown-linux-musl/release/wasm*"
@@ -367,7 +367,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: aarch64-unknown-linux-gnu
     - run: sudo apt update -y && sudo apt install gcc-aarch64-linux-gnu -y
@@ -375,7 +375,7 @@ jobs:
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-gnu --features vendored-openssl --release
       env:
         CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: dist_linux_aarch64_gnu
         path: "target/aarch64-unknown-linux-gnu/release/wasm*"
@@ -385,13 +385,13 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: aarch64-unknown-linux-musl
     - run: sudo apt update -y && sudo apt install musl-tools -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-musl --features vendored-openssl --release
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: dist_linux_aarch64_musl
         path: "target/aarch64-unknown-linux-musl/release/wasm*"
@@ -401,13 +401,13 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: x86_64-apple-darwin
     - run: cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-apple-darwin --release
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.7
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: dist_macos_x86_64
         path: "target/x86_64-apple-darwin/release/wasm*"
@@ -417,12 +417,12 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.7
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: dist_macos_aarch64
         path: "target/release/wasm*"
@@ -432,11 +432,11 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
     - run: cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
         RUSTFLAGS: -Ctarget-feature=+crt-static
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: dist_windows
         path: "target/release/wasm*"
@@ -450,7 +450,7 @@ jobs:
         curl -L https://github.com/rust-lang/mdBook/releases/download/v0.4.28/mdbook-v0.4.28-x86_64-unknown-linux-gnu.tar.gz | tar xzf -
         echo $PWD >> $GITHUB_PATH
     - run: (cd guide && mdbook build)
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: doc_book
         path: guide/book/html
@@ -470,7 +470,7 @@ jobs:
       env:
         RUSTDOCFLAGS: --cfg=docsrs
     - run: tar czvf docs.tar.gz target/doc
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: doc_api
         path: docs.tar.gz
@@ -560,7 +560,7 @@ jobs:
     - uses: actions/checkout@v5
       with:
         fetch-depth: 0
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         path: artifacts
     - run: find artifacts
@@ -590,7 +590,7 @@ jobs:
         mk x86_64-apple-darwin dist_macos_x86_64
         mk aarch64-apple-darwin dist_macos_aarch64
         mk x86_64-pc-windows-msvc dist_windows
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: gh-release
         path: gh-release
@@ -601,7 +601,7 @@ jobs:
         mv artifacts/examples gh-pages/exbuild
         mv artifacts/benchmarks gh-pages/benchmarks
         tar czf gh-pages.tar.gz gh-pages
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: gh-pages
         path: gh-pages.tar.gz
@@ -615,7 +615,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: "gh-release/*.tar.gz*"
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@1.90
       if: startsWith(github.ref, 'refs/tags/')
     - run: rustc publish.rs
       if: startsWith(github.ref, 'refs/tags/')

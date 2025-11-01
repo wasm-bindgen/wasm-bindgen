@@ -39,6 +39,7 @@ pub mod imports;
 pub mod inner_self;
 pub mod intrinsics;
 pub mod js_keywords;
+pub mod js_namespace_exports;
 pub mod js_objects;
 pub mod js_vec;
 pub mod jscast;

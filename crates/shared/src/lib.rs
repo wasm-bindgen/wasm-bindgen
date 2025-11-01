@@ -88,6 +88,7 @@ macro_rules! shared_api {
 
         enum OperationKind<'a> {
             Regular,
+            RegularThis,
             Getter(&'a str),
             Setter(&'a str),
             IndexingGetter,
@@ -116,6 +117,7 @@ macro_rules! shared_api {
             variant_values: Vec<&'a str>,
             comments: Vec<&'a str>,
             generate_typescript: bool,
+            js_namespace: Option<Vec<String>>,
         }
 
         struct Export<'a> {
@@ -123,6 +125,7 @@ macro_rules! shared_api {
             comments: Vec<&'a str>,
             consumed: bool,
             function: Function<'a>,
+            js_namespace: Option<Vec<String>>,
             method_kind: MethodKind<'a>,
             start: bool,
         }
@@ -133,6 +136,7 @@ macro_rules! shared_api {
             variants: Vec<EnumVariant<'a>>,
             comments: Vec<&'a str>,
             generate_typescript: bool,
+            js_namespace: Option<Vec<String>>,
         }
 
         struct EnumVariant<'a> {
@@ -164,6 +168,7 @@ macro_rules! shared_api {
             comments: Vec<&'a str>,
             is_inspectable: bool,
             generate_typescript: bool,
+            js_namespace: Option<Vec<String>>,
         }
 
         struct StructField<'a> {
