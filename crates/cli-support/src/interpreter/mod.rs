@@ -365,7 +365,9 @@ impl Frame<'_> {
                     }
                 }
 
-                Instr::Block(block) => return self.eval(block.seq),
+                Instr::Block(block) => {
+                    self.eval(block.seq)?;
+                }
 
                 Instr::Try(block) => {
                     self.eval(block.seq)?;
