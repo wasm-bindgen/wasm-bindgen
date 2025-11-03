@@ -22,6 +22,9 @@
 * Fixed node test harness getting stuck after tests completed.
   [#4776](https://github.com/wasm-bindgen/wasm-bindgen/pull/4776)
 
+* Fixes TryFromJsValue for structs JsValue stack corruption on failure.
+  [#4786](https://github.com/wasm-bindgen/wasm-bindgen/pull/4786)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
