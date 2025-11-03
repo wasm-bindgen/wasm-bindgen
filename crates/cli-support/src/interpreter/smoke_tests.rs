@@ -227,3 +227,33 @@ fn calling_functions() {
     "#;
     interpret(wat, "foo", &[0]);
 }
+
+#[test]
+fn try_block() {
+    let wat = r#"
+        (module
+            (export "foo" (func $foo))
+
+            (func $foo)
+        )
+    "#;
+    interpret(wat, "foo", &[]);
+
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (func $foo
+                try
+                    i32.const 1
+                    call $__wbindgen_describe
+                catch_all
+                end
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[1]);
+}

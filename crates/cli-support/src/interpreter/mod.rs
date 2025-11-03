@@ -367,6 +367,10 @@ impl Frame<'_> {
 
                 Instr::Block(block) => return self.eval(block.seq),
 
+                Instr::Try(block) => {
+                    self.eval(block.seq)?;
+                }
+
                 // All other instructions shouldn't be used by our various
                 // descriptor functions. LLVM optimizations may mean that some
                 // of the above instructions aren't actually needed either, but
