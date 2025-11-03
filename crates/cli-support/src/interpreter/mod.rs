@@ -272,8 +272,27 @@ impl Frame<'_> {
                         address > 0,
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
-                    ensure!(address % 4 == 0);
-                    stack.push(self.interp.mem[address as usize / 4])
+                    let width = e.kind.width();
+                    ensure!(address % width == 0);
+                    let val = self.interp.mem[address as usize / 4];
+                    if width == 4 {
+                        stack.push(val)
+                    } else if width == 1 {
+                        let result = val.to_le_bytes()[(address % 4) as usize];
+                        let LoadKind::I32_8 { kind } = e.kind else {
+                            panic!("Unhandled load kind {:?}", e.kind)
+                        };
+                        match kind {
+                            ExtendedLoad::SignExtend => {
+                                stack.push(result as i8 as i32);
+                            }
+                            ExtendedLoad::ZeroExtend | ExtendedLoad::ZeroExtendAtomic => {
+                                stack.push(result as i32);
+                            }
+                        };
+                    } else {
+                        panic!("Unhandled load width {width}");
+                    }
                 }
                 Instr::Store(e) => {
                     let value = stack.pop().unwrap();
@@ -283,8 +302,24 @@ impl Frame<'_> {
                         address > 0,
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
-                    ensure!(address % 4 == 0);
-                    self.interp.mem[address as usize / 4] = value;
+                    let width = e.kind.width();
+                    ensure!(address % width == 0);
+                    let index = address as usize / 4;
+                    if width == 8 {
+                        // Oops our stack is of i32s so we can't really handle a
+                        // store of width 8. Just treat the more signifcant 4
+                        // bytes as 0.
+                        self.interp.mem[index] = value;
+                        self.interp.mem[index + 1] = 0;
+                    } else if width == 4 {
+                        self.interp.mem[index] = value;
+                    } else if width == 1 {
+                        let mut bytes = self.interp.mem[index].to_le_bytes();
+                        bytes[(address % 4) as usize] = value as u8;
+                        self.interp.mem[index] = i32::from_le_bytes(bytes);
+                    } else {
+                        panic!("Unhandled store width {width}");
+                    }
                 }
 
                 Instr::Return(_) => {

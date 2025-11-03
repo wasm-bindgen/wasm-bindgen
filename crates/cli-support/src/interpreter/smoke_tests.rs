@@ -175,6 +175,16 @@ fn loads_and_stores() {
                 i32.const 3
                 i32.store offset=8
 
+                ;; store8
+                local.get 0
+                i32.const 3
+                i32.store8 offset=7
+
+                ;; load8
+                local.get 0
+                i32.load8_u offset=7
+                drop
+
                 ;; load fp+0 and call
                 local.get 0
                 i32.load offset=0
@@ -200,7 +210,7 @@ fn loads_and_stores() {
             (export "foo" (func $foo))
         )
     "#;
-    interpret(wat, "foo", &[1, 2, 3]);
+    interpret(wat, "foo", &[1, 50331650, 3]);
 }
 
 #[test]
