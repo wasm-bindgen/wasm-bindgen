@@ -3,7 +3,7 @@ use std::char;
 use wasm_bindgen_shared::identifier::is_valid_ident;
 use wasm_bindgen_shared::tys::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Descriptor {
     I8,
     U8,
@@ -46,7 +46,7 @@ pub enum Descriptor {
     NonNull,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Function {
     pub arguments: Vec<Descriptor>,
     pub shim_idx: u32,
@@ -54,7 +54,7 @@ pub struct Function {
     pub inner_ret: Option<Descriptor>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Closure {
     pub dtor_idx: u32,
     pub function: Function,

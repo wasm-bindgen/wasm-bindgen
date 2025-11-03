@@ -110,45 +110,6 @@ export class Foo {
         wasm.__wbg_foo_free(ptr, 0);
     }
     /**
-     * @returns {number}
-     */
-    get x() {
-        const ret = wasm.__wbg_get_foo_x(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set x(arg0) {
-        wasm.__wbg_set_foo_x(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get y() {
-        const ret = wasm.__wbg_get_foo_y(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set y(arg0) {
-        wasm.__wbg_set_foo_y(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get z() {
-        const ret = wasm.foo_z(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [z]
-     */
-    set z(z) {
-        wasm.foo_set_z(this.__wbg_ptr, isLikeNone(z) ? 0x100000001 : (z) >>> 0);
-    }
-    /**
      * @returns {number | undefined}
      */
     get lone_getter() {
@@ -181,6 +142,19 @@ export class Foo {
         wasm.foo_set_weird(this.__wbg_ptr, ptr0, len0);
     }
     /**
+     * @returns {number}
+     */
+    get x() {
+        const ret = wasm.__wbg_get_foo_x(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set x(arg0) {
+        wasm.__wbg_set_foo_x(this.__wbg_ptr, arg0);
+    }
+    /**
      * There can be static getters and setters too, and they can even have the
      * same name as instance getters and setters.
      * @returns {boolean | undefined}
@@ -194,6 +168,32 @@ export class Foo {
      */
     static set x(value) {
         wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get y() {
+        const ret = wasm.__wbg_get_foo_y(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set y(arg0) {
+        wasm.__wbg_set_foo_y(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get z() {
+        const ret = wasm.foo_z(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [z]
+     */
+    set z(z) {
+        wasm.foo_set_z(this.__wbg_ptr, isLikeNone(z) ? 0x100000001 : (z) >>> 0);
     }
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;

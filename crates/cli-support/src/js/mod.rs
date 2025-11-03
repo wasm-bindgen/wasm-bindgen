@@ -2928,7 +2928,7 @@ wasm = wasmInstance.exports;
 
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
-        for (id, adapter, kind) in iter_adapeter(self.aux, self.wit, self.module) {
+        for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
                 AdapterKind::Import { .. } => continue,
                 AdapterKind::Local { instructions } => instructions,
@@ -2960,7 +2960,13 @@ wasm = wasmInstance.exports;
             self.generate_struct(s)?;
         }
 
-        self.typescript.push_str(&self.aux.extra_typescript);
+        // Sort typescript sections to have consistent output across compilation units
+        let mut custom_sections: Vec<_> = self.aux.extra_typescript.iter().collect();
+        custom_sections.sort();
+        for section in custom_sections {
+            self.typescript.push_str(section);
+            self.typescript.push_str("\n\n");
+        }
 
         for path in self.aux.package_jsons.iter() {
             self.process_package_json(path)?;
@@ -4480,7 +4486,7 @@ impl<'a> ContextAdapterKind<'a> {
 }
 
 /// Iterate over the adapters in a deterministic order.
-fn iter_adapeter<'a>(
+fn iter_adapter<'a>(
     aux: &'a WasmBindgenAux,
     wit: &'a NonstandardWitSection,
     module: &Module,
@@ -4495,14 +4501,8 @@ fn iter_adapeter<'a>(
         })
         .collect();
 
-    // Since `wit.adapters` is a BTreeMap, the adapters are already sorted by
-    // their ID. This is good enough for exports and adapters, but imports need
-    // to be sorted by their name.
-    //
-    // Note: we do *NOT* want to sort exports by name. By default, exports are
-    // the order in which they were defined in the Rust code. Sorting them by
-    // name would break that order and take away control from the user.
-
+    // Imports and exports are sorted by name to ensure consistent ordering
+    // across codegen units.
     adapters.sort_by(|(_, _, a), (_, _, b)| {
         fn get_kind_order(kind: &ContextAdapterKind) -> u8 {
             match kind {
@@ -4512,11 +4512,24 @@ fn iter_adapeter<'a>(
             }
         }
 
+        // For class members, we sort by class name first, then by member name.
+        fn get_export_sort_key(export: &AuxExport) -> (&str, &str) {
+            match &export.kind {
+                AuxExportKind::Function(name)
+                | AuxExportKind::FunctionThis(name)
+                | AuxExportKind::Constructor(name) => (name.as_str(), ""),
+                AuxExportKind::Method { class, name, .. } => (class.as_str(), name.as_str()),
+            }
+        }
+
         match (a, b) {
             (ContextAdapterKind::Import(a), ContextAdapterKind::Import(b)) => {
                 let a = module.imports.get(*a);
                 let b = module.imports.get(*b);
                 a.name.cmp(&b.name)
+            }
+            (ContextAdapterKind::Export(a), ContextAdapterKind::Export(b)) => {
+                get_export_sort_key(a).cmp(&get_export_sort_key(b))
             }
             _ => get_kind_order(a).cmp(&get_kind_order(b)),
         }
