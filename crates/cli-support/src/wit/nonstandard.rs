@@ -34,6 +34,10 @@ pub struct WasmBindgenAux {
     /// A map from imported function id to what it's expected to import.
     pub import_map: HashMap<AdapterId, AuxImport>,
 
+    /// A map from AdapterId to the reexport name (if the import should be re-exported).
+    /// A None value means reexport with the same name as the import.
+    pub reexports: HashMap<AdapterId, Option<String>>,
+
     /// Small bits of metadata about imports.
     pub imports_with_catch: HashSet<AdapterId>,
     pub imports_with_variadic: HashSet<AdapterId>,

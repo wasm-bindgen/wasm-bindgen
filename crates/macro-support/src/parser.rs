@@ -176,6 +176,7 @@ macro_rules! attrgen {
             (readonly, false, Readonly(Span)),
             (js_name, false, JsName(Span, String, Span)),
             (js_class, false, JsClass(Span, String, Span)),
+            (reexport, false, Reexport(Span, Option<String>)),
             (inspectable, false, Inspectable(Span)),
             (is_type_of, false, IsTypeOf(Span, syn::Expr)),
             (extends, false, Extends(Span, syn::Path)),
@@ -772,6 +773,15 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             ast::ImportFunctionKind::Normal
         };
 
+        // Validate that reexport is not used on methods/constructors/static methods
+        if opts.reexport().is_some() && matches!(kind, ast::ImportFunctionKind::Method { .. }) {
+            return Err(Diagnostic::span_error(
+                self.sig.ident.span(),
+                "`reexport` cannot be used on methods, constructors, or static methods. \
+                Use `reexport` on the type import instead.",
+            ));
+        }
+
         let shim = {
             let ns = match kind {
                 ast::ImportFunctionKind::Normal => (0, "n"),
@@ -1150,7 +1160,7 @@ fn function_from_decl(
             syn::FnArg::Typed(mut c) => {
                 // typical arguments like foo: u32
                 replace_colliding_arg(&mut c);
-                c.ty = Box::new(replace_self(*c.ty));
+                *c.ty = replace_self(*c.ty);
                 arguments.push(c);
             }
             syn::FnArg::Receiver(r) => {
@@ -1658,6 +1668,7 @@ fn string_enum(
     program.imports.push(ast::Import {
         module: None,
         js_namespace: None,
+        reexport: None,
         kind: ast::ImportKind::Enum(ast::StringEnum {
             vis: enum_.vis,
             name: enum_.ident,
@@ -1962,11 +1973,13 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                     let mut item: syn::ItemStatic =
                         syn::parse(v.into()).expect("only foreign functions/types allowed for now");
                     let item_opts = BindgenAttrs::find(&mut item.attrs)?;
+                    let reexport = item_opts.reexport().cloned();
                     let kind = item.convert((program, item_opts, &ctx.module))?;
 
                     program.imports.push(ast::Import {
                         module: None,
                         js_namespace: None,
+                        reexport,
                         kind,
                     });
 
@@ -1983,6 +1996,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .or(ctx.js_namespace)
             .map(|s| s.0);
         let module = ctx.module;
+        let reexport = item_opts.reexport().cloned();
 
         let kind = match self {
             syn::ForeignItem::Fn(f) => f.convert((program, item_opts, &module))?,
@@ -2041,6 +2055,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
         program.imports.push(ast::Import {
             module,
             js_namespace,
+            reexport,
             kind,
         });
 
@@ -2335,14 +2350,13 @@ fn main(program: &ast::Program, mut f: ItemFn, tokens: &mut TokenStream) -> Resu
 
     let r#return = f.sig.output;
     f.sig.output = ReturnType::Default;
-    let body = f.block;
+    let body = f.block.as_ref();
 
     let wasm_bindgen = &program.wasm_bindgen;
     let wasm_bindgen_futures = &program.wasm_bindgen_futures;
 
     if f.sig.asyncness.take().is_some() {
-        f.block = Box::new(
-            syn::parse2(quote::quote! {
+        *f.block = syn::parse2(quote::quote! {
                 {
                     async fn __wasm_bindgen_generated_main() #r#return #body
                     #wasm_bindgen_futures::spawn_local(
@@ -2354,20 +2368,17 @@ fn main(program: &ast::Program, mut f: ItemFn, tokens: &mut TokenStream) -> Resu
                     )
                 }
             })
-            .unwrap(),
-        );
+            .unwrap();
     } else {
-        f.block = Box::new(
-            syn::parse2(quote::quote! {
-                {
-                    fn __wasm_bindgen_generated_main() #r#return #body
-                    use #wasm_bindgen::__rt::Main;
-                    let __ret = __wasm_bindgen_generated_main();
-                    (&mut &mut &mut #wasm_bindgen::__rt::MainWrapper(Some(__ret))).__wasm_bindgen_main()
-                }
-            })
-            .unwrap(),
-        );
+        *f.block = syn::parse2(quote::quote! {
+            {
+                fn __wasm_bindgen_generated_main() #r#return #body
+                use #wasm_bindgen::__rt::Main;
+                let __ret = __wasm_bindgen_generated_main();
+                (&mut &mut &mut #wasm_bindgen::__rt::MainWrapper(Some(__ret))).__wasm_bindgen_main()
+            }
+        })
+        .unwrap();
     }
 
     f.to_tokens(tokens);

@@ -50,6 +50,7 @@ pub mod no_shims;
 pub mod node;
 pub mod option;
 pub mod optional_primitives;
+pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
