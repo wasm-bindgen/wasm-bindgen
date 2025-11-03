@@ -1097,7 +1097,7 @@ impl<'a> Context<'a> {
         let unwrap_fn = wasm_bindgen_shared::unwrap_function(struct_.name);
         self.add_aux_import_to_import_map(
             &unwrap_fn,
-            vec![Descriptor::Externref],
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
             Descriptor::I32,
             AuxImport::UnwrapExportedClass(struct_.name.to_string()),
         )?;
