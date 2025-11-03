@@ -11,8 +11,8 @@ export class Rectangle {
   private constructor();
   free(): void;
   [Symbol.dispose](): void;
-  width: number;
   height: number;
+  width: number;
 }
 
 declare class Counter {

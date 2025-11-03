@@ -6,7 +6,6 @@ use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
-use std::hash::{DefaultHasher, Hash, Hasher};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
@@ -175,17 +174,19 @@ impl<'a> Context<'a> {
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
 
-            for (descriptor, orig_func_ids) in cast_imports {
+            // Collect and sort cast imports by descriptor for deterministic order.
+            let mut sorted_casts: Vec<_> = cast_imports.into_iter().collect();
+            sorted_casts.sort_by(|(a_des, _), (b_des, _)| a_des.cmp(b_des));
+
+            for (idx, (descriptor, orig_func_ids)) in sorted_casts.into_iter().enumerate() {
                 let signature = descriptor.unwrap_function();
                 let [arg] = &signature.arguments[..] else {
                     bail!("Cast function must take exactly one argument");
                 };
                 let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
 
-                // Hash the descriptor string to produce a stable import name.
-                let mut hasher = DefaultHasher::default();
-                sig_comment.hash(&mut hasher);
-                let import_name = format!("__wbindgen_cast_{:016x}", hasher.finish());
+                // Use iteration index as cast name.
+                let import_name = format!("__wbindgen_cast_{idx:016x}");
 
                 // Manufacture an import for this cast.
                 let ty = self.module.funcs.get(orig_func_ids[0]).ty();
@@ -477,10 +478,11 @@ impl<'a> Context<'a> {
         for struct_ in structs {
             self.struct_(struct_)?;
         }
-        for section in typescript_custom_sections {
-            self.aux.extra_typescript.push_str(&section);
-            self.aux.extra_typescript.push_str("\n\n");
-        }
+        // Collect custom sections to be sorted later when all sections from
+        // all compilation units have been gathered
+        self.aux
+            .extra_typescript
+            .extend(typescript_custom_sections.iter().map(|s| s.to_string()));
         self.aux
             .snippets
             .entry(unique_crate_identifier.to_string())

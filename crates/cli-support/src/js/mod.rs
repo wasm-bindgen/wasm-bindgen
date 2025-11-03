@@ -2966,7 +2966,13 @@ wasm = wasmInstance.exports;
             self.generate_struct(s)?;
         }
 
-        self.typescript.push_str(&self.aux.extra_typescript);
+        // Sort typescript sections to have consistent output across compilation units
+        let mut custom_sections: Vec<_> = self.aux.extra_typescript.iter().collect();
+        custom_sections.sort();
+        for section in custom_sections {
+            self.typescript.push_str(section);
+            self.typescript.push_str("\n\n");
+        }
 
         for path in self.aux.package_jsons.iter() {
             self.process_package_json(path)?;
@@ -4513,7 +4519,8 @@ fn iter_adapter<'a>(
         })
         .collect();
 
-    // just sort imports here, exports are sorted separately by export_def btree collection
+    // Imports and exports are sorted by name to ensure consistent ordering
+    // across codegen units.
     adapters.sort_by(|(_, _, a), (_, _, b)| {
         fn get_kind_order(kind: &ContextAdapterKind) -> u8 {
             match kind {
@@ -4523,11 +4530,24 @@ fn iter_adapter<'a>(
             }
         }
 
+        // For class members, we sort by class name first, then by member name.
+        fn get_export_sort_key(export: &AuxExport) -> (&str, &str) {
+            match &export.kind {
+                AuxExportKind::Function(name)
+                | AuxExportKind::FunctionThis(name)
+                | AuxExportKind::Constructor(name) => (name.as_str(), ""),
+                AuxExportKind::Method { class, name, .. } => (class.as_str(), name.as_str()),
+            }
+        }
+
         match (a, b) {
             (ContextAdapterKind::Import(a), ContextAdapterKind::Import(b)) => {
                 let a = module.imports.get(*a);
                 let b = module.imports.get(*b);
                 a.name.cmp(&b.name)
+            }
+            (ContextAdapterKind::Export(a), ContextAdapterKind::Export(b)) => {
+                get_export_sort_key(a).cmp(&get_export_sort_key(b))
             }
             _ => get_kind_order(a).cmp(&get_kind_order(b)),
         }

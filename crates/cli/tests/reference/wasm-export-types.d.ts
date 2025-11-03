@@ -8,14 +8,14 @@ export function example_128(a: bigint): bigint | undefined;
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly memory: WebAssembly.Memory;
-  readonly example: (a: number, b: bigint, c: any, d: number, e: number) => [number, number];
-  readonly example_128: (a: bigint, b: bigint) => [number, bigint, bigint];
   readonly __wbindgen_externrefs: WebAssembly.Table;
+  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
-  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_start: () => void;
+  readonly example: (a: number, b: bigint, c: any, d: number, e: number) => [number, number];
+  readonly example_128: (a: bigint, b: bigint) => [number, bigint, bigint];
+  readonly memory: WebAssembly.Memory;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

@@ -85,19 +85,30 @@ pub fn typescript(module: &Module) -> Result<String, Error> {
 /// Iterates over all the exports in a module and generates TypeScript types. All
 /// name-type pairs are passed to the `export` function.
 fn module_export_types(module: &Module, mut export: impl FnMut(&str, &str)) {
-    for entry in module.exports.iter() {
-        match entry.item {
-            walrus::ExportItem::Function(id) => {
-                let func = module.funcs.get(id);
-                let ty = module.types.get(func.ty());
-                let ts_type = function_type_to_ts(ty, args_are_optional(&entry.name));
-                export(&entry.name, &ts_type);
-            }
-            walrus::ExportItem::Memory(_) => export(&entry.name, "WebAssembly.Memory"),
-            walrus::ExportItem::Table(_) => export(&entry.name, "WebAssembly.Table"),
-            walrus::ExportItem::Global(_) => continue,
-            walrus::ExportItem::Tag(_) => export(&entry.name, "WebAssembly.Tag"),
-        };
+    // Collect exports with their TypeScript types, then sort by name for deterministic output
+    let mut exports: Vec<_> = module
+        .exports
+        .iter()
+        .filter_map(|entry| {
+            let ts_type = match entry.item {
+                walrus::ExportItem::Function(id) => {
+                    let func = module.funcs.get(id);
+                    let ty = module.types.get(func.ty());
+                    function_type_to_ts(ty, args_are_optional(&entry.name))
+                }
+                walrus::ExportItem::Memory(_) => "WebAssembly.Memory".to_string(),
+                walrus::ExportItem::Table(_) => "WebAssembly.Table".to_string(),
+                walrus::ExportItem::Global(_) => return None,
+                walrus::ExportItem::Tag(_) => "WebAssembly.Tag".to_string(),
+            };
+            Some((entry.name.as_str(), ts_type))
+        })
+        .collect();
+
+    exports.sort_by_key(|(name, _)| *name);
+
+    for (name, ts_type) in exports {
+        export(name, &ts_type);
     }
 }
 fn val_type_to_ts(ty: walrus::ValType) -> &'static str {

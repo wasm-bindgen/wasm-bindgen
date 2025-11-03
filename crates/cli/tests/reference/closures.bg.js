@@ -87,12 +87,12 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1, arg2, arg3, arg4);
 }
 
 export function delayed_callback() {
@@ -134,7 +134,7 @@ export function __wbg_forEach_fdfa9a663e9c9a9e(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, arg0, arg1, arg2);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000001(a, state0.b, arg0, arg1, arg2);
             } finally {
                 state0.a = a;
             }
@@ -191,14 +191,14 @@ export function __wbg_static_accessor_WINDOW_a8924b26aa92d024() {
 };
 
 export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 2, function: Function { arguments: [], shim_idx: 3, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000000, wasm_bindgen__convert__closures_____invoke__h0000000000000000);
     return ret;
 };
 
 export function __wbindgen_cast_0000000000000001(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
+    // Cast intrinsic for `Ref(String) -> Externref`.
+    const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 };
 

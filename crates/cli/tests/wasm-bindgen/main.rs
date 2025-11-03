@@ -11,10 +11,10 @@
 //! quite expensive, so it's recommended that this test suite doesn't become too
 //! large!
 
+mod deterministic;
 mod npm;
 mod reference;
 
-use assert_cmd::cargo::cargo_bin_cmd;
 use assert_cmd::Command;
 use predicates::str;
 use std::env;
@@ -164,7 +164,8 @@ impl Project {
 
 #[test]
 fn version_useful() {
-    cargo_bin_cmd!("wasm-bindgen")
+    Command::cargo_bin("wasm-bindgen")
+        .unwrap()
         .arg("-V")
         .assert()
         .stdout(str::ends_with("\n"))

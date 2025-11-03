@@ -6,11 +6,11 @@ export function add_that_might_fail(a: number, b: number): number;
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
+  readonly __wbindgen_externrefs: WebAssembly.Table;
+  readonly __wbindgen_start: (a: number) => void;
+  readonly __wbindgen_thread_destroy: (a?: number, b?: number, c?: number) => void;
   readonly add_that_might_fail: (a: number, b: number) => number;
   readonly memory: WebAssembly.Memory;
-  readonly __wbindgen_externrefs: WebAssembly.Table;
-  readonly __wbindgen_thread_destroy: (a?: number, b?: number, c?: number) => void;
-  readonly __wbindgen_start: (a: number) => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;
