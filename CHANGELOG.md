@@ -22,6 +22,9 @@
 * Fixed node test harness getting stuck after tests completed.
   [#4776](https://github.com/wasm-bindgen/wasm-bindgen/pull/4776)
 
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/wasm-bindgen/wasm-bindgen/pull/4488)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
@@ -112,9 +115,6 @@
 
 * Fixed a bug in `--experimental-reset-state-function` support for heap reset.
   [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
-
-* Quote names containing colons in generated .d.ts.
-  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
 
 * Fixed compilation failures on Rust v1.82 and v1.83.
   [#4675](https://github.com/wasm-bindgen/wasm-bindgen/pull/4675)
