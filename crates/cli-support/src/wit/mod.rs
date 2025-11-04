@@ -989,6 +989,7 @@ impl<'a> Context<'a> {
                 })
                 .collect(),
             generate_typescript: enum_.generate_typescript,
+            hide: enum_.hide,
             js_namespace: enum_.js_namespace.clone(),
         };
         let mut result = Ok(());
@@ -1082,6 +1083,7 @@ impl<'a> Context<'a> {
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
+            hide: struct_.hide,
             js_namespace: struct_.js_namespace.clone(),
         };
         self.aux.structs.push(aux);

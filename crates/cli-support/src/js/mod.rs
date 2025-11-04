@@ -104,6 +104,8 @@ struct ExportedClass {
     typescript: String,
     /// Whether TypeScript for this class should be emitted (i.e., `skip_typescript` wasn't specified).
     generate_typescript: bool,
+    /// Whether to hide this class from the module exports
+    hide: bool,
     has_constructor: bool,
     wrap_needed: bool,
     unwrap_needed: bool,
@@ -1105,7 +1107,9 @@ wasm = wasmInstance.exports;
 
     fn write_class(&mut self, name: &str, class: &ExportedClass) -> Result<(), Error> {
         let mut dst = format!("class {name} {{\n");
-        let mut ts_dst = if class.js_namespace.is_none() {
+        let mut ts_dst = if class.hide {
+            dst.to_string()
+        } else if class.js_namespace.is_none() {
             format!("export {dst}")
         } else {
             format!("declare {dst}")
@@ -1269,18 +1273,28 @@ wasm = wasmInstance.exports;
         dst.push('}');
         ts_dst.push_str("}\n");
 
+        // For hidden classes, add export type statement
+        if class.hide {
+            ts_dst.push_str(&format!("export type {{ {name} }};\n"));
+        }
+
         dst.push_str(&format!(
             "
                 if (Symbol.dispose) {name}.prototype[Symbol.dispose] = {name}.prototype.free;
             "
         ));
 
-        self.export(
-            name,
-            class.js_namespace.as_ref(),
-            ExportJs::Class(&dst),
-            Some(&class.comments),
-        )?;
+        if !class.hide {
+            self.export(
+                name,
+                class.js_namespace.as_ref(),
+                ExportJs::Class(&dst),
+                Some(&class.comments),
+            )?;
+        } else {
+            // Hidden classes are still defined in the module but not exported
+            self.global(&dst);
+        }
 
         if class.generate_typescript {
             self.typescript.push_str(&class.comments);
@@ -4099,19 +4113,21 @@ wasm = wasmInstance.exports;
     }
 
     fn generate_enum(&mut self, enum_: &AuxEnum) -> Result<(), Error> {
-        let mut variants = String::new();
-
+        let name = &enum_.name;
         if enum_.generate_typescript {
             self.typescript
                 .push_str(&format_doc_comments(&enum_.comments, None));
             if enum_.js_namespace.is_none() {
-                self.typescript
-                    .push_str(&format!("export enum {} {{", enum_.name));
+                self.typescript.push_str(&format!(
+                    "{}enum {name} {{",
+                    if enum_.hide { "" } else { "export " }
+                ));
             } else {
-                self.typescript
-                    .push_str(&format!("declare enum {} {{", enum_.name));
+                self.typescript.push_str(&format!("declare enum {name} {{"));
             }
         }
+
+        let mut variants = String::new();
         for (name, value, comments) in enum_.variants.iter() {
             let variant_docs = if comments.is_empty() {
                 String::new()
@@ -4135,6 +4151,12 @@ wasm = wasmInstance.exports;
         }
         if enum_.generate_typescript {
             self.typescript.push_str("\n}\n");
+
+            if enum_.hide {
+                self.typescript
+                    .push_str(&format!("export type {{ {name} }};\n"));
+                return Ok(());
+            }
         }
 
         // add an `@enum {1 | 2 | 3}` to ensure that enums type-check even without .d.ts
@@ -4149,7 +4171,7 @@ wasm = wasmInstance.exports;
         let docs = format_doc_comments(&enum_.comments, Some(at_enum));
 
         self.export(
-            &enum_.name,
+            name,
             enum_.js_namespace.as_ref(),
             ExportJs::Expression(&format!("Object.freeze({{\n{variants}}})")),
             Some(&docs),
@@ -4206,6 +4228,7 @@ wasm = wasmInstance.exports;
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
+        class.hide = struct_.hide;
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         Ok(())
     }
