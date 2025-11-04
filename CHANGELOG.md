@@ -113,6 +113,9 @@
 * Fixed a bug in `--experimental-reset-state-function` support for heap reset.
   [#4665](https://github.com/wasm-bindgen/wasm-bindgen/pull/4665)
 
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/rustwasm/wasm-bindgen/pull/4488)
+
 * Fixed compilation failures on Rust v1.82 and v1.83.
   [#4675](https://github.com/wasm-bindgen/wasm-bindgen/pull/4675)
 
