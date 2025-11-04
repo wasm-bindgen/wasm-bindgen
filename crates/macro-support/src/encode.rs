@@ -265,6 +265,7 @@ fn shared_enum<'a>(e: &'a ast::Enum, intern: &'a Interner) -> Enum<'a> {
             .js_namespace
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
+        private: e.private,
     }
 }
 
@@ -420,6 +421,7 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
             .js_namespace
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
+        private: s.private,
     }
 }
 

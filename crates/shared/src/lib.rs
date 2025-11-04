@@ -138,6 +138,7 @@ macro_rules! shared_api {
             comments: Vec<&'a str>,
             generate_typescript: bool,
             js_namespace: Option<Vec<&'a str>>,
+            private: bool,
         }
 
         struct EnumVariant<'a> {
@@ -170,6 +171,7 @@ macro_rules! shared_api {
             is_inspectable: bool,
             generate_typescript: bool,
             js_namespace: Option<Vec<&'a str>>,
+            private: bool,
         }
 
         struct StructField<'a> {

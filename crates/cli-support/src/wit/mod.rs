@@ -1038,6 +1038,7 @@ impl<'a> Context<'a> {
                 .js_namespace
                 .as_ref()
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
+            private: enum_.private,
         };
         let mut result = Ok(());
         self.aux
@@ -1134,6 +1135,7 @@ impl<'a> Context<'a> {
                 .js_namespace
                 .as_ref()
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
+            private: struct_.private,
         };
         self.aux.structs.push(aux);
 
