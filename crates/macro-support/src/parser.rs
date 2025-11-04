@@ -102,6 +102,7 @@ macro_rules! attrgen {
             (typescript_custom_section, false, TypescriptCustomSection(Span)),
             (skip_typescript, false, SkipTypescript(Span)),
             (skip_jsdoc, false, SkipJsDoc(Span)),
+            (private, false, Hide(Span)),
             (main, false, Main(Span)),
             (start, false, Start(Span)),
             (wasm_bindgen, false, WasmBindgen(Span, syn::Path)),
@@ -533,6 +534,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             attrs.check_used();
         }
         let generate_typescript = attrs.skip_typescript().is_none();
+        let private = attrs.private().is_some();
         let comments: Vec<String> = extract_doc_comments(&self.attrs);
         let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
         attrs.check_used();
@@ -543,6 +545,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             comments,
             is_inspectable,
             generate_typescript,
+            private,
             js_namespace,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
@@ -1663,6 +1666,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         }
 
         let generate_typescript = opts.skip_typescript().is_none();
+        let private = opts.private().is_some();
         let comments = extract_doc_comments(&self.attrs);
         let js_name = opts
             .js_name()
@@ -1810,6 +1814,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
             comments,
             hole,
             generate_typescript,
+            private,
             js_namespace,
             wasm_bindgen: program.wasm_bindgen.clone(),
         });
