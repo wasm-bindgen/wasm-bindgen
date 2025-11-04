@@ -22,6 +22,9 @@
 * Fixed node test harness getting stuck after tests completed.
   [#4776](https://github.com/wasm-bindgen/wasm-bindgen/pull/4776)
 
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/wasm-bindgen/wasm-bindgen/pull/4488)
+
 * Fixes TryFromJsValue for structs JsValue stack corruption on failure.
   [#4786](https://github.com/wasm-bindgen/wasm-bindgen/pull/4786)
 

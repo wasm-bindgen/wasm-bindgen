@@ -13,7 +13,7 @@ use walrus::{
     ir::Value, ConstExpr, ElementItems, FunctionBuilder, FunctionId, FunctionKind, GlobalId,
     GlobalKind, MemoryId, Module, RawCustomSection, ValType,
 };
-use wasmparser::{BinaryReader, WasmFeatures};
+use wasmparser::BinaryReader;
 
 /// Get a Wasm module's canonical linear memory.
 pub fn get_memory(module: &Module) -> Result<MemoryId> {
@@ -182,7 +182,7 @@ pub fn target_feature(module: &Module, feature: &str) -> Result<bool> {
             .as_any()
             .downcast_ref()
             .context("failed to read section")?;
-        let mut reader = BinaryReader::new(&section.data, 0, WasmFeatures::default());
+        let mut reader = BinaryReader::new(&section.data, 0);
         // The first integer contains the target feature count.
         let count = reader.read_var_u32()?;
 
@@ -227,7 +227,7 @@ pub fn insert_target_feature(module: &mut Module, new_feature: &str) -> Result<(
             .as_any_mut()
             .downcast_mut()
             .context("failed to read section")?;
-        let mut reader = BinaryReader::new(&section.data, 0, WasmFeatures::default());
+        let mut reader = BinaryReader::new(&section.data, 0);
         // The first integer contains the target feature count.
         let count = reader.read_var_u32()?;
 
