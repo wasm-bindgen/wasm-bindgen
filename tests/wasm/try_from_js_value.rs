@@ -364,3 +364,33 @@ fn numeric_types_reject_invalid_js_values() {
     assert!(f32::try_from_js_value(JsValue::from_str("0")).is_err());
     assert!(f32::try_from_js_value(JsValue::from_str("25")).is_err());
 }
+
+// https://github.com/wasm-bindgen/wasm-bindgen/issues/4289
+// TryFromJsValue::try_from_js_value() invalidates the converted value on failure
+#[wasm_bindgen]
+pub struct SquareShape {
+    #[allow(dead_code)]
+    side_length: f64,
+}
+
+#[wasm_bindgen]
+pub struct CircleShape {
+    #[allow(dead_code)]
+    radius: f64,
+}
+
+#[wasm_bindgen_test]
+fn try_from_js_value_invalidates_cloned_value() {
+    let circle = CircleShape { radius: 5.0 };
+    let value = JsValue::from(circle);
+
+    // First check fails (value is CircleShape, not SquareShape)
+    assert!(SquareShape::try_from_js_value(value.clone()).is_err());
+
+    // Second check should succeed, but the first check invalidated the cloned value
+    let result = CircleShape::try_from_js_value(value.clone());
+    assert!(
+        result.is_ok(),
+        "Bug #4289: cloned value was invalidated by first failed try_from_js_value"
+    );
+}
