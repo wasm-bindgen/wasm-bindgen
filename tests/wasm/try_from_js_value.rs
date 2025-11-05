@@ -385,7 +385,7 @@ fn try_from_js_value_invalidates_cloned_value() {
     let value = JsValue::from(circle);
 
     // First check fails (value is CircleShape, not SquareShape)
-    let _ = SquareShape::try_from_js_value(value.clone());
+    assert!(SquareShape::try_from_js_value(value.clone()).is_err());
 
     // Second check should succeed, but the first check invalidated the cloned value
     let result = CircleShape::try_from_js_value(value.clone());
