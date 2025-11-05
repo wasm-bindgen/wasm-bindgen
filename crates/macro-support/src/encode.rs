@@ -258,7 +258,7 @@ fn shared_enum<'a>(e: &'a ast::Enum, intern: &'a Interner) -> Enum<'a> {
             .collect(),
         comments: e.comments.iter().map(|s| &**s).collect(),
         generate_typescript: e.generate_typescript,
-        hide: e.hide,
+        skip_export: e.skip_export,
         js_namespace: e.js_namespace.clone(),
     }
 }
@@ -395,7 +395,7 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
         comments: s.comments.iter().map(|s| &**s).collect(),
         is_inspectable: s.is_inspectable,
         generate_typescript: s.generate_typescript,
-        hide: s.hide,
+        skip_export: s.skip_export,
         js_namespace: s.js_namespace.clone(),
     }
 }

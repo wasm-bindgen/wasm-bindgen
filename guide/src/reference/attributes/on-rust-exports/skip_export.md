@@ -1,9 +1,9 @@
-# `hide`
+# `skip_export`
 
-The `hide` attribute can be applied to exported structs and enums to generate the exported binding but not export it from the JavaScript module. This allows defining types that can be used as arguments or return values in exported functions without exposing them in the public JavaScript API.
+The `skip_export` attribute can be applied to exported structs and enums to generate the exported binding but not export it on the public exports of the JavaScript module. This allows defining types that can be used as arguments or return values in exported functions without exposing them in the public exported API.
 
 ```rust
-#[wasm_bindgen(hide)]
+#[wasm_bindgen(skip_export)]
 pub struct Config {
     pub timeout: i32,
 }
@@ -32,7 +32,7 @@ const config = app.create_config(100);
 const result = app.apply_config(config);
 ```
 
-The TypeScript definitions will still export the type (as it's needed for the function signatures):
+The TypeScript definitions will still export the type under its name as a type-only export:
 
 ```ts
 export function create_config(timeout: number): Config;
@@ -45,4 +45,4 @@ class Config {
 export type { Config };
 ```
 
-The `hide` attribute is only supported on structs and enums, not on functions.
+The `skip_export` attribute is only supported on structs and enums, not on functions.

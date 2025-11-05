@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 /// A hidden struct that is not exported but can be used as an argument type
-#[wasm_bindgen(hide)]
+#[wasm_bindgen(skip_export)]
 pub struct HiddenStruct {
     pub value: i32,
 }
@@ -13,7 +13,7 @@ pub struct PublicStruct {
 }
 
 /// A hidden enum that is not exported
-#[wasm_bindgen(hide)]
+#[wasm_bindgen(skip_export)]
 pub enum HiddenEnum {
     Variant1,
     Variant2,
@@ -48,7 +48,7 @@ pub fn get_public_struct() -> PublicStruct {
 }
 
 // Test with js_namespace
-#[wasm_bindgen(hide, js_namespace = internal)]
+#[wasm_bindgen(skip_export, js_namespace = internal)]
 pub struct NamespacedHidden {
     pub data: i32,
 }

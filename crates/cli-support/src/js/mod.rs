@@ -104,8 +104,8 @@ struct ExportedClass {
     typescript: String,
     /// Whether TypeScript for this class should be emitted (i.e., `skip_typescript` wasn't specified).
     generate_typescript: bool,
-    /// Whether to hide this class from the module exports
-    hide: bool,
+    /// Whether to skip exporting this class from the module exports
+    skip_export: bool,
     has_constructor: bool,
     wrap_needed: bool,
     unwrap_needed: bool,
@@ -1107,7 +1107,7 @@ wasm = wasmInstance.exports;
 
     fn write_class(&mut self, name: &str, class: &ExportedClass) -> Result<(), Error> {
         let mut dst = format!("class {name} {{\n");
-        let mut ts_dst = if class.hide {
+        let mut ts_dst = if class.skip_export {
             dst.to_string()
         } else if class.js_namespace.is_none() {
             format!("export {dst}")
@@ -1274,7 +1274,7 @@ wasm = wasmInstance.exports;
         ts_dst.push_str("}\n");
 
         // For hidden classes, add export type statement
-        if class.hide {
+        if class.skip_export {
             ts_dst.push_str(&format!("export type {{ {name} }};\n"));
         }
 
@@ -1284,7 +1284,7 @@ wasm = wasmInstance.exports;
             "
         ));
 
-        if !class.hide {
+        if !class.skip_export {
             self.export(
                 name,
                 class.js_namespace.as_ref(),
@@ -4120,7 +4120,7 @@ wasm = wasmInstance.exports;
             if enum_.js_namespace.is_none() {
                 self.typescript.push_str(&format!(
                     "{}enum {name} {{",
-                    if enum_.hide { "" } else { "export " }
+                    if enum_.skip_export { "" } else { "export " }
                 ));
             } else {
                 self.typescript.push_str(&format!("declare enum {name} {{"));
@@ -4152,7 +4152,7 @@ wasm = wasmInstance.exports;
         if enum_.generate_typescript {
             self.typescript.push_str("\n}\n");
 
-            if enum_.hide {
+            if enum_.skip_export {
                 self.typescript
                     .push_str(&format!("export type {{ {name} }};\n"));
                 return Ok(());
@@ -4228,7 +4228,7 @@ wasm = wasmInstance.exports;
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
-        class.hide = struct_.hide;
+        class.skip_export = struct_.skip_export;
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         Ok(())
     }
