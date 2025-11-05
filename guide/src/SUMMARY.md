@@ -53,6 +53,7 @@
     - [Imported JavaScript Types](./reference/types/imported-js-types.md)
     - [Exported Rust Types](./reference/types/exported-rust-types.md)
     - [`JsValue`](./reference/types/jsvalue.md)
+    - [`JsRef`](./reference/types/jsref.md)
     - [`Box<[T]>` and `Vec<T>`](./reference/types/boxed-slices.md)
     - [`*const T` and `*mut T`](./reference/types/pointers.md)
     - [`NonNull<T>`](./reference/types/non-null.md)
