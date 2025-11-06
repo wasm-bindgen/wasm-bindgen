@@ -1,9 +1,9 @@
-# `skip_export`
+# `private`
 
-The `skip_export` attribute can be applied to exported structs and enums to generate the exported binding but not export it on the public exports of the JavaScript module. This allows defining types that can be used as arguments or return values in exported functions without exposing them in the public exported API.
+The `private` attribute can be applied to exported structs and enums to generate the exported binding but not export it on the public exports of the JavaScript module. This allows defining types that can be used as arguments or return values in exported functions without exposing them in the public exported API.
 
 ```rust
-#[wasm_bindgen(skip_export)]
+#[wasm_bindgen(private)]
 pub struct Config {
     pub timeout: i32,
 }
@@ -45,4 +45,4 @@ class Config {
 export type { Config };
 ```
 
-The `skip_export` attribute is only supported on structs and enums, not on functions.
+The `private` attribute is only supported on structs and enums, not on functions.

@@ -433,7 +433,7 @@ pub struct Struct {
     /// Whether to generate a typescript definition for this struct
     pub generate_typescript: bool,
     /// Whether to skip exporting this struct from the module exports
-    pub skip_export: bool,
+    pub private: bool,
     /// The namespace to export the struct through, if any
     pub js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
@@ -494,7 +494,7 @@ pub struct Enum {
     /// Whether to generate a typescript definition for this enum
     pub generate_typescript: bool,
     /// Whether to hide this enum from the module exports
-    pub skip_export: bool,
+    pub private: bool,
     /// The namespace to export the enum through, if any
     pub js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
