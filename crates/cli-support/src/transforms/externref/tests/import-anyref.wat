@@ -16,6 +16,8 @@
   (type (;1;) (func (param i32)))
   (type (;2;) (func (param externref)))
   (import "" "a" (func $a (;0;) (type 2)))
+  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (export "foo" (func 2))
   (func $"a externref shim" (;1;) (type 1) (param i32)
     local.get 0
     table.get $__wbindgen_externrefs
@@ -25,8 +27,6 @@
     i32.const 0
     call $"a externref shim"
   )
-  (table $__wbindgen_externrefs (;0;) 128 externref)
-  (export "foo" (func 2))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
 ;)

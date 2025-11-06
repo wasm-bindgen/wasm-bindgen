@@ -63,7 +63,13 @@ fn args_are_optional(name: &str) -> bool {
 pub fn interface(module: &Module) -> Result<String, Error> {
     let mut exports = String::new();
     module_export_types(module, |name, ty| {
-        writeln!(exports, "  readonly {name}: {ty};").unwrap();
+        if name.contains(':') {
+            // This can happen when `name` is namespaced, like `__wbgt__reference_test::foo`.
+            // We should quote the name, as : is not valid in TypeScript identifiers.
+            writeln!(exports, "  readonly {name:?}: {ty};").unwrap();
+        } else {
+            writeln!(exports, "  readonly {name}: {ty};").unwrap();
+        }
     });
     Ok(exports)
 }

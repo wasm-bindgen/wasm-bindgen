@@ -382,7 +382,10 @@ impl ToTokens for ast::Struct {
             #[automatically_derived]
             impl #wasm_bindgen::convert::TryFromJsValue for #name {
                 fn try_from_js_value(value: #wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::result::Result<Self, #wasm_bindgen::JsValue> {
-                    let idx = #wasm_bindgen::convert::IntoWasmAbi::into_abi(&value);
+                    Self::try_from_js_value_ref(&value).ok_or(value)
+                }
+                fn try_from_js_value_ref(value: &#wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::option::Option<Self> {
+                    let idx = #wasm_bindgen::convert::IntoWasmAbi::into_abi(value);
 
                     #[link(wasm_import_module = "__wbindgen_placeholder__")]
                     #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
@@ -397,20 +400,14 @@ impl ToTokens for ast::Struct {
 
                     let ptr = unsafe { #unwrap_fn(idx) };
                     if ptr == 0 {
-                        #wasm_bindgen::__rt::core::result::Result::Err(value)
+                        #wasm_bindgen::__rt::core::option::Option::None
                     } else {
-                        // Don't run `JsValue`'s destructor, `unwrap_fn` already did that for us.
-                        #[allow(clippy::mem_forget)]
-                        #wasm_bindgen::__rt::core::mem::forget(value);
                         unsafe {
-                            #wasm_bindgen::__rt::core::result::Result::Ok(
+                            #wasm_bindgen::__rt::core::option::Option::Some(
                                 <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(ptr)
                             )
                         }
                     }
-                }
-                fn try_from_js_value_ref(value: &#wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::option::Option<Self> {
-                    Self::try_from_js_value(value.clone()).ok()
                 }
             }
 

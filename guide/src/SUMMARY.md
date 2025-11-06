@@ -32,6 +32,7 @@
   - [web-sys: A TODO MVC App](./examples/todomvc.md)
 - [Reference](./reference/index.md)
   - [Deployment](./reference/deployment.md)
+  - [Community Projects](./reference/community-projects.md)
   - [JS snippets](./reference/js-snippets.md)
   - [Static JS Objects](./reference/static-js-objects.md)
   - [Passing Rust Closures to JS](./reference/passing-rust-closures-to-js.md)
