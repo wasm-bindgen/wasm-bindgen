@@ -48,16 +48,6 @@ function divide(a, b) {
  * @param {number} b
  * @returns {number}
  */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
 function add(a, b) {
     const ret = wasm.add(a, b);
     return ret;
@@ -139,6 +129,24 @@ function concat(a, b) {
 }
 
 /**
+ * @returns {number}
+ */
+export function regular_function() {
+    const ret = wasm.regular_function();
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
+    return ret;
+}
+
+/**
  * @param {string} s
  * @returns {string}
  */
@@ -155,14 +163,6 @@ function uppercase(s) {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
-}
-
-/**
- * @returns {number}
- */
-export function regular_function() {
-    const ret = wasm.regular_function();
-    return ret;
 }
 
 /**

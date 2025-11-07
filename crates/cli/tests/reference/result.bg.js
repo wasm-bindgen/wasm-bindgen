@@ -40,17 +40,6 @@ function takeFromExternrefTable0(idx) {
     return value;
 }
 /**
- * @returns {number}
- */
-export function result_i32() {
-    const ret = wasm.result_i32();
-    if (ret[2]) {
-        throw takeFromExternrefTable0(ret[1]);
-    }
-    return ret[0];
-}
-
-/**
  * @returns {string}
  */
 export function result_string() {
@@ -70,6 +59,17 @@ export function result_string() {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
+}
+
+/**
+ * @returns {number}
+ */
+export function result_i32() {
+    const ret = wasm.result_i32();
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0];
 }
 
 export function result_void() {

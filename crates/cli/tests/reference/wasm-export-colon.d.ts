@@ -1,9 +1,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Handler for `console.error` invocations. See above.
+ * Handler for `console.info` invocations. See above.
  */
-export function __wbgtest_console_error(args: Array<any>): void;
+export function __wbgtest_console_info(args: Array<any>): void;
 /**
  * Handler for `console.debug` invocations. See above.
  */
@@ -22,9 +22,9 @@ export function __wbgtest_console_warn(args: Array<any>): void;
  */
 export function __wbgtest_console_log(args: Array<any>): void;
 /**
- * Handler for `console.info` invocations. See above.
+ * Handler for `console.error` invocations. See above.
  */
-export function __wbgtest_console_info(args: Array<any>): void;
+export function __wbgtest_console_error(args: Array<any>): void;
 export function __wbgtest_cov_dump(): Uint8Array | undefined;
 /**
  * Runtime test harness support instantiated in JS.

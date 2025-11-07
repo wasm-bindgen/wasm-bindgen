@@ -29,6 +29,14 @@ function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
 }
+/**
+ * @param {bigint} a
+ * @returns {bigint | undefined}
+ */
+export function example_128(a) {
+    const ret = wasm.example_128(a, a >> BigInt(64));
+    return ret[0] === 0 ? undefined : (BigInt.asUintN(64, ret[1]) | (BigInt.asUintN(64, ret[2]) << BigInt(64)));
+}
 
 let WASM_VECTOR_LEN = 0;
 
@@ -103,15 +111,6 @@ export function example(a, b, c, d) {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
-}
-
-/**
- * @param {bigint} a
- * @returns {bigint | undefined}
- */
-export function example_128(a) {
-    const ret = wasm.example_128(a, a >> BigInt(64));
-    return ret[0] === 0 ? undefined : (BigInt.asUintN(64, ret[1]) | (BigInt.asUintN(64, ret[2]) << BigInt(64)));
 }
 
 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
