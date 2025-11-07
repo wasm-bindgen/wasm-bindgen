@@ -46,7 +46,11 @@ use core::fmt;
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
+#[cfg(all(feature = "std", panic = "unwind"))]
+use futures_util::FutureExt;
 use js_sys::Promise;
+#[cfg(all(feature = "std", panic = "unwind"))]
+use wasm_bindgen::__rt::panic_to_panic_error;
 use wasm_bindgen::prelude::*;
 
 mod queue;
@@ -109,6 +113,8 @@ struct Inner {
 pub struct JsFuture {
     inner: Rc<RefCell<Inner>>,
 }
+
+impl core::panic::UnwindSafe for JsFuture {}
 
 impl fmt::Debug for JsFuture {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -205,18 +211,15 @@ impl Future for JsFuture {
 /// The `future` must be `'static` because it will be scheduled to run in the
 /// background and cannot contain any stack references.
 ///
-/// The returned `Promise` will be resolved or rejected when the future completes,
-/// depending on whether it finishes with `Ok` or `Err`.
+/// The returned `Promise` will be resolved or rejected when the future
+/// completes, depending on whether it finishes with `Ok` or `Err`.
 ///
 /// # Panics
 ///
 /// Note that in Wasm panics are currently translated to aborts, but "abort" in
 /// this case means that a JavaScript exception is thrown. The Wasm module is
 /// still usable (likely erroneously) after Rust panics.
-///
-/// If the `future` provided panics then the returned `Promise` **will not
-/// resolve**. Instead it will be a leaked promise. This is an unfortunate
-/// limitation of Wasm currently that's hoped to be fixed one day!
+#[cfg(any(not(feature = "std"), panic = "abort"))]
 pub fn future_to_promise<F>(future: F) -> Promise
 where
     F: Future<Output = Result<JsValue, JsValue>> + 'static,
@@ -233,6 +236,48 @@ where
                 }
                 Err(val) => {
                     reject.call1(&JsValue::undefined(), &val).unwrap_throw();
+                }
+            }
+        });
+    })
+}
+
+/// Converts a Rust `Future` into a JavaScript `Promise`.
+///
+/// This function will take any future in Rust and schedule it to be executed,
+/// returning a JavaScript `Promise` which can then be passed to JavaScript.
+///
+/// The `future` must be `'static` because it will be scheduled to run in the
+/// background and cannot contain any stack references.
+///
+/// The returned `Promise` will be resolved or rejected when the future
+/// completes, depending on whether it finishes with `Ok` or `Err`.
+///
+/// # Panics
+///
+/// If the `future` provided panics then the returned `Promise` will be rejected
+/// with a PanicError.
+#[cfg(all(feature = "std", panic = "unwind"))]
+pub fn future_to_promise<F>(future: F) -> Promise
+where
+    F: Future<Output = Result<JsValue, JsValue>> + 'static + std::panic::UnwindSafe,
+{
+    let mut future = Some(future);
+    Promise::new(&mut |resolve, reject| {
+        let future = future.take().unwrap_throw();
+        spawn_local(async move {
+            let res = future.catch_unwind().await;
+            match res {
+                Ok(Ok(val)) => {
+                    resolve.call1(&JsValue::undefined(), &val).unwrap_throw();
+                }
+                Ok(Err(val)) => {
+                    reject.call1(&JsValue::undefined(), &val).unwrap_throw();
+                }
+                Err(val) => {
+                    reject
+                        .call1(&JsValue::undefined(), &panic_to_panic_error(val))
+                        .unwrap_throw();
                 }
             }
         });

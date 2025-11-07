@@ -54,6 +54,7 @@ pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
+pub mod should_panic;
 pub mod simple;
 pub mod slice;
 pub mod slice_jsvalue;
@@ -62,6 +63,8 @@ pub mod struct_vecs;
 pub mod structural;
 pub mod truthy_falsy;
 pub mod try_from_js_value;
+#[cfg(all(panic = "unwind", feature = "std"))]
+pub mod unwind;
 pub mod usize;
 pub mod validate_prt;
 pub mod variadic;

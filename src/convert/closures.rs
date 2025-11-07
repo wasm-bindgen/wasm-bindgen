@@ -1,6 +1,11 @@
 use alloc::boxed::Box;
 use core::mem;
 
+#[cfg(all(feature = "std", panic = "unwind"))]
+use crate::__rt::maybe_catch_unwind;
+#[cfg(all(feature = "std", panic = "unwind"))]
+use std::panic::AssertUnwindSafe;
+
 use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
@@ -63,7 +68,16 @@ macro_rules! closures {
                 $(
                     let $var = $var::Abi::join($arg1, $arg2, $arg3, $arg4);
                 )*
-                f($($var_expr),*)
+
+                #[cfg(all(feature = "std", panic = "unwind"))]
+                {
+                    maybe_catch_unwind(AssertUnwindSafe(|| f($($var_expr),*)))
+                }
+
+                #[cfg(not(all(feature = "std", panic = "unwind")))]
+                {
+                    f($($var_expr),*)
+                }
             };
             ret.return_abi().into()
         }
