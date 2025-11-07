@@ -61,11 +61,11 @@ export class Test {
         const ptr = this.__destroy_into_raw();
         wasm.test_consume_self(ptr);
     }
-    ref_self() {
-        wasm.test_ref_self(this.__wbg_ptr);
-    }
     ref_mut_self() {
         wasm.test_ref_mut_self(this.__wbg_ptr);
+    }
+    ref_self() {
+        wasm.test_ref_self(this.__wbg_ptr);
     }
     self_Self() {
         const ptr = this.__destroy_into_raw();

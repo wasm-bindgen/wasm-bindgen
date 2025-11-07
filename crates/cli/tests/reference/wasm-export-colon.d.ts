@@ -44,13 +44,13 @@ export class WasmBindgenTestContext {
    */
   constructor();
   /**
-   * Handle `--include-ignored` flag.
-   */
-  include_ignored(include_ignored: boolean): void;
-  /**
    * Handle filter argument.
    */
   filtered_count(filtered: number): void;
+  /**
+   * Handle `--include-ignored` flag.
+   */
+  include_ignored(include_ignored: boolean): void;
   /**
    * Executes a list of tests, returning a promise representing their
    * eventual completion.

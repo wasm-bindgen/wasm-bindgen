@@ -177,19 +177,19 @@ function handleError(f, args) {
     }
 }
 /**
- * @returns {URL}
- */
-export function get_url() {
-    const ret = wasm.get_url();
-    return ret;
-}
-
-/**
  * @returns {MediaSourceEnum}
  */
 export function get_media_source() {
     const ret = wasm.get_media_source();
     return __wbindgen_enum_MediaSourceEnum[ret];
+}
+
+/**
+ * @returns {URL}
+ */
+export function get_url() {
+    const ret = wasm.get_url();
+    return ret;
 }
 
 const __wbindgen_enum_MediaSourceEnum = ["camera", "screen", "application", "window", "browser", "microphone", "audioCapture", "other"];

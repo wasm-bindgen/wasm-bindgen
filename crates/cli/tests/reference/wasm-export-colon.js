@@ -219,6 +219,30 @@ function passArrayJsValueToWasm0(array, malloc) {
     return ptr;
 }
 /**
+ * Handler for `console.debug` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_debug(args) {
+    wasm.__wbgtest_console_debug(args);
+}
+
+/**
+ * Handler for `console.error` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_error(args) {
+    wasm.__wbgtest_console_error(args);
+}
+
+/**
+ * Handler for `console.info` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_info(args) {
+    wasm.__wbgtest_console_info(args);
+}
+
+/**
  * Handler for `console.log` invocations.
  *
  * If a test is currently running it takes the `args` array and stringifies
@@ -232,35 +256,11 @@ export function __wbgtest_console_log(args) {
 }
 
 /**
- * Handler for `console.debug` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_debug(args) {
-    wasm.__wbgtest_console_debug(args);
-}
-
-/**
- * Handler for `console.info` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_info(args) {
-    wasm.__wbgtest_console_info(args);
-}
-
-/**
  * Handler for `console.warn` invocations. See above.
  * @param {Array<any>} args
  */
 export function __wbgtest_console_warn(args) {
     wasm.__wbgtest_console_warn(args);
-}
-
-/**
- * Handler for `console.error` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_error(args) {
-    wasm.__wbgtest_console_error(args);
 }
 
 function getArrayU8FromWasm0(ptr, len) {
@@ -337,18 +337,18 @@ export class WasmBindgenTestContext {
         return this;
     }
     /**
-     * Handle `--include-ignored` flag.
-     * @param {boolean} include_ignored
-     */
-    include_ignored(include_ignored) {
-        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
-    }
-    /**
      * Handle filter argument.
      * @param {number} filtered
      */
     filtered_count(filtered) {
         wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
+    }
+    /**
+     * Handle `--include-ignored` flag.
+     * @param {boolean} include_ignored
+     */
+    include_ignored(include_ignored) {
+        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
     }
     /**
      * Executes a list of tests, returning a promise representing their

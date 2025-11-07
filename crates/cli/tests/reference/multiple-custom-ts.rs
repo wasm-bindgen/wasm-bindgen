@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-// Test that custom TypeScript sections are sorted alphabetically
-// Define them in non-alphabetical order
+// Test that custom TypeScript sections and function exports are sorted alphabetically
+// for deterministic output. Define them in non-alphabetical order.
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_ZEBRA: &'static str = r#"export type ZebraType = "stripes";"#;

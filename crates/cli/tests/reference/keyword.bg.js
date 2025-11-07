@@ -34,16 +34,16 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
-export function exported() {
-    wasm.exported();
-}
-
 export function _function() {
     wasm._function();
 }
 
 export function _var() {
     wasm._var();
+}
+
+export function exported() {
+    wasm.exported();
 }
 
 /**

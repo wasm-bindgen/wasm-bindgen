@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-// Define structs in non-alphabetical order to test that their definition order
-// is preserved in the Wasm, but the typescript output is sorted alphabetically.
+// Define structs in non-alphabetical order to test that outputs are sorted
+// alphabetically for deterministic output.
 
 #[wasm_bindgen]
 pub struct Zebra {
@@ -22,4 +22,3 @@ pub struct Mango {
 pub struct Banana {
     b: u32,
 }
-

@@ -272,16 +272,6 @@ export class HoldsNumber {
         return ret;
     }
     /**
-     * Description for static_fn_with_attr
-     * @param {number} firstArg - some number
-     * @param {number | undefined} secondArg
-     * @returns {HoldsNumber} returns an instance of HoldsNumber, holding arg1 if arg2 is undefined and holding arg2 if not
-     */
-    static static_fn_with_attr(firstArg, secondArg) {
-        const ret = wasm.holdsnumber_static_fn_with_attr(firstArg, secondArg);
-        return HoldsNumber.__wrap(ret);
-    }
-    /**
      * Description for method_with_attr
      * @param {number} firstArg - some number
      * @param {boolean | undefined} secondArg
@@ -290,6 +280,16 @@ export class HoldsNumber {
     method_with_attr(firstArg, secondArg) {
         const ret = wasm.holdsnumber_method_with_attr(this.__wbg_ptr, firstArg, secondArg);
         return ret;
+    }
+    /**
+     * Description for static_fn_with_attr
+     * @param {number} firstArg - some number
+     * @param {number | undefined} secondArg
+     * @returns {HoldsNumber} returns an instance of HoldsNumber, holding arg1 if arg2 is undefined and holding arg2 if not
+     */
+    static static_fn_with_attr(firstArg, secondArg) {
+        const ret = wasm.holdsnumber_static_fn_with_attr(firstArg, secondArg);
+        return HoldsNumber.__wrap(ret);
     }
 }
 if (Symbol.dispose) HoldsNumber.prototype[Symbol.dispose] = HoldsNumber.prototype.free;

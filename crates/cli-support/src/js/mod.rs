@@ -155,8 +155,6 @@ enum ExportJs<'a> {
 
 /// A TypeScript function export declaration.
 struct TsFunctionExport {
-    /// The name of the exported function
-    name: String,
     /// The complete TypeScript declaration for this function
     declaration: String,
 }
@@ -2957,12 +2955,9 @@ wasm = wasmInstance.exports;
             })?;
         }
 
-        // Sort and emit TypeScript function exports for deterministic output.
-        // This ensures that the TypeScript declarations are consistent regardless
-        // of compiler settings (like codegen units) while preserving the JS export
-        // order as defined in the source code.
-        self.typescript_function_exports
-            .sort_by(|a, b| a.name.cmp(&b.name));
+        // Emit TypeScript function exports. These are already in sorted order
+        // because exports are sorted alphabetically in iter_adapeter before being
+        // processed, ensuring deterministic output regardless of compiler settings.
         for export in &self.typescript_function_exports {
             self.typescript.push_str(&export.declaration);
         }
@@ -3176,7 +3171,6 @@ wasm = wasmInstance.exports;
                             ts_decl.push_str(ts_sig);
                             ts_decl.push_str(";\n");
                             self.typescript_function_exports.push(TsFunctionExport {
-                                name: name.clone(),
                                 declaration: ts_decl,
                             });
                         }
@@ -4530,14 +4524,10 @@ fn iter_adapeter<'a>(
         })
         .collect();
 
-    // Since `wit.adapters` is a BTreeMap, the adapters are already sorted by
-    // their ID. This is good enough for exports and adapters, but imports need
-    // to be sorted by their name.
-    //
-    // Note: we do *NOT* want to sort exports by name. By default, exports are
-    // the order in which they were defined in the Rust code. Sorting them by
-    // name would break that order and take away control from the user.
-
+    // Sort adapters for deterministic output across different compilation settings.
+    // Imports and exports are sorted by name to ensure consistent ordering regardless
+    // of codegen units or other compiler settings that might affect the order in which
+    // functions are processed.
     adapters.sort_by(|(_, _, a), (_, _, b)| {
         fn get_kind_order(kind: &ContextAdapterKind) -> u8 {
             match kind {
@@ -4547,11 +4537,24 @@ fn iter_adapeter<'a>(
             }
         }
 
+        // For class members, we sort by class name first, then by member name.
+        fn get_export_sort_key(export: &AuxExport) -> (&str, &str) {
+            match &export.kind {
+                AuxExportKind::Function(name)
+                | AuxExportKind::FunctionThis(name)
+                | AuxExportKind::Constructor(name) => (name.as_str(), ""),
+                AuxExportKind::Method { class, name, .. } => (class.as_str(), name.as_str()),
+            }
+        }
+
         match (a, b) {
             (ContextAdapterKind::Import(a), ContextAdapterKind::Import(b)) => {
                 let a = module.imports.get(*a);
                 let b = module.imports.get(*b);
                 a.name.cmp(&b.name)
+            }
+            (ContextAdapterKind::Export(a), ContextAdapterKind::Export(b)) => {
+                get_export_sort_key(a).cmp(&get_export_sort_key(b))
             }
             _ => get_kind_order(a).cmp(&get_kind_order(b)),
         }
