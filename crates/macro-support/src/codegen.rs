@@ -776,6 +776,12 @@ impl TryToTokens for ast::Export {
                     }).into()
                 }
             }
+        } else if cfg!(panic = "unwind") {
+            call = quote! {
+                #wasm_bindgen::__rt::maybe_catch_unwind(|| {
+                    #call
+                })
+            };
         }
 
         let projection = quote! { <#ret_ty as #wasm_bindgen::convert::ReturnWasmAbi> };
@@ -843,7 +849,7 @@ impl TryToTokens for ast::Export {
                     all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")),
                     export_name = #export_name,
                 )]
-                pub unsafe extern "C" fn #generated_name(#(#args),*) -> #wasm_bindgen::convert::WasmRet<#projection::Abi> {
+                pub unsafe extern "C-unwind" fn #generated_name(#(#args),*) -> #wasm_bindgen::convert::WasmRet<#projection::Abi> {
                     const _: () = {
                         #(#checks)*
                     };
