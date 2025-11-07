@@ -6,6 +6,7 @@
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
 use crate::{Clamped, JsCast, JsError, JsValue};
@@ -196,5 +197,14 @@ impl WasmDescribe for JsError {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         JsValue::describe();
+    }
+}
+
+impl<T> WasmDescribe for AssertUnwindSafe<T>
+where
+    T: WasmDescribe,
+{
+    fn describe() {
+        T::describe();
     }
 }

@@ -96,6 +96,7 @@ use alloc::vec::Vec;
 use core::cell::{Cell, RefCell};
 use core::fmt::{self, Display};
 use core::future::Future;
+use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{self, Poll};
 use js_sys::{Array, Function, Promise};
@@ -293,11 +294,15 @@ impl Context {
     #[wasm_bindgen(constructor)]
     pub fn new(is_bench: bool) -> Context {
         fn panic_handling(mut message: String) {
-            let should_panic = CURRENT_OUTPUT.with(|output| {
-                let mut output = output.borrow_mut();
-                output.panic.push_str(&message);
-                output.should_panic
-            });
+            let should_panic = if !CURRENT_OUTPUT.is_set() {
+                false
+            } else {
+                CURRENT_OUTPUT.with(|output| {
+                    let mut output = output.borrow_mut();
+                    output.panic.push_str(&message);
+                    output.should_panic
+                })
+            };
 
             // See https://github.com/rustwasm/console_error_panic_hook/blob/4dc30a5448ed3ffcfb961b1ad54d000cca881b84/src/lib.rs#L83-L123.
             if !should_panic {
@@ -408,7 +413,7 @@ impl Context {
         // Now that we've collected all our tests we wrap everything up in a
         // future to actually do all the processing, and pass it out to JS as a
         // `Promise`.
-        let state = self.state.clone();
+        let state = AssertUnwindSafe(self.state.clone());
         future_to_promise(async {
             let passed = ExecuteTests(state).await;
             Ok(JsValue::from(passed))
@@ -573,7 +578,7 @@ impl Context {
     }
 }
 
-struct ExecuteTests(Rc<State>);
+struct ExecuteTests(AssertUnwindSafe<Rc<State>>);
 
 impl Future for ExecuteTests {
     type Output = bool;
