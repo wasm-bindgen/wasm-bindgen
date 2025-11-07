@@ -43,16 +43,6 @@ function add(a, b) {
     return ret;
 }
 
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
-    return ret;
-}
-
 let WASM_VECTOR_LEN = 0;
 
 const cachedTextEncoder = new TextEncoder();
@@ -107,28 +97,6 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 /**
- * @param {string} a
- * @param {string} b
- * @returns {string}
- */
-function concat(a, b) {
-    let deferred3_0;
-    let deferred3_1;
-    try {
-        const ptr0 = passStringToWasm0(a, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passStringToWasm0(b, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.concat(ptr0, len0, ptr1, len1);
-        deferred3_0 = ret[0];
-        deferred3_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
-    } finally {
-        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
-    }
-}
-
-/**
  * @param {string} s
  * @returns {string}
  */
@@ -158,10 +126,42 @@ function divide(a, b) {
 }
 
 /**
+ * @param {string} a
+ * @param {string} b
+ * @returns {string}
+ */
+function concat(a, b) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(a, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(b, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.concat(ptr0, len0, ptr1, len1);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
  * @returns {number}
  */
 export function regular_function() {
     const ret = wasm.regular_function();
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
     return ret;
 }
 
@@ -223,14 +223,14 @@ class Counter {
         const ret = wasm.counter_value(this.__wbg_ptr);
         return ret;
     }
+    increment() {
+        wasm.counter_increment(this.__wbg_ptr);
+    }
     /**
      * @param {number} val
      */
     set value(val) {
         wasm.counter_set_value(this.__wbg_ptr, val);
-    }
-    increment() {
-        wasm.counter_increment(this.__wbg_ptr);
     }
 }
 if (Symbol.dispose) Counter.prototype[Symbol.dispose] = Counter.prototype.free;

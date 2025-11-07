@@ -33,12 +33,6 @@ function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
 }
-/**
- * @param {number | string} a
- */
-export function single(a) {
-    wasm.single(a);
-}
 
 let cachedDataViewMemory0 = null;
 
@@ -73,6 +67,13 @@ export function slice(a) {
     const ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     wasm.slice(ptr0, len0);
+}
+
+/**
+ * @param {number | string} a
+ */
+export function single(a) {
+    wasm.single(a);
 }
 
 export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
