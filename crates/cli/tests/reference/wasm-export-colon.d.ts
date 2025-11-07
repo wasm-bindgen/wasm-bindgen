@@ -1,21 +1,21 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Handler for `console.error` invocations. See above.
- */
-export function __wbgtest_console_error(args: Array<any>): void;
-/**
- * Handler for `console.warn` invocations. See above.
- */
-export function __wbgtest_console_warn(args: Array<any>): void;
-/**
  * Handler for `console.debug` invocations. See above.
  */
 export function __wbgtest_console_debug(args: Array<any>): void;
 /**
+ * Handler for `console.error` invocations. See above.
+ */
+export function __wbgtest_console_error(args: Array<any>): void;
+/**
  * Handler for `console.info` invocations. See above.
  */
 export function __wbgtest_console_info(args: Array<any>): void;
+/**
+ * Handler for `console.warn` invocations. See above.
+ */
+export function __wbgtest_console_warn(args: Array<any>): void;
 /**
  * Handler for `console.log` invocations.
  *

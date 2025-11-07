@@ -38,8 +38,8 @@ function getStringFromWasm0(ptr, len) {
  * @param {number} b
  * @returns {number}
  */
-function add(a, b) {
-    const ret = wasm.add(a, b);
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
     return ret;
 }
 
@@ -120,6 +120,16 @@ function uppercase(s) {
  * @param {number} b
  * @returns {number}
  */
+function add(a, b) {
+    const ret = wasm.add(a, b);
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
 function divide(a, b) {
     const ret = wasm.divide(a, b);
     return ret;
@@ -152,16 +162,6 @@ function concat(a, b) {
  */
 export function regular_function() {
     const ret = wasm.regular_function();
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
     return ret;
 }
 

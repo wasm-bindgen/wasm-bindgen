@@ -44,12 +44,12 @@ export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
 }
 
-export function _var() {
-    wasm._var();
-}
-
 export function _function() {
     wasm._function();
+}
+
+export function _var() {
+    wasm._var();
 }
 
 export function exported() {
