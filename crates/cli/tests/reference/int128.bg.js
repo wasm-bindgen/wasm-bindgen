@@ -33,28 +33,6 @@ function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
 }
-
-function isLikeNone(x) {
-    return x === undefined || x === null;
-}
-/**
- * @param {bigint | null} [a]
- * @returns {bigint | undefined}
- */
-export function echo_option_i128(a) {
-    const ret = wasm.echo_option_i128(!isLikeNone(a), isLikeNone(a) ? BigInt(0) : a, isLikeNone(a) ? BigInt(0) : a >> BigInt(64));
-    return ret[0] === 0 ? undefined : (BigInt.asUintN(64, ret[1]) | (ret[2] << BigInt(64)));
-}
-
-/**
- * @param {bigint} a
- * @returns {bigint}
- */
-export function echo_u128(a) {
-    const ret = wasm.echo_u128(a, a >> BigInt(64));
-    return (BigInt.asUintN(64, ret[0]) | (BigInt.asUintN(64, ret[1]) << BigInt(64)));
-}
-
 /**
  * @param {bigint} a
  * @returns {bigint}
@@ -64,6 +42,9 @@ export function echo_i128(a) {
     return (BigInt.asUintN(64, ret[0]) | (ret[1] << BigInt(64)));
 }
 
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
 /**
  * @param {bigint | null} [a]
  * @returns {bigint | undefined}
@@ -87,6 +68,24 @@ export function throw_i128() {
         throw takeFromExternrefTable0(ret[2]);
     }
     return (BigInt.asUintN(64, ret[0]) | (ret[1] << BigInt(64)));
+}
+
+/**
+ * @param {bigint | null} [a]
+ * @returns {bigint | undefined}
+ */
+export function echo_option_i128(a) {
+    const ret = wasm.echo_option_i128(!isLikeNone(a), isLikeNone(a) ? BigInt(0) : a, isLikeNone(a) ? BigInt(0) : a >> BigInt(64));
+    return ret[0] === 0 ? undefined : (BigInt.asUintN(64, ret[1]) | (ret[2] << BigInt(64)));
+}
+
+/**
+ * @param {bigint} a
+ * @returns {bigint}
+ */
+export function echo_u128(a) {
+    const ret = wasm.echo_u128(a, a >> BigInt(64));
+    return (BigInt.asUintN(64, ret[0]) | (BigInt.asUintN(64, ret[1]) << BigInt(64)));
 }
 
 export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {

@@ -33,25 +33,6 @@ function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
 }
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function divide(a, b) {
-    const ret = wasm.divide(a, b);
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function add(a, b) {
-    const ret = wasm.add(a, b);
-    return ret;
-}
 
 let WASM_VECTOR_LEN = 0;
 
@@ -107,6 +88,63 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 /**
+ * @param {string} s
+ * @returns {string}
+ */
+function uppercase(s) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.uppercase(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function add(a, b) {
+    const ret = wasm.add(a, b);
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function divide(a, b) {
+    const ret = wasm.divide(a, b);
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
+    return ret;
+}
+
+/**
+ * @returns {number}
+ */
+export function regular_function() {
+    const ret = wasm.regular_function();
+    return ret;
+}
+
+/**
  * @param {string} a
  * @param {string} b
  * @returns {string}
@@ -125,43 +163,6 @@ function concat(a, b) {
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
-    }
-}
-
-/**
- * @returns {number}
- */
-export function regular_function() {
-    const ret = wasm.regular_function();
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
-    return ret;
-}
-
-/**
- * @param {string} s
- * @returns {string}
- */
-function uppercase(s) {
-    let deferred2_0;
-    let deferred2_1;
-    try {
-        const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.uppercase(ptr0, len0);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
-    } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
 }
 

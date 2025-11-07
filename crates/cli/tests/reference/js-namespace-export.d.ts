@@ -1,11 +1,11 @@
 /* tslint:disable */
 /* eslint-disable */
-declare function divide(a: number, b: number): number;
-declare function add(a: number, b: number): number;
-declare function concat(a: string, b: string): string;
-export function regular_function(): number;
-declare function multiply(a: number, b: number): number;
 declare function uppercase(s: string): string;
+declare function add(a: number, b: number): number;
+declare function divide(a: number, b: number): number;
+declare function multiply(a: number, b: number): number;
+export function regular_function(): number;
+declare function concat(a: string, b: string): string;
 export enum Color {
   Red = 0,
   Green = 1,

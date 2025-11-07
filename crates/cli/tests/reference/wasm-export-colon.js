@@ -209,11 +209,11 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 /**
- * Handler for `console.info` invocations. See above.
+ * Handler for `console.error` invocations. See above.
  * @param {Array<any>} args
  */
-export function __wbgtest_console_info(args) {
-    wasm.__wbgtest_console_info(args);
+export function __wbgtest_console_error(args) {
+    wasm.__wbgtest_console_error(args);
 }
 
 /**
@@ -246,11 +246,11 @@ export function __wbgtest_console_log(args) {
 }
 
 /**
- * Handler for `console.error` invocations. See above.
+ * Handler for `console.info` invocations. See above.
  * @param {Array<any>} args
  */
-export function __wbgtest_console_error(args) {
-    wasm.__wbgtest_console_error(args);
+export function __wbgtest_console_info(args) {
+    wasm.__wbgtest_console_info(args);
 }
 
 function passArrayJsValueToWasm0(array, malloc) {

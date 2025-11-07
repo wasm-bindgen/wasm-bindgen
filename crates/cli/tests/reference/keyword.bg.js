@@ -34,10 +34,6 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
-export function _var() {
-    wasm._var();
-}
-
 export function exported() {
     wasm.exported();
 }
@@ -55,6 +51,10 @@ export function _function() {
  */
 export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
+}
+
+export function _var() {
+    wasm._var();
 }
 
 export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
