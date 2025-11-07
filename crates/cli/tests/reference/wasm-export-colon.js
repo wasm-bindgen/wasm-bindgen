@@ -209,14 +209,6 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 /**
- * Handler for `console.debug` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_debug(args) {
-    wasm.__wbgtest_console_debug(args);
-}
-
-/**
  * Handler for `console.error` invocations. See above.
  * @param {Array<any>} args
  */
@@ -225,11 +217,11 @@ export function __wbgtest_console_error(args) {
 }
 
 /**
- * Handler for `console.info` invocations. See above.
+ * Handler for `console.debug` invocations. See above.
  * @param {Array<any>} args
  */
-export function __wbgtest_console_info(args) {
-    wasm.__wbgtest_console_info(args);
+export function __wbgtest_console_debug(args) {
+    wasm.__wbgtest_console_debug(args);
 }
 
 /**
@@ -251,6 +243,14 @@ export function __wbgtest_console_warn(args) {
  */
 export function __wbgtest_console_log(args) {
     wasm.__wbgtest_console_log(args);
+}
+
+/**
+ * Handler for `console.info` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_info(args) {
+    wasm.__wbgtest_console_info(args);
 }
 
 function passArrayJsValueToWasm0(array, malloc) {
@@ -656,14 +656,14 @@ function __wbg_get_imports() {
         const ret = getStringFromWasm0(arg0, arg1);
         return ret;
     };
-    imports.wbg.__wbindgen_cast_0000000000000001 = function(arg0, arg1) {
-        // Cast intrinsic for `Closure(Closure { dtor_idx: 9, function: Function { arguments: [Externref], shim_idx: 10, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-        const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000008, wasm_bindgen__convert__closures_____invoke__h0000000000000003);
-        return ret;
-    };
-    imports.wbg.__wbindgen_cast_0000000000000002 = function(arg0) {
+    imports.wbg.__wbindgen_cast_0000000000000001 = function(arg0) {
         // Cast intrinsic for `F64 -> Externref`.
         const ret = arg0;
+        return ret;
+    };
+    imports.wbg.__wbindgen_cast_0000000000000002 = function(arg0, arg1) {
+        // Cast intrinsic for `Closure(Closure { dtor_idx: 9, function: Function { arguments: [Externref], shim_idx: 10, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+        const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000008, wasm_bindgen__convert__closures_____invoke__h0000000000000003);
         return ret;
     };
     imports.wbg.__wbindgen_init_externref_table = function() {

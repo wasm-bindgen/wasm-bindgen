@@ -33,18 +33,28 @@ function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
 }
-/**
- * @param {Color} color
- * @returns {Color}
- */
-export function enum_echo(color) {
-    const ret = wasm.enum_echo(color);
-    return ret;
-}
 
 function isLikeNone(x) {
     return x === undefined || x === null;
 }
+/**
+ * @param {Ordering | null} [order]
+ * @returns {Ordering | undefined}
+ */
+export function option_order(order) {
+    const ret = wasm.option_order(isLikeNone(order) ? 2 : order);
+    return ret === 2 ? undefined : ret;
+}
+
+/**
+ * @param {Color | null} [color]
+ * @returns {Color | undefined}
+ */
+export function option_enum_echo(color) {
+    const ret = wasm.option_enum_echo(isLikeNone(color) ? 3 : color);
+    return ret === 3 ? undefined : ret;
+}
+
 /**
  * @param {ColorName | null} [color]
  * @returns {ColorName | undefined}
@@ -64,21 +74,12 @@ export function get_name(color) {
 }
 
 /**
- * @param {Color | null} [color]
- * @returns {Color | undefined}
+ * @param {Color} color
+ * @returns {Color}
  */
-export function option_enum_echo(color) {
-    const ret = wasm.option_enum_echo(isLikeNone(color) ? 3 : color);
-    return ret === 3 ? undefined : ret;
-}
-
-/**
- * @param {Ordering | null} [order]
- * @returns {Ordering | undefined}
- */
-export function option_order(order) {
-    const ret = wasm.option_order(isLikeNone(order) ? 2 : order);
-    return ret === 2 ? undefined : ret;
+export function enum_echo(color) {
+    const ret = wasm.enum_echo(color);
+    return ret;
 }
 
 /**
