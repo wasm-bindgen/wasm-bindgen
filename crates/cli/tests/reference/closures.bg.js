@@ -87,12 +87,12 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1);
+function wasm_bindgen_d73e5480fb5c094d___convert__closures_____invoke______(arg0, arg1) {
+    wasm.wasm_bindgen_d73e5480fb5c094d___convert__closures_____invoke______(arg0, arg1);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen_d73e5480fb5c094d___convert__closures_____invoke___wasm_bindgen_d73e5480fb5c094d___JsValue__u32__js_sys_8e131e6159be0ffd___Array_____(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen_d73e5480fb5c094d___convert__closures_____invoke___wasm_bindgen_d73e5480fb5c094d___JsValue__u32__js_sys_8e131e6159be0ffd___Array_____(arg0, arg1, arg2, arg3, arg4);
 }
 
 export function delayed_callback() {
@@ -134,7 +134,7 @@ export function __wbg_forEach_fdfa9a663e9c9a9e(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, arg0, arg1, arg2);
+                return wasm_bindgen_d73e5480fb5c094d___convert__closures_____invoke___wasm_bindgen_d73e5480fb5c094d___JsValue__u32__js_sys_8e131e6159be0ffd___Array_____(a, state0.b, arg0, arg1, arg2);
             } finally {
                 state0.a = a;
             }
@@ -197,8 +197,8 @@ export function __wbindgen_cast_0000000000000000(arg0, arg1) {
 };
 
 export function __wbindgen_cast_0000000000000001(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 2, function: Function { arguments: [], shim_idx: 3, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen_d73e5480fb5c094d___closure__destroy___dyn_core_f622c628fd7f704e___ops__function__FnMut_____Output_______, wasm_bindgen_d73e5480fb5c094d___convert__closures_____invoke______);
     return ret;
 };
 

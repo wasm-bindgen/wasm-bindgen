@@ -2,8 +2,13 @@ error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
  --> ui-tests/traits-not-implemented.rs:5:1
   |
 5 | #[wasm_bindgen]
-  | ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `A`
+  | ^^^^^^^^^^^^^^^ unsatisfied trait bound
   |
+help: the trait `IntoWasmAbi` is not implemented for `A`
+ --> ui-tests/traits-not-implemented.rs:3:1
+  |
+3 | struct A;
+  | ^^^^^^^^
   = help: the following other types implement trait `IntoWasmAbi`:
             &'a [MaybeUninit<f32>]
             &'a [MaybeUninit<f64>]
@@ -20,8 +25,13 @@ error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
  --> ui-tests/traits-not-implemented.rs:8:19
   |
 8 |     pub fn foo(a: A);
-  |                   ^ the trait `IntoWasmAbi` is not implemented for `A`
+  |                   ^ unsatisfied trait bound
   |
+help: the trait `IntoWasmAbi` is not implemented for `A`
+ --> ui-tests/traits-not-implemented.rs:3:1
+  |
+3 | struct A;
+  | ^^^^^^^^
   = help: the following other types implement trait `IntoWasmAbi`:
             &'a [MaybeUninit<f32>]
             &'a [MaybeUninit<f64>]
