@@ -482,7 +482,7 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - 1.57
+          - 1.71
           - stable
         target:
           - x86_64-unknown-linux-gnu
@@ -508,7 +508,7 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - 1.57
+          - 1.71
           - 1.82
         target:
           - x86_64-unknown-linux-gnu
