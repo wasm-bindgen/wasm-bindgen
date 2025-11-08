@@ -96,6 +96,7 @@ use alloc::vec::Vec;
 use core::cell::{Cell, RefCell};
 use core::fmt::{self, Display};
 use core::future::Future;
+use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{self, Poll};
 use js_sys::{Array, Function, Promise};
@@ -396,7 +397,7 @@ impl Context {
         // Now that we've collected all our tests we wrap everything up in a
         // future to actually do all the processing, and pass it out to JS as a
         // `Promise`.
-        let state = self.state.clone();
+        let state = AssertUnwindSafe(self.state.clone());
         future_to_promise(async {
             let passed = ExecuteTests(state).await;
             Ok(JsValue::from(passed))
@@ -559,7 +560,7 @@ impl Context {
     }
 }
 
-struct ExecuteTests(Rc<State>);
+struct ExecuteTests(AssertUnwindSafe<Rc<State>>);
 
 impl Future for ExecuteTests {
     type Output = bool;
