@@ -53,7 +53,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@1.90
       with:
         components: clippy,rustfmt
-    - run: RUSTFLAGS=-Cpanic=abort cargo clippy --no-deps --all --all-features -- -D warnings
+    - run: cargo clippy --no-deps --all --all-features -- -D warnings
 
   # Run `cargo clippy` over all Wasm crates
   clippy_wasm:
