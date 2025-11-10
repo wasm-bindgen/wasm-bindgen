@@ -2647,11 +2647,9 @@ wasm = wasmInstance.exports;
     }
 
     fn expose_panic_error(&mut self) {
-        if !self.should_write_global("panic_error") {
-            return;
-        }
-
-        self.global("class PanicError extends Error {}");
+        intrinsic(&mut self.intrinsics, "panic_error".into(), || {
+            "class PanicError extends Error {}".into()
+        });
     }
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {

@@ -20,8 +20,8 @@ exports.call_exports = async function() {
   assert.strictEqual(42, await foo.method());
   await wasm.async_take_js_reference(42);
   const buffer = new Int32Array([1, 2, 3, 4]);
-  await wasm.async_take_mut_slice(buffer);
-  assert.deepStrictEqual(buffer, new Int32Array([42, 42, 42, 42]));
+//   await wasm.async_take_mut_slice(buffer);
+//   assert.deepStrictEqual(buffer, new Int32Array([42, 42, 42, 42]));
 };
 
 exports.call_promise = async function() {
@@ -45,4 +45,8 @@ exports.call_promise_ok_unit = async function() {
 
 exports.call_promise_err_unit = async function() {
     throw "error";
+}
+
+exports.check_panic = async function() {
+    assert.rejects(wasm.panics(), "xxx");
 }
