@@ -936,7 +936,8 @@ impl<'a> Context<'a> {
         // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
             "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
-            const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
+            const wasmBytes = await Deno.readFile(wasmUrl);
+            const wasmInstantiated = await WebAssembly.instantiate(wasmBytes, __wbg_get_imports());
             const wasm = wasmInstantiated.instance.exports;
             {start}",
             start = if needs_manual_start {
