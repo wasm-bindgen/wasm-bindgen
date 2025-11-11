@@ -34,6 +34,7 @@ fn test_valid() {
     pass_struct_vec();
 }
 
+#[cfg(not(feature = "_panic-unwind"))]
 #[wasm_bindgen_test]
 fn test_invalid() {
     pass_invalid_struct_vec();
