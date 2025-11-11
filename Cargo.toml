@@ -127,6 +127,7 @@ members = [
   "examples/without-a-bundler-no-modules",
   "examples/synchronous-instantiation",
   "tests/no-std",
+  "benchmarks/codspeed-napi"
 ]
 resolver = "2"
 

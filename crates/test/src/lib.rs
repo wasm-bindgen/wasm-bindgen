@@ -7,7 +7,7 @@
 
 extern crate alloc;
 
-pub use wasm_bindgen_test_macro::wasm_bindgen_test;
+pub use wasm_bindgen_test_macro::{wasm_bindgen_bench, wasm_bindgen_test};
 
 // Custom allocator that only returns pointers in the 2GB-4GB range
 // To ensure we actually support more than 2GB of memory
@@ -117,3 +117,7 @@ pub mod __rt;
 // That way you can use normal cargo test without minicov
 #[cfg(target_arch = "wasm32")]
 mod coverage;
+
+mod bench;
+
+pub use bench::Criterion;

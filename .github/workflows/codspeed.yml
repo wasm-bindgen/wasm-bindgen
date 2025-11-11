@@ -1,0 +1,38 @@
+name: CodSpeed Benchmarks
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  benchmarks:
+    name: Run benchmarks
+    # runs-on: codspeed-macro
+    # runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: |
+          cd benchmarks/codspeed-napi
+          npm install
+          npm run build
+      - run: |
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/latest/download/codspeed-runner-installer.sh | bash
+          source "$HOME/.cargo/env"
+          export CODSPEED_ARGS="--profile-folder=$GITHUB_WORKSPACE/target/profile"
+          export WASM_BINDGEN_CODSPEED_NAPI=$GITHUB_WORKSPACE/benchmarks/codspeed-napi/codspeed.node
+          export WASM_BINDGEN_CODSPEED_WORKSPACE_ROOT=$GITHUB_WORKSPACE
+          mkdir -p target/profile
+
+          cargo bench --target wasm32-unknown-unknown -p js-sys -- --codspeed
+        env:
+          CODSPEED_LOG: debug
+          CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
+

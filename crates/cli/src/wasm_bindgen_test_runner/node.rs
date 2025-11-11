@@ -9,21 +9,23 @@ use super::Cli;
 use super::Tests;
 
 // depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
-pub const SHARED_SETUP: &str = r#"
-const handlers = {};
+pub fn shared_setup(is_bench: bool) -> String {
+    format!(
+        r#"
+const handlers = {{}};
 
-const wrap = method => {
+const wrap = method => {{
     const og = console[method];
-    const on_method = `on_console_${method}`;
-    console[method] = function (...args) {
-        if (nocapture) {
+    const on_method = `on_console_${{method}}`;
+    console[method] = function (...args) {{
+        if (nocapture) {{
             og.apply(this, args);
-        }
-        if (handlers[on_method]) {
+        }}
+        if (handlers[on_method]) {{
             handlers[on_method](args);
-        }
-    };
-};
+        }}
+    }};
+}};
 
 // save original `console.log`
 global.__wbgtest_og_console_log = console.log;
@@ -36,13 +38,15 @@ wrap("info");
 wrap("warn");
 wrap("error");
 
-const cx = new wasm.WasmBindgenTestContext();
+const cx = new wasm.WasmBindgenTestContext({is_bench});
 handlers.on_console_debug = wasm.__wbgtest_console_debug;
 handlers.on_console_log = wasm.__wbgtest_console_log;
 handlers.on_console_info = wasm.__wbgtest_console_info;
 handlers.on_console_warn = wasm.__wbgtest_console_warn;
 handlers.on_console_error = wasm.__wbgtest_console_error;
-"#;
+"#
+    )
+}
 
 pub fn execute(
     module: &str,
@@ -51,20 +55,36 @@ pub fn execute(
     tests: Tests,
     module_format: bool,
     coverage: PathBuf,
+    benchmark: PathBuf,
 ) -> Result<(), Error> {
+    let codspeed = cli.codspeed;
+    let wbg_workspace_root = env::var("WASM_BINDGEN_CODSPEED_WORKSPACE_ROOT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| env::current_dir().unwrap());
+
     let mut js_to_execute = format!(
         r#"
         {exit};
         {fs};
         {wasm};
+        {codspeed};
 
         const nocapture = {nocapture};
-        {SHARED_SETUP}
+        {shared_setup}
 
         global.__wbg_test_invoke = f => f();
 
+        global.codspeed = codspeed;
+
         async function main(tests) {{
             {args}
+
+            try {{
+                const bimport = await fs.readFile('{benchmark}');
+                if (bimport !== undefined)
+                    wasm.__wbgbench_import(new Uint8Array(bimport));
+            }} catch {{
+            }}
 
             const ok = await cx.run(tests.map(n => wasm.__wasm[n]));
 
@@ -72,12 +92,19 @@ pub fn execute(
             if (coverage !== undefined)
                 await fs.writeFile('{coverage}', coverage);
 
+            const bdump = wasm.__wbgbench_dump();
+            if (bdump !== undefined)
+                await fs.writeFile('{benchmark}', bdump);
+
+            codspeed.aggregateRawWalltimeData('{codspeed_workspace_root}');
+
             if (!ok)
                 exit(1);
         }}
 
         const tests = [];
     "#,
+        shared_setup = shared_setup(cli.bench),
         wasm = if !module_format {
             format!(r"const wasm = require('./{module}.js')")
         } else {
@@ -93,9 +120,41 @@ pub fn execute(
         } else {
             r"import fs from 'node:fs/promises'".to_string()
         },
+        codspeed = if cli.codspeed {
+            if !module_format {
+                r"const codspeed = require('./codspeed.node')"
+            } else {
+                r"import * as codspeed from './codspeed.node'"
+            }
+        } else {
+            r"
+            const codspeed = {
+                initCodspeed() {},
+                currentTimestamp() {
+                    return '';
+                },
+                addBenchmarkTimestamps(start, end) {},
+                setExecutedBenchmark(uri) {
+                    return true;
+                },
+                startBenchmark() {
+                    return true;
+                },
+                stopBenchmark() {
+                    return true;
+                },
+                collectRawWalltimeResults(...args) {},
+                aggregateRawWalltimeData(...args) {
+                    return true;
+                }
+            }
+            "
+        },
+        codspeed_workspace_root = wbg_workspace_root.display(),
         coverage = coverage.display(),
-        nocapture = cli.nocapture.clone(),
+        nocapture = cli.nocapture || cli.bench,
         args = cli.into_args(&tests),
+        benchmark = benchmark.display()
     );
 
     // Note that we're collecting *JS objects* that represent the functions to
@@ -142,13 +201,43 @@ pub fn execute(
         .filter(|s| !s.is_empty())
         .collect::<Vec<_>>();
 
-    let status = Command::new("node")
-        .env("NODE_PATH", env::join_paths(&path).unwrap())
-        .arg("--expose-gc")
-        .args(&extra_node_args)
-        .arg(&js_path)
-        .status()
-        .context("failed to find or execute Node.js")?;
+    let status = if codspeed {
+        std::fs::copy(
+            std::env::var("WASM_BINDGEN_CODSPEED_NAPI").unwrap_or_else(|_| "codspeed.node".into()),
+            tmpdir.join("codspeed.node"),
+        )
+        .context("Run benchmarks with codspeed requires setting the codspeed napi path.")?;
+
+        let extra_codspeed_args = env::var("CODSPEED_ARGS")
+            .unwrap_or_default()
+            .split(',')
+            .map(|s| s.to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
+
+        Command::new("codspeed")
+            .arg("run")
+            .args(["--mode", "walltime"])
+            .args(&extra_codspeed_args)
+            .arg("--")
+            .arg("node")
+            .arg("--perf-basic-prof-only-functions")
+            .arg("--expose-gc")
+            .args(&extra_node_args)
+            .arg(&js_path)
+            .env("CODSPEED_CARGO_WORKSPACE_ROOT", &wbg_workspace_root)
+            .env("NODE_PATH", env::join_paths(&path).unwrap())
+            .status()
+            .context("failed to find or execute Node.js with codspeed")?
+    } else {
+        Command::new("node")
+            .env("NODE_PATH", env::join_paths(&path).unwrap())
+            .arg("--expose-gc")
+            .args(&extra_node_args)
+            .arg(&js_path)
+            .status()
+            .context("failed to find or execute Node.js")?
+    };
 
     if !status.success() {
         bail!("Node failed with exit_code {}", status.code().unwrap_or(1))

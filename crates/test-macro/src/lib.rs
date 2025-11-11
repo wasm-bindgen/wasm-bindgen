@@ -8,9 +8,25 @@ use quote::quote;
 use quote::quote_spanned;
 
 #[proc_macro_attribute]
+pub fn wasm_bindgen_bench(
+    attr: proc_macro::TokenStream,
+    body: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    bindgen(attr, body, true)
+}
+
+#[proc_macro_attribute]
 pub fn wasm_bindgen_test(
     attr: proc_macro::TokenStream,
     body: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    bindgen(attr, body, false)
+}
+
+fn bindgen(
+    attr: proc_macro::TokenStream,
+    body: proc_macro::TokenStream,
+    is_bench: bool,
 ) -> proc_macro::TokenStream {
     let mut attributes = Attributes::default();
     let attribute_parser = syn::meta::parser(|meta| attributes.parse(meta));
@@ -84,20 +100,40 @@ pub fn wasm_bindgen_test(
         None => quote! { ::core::option::Option::None },
     };
 
-    let test_body = if attributes.r#async {
-        quote! { cx.execute_async(test_name, #ident, #should_panic_par, #ignore_par); }
+    let exec_ident = if is_bench {
+        let body = if attributes.r#async {
+            quote! { #ident(&mut bencher).await; }
+        } else {
+            quote! {#ident(&mut bencher);}
+        };
+        let bench_ident = quote::format_ident!("__wbg_bench_{ident}");
+        tokens.extend(quote! {
+            async fn #bench_ident() {
+                let mut bencher = Criterion::default()
+                    .location(file!(), module_path!());
+                #body
+            }
+        });
+        bench_ident
     } else {
-        quote! { cx.execute_sync(test_name, #ident, #should_panic_par, #ignore_par); }
+        ident.clone()
+    };
+
+    let test_body = if attributes.r#async || is_bench {
+        quote! { cx.execute_async(test_name, #exec_ident, #should_panic_par, #ignore_par); }
+    } else {
+        quote! { cx.execute_sync(test_name, #exec_ident, #should_panic_par, #ignore_par); }
     };
 
     let ignore_name = if ignore.is_some() { "$" } else { "" };
 
     let wasm_bindgen_path = attributes.wasm_bindgen_path;
+    let prefix = if is_bench { "__wbgb_" } else { "__wbgt_" };
     tokens.extend(
         quote! {
             const _: () = {
                 #wasm_bindgen_path::__rt::wasm_bindgen::__wbindgen_coverage! {
-                #[export_name = ::core::concat!("__wbgt_", #ignore_name, "_", ::core::module_path!(), "::", ::core::stringify!(#ident))]
+                #[export_name = ::core::concat!(#prefix, #ignore_name, "_", ::core::module_path!(), "::", ::core::stringify!(#ident))]
                 #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
                 extern "C" fn __wbgt_test(cx: &#wasm_bindgen_path::__rt::Context) {
                     let test_name = ::core::concat!(::core::module_path!(), "::", ::core::stringify!(#ident));
