@@ -17,6 +17,9 @@
   semantics to enable arbitrarily nested exported interface objects.
   [#4744](https://github.com/wasm-bindgen/wasm-bindgen/pull/4744)
 
+* Added experimental `_panic-unwind` feature to support building with
+  `-Cpanic=unwind`.
+
 ### Fixed
 
 * Fixed node test harness getting stuck after tests completed.

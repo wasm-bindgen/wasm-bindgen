@@ -17,6 +17,7 @@ version = "0.2.105"
 proc-macro = true
 
 [features]
+panic-unwind = ["wasm-bindgen-macro-support/panic-unwind"]
 strict-macro = ["wasm-bindgen-macro-support/strict-macro"]
 
 [dependencies]
