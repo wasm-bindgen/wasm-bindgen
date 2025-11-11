@@ -8,7 +8,7 @@ use wasm_bindgen_test::*;
 extern "C" {
     fn js_simple();
     fn js_strings();
-    fn js_exceptions();
+    fn js_exceptions(is_panic_unwind: bool);
     fn js_pass_one_to_another();
     fn take_class(foo: ClassesIntoJs);
     #[wasm_bindgen(js_name = take_class)]
@@ -111,7 +111,7 @@ impl ClassesStrings2 {
 
 #[wasm_bindgen_test]
 fn exceptions() {
-    js_exceptions();
+    js_exceptions(cfg!(target_feature = "exception-handling"));
 }
 
 #[wasm_bindgen]

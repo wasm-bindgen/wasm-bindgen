@@ -30,7 +30,7 @@ exports.js_strings = () => {
     bar.free();
 };
 
-exports.js_exceptions = () => {
+exports.js_exceptions = (is_panic_unwind) => {
     // this test only works when `--debug` is passed to `wasm-bindgen` (or the
     // equivalent thereof)
     if (require('process').env.WASM_BINDGEN_NO_DEBUG)
@@ -43,10 +43,15 @@ exports.js_exceptions = () => {
     let b = wasm.ClassesExceptions1.new();
     b.foo(b);
     assert.throws(() => b.bar(b), /recursive use of an object/);
-    // TODO: throws because it tries to borrow_mut, but the throw_str from the previous line doesn't clean up the
-    // RefMut so the object is left in a broken state.
-    // We still try to call free here so the object is removed from the FinalizationRegistry when weak refs are enabled.
-    assert.throws(() => b.free(), /attempted to take ownership/);
+    if (is_panic_unwind) {
+        // In this case it works
+        b.free();
+    } else {
+        // throws because it tries to borrow_mut, but the throw_str from the previous line doesn't clean up the
+        // RefMut so the object is left in a broken state.
+        // We still try to call free here so the object is removed from the FinalizationRegistry when weak refs are enabled.
+        assert.throws(() => b.free(), /attempted to take ownership/);
+    }
 
     let c = wasm.ClassesExceptions1.new();
     let d = wasm.ClassesExceptions2.new();
