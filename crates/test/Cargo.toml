@@ -20,6 +20,16 @@ wasm-bindgen = { path = '../..', version = '=0.2.105', default-features = false 
 wasm-bindgen-futures = { path = '../futures', version = '=0.4.55', default-features = false }
 wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.55' }
 
+# benchmark required start
+cast = "0.3"
+libm = "0.2.11"
+nu-ansi-term = { version = "0.50", default-features = false }
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
+oorandom = "11.1.5"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+# benchmark required end
+
 [target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
 minicov = "0.3"
 

@@ -142,6 +142,13 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
 function passArrayJsValueToWasm0(array, malloc) {
     const ptr = malloc(array.length * 4, 4) >>> 0;
     for (let i = 0; i < array.length; i++) {
@@ -280,9 +287,10 @@ export class WasmBindgenTestContext {
      * A `Context` is the main structure through which test execution is
      * coordinated, and this will collect output and results for all executed
      * tests.
+     * @param {boolean} is_bench
      */
-    constructor() {
-        const ret = wasm.wasmbindgentestcontext_new();
+    constructor(is_bench) {
+        const ret = wasm.wasmbindgentestcontext_new(is_bench);
         this.__wbg_ptr = ret >>> 0;
         WasmBindgenTestContextFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -308,6 +316,30 @@ export class WasmBindgenTestContext {
     }
 }
 if (Symbol.dispose) WasmBindgenTestContext.prototype[Symbol.dispose] = WasmBindgenTestContext.prototype.free;
+
+/**
+ * Used to read benchmark data, and then the runner stores it on the local disk.
+ * @returns {Uint8Array | undefined}
+ */
+export function __wbgbench_dump() {
+    const ret = wasm.__wbgbench_dump();
+    let v1;
+    if (ret[0] !== 0) {
+        v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    }
+    return v1;
+}
+
+/**
+ * Used to write previous benchmark data before the benchmark, for later comparison.
+ * @param {Uint8Array} baseline
+ */
+export function __wbgbench_import(baseline) {
+    const ptr0 = passArray8ToWasm0(baseline, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.__wbgbench_import(ptr0, len0);
+}
 
 /**
  * Handler for `console.debug` invocations. See above.
@@ -504,6 +536,9 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_getElementById_eca4e95044d7b113 = function(arg0, arg1, arg2) {
         const ret = arg0.getElementById(getStringFromWasm0(arg1, arg2));
         return ret;
+    };
+    imports.wbg.__wbg_log_3c7667944b131d3f = function(arg0, arg1) {
+        console.log(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbg_message_1ee258909d7264fd = function(arg0) {
         const ret = arg0.message;

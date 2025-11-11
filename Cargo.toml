@@ -135,4 +135,5 @@ resolver = "2"
 js-sys = { path = 'crates/js-sys' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
+wasm-bindgen-test = { path = 'crates/test' }
 web-sys = { path = 'crates/web-sys' }

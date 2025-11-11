@@ -9,21 +9,23 @@ use super::Cli;
 use super::Tests;
 
 // depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
-pub const SHARED_SETUP: &str = r#"
-const handlers = {};
+pub fn shared_setup(is_bench: bool) -> String {
+    format!(
+        r#"
+const handlers = {{}};
 
-const wrap = method => {
+const wrap = method => {{
     const og = console[method];
-    const on_method = `on_console_${method}`;
-    console[method] = function (...args) {
-        if (nocapture) {
+    const on_method = `on_console_${{method}}`;
+    console[method] = function (...args) {{
+        if (nocapture) {{
             og.apply(this, args);
-        }
-        if (handlers[on_method]) {
+        }}
+        if (handlers[on_method]) {{
             handlers[on_method](args);
-        }
-    };
-};
+        }}
+    }};
+}};
 
 // save original `console.log`
 global.__wbgtest_og_console_log = console.log;
@@ -36,13 +38,15 @@ wrap("info");
 wrap("warn");
 wrap("error");
 
-const cx = new wasm.WasmBindgenTestContext();
+const cx = new wasm.WasmBindgenTestContext({is_bench});
 handlers.on_console_debug = wasm.__wbgtest_console_debug;
 handlers.on_console_log = wasm.__wbgtest_console_log;
 handlers.on_console_info = wasm.__wbgtest_console_info;
 handlers.on_console_warn = wasm.__wbgtest_console_warn;
 handlers.on_console_error = wasm.__wbgtest_console_error;
-"#;
+"#
+    )
+}
 
 pub fn execute(
     module: &str,
@@ -51,6 +55,7 @@ pub fn execute(
     tests: Tests,
     module_format: bool,
     coverage: PathBuf,
+    benchmark: PathBuf,
 ) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"
@@ -59,12 +64,21 @@ pub fn execute(
         {wasm};
 
         const nocapture = {nocapture};
-        {SHARED_SETUP}
+        {shared_setup}
 
         global.__wbg_test_invoke = f => f();
 
         async function main(tests) {{
             {args}
+
+            if ({is_bench}) {{
+                try {{
+                    const benchmark_import = await fs.readFile('{benchmark}');
+                    if (benchmark_import !== undefined)
+                        wasm.__wbgbench_import(new Uint8Array(benchmark_import));
+                }} catch {{
+                }}
+            }}
 
             const ok = await cx.run(tests.map(n => wasm.__wasm[n]));
 
@@ -72,12 +86,19 @@ pub fn execute(
             if (coverage !== undefined)
                 await fs.writeFile('{coverage}', coverage);
 
+            if ({is_bench}) {{
+                const benchmark_dump = wasm.__wbgbench_dump();
+                if (benchmark_dump !== undefined)
+                    await fs.writeFile('{benchmark}', benchmark_dump);
+            }}
+
             if (!ok)
                 exit(1);
         }}
 
         const tests = [];
     "#,
+        shared_setup = shared_setup(cli.bench),
         wasm = if !module_format {
             format!(r"const wasm = require('./{module}.js')")
         } else {
@@ -93,9 +114,11 @@ pub fn execute(
         } else {
             r"import fs from 'node:fs/promises'".to_string()
         },
+        is_bench = cli.bench,
         coverage = coverage.display(),
-        nocapture = cli.nocapture.clone(),
-        args = cli.into_args(&tests),
+        nocapture = cli.nocapture || cli.bench,
+        args = cli.get_args(&tests),
+        benchmark = benchmark.display()
     );
 
     // Note that we're collecting *JS objects* that represent the functions to

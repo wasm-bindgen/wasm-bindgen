@@ -19,7 +19,7 @@ export class WasmBindgenTestContext {
    * coordinated, and this will collect output and results for all executed
    * tests.
    */
-  constructor();
+  constructor(is_bench: boolean);
   /**
    * Executes a list of tests, returning a promise representing their
    * eventual completion.
@@ -33,6 +33,16 @@ export class WasmBindgenTestContext {
    */
   run(tests: any[]): Promise<any>;
 }
+
+/**
+ * Used to read benchmark data, and then the runner stores it on the local disk.
+ */
+export function __wbgbench_dump(): Uint8Array | undefined;
+
+/**
+ * Used to write previous benchmark data before the benchmark, for later comparison.
+ */
+export function __wbgbench_import(baseline: Uint8Array): void;
 
 /**
  * Handler for `console.debug` invocations. See above.
@@ -72,6 +82,8 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly "__wbgt__wasm_export_colon_reftest::colon_test": (a: number) => void;
   readonly __wbg_wasmbindgentestcontext_free: (a: number, b: number) => void;
+  readonly __wbgbench_dump: () => [number, number];
+  readonly __wbgbench_import: (a: number, b: number) => void;
   readonly __wbgtest_console_debug: (a: any) => void;
   readonly __wbgtest_console_error: (a: any) => void;
   readonly __wbgtest_console_info: (a: any) => void;
@@ -80,7 +92,7 @@ export interface InitOutput {
   readonly __wbgtest_cov_dump: () => [number, number];
   readonly wasmbindgentestcontext_filtered_count: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
-  readonly wasmbindgentestcontext_new: () => number;
+  readonly wasmbindgentestcontext_new: (a: number) => number;
   readonly wasmbindgentestcontext_run: (a: number, b: number, c: number) => any;
   readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number, c: any) => void;
   readonly wasm_bindgen__closure__destroy__h0000000000000008: (a: number, b: number) => void;
