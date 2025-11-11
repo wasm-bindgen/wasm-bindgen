@@ -7,10 +7,16 @@ export class Foo {
   x: number;
   get y(): number | undefined;
   set y(value: number | null | undefined);
+  readonly lone_getter: number | undefined;
+  /**
+   * There can be static getters and setters too, and they can even have the
+   * same name as instance getters and setters.
+   */
+  static get x(): boolean | undefined;
+  static set x(value: boolean | null | undefined);
+  set lone_setter(value: number | null | undefined);
   get z(): number | undefined;
   set z(value: number | null | undefined);
-  readonly lone_getter: number | undefined;
-  set lone_setter(value: number | null | undefined);
   /**
    * You will only read numbers.
    */
@@ -21,10 +27,4 @@ export class Foo {
    * Yes, this is totally fine in JS.
    */
   set weird(value: string | null | undefined);
-  /**
-   * There can be static getters and setters too, and they can even have the
-   * same name as instance getters and setters.
-   */
-  static get x(): boolean | undefined;
-  static set x(value: boolean | null | undefined);
 }

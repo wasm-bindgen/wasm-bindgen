@@ -38,18 +38,8 @@ function getStringFromWasm0(ptr, len) {
  * @param {number} b
  * @returns {number}
  */
-function add(a, b) {
-    const ret = wasm.add(a, b);
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
+function divide(a, b) {
+    const ret = wasm.divide(a, b);
     return ret;
 }
 
@@ -107,6 +97,43 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 /**
+ * @param {string} s
+ * @returns {string}
+ */
+function uppercase(s) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.uppercase(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @returns {number}
+ */
+export function regular_function() {
+    const ret = wasm.regular_function();
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function add(a, b) {
+    const ret = wasm.add(a, b);
+    return ret;
+}
+
+/**
  * @param {string} a
  * @param {string} b
  * @returns {string}
@@ -129,39 +156,12 @@ function concat(a, b) {
 }
 
 /**
- * @param {string} s
- * @returns {string}
- */
-function uppercase(s) {
-    let deferred2_0;
-    let deferred2_1;
-    try {
-        const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.uppercase(ptr0, len0);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
-    } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
-    }
-}
-
-/**
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
-function divide(a, b) {
-    const ret = wasm.divide(a, b);
-    return ret;
-}
-
-/**
- * @returns {number}
- */
-export function regular_function() {
-    const ret = wasm.regular_function();
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
     return ret;
 }
 
@@ -223,14 +223,14 @@ class Counter {
         const ret = wasm.counter_value(this.__wbg_ptr);
         return ret;
     }
+    increment() {
+        wasm.counter_increment(this.__wbg_ptr);
+    }
     /**
      * @param {number} val
      */
     set value(val) {
         wasm.counter_set_value(this.__wbg_ptr, val);
-    }
-    increment() {
-        wasm.counter_increment(this.__wbg_ptr);
     }
 }
 if (Symbol.dispose) Counter.prototype[Symbol.dispose] = Counter.prototype.free;

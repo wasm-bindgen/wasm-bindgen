@@ -208,16 +208,14 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     CLOSURE_DTORS.register(real, state, state);
     return real;
 }
-
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    for (let i = 0; i < array.length; i++) {
-        const add = addToExternrefTable0(array[i]);
-        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
-    }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
+/**
+ * Handler for `console.debug` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_debug(args) {
+    wasm.__wbgtest_console_debug(args);
 }
+
 /**
  * Handler for `console.log` invocations.
  *
@@ -229,14 +227,6 @@ function passArrayJsValueToWasm0(array, malloc) {
  */
 export function __wbgtest_console_log(args) {
     wasm.__wbgtest_console_log(args);
-}
-
-/**
- * Handler for `console.debug` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_debug(args) {
-    wasm.__wbgtest_console_debug(args);
 }
 
 /**
@@ -261,6 +251,16 @@ export function __wbgtest_console_warn(args) {
  */
 export function __wbgtest_console_error(args) {
     wasm.__wbgtest_console_error(args);
+}
+
+function passArrayJsValueToWasm0(array, malloc) {
+    const ptr = malloc(array.length * 4, 4) >>> 0;
+    for (let i = 0; i < array.length; i++) {
+        const add = addToExternrefTable0(array[i]);
+        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
+    }
+    WASM_VECTOR_LEN = array.length;
+    return ptr;
 }
 
 function getArrayU8FromWasm0(ptr, len) {
@@ -324,6 +324,20 @@ export class WasmBindgenTestContext {
         wasm.__wbg_wasmbindgentestcontext_free(ptr, 0);
     }
     /**
+     * Handle filter argument.
+     * @param {number} filtered
+     */
+    filtered_count(filtered) {
+        wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
+    }
+    /**
+     * Handle `--include-ignored` flag.
+     * @param {boolean} include_ignored
+     */
+    include_ignored(include_ignored) {
+        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
+    }
+    /**
      * Creates a new context ready to run tests.
      *
      * A `Context` is the main structure through which test execution is
@@ -335,20 +349,6 @@ export class WasmBindgenTestContext {
         this.__wbg_ptr = ret >>> 0;
         WasmBindgenTestContextFinalization.register(this, this.__wbg_ptr, this);
         return this;
-    }
-    /**
-     * Handle `--include-ignored` flag.
-     * @param {boolean} include_ignored
-     */
-    include_ignored(include_ignored) {
-        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
-    }
-    /**
-     * Handle filter argument.
-     * @param {number} filtered
-     */
-    filtered_count(filtered) {
-        wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
     }
     /**
      * Executes a list of tests, returning a promise representing their

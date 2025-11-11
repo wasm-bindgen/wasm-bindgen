@@ -138,6 +138,25 @@ export class Foo {
     /**
      * @returns {number | undefined}
      */
+    get lone_getter() {
+        const ret = wasm.foo_lone_getter(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {boolean | null} [value]
+     */
+    static set x(value) {
+        wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
+    }
+    /**
+     * @param {number | null} [value]
+     */
+    set lone_setter(value) {
+        wasm.foo_set_lone_setter(this.__wbg_ptr, isLikeNone(value) ? 0x100000001 : (value) >>> 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
     get z() {
         const ret = wasm.foo_z(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
@@ -149,36 +168,12 @@ export class Foo {
         wasm.foo_set_z(this.__wbg_ptr, isLikeNone(z) ? 0x100000001 : (z) >>> 0);
     }
     /**
-     * @returns {number | undefined}
-     */
-    get lone_getter() {
-        const ret = wasm.foo_lone_getter(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [value]
-     */
-    set lone_setter(value) {
-        wasm.foo_set_lone_setter(this.__wbg_ptr, isLikeNone(value) ? 0x100000001 : (value) >>> 0);
-    }
-    /**
      * You will only read numbers.
      * @returns {number}
      */
     get weird() {
         const ret = wasm.foo_weird(this.__wbg_ptr);
         return ret >>> 0;
-    }
-    /**
-     * But you must write strings.
-     *
-     * Yes, this is totally fine in JS.
-     * @param {string | null} [value]
-     */
-    set weird(value) {
-        var ptr0 = isLikeNone(value) ? 0 : passStringToWasm0(value, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.foo_set_weird(this.__wbg_ptr, ptr0, len0);
     }
     /**
      * There can be static getters and setters too, and they can even have the
@@ -190,10 +185,15 @@ export class Foo {
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * @param {boolean | null} [value]
+     * But you must write strings.
+     *
+     * Yes, this is totally fine in JS.
+     * @param {string | null} [value]
      */
-    static set x(value) {
-        wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
+    set weird(value) {
+        var ptr0 = isLikeNone(value) ? 0 : passStringToWasm0(value, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.foo_set_weird(this.__wbg_ptr, ptr0, len0);
     }
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;

@@ -84,12 +84,6 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     CLOSURE_DTORS.register(real, state, state);
     return real;
 }
-/**
- * @param {Array<any>} a
- */
-export function use_stack_callback(a) {
-    wasm.use_stack_callback(a);
-}
 
 function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_externrefs.get(idx);
@@ -102,6 +96,13 @@ export function delayed_callback() {
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
+}
+
+/**
+ * @param {Array<any>} a
+ */
+export function use_stack_callback(a) {
+    wasm.use_stack_callback(a);
 }
 
 function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {

@@ -14,7 +14,6 @@
 mod npm;
 mod reference;
 
-use assert_cmd::cargo::cargo_bin_cmd;
 use assert_cmd::Command;
 use predicates::str;
 use std::env;
@@ -164,7 +163,7 @@ impl Project {
 
 #[test]
 fn version_useful() {
-    cargo_bin_cmd!("wasm-bindgen")
+    Command::new("wasm-bindgen")
         .arg("-V")
         .assert()
         .stdout(str::ends_with("\n"))
