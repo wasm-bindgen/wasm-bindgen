@@ -44,6 +44,7 @@ xxx_debug_only_print_generated_code = []
 [dependencies]
 cfg-if = "1.0.0"
 once_cell = { version = "1.12", default-features = false }
+rustversion-compat = { package = "rustversion", version = "1.0" }
 serde = { version = "1.0", optional = true }
 serde_json = { version = "1.0", optional = true }
 wasm-bindgen-macro = { path = "crates/macro", version = "=0.2.105" }

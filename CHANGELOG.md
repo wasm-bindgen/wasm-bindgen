@@ -34,6 +34,11 @@
 * Fixed `wasm-bindgen-test-runner` outputting empty line when using the `--list` option. In particular, `cargo-nextest` now works correctly.
   [#4803](https://github.com/wasm-bindgen/wasm-bindgen/pull/4803)
 
+* It now works to build with `-Cpanic=unwind`.
+  [#4796](https://github.com/wasm-bindgen/wasm-bindgen/pull/4796)
+  [#4783](https://github.com/wasm-bindgen/wasm-bindgen/pull/4783)
+  [#4782](https://github.com/wasm-bindgen/wasm-bindgen/pull/4782)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
