@@ -33,6 +33,15 @@ function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
 }
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function divide(a, b) {
+    const ret = wasm.divide(a, b);
+    return ret;
+}
 
 let WASM_VECTOR_LEN = 0;
 
@@ -107,40 +116,20 @@ function uppercase(s) {
 }
 
 /**
+ * @returns {number}
+ */
+export function regular_function() {
+    const ret = wasm.regular_function();
+    return ret;
+}
+
+/**
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
 function add(a, b) {
     const ret = wasm.add(a, b);
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function divide(a, b) {
-    const ret = wasm.divide(a, b);
-    return ret;
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
-    return ret;
-}
-
-/**
- * @returns {number}
- */
-export function regular_function() {
-    const ret = wasm.regular_function();
     return ret;
 }
 
@@ -164,6 +153,16 @@ function concat(a, b) {
     } finally {
         wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
+    return ret;
 }
 
 /**

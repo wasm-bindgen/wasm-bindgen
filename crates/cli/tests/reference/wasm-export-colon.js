@@ -209,27 +209,11 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 /**
- * Handler for `console.error` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_error(args) {
-    wasm.__wbgtest_console_error(args);
-}
-
-/**
  * Handler for `console.debug` invocations. See above.
  * @param {Array<any>} args
  */
 export function __wbgtest_console_debug(args) {
     wasm.__wbgtest_console_debug(args);
-}
-
-/**
- * Handler for `console.warn` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_warn(args) {
-    wasm.__wbgtest_console_warn(args);
 }
 
 /**
@@ -251,6 +235,22 @@ export function __wbgtest_console_log(args) {
  */
 export function __wbgtest_console_info(args) {
     wasm.__wbgtest_console_info(args);
+}
+
+/**
+ * Handler for `console.warn` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_warn(args) {
+    wasm.__wbgtest_console_warn(args);
+}
+
+/**
+ * Handler for `console.error` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_error(args) {
+    wasm.__wbgtest_console_error(args);
 }
 
 function passArrayJsValueToWasm0(array, malloc) {
@@ -293,12 +293,12 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3);
 }
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -499,7 +499,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1, arg2);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1, arg2);
                 } finally {
                     state0.a = a;
                 }
@@ -535,7 +535,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
