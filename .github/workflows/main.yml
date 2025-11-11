@@ -148,6 +148,23 @@ jobs:
         node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
 
+  test_wasm_bindgen_unwind:
+    name: "Run wasm-bindgen crate tests with panic=unwind"
+    runs-on: ubuntu-latest
+    env:
+      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
+      RUSTFLAGS: -Cpanic=unwind
+    steps:
+    - uses: actions/checkout@v5
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: rust-src
+    - uses: actions/setup-node@v6
+      with:
+        node-version: '20'
+    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'" --lib --bins --tests
+
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.
   # test_wasm_bindgen_windows:
