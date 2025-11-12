@@ -285,7 +285,13 @@ pub(crate) fn spawn(
 
             async function main(test) {{
                 const wasm = await init('./{module}_bg.wasm');
+
                 const cx = new Context();
+                window.on_console_debug = __wbgtest_console_debug;
+                window.on_console_log = __wbgtest_console_log;
+                window.on_console_info = __wbgtest_console_info;
+                window.on_console_warn = __wbgtest_console_warn;
+                window.on_console_error = __wbgtest_console_error;
 
                 {args}
 
