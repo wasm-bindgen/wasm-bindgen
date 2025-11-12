@@ -13,6 +13,7 @@ version = "0.2.105"
 
 [features]
 extra-traits = ["syn/extra-traits"]
+panic-unwind = []
 strict-macro = []
 
 [dependencies]
