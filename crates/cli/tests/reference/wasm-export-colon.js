@@ -509,10 +509,6 @@ function __wbg_get_imports() {
             state0.a = state0.b = 0;
         }
     };
-    imports.wbg.__wbg_getElementById_eca4e95044d7b113 = function(arg0, arg1, arg2) {
-        const ret = arg0.getElementById(getStringFromWasm0(arg1, arg2));
-        return ret;
-    };
     imports.wbg.__wbg_message_1ee258909d7264fd = function(arg0) {
         const ret = arg0.message;
         return ret;
@@ -595,9 +591,6 @@ function __wbg_get_imports() {
         const ret = arg0.self;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
     };
-    imports.wbg.__wbg_set_text_content_75282044601f711a = function(arg0, arg1, arg2) {
-        arg0.textContent = getStringFromWasm0(arg1, arg2);
-    };
     imports.wbg.__wbg_stack_03cb47c2d3062fcc = function(arg0) {
         const ret = arg0.stack;
         return ret;
@@ -620,10 +613,6 @@ function __wbg_get_imports() {
         getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
         getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
-    imports.wbg.__wbg_static_accessor_DOCUMENT_bc686c3dea6d9453 = function() {
-        const ret = document;
-        return ret;
-    };
     imports.wbg.__wbg_static_accessor_GLOBAL_89e1d9ac6a1b250e = function() {
         const ret = typeof global === 'undefined' ? null : global;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
@@ -639,13 +628,6 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_static_accessor_WINDOW_b45bfc5a37f6cfa2 = function() {
         const ret = typeof window === 'undefined' ? null : window;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_text_content_b0fce51a6f64d76b = function(arg0, arg1) {
-        const ret = arg1.textContent;
-        const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len1 = WASM_VECTOR_LEN;
-        getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-        getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
     imports.wbg.__wbg_then_4f46f6544e6b4a28 = function(arg0, arg1) {
         const ret = arg0.then(arg1);
