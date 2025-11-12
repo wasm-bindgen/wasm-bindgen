@@ -32,6 +32,9 @@
 * Interpreter: support try_table blocks
   [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4862)
 
+* Fixed `--nocapture` not working when `run_in_browser` was set.
+  [#4799](https://github.com/wasm-bindgen/wasm-bindgen/pull/4799)
+
 ### Removed
 
 ## [0.2.106](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.105...0.2.106)

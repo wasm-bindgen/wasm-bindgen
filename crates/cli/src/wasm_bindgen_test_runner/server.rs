@@ -326,6 +326,29 @@ pub(crate) fn spawn(
             // Wasm module.
             document.getElementById('output').textContent = "Loading Wasm module...";
 
+            const nocapture = {nocapture};
+            const wrap = method => {{
+                const og = console[method];
+                console[method] = function (...args) {{
+                    if (nocapture) {{
+                        window.__wbg_test_output_writeln(args);
+                    }}
+                    og(args[0]);
+                }};
+            }};
+
+            wrap("debug");
+            wrap("log");
+            wrap("info");
+            wrap("warn");
+            wrap("error");
+
+            window.__wbg_test_output = "";
+            window.__wbg_test_output_writeln = function (line) {{
+                window.__wbg_test_output += line + "\n";
+                document.getElementById("output").textContent = window.__wbg_test_output;
+            }}
+
             async function main(test) {{
                 const wasm = await init('./{module}_bg.wasm');
 
