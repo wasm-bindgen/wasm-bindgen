@@ -28,6 +28,9 @@
 * Fixes TryFromJsValue for structs JsValue stack corruption on failure.
   [#4786](https://github.com/wasm-bindgen/wasm-bindgen/pull/4786)
 
+* Fixed `--nocapture` not working when `run_in_browser` was set.
+  [#4799](https://github.com/wasm-bindgen/wasm-bindgen/pull/4799)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
