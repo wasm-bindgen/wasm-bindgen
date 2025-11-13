@@ -43,16 +43,6 @@ function add(a, b) {
     return ret;
 }
 
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
-    return ret;
-}
-
 let WASM_VECTOR_LEN = 0;
 
 const cachedTextEncoder = new TextEncoder();
@@ -129,6 +119,34 @@ function concat(a, b) {
 }
 
 /**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function divide(a, b) {
+    const ret = wasm.divide(a, b);
+    return ret;
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function multiply(a, b) {
+    const ret = wasm.multiply(a, b);
+    return ret;
+}
+
+/**
+ * @returns {number}
+ */
+export function regular_function() {
+    const ret = wasm.regular_function();
+    return ret;
+}
+
+/**
  * @param {string} s
  * @returns {string}
  */
@@ -145,24 +163,6 @@ function uppercase(s) {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function divide(a, b) {
-    const ret = wasm.divide(a, b);
-    return ret;
-}
-
-/**
- * @returns {number}
- */
-export function regular_function() {
-    const ret = wasm.regular_function();
-    return ret;
 }
 
 /**
@@ -216,6 +216,9 @@ class Counter {
         CounterFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
+    increment() {
+        wasm.counter_increment(this.__wbg_ptr);
+    }
     /**
      * @returns {number}
      */
@@ -228,9 +231,6 @@ class Counter {
      */
     set value(val) {
         wasm.counter_set_value(this.__wbg_ptr, val);
-    }
-    increment() {
-        wasm.counter_increment(this.__wbg_ptr);
     }
 }
 if (Symbol.dispose) Counter.prototype[Symbol.dispose] = Counter.prototype.free;
@@ -360,19 +360,6 @@ export class Rectangle {
     /**
      * @returns {number}
      */
-    get width() {
-        const ret = wasm.__wbg_get_rectangle_width(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set width(arg0) {
-        wasm.__wbg_set_rectangle_width(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @returns {number}
-     */
     get height() {
         const ret = wasm.__wbg_get_rectangle_height(this.__wbg_ptr);
         return ret;
@@ -382,6 +369,19 @@ export class Rectangle {
      */
     set height(arg0) {
         wasm.__wbg_set_rectangle_height(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get width() {
+        const ret = wasm.__wbg_get_rectangle_width(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set width(arg0) {
+        wasm.__wbg_set_rectangle_width(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) Rectangle.prototype[Symbol.dispose] = Rectangle.prototype.free;
