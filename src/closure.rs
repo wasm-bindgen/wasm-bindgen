@@ -427,7 +427,7 @@ where
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(CLOSURE);
-        inform(destroy::<T> as usize as u32);
+        inform(destroy::<T> as *const () as usize as u32);
         inform(T::IS_MUT as u32);
         T::describe();
     }
