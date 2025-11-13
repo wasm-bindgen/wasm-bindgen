@@ -107,7 +107,7 @@ greet("World!");
 
 ## MSRV Policy
 
-Libraries that are released on [crates.io](https://crates.io) have a MSRV of v1.70.0. Changes to the MSRV will be accompanied by a minor version bump.
+Libraries that are released on [crates.io](https://crates.io) have a MSRV of v1.71. Changes to the MSRV will be accompanied by a minor version bump.
 
 CLI tools and their corresponding support libraries have a MSRV of v1.82. Changes to the MSRV will be accompanied by a patch version bump.
 
