@@ -405,7 +405,7 @@ impl Parse for BindgenAttr {
         let attr = attr.0;
         let attr_span = attr.span();
         let attr_string = attr.to_string();
-        let raw_attr_string = format!("r#{}", attr_string);
+        let raw_attr_string = format!("r#{attr_string}");
 
         macro_rules! parsers {
             ($(($name:ident, $_:literal, $($contents:tt)*),)*) => {
@@ -1148,7 +1148,7 @@ fn function_from_decl(
             // names are considered an implementation detail in JS, we can
             // safely rename them to avoid collisions.
             if is_js_keyword(&ident) {
-                i.ident = Ident::new(format!("_{}", ident).as_str(), i.ident.span());
+                i.ident = Ident::new(format!("_{ident}").as_str(), i.ident.span());
             }
         }
     };
@@ -1239,7 +1239,7 @@ fn function_from_decl(
             OperationKind::Setter(_) => "set_",
             _ => "",
         };
-        (format!("{}{}", prefix, js_name), js_name_span)
+        (format!("{prefix}{js_name}"), js_name_span)
     } else {
         (decl_name.unraw().to_string(), decl_name.span())
     };
@@ -1796,7 +1796,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         // values yet, we just need to know their sign. The actual parsing is
         // done in a second pass.
         let signed = self.variants.iter().any(|v| match &v.discriminant {
-            Some((_, expr)) => NumericValue::from_expr(expr).map_or(false, |n| n.negative),
+            Some((_, expr)) => NumericValue::from_expr(expr).is_some_and(|n| n.negative),
             None => false,
         });
         let underlying_min = if signed { i32::MIN as i64 } else { 0 };
@@ -2277,7 +2277,7 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
         if !unused_attrs.is_empty() {
             let unused_attrs = unused_attrs.iter().map(|UnusedState { error, ident }| {
                 if *error {
-                    let text = format!("invalid attribute {} in this position", ident);
+                    let text = format!("invalid attribute {ident} in this position");
                     quote::quote_spanned! { ident.span() => ::core::compile_error!(#text); }
                 } else {
                     quote::quote! { let #ident: (); }

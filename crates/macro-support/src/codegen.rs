@@ -641,7 +641,7 @@ impl TryToTokens for ast::Export {
         for (i, arg) in self.function.arguments.iter().enumerate() {
             argtys.push(&*arg.pat_type.ty);
             let i = i + offset;
-            let ident = Ident::new(&format!("arg{}", i), Span::call_site());
+            let ident = Ident::new(&format!("arg{i}"), Span::call_site());
             fn unwrap_nested_types(ty: &syn::Type) -> &syn::Type {
                 match &ty {
                     syn::Type::Group(syn::TypeGroup { ref elem, .. }) => unwrap_nested_types(elem),
@@ -1215,8 +1215,7 @@ impl ToTokens for ast::StringEnum {
         let attrs = &self.rust_attrs;
 
         let invalid_to_str_msg = format!(
-            "Converting an invalid string enum ({}) back to a string is currently not supported",
-            enum_name
+            "Converting an invalid string enum ({enum_name}) back to a string is currently not supported"
         );
 
         // A vector of EnumName::VariantName tokens for this enum
@@ -1363,7 +1362,7 @@ impl TryToTokens for ast::ImportFunction {
                     subpat: None,
                     ..
                 }) => ident.clone(),
-                syn::Pat::Wild(_) => syn::Ident::new(&format!("__genarg_{}", i), Span::call_site()),
+                syn::Pat::Wild(_) => syn::Ident::new(&format!("__genarg_{i}"), Span::call_site()),
                 _ => bail_span!(
                     arg.pat_type.pat,
                     "unsupported pattern in #[wasm_bindgen] imported function",
@@ -1874,7 +1873,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
             return;
         }
 
-        let name = Ident::new(&format!("__wbindgen_describe_{}", ident), ident.span());
+        let name = Ident::new(&format!("__wbindgen_describe_{ident}"), ident.span());
         let inner = &self.inner;
         let attrs = &self.attrs;
         let wasm_bindgen = &self.wasm_bindgen;
