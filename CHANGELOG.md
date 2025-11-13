@@ -28,6 +28,9 @@
 * Fixes TryFromJsValue for structs JsValue stack corruption on failure.
   [#4786](https://github.com/wasm-bindgen/wasm-bindgen/pull/4786)
 
+* Fix non-deterministic output of generated js, .d.ts, and wasm files across compilation settings.
+  [#4800](https://github.com/wasm-bindgen/wasm-bindgen/pull/4800)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
