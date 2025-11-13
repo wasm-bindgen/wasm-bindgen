@@ -8,7 +8,7 @@ include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-macro-support"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro-support"
-rust-version = "1.57"
+rust-version = "1.70.0"
 version = "0.2.105"
 
 [features]

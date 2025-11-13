@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 name = "web-sys"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/web-sys"
-rust-version = "1.57"
+rust-version = "1.70.0"
 version = "0.3.82"
 
 [package.metadata.docs.rs]
