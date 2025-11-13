@@ -108,7 +108,7 @@ impl Interner {
 
         // Generate a unique ID which is somewhat readable as well, so mix in
         // the crate name, hash to make it unique, and then the original path.
-        let new_identifier = format!("{}{}", self.unique_crate_identifier(), id);
+        let new_identifier = format!("{}{id}", self.unique_crate_identifier());
         let file = LocalFile {
             path,
             definition: span,
@@ -179,7 +179,7 @@ fn shared_program<'a>(
                         linked_module: file.linked_module,
                     })
                     .map_err(|e| {
-                        let msg = format!("failed to read file `{}`: {}", file.path.display(), e);
+                        let msg = format!("failed to read file `{}`: {e}", file.path.display());
                         Diagnostic::span_error(file.definition, msg)
                     })
             })
@@ -227,7 +227,7 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
                     if let syn::Pat::Ident(x) = &*arg.pat_type.pat {
                         x.ident.unraw().to_string()
                     } else {
-                        format!("arg{}", idx)
+                        format!("arg{idx}")
                     },
                 ),
                 ty_override: arg.js_type.as_deref(),

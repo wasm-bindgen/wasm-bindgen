@@ -83,8 +83,9 @@ impl fmt::Display for WebIDLParseError {
 
 impl std::error::Error for WebIDLParseError {}
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub(crate) enum ApiStability {
+    #[default]
     Stable,
     Unstable,
 }
@@ -92,12 +93,6 @@ pub(crate) enum ApiStability {
 impl ApiStability {
     pub(crate) fn is_unstable(self) -> bool {
         self == Self::Unstable
-    }
-}
-
-impl Default for ApiStability {
-    fn default() -> Self {
-        Self::Stable
     }
 }
 
