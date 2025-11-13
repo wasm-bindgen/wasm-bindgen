@@ -44,6 +44,20 @@ jobs:
           tool: taplo-cli
       - run: taplo fmt --check
 
+  # nextest check
+  nextest:
+    name: Nextest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.90
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - run: cargo nextest run --target wasm32-unknown-unknown --no-run -p wasm-bindgen
+
   # Run `cargo clippy` over everything
   clippy:
     name: Clippy (native)
