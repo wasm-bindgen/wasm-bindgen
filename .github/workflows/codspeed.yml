@@ -10,8 +10,8 @@ on:
 jobs:
   benchmarks:
     name: Run benchmarks
-    runs-on: codspeed-macro
-    # runs-on: ubuntu-latest
+    # runs-on: codspeed-macro
+    runs-on: ubuntu-latest
     env:
       CODSPEED_PERF_ENABLED: false
 
