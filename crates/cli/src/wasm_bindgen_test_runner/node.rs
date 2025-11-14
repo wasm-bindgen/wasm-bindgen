@@ -77,7 +77,14 @@ pub fn execute(
                     wasm.__wbgbench_import(new Uint8Array(bimport));
             }} catch {{ 
             }}
-            
+
+            const codspeed = require('./index.node');
+
+            global.__wbg_init_codspeed = codspeed.initCodspeed;
+            global.__wbg_current_timestamp = codspeed.currentTimestamp;
+            global.__wbg_add_benchmark_timestamps = codspeed.addBenchmarkTimestamps;
+            global.__wbg_set_executed_benchmark = codspeed.setExecutedBenchmark;
+
             const ok = await cx.run(tests.map(n => wasm.__wasm[n]));
 
             const coverage = wasm.__wbgtest_cov_dump();
@@ -145,6 +152,11 @@ pub fn execute(
         tmpdir.join("run.cjs")
     };
     fs::write(&js_path, js_to_execute).context("failed to write JS file")?;
+    std::fs::copy(
+        std::env::var("WASM_BINGEN_CODSPEED_NAPI").unwrap_or_else(|_| "index.node".into()),
+        tmpdir.join("index.node"),
+    )
+    .unwrap();
 
     // Augment `NODE_PATH` so things like `require("tests/my-custom.js")` work
     // and Rust code can import from custom JS shims. This is a bit of a hack

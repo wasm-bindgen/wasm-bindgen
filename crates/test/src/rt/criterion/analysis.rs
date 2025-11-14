@@ -1,3 +1,5 @@
+use crate::__rt::criterion::__wbg_set_executed_benchmark;
+
 use super::stats::bivariate::regression::Slope;
 use super::stats::bivariate::Data;
 use super::stats::univariate::Sample;
@@ -72,6 +74,14 @@ pub(crate) fn common<M: Measurement>(
         .report
         .measurement_complete(id, &measurement_data, criterion.measurement.formatter());
 
+    if let Some(location) = &criterion.location {
+        __wbg_set_executed_benchmark(format!(
+            "{}::{}::{}",
+            location.file,
+            location.module,
+            id.desc()
+        ));
+    }
     prev::write(
         id.desc(),
         prev::PrevBenchmark {

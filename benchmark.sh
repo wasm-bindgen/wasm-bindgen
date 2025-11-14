@@ -1,6 +1,7 @@
 #!/bin/sh
 
 export WASM_BINDGEN_BENCH_RESULT=$(pwd)/target/wbg_bench.json
+export WASM_BINGEN_CODSPEED_NAPI=$(pwd)/index.node
 
 cargo bench --target wasm32-unknown-unknown -p js-sys
 

@@ -1,3 +1,5 @@
+use crate::__rt::criterion::{__wbg_add_benchmark_timestamps, __wbg_current_timestamp};
+
 use super::measurement::Measurement;
 use std::hint::black_box;
 use std::time::Duration;
@@ -56,6 +58,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         R: FnMut() -> O,
     {
         self.iterated = true;
+        let profiling_start = __wbg_current_timestamp();
         let start = self.measurement.start();
         for _ in 0..self.iters {
             black_box(routine());
@@ -63,5 +66,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         let end = self.measurement.end(start);
         self.value = end;
         self.elapsed_time = end;
+        let profiling_end= __wbg_current_timestamp();
+        __wbg_add_benchmark_timestamps(profiling_start, profiling_end);
     }
 }

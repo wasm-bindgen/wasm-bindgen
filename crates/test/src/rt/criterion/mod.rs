@@ -38,6 +38,7 @@ mod stats;
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use benchmark::BenchmarkConfig;
 use measurement::WallTime;
@@ -70,6 +71,18 @@ pub struct Criterion<M: Measurement = WallTime> {
 struct Location {
     file: String,
     module: String,
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// 1
+    pub fn __wbg_init_codspeed();
+    /// 2
+    pub fn __wbg_current_timestamp() -> String;
+    /// 3
+    pub fn __wbg_add_benchmark_timestamps(start: String, end: String);
+    /// 4
+    pub fn __wbg_set_executed_benchmark(uri: String) -> bool;
 }
 
 impl Default for Criterion {
@@ -291,6 +304,7 @@ where
     where
         F: FnMut() -> O,
     {
+        __wbg_init_codspeed();
         let id = report::BenchmarkId::new(desc.into());
         let mut func = routine::Function::new(|b| {
             let f = &mut f;
