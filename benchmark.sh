@@ -1,7 +1,6 @@
 #!/bin/sh
 
 export WASM_BINDGEN_BENCH_RESULT=$(pwd)/target/wbg_bench.json
-# export CODSPEED_PERF_UNWINDING_MODE=1
 
 cargo bench --target wasm32-unknown-unknown -p js-sys
 
