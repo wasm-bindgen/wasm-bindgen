@@ -1,3 +1,5 @@
+use crate::__rt::criterion::{__wbg_start_benchmark, __wbg_stop_benchmark};
+
 use super::benchmark::BenchmarkConfig;
 use super::measurement::Measurement;
 use super::report::{BenchmarkId, Report};
@@ -53,7 +55,12 @@ pub(crate) trait Routine<M: Measurement> {
             .report
             .measurement_start(id, n, expected_ns, total_iters);
 
-        let m_elapsed = self.bench(measurement, &m_iters);
+        let m_elapsed = {
+            __wbg_start_benchmark();
+            let value = self.bench(measurement, &m_iters);
+            __wbg_stop_benchmark();
+            value
+        };
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 

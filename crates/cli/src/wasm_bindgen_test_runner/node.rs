@@ -85,6 +85,8 @@ pub fn execute(
             global.__wbg_add_benchmark_timestamps = codspeed.addBenchmarkTimestamps;
             global.__wbg_set_executed_benchmark = codspeed.setExecutedBenchmark;
             global.__wbg_pid = codspeed.processId;
+            global.__wbg_start_benchmark = codspeed.startBenchmark;
+            global.__wbg_stop_benchmark = codspeed.stopBenchmark;
 
             const ok = await cx.run(tests.map(n => wasm.__wasm[n]));
 

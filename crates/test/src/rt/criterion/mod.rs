@@ -85,6 +85,10 @@ extern "C" {
     pub fn __wbg_set_executed_benchmark(uri: String) -> bool;
     /// 5
     pub fn __wbg_pid() -> u32;
+    /// 6
+    pub fn __wbg_start_benchmark() -> bool;
+    /// 7
+    pub fn __wbg_stop_benchmark() -> bool;
 }
 
 impl Default for Criterion {
