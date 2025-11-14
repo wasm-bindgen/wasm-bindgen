@@ -1,4 +1,4 @@
-use crate::__rt::criterion::__wbg_set_executed_benchmark;
+use crate::__rt::criterion::{__wbg_pid, __wbg_set_executed_benchmark};
 
 use super::stats::bivariate::regression::Slope;
 use super::stats::bivariate::Data;
@@ -85,6 +85,7 @@ pub(crate) fn common<M: Measurement>(
     prev::write(
         id.desc(),
         prev::PrevBenchmark {
+            pid: __wbg_pid(),
             file: criterion.location.as_ref().map(|x| x.file.clone()),
             module: criterion.location.as_ref().map(|x| x.module.clone()),
             sample: SavedSample {

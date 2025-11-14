@@ -83,6 +83,8 @@ extern "C" {
     pub fn __wbg_add_benchmark_timestamps(start: String, end: String);
     /// 4
     pub fn __wbg_set_executed_benchmark(uri: String) -> bool;
+    /// 5
+    pub fn __wbg_pid() -> u32;
 }
 
 impl Default for Criterion {

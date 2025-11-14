@@ -13,6 +13,7 @@ thread_local! {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PrevBenchmark {
+    pub pid: u32,
     pub file: Option<String>,
     pub module: Option<String>,
     pub sample: SavedSample,
