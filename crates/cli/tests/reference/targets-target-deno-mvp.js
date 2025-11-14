@@ -20,7 +20,6 @@ const imports = {
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = await Deno.readFile(wasmUrl);
-const wasmResponse = new Response(wasmBytes, { headers: [['Content-Type', 'application/wasm']] });
-const wasm =  (await WebAssembly.instantiateStreaming(wasmResponse, imports)).instance.exports;
+const wasm = (await WebAssembly.instantiate(wasmBytes, imports)).instance.exports;
 export { wasm as __wasm };
 
