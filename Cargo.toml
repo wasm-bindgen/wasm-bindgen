@@ -135,3 +135,6 @@ js-sys = { path = 'crates/js-sys' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
 web-sys = { path = 'crates/web-sys' }
+
+[profile.bench]
+debug = true

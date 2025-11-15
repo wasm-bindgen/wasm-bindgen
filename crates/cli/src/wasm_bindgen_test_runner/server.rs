@@ -19,6 +19,7 @@ pub(crate) fn spawn(
     test_mode: TestMode,
     isolate_origin: bool,
     coverage: PathBuf,
+    benchmark: PathBuf,
 ) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
     let mut js_to_execute = String::new();
 
@@ -27,6 +28,7 @@ pub(crate) fn spawn(
     } else {
         "__wbgtest_cov_dump,"
     };
+
     let cov_dump = r#"
         // Dump the coverage data collected during the tests
         const coverage = __wbgtest_cov_dump();
@@ -35,6 +37,34 @@ pub(crate) fn spawn(
             await fetch("/__wasm_bindgen/coverage", {
                 method: "POST",
                 body: coverage
+            });
+        }
+    "#;
+
+    let bench_import = if test_mode.no_modules() {
+        "let __wbgbench_import = wasm_bindgen.__wbgbench_import;
+        let __wbgbench_dump = wasm_bindgen.__wbgbench_dump;"
+    } else {
+        "__wbgbench_import,__wbgbench_dump,"
+    };
+
+    let import_bench =r#"
+        // Import the benchmark data before benches
+        const response = await fetch("/__wasm_bindgen/bench/fetch");
+        if (response.ok) {
+            const array = await response.arrayBuffer();
+            __wbgbench_import(new Uint8Array(array));
+        }
+    "#;
+
+    let dump_bench = r#"
+        // Dump the benchmark data collected during the benches
+        const bdump = __wbgbench_dump();
+
+        if (bdump !== undefined) {
+            await fetch("/__wasm_bindgen/bench/dump", {
+                method: "POST",
+                body: bdump
             });
         }
     "#;
@@ -49,6 +79,7 @@ pub(crate) fn spawn(
             let __wbgtest_console_warn = wasm_bindgen.__wbgtest_console_warn;
             let __wbgtest_console_error = wasm_bindgen.__wbgtest_console_error;
             {cov_import}
+            {bench_import}
             let init = wasm_bindgen;
             "#,
         )
@@ -63,13 +94,15 @@ pub(crate) fn spawn(
                 __wbgtest_console_warn,
                 __wbgtest_console_error,
                 {cov_import}
+                {bench_import}
                 default as init,
             }} from './{module}';
             "#,
         )
     };
 
-    let nocapture = cli.nocapture;
+    let nocapture = cli.nocapture || cli.bench;
+    let is_bench = cli.bench;
     let args = cli.into_args(&tests);
 
     if test_mode.is_worker() {
@@ -132,7 +165,7 @@ pub(crate) fn spawn(
             async function run_in_worker(tests) {{
                 const wasm = await init("./{module}_bg.wasm");
                 const t = self;
-                const cx = new Context();
+                const cx = new Context({is_bench});
 
                 self.on_console_debug = __wbgtest_console_debug;
                 self.on_console_log = __wbgtest_console_log;
@@ -142,8 +175,10 @@ pub(crate) fn spawn(
 
                 {args}
 
+                {import_bench}
                 await cx.run(tests.map(s => wasm[s]));
                 {cov_dump}
+                {dump_bench}
             }}
 
             port.onmessage = function(e) {{
@@ -263,7 +298,7 @@ pub(crate) fn spawn(
             async function main(test) {{
                 const wasm = await init('./{module}_bg.wasm');
 
-                const cx = new Context();
+                const cx = new Context({is_bench});
                 window.on_console_debug = __wbgtest_console_debug;
                 window.on_console_log = __wbgtest_console_log;
                 window.on_console_info = __wbgtest_console_info;
@@ -272,8 +307,10 @@ pub(crate) fn spawn(
 
                 {args}
 
+                {import_bench}
                 await cx.run(test.map(s => wasm[s]));
                 {cov_dump}
+                {dump_bench}
             }}
 
             const tests = [];
@@ -331,6 +368,18 @@ pub(crate) fn spawn(
             } else {
                 Response::empty_204()
             };
+        } else if request.url() == "/__wasm_bindgen/bench/fetch" {
+            return handle_benchmark_fetch(&benchmark);
+        } else if request.url() == "/__wasm_bindgen/bench/dump" {
+            return if let Err(e) = handle_benchmark_dump(&benchmark, request) {
+                let s: &str = &format!("Failed to save benchmark: {e}");
+                log::error!("{s}");
+                let mut ret = Response::text(s);
+                ret.status_code = 500;
+                ret
+            } else {
+                Response::empty_204()
+            };
         }
 
         // Otherwise we need to find the asset here. It may either be in our
@@ -380,6 +429,20 @@ pub(crate) fn spawn(
         }
         response
     }
+}
+
+fn handle_benchmark_fetch(path: &Path) -> Response {
+    let data = std::fs::read(path).unwrap_or_default();
+    Response::from_data("application/octet-stream", data)
+}
+
+fn handle_benchmark_dump(path: &Path, request: &Request) -> anyhow::Result<()> {
+    let mut data = Vec::new();
+    if let Some(mut body) = request.data() {
+        body.read_to_end(&mut data)?;
+    }
+    std::fs::write(path, data)?;
+    Ok(())
 }
 
 fn handle_coverage_dump(profraw_path: &Path, request: &Request) -> anyhow::Result<()> {

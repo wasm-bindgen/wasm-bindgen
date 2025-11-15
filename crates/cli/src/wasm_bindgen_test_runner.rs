@@ -36,6 +36,8 @@ struct Cli {
         help = "The file to test. `cargo test` passes this argument for you."
     )]
     file: PathBuf,
+    #[arg(long, help = "Run benchmarks")]
+    bench: bool,
     #[arg(long, conflicts_with = "ignored", help = "Run ignored tests")]
     include_ignored: bool,
     #[arg(long, conflicts_with = "include_ignored", help = "Run ignored tests")]
@@ -149,8 +151,10 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         .context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
 
+    let prefix = if cli.bench { "__wbgb_" } else { "__wbgt_" };
+
     'outer: for export in wasm.exports.iter() {
-        let Some(name) = export.name.strip_prefix("__wbgt_") else {
+        let Some(name) = export.name.strip_prefix(prefix) else {
             continue;
         };
         let modifiers = name.split_once('_').expect("found invalid identifier").0;
@@ -200,7 +204,11 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
 
     if cli.list {
         for test in tests.tests {
-            println!("{}: test", test.name);
+            if cli.bench {
+                println!("{}: benchmark", test.name);
+            } else {
+                println!("{}: test", test.name);
+            }
         }
 
         return Ok(());
@@ -346,6 +354,11 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     }
 
     let coverage = coverage_args(file_name);
+    let benchmark = Path::new(
+        &std::env::var("WASM_BINDGEN_BENCH_RESULT")
+            .unwrap_or_else(|_| String::from("target/wbg_bench.json")),
+    )
+    .to_path_buf();
 
     // The debug here means adding some assertions and some error messages to the generated js
     // code.
@@ -359,9 +372,15 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     shell.clear();
 
     match test_mode {
-        TestMode::Node { no_modules } => {
-            node::execute(module, &tmpdir_path, cli, tests, !no_modules, coverage)?
-        }
+        TestMode::Node { no_modules } => node::execute(
+            module,
+            &tmpdir_path,
+            cli,
+            tests,
+            !no_modules,
+            coverage,
+            benchmark,
+        )?,
         TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
@@ -383,6 +402,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
                 test_mode,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
                 coverage,
+                benchmark,
             )
             .context("failed to spawn server")?;
             let addr = srv.server_addr();
