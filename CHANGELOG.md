@@ -17,6 +17,9 @@
   semantics to enable arbitrarily nested exported interface objects.
   [#4744](https://github.com/wasm-bindgen/wasm-bindgen/pull/4744)
 
+* Added 'container' attribute to `ScrollIntoViewOptions`
+  [#4806](https://github.com/wasm-bindgen/wasm-bindgen/pull/4806)
+
 ### Fixed
 
 * Fixed node test harness getting stuck after tests completed.

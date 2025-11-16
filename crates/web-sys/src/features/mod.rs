@@ -8314,6 +8314,13 @@ mod gen_ScrollBoxObject;
 #[allow(unused_imports)]
 pub use gen_ScrollBoxObject::*;
 
+#[cfg(feature = "ScrollIntoViewContainer")]
+#[allow(non_snake_case)]
+mod gen_ScrollIntoViewContainer;
+#[cfg(feature = "ScrollIntoViewContainer")]
+#[allow(unused_imports)]
+pub use gen_ScrollIntoViewContainer::*;
+
 #[cfg(feature = "ScrollIntoViewOptions")]
 #[allow(non_snake_case)]
 mod gen_ScrollIntoViewOptions;
