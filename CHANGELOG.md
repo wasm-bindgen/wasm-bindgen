@@ -31,6 +31,9 @@
 * Fixes TryFromJsValue for structs JsValue stack corruption on failure.
   [#4786](https://github.com/wasm-bindgen/wasm-bindgen/pull/4786)
 
+* Fixed `wasm-bindgen-test-runner` outputting empty line when using the `--list` option. In particular, `cargo-nextest` now works correctly.
+  [#4803](https://github.com/wasm-bindgen/wasm-bindgen/pull/4803)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)

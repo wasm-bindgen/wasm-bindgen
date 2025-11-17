@@ -128,8 +128,6 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    let shell = shell::Shell::new();
-
     let file_name = cli
         .file
         .file_name()
@@ -318,6 +316,8 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             timeout
         })
         .unwrap_or(20);
+
+    let shell = shell::Shell::new();
 
     // Make the generated bindings available for the tests to execute against.
     shell.status("Executing bindgen...");
