@@ -34,6 +34,18 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ScrollIntoViewOptions`, `ScrollLogicalPosition`*"]
     #[wasm_bindgen(method, setter = "block")]
     pub fn set_block(this: &ScrollIntoViewOptions, val: ScrollLogicalPosition);
+    #[cfg(feature = "ScrollIntoViewContainer")]
+    #[doc = "Get the `container` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollIntoViewContainer`, `ScrollIntoViewOptions`*"]
+    #[wasm_bindgen(method, getter = "container")]
+    pub fn get_container(this: &ScrollIntoViewOptions) -> Option<ScrollIntoViewContainer>;
+    #[cfg(feature = "ScrollIntoViewContainer")]
+    #[doc = "Change the `container` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollIntoViewContainer`, `ScrollIntoViewOptions`*"]
+    #[wasm_bindgen(method, setter = "container")]
+    pub fn set_container(this: &ScrollIntoViewOptions, val: ScrollIntoViewContainer);
     #[cfg(feature = "ScrollLogicalPosition")]
     #[doc = "Get the `inline` field of this object."]
     #[doc = ""]
@@ -66,6 +78,12 @@ impl ScrollIntoViewOptions {
     #[deprecated = "Use `set_block()` instead."]
     pub fn block(&mut self, val: ScrollLogicalPosition) -> &mut Self {
         self.set_block(val);
+        self
+    }
+    #[cfg(feature = "ScrollIntoViewContainer")]
+    #[deprecated = "Use `set_container()` instead."]
+    pub fn container(&mut self, val: ScrollIntoViewContainer) -> &mut Self {
+        self.set_container(val);
         self
     }
     #[cfg(feature = "ScrollLogicalPosition")]
