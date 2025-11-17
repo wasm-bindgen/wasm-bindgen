@@ -13,7 +13,7 @@ use walrus::TypedCustomSectionId;
 pub struct WasmBindgenAux {
     /// Extra typescript annotations that should be appended to the generated
     /// TypeScript file. This is provided via a custom attribute in Rust code.
-    pub extra_typescript: String,
+    pub extra_typescript: Vec<String>,
 
     /// A map from identifier to the contents of each local module defined via
     /// the `#[wasm_bindgen(module = "/foo.js")]` import options.
