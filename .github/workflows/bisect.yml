@@ -15,5 +15,5 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
     - run: |
         cargo install cargo-bisect-rustc
-        cargo bisect-rustc --start 1.90.0 --end 1.91.0 --script bisect.sh -vv --target wasm32-unknown-unknown
+        cargo bisect-rustc --start 1.90.0 --end 1.91.0 --script bisect.sh --target wasm32-unknown-unknown
 
