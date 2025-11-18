@@ -1796,7 +1796,7 @@ where
     E: core::error::Error,
 {
     fn from(error: E) -> Self {
-        use std::string::ToString;
+        use alloc::string::ToString;
 
         JsError::new(&error.to_string())
     }
