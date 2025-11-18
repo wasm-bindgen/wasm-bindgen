@@ -2,8 +2,12 @@ import source wasmModule from "./reference_test_bg.wasm";
 
 let wasm;
 
-let cachedUint8ArrayMemory0 = null;
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
 
+let cachedUint8ArrayMemory0 = null;
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.buffer !== wasm.memory.buffer) {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
@@ -12,17 +16,12 @@ function getUint8ArrayMemory0() {
 }
 
 let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : undefined);
-
 if (cachedTextDecoder) cachedTextDecoder.decode();
 
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
-}
 /**
  * @param {number} a
  * @param {number} b
@@ -50,7 +49,6 @@ const imports = {
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         },
         memory: new WebAssembly.Memory({initial:18,maximum:16384,shared:true}),
     },
@@ -61,4 +59,3 @@ const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
 
 wasm.__wbindgen_start();
-

@@ -271,6 +271,19 @@ fn shared_variant<'a>(v: &'a ast::Variant, intern: &'a Interner) -> EnumVariant<
 }
 
 fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<'a>, Diagnostic> {
+    // Resolve reexport name: use explicit rename if provided, otherwise use the import's name
+    let reexport = i.reexport.as_ref().map(|rename_opt| {
+        rename_opt.clone().unwrap_or_else(|| {
+            // Get the default name from the import kind
+            match &i.kind {
+                ast::ImportKind::Type(t) => t.js_name.clone(),
+                ast::ImportKind::Function(f) => f.function.name.clone(),
+                ast::ImportKind::Static(s) => s.js_name.clone(),
+                _ => unreachable!("reexport only supported on types, functions, and statics"),
+            }
+        })
+    });
+
     Ok(Import {
         module: i
             .module
@@ -278,7 +291,7 @@ fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<
             .map(|m| shared_module(m, intern, false))
             .transpose()?,
         js_namespace: i.js_namespace.clone(),
-        reexport: i.reexport.clone(),
+        reexport,
         kind: shared_import_kind(&i.kind, intern)?,
     })
 }

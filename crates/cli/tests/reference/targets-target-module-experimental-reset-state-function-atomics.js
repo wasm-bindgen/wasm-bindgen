@@ -2,8 +2,12 @@ import source wasmModule from "./reference_test_bg.wasm";
 
 let wasm;
 
-let cachedUint8ArrayMemory0 = null;
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
 
+let cachedUint8ArrayMemory0 = null;
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.buffer !== wasm.memory.buffer) {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
@@ -12,17 +16,24 @@ function getUint8ArrayMemory0() {
 }
 
 let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : undefined);
-
 if (cachedTextDecoder) cachedTextDecoder.decode();
 
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+let __wbg_instance_id = 0;
+
+function ____wbg_reset_state  () {
+    __wbg_instance_id++;
+    cachedUint8ArrayMemory0 = null;
+    if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
+    const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+    wasm = wasmInstance.exports;
+    wasm.__wbindgen_start();
 }
+export { ____wbg_reset_state as __wbg_reset_state }
+
 /**
  * @param {number} a
  * @param {number} b
@@ -31,17 +42,6 @@ function getStringFromWasm0(ptr, len) {
 export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
-}
-
-let __wbg_instance_id = 0;
-
-export function __wbg_reset_state () {
-    __wbg_instance_id++;
-    cachedUint8ArrayMemory0 = null;
-    if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-    wasm = wasmInstance.exports;
-    wasm.__wbindgen_start();
 }
 
 const imports = {
@@ -61,7 +61,6 @@ const imports = {
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         },
         memory: new WebAssembly.Memory({initial:18,maximum:16384,shared:true}),
     },
@@ -72,4 +71,3 @@ const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
 
 wasm.__wbindgen_start();
-

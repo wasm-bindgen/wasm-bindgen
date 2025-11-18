@@ -1,6 +1,17 @@
 import source wasmModule from "./reference_test_bg.wasm";
 
 let wasm;
+
+let __wbg_instance_id = 0;
+
+function ____wbg_reset_state  () {
+    __wbg_instance_id++;
+    const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+    wasm = wasmInstance.exports;
+    wasm.__wbindgen_start();
+}
+export { ____wbg_reset_state as __wbg_reset_state }
+
 /**
  * @param {number} a
  * @param {number} b
@@ -9,15 +20,6 @@ let wasm;
 export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
-}
-
-let __wbg_instance_id = 0;
-
-export function __wbg_reset_state () {
-    __wbg_instance_id++;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-    wasm = wasmInstance.exports;
-    wasm.__wbindgen_start();
 }
 
 const imports = {
@@ -34,7 +36,6 @@ const imports = {
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         },
     },
 
@@ -44,4 +45,3 @@ const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
 
 wasm.__wbindgen_start();
-

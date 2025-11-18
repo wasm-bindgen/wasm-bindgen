@@ -620,18 +620,36 @@ impl<'a> Context<'a> {
     }
 
     fn import(&mut self, import: decode::Import<'_>) -> Result<(), Error> {
-        let id = match &import.kind {
+        let (id, reexport_source) = match &import.kind {
             decode::ImportKind::Function(f) => self.import_function(&import, f)?,
             decode::ImportKind::Static(s) => self.import_static(&import, s)?,
             decode::ImportKind::String(s) => self.import_string(s)?,
             decode::ImportKind::Type(t) => self.import_type(&import, t)?,
             decode::ImportKind::Enum(e) => self.string_enum(e)?,
         };
+
+        // Handle adapter-based imports
         if let Some(id) = id {
-            if let Some(reexport_name) = import.reexport {
-                self.aux.reexports.insert(id, reexport_name);
+            if let Some(ref reexport_name) = import.reexport {
+                let import = match &self.aux.import_map[&id] {
+                    AuxImport::Value(AuxValue::Bare(js)) => js,
+                    AuxImport::Static { js, .. } => js,
+                    AuxImport::Instanceof(js) => js,
+                    _ => bail!("Unsupported re-export"),
+                };
+                self.aux
+                    .reexports
+                    .insert(reexport_name.clone(), import.clone());
             }
         }
+
+        // Handle reexports without adapters (e.g., types from snippets)
+        if let Some(source) = reexport_source {
+            if let Some(reexport_name) = import.reexport {
+                self.aux.reexports.insert(reexport_name, source);
+            }
+        }
+
         Ok(())
     }
 
@@ -639,7 +657,7 @@ impl<'a> Context<'a> {
         &mut self,
         import: &decode::Import<'_>,
         function: &decode::ImportFunction<'_>,
-    ) -> Result<Option<AdapterId>, Error> {
+    ) -> Result<(Option<AdapterId>, Option<nonstandard::JsImport>), Error> {
         let decode::ImportFunction {
             shim,
             catch,
@@ -651,10 +669,28 @@ impl<'a> Context<'a> {
         } = function;
         let (import_id, _id) = match self.function_imports.get(*shim) {
             Some(pair) => *pair,
-            None => return Ok(None),
+            None => {
+                return Ok((
+                    None,
+                    if import.reexport.is_some() {
+                        Some(self.determine_import(import, function.name)?)
+                    } else {
+                        None
+                    },
+                ));
+            }
         };
         let descriptor = match self.descriptors.remove(*shim) {
-            None => return Ok(None),
+            None => {
+                return Ok((
+                    None,
+                    if import.reexport.is_some() {
+                        Some(self.determine_import(import, function.name)?)
+                    } else {
+                        None
+                    },
+                ));
+            }
             Some(d) => d.unwrap_function(),
         };
 
@@ -664,7 +700,7 @@ impl<'a> Context<'a> {
         // to be imported from. The `import_map` table will record, for each
         // import, what is getting hooked up to that slot of the import table
         // to the WebAssembly instance.
-        let (id, import) = match method {
+        let (id, aux_import) = match method {
             Some(data) => {
                 let class = self.determine_import(import, data.class)?;
                 match &data.kind {
@@ -736,8 +772,18 @@ impl<'a> Context<'a> {
             self.aux.imports_with_assert_no_shim.insert(adapter);
         }
 
-        self.aux.import_map.insert(id, import);
-        Ok(Some(id))
+        let reexport_source = if import.reexport.is_some() {
+            match &aux_import {
+                AuxImport::Value(AuxValue::Bare(js)) => Some(js.clone()),
+                _ => None,
+            }
+        } else {
+            None
+        };
+
+        self.aux.import_map.insert(id, aux_import);
+
+        Ok((Some(id), reexport_source))
     }
 
     /// The `bool` returned indicates whether the imported value should be
@@ -852,14 +898,14 @@ impl<'a> Context<'a> {
         &mut self,
         import: &decode::Import<'_>,
         static_: &decode::ImportStatic<'_>,
-    ) -> Result<Option<AdapterId>, Error> {
+    ) -> Result<(Option<AdapterId>, Option<nonstandard::JsImport>), Error> {
         let (import_id, _id) = match self.function_imports.get(static_.shim) {
             Some(pair) => *pair,
-            None => return Ok(None),
+            None => return Ok((None, None)),
         };
 
         let descriptor = match self.descriptors.remove(static_.shim) {
-            None => return Ok(None),
+            None => return Ok((None, None)),
             Some(d) => d,
         };
         let optional = matches!(descriptor, Descriptor::Option(_));
@@ -882,16 +928,16 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::Static { js, optional });
-        Ok(Some(id))
+        Ok((Some(id), None))
     }
 
     fn import_string(
         &mut self,
         string: &decode::ImportString<'_>,
-    ) -> Result<Option<AdapterId>, Error> {
+    ) -> Result<(Option<AdapterId>, Option<nonstandard::JsImport>), Error> {
         let (import_id, _id) = match self.function_imports.get(string.shim) {
             Some(pair) => *pair,
-            None => return Ok(None),
+            None => return Ok((None, None)),
         };
 
         // Register the signature of this imported shim
@@ -911,17 +957,25 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::String(string.string.to_owned()));
-        Ok(None)
+        Ok((None, None))
     }
 
     fn import_type(
         &mut self,
         import: &decode::Import<'_>,
         type_: &decode::ImportType<'_>,
-    ) -> Result<Option<AdapterId>, Error> {
+    ) -> Result<(Option<AdapterId>, Option<nonstandard::JsImport>), Error> {
+        // If this type has a reexport attribute but no instanceof shim (e.g., from inline_js),
+        // we still need to return a JsImport so it can be re-exported
         let (import_id, _id) = match self.function_imports.get(type_.instanceof_shim) {
             Some(pair) => *pair,
-            None => return Ok(None),
+            None => {
+                if import.reexport.is_some() {
+                    let js_import = self.determine_import(import, type_.name)?;
+                    return Ok((None, Some(js_import)));
+                }
+                return Ok((None, None));
+            }
         };
 
         // Register the signature of this imported shim
@@ -938,17 +992,17 @@ impl<'a> Context<'a> {
 
         // And then save off that this function is is an instanceof shim for an
         // imported item.
-        let import = self.determine_import(import, type_.name)?;
+        let js_import = self.determine_import(import, type_.name)?;
         self.aux
             .import_map
-            .insert(id, AuxImport::Instanceof(import));
-        Ok(Some(id))
+            .insert(id, AuxImport::Instanceof(js_import));
+        Ok((Some(id), None))
     }
 
     fn string_enum(
         &mut self,
         string_enum: &decode::StringEnum<'_>,
-    ) -> Result<Option<AdapterId>, Error> {
+    ) -> Result<(Option<AdapterId>, Option<nonstandard::JsImport>), Error> {
         let aux = AuxStringEnum {
             name: string_enum.name.to_string(),
             comments: concatenate_comments(&string_enum.comments),
@@ -960,7 +1014,7 @@ impl<'a> Context<'a> {
             generate_typescript: string_enum.generate_typescript,
             js_namespace: string_enum.js_namespace.clone(),
         };
-        let mut result = Ok(None);
+        let mut result = Ok((None, None));
         self.aux
             .string_enums
             .entry(aux.name.clone())

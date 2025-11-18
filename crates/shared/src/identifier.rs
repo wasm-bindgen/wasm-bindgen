@@ -46,6 +46,61 @@ fn maybe_valid_chars(name: &str) -> impl Iterator<Item = Option<char>> + '_ {
     }))
 }
 
+static RESERVED_WORDS: &[&str] = &[
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "export",
+    "extends",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "import",
+    "in",
+    "instanceof",
+    "new",
+    "return",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
+    "enum",
+    "await",
+    "implements",
+    "interface",
+    "let",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "static",
+    "null",
+    "true",
+    "false",
+];
+
+/// Returns whether a string is a valid JavaScript identifier.
+/// Defined at https://tc39.es/ecma262/#prod-IdentifierName.
+pub fn is_reserved_ident(name: &str) -> bool {
+    RESERVED_WORDS.contains(&name)
+}
+
 /// Returns whether a string is a valid JavaScript identifier.
 /// Defined at https://tc39.es/ecma262/#prod-IdentifierName.
 pub fn is_valid_ident(name: &str) -> bool {
@@ -55,7 +110,16 @@ pub fn is_valid_ident(name: &str) -> bool {
 /// Converts a string to a valid JavaScript identifier by replacing invalid
 /// characters with underscores.
 pub fn to_valid_ident(name: &str) -> String {
-    maybe_valid_chars(name)
+    let result: String = maybe_valid_chars(name)
         .map(|opt| opt.unwrap_or('_'))
-        .collect()
+        .collect();
+
+    if RESERVED_WORDS.contains(&result.as_str()) {
+        let mut prefixed = String::with_capacity(result.len() + 1);
+        prefixed.push('_');
+        prefixed.push_str(&result);
+        prefixed
+    } else {
+        result
+    }
 }

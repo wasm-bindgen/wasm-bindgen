@@ -6,15 +6,17 @@ let wasm_bindgen;
         script_src = new URL(document.currentScript.src, location.href).toString();
     }
     let wasm = undefined;
+
     /**
      * @param {number} a
      * @param {number} b
      * @returns {number}
      */
-    __exports.add_that_might_fail = function(a, b) {
+    function add_that_might_fail(a, b) {
         const ret = wasm.add_that_might_fail(a, b);
         return ret >>> 0;
-    };
+    }
+    __exports.add_that_might_fail = add_that_might_fail;
 
     const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
@@ -23,7 +25,6 @@ let wasm_bindgen;
             if (typeof WebAssembly.instantiateStreaming === 'function') {
                 try {
                     return await WebAssembly.instantiateStreaming(module, imports);
-
                 } catch (e) {
                     const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
 
@@ -38,13 +39,11 @@ let wasm_bindgen;
 
             const bytes = await module.arrayBuffer();
             return await WebAssembly.instantiate(bytes, imports);
-
         } else {
             const instance = await WebAssembly.instantiate(module, imports);
 
             if (instance instanceof WebAssembly.Instance) {
                 return { instance, module };
-
             } else {
                 return instance;
             }
@@ -66,7 +65,6 @@ let wasm_bindgen;
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         };
 
         return imports;
@@ -94,13 +92,10 @@ let wasm_bindgen;
         }
 
         const imports = __wbg_get_imports();
-
         if (!(module instanceof WebAssembly.Module)) {
             module = new WebAssembly.Module(module);
         }
-
         const instance = new WebAssembly.Instance(module, imports);
-
         return __wbg_finalize_init(instance, module);
     }
 
@@ -131,5 +126,4 @@ let wasm_bindgen;
     }
 
     wasm_bindgen = Object.assign(__wbg_init, { initSync }, __exports);
-
 })();
