@@ -1,0 +1,19 @@
+name: Rustc Bisect
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rustc_bisect:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - uses: dtolnay/rust-toolchain@stable
+    - run: |
+        cargo install cargo-bisect-rustc
+        cargo bisect-rustc --start 1.90.0 --end 1.91.0 --script bisect.sh -vv --target wasm32-unknown-unknown
+
