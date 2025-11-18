@@ -3047,8 +3047,7 @@ impl fmt::Display for TryFromIntError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for TryFromIntError {}
+impl core::error::Error for TryFromIntError {}
 
 macro_rules! number_try_from {
     ($($x:ident)*) => ($(

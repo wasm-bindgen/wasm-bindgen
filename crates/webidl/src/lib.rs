@@ -81,7 +81,7 @@ impl fmt::Display for WebIDLParseError {
     }
 }
 
-impl std::error::Error for WebIDLParseError {}
+impl core::error::Error for WebIDLParseError {}
 
 #[derive(Clone, Copy, PartialEq)]
 pub(crate) enum ApiStability {

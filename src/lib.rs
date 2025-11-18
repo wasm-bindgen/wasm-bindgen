@@ -1726,7 +1726,7 @@ impl<T> DerefMut for Clamped<T> {
 /// You can get wasm_bindgen to throw basic errors by simply returning
 /// `Err(JsError::new("message"))` from such a function.
 ///
-/// For more complex error handling, `JsError` implements `From<T> where T: std::error::Error` by
+/// For more complex error handling, `JsError` implements `From<T> where T: core::error::Error` by
 /// converting it to a string, so you can use it with `?`. Many Rust error types already do this,
 /// and you can use [`thiserror`](https://crates.io/crates/thiserror) to derive Display
 /// implementations easily or use any number of boxed error types that implement it already.
@@ -1758,7 +1758,7 @@ impl<T> DerefMut for Clamped<T> {
 /// }
 ///
 /// use core::fmt;
-/// impl std::error::Error for MyErrorType {}
+/// impl core::error::Error for MyErrorType {}
 /// impl fmt::Display for MyErrorType {
 ///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 ///         write!(f, "display implementation becomes the error message")
@@ -1791,10 +1791,9 @@ impl JsError {
     }
 }
 
-#[cfg(feature = "std")]
 impl<E> From<E> for JsError
 where
-    E: std::error::Error,
+    E: core::error::Error,
 {
     fn from(error: E) -> Self {
         use std::string::ToString;

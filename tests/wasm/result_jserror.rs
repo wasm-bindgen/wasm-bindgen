@@ -10,7 +10,7 @@ enum MyError {
     InflightShouldBeFalse,
 }
 // shouldn't technically need this, surely
-impl std::error::Error for MyError {}
+impl core::error::Error for MyError {}
 impl fmt::Display for MyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "MyError::{:?}", self)
