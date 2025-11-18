@@ -6,11 +6,20 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::format_ident;
 use quote::quote_spanned;
 use quote::{quote, ToTokens};
+use rustversion_compat as rustversion;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use syn::parse_quote;
 use syn::spanned::Spanned;
 use wasm_bindgen_shared as shared;
+
+fn get_extern_type() -> TokenStream {
+    if rustversion::cfg!(since(1.71)) {
+        quote! {"C-unwind"}
+    } else {
+        quote! {"C"}
+    }
+}
 
 /// A trait for converting AST structs into Tokens and adding them to a TokenStream,
 /// or providing a diagnostic if conversion fails.
@@ -223,6 +232,7 @@ impl ToTokens for ast::Struct {
         let free_fn = Ident::new(&shared::free_function(&name_str), Span::call_site());
         let unwrap_fn = Ident::new(&shared::unwrap_function(&name_str), Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
+        let extern_type = get_extern_type();
         (quote! {
             #[automatically_derived]
             impl #wasm_bindgen::__rt::marker::SupportsConstructor for #name {}
@@ -306,7 +316,7 @@ impl ToTokens for ast::Struct {
                 #[doc(hidden)]
                 // `allow_delayed` is whether it's ok to not actually free the `ptr` immediately
                 // if it's still borrowed.
-                pub unsafe extern "C" fn #free_fn(ptr: u32, allow_delayed: u32) {
+                pub unsafe extern #extern_type fn #free_fn(ptr: u32, allow_delayed: u32) {
                     use #wasm_bindgen::__rt::alloc::rc::Rc;
 
                     if allow_delayed != 0 {
@@ -486,6 +496,7 @@ impl ToTokens for ast::StructField {
         }
 
         let wasm_bindgen = &self.wasm_bindgen;
+        let extern_type = get_extern_type();
 
         (quote! {
             #[automatically_derived]
@@ -493,7 +504,7 @@ impl ToTokens for ast::StructField {
                 #wasm_bindgen::__wbindgen_coverage! {
                 #[cfg_attr(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")), no_mangle)]
                 #[doc(hidden)]
-                pub unsafe extern "C" fn #getter(js: u32)
+                pub unsafe extern #extern_type fn #getter(js: u32)
                     -> #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi>
                 {
                     use #wasm_bindgen::__rt::{WasmRefCell, assert_not_null};
@@ -528,6 +539,7 @@ impl ToTokens for ast::StructField {
 
         let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
         let (args, names) = splat(wasm_bindgen, &Ident::new("val", rust_name.span()), &abi);
+        let extern_type = get_extern_type();
 
         (quote! {
             #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
@@ -536,7 +548,7 @@ impl ToTokens for ast::StructField {
                 #wasm_bindgen::__wbindgen_coverage! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub unsafe extern "C" fn #setter(
+                pub unsafe extern #extern_type fn #setter(
                     js: u32,
                     #(#args,)*
                 ) {
@@ -831,6 +843,7 @@ impl TryToTokens for ast::Export {
             }
         }
 
+        let extern_type = get_extern_type();
         (quote! {
             #[automatically_derived]
             const _: () = {
@@ -840,7 +853,7 @@ impl TryToTokens for ast::Export {
                     all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")),
                     export_name = #export_name,
                 )]
-                pub unsafe extern "C" fn #generated_name(#(#args),*) -> #wasm_bindgen::convert::WasmRet<#projection::Abi> {
+                pub unsafe extern #extern_type fn #generated_name(#(#args),*) -> #wasm_bindgen::convert::WasmRet<#projection::Abi> {
                     const _: () = {
                         #(#checks)*
                     };
@@ -1865,6 +1878,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
         let inner = &self.inner;
         let attrs = &self.attrs;
         let wasm_bindgen = &self.wasm_bindgen;
+        let extern_type = get_extern_type();
         (quote! {
             #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
             #[automatically_derived]
@@ -1873,7 +1887,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
                 #(#attrs)*
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #name() {
+                pub extern #extern_type fn #name() {
                     use #wasm_bindgen::describe::*;
                     // See definition of `link_mem_intrinsics` for what this is doing
                     #wasm_bindgen::__rt::link_mem_intrinsics();

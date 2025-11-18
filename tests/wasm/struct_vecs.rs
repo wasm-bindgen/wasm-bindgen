@@ -1,3 +1,4 @@
+use rustversion_compat as rustversion;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -34,6 +35,7 @@ fn test_valid() {
     pass_struct_vec();
 }
 
+#[cfg(not(target_feature = "exception-handling"))]
 #[wasm_bindgen_test]
 fn test_invalid() {
     pass_invalid_struct_vec();
