@@ -15,6 +15,7 @@ We welcome new members - if you are interested in joining the team, see the [mem
 ## Collaborators
 
 * [Hood Chatham](https://github.com/hoodmane)
+* [Dan Carney](https://github.com/drcarney66)
 
 ## Former Members
 
