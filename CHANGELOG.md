@@ -36,6 +36,11 @@
 
 ### Removed
 
+### Changed
+
+* Changed `std::error::Error` usage to `core::error::Error` to better support no_std environments. 
+  [#4808](https://github.com/wasm-bindgen/wasm-bindgen/pull/4808)
+
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
 
 ### Added
