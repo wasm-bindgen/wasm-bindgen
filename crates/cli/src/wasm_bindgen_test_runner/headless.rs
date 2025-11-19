@@ -121,7 +121,7 @@ pub fn run(
     );
 
     let mut client = Client {
-        agent: Agent::new(),
+        agent: Agent::new_with_defaults(),
         driver_url,
         session: None,
     };
@@ -583,18 +583,18 @@ impl Client {
 
     fn doit(&mut self, path: &str, method: Method) -> Result<String, Error> {
         let url = self.driver_url.join(path)?;
-        let response = match method {
+        let mut response = match method {
             Method::Post(data) => self
                 .agent
                 .post(url.as_str())
-                .set("Content-Type", "application/json")
-                .send_bytes(data.as_bytes())?,
+                .content_type("application/json")
+                .send(data.as_bytes())?,
             Method::Delete => self.agent.delete(url.as_str()).call()?,
             Method::Get => self.agent.get(url.as_str()).call()?,
         };
 
         let response_code = response.status();
-        let result = response.into_string()?;
+        let result = response.body_mut().read_to_string()?;
 
         if response_code != 200 {
             bail!("non-200 response code: {response_code}\n{result}");

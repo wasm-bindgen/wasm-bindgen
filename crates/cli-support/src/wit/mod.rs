@@ -144,6 +144,18 @@ impl<'a> Context<'a> {
             Descriptor::Unit,
             AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
         )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_object_is_null_or_undefined",
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Boolean,
+            AuxImport::Intrinsic(Intrinsic::ObjectIsNullOrUndefined),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_object_is_undefined",
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
+            Descriptor::Boolean,
+            AuxImport::Intrinsic(Intrinsic::ObjectIsUndefined),
+        )?;
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
@@ -497,6 +509,11 @@ impl<'a> Context<'a> {
             self.add_start_function(id)?;
         }
 
+        let classless_this = matches!(
+            &export.method_kind,
+            decode::MethodKind::Operation(op) if matches!(op.kind, decode::OperationKind::RegularThis)
+        );
+
         let kind = match export.class {
             Some(class) => {
                 let class = class.to_string();
@@ -532,7 +549,13 @@ impl<'a> Context<'a> {
                     }
                 }
             }
-            None => AuxExportKind::Function(export.function.name.to_string()),
+            _ => {
+                if classless_this {
+                    AuxExportKind::FunctionThis(export.function.name.to_string())
+                } else {
+                    AuxExportKind::Function(export.function.name.to_string())
+                }
+            }
         };
 
         let args = Some(
@@ -556,6 +579,7 @@ impl<'a> Context<'a> {
                 args,
                 asyncness: export.function.asyncness,
                 kind,
+                js_namespace: export.js_namespace.clone(),
                 generate_typescript: export.function.generate_typescript,
                 generate_jsdoc: export.function.generate_jsdoc,
                 variadic: export.function.variadic,
@@ -596,20 +620,26 @@ impl<'a> Context<'a> {
     }
 
     fn import(&mut self, import: decode::Import<'_>) -> Result<(), Error> {
-        match &import.kind {
-            decode::ImportKind::Function(f) => self.import_function(&import, f),
-            decode::ImportKind::Static(s) => self.import_static(&import, s),
-            decode::ImportKind::String(s) => self.import_string(s),
-            decode::ImportKind::Type(t) => self.import_type(&import, t),
-            decode::ImportKind::Enum(e) => self.string_enum(e),
+        let id = match &import.kind {
+            decode::ImportKind::Function(f) => self.import_function(&import, f)?,
+            decode::ImportKind::Static(s) => self.import_static(&import, s)?,
+            decode::ImportKind::String(s) => self.import_string(s)?,
+            decode::ImportKind::Type(t) => self.import_type(&import, t)?,
+            decode::ImportKind::Enum(e) => self.string_enum(e)?,
+        };
+        if let Some(id) = id {
+            if let Some(reexport_name) = import.reexport {
+                self.aux.reexports.insert(id, reexport_name);
+            }
         }
+        Ok(())
     }
 
     fn import_function(
         &mut self,
         import: &decode::Import<'_>,
         function: &decode::ImportFunction<'_>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<AdapterId>, Error> {
         let decode::ImportFunction {
             shim,
             catch,
@@ -621,10 +651,10 @@ impl<'a> Context<'a> {
         } = function;
         let (import_id, _id) = match self.function_imports.get(*shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
         let descriptor = match self.descriptors.remove(*shim) {
-            None => return Ok(()),
+            None => return Ok(None),
             Some(d) => d.unwrap_function(),
         };
 
@@ -707,7 +737,7 @@ impl<'a> Context<'a> {
         }
 
         self.aux.import_map.insert(id, import);
-        Ok(())
+        Ok(Some(id))
     }
 
     /// The `bool` returned indicates whether the imported value should be
@@ -737,6 +767,10 @@ impl<'a> Context<'a> {
                     class.fields.push(function.name.to_string());
                     Ok((AuxImport::Value(AuxValue::Bare(class)), true))
                 }
+            }
+
+            decode::OperationKind::RegularThis => {
+                bail!("RegularThis operation kind should only appear on exports, not imports")
             }
 
             decode::OperationKind::Getter(field) => {
@@ -818,14 +852,14 @@ impl<'a> Context<'a> {
         &mut self,
         import: &decode::Import<'_>,
         static_: &decode::ImportStatic<'_>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<AdapterId>, Error> {
         let (import_id, _id) = match self.function_imports.get(static_.shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
         let descriptor = match self.descriptors.remove(static_.shim) {
-            None => return Ok(()),
+            None => return Ok(None),
             Some(d) => d,
         };
         let optional = matches!(descriptor, Descriptor::Option(_));
@@ -848,13 +882,16 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::Static { js, optional });
-        Ok(())
+        Ok(Some(id))
     }
 
-    fn import_string(&mut self, string: &decode::ImportString<'_>) -> Result<(), Error> {
+    fn import_string(
+        &mut self,
+        string: &decode::ImportString<'_>,
+    ) -> Result<Option<AdapterId>, Error> {
         let (import_id, _id) = match self.function_imports.get(string.shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
         // Register the signature of this imported shim
@@ -874,17 +911,17 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::String(string.string.to_owned()));
-        Ok(())
+        Ok(None)
     }
 
     fn import_type(
         &mut self,
         import: &decode::Import<'_>,
         type_: &decode::ImportType<'_>,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<AdapterId>, Error> {
         let (import_id, _id) = match self.function_imports.get(type_.instanceof_shim) {
             Some(pair) => *pair,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
         // Register the signature of this imported shim
@@ -905,10 +942,13 @@ impl<'a> Context<'a> {
         self.aux
             .import_map
             .insert(id, AuxImport::Instanceof(import));
-        Ok(())
+        Ok(Some(id))
     }
 
-    fn string_enum(&mut self, string_enum: &decode::StringEnum<'_>) -> Result<(), Error> {
+    fn string_enum(
+        &mut self,
+        string_enum: &decode::StringEnum<'_>,
+    ) -> Result<Option<AdapterId>, Error> {
         let aux = AuxStringEnum {
             name: string_enum.name.to_string(),
             comments: concatenate_comments(&string_enum.comments),
@@ -918,8 +958,9 @@ impl<'a> Context<'a> {
                 .map(|v| v.to_string())
                 .collect(),
             generate_typescript: string_enum.generate_typescript,
+            js_namespace: string_enum.js_namespace.clone(),
         };
-        let mut result = Ok(());
+        let mut result = Ok(None);
         self.aux
             .string_enums
             .entry(aux.name.clone())
@@ -948,6 +989,7 @@ impl<'a> Context<'a> {
                 })
                 .collect(),
             generate_typescript: enum_.generate_typescript,
+            js_namespace: enum_.js_namespace.clone(),
         };
         let mut result = Ok(());
         self.aux
@@ -991,6 +1033,7 @@ impl<'a> Context<'a> {
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Getter,
                     },
+                    js_namespace: None,
                     generate_typescript: field.generate_typescript,
                     generate_jsdoc: field.generate_jsdoc,
                     variadic: false,
@@ -1025,6 +1068,7 @@ impl<'a> Context<'a> {
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Setter,
                     },
+                    js_namespace: None,
                     generate_typescript: field.generate_typescript,
                     generate_jsdoc: field.generate_jsdoc,
                     variadic: false,
@@ -1038,6 +1082,7 @@ impl<'a> Context<'a> {
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
+            js_namespace: struct_.js_namespace.clone(),
         };
         self.aux.structs.push(aux);
 
@@ -1052,7 +1097,7 @@ impl<'a> Context<'a> {
         let unwrap_fn = wasm_bindgen_shared::unwrap_function(struct_.name);
         self.add_aux_import_to_import_map(
             &unwrap_fn,
-            vec![Descriptor::Externref],
+            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
             Descriptor::I32,
             AuxImport::UnwrapExportedClass(struct_.name.to_string()),
         )?;

@@ -26,6 +26,8 @@ pub struct Builder<'a, 'b> {
     /// Whether or not this is building a method of a Rust class instance, and
     /// whether or not the method consumes `self` or not.
     method: Option<bool>,
+    /// Whether this is a classless this function (receives JS `this` as first param)
+    classless_this: bool,
     /// Whether or not we're catching exceptions from the main function
     /// invocation. Currently only used for imports.
     catch: bool,
@@ -87,7 +89,7 @@ pub struct JsFunction {
 
 /// A references to an (likely) exported symbol used in TS type expression.
 ///
-/// Right now, only string enum require this type of anaylsis.
+/// Right now, only string enum require this type of analysis.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TsReference {
     StringEnum(String),
@@ -100,12 +102,17 @@ impl<'a, 'b> Builder<'a, 'b> {
             cx,
             constructor: None,
             method: None,
+            classless_this: false,
             catch: false,
         }
     }
 
     pub fn method(&mut self, consumed: bool) {
         self.method = Some(consumed);
+    }
+
+    pub fn classless_this(&mut self) {
+        self.classless_this = true;
     }
 
     pub fn constructor(&mut self, class: &str) {
@@ -172,6 +179,9 @@ impl<'a, 'b> Builder<'a, 'b> {
             } else {
                 js.args.push("this.__wbg_ptr".into());
             }
+        } else if self.classless_this {
+            let _ = params.next();
+            js.args.push("this".into());
         }
         for (i, param) in params.enumerate() {
             let arg = match args_data {

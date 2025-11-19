@@ -5,6 +5,46 @@
 
 ### Added
 
+* Added typed `this` support in the first argument in free function exports via
+  a new `#[wasm_bindgen(this)]` attribute.
+  [#4757](https://github.com/wasm-bindgen/wasm-bindgen/pull/4757)
+
+* Added `reexport` attribute for imports to support re-exporting imported types,
+  with optional renaming.
+  [#4759](https://github.com/wasm-bindgen/wasm-bindgen/pull/4759)
+
+* Added `js_namespace` attribute on exported types, mirroring the import
+  semantics to enable arbitrarily nested exported interface objects.
+  [#4744](https://github.com/wasm-bindgen/wasm-bindgen/pull/4744)
+
+* Added 'container' attribute to `ScrollIntoViewOptions`
+  [#4806](https://github.com/wasm-bindgen/wasm-bindgen/pull/4806)
+
+### Fixed
+
+* Fixed node test harness getting stuck after tests completed.
+  [#4776](https://github.com/wasm-bindgen/wasm-bindgen/pull/4776)
+
+* Quote names containing colons in generated .d.ts.
+  [#4488](https://github.com/wasm-bindgen/wasm-bindgen/pull/4488)
+
+* Fixes TryFromJsValue for structs JsValue stack corruption on failure.
+  [#4786](https://github.com/wasm-bindgen/wasm-bindgen/pull/4786)
+
+* Fixed `wasm-bindgen-test-runner` outputting empty line when using the `--list` option. In particular, `cargo-nextest` now works correctly.
+  [#4803](https://github.com/wasm-bindgen/wasm-bindgen/pull/4803)
+
+* It now works to build with `-Cpanic=unwind`.
+  [#4796](https://github.com/wasm-bindgen/wasm-bindgen/pull/4796)
+  [#4783](https://github.com/wasm-bindgen/wasm-bindgen/pull/4783)
+  [#4782](https://github.com/wasm-bindgen/wasm-bindgen/pull/4782)
+
+### Removed
+
+## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
+
+### Added
+
 * Added `Math::PI` binding to `js_sys`, exposing the ECMAScript `Math.PI` constant.
   [#4748](https://github.com/wasm-bindgen/wasm-bindgen/pull/4748)
 
@@ -25,6 +65,19 @@
 
 * Added better support for async stack traces when building in debug mode.
   [#4711](https://github.com/wasm-bindgen/wasm-bindgen/pull/4711)
+
+* Extended support for `TryFromJsValue` trait implementations.
+  [#4714](https://github.com/wasm-bindgen/wasm-bindgen/pull/4714)
+
+* New `JsValue.is_null_or_undefined()` method and intrinsic.
+  [#4751](https://github.com/wasm-bindgen/wasm-bindgen/pull/4751)
+
+* Support for `Option<JsValue>` in function arguments and return.
+  [#4752](https://github.com/wasm-bindgen/wasm-bindgen/pull/4752)
+
+* Support for `WASM_BINDGEN_KEEP_TEST_BUILD=1` environment variable
+  to retain build files when using the test runner.
+  [#4758](https://github.com/wasm-bindgen/wasm-bindgen/pull/4758)
 
 ### Fixed
 
