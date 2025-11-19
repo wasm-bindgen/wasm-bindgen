@@ -197,7 +197,7 @@ export class Foo {
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
 
-export function __wbg___wbindgen_throw_451ec1a8469d7eb6(arg0, arg1) {
+export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 

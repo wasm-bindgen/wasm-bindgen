@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::char;
-use core::fmt::Debug;
 use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
@@ -9,7 +8,7 @@ use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
 use crate::convert::{OptionFromWasmAbi, OptionIntoWasmAbi, ReturnWasmAbi};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{Clamped, JsError, JsValue, UnwrapThrowExt, __wbindgen_object_is_undefined};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -466,6 +465,20 @@ impl LongRefFromWasmAbi for JsValue {
     }
 }
 
+impl OptionIntoWasmAbi for JsValue {
+    #[inline]
+    fn none() -> u32 {
+        crate::__rt::JSIDX_UNDEFINED
+    }
+}
+
+impl OptionFromWasmAbi for JsValue {
+    #[inline]
+    fn is_none(js: &u32) -> bool {
+        unsafe { __wbindgen_object_is_undefined(*js) }
+    }
+}
+
 impl<T: OptionIntoWasmAbi> IntoWasmAbi for Option<T> {
     type Abi = T::Abi;
 
@@ -600,10 +613,7 @@ pub fn js_value_vector_into_abi<T: Into<JsValue>>(
 /// documentation for more details.
 pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     js: <Box<[JsValue]> as FromWasmAbi>::Abi,
-) -> Box<[T]>
-where
-    T::Error: Debug,
-{
+) -> Box<[T]> {
     let js_vals = <Vec<JsValue> as FromWasmAbi>::from_abi(js);
 
     let mut result = Vec::with_capacity(js_vals.len());

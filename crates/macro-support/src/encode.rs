@@ -209,6 +209,7 @@ fn shared_export<'a>(
         comments: export.comments.iter().map(|s| &**s).collect(),
         consumed,
         function: shared_function(&export.function, intern),
+        js_namespace: export.js_namespace.clone(),
         method_kind,
         start: export.start,
     })
@@ -257,6 +258,7 @@ fn shared_enum<'a>(e: &'a ast::Enum, intern: &'a Interner) -> Enum<'a> {
             .collect(),
         comments: e.comments.iter().map(|s| &**s).collect(),
         generate_typescript: e.generate_typescript,
+        js_namespace: e.js_namespace.clone(),
     }
 }
 
@@ -276,6 +278,7 @@ fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<
             .map(|m| shared_module(m, intern, false))
             .transpose()?,
         js_namespace: i.js_namespace.clone(),
+        reexport: i.reexport.clone(),
         kind: shared_import_kind(&i.kind, intern)?,
     })
 }
@@ -376,6 +379,7 @@ fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> Stri
         generate_typescript: i.generate_typescript,
         variant_values: i.variant_values.iter().map(|x| &**x).collect(),
         comments: i.comments.iter().map(|s| &**s).collect(),
+        js_namespace: i.js_namespace.clone(),
     }
 }
 
@@ -390,6 +394,7 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
         comments: s.comments.iter().map(|s| &**s).collect(),
         is_inspectable: s.is_inspectable,
         generate_typescript: s.generate_typescript,
+        js_namespace: s.js_namespace.clone(),
     }
 }
 
@@ -609,6 +614,7 @@ fn from_ast_method_kind<'a>(
                     OperationKind::Getter(g.unwrap_or_else(|| function.infer_getter_property()))
                 }
                 ast::OperationKind::Regular => OperationKind::Regular,
+                ast::OperationKind::RegularThis => OperationKind::RegularThis,
                 ast::OperationKind::Setter(s) => {
                     let s = s.as_ref().map(|s| intern.intern_str(s));
                     OperationKind::Setter(match s {

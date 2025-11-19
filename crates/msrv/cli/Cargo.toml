@@ -5,4 +5,13 @@ publish = false
 version = "0.0.0"
 
 [dependencies]
+icu_collections = "=2.0.0"
+icu_locale_core = "=2.0.0"
+icu_normalizer = "=2.0.0"
+icu_normalizer_data = "=2.0.0"
+icu_properties = "=2.0.0"
+icu_properties_data = "=2.0.0"
+icu_provider = "=2.0.0"
 wasm-bindgen-cli = { path = "../../cli" }
+# enable default feature for icu
+writeable = "0.6.0"

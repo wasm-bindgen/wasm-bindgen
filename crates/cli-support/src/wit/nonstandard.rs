@@ -34,6 +34,10 @@ pub struct WasmBindgenAux {
     /// A map from imported function id to what it's expected to import.
     pub import_map: HashMap<AdapterId, AuxImport>,
 
+    /// A map from AdapterId to the reexport name (if the import should be re-exported).
+    /// A None value means reexport with the same name as the import.
+    pub reexports: HashMap<AdapterId, Option<String>>,
+
     /// Small bits of metadata about imports.
     pub imports_with_catch: HashSet<AdapterId>,
     pub imports_with_variadic: HashSet<AdapterId>,
@@ -80,6 +84,8 @@ pub struct AuxExport {
     pub asyncness: bool,
     /// What kind of function this is and where it shows up
     pub kind: AuxExportKind,
+    /// The namespace to export the item through, if any
+    pub js_namespace: Option<Vec<String>>,
     /// Whether typescript bindings should be generated for this export.
     pub generate_typescript: bool,
     /// Whether jsdoc comments should be generated for this export.
@@ -123,6 +129,9 @@ pub struct AuxFunctionArgumentData {
 pub enum AuxExportKind {
     /// A free function that's just listed on the exported module
     Function(String),
+
+    /// A free function that receives JS `this` as its first parameter
+    FunctionThis(String),
 
     /// A function that's used to create an instance of a class. The function
     /// actually return just an integer which is put on an JS object currently.
@@ -188,6 +197,8 @@ pub struct AuxEnum {
     pub variants: Vec<(String, i64, String)>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
+    /// The namespace to export the enum through, if any
+    pub js_namespace: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -200,6 +211,11 @@ pub struct AuxStringEnum {
     pub variant_values: Vec<String>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
+    /// The namespace to export the enum through, if any
+    /// Note: Currently unused as string enums don't generate exports,
+    /// but kept for consistency and potential future use.
+    #[allow(dead_code)]
+    pub js_namespace: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -212,6 +228,8 @@ pub struct AuxStruct {
     pub is_inspectable: bool,
     /// Whether typescript bindings should be generated for this struct.
     pub generate_typescript: bool,
+    /// The namespace to export the struct through, if any
+    pub js_namespace: Option<Vec<String>>,
 }
 
 /// All possible types of imports that can be imported by a Wasm module.

@@ -128,8 +128,6 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    let shell = shell::Shell::new();
-
     let mut file_name = cli
         .file
         .file_name()
@@ -218,6 +216,18 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     }
 
     let tmpdir = tempfile::tempdir()?;
+
+    // Support a WASM_BINDGEN_KEEP_TEST_BUILD=1 env var for debugging test files
+    let tmpdir_path = if env::var("WASM_BINDGEN_KEEP_TEST_BUILD").is_ok() {
+        let path = tmpdir.keep();
+        println!(
+            "Retaining temporary build output folder: {}",
+            path.to_string_lossy()
+        );
+        path
+    } else {
+        tmpdir.path().to_path_buf()
+    };
 
     let module = "wasm-bindgen-test";
 
@@ -319,6 +329,8 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         })
         .unwrap_or(20);
 
+    let shell = shell::Shell::new();
+
     // Make the generated bindings available for the tests to execute against.
     shell.status("Executing bindgen...");
     let mut b = Bindgen::new();
@@ -355,14 +367,15 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     b.debug(debug)
         .input_module(module, wasm)
         .emit_start(false)
-        .generate(&tmpdir)
+        .generate(&tmpdir_path)
         .context("executing `wasm-bindgen` over the Wasm file")?;
     shell.clear();
 
     match test_mode {
         TestMode::Node { no_modules } => {
-            node::execute(module, tmpdir.path(), cli, tests, !no_modules, coverage)?
+            node::execute(module, &tmpdir_path, cli, tests, !no_modules, coverage)?
         }
+<<<<<<< HEAD
         TestMode::Emscripten => {
             let srv = server::spawn_emscripten(
                 &"127.0.0.1:0".parse().unwrap(),
@@ -376,6 +389,9 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
         }
         TestMode::Deno => deno::execute(module, tmpdir.path(), cli, tests)?,
+=======
+        TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
+>>>>>>> upstream/main
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
         | TestMode::SharedWorker { .. }
@@ -390,7 +406,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
                 },
                 headless,
                 module,
-                tmpdir.path(),
+                &tmpdir_path,
                 cli,
                 tests,
                 test_mode,

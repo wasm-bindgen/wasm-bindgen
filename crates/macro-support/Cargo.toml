@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-macro-support"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro-support"
 rust-version = "1.57"
-version = "0.2.104"
+version = "0.2.105"
 
 [features]
 extra-traits = ["syn/extra-traits"]
@@ -19,8 +19,9 @@ strict-macro = []
 bumpalo = "3.0.0"
 proc-macro2 = "1.0"
 quote = '1.0'
+rustversion-compat = { package = "rustversion", version = "1.0" }
 syn = { version = '2.0', features = ['visit', 'visit-mut', 'full'] }
-wasm-bindgen-shared = { path = "../shared", version = "=0.2.104" }
+wasm-bindgen-shared = { path = "../shared", version = "=0.2.105" }
 
 [lints]
 workspace = true
