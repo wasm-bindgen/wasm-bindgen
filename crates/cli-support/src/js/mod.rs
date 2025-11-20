@@ -212,8 +212,8 @@ impl<'a> Context<'a> {
         if self.config.typescript {
             self.typescript.push('\n');
         }
-        // Unless it is `export ...declaration...` inline (common case unless a non-
-        // identifier /default export), we define declaration upfront and then export.
+        // Unless it is `export ...declaration...` form (common case), write the declaration first
+        // and then export.
         if export_name.map(|name| name != id).unwrap_or(true)
             || matches!(
                 self.config.mode,
@@ -224,20 +224,21 @@ impl<'a> Context<'a> {
                 self.globals.push_str(c);
             }
             self.globals.push_str(decl);
-            if self.config.typescript {
+        } else if let Some(c) = comments {
+            self.globals.push_str(c);
+        }
+        if self.config.typescript {
+            if export_name.map(|name| name != id).unwrap_or(true) {
                 if let Some(c) = ts_comments {
                     self.typescript.push_str(c);
                 }
-                self.typescript.push_str(&format!("declare {ts_decl}"));
-            }
-        } else {
-            if let Some(c) = comments {
-                self.globals.push_str(c);
-            }
-            if self.config.typescript {
-                if let Some(c) = ts_comments {
-                    self.typescript.push_str(c);
+                // in nomodules, we output into a namespace, which is already ambient
+                if !self.config.mode.no_modules() {
+                    self.typescript.push_str("declare ");
                 }
+                self.typescript.push_str(ts_decl);
+            } else if let Some(c) = ts_comments {
+                self.typescript.push_str(c);
             }
         }
         if let Some(export_name) = export_name {
@@ -275,12 +276,7 @@ impl<'a> Context<'a> {
                 if export_name == "default" {
                     self.typescript.push_str(&format!("export default {id};\n"));
                 } else if export_name == id {
-                    if !ts_decl.is_empty() {
-                        self.typescript.push_str(&format!("export {ts_decl}\n"));
-                    } else {
-                        // reexport case
-                        self.typescript.push_str(&format!("export {{ {id} }}\n"));
-                    }
+                    self.typescript.push_str(&format!("export {ts_decl}"));
                 } else if is_valid_ident(export_name) {
                     self.typescript
                         .push_str(&format!("export {{ {id} as {export_name} }}\n"));
@@ -304,6 +300,7 @@ impl<'a> Context<'a> {
         // Process reexports
         for (export_name, js_import) in self.aux.reexports.clone() {
             let import_name = self.import_name(&js_import)?;
+            let ts_definition = format!("let {import_name}: unknown;\n");
             define_export(
                 &mut self.exports,
                 &export_name,
@@ -313,7 +310,7 @@ impl<'a> Context<'a> {
                     comments: None,
                     definition: "".to_string(),
                     ts_comments: None,
-                    ts_definition: "".to_string(),
+                    ts_definition,
                 }),
             )?;
         }
@@ -1276,7 +1273,7 @@ wasm = wasmInstance.exports;
         self.write_class_field_types(&class, &mut ts_dst);
 
         dst.push_str("}\n");
-        ts_dst.push('}');
+        ts_dst.push_str("}\n");
 
         dst.push_str(&format!(
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
@@ -1454,7 +1451,7 @@ wasm = wasmInstance.exports;
         indent: &str,
     ) -> Result<(String, String), Error> {
         let (mut ns_dst, mut ts_dst) = if let Some(id) = &namespace.id {
-            (format!("Object.assign({id}, {{\n"), String::from("{{\n"))
+            (format!("Object.assign({id}, {{\n"), String::from("{\n"))
         } else {
             (String::from("{\n"), String::from("{\n"))
         };
@@ -3110,7 +3107,7 @@ wasm = wasmInstance.exports;
                             typescript.push_str("function ");
                             typescript.push_str(&identifier);
                             typescript.push_str(ts_sig);
-                            typescript.push(';');
+                            typescript.push_str(";\n");
                             Some(ts_docs)
                         } else {
                             None
@@ -4108,7 +4105,7 @@ wasm = wasmInstance.exports;
             }
         }
         if enum_.generate_typescript {
-            typescript.push_str("\n}");
+            typescript.push_str("\n}\n");
         }
 
         // add an `@enum {1 | 2 | 3}` to ensure that enums type-check even without .d.ts

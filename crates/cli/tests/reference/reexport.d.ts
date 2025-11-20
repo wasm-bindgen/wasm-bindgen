@@ -1,20 +1,25 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export { CustomType }
+export let CustomType: unknown;
 
-declare export { OriginalName as RenamedClass }
+declare let OriginalName: unknown;
+export { OriginalName as RenamedClass }
 
 declare function foo(): void;
-declare let Snippet2: {{
+
+declare let Snippet2: {
   foo: typeof foo,
 };
 export { Snippet2 as Snippet }
 
-declare export default _default;
+declare let _default: unknown;
+export default _default;
 
-export { helperFunction }
+export let helperFunction: unknown;
 
-declare // export { invalid_name as 'invalid-name' }
+declare let invalid_name: unknown;
+// export { invalid_name as 'invalid-name' }
 
-declare export { original as renamedFunction }
+declare let original: unknown;
+export { original as renamedFunction }

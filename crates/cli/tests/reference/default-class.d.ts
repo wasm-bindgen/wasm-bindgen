@@ -6,4 +6,5 @@ declare class _default {
   [Symbol.dispose](): void;
   constructor(value: number);
   get_value(): number;
-}export default _default;
+}
+export default _default;

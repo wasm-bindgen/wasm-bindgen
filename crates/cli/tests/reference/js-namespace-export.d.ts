@@ -22,7 +22,9 @@ declare class Counter {
   increment(): void;
   value: number;
 }
+
 declare function concat(a: string, b: string): string;
+
 declare let _default: {
   Counter: typeof Counter,
   concat: typeof concat,
@@ -30,14 +32,16 @@ declare let _default: {
 export default _default;
 
 declare function add(a: number, b: number): number;
+
 declare function divide(a: number, b: number): number;
+
 declare function multiply(a: number, b: number): number;
+
 export let math: {
   add: typeof add,
   divide: typeof divide,
   multiply: typeof multiply,
 };
-
 
 declare class Point3D {
   private constructor();
@@ -47,6 +51,7 @@ declare class Point3D {
   y: number;
   z: number;
 }
+
 declare class Point {
   private constructor();
   free(): void;
@@ -54,13 +59,13 @@ declare class Point {
   x: number;
   y: number;
 }
+
 export let models: {
   '3d': {
     Point3D: typeof Point3D,
   },
   Point: typeof Point,
 };
-
 
 export function regular_function(): number;
 
@@ -69,11 +74,13 @@ declare enum Status {
   Active = 1,
   Complete = 2,
 }
+
 declare enum HttpStatus {
   Ok = 200,
   NotFound = 404,
   ServerError = 500,
 }
+
 export let types: {
   Status: typeof Status,
   http: {
@@ -81,11 +88,10 @@ export let types: {
   },
 };
 
-
 declare function uppercase(s: string): string;
+
 export let utils: {
   string: {
     uppercase: typeof uppercase,
   },
 };
-

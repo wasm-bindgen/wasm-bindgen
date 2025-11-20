@@ -1,4 +1,3 @@
-use rustversion_compat as rustversion;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
