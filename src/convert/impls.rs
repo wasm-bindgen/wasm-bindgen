@@ -43,7 +43,7 @@ impl WasmAbi for i128 {
 
     #[inline]
     fn join(low: u64, high: u64, _: (), _: ()) -> Self {
-        ((high as u128) << 64 | low as u128) as i128
+        (((high as u128) << 64) | low as u128) as i128
     }
 }
 impl WasmAbi for u128 {
@@ -61,7 +61,7 @@ impl WasmAbi for u128 {
 
     #[inline]
     fn join(low: u64, high: u64, _: (), _: ()) -> Self {
-        (high as u128) << 64 | low as u128
+        ((high as u128) << 64) | low as u128
     }
 }
 

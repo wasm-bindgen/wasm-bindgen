@@ -67,6 +67,7 @@ enum OutputMode {
     NoModules { global: String },
     Node { module: bool },
     Deno,
+    Emscripten,
     Module,
 }
 
@@ -228,6 +229,13 @@ impl Bindgen {
         match &mut self.mode {
             OutputMode::NoModules { global } => *global = name.to_string(),
             _ => bail!("can only specify `--no-modules-global` with `--target no-modules`"),
+        }
+        Ok(self)
+    }
+
+    pub fn emscripten(&mut self, emscripten: bool) -> Result<&mut Bindgen, Error> {
+        if emscripten {
+            self.switch_mode(OutputMode::Emscripten, "--target emscripten")?;
         }
         Ok(self)
     }
@@ -743,6 +751,9 @@ export * from \"./{js_name}\";
                 )?;
             }
             write(out_dir.join(&js_name), reset_indentation(&gen.js))?;
+        } else if matches!(self.generated.mode, OutputMode::Emscripten) {
+            let emscripten_js_path = out_dir.join("library_bindgen.js");
+            write(&emscripten_js_path, reset_indentation(&gen.js))?;
         } else {
             write(&js_path, reset_indentation(&gen.js))?;
         }

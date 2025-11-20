@@ -92,4 +92,3 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 3, false);
     ;
 };
-
