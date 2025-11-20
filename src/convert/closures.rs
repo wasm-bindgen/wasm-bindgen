@@ -78,7 +78,7 @@ macro_rules! closures {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() {
                 inform(FUNCTION);
-                inform(invoke::<$($var,)* R> as usize as u32);
+                inform(invoke::<$($var,)* R> as *const () as usize as u32);
                 closures!(@describe $abi $FnArgs);
                 R::describe();
                 R::describe();
