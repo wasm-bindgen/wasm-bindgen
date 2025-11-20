@@ -34,8 +34,7 @@ pub struct WasmBindgenAux {
     /// A map from imported function id to what it's expected to import.
     pub import_map: HashMap<AdapterId, AuxImport>,
 
-    /// List of imports that should be re-exported.
-    /// The Option<String> is the optional renamed export name.
+    /// List of imports that should be re-exported, keyed by reexport name.
     pub reexports: BTreeMap<String, JsImport>,
 
     /// Small bits of metadata about imports.

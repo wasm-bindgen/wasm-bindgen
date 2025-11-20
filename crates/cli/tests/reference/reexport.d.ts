@@ -3,6 +3,8 @@
 
 export let CustomType: unknown;
 
+export let MY_CONSTANT: unknown;
+
 declare let OriginalName: unknown;
 export { OriginalName as RenamedClass }
 
@@ -20,6 +22,9 @@ export let helperFunction: unknown;
 
 declare let invalid_name: unknown;
 // export { invalid_name as 'invalid-name' }
+
+declare let original_config: unknown;
+export { original_config as renamedConfig }
 
 declare let original: unknown;
 export { original as renamedFunction }

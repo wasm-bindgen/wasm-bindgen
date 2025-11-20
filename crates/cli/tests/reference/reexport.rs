@@ -48,3 +48,15 @@ extern "C" {
     #[wasm_bindgen(reexport)]
     pub type Snippet;
 }
+
+#[wasm_bindgen(module = "constants")]
+extern "C" {
+    #[wasm_bindgen(reexport)]
+    pub static MY_CONSTANT: JsValue;
+}
+
+#[wasm_bindgen(module = "config")]
+extern "C" {
+    #[wasm_bindgen(js_name = "original_config", reexport = "renamedConfig")]
+    pub static CONFIG: JsValue;
+}

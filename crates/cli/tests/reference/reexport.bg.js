@@ -1,4 +1,6 @@
 import { Snippet } from './snippets/reexport_reftest-7b4ae97ed571adca/inline0.js';
+import { original_config } from 'config';
+import { MY_CONSTANT } from 'constants';
 import { default as _default } from 'default-export-lib';
 import { helperFunction } from 'helpers';
 import { OriginalName } from 'some-library';
@@ -12,6 +14,8 @@ export function __wbg_set_wasm(val) {
 }
 
 export { CustomType }
+
+export { MY_CONSTANT }
 
 export { OriginalName as RenamedClass }
 
@@ -29,6 +33,8 @@ export default _default;
 export { helperFunction }
 
 export { invalid_name as 'invalid-name' }
+
+export { original_config as renamedConfig }
 
 export { original as renamedFunction }
 

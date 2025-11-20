@@ -114,7 +114,7 @@ pub fn to_valid_ident(name: &str) -> String {
         .map(|opt| opt.unwrap_or('_'))
         .collect();
 
-    if RESERVED_WORDS.contains(&result.as_str()) {
+    if is_reserved_ident(&result) {
         let mut prefixed = String::with_capacity(result.len() + 1);
         prefixed.push('_');
         prefixed.push_str(&result);
