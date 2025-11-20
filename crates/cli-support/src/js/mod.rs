@@ -209,7 +209,7 @@ impl<'a> Context<'a> {
             ts_comments,
         } = def;
         self.globals.push('\n');
-        if self.config.typescript {
+        if self.config.typescript && !ts_decl.is_empty() {
             self.typescript.push('\n');
         }
         // Unless it is `export ...declaration...` form (common case), write the declaration first
@@ -227,7 +227,7 @@ impl<'a> Context<'a> {
         } else if let Some(c) = comments {
             self.globals.push_str(c);
         }
-        if self.config.typescript {
+        if self.config.typescript && !ts_decl.is_empty() {
             if export_name.map(|name| name != id).unwrap_or(true) {
                 if let Some(c) = ts_comments {
                     self.typescript.push_str(c);
@@ -272,11 +272,13 @@ impl<'a> Context<'a> {
                     }
                 }
             };
-            if self.config.typescript {
+            if self.config.typescript && !ts_decl.is_empty() {
                 if export_name == "default" {
                     self.typescript.push_str(&format!("export default {id};\n"));
                 } else if export_name == id {
-                    self.typescript.push_str(&format!("export {ts_decl}"));
+                    if !ts_decl.is_empty() {
+                        self.typescript.push_str(&format!("export {ts_decl}"));
+                    }
                 } else if is_valid_ident(export_name) {
                     self.typescript
                         .push_str(&format!("export {{ {id} as {export_name} }}\n"));
@@ -2677,9 +2679,9 @@ wasm = wasmInstance.exports;
             .to_string(),
         );
 
-        let function_body = format!(" () {{\n{}}}", reset_statements.join("\n"));
+        let function_body = format!("() {{\n{}}}", reset_statements.join("\n"));
 
-        let identifier = self.generate_identifier("____wbg_reset_state");
+        let identifier = self.generate_identifier("__wbg_reset_state");
         let definition = format!("function {identifier} {function_body}\n");
         define_export(
             &mut self.exports,
@@ -2689,7 +2691,7 @@ wasm = wasmInstance.exports;
                 comments: None,
                 identifier,
                 definition,
-                ts_definition: "".to_string(),
+                ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
             }),
         )?;

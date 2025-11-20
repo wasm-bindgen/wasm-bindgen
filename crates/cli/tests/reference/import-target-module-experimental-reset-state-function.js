@@ -49,7 +49,7 @@ function decodeText(ptr, len) {
 
 let __wbg_instance_id = 0;
 
-function ____wbg_reset_state  () {
+export function __wbg_reset_state () {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
@@ -57,7 +57,6 @@ function ____wbg_reset_state  () {
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
-export { ____wbg_reset_state as __wbg_reset_state }
 
 export function exported() {
     const ret = wasm.exported();

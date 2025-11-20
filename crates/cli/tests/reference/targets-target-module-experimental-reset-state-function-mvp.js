@@ -4,13 +4,12 @@ let wasm;
 
 let __wbg_instance_id = 0;
 
-function ____wbg_reset_state  () {
+export function __wbg_reset_state () {
     __wbg_instance_id++;
     const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
-export { ____wbg_reset_state as __wbg_reset_state }
 
 /**
  * @param {number} a
