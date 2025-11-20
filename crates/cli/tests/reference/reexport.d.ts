@@ -10,10 +10,9 @@ export { OriginalName as RenamedClass }
 
 declare function foo(): void;
 
-declare let Snippet2: {
+export let Snippet: {
   foo: typeof foo,
 };
-export { Snippet2 as Snippet }
 
 declare let _default: unknown;
 export default _default;

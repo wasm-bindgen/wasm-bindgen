@@ -199,7 +199,7 @@ function concat(a, b) {
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(b, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.concat(ptr0, len0, ptr1, len1);
+        const ret = wasm.default_concat(ptr0, len0, ptr1, len1);
         deferred3_0 = ret[0];
         deferred3_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -208,10 +208,30 @@ function concat(a, b) {
     }
 }
 
-const _default = {
-    Counter,
-    concat,
-};
+/**
+ * @param {string} s
+ * @returns {string}
+ */
+function uppercase(s) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.default_uppercase_uppercase(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+const _default = {};
+_default.Counter = Counter;
+_default.concat = concat;
+_default.uppercase = {};
+_default.uppercase.uppercase = uppercase;
 export default _default;
 
 /**
@@ -220,7 +240,7 @@ export default _default;
  * @returns {number}
  */
 function add(a, b) {
-    const ret = wasm.add(a, b);
+    const ret = wasm.math_add(a, b);
     return ret;
 }
 
@@ -230,7 +250,7 @@ function add(a, b) {
  * @returns {number}
  */
 function divide(a, b) {
-    const ret = wasm.divide(a, b);
+    const ret = wasm.math_divide(a, b);
     return ret;
 }
 
@@ -240,15 +260,14 @@ function divide(a, b) {
  * @returns {number}
  */
 function multiply(a, b) {
-    const ret = wasm.multiply(a, b);
+    const ret = wasm.math_multiply(a, b);
     return ret;
 }
 
-export const math = {
-    add,
-    divide,
-    multiply,
-};
+export const math = {};
+math.add = add;
+math.divide = divide;
+math.multiply = multiply;
 
 class Point3D {
     __destroy_into_raw() {
@@ -343,12 +362,10 @@ class Point {
 }
 if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
 
-export const models = {
-    '3d': {
-        Point3D,
-    },
-    Point,
-};
+export const models = {};
+models['3d'] = {};
+models['3d'].Point3D = Point3D;
+models.Point = Point;
 
 /**
  * @returns {number}
@@ -376,24 +393,22 @@ const HttpStatus = Object.freeze({
     ServerError: 500, "500": "ServerError",
 });
 
-export const types = {
-    Status,
-    http: {
-        HttpStatus,
-    },
-};
+export const types = {};
+types.Status = Status;
+types.http = {};
+types.http.HttpStatus = HttpStatus;
 
 /**
  * @param {string} s
  * @returns {string}
  */
-function uppercase(s) {
+function uppercase2(s) {
     let deferred2_0;
     let deferred2_1;
     try {
         const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.uppercase(ptr0, len0);
+        const ret = wasm.utils_string_uppercase(ptr0, len0);
         deferred2_0 = ret[0];
         deferred2_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -402,11 +417,9 @@ function uppercase(s) {
     }
 }
 
-export const utils = {
-    string: {
-        uppercase,
-    },
-};
+export const utils = {};
+utils.string = {};
+utils.string.uppercase = uppercase2;
 
 export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));

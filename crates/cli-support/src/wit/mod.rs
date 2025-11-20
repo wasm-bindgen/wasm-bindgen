@@ -492,7 +492,14 @@ impl<'a> Context<'a> {
     fn export(&mut self, export: decode::Export<'_>) -> Result<(), Error> {
         let wasm_name = match &export.class {
             Some(class) => struct_function_export_name(class, export.function.name),
-            None => export.function.name.to_string(),
+            None => {
+                let base_name = export.function.name.to_string();
+                if let Some(ref ns) = export.js_namespace {
+                    format!("{}_{base_name}", ns.join("_"))
+                } else {
+                    base_name
+                }
+            }
         };
         let mut descriptor = match self.descriptors.remove(&wasm_name) {
             None => return Ok(()),
@@ -579,7 +586,9 @@ impl<'a> Context<'a> {
                 args,
                 asyncness: export.function.asyncness,
                 kind,
-                js_namespace: export.js_namespace.clone(),
+                js_namespace: export
+                    .js_namespace
+                    .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
                 generate_typescript: export.function.generate_typescript,
                 generate_jsdoc: export.function.generate_jsdoc,
                 variadic: export.function.variadic,
@@ -991,7 +1000,10 @@ impl<'a> Context<'a> {
                 .map(|v| v.to_string())
                 .collect(),
             generate_typescript: string_enum.generate_typescript,
-            js_namespace: string_enum.js_namespace.clone(),
+            js_namespace: string_enum
+                .js_namespace
+                .as_ref()
+                .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
         };
         let mut result = Ok(());
         self.aux
@@ -1022,7 +1034,10 @@ impl<'a> Context<'a> {
                 })
                 .collect(),
             generate_typescript: enum_.generate_typescript,
-            js_namespace: enum_.js_namespace.clone(),
+            js_namespace: enum_
+                .js_namespace
+                .as_ref()
+                .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
         };
         let mut result = Ok(());
         self.aux
@@ -1115,7 +1130,10 @@ impl<'a> Context<'a> {
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
-            js_namespace: struct_.js_namespace.clone(),
+            js_namespace: struct_
+                .js_namespace
+                .as_ref()
+                .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
         };
         self.aux.structs.push(aux);
 

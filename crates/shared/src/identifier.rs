@@ -46,7 +46,14 @@ fn maybe_valid_chars(name: &str) -> impl Iterator<Item = Option<char>> + '_ {
     }))
 }
 
-static RESERVED_WORDS: &[&str] = &[
+/// Javascript keywords.
+///
+/// Note that some of these keywords are only reserved in strict mode. Since we
+/// generate strict mode JS code, we treat all of these as reserved.
+///
+/// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_words
+const JS_KEYWORDS: [&str; 47] = [
+    "arguments",
     "break",
     "case",
     "catch",
@@ -58,21 +65,34 @@ static RESERVED_WORDS: &[&str] = &[
     "delete",
     "do",
     "else",
+    "enum",
+    "eval",
     "export",
     "extends",
+    "false",
     "finally",
     "for",
     "function",
     "if",
+    "implements",
     "import",
     "in",
     "instanceof",
+    "interface",
+    "let",
     "new",
+    "null",
+    "package",
+    "private",
+    "protected",
+    "public",
     "return",
+    "static",
     "super",
     "switch",
     "this",
     "throw",
+    "true",
     "try",
     "typeof",
     "var",
@@ -80,25 +100,34 @@ static RESERVED_WORDS: &[&str] = &[
     "while",
     "with",
     "yield",
-    "enum",
-    "await",
-    "implements",
-    "interface",
-    "let",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "static",
-    "null",
-    "true",
-    "false",
 ];
 
-/// Returns whether a string is a valid JavaScript identifier.
-/// Defined at https://tc39.es/ecma262/#prod-IdentifierName.
-pub fn is_reserved_ident(name: &str) -> bool {
-    RESERVED_WORDS.contains(&name)
+/// Javascript keywords that behave like values in that they can be called like
+/// functions or have properties accessed on them.
+///
+/// Naturally, this list is a subset of `JS_KEYWORDS`.
+const VALUE_LIKE_JS_KEYWORDS: [&str; 7] = [
+    "eval",   // eval is a function-like keyword, so e.g. `eval(...)` is valid
+    "false",  // false resolves to a boolean value, so e.g. `false.toString()` is valid
+    "import", // import.meta and import()
+    "new",    // new.target
+    "super", // super can be used for a function call (`super(...)`) or property lookup (`super.prop`)
+    "this",  // this obviously can be used as a value
+    "true",  // true resolves to a boolean value, so e.g. `false.toString()` is valid
+];
+
+/// Returns whether the given string is a JS keyword.
+pub fn is_js_keyword(keyword: &str) -> bool {
+    JS_KEYWORDS.contains(&keyword)
+}
+/// Returns whether the given string is a JS keyword that does NOT behave like
+/// a value.
+///
+/// Value-like keywords can be called like functions or have properties
+/// accessed, which makes it possible to use them in imports. In general,
+/// imports should use this function to check for reserved keywords.
+pub fn is_non_value_js_keyword(keyword: &str) -> bool {
+    JS_KEYWORDS.contains(&keyword) && !VALUE_LIKE_JS_KEYWORDS.contains(&keyword)
 }
 
 /// Returns whether a string is a valid JavaScript identifier.
@@ -114,11 +143,8 @@ pub fn to_valid_ident(name: &str) -> String {
         .map(|opt| opt.unwrap_or('_'))
         .collect();
 
-    if is_reserved_ident(&result) {
-        let mut prefixed = String::with_capacity(result.len() + 1);
-        prefixed.push('_');
-        prefixed.push_str(&result);
-        prefixed
+    if is_js_keyword(&result) || is_non_value_js_keyword(&result) {
+        alloc::format!("_{result}")
     } else {
         result
     }

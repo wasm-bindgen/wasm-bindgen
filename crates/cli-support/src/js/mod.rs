@@ -1090,10 +1090,6 @@ wasm = wasmInstance.exports;
     }
 
     fn require_class<'b>(&'b mut self, name: &str) -> &'b mut ExportedClass {
-        if name == "DefaultClass" {
-            panic!("WRONG");
-        }
-        // Check if we need to generate an identifier before getting the mutable reference
         if self
             .exported_classes
             .get(name)
@@ -1427,9 +1423,22 @@ wasm = wasmInstance.exports;
                     self.export_def(Some(export_name), &def);
                 }
                 ExportEntry::Namespace(ns) => {
-                    let (ns_dst, ts_dst) = self.write_namespace(&ns, "")?;
-                    let identifier = self.generate_identifier(export_name);
-                    let definition = format!("const {identifier} = {ns_dst};\n");
+                    let (identifier, existing) = match ns.id {
+                        Some(id) => (id, true),
+                        None => (self.generate_identifier(export_name), false),
+                    };
+                    let ns_dst = self.write_namespace(&identifier, &ns.ns, existing)?;
+                    let ts_dst = if self.config.typescript {
+                        self.write_namespace_ts(&ns.ns, "")?
+                    } else {
+                        String::new()
+                    };
+                    let definition = if !existing {
+                        format!("const {identifier} = {{}};\n{ns_dst}")
+                    } else {
+                        self.global(&ns_dst);
+                        "".to_string()
+                    };
                     let ts_definition = format!("let {identifier}: {ts_dst};\n");
                     self.export_def(
                         Some(export_name),
@@ -1449,44 +1458,58 @@ wasm = wasmInstance.exports;
 
     fn write_namespace(
         &mut self,
-        namespace: &ExportedNamespace,
-        indent: &str,
-    ) -> Result<(String, String), Error> {
-        let (mut ns_dst, mut ts_dst) = if let Some(id) = &namespace.id {
-            (format!("Object.assign({id}, {{\n"), String::from("{\n"))
-        } else {
-            (String::from("{\n"), String::from("{\n"))
-        };
-        for (name, entry) in &namespace.ns {
-            let indent = format!("  {indent}");
-            let (entry_js, entry_ts) = match entry {
-                ExportEntry::Namespace(ns) => self.write_namespace(ns, &indent)?,
+        name: &str,
+        namespace: &BTreeMap<String, ExportEntry>,
+        existing: bool,
+    ) -> Result<String, Error> {
+        let mut output = String::new();
+        for (key, entry) in namespace {
+            let full_name = if is_valid_ident(key) {
+                format!("{name}.{key}")
+            } else {
+                format!("{name}['{key}']")
+            };
+            match entry {
+                ExportEntry::Namespace(ns) => {
+                    output.push_str(&format!(
+                        "{full_name} = {}{{}};\n",
+                        if existing {
+                            format!("{full_name} || ")
+                        } else {
+                            "".to_string()
+                        }
+                    ));
+                    output.push_str(&self.write_namespace(&full_name, &ns.ns, existing)?);
+                }
                 ExportEntry::Definition(def) => {
                     self.export_def(None, def);
-                    (
-                        def.identifier.to_string(),
-                        format!("typeof {}", def.identifier),
-                    )
+                    output.push_str(&format!("{full_name} = {};\n", def.identifier));
                 }
+            }
+        }
+        Ok(output)
+    }
+
+    fn write_namespace_ts(
+        &mut self,
+        namespace: &BTreeMap<String, ExportEntry>,
+        indent: &str,
+    ) -> Result<String, Error> {
+        let mut ts_dst = String::from("{\n");
+        for (name, entry) in namespace {
+            let indent = format!("  {indent}");
+            let entry_ts = match entry {
+                ExportEntry::Namespace(ns) => self.write_namespace_ts(&ns.ns, &indent)?,
+                ExportEntry::Definition(def) => format!("typeof {}", def.identifier),
             };
             if is_valid_ident(name) {
-                if name == &entry_js {
-                    ns_dst.push_str(&format!("{indent}{name},\n"));
-                } else {
-                    ns_dst.push_str(&format!("{indent}{name}: {entry_js},\n"));
-                }
                 ts_dst.push_str(&format!("{indent}{name}: {entry_ts},\n"));
             } else {
-                ns_dst.push_str(&format!("{indent}'{name}': {entry_js},\n"));
                 ts_dst.push_str(&format!("{indent}'{name}': {entry_ts},\n"));
             }
         }
-        ns_dst.push_str(&format!("{indent}}}"));
         ts_dst.push_str(&format!("{indent}}}"));
-        if namespace.id.is_some() {
-            ns_dst.push(')');
-        }
-        Ok((ns_dst, ts_dst))
+        Ok(ts_dst)
     }
 
     fn expose_drop_ref(&mut self) {

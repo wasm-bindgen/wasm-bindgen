@@ -20,13 +20,12 @@ export { MY_CONSTANT }
 export { OriginalName as RenamedClass }
 
 function foo() {
-    wasm.foo();
+    wasm.Snippet_foo();
 }
 
-const Snippet2 = Object.assign(Snippet, {
-    foo,
-});
-export { Snippet2 as Snippet }
+Snippet.foo = foo;
+
+export { Snippet }
 
 export default _default;
 
