@@ -139,10 +139,11 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        targets: wasm32-unknown-unknown
-        components: rust-src
+    - run: |
+        rustup toolchain install nightly-2025-11-18
+        rustup target add wasm32-unknown-unknown --toolchain nightly-2025-11-18
+        rustup component add rust-src --toolchain nightly-2025-11-18
+        rustup default nightly-2025-11-18
     - uses: actions/setup-node@v6
       with:
         node-version: '20'
@@ -156,10 +157,11 @@ jobs:
       RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        targets: wasm32-unknown-unknown
-        components: rust-src
+    - run: |
+        rustup toolchain install nightly-2025-11-18
+        rustup target add wasm32-unknown-unknown --toolchain nightly-2025-11-18
+        rustup component add rust-src --toolchain nightly-2025-11-18
+        rustup default nightly-2025-11-18
     - uses: actions/setup-node@v6
       with:
         node-version: '20'
@@ -208,10 +210,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        targets: wasm32-unknown-unknown
-        components: rust-src
+    - run: |
+        rustup toolchain install nightly-2025-11-18
+        rustup target add wasm32-unknown-unknown --toolchain nightly-2025-11-18
+        rustup component add rust-src --toolchain nightly-2025-11-18
+        rustup default nightly-2025-11-18
     - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
@@ -299,10 +302,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        targets: wasm32-unknown-unknown
-        components: clippy,rust-src
+    - run: |
+        rustup toolchain install nightly-2025-11-18
+        rustup target add wasm32-unknown-unknown --toolchain nightly-2025-11-18
+        rustup component add rust-src --toolchain nightly-2025-11-18
+        rustup default nightly-2025-11-18
     - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: wasm32-unknown-unknown
@@ -477,7 +481,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - run: |
+        rustup toolchain install nightly-2025-11-18
+        rustup target add wasm32-unknown-unknown --toolchain nightly-2025-11-18
+        rustup component add rust-src --toolchain nightly-2025-11-18
+        rustup default nightly-2025-11-18
     - run: cargo doc --no-deps --features 'serde-serialize'
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
     - run: cargo doc --no-deps --manifest-path crates/web-sys/Cargo.toml --all-features
