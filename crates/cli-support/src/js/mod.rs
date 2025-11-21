@@ -684,30 +684,31 @@ wasm = wasmInstance.exports;
              generated some JS before the imports: {js}"
         );
 
-        let mut needs_newline = false;
-        let mut push_with_newline = |s: &str| {
+        let mut push_with_newline = |s: &str, newline: bool| -> bool {
             if !s.is_empty() {
-                if needs_newline {
+                if newline {
                     js.push('\n');
                 }
                 js.push_str(s);
-                needs_newline = true;
+                true
+            } else {
+                newline
             }
         };
 
-        push_with_newline(&imports);
+        let nl = push_with_newline(&imports, false);
 
-        push_with_newline(&self.imports_post);
+        let nl = push_with_newline(&self.imports_post, nl);
 
         // Emit intrinsics
-        push_with_newline(&intrinsics);
+        let nl = push_with_newline(&intrinsics, false) || nl;
 
         // Emit all our exports from this module
-        push_with_newline(&globals);
+        let nl = push_with_newline(&globals, nl);
 
         // Generate the initialization glue, if there was any
-        push_with_newline(&init_js);
-        push_with_newline(&footer);
+        let nl = push_with_newline(&init_js, nl);
+        push_with_newline(&footer, nl);
         if self.config.mode.no_modules() {
             js.push_str("})();\n");
         }
@@ -1429,7 +1430,7 @@ wasm = wasmInstance.exports;
                     };
                     let ns_dst = self.write_namespace(&identifier, &ns.ns, existing)?;
                     let ts_dst = if self.config.typescript {
-                        self.write_namespace_ts(&ns.ns, "")?
+                        Self::write_namespace_ts(&ns.ns, "")?
                     } else {
                         String::new()
                     };
@@ -1491,7 +1492,6 @@ wasm = wasmInstance.exports;
     }
 
     fn write_namespace_ts(
-        &mut self,
         namespace: &BTreeMap<String, ExportEntry>,
         indent: &str,
     ) -> Result<String, Error> {
@@ -1499,7 +1499,7 @@ wasm = wasmInstance.exports;
         for (name, entry) in namespace {
             let indent = format!("  {indent}");
             let entry_ts = match entry {
-                ExportEntry::Namespace(ns) => self.write_namespace_ts(&ns.ns, &indent)?,
+                ExportEntry::Namespace(ns) => Self::write_namespace_ts(&ns.ns, &indent)?,
                 ExportEntry::Definition(def) => format!("typeof {}", def.identifier),
             };
             if is_valid_ident(name) {
@@ -1555,7 +1555,7 @@ wasm = wasmInstance.exports;
     fn expose_global_heap_next(&mut self) {
         self.expose_global_heap();
         intrinsic(&mut self.intrinsics, "heap_next".into(), || {
-            "let heap_next = heap.length;\n".into()
+            "\nlet heap_next = heap.length;\n".into()
         });
     }
 
@@ -1564,13 +1564,13 @@ wasm = wasmInstance.exports;
         // the stack/heap are laid out.
         self.expose_global_heap();
         intrinsic(&mut self.intrinsics, "get_object".into(), || {
-            "function getObject(idx) { return heap[idx]; }\n".into()
+            "\nfunction getObject(idx) { return heap[idx]; }\n".into()
         });
     }
 
     fn expose_not_defined(&mut self) {
         intrinsic(&mut self.intrinsics, "not_defined".into(), || {
-            "function notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }\n".into()
+            "\nfunction notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }\n".into()
         });
     }
 
@@ -1609,7 +1609,7 @@ wasm = wasmInstance.exports;
 
     fn expose_wasm_vector_len(&mut self) {
         intrinsic(&mut self.intrinsics, "wasm_vector_len".into(), || {
-            "let WASM_VECTOR_LEN = 0;".into()
+            "\nlet WASM_VECTOR_LEN = 0;\n".into()
         });
     }
 
@@ -1783,13 +1783,13 @@ wasm = wasmInstance.exports;
         intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
             format!(
                 "
-            function {ret}(arg, malloc) {{
-                const ptr = malloc(arg.length * {size}, {size}) >>> 0;
-                {view}().set(arg, ptr / {size});
-                WASM_VECTOR_LEN = arg.length;
-                return ptr;
-            }}
-            "
+                function {ret}(arg, malloc) {{
+                    const ptr = malloc(arg.length * {size}, {size}) >>> 0;
+                    {view}().set(arg, ptr / {size});
+                    WASM_VECTOR_LEN = arg.length;
+                    return ptr;
+                }}
+                "
             )
             .into()
         });
@@ -1823,7 +1823,7 @@ wasm = wasmInstance.exports;
                         if (!('encodeInto' in cachedTextEncoder)) {{
                             {polyfill_encode_into}
                         }}
-                    "
+                        "
                     ));
                 }
                 _ => {
@@ -1834,7 +1834,7 @@ wasm = wasmInstance.exports;
                             if (cachedTextEncoder) {{
                                 {polyfill_encode_into}
                             }}
-                        "
+                            "
                         ));
                     } else {
                         dst.push_str(polyfill_encode_into);
@@ -1912,10 +1912,10 @@ wasm = wasmInstance.exports;
                     // For browser-targets, see the workaround for Safari above.
                     dst.push_str(&format!(
                         "
-                    function decodeText(ptr, len) {{
-                        return {text_decoder_decode};
-                    }}
-                    ",
+                        function decodeText(ptr, len) {{
+                            return {text_decoder_decode};
+                        }}
+                        ",
                     ));
                 }
             }
@@ -1964,12 +1964,12 @@ wasm = wasmInstance.exports;
         };
         intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
             format!(
-                "\
-            function {ret}(ptr, len) {{
-                ptr = ptr >>> 0;
-                return decodeText(ptr, len);
-            }}
-            ",
+                "
+                function {ret}(ptr, len) {{
+                    ptr = ptr >>> 0;
+                    return decodeText(ptr, len);
+                }}
+                ",
             )
             .into()
         });
@@ -2263,7 +2263,7 @@ wasm = wasmInstance.exports;
 
     fn expose_global_stack_pointer(&mut self) {
         intrinsic(&mut self.intrinsics, "stack_pointer".into(), || {
-            format!("let stack_pointer = {INITIAL_HEAP_OFFSET};").into()
+            format!("\nlet stack_pointer = {INITIAL_HEAP_OFFSET};\n").into()
         });
     }
 
@@ -2343,16 +2343,16 @@ wasm = wasmInstance.exports;
                 let add = self.expose_add_to_externref_table(table, alloc);
                 intrinsic(&mut self.intrinsics, "handle_error".into(), || {
                     format!(
-                        "\
-                    function handleError(f, args) {{
-                        try {{
-                            return f.apply(this, args);
-                        }} catch (e) {{
-                            const idx = {add}(e);
-                            wasm.{store}(idx);
+                        "
+                        function handleError(f, args) {{
+                            try {{
+                                return f.apply(this, args);
+                            }} catch (e) {{
+                                const idx = {add}(e);
+                                wasm.{store}(idx);
+                            }}
                         }}
-                    }}
-                    ",
+                        ",
                     )
                     .into()
                 });
@@ -2361,15 +2361,15 @@ wasm = wasmInstance.exports;
                 self.expose_add_heap_object();
                 intrinsic(&mut self.intrinsics, "handle_error".into(), || {
                     format!(
-                        "\
-                    function handleError(f, args) {{
-                        try {{
-                            return f.apply(this, args);
-                        }} catch (e) {{
-                            wasm.{store}(addHeapObject(e));
+                        "
+                        function handleError(f, args) {{
+                            try {{
+                                return f.apply(this, args);
+                            }} catch (e) {{
+                                wasm.{store}(addHeapObject(e));
+                            }}
                         }}
-                    }}
-                    ",
+                        ",
                     )
                     .into()
                 });
@@ -2380,7 +2380,7 @@ wasm = wasmInstance.exports;
 
     fn expose_log_error(&mut self) {
         intrinsic(&mut self.intrinsics, "log_error".into(), || {
-            "\
+            "
             function logError(f, args) {
                 try {
                     return f.apply(this, args);
@@ -2455,15 +2455,15 @@ wasm = wasmInstance.exports;
             "get_inherited_descriptor".into(),
             || {
                 "
-            function GetOwnOrInheritedPropertyDescriptor(obj, id) {
-                while (obj) {
-                    let desc = Object.getOwnPropertyDescriptor(obj, id);
-                    if (desc) return desc;
-                    obj = Object.getPrototypeOf(obj);
+                function GetOwnOrInheritedPropertyDescriptor(obj, id) {
+                    while (obj) {
+                        let desc = Object.getOwnPropertyDescriptor(obj, id);
+                        if (desc) return desc;
+                        obj = Object.getPrototypeOf(obj);
+                    }
+                    return {};
                 }
-                return {};
-            }
-            "
+                "
                 .into()
             },
         );
@@ -2612,9 +2612,9 @@ wasm = wasmInstance.exports;
         intrinsic(&mut self.intrinsics, "closure_finalization".into(), || {
             format!(
                 "
-                    const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
-                        ? {{ register: () => {{}}, unregister: () => {{}} }}
-                        : new FinalizationRegistry({});
+                const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
+                    ? {{ register: () => {{}}, unregister: () => {{}} }}
+                    : new FinalizationRegistry({});
                 ",
                 if self.config.generate_reset_state {
                     "
@@ -2875,7 +2875,7 @@ wasm = wasmInstance.exports;
         assert!(self.config.externref);
         let table = self.export_name_of(table);
         intrinsic(&mut self.intrinsics, view.to_string().into(), || {
-            format!("function {view}(idx) {{ return wasm.{table}.get(idx); }}").into()
+            format!("\nfunction {view}(idx) {{ return wasm.{table}.get(idx); }}\n").into()
         });
         view
     }
@@ -2923,7 +2923,7 @@ wasm = wasmInstance.exports;
 
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
-        for (id, adapter, kind) in iter_adapeter(self.aux, self.wit, self.module) {
+        for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
                 AdapterKind::Import { .. } => continue,
                 AdapterKind::Local { instructions } => instructions,
@@ -4479,7 +4479,7 @@ impl<'a> ContextAdapterKind<'a> {
 }
 
 /// Iterate over the adapters in a deterministic order.
-fn iter_adapeter<'a>(
+fn iter_adapter<'a>(
     aux: &'a WasmBindgenAux,
     wit: &'a NonstandardWitSection,
     module: &Module,
@@ -4494,14 +4494,7 @@ fn iter_adapeter<'a>(
         })
         .collect();
 
-    // Since `wit.adapters` is a BTreeMap, the adapters are already sorted by
-    // their ID. This is good enough for exports and adapters, but imports need
-    // to be sorted by their name.
-    //
-    // Note: we do *NOT* want to sort exports by name. By default, exports are
-    // the order in which they were defined in the Rust code. Sorting them by
-    // name would break that order and take away control from the user.
-
+    // just sort imports here, exports are sorted separately by export_def btree collection
     adapters.sort_by(|(_, _, a), (_, _, b)| {
         fn get_kind_order(kind: &ContextAdapterKind) -> u8 {
             match kind {
