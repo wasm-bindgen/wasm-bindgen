@@ -1203,7 +1203,7 @@ impl ToTokens for ast::StringEnum {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let vis = &self.vis;
         let enum_name = &self.name;
-        let name_str = &self.js_name;
+        let name_str = &self.export_name;
         let name_len = name_str.len() as u32;
         let name_chars = name_str.chars().map(u32::from);
         let variants = &self.variants;

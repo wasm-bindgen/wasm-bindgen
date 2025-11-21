@@ -1,116 +1,14 @@
 let wasm;
 
-function isLikeNone(x) {
-    return x === undefined || x === null;
-}
-
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
 }
 
-let WASM_VECTOR_LEN = 0;
-
-let cachedUint8ArrayMemory0 = null;
-
-function getUint8ArrayMemory0() {
-    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
-        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachedUint8ArrayMemory0;
-}
-
-const cachedTextEncoder = new TextEncoder();
-
-if (!('encodeInto' in cachedTextEncoder)) {
-    cachedTextEncoder.encodeInto = function (arg, view) {
-        const buf = cachedTextEncoder.encode(arg);
-        view.set(buf);
-        return {
-            read: arg.length,
-            written: buf.length
-        };
-    }
-}
-
-function passStringToWasm0(arg, malloc, realloc) {
-
-    if (realloc === undefined) {
-        const buf = cachedTextEncoder.encode(arg);
-        const ptr = malloc(buf.length, 1) >>> 0;
-        getUint8ArrayMemory0().subarray(ptr, ptr + buf.length).set(buf);
-        WASM_VECTOR_LEN = buf.length;
-        return ptr;
-    }
-
-    let len = arg.length;
-    let ptr = malloc(len, 1) >>> 0;
-
-    const mem = getUint8ArrayMemory0();
-
-    let offset = 0;
-
-    for (; offset < len; offset++) {
-        const code = arg.charCodeAt(offset);
-        if (code > 0x7F) break;
-        mem[ptr + offset] = code;
-    }
-
-    if (offset !== len) {
-        if (offset !== 0) {
-            arg = arg.slice(offset);
-        }
-        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
-        const view = getUint8ArrayMemory0().subarray(ptr + offset, ptr + len);
-        const ret = cachedTextEncoder.encodeInto(arg, view);
-
-        offset += ret.written;
-        ptr = realloc(ptr, len, offset, 1) >>> 0;
-    }
-
-    WASM_VECTOR_LEN = offset;
-    return ptr;
-}
-
-let cachedDataViewMemory0 = null;
-
-function getDataViewMemory0() {
-    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
-        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
-    }
-    return cachedDataViewMemory0;
-}
-
-function handleError(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        const idx = addToExternrefTable0(e);
-        wasm.__wbindgen_exn_store(idx);
-    }
-}
-
-let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
-
-const MAX_SAFARI_DECODE_BYTES = 2146435072;
-let numBytesDecoded = 0;
-function decodeText(ptr, len) {
-    numBytesDecoded += len;
-    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
-        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-        cachedTextDecoder.decode();
-        numBytesDecoded = len;
-    }
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
-}
-
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
-}
+const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(state => state.dtor(state.a, state.b));
 
 function debugString(val) {
     // primitive types
@@ -177,9 +75,44 @@ function debugString(val) {
     return className;
 }
 
-const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(state => state.dtor(state.a, state.b));
+function getArrayU8FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}
+
+let cachedDataViewMemory0 = null;
+function getDataViewMemory0() {
+    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
+        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
+    }
+    return cachedDataViewMemory0;
+}
+
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
+
+let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
 
 function makeMutClosure(arg0, arg1, dtor, f) {
     const state = { a: arg0, b: arg1, cnt: 1, dtor };
@@ -218,67 +151,72 @@ function passArrayJsValueToWasm0(array, malloc) {
     WASM_VECTOR_LEN = array.length;
     return ptr;
 }
-/**
- * Handler for `console.log` invocations.
- *
- * If a test is currently running it takes the `args` array and stringifies
- * it and appends it to the current output of the test. Otherwise it passes
- * the arguments to the original `console.log` function, psased as
- * `original`.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_log(args) {
-    wasm.__wbgtest_console_log(args);
-}
 
-/**
- * Handler for `console.debug` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_debug(args) {
-    wasm.__wbgtest_console_debug(args);
-}
-
-/**
- * Handler for `console.info` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_info(args) {
-    wasm.__wbgtest_console_info(args);
-}
-
-/**
- * Handler for `console.warn` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_warn(args) {
-    wasm.__wbgtest_console_warn(args);
-}
-
-/**
- * Handler for `console.error` invocations. See above.
- * @param {Array<any>} args
- */
-export function __wbgtest_console_error(args) {
-    wasm.__wbgtest_console_error(args);
-}
-
-function getArrayU8FromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
-}
-/**
- * @returns {Uint8Array | undefined}
- */
-export function __wbgtest_cov_dump() {
-    const ret = wasm.__wbgtest_cov_dump();
-    let v1;
-    if (ret[0] !== 0) {
-        v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+function passStringToWasm0(arg, malloc, realloc) {
+    if (realloc === undefined) {
+        const buf = cachedTextEncoder.encode(arg);
+        const ptr = malloc(buf.length, 1) >>> 0;
+        getUint8ArrayMemory0().subarray(ptr, ptr + buf.length).set(buf);
+        WASM_VECTOR_LEN = buf.length;
+        return ptr;
     }
-    return v1;
+
+    let len = arg.length;
+    let ptr = malloc(len, 1) >>> 0;
+
+    const mem = getUint8ArrayMemory0();
+
+    let offset = 0;
+
+    for (; offset < len; offset++) {
+        const code = arg.charCodeAt(offset);
+        if (code > 0x7F) break;
+        mem[ptr + offset] = code;
+    }
+    if (offset !== len) {
+        if (offset !== 0) {
+            arg = arg.slice(offset);
+        }
+        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+        const view = getUint8ArrayMemory0().subarray(ptr + offset, ptr + len);
+        const ret = cachedTextEncoder.encodeInto(arg, view);
+
+        offset += ret.written;
+        ptr = realloc(ptr, len, offset, 1) >>> 0;
+    }
+
+    WASM_VECTOR_LEN = offset;
+    return ptr;
 }
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+const MAX_SAFARI_DECODE_BYTES = 2146435072;
+let numBytesDecoded = 0;
+function decodeText(ptr, len) {
+    numBytesDecoded += len;
+    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder.decode();
+        numBytesDecoded = len;
+    }
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+const cachedTextEncoder = new TextEncoder();
+
+if (!('encodeInto' in cachedTextEncoder)) {
+    cachedTextEncoder.encodeInto = function (arg, view) {
+        const buf = cachedTextEncoder.encode(arg);
+        view.set(buf);
+        return {
+            read: arg.length,
+            written: buf.length
+        };
+    }
+}
+
+let WASM_VECTOR_LEN = 0;
 
 function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2);
@@ -293,17 +231,18 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4);
 }
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_wasmbindgentestcontext_free(ptr >>> 0, 1));
+
 /**
  * Runtime test harness support instantiated in JS.
  *
@@ -311,17 +250,29 @@ const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'und
  * drive test execution.
  */
 export class WasmBindgenTestContext {
-
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
         WasmBindgenTestContextFinalization.unregister(this);
         return ptr;
     }
-
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_wasmbindgentestcontext_free(ptr, 0);
+    }
+    /**
+     * Handle filter argument.
+     * @param {number} filtered
+     */
+    filtered_count(filtered) {
+        wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
+    }
+    /**
+     * Handle `--include-ignored` flag.
+     * @param {boolean} include_ignored
+     */
+    include_ignored(include_ignored) {
+        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
     }
     /**
      * Creates a new context ready to run tests.
@@ -335,20 +286,6 @@ export class WasmBindgenTestContext {
         this.__wbg_ptr = ret >>> 0;
         WasmBindgenTestContextFinalization.register(this, this.__wbg_ptr, this);
         return this;
-    }
-    /**
-     * Handle `--include-ignored` flag.
-     * @param {boolean} include_ignored
-     */
-    include_ignored(include_ignored) {
-        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
-    }
-    /**
-     * Handle filter argument.
-     * @param {number} filtered
-     */
-    filtered_count(filtered) {
-        wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
     }
     /**
      * Executes a list of tests, returning a promise representing their
@@ -372,6 +309,64 @@ export class WasmBindgenTestContext {
 }
 if (Symbol.dispose) WasmBindgenTestContext.prototype[Symbol.dispose] = WasmBindgenTestContext.prototype.free;
 
+/**
+ * Handler for `console.debug` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_debug(args) {
+    wasm.__wbgtest_console_debug(args);
+}
+
+/**
+ * Handler for `console.error` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_error(args) {
+    wasm.__wbgtest_console_error(args);
+}
+
+/**
+ * Handler for `console.info` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_info(args) {
+    wasm.__wbgtest_console_info(args);
+}
+
+/**
+ * Handler for `console.log` invocations.
+ *
+ * If a test is currently running it takes the `args` array and stringifies
+ * it and appends it to the current output of the test. Otherwise it passes
+ * the arguments to the original `console.log` function, psased as
+ * `original`.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_log(args) {
+    wasm.__wbgtest_console_log(args);
+}
+
+/**
+ * Handler for `console.warn` invocations. See above.
+ * @param {Array<any>} args
+ */
+export function __wbgtest_console_warn(args) {
+    wasm.__wbgtest_console_warn(args);
+}
+
+/**
+ * @returns {Uint8Array | undefined}
+ */
+export function __wbgtest_cov_dump() {
+    const ret = wasm.__wbgtest_cov_dump();
+    let v1;
+    if (ret[0] !== 0) {
+        v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    }
+    return v1;
+}
+
 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
 async function __wbg_load(module, imports) {
@@ -379,7 +374,6 @@ async function __wbg_load(module, imports) {
         if (typeof WebAssembly.instantiateStreaming === 'function') {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
-
             } catch (e) {
                 const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
 
@@ -394,13 +388,11 @@ async function __wbg_load(module, imports) {
 
         const bytes = await module.arrayBuffer();
         return await WebAssembly.instantiate(bytes, imports);
-
     } else {
         const instance = await WebAssembly.instantiate(module, imports);
 
         if (instance instanceof WebAssembly.Instance) {
             return { instance, module };
-
         } else {
             return instance;
         }
@@ -499,7 +491,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1, arg2);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1, arg2);
                 } finally {
                     state0.a = a;
                 }
@@ -535,7 +527,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -674,7 +666,6 @@ function __wbg_get_imports() {
         table.set(offset + 1, null);
         table.set(offset + 2, true);
         table.set(offset + 3, false);
-        ;
     };
 
     return imports;
@@ -704,13 +695,10 @@ function initSync(module) {
     }
 
     const imports = __wbg_get_imports();
-
     if (!(module instanceof WebAssembly.Module)) {
         module = new WebAssembly.Module(module);
     }
-
     const instance = new WebAssembly.Instance(module, imports);
-
     return __wbg_finalize_init(instance, module);
 }
 

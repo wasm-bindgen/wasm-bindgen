@@ -3,7 +3,7 @@ use wasm_bindgen_test::*;
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(reexport)]
+    #[wasm_bindgen(reexport, js_name = "console")]
     pub type Console;
 
     #[wasm_bindgen(method)]
@@ -31,12 +31,8 @@ pub enum Status {
 }
 
 #[wasm_bindgen_test]
-fn test_reexport_function() {
+fn test_reexports() {
     assert_eq!(add(2, 3), 5);
     assert_eq!(multiply(4, 5), 20);
-}
-
-#[wasm_bindgen_test]
-fn test_reexport_static() {
     PI.with(|pi| assert!((*pi - 3.14159).abs() < 0.001));
 }

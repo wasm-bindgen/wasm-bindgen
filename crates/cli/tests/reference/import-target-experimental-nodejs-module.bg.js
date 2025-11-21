@@ -1,4 +1,4 @@
-import { default as default1 } from 'tests/wasm/import_class.js';
+import { default as _default } from 'tests/wasm/import_class.js';
 
 let wasm;
 let wasmModule;
@@ -7,22 +7,10 @@ export function __wbg_set_wasm(exports, module) {
     wasmModule = module;
 }
 
-
-let cachedUint8ArrayMemory0 = null;
-
-function getUint8ArrayMemory0() {
-    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
-        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachedUint8ArrayMemory0;
-}
-
-let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
-
-function decodeText(ptr, len) {
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_externrefs.set(idx, obj);
+    return idx;
 }
 
 function getStringFromWasm0(ptr, len) {
@@ -30,10 +18,12 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_externrefs.set(idx, obj);
-    return idx;
+let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
 }
 
 function handleError(f, args) {
@@ -49,6 +39,12 @@ function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_externrefs.get(idx);
     wasm.__externref_table_dealloc(idx);
     return value;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+function decodeText(ptr, len) {
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
 export function exported() {
@@ -76,7 +72,7 @@ export function __wbg_my_function_597f96bc4719408a() {
 };
 
 export function __wbg_new_c30895ccee9479d4(arg0) {
-    const ret = new default1(arg0);
+    const ret = new _default(arg0);
     return ret;
 };
 
@@ -105,6 +101,4 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 1, null);
     table.set(offset + 2, true);
     table.set(offset + 3, false);
-    ;
 };
-

@@ -1,6 +1,7 @@
 import source wasmModule from "./reference_test_bg.wasm";
 
 let wasm;
+
 /**
  * @param {number} a
  * @param {number} b
@@ -23,4 +24,3 @@ const imports = {
 
 const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
-

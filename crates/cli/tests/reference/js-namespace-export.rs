@@ -20,6 +20,11 @@ pub fn uppercase(s: &str) -> String {
     s.to_uppercase()
 }
 
+#[wasm_bindgen(js_name = "uppercase", js_namespace = ["default", "uppercase"])]
+pub fn default_uppercase(s: &str) -> String {
+    s.to_uppercase()
+}
+
 #[wasm_bindgen(js_namespace = math, js_name = "divide")]
 pub fn div(a: f64, b: f64) -> f64 {
     a / b
@@ -42,6 +47,11 @@ pub enum HttpStatus {
     Ok = 200,
     NotFound = 404,
     ServerError = 500,
+}
+
+#[wasm_bindgen(js_namespace = ["shapes", "http"])]
+pub enum HttpShape {
+    Blah = "Blah"
 }
 
 #[wasm_bindgen(js_namespace = models)]
