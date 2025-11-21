@@ -481,9 +481,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@master
+    - uses: dtolnay/rust-toolchain@stable
     - run: cargo doc --no-deps --features 'serde-serialize'
-      toolchain: nightly-2025-11-18
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
     - run: cargo doc --no-deps --manifest-path crates/web-sys/Cargo.toml --all-features
       env:
