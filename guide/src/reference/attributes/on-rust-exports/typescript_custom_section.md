@@ -7,10 +7,20 @@ string to the `.d.ts` file exported by `wasm-bindgen-cli` (when the
 ```rust
 #[wasm_bindgen(typescript_custom_section)]
 const TS_APPEND_CONTENT: &'static str = r#"
-
 export type Coords = { "latitude": number, "longitude": number, }; 
-
 "#;
+```
+
+It's also possible to put type definitions in a separate file:
+
+```rust
+#[wasm_bindgen(typescript_custom_section)]
+const TS_APPEND_CONTENT: &'static str = include_str!("./coords.d.ts");
+```
+
+```typescript
+// ./coords.d.ts
+export type Coords = { "latitude": number, "longitude": number, }; 
 ```
 
 The primary target for this feature is for code generation. For example, you
