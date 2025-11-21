@@ -34,18 +34,18 @@ async fn fail_after_3s() {
 }
 
 #[wasm_bindgen_test]
-fn result_fail() -> Result<(), Box<dyn std::error::Error>> {
+fn result_fail() -> Result<(), Box<dyn core::error::Error>> {
     Err("failed via Result".into())
 }
 
 #[wasm_bindgen_test]
-async fn result_fail_after_1s() -> Result<(), Box<dyn std::error::Error>> {
+async fn result_fail_after_1s() -> Result<(), Box<dyn core::error::Error>> {
     Timeout::new(Duration::from_secs(1)).await;
     Err("failed via Result".into())
 }
 
 #[wasm_bindgen_test]
-fn panic_before_result_fail() -> Result<(), Box<dyn std::error::Error>> {
+fn panic_before_result_fail() -> Result<(), Box<dyn core::error::Error>> {
     panic!("panic before Result fail");
 
     #[allow(unreachable_code)]
