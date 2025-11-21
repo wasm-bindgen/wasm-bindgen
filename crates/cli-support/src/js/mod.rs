@@ -1473,12 +1473,8 @@ wasm = wasmInstance.exports;
             match entry {
                 ExportEntry::Namespace(ns) => {
                     output.push_str(&format!(
-                        "{full_name} = {}{{}};\n",
-                        if existing {
-                            format!("{full_name} || ")
-                        } else {
-                            "".to_string()
-                        }
+                        "{full_name} {}= {{}};\n",
+                        if existing { "||" } else { "" }
                     ));
                     output.push_str(&self.write_namespace(&full_name, &ns.ns, existing)?);
                 }
