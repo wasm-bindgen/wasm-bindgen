@@ -139,8 +139,9 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: nightly-2025-11-18
         targets: wasm32-unknown-unknown
         components: rust-src
     - uses: actions/setup-node@v6
@@ -156,8 +157,9 @@ jobs:
       RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: nightly-2025-11-18
         targets: wasm32-unknown-unknown
         components: rust-src
     - uses: actions/setup-node@v6
@@ -208,8 +210,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: nightly-2025-11-18
         targets: wasm32-unknown-unknown
         components: rust-src
     - uses: dtolnay/rust-toolchain@1.90
@@ -299,8 +302,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: nightly-2025-11-18
         targets: wasm32-unknown-unknown
         components: clippy,rust-src
     - uses: dtolnay/rust-toolchain@1.90
@@ -477,7 +481,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@stable
     - run: cargo doc --no-deps --features 'serde-serialize'
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
     - run: cargo doc --no-deps --manifest-path crates/web-sys/Cargo.toml --all-features
