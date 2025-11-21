@@ -54,7 +54,7 @@ struct Generated {
     js: String,
     ts: String,
     start: Option<String>,
-    snippets: HashMap<String, Vec<String>>,
+    snippets: BTreeMap<String, Vec<String>>,
     local_modules: HashMap<String, String>,
     npm_dependencies: HashMap<String, (PathBuf, String)>,
     typescript: bool,
@@ -615,7 +615,7 @@ impl Output {
         self.generated.start.as_ref()
     }
 
-    pub fn snippets(&self) -> &HashMap<String, Vec<String>> {
+    pub fn snippets(&self) -> &BTreeMap<String, Vec<String>> {
         &self.generated.snippets
     }
 

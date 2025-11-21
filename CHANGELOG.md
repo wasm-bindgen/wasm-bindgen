@@ -23,6 +23,10 @@
 * Added 'container' attribute to `ScrollIntoViewOptions`
   [#4806](https://github.com/wasm-bindgen/wasm-bindgen/pull/4806)
 
+* Updated and refactored output generation to use alphabetical ordering
+  of declarations.
+  [#4813](https://github.com/wasm-bindgen/wasm-bindgen/pull/4813)
+
 ### Fixed
 
 * Fixed node test harness getting stuck after tests completed.

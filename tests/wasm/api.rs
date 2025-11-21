@@ -240,7 +240,7 @@ fn debug_output() {
 fn function_table_is() {
     assert_function_table(
         wasm_bindgen::function_table(),
-        function_table_lookup as usize,
+        function_table_lookup as *const () as usize,
     );
 }
 

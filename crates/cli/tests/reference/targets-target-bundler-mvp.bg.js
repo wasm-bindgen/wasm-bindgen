@@ -17,4 +17,3 @@ export function __wbg_random_9526caf33df4270d() {
     const ret = Math.random();
     return ret;
 };
-
