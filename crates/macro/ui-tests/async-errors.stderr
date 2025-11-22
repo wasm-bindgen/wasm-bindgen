@@ -18,30 +18,30 @@ error[E0277]: the trait bound `Result<(), BadType>: IntoJsResult` is not satisfi
              Result<(), E>
              Result<T, E>
 
-error[E0277]: the trait bound `wasm_bindgen::JsValue: From<BadType>` is not satisfied
+error[E0277]: the trait bound `JsRef: From<BadType>` is not satisfied
   --> ui-tests/async-errors.rs:59:24
    |
 59 | pub async fn bad3() -> BadType {
-   |                        ^^^^^^^ the trait `From<BadType>` is not implemented for `wasm_bindgen::JsValue`
+   |                        ^^^^^^^ the trait `From<BadType>` is not implemented for `JsRef`
    |
    = help: the following other types implement trait `From<T>`:
-             `wasm_bindgen::JsValue` implements `From<&String>`
-             `wasm_bindgen::JsValue` implements `From<&T>`
-             `wasm_bindgen::JsValue` implements `From<&str>`
-             `wasm_bindgen::JsValue` implements `From<*const T>`
-             `wasm_bindgen::JsValue` implements `From<*mut T>`
-             `wasm_bindgen::JsValue` implements `From<Array>`
-             `wasm_bindgen::JsValue` implements `From<ArrayBuffer>`
-             `wasm_bindgen::JsValue` implements `From<BigInt64Array>`
+             `JsRef` implements `From<&String>`
+             `JsRef` implements `From<&T>`
+             `JsRef` implements `From<&str>`
+             `JsRef` implements `From<*const T>`
+             `JsRef` implements `From<*mut T>`
+             `JsRef` implements `From<Array>`
+             `JsRef` implements `From<ArrayBuffer>`
+             `JsRef` implements `From<BigInt64Array>`
            and $N others
-   = note: required for `BadType` to implement `Into<wasm_bindgen::JsValue>`
+   = note: required for `BadType` to implement `Into<JsRef>`
    = note: required for `BadType` to implement `IntoJsResult`
 
-error[E0277]: the trait bound `Result<BadType, wasm_bindgen::JsValue>: IntoJsResult` is not satisfied
+error[E0277]: the trait bound `Result<BadType, JsRef>: IntoJsResult` is not satisfied
   --> ui-tests/async-errors.rs:63:24
    |
 63 | pub async fn bad4() -> Result<BadType, JsValue> {
-   |                        ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<BadType, wasm_bindgen::JsValue>`
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<BadType, JsRef>`
    |
    = help: the following other types implement trait `IntoJsResult`:
              Result<(), E>
