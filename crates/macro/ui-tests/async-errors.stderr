@@ -30,6 +30,7 @@ error[E0277]: the trait bound `JsRef: From<BadType>` is not satisfied
              `JsRef` implements `From<&str>`
              `JsRef` implements `From<*const T>`
              `JsRef` implements `From<*mut T>`
+             `JsRef` implements `From<AnyType>`
              `JsRef` implements `From<Array>`
              `JsRef` implements `From<ArrayBuffer>`
              `JsRef` implements `From<BigInt64Array>`

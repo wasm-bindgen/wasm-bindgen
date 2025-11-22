@@ -1,3 +1,5 @@
+use crate::{closure::WasmClosure, describe::WasmDescribe};
+
 /// Marker trait for types that support `#[wasm_bindgen(constructor)]`.
 #[cfg_attr(
     wbg_diagnostic,
@@ -44,6 +46,29 @@ pub struct CheckSupportsStaticProperty<T: SupportsStaticProperty>(T);
 /// provides compatibility with existing code while allowing the generic `JsValue<T>`
 /// system to work alongside these untyped cases.
 ///
+/// This type is not designed to be inhabited itself.
+///
 /// ```
 #[doc(hidden)]
 pub struct AnyType;
+
+/// Marker trait for types which implement generics, indicating that they can be
+/// transmuted on their generics for type casting on ABI boundaries.
+pub trait GenericType {}
+
+// Minimal trait implementations for AnyType to support Closure generics.
+impl WasmDescribe for AnyType {
+    fn describe() {}
+}
+
+// Ensures that JsValue supports clone
+impl Clone for AnyType {
+    fn clone(&self) -> Self {
+        Self
+    }
+}
+
+// This allows for closures to unwrap JsRef<T> as T
+unsafe impl WasmClosure for AnyType {
+    const IS_MUT: bool = false;
+}
