@@ -29,6 +29,7 @@
 
 * Added benchmark support to `wasm-bindgen-test`.
   [#4812](https://github.com/wasm-bindgen/wasm-bindgen/pull/4812)
+  [#4823](https://github.com/wasm-bindgen/wasm-bindgen/pull/4823)
 
 ### Fixed
 

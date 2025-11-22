@@ -36,10 +36,15 @@ mod report;
 mod routine;
 mod stats;
 
+use core::future::Future;
+use core::pin::Pin;
+use core::ptr;
+use core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 use core::time::Duration;
 use libm::{ceil, sqrt};
 use serde::{Deserialize, Serialize};
 
+use alloc::boxed::Box;
 use alloc::vec;
 use alloc::vec::Vec;
 use benchmark::BenchmarkConfig;
@@ -249,6 +254,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 }
+
 impl<M> Criterion<M>
 where
     M: Measurement + 'static,
@@ -264,7 +270,7 @@ where
     /// fn bench(c: &mut Criterion) {
     ///     // Setup (construct data, allocate memory, etc)
     ///     c.bench_function(
-    ///         "function_name",
+    ///         "bench desc",
     ///         |b| b.iter(|| {
     ///             // Code to benchmark goes here
     ///         }),
@@ -275,8 +281,68 @@ where
     where
         F: FnMut(&mut Bencher<'_, M>),
     {
+        const NOOP: RawWaker = {
+            const VTABLE: RawWakerVTable = RawWakerVTable::new(
+                // Cloning just returns a new no-op raw waker
+                |_| NOOP,
+                // `wake` does nothing
+                |_| {},
+                // `wake_by_ref` does nothing
+                |_| {},
+                // Dropping does nothing as we don't allocate anything
+                |_| {},
+            );
+            RawWaker::new(ptr::null(), &VTABLE)
+        };
+
+        // bench_function never be pending
+        fn block_on(f: impl Future<Output = ()>) {
+            let waker = unsafe { Waker::from_raw(NOOP) };
+            let mut ctx = Context::from_waker(&waker);
+            match core::pin::pin!(f).poll(&mut ctx) {
+                Poll::Ready(_) => (),
+                // sync functions not be pending
+                Poll::Pending => unreachable!(),
+            }
+        }
+
         let id = report::BenchmarkId::new(desc.into());
-        analysis::common(&id, &mut routine::Function::new(f), &self.config, self);
+        block_on(analysis::common(
+            &id,
+            &mut routine::Function::new(f),
+            &self.config,
+            self,
+        ));
+
+        self
+    }
+
+    /// Benchmarks a future.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use wasm_bindgen_test::{Criterion, wasm_bindgen_bench};
+    ///
+    /// #[wasm_bindgen_bench]
+    /// async fn bench(c: &mut Criterion) {
+    ///     // Setup (construct data, allocate memory, etc)
+    ///     c.bench_async_function(
+    ///         "bench desc",
+    ///         Box::pin(
+    ///             b.iter_future(|| async {
+    ///                 // Code to benchmark goes here
+    ///             })
+    ///         )
+    ///     ).await;
+    /// }
+    /// ```
+    pub async fn bench_async_function<F>(&mut self, desc: &str, f: F) -> &mut Criterion<M>
+    where
+        for<'b> F: FnMut(&'b mut Bencher<'_, M>) -> Pin<Box<dyn Future<Output = ()> + 'b>>,
+    {
+        let id = report::BenchmarkId::new(desc.into());
+        analysis::common(&id, &mut routine::AsyncFunction::new(f), &self.config, self).await;
         self
     }
 }

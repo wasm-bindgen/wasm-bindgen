@@ -1,4 +1,5 @@
 use super::measurement::Measurement;
+use core::future::Future;
 use core::hint::black_box;
 use core::time::Duration;
 
@@ -59,6 +60,35 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         let start = self.measurement.start();
         for _ in 0..self.iters {
             black_box(routine());
+        }
+        let end = self.measurement.end(start);
+        self.value = end;
+        self.elapsed_time = end;
+    }
+
+    /// Times a `routine` by executing it many times and timing the total elapsed time.
+    ///
+    /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
+    ///
+    /// # Timing model
+    ///
+    /// Note that the `Bencher` also times the time required to destroy the output of `routine()`.
+    /// Therefore prefer this timing loop when the runtime of `mem::drop(O)` is negligible compared
+    /// to the runtime of the `routine`.
+    ///
+    /// ```text
+    /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
+    /// ```
+    #[inline(never)]
+    pub async fn iter_future<O, R, Fut>(&mut self, mut routine: R)
+    where
+        R: FnMut() -> Fut,
+        Fut: Future<Output = O>,
+    {
+        self.iterated = true;
+        let start = self.measurement.start();
+        for _ in 0..self.iters {
+            black_box(routine().await);
         }
         let end = self.measurement.end(start);
         self.value = end;

@@ -21,6 +21,7 @@ wasm-bindgen-futures = { path = '../futures', version = '=0.4.55', default-featu
 wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.55' }
 
 # benchmark required start
+async-trait = "0.1.89"
 cast = "0.3"
 libm = "0.2.11"
 nu-ansi-term = { version = "0.50", default-features = false }
