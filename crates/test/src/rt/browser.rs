@@ -8,8 +8,6 @@ use alloc::string::String;
 use js_sys::Error;
 use wasm_bindgen::prelude::*;
 
-use super::TestResult;
-
 /// Implementation of `Formatter` for browsers.
 ///
 /// Routes all output to a `pre` on the page currently. Eventually this probably
@@ -52,10 +50,6 @@ impl super::Formatter for Browser {
         let mut html = self.pre.text_content();
         html.extend(line.chars().chain(Some('\n')));
         self.pre.set_text_content(&html);
-    }
-
-    fn log_test(&self, name: &str, result: &TestResult) {
-        self.writeln(&format!("test {} ... {}", name, result));
     }
 
     fn stringify_error(&self, err: &JsValue) -> String {

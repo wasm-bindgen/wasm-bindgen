@@ -1,6 +1,6 @@
 .idea
 .DS_Store
-/target/
+target/
 **/*.rs.bk
 Cargo.lock
 node_modules

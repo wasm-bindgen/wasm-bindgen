@@ -3,11 +3,8 @@
 //! This currently uses the same output as `libtest`, only reimplemented here
 //! for node itself.
 
-use alloc::format;
 use alloc::string::String;
 use wasm_bindgen::prelude::*;
-
-use super::TestResult;
 
 /// Implementation of the `Formatter` trait for node.js
 pub struct Node {}
@@ -33,10 +30,6 @@ impl Node {
 impl super::Formatter for Node {
     fn writeln(&self, line: &str) {
         og_console_log(line);
-    }
-
-    fn log_test(&self, name: &str, result: &TestResult) {
-        self.writeln(&format!("test {} ... {}", name, result));
     }
 
     fn stringify_error(&self, err: &JsValue) -> String {

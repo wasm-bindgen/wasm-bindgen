@@ -5,14 +5,14 @@ use std::process::Command;
 use anyhow::{bail, Context, Error};
 
 use super::Tests;
-use super::{node::SHARED_SETUP, Cli};
+use super::{node::shared_setup, Cli};
 
 pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<(), Error> {
     let mut js_to_execute = format!(
         r#"import * as wasm from "./{module}.js";
 
         const nocapture = {nocapture};
-        {SHARED_SETUP}
+        {shared_setup}
 
         window.__wbg_test_invoke = f => f();
 
@@ -20,8 +20,9 @@ pub fn execute(module: &str, tmpdir: &Path, cli: Cli, tests: Tests) -> Result<()
 
         const tests = [];
     "#,
-        nocapture = cli.nocapture.clone(),
-        args = cli.into_args(&tests),
+        shared_setup = shared_setup(cli.bench),
+        nocapture = cli.nocapture || cli.bench,
+        args = cli.get_args(&tests),
     );
 
     for test in tests.tests {

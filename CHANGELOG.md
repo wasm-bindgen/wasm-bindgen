@@ -27,6 +27,9 @@
   of declarations.
   [#4813](https://github.com/wasm-bindgen/wasm-bindgen/pull/4813)
 
+* Added benchmark support to `wasm-bindgen-test`.
+  [#4812](https://github.com/wasm-bindgen/wasm-bindgen/pull/4812)
+
 ### Fixed
 
 * Fixed node test harness getting stuck after tests completed.
