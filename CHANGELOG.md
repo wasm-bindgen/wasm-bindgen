@@ -27,6 +27,11 @@
   of declarations.
   [#4813](https://github.com/wasm-bindgen/wasm-bindgen/pull/4813)
 
+* Added `private` attribute on exported types to allow generating
+  exports and structs as implicit internal exported types for function
+  arguments and returns, without exporting them on the public interface.
+  [#4788](https://github.com/wasm-bindgen/wasm-bindgen/pull/4788)
+
 ### Fixed
 
 * Fixed node test harness getting stuck after tests completed.

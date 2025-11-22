@@ -103,6 +103,9 @@ struct ExportDefinition {
 
     ts_comments: Option<String>,
     ts_definition: String,
+
+    /// Whether this is a private export, so not actually exposed on the module exports interface
+    private: bool,
 }
 
 /// Module namespace export
@@ -123,6 +126,8 @@ struct ExportedClass {
     typescript: String,
     /// Whether TypeScript for this class should be emitted (i.e., `skip_typescript` wasn't specified).
     generate_typescript: bool,
+    /// Whether to skip exporting this class from the module exports
+    private: bool,
     has_constructor: bool,
     wrap_needed: bool,
     unwrap_needed: bool,
@@ -207,6 +212,7 @@ impl<'a> Context<'a> {
             identifier: id,
             comments,
             ts_comments,
+            private,
         } = def;
         self.globals.push('\n');
         if self.config.typescript && !ts_decl.is_empty() {
@@ -219,6 +225,7 @@ impl<'a> Context<'a> {
                 self.config.mode,
                 OutputMode::Node { module: false } | OutputMode::NoModules { .. }
             )
+            || *private
         {
             if let Some(c) = comments {
                 self.globals.push_str(c);
@@ -228,7 +235,7 @@ impl<'a> Context<'a> {
             self.globals.push_str(c);
         }
         if self.config.typescript && !ts_decl.is_empty() {
-            if export_name.map(|name| name != id).unwrap_or(true) {
+            if export_name.map(|name| name != id).unwrap_or(true) || *private {
                 if let Some(c) = ts_comments {
                     self.typescript.push_str(c);
                 }
@@ -240,6 +247,9 @@ impl<'a> Context<'a> {
             } else if let Some(c) = ts_comments {
                 self.typescript.push_str(c);
             }
+        }
+        if *private {
+            return;
         }
         if let Some(export_name) = export_name {
             match self.config.mode {
@@ -313,6 +323,7 @@ impl<'a> Context<'a> {
                     definition: "".to_string(),
                     ts_comments: None,
                     ts_definition,
+                    private: false,
                 }),
             )?;
         }
@@ -1274,6 +1285,11 @@ wasm = wasmInstance.exports;
         dst.push_str("}\n");
         ts_dst.push_str("}\n");
 
+        // For hidden classes, add export type statement
+        if class.private {
+            ts_dst.push_str(&format!("export type {{ {name} }};\n"));
+        }
+
         dst.push_str(&format!(
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
         ));
@@ -1292,6 +1308,7 @@ wasm = wasmInstance.exports;
                     String::new()
                 },
                 ts_comments: None,
+                private: class.private,
             }),
         )?;
 
@@ -1449,6 +1466,7 @@ wasm = wasmInstance.exports;
                             ts_comments: None,
                             ts_definition,
                             identifier,
+                            private: false,
                         },
                     );
                 }
@@ -2712,6 +2730,7 @@ wasm = wasmInstance.exports;
                 definition,
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
+                private: false,
             }),
         )?;
 
@@ -3145,6 +3164,7 @@ wasm = wasmInstance.exports;
                                 definition,
                                 ts_definition: typescript,
                                 ts_comments,
+                                private: false,
                             }),
                         )?;
                     }
@@ -4097,13 +4117,14 @@ wasm = wasmInstance.exports;
 
     fn generate_enum(&mut self, enum_: &AuxEnum) -> Result<(), Error> {
         let identifier = self.generate_identifier(&enum_.name);
-        let mut variants = String::new();
 
         let ts_comments = format_doc_comments(&enum_.comments, None);
         let mut typescript = String::new();
         if enum_.generate_typescript {
             typescript.push_str(&format!("enum {identifier} {{"));
         }
+
+        let mut variants = String::new();
         for (name, value, comments) in enum_.variants.iter() {
             let variant_docs = if comments.is_empty() {
                 String::new()
@@ -4152,6 +4173,7 @@ wasm = wasmInstance.exports;
                 definition,
                 ts_definition: typescript,
                 ts_comments: Some(ts_comments),
+                private: enum_.private,
             }),
         )?;
 
@@ -4206,6 +4228,7 @@ wasm = wasmInstance.exports;
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
+        class.private = struct_.private;
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         Ok(())
     }
