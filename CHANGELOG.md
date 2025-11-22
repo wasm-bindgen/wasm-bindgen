@@ -42,6 +42,9 @@
   [#4783](https://github.com/wasm-bindgen/wasm-bindgen/pull/4783)
   [#4782](https://github.com/wasm-bindgen/wasm-bindgen/pull/4782)
 
+* Fixed duplicate symbols caused by enabling v0 mangling.
+  [#4822](https://github.com/wasm-bindgen/wasm-bindgen/pull/4822)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)
