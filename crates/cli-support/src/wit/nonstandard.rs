@@ -48,6 +48,9 @@ pub struct WasmBindgenAux {
     /// Auxiliary information to go into JS/TypeScript bindings describing the
     /// exported string enums from Rust.
     pub string_enums: HashMap<String, AuxStringEnum>,
+    /// Auxiliary information to go into JS/TypeScript bindings describing the
+    /// exported discriminated unions from Rust.
+    pub discriminated_unions: HashMap<String, AuxDiscriminatedUnion>,
 
     /// Auxiliary information to go into JS/TypeScript bindings describing the
     /// exported structs from Rust and their fields they've got exported.
@@ -215,6 +218,18 @@ pub struct AuxStringEnum {
     /// but kept for consistency and potential future use.
     #[allow(dead_code)]
     pub js_namespace: Option<Vec<String>>,
+}
+
+#[derive(Debug)]
+pub struct AuxDiscriminatedUnion {
+    /// The name of this enum
+    pub name: String,
+    /// The copied Rust comments to forward to JS
+    pub comments: String,
+    /// The list of variant types
+    pub variants: Vec<String>,
+    /// Whether typescript bindings should be generated for this enum.
+    pub generate_typescript: bool,
 }
 
 #[derive(Debug)]
