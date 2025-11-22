@@ -56,41 +56,11 @@ const HiddenEnum = Object.freeze({
     Variant1: 0, "0": "Variant1",
     Variant2: 1, "1": "Variant2",
 });
-export const HiddenEnum = Object.freeze({
-    Variant1: 0, "0": "Variant1",
-    Variant2: 1, "1": "Variant2",
-});
 
 /**
  * A hidden struct that is not exported but can be used as an argument type
  */
 class HiddenStruct {
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        HiddenStructFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_hiddenstruct_free(ptr, 0);
-    }
-    /**
-     * @returns {number}
-     */
-    get value() {
-        const ret = wasm.__wbg_get_hiddenstruct_value(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set value(arg0) {
-        wasm.__wbg_set_hiddenstruct_value(this.__wbg_ptr, arg0);
-    }
-}
-if (Symbol.dispose) HiddenStruct.prototype[Symbol.dispose] = HiddenStruct.prototype.free;
-export class HiddenStruct {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;

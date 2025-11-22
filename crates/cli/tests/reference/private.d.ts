@@ -8,19 +8,8 @@ declare enum HiddenEnum {
   Variant1 = 0,
   Variant2 = 1,
 }
-export enum HiddenEnum {
-  Variant1 = 0,
-  Variant2 = 1,
-}
 
 declare class HiddenStruct {
-  private constructor();
-  free(): void;
-  [Symbol.dispose](): void;
-  value: number;
-}
-export type { HiddenStruct };
-export class HiddenStruct {
   private constructor();
   free(): void;
   [Symbol.dispose](): void;

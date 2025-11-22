@@ -248,6 +248,9 @@ impl<'a> Context<'a> {
                 self.typescript.push_str(c);
             }
         }
+        if *private {
+            return;
+        }
         if let Some(export_name) = export_name {
             match self.config.mode {
                 OutputMode::Node { module: false } => self
