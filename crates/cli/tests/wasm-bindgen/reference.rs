@@ -142,7 +142,7 @@ fn runtest_targets_atomics() -> Result<()> {
 
     runtest_with_opts(test, Some("atomics"), |command| {
         command
-            .env("RUSTUP_TOOLCHAIN", "nightly-2025-11-18")
+            .env("RUSTUP_TOOLCHAIN", "nightly")
             .env(
                 "RUSTFLAGS",
                 "-Ctarget-feature=+atomics \
@@ -167,7 +167,7 @@ fn runtest_targets_mvp() -> Result<()> {
 
     runtest_with_opts(test, Some("mvp"), |command| {
         command
-            .env("RUSTUP_TOOLCHAIN", "nightly-2025-11-18")
+            .env("RUSTUP_TOOLCHAIN", "nightly")
             .env("RUSTFLAGS", "-C target-cpu=mvp")
             .arg("-Zbuild-std=std,panic_abort");
     })
