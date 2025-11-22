@@ -45,7 +45,7 @@ pub struct CheckSupportsStaticProperty<T: SupportsStaticProperty>(T);
 /// without a type parameter is equivalent to `JsValue<AnyType>`. This marker type
 /// provides compatibility with existing code while allowing the generic `JsValue<T>`
 /// system to work alongside these untyped cases.
-/// 
+///
 /// This type is not designed to be inhabited itself.
 ///
 /// ```
