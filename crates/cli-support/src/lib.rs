@@ -551,15 +551,14 @@ fn demangle(module: &mut Module) {
     let mut counter: HashMap<String, i32> = HashMap::with_capacity(upper.unwrap_or(lower));
 
     for func in module.funcs.iter_mut() {
-        let name = match &func.name {
-            Some(name) => name,
-            None => continue,
+        let Some(name) = &func.name else {
+            continue;
         };
 
-        let sym = match rustc_demangle::try_demangle(name) {
-            Ok(sym) => sym,
-            Err(_) => continue,
+        let Ok(sym) = rustc_demangle::try_demangle(name) else {
+            continue;
         };
+
         let count = counter.entry(sym.to_string()).or_insert(0);
 
         func.name = Some(if *count > 0 {
