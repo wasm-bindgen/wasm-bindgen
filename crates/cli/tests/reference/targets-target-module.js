@@ -1,6 +1,7 @@
 import source wasmModule from "./reference_test_bg.wasm";
 
 let wasm;
+
 /**
  * @param {number} a
  * @param {number} b
@@ -25,7 +26,6 @@ const imports = {
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         },
     },
 
@@ -35,4 +35,3 @@ const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
 
 wasm.__wbindgen_start();
-

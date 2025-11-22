@@ -209,7 +209,10 @@ fn shared_export<'a>(
         comments: export.comments.iter().map(|s| &**s).collect(),
         consumed,
         function: shared_function(&export.function, intern),
-        js_namespace: export.js_namespace.clone(),
+        js_namespace: export
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
         method_kind,
         start: export.start,
     })
@@ -258,7 +261,10 @@ fn shared_enum<'a>(e: &'a ast::Enum, intern: &'a Interner) -> Enum<'a> {
             .collect(),
         comments: e.comments.iter().map(|s| &**s).collect(),
         generate_typescript: e.generate_typescript,
-        js_namespace: e.js_namespace.clone(),
+        js_namespace: e
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
     }
 }
 
@@ -271,6 +277,19 @@ fn shared_variant<'a>(v: &'a ast::Variant, intern: &'a Interner) -> EnumVariant<
 }
 
 fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<'a>, Diagnostic> {
+    // Resolve reexport name: use explicit rename if provided, otherwise use the import's name
+    let reexport = i.reexport.as_ref().map(|rename_opt| {
+        rename_opt.clone().unwrap_or_else(|| {
+            // Get the default name from the import kind
+            match &i.kind {
+                ast::ImportKind::Type(t) => t.js_name.clone(),
+                ast::ImportKind::Function(f) => f.function.name.clone(),
+                ast::ImportKind::Static(s) => s.js_name.clone(),
+                _ => unreachable!("reexport only supported on types, functions, and statics"),
+            }
+        })
+    });
+
     Ok(Import {
         module: i
             .module
@@ -278,7 +297,7 @@ fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<
             .map(|m| shared_module(m, intern, false))
             .transpose()?,
         js_namespace: i.js_namespace.clone(),
-        reexport: i.reexport.clone(),
+        reexport,
         kind: shared_import_kind(&i.kind, intern)?,
     })
 }
@@ -375,11 +394,14 @@ fn shared_import_type<'a>(i: &'a ast::ImportType, intern: &'a Interner) -> Impor
 
 fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> StringEnum<'a> {
     StringEnum {
-        name: &i.js_name,
+        name: &i.export_name,
         generate_typescript: i.generate_typescript,
         variant_values: i.variant_values.iter().map(|x| &**x).collect(),
         comments: i.comments.iter().map(|s| &**s).collect(),
-        js_namespace: i.js_namespace.clone(),
+        js_namespace: i
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
     }
 }
 
@@ -394,7 +416,10 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
         comments: s.comments.iter().map(|s| &**s).collect(),
         is_inspectable: s.is_inspectable,
         generate_typescript: s.generate_typescript,
-        js_namespace: s.js_namespace.clone(),
+        js_namespace: s
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
     }
 }
 

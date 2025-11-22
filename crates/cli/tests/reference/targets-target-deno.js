@@ -1,3 +1,4 @@
+
 /**
  * @param {number} a
  * @param {number} b
@@ -22,7 +23,6 @@ const imports = {
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         },
     },
 
@@ -33,4 +33,3 @@ const wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports)).i
 export { wasm as __wasm };
 
 wasm.__wbindgen_start();
-
