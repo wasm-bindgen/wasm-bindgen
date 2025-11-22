@@ -25,7 +25,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: taiki-e/install-action@v2
         with:
           tool: taplo-cli
@@ -49,7 +49,7 @@ jobs:
     name: Clippy (native)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy,rustfmt
@@ -60,7 +60,7 @@ jobs:
     name: Clippy (Wasm)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
@@ -84,7 +84,7 @@ jobs:
     name: Clippy (Wasm + ${{ matrix.name }})
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
@@ -116,7 +116,7 @@ jobs:
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
@@ -138,7 +138,7 @@ jobs:
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
@@ -155,7 +155,7 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
       RUSTFLAGS: -Cpanic=unwind
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
@@ -171,7 +171,7 @@ jobs:
   #   name: "Run wasm-bindgen crate tests (Windows)"
   #   runs-on: windows-latest
   #   steps:
-  #   - uses: actions/checkout@v5
+  #   - uses: actions/checkout@v6
   #   - run: rustup update --no-self-update stable && rustup default stable
   #   - run: rustup target add wasm32-unknown-unknown
   #   - uses: actions/setup-node@v6
@@ -192,7 +192,7 @@ jobs:
     name: Run CLI reference TypeScript check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: actions/setup-node@v6
       with:
         node-version: 'lts/*'
@@ -207,7 +207,7 @@ jobs:
     name: Run native tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
@@ -265,7 +265,7 @@ jobs:
       WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE: ${{ matrix.runs.env.WBINDGEN_I_PROMISE_JS_SYNTAX_WORKS_IN_NODE }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
@@ -279,7 +279,7 @@ jobs:
     name: Run UI compile-fail tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@1.88
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
@@ -288,7 +288,7 @@ jobs:
     name: "Verify that web-sys is compiled correctly"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
@@ -298,7 +298,7 @@ jobs:
   build_examples:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
@@ -326,7 +326,7 @@ jobs:
     - build_examples
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: actions/download-artifact@v6
       with:
         name: examples
@@ -349,7 +349,7 @@ jobs:
   build_benchmarks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
@@ -364,7 +364,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: x86_64-unknown-linux-musl
@@ -383,7 +383,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: aarch64-unknown-linux-gnu
@@ -401,7 +401,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04-arm
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: aarch64-unknown-linux-musl
@@ -417,7 +417,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: x86_64-apple-darwin
@@ -433,7 +433,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --release
@@ -448,7 +448,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
     - run: cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
@@ -462,7 +462,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - run: |
         curl -L https://github.com/rust-lang/mdBook/releases/download/v0.4.28/mdbook-v0.4.28-x86_64-unknown-linux-gnu.tar.gz | tar xzf -
         echo $PWD >> $GITHUB_PATH
@@ -476,7 +476,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
     - run: cargo doc --no-deps --features 'serde-serialize'
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
@@ -511,7 +511,7 @@ jobs:
       run:
         working-directory: crates/msrv/resolver
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
@@ -537,7 +537,7 @@ jobs:
       run:
         working-directory: crates/msrv/lib
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
@@ -551,7 +551,7 @@ jobs:
       run:
         working-directory: crates/msrv/cli
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@1.82
     - run: cargo build
 
@@ -574,7 +574,7 @@ jobs:
       - build_benchmarks
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - uses: actions/download-artifact@v6
