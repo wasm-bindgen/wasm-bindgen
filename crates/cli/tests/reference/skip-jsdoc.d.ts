@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+
 /**
  * Manually documented function
  *
@@ -7,6 +8,7 @@
  * @returns to whence I came
  */
 export function docme(arg: number): number;
+
 /**
  * Regular documentation.
  */

@@ -23,6 +23,10 @@
 * Added 'container' attribute to `ScrollIntoViewOptions`
   [#4806](https://github.com/wasm-bindgen/wasm-bindgen/pull/4806)
 
+* Updated and refactored output generation to use alphabetical ordering
+  of declarations.
+  [#4813](https://github.com/wasm-bindgen/wasm-bindgen/pull/4813)
+
 ### Fixed
 
 * Fixed node test harness getting stuck after tests completed.
@@ -41,6 +45,9 @@
   [#4796](https://github.com/wasm-bindgen/wasm-bindgen/pull/4796)
   [#4783](https://github.com/wasm-bindgen/wasm-bindgen/pull/4783)
   [#4782](https://github.com/wasm-bindgen/wasm-bindgen/pull/4782)
+
+* Fixed duplicate symbols caused by enabling v0 mangling.
+  [#4822](https://github.com/wasm-bindgen/wasm-bindgen/pull/4822)
 
 * Fixed a multithreaded wasm32+atomics race where `Atomics.waitAsync` promise callbacks could call `run` without waking first, causing sporadic panics.
   [#TODO](https://github.com/wasm-bindgen/wasm-bindgen/pull/xxxx)

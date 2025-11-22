@@ -1,7 +1,11 @@
 let wasm;
 
-let cachedUint8ArrayMemory0 = null;
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
 
+let cachedUint8ArrayMemory0 = null;
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.buffer !== wasm.memory.buffer) {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
@@ -10,7 +14,6 @@ function getUint8ArrayMemory0() {
 }
 
 let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : undefined);
-
 if (cachedTextDecoder) cachedTextDecoder.decode();
 
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
@@ -25,10 +28,6 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
-}
 /**
  * @param {number} a
  * @param {number} b
@@ -46,7 +45,6 @@ async function __wbg_load(module, imports) {
         if (typeof WebAssembly.instantiateStreaming === 'function') {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
-
             } catch (e) {
                 const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
 
@@ -61,13 +59,11 @@ async function __wbg_load(module, imports) {
 
         const bytes = await module.arrayBuffer();
         return await WebAssembly.instantiate(bytes, imports);
-
     } else {
         const instance = await WebAssembly.instantiate(module, imports);
 
         if (instance instanceof WebAssembly.Instance) {
             return { instance, module };
-
         } else {
             return instance;
         }
@@ -92,7 +88,6 @@ function __wbg_get_imports(memory) {
         table.set(offset + 1, null);
         table.set(offset + 2, true);
         table.set(offset + 3, false);
-        ;
     };
     imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 
@@ -122,13 +117,10 @@ function initSync(module, memory) {
     }
 
     const imports = __wbg_get_imports(memory);
-
     if (!(module instanceof WebAssembly.Module)) {
         module = new WebAssembly.Module(module);
     }
-
     const instance = new WebAssembly.Instance(module, imports);
-
     return __wbg_finalize_init(instance, module, thread_stack_size);
 }
 

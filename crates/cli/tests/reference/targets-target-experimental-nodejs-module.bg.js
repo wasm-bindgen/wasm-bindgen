@@ -28,6 +28,4 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 1, null);
     table.set(offset + 2, true);
     table.set(offset + 3, false);
-    ;
 };
-
