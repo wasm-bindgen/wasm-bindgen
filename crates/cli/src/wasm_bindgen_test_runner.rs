@@ -361,10 +361,14 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         PathBuf::from(path)
     } else {
         // such as `js-sys/target/wbg_benchmark.json`
-        env::current_dir()
+        let path = env::current_dir()
             .context("Failed to get current dir")?
-            .join("target")
-            .join("wbg_benchmark.json")
+            .join("target");
+        // crates in the workspace that do not have a target dir.
+        if cli.bench {
+            fs::create_dir_all(&path)?;
+        }
+        path.join("wbg_benchmark.json")
     };
 
     // The debug here means adding some assertions and some error messages to the generated js

@@ -102,10 +102,30 @@ Found 13 outliers among 100 measurements (13.00%)
 As you can see, Criterion is statistically confident that our optimization has made an improvement.
 If we introduce a performance regression, Criterion will instead print a message indicating this.
 
-### Step 5 - Run benchmark in browser ###
+### Step 5 - Asynchronous function ###
+
+It also supports benchmarking asynchronous functions:
+
+```rust
+use wasm_bindgen_test::{wasm_bindgen_bench, Criterion};
+
+#[wasm_bindgen_bench]
+async fn bench(c: &mut Criterion) {
+    c.bench_async_function(
+        "bench desc",
+         Box::pin(
+             b.iter_future(|| async {
+                 // Code to benchmark goes here
+             })
+         )
+    ).await;
+}
+```
+
+### Step 6 - Run benchmark in browser ###
 
 Similar to test, you can use `wasm_bindgen_test_configure!` to configure the execution environment.
 
-### Step 6 - Configuration ###
+### Step 7 - Configuration ###
 
 * `WASM_BINDGEN_BENCH_RESULT`: Path for the custom benchmark result file.

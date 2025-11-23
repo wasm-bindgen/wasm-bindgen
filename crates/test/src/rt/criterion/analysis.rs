@@ -15,7 +15,7 @@ use super::{baseline, compare, Criterion, SavedSample};
 use alloc::vec::Vec;
 
 // Common analysis procedure
-pub(crate) fn common<M: Measurement>(
+pub(crate) async fn common<M: Measurement>(
     id: &BenchmarkId,
     routine: &mut dyn Routine<M>,
     config: &BenchmarkConfig,
@@ -24,7 +24,9 @@ pub(crate) fn common<M: Measurement>(
     criterion.report.benchmark_start(id);
 
     let (sampling_mode, iters, times);
-    let sample = routine.sample(&criterion.measurement, id, config, criterion);
+    let sample = routine
+        .sample(&criterion.measurement, id, config, criterion)
+        .await;
     sampling_mode = sample.0;
     iters = sample.1;
     times = sample.2;
