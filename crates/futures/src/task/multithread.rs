@@ -99,7 +99,12 @@ impl Task {
 
         let closure = {
             let this = Rc::clone(&this);
-            Closure::new(move |_| this.run())
+            Closure::new(move |_| {
+                // The promise resolution acts like a wake, so ensure the state
+                // transitions to AWAKE before entering `run`.
+                this.atomic.wake_by_ref();
+                this.run();
+            })
         };
         *this.inner.borrow_mut() = Some(Inner {
             future: Box::pin(future),
