@@ -6,7 +6,6 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::format_ident;
 use quote::quote_spanned;
 use quote::{quote, ToTokens};
-use rustversion_compat as rustversion;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use syn::parse_quote;
@@ -14,11 +13,7 @@ use syn::spanned::Spanned;
 use wasm_bindgen_shared as shared;
 
 fn get_extern_type() -> TokenStream {
-    if rustversion::cfg!(since(1.71)) {
-        quote! {"C-unwind"}
-    } else {
-        quote! {"C"}
-    }
+    quote! {"C-unwind"}
 }
 
 /// A trait for converting AST structs into Tokens and adding them to a TokenStream,

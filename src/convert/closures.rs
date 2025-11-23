@@ -1,6 +1,5 @@
 use alloc::boxed::Box;
 use core::mem;
-use rustversion_compat as rustversion;
 
 use crate::closure::{Closure, IntoWasmClosure, WasmClosure, WasmClosureFnOnce};
 use crate::convert::slices::WasmSlice;
@@ -201,8 +200,4 @@ macro_rules! apply_closures {
     }
 }
 
-#[rustversion::since(1.71)]
 apply_closures!("C-unwind");
-
-#[rustversion::before(1.71)]
-apply_closures!("C");
