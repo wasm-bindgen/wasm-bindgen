@@ -109,7 +109,8 @@ fn bindgen(
         let bench_ident = quote::format_ident!("__wbg_bench_{ident}");
         tokens.extend(quote! {
             async fn #bench_ident() {
-                let mut bencher = Criterion::default();
+                let mut bencher = Criterion::default()
+                    .with_location(file!(), module_path!());
                 #body
             }
         });

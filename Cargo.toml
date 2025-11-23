@@ -87,6 +87,7 @@ uninlined_format_args = "warn"
 exclude = ["crates/msrv/resolver", "crates/msrv/lib", "crates/msrv/cli"]
 members = [
   "benchmarks",
+  "benchmarks/wcodspeed",
   "crates/cli",
   "crates/js-sys",
   "crates/test",
