@@ -45,6 +45,7 @@ use libm::{ceil, sqrt};
 use serde::{Deserialize, Serialize};
 
 use alloc::boxed::Box;
+use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 use benchmark::BenchmarkConfig;
@@ -72,6 +73,12 @@ pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
     report: WasmReport,
     measurement: M,
+    location: Option<Location>,
+}
+
+pub(crate) struct Location {
+    file: String,
+    module_path: String,
 }
 
 impl Default for Criterion {
@@ -98,6 +105,7 @@ impl Default for Criterion {
             },
             report: WasmReport,
             measurement: WallTime,
+            location: None,
         }
     }
 }
@@ -111,10 +119,22 @@ impl<M: Measurement> Criterion<M> {
             config: self.config,
             report: self.report,
             measurement: m,
+            location: self.location,
         }
     }
 
+    /// Configure file and module paths for use with codspeed.
     #[must_use]
+    pub fn with_location(self, file: &str, module_path: &str) -> Criterion<M> {
+        Criterion {
+            location: Some(Location {
+                file: file.into(),
+                module_path: module_path.into(),
+            }),
+            ..self
+        }
+    }
+
     /// Changes the default size of the sample for benchmarks run with this runner.
     ///
     /// A bigger sample should yield more accurate results if paired with a sufficiently large
@@ -125,6 +145,7 @@ impl<M: Measurement> Criterion<M> {
     /// # Panics
     ///
     /// Panics if n < 10
+    #[must_use]
     pub fn sample_size(mut self, n: usize) -> Criterion<M> {
         assert!(n >= 10);
 
@@ -132,12 +153,12 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    #[must_use]
     /// Changes the default warm up time for benchmarks run with this runner.
     ///
     /// # Panics
     ///
     /// Panics if the input duration is zero
+    #[must_use]
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion<M> {
         assert!(dur.as_nanos() > 0);
 
@@ -145,8 +166,6 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    #[must_use]
-    /// Changes the default measurement time for benchmarks run with this runner.
     ///
     /// With a longer time, the measurement will become more resilient to transitory peak loads
     /// caused by external programs
@@ -156,6 +175,8 @@ impl<M: Measurement> Criterion<M> {
     /// # Panics
     ///
     /// Panics if the input duration in zero
+    /// Changes the default measurement time for benchmarks run with this runner.
+    #[must_use]
     pub fn measurement_time(mut self, dur: Duration) -> Criterion<M> {
         assert!(dur.as_nanos() > 0);
 
@@ -163,7 +184,6 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    #[must_use]
     /// Changes the default number of resamples for benchmarks run with this runner.
     ///
     /// Number of resamples to use for the
@@ -175,6 +195,7 @@ impl<M: Measurement> Criterion<M> {
     /// # Panics
     ///
     /// Panics if the number of resamples is set to zero
+    #[must_use]
     pub fn nresamples(mut self, n: usize) -> Criterion<M> {
         assert!(n > 0);
         if n <= 1000 {
@@ -185,7 +206,6 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    #[must_use]
     /// Changes the default noise threshold for benchmarks run with this runner. The noise threshold
     /// is used to filter out small changes in performance, even if they are statistically
     /// significant. Sometimes benchmarking the same code twice will result in small but
@@ -198,6 +218,7 @@ impl<M: Measurement> Criterion<M> {
     /// # Panics
     ///
     /// Panics if the threshold is set to a negative value
+    #[must_use]
     pub fn noise_threshold(mut self, threshold: f64) -> Criterion<M> {
         assert!(threshold >= 0.0);
 
@@ -205,7 +226,6 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    #[must_use]
     /// Changes the default confidence level for benchmarks run with this runner. The confidence
     /// level is the desired probability that the true runtime lies within the estimated
     /// [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval). The default is
@@ -214,6 +234,7 @@ impl<M: Measurement> Criterion<M> {
     /// # Panics
     ///
     /// Panics if the confidence level is set to a value outside the `(0, 1)` range
+    #[must_use]
     pub fn confidence_level(mut self, cl: f64) -> Criterion<M> {
         assert!(cl > 0.0 && cl < 1.0);
         if cl < 0.5 {
@@ -226,7 +247,6 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    #[must_use]
     /// Changes the default [significance level](https://en.wikipedia.org/wiki/Statistical_significance)
     /// for benchmarks run with this runner. This is used to perform a
     /// [hypothesis test](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing) to see if
@@ -247,6 +267,7 @@ impl<M: Measurement> Criterion<M> {
     /// # Panics
     ///
     /// Panics if the significance level is set to a value outside the `(0, 1)` range
+    #[must_use]
     pub fn significance_level(mut self, sl: f64) -> Criterion<M> {
         assert!(sl > 0.0 && sl < 1.0);
 

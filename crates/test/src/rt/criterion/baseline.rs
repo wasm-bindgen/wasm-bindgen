@@ -16,6 +16,10 @@ static BASELINE: LazyCell<RefCell<BTreeMap<String, BenchmarkBaseline>>> =
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct BenchmarkBaseline {
+    pub(crate) file: Option<String>,
+    pub(crate) module_path: Option<String>,
+    pub(crate) iters: Vec<f64>,
+    pub(crate) times: Vec<f64>,
     pub(crate) sample: SavedSample,
     pub(crate) estimates: Estimates,
 }
