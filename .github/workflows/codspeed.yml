@@ -20,15 +20,16 @@ permissions:
 jobs:
   benchmarks:
     name: Run benchmarks
-    # crash
-    # runs-on: codspeed-macro
-    runs-on: ubuntu-latest
+    runs-on: codspeed-macro
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@just
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '25'
       - run: just bench
 
       - name: Upload benchmark results
