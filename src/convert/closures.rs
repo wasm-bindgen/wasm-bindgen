@@ -14,7 +14,7 @@ macro_rules! closures {
     // A counter helper to count number of arguments.
     (@count_one $ty:ty) => (1);
 
-    (@describe $abi:literal ( $($ty:ty),* )) => {
+    (@describe ( $($ty:ty),* )) => {
         // Needs to be a constant so that interpreter doesn't crash on
         // unsupported operations in debug mode.
         const ARG_COUNT: u32 = 0 $(+ closures!(@count_one $ty))*;
@@ -27,7 +27,7 @@ macro_rules! closures {
     // while `|var_with_ref_type: &A|` makes it use the higher-order generic as expected.
     (@closure ($($ty:ty),*) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
-    (@impl_for_fn $abi:literal $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+    (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
         where
             Self: WasmDescribe,
@@ -43,7 +43,7 @@ macro_rules! closures {
         }
 
         #[allow(non_snake_case)]
-        unsafe extern $abi fn invoke<$($var: $FromWasmAbi,)* R: ReturnWasmAbi>(
+        unsafe extern "C-unwind" fn invoke<$($var: $FromWasmAbi,)* R: ReturnWasmAbi>(
             a: usize,
             b: usize,
             $(
@@ -77,8 +77,8 @@ macro_rules! closures {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() {
                 inform(FUNCTION);
-                inform(invoke::<$($var,)* R> as *const () as usize as u32);
-                closures!(@describe $abi $FnArgs);
+                inform(invoke::<$($var,)* R> as usize as u32);
+                closures!(@describe $FnArgs);
                 R::describe();
                 R::describe();
             }
@@ -99,9 +99,9 @@ macro_rules! closures {
         }
     };);
 
-    (@impl_for_args $abi:literal $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
-        closures!(@impl_for_fn $abi false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
-        closures!(@impl_for_fn $abi true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+    (@impl_for_args $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
+        closures!(@impl_for_fn false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_fn true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
 
         // The memory safety here in these implementations below is a bit tricky. We
         // want to be able to drop the `Closure` object from within the invocation of a
@@ -163,41 +163,31 @@ macro_rules! closures {
         }
     };
 
-    ($abi:literal $( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
-        closures!(@impl_for_args $abi ($($var),*) FromWasmAbi $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
+    ($( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
+        closures!(@impl_for_args ($($var),*) FromWasmAbi $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
     )*);
 }
 
-macro_rules! apply_closures {
-    ($abi:literal) => {
-        closures! {
-            $abi
-            ()
-            (A a1 a2 a3 a4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4)
-            (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
-        }
-
-        // Copy the above impls down here for where there's only one argument and it's a
-        // reference. We could add more impls for more kinds of references, but it
-        // becomes a combinatorial explosion quickly. Let's see how far we can get with
-        // just this one! Maybe someone else can figure out voodoo so we don't have to
-        // duplicate.
-
-        // We need to allow coherence leak check just for these traits because
-        // we're providing separate implementation for `Fn(&A)` variants when
-        // `Fn(A)` one already exists.
-        #[allow(coherence_leak_check)]
-        const _: () = {
-            closures!(@impl_for_args $abi (&A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
-        };
-
-    }
+closures! {
+    ()
+    (A a1 a2 a3 a4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4)
+    (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
 }
 
-apply_closures!("C-unwind");
+// Copy the above impls down here for where there's only one argument and it's a
+// reference. We could add more impls for more kinds of references, but it
+// becomes a combinatorial explosion quickly. Let's see how far we can get with
+// just this one! Maybe someone else can figure out voodoo so we don't have to
+// duplicate.
+
+// We need to allow coherence leak check just for these traits because we're providing separate implementation for `Fn(&A)` variants when `Fn(A)` one already exists.
+#[allow(coherence_leak_check)]
+const _: () = {
+    closures!(@impl_for_args (&A) RefFromWasmAbi &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+};
