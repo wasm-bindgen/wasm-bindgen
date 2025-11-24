@@ -79,6 +79,10 @@ pub(crate) async fn common<M: Measurement>(
     baseline::write(
         id.desc(),
         baseline::BenchmarkBaseline {
+            file: criterion.location.as_ref().map(|l| l.file.clone()),
+            module_path: criterion.location.as_ref().map(|l| l.module_path.clone()),
+            iters: data.x().as_ref().to_vec(),
+            times: data.y().as_ref().to_vec(),
             sample: SavedSample {
                 sampling_mode,
                 iters: data.x().as_ref().to_vec(),

@@ -35,3 +35,8 @@ test-wasm-bindgen *ARGS="":
 
 test-wasm-bindgen-futures *ARGS="":
     NODE_ARGS="--stack-trace-limit=100" RUST_BACKTRACE=1 cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures {{ARGS}}
+
+bench:
+    cargo bench --target wasm32-unknown-unknown
+    cargo bench --target wasm32-unknown-unknown -p js-sys
+    cargo bench --target wasm32-unknown-unknown -p wasm-bindgen-futures
