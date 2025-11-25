@@ -116,43 +116,84 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
     pub fn get_entries_by_type(this: &Performance, entry_type: &str) -> ::js_sys::Array;
+    #[cfg(feature = "PerformanceMark")]
     # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = mark)]
     #[doc = "The `mark()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
-    pub fn mark(this: &Performance, mark_name: &str) -> Result<(), JsValue>;
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMark`*"]
+    pub fn mark(this: &Performance, mark_name: &str) -> Result<PerformanceMark, JsValue>;
+    #[cfg(all(feature = "PerformanceMark", feature = "PerformanceMarkOptions",))]
+    # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = mark)]
+    #[doc = "The `mark()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMark`, `PerformanceMarkOptions`*"]
+    pub fn mark_with_mark_options(
+        this: &Performance,
+        mark_name: &str,
+        mark_options: &PerformanceMarkOptions,
+    ) -> Result<PerformanceMark, JsValue>;
+    #[cfg(feature = "PerformanceMeasure")]
     # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = measure)]
     #[doc = "The `measure()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
-    pub fn measure(this: &Performance, measure_name: &str) -> Result<(), JsValue>;
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`*"]
+    pub fn measure(this: &Performance, measure_name: &str) -> Result<PerformanceMeasure, JsValue>;
+    #[cfg(feature = "PerformanceMeasure")]
     # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = measure)]
     #[doc = "The `measure()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
-    pub fn measure_with_start_mark(
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`*"]
+    pub fn measure_with_str(
         this: &Performance,
         measure_name: &str,
-        start_mark: &str,
-    ) -> Result<(), JsValue>;
+        start_or_measure_options: &str,
+    ) -> Result<PerformanceMeasure, JsValue>;
+    #[cfg(all(feature = "PerformanceMeasure", feature = "PerformanceMeasureOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = measure)]
     #[doc = "The `measure()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
-    pub fn measure_with_start_mark_and_end_mark(
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`, `PerformanceMeasureOptions`*"]
+    pub fn measure_with_performance_measure_options(
         this: &Performance,
         measure_name: &str,
-        start_mark: &str,
+        start_or_measure_options: &PerformanceMeasureOptions,
+    ) -> Result<PerformanceMeasure, JsValue>;
+    #[cfg(feature = "PerformanceMeasure")]
+    # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = measure)]
+    #[doc = "The `measure()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`*"]
+    pub fn measure_with_str_and_end_mark(
+        this: &Performance,
+        measure_name: &str,
+        start_or_measure_options: &str,
         end_mark: &str,
-    ) -> Result<(), JsValue>;
+    ) -> Result<PerformanceMeasure, JsValue>;
+    #[cfg(all(feature = "PerformanceMeasure", feature = "PerformanceMeasureOptions",))]
+    # [wasm_bindgen (catch , method , structural , js_class = "Performance" , js_name = measure)]
+    #[doc = "The `measure()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`, `PerformanceMeasureOptions`*"]
+    pub fn measure_with_performance_measure_options_and_end_mark(
+        this: &Performance,
+        measure_name: &str,
+        start_or_measure_options: &PerformanceMeasureOptions,
+        end_mark: &str,
+    ) -> Result<PerformanceMeasure, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "Performance" , js_name = measureUserAgentSpecificMemory)]
     #[doc = "The `measureUserAgentSpecificMemory()` method."]

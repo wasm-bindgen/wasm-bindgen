@@ -48,13 +48,13 @@ partial interface Performance {
   attribute EventHandler onresourcetimingbufferfull;
 };
 
-// http://www.w3.org/TR/user-timing/
+// https://www.w3.org/TR/user-timing/#extensions-performance-interface
 [Exposed=(Window,Worker)]
 partial interface Performance {
   [Throws]
-  undefined mark(DOMString markName);
+  PerformanceMark mark(DOMString markName, optional PerformanceMarkOptions markOptions = {});
   undefined clearMarks(optional DOMString markName);
   [Throws]
-  undefined measure(DOMString measureName, optional DOMString startMark, optional DOMString endMark);
+  PerformanceMeasure measure(DOMString measureName, optional (DOMString or PerformanceMeasureOptions) startOrMeasureOptions = {}, optional DOMString endMark);
   undefined clearMeasures(optional DOMString measureName);
 };
