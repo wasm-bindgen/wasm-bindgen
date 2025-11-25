@@ -2628,6 +2628,14 @@ wasm = wasmInstance.exports;
         });
     }
 
+    fn expose_panic_error(&mut self) {
+        if !self.should_write_global("panic_error") {
+            return;
+        }
+
+        self.global("class PanicError extends Error {}");
+    }
+
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
 
@@ -4090,6 +4098,11 @@ wasm = wasmInstance.exports;
                     ));
                 }
                 base
+            }
+            Intrinsic::PanicError => {
+                assert_eq!(args.len(), 1);
+                self.expose_panic_error();
+                format!("new PanicError({})", args[0])
             }
         };
         Ok(expr)

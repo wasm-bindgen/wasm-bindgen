@@ -10,6 +10,7 @@ rust-version = "1.71"
 version = "0.3.55"
 
 [features]
+catch-unwind = ["std"]
 default = ["std"]
 std = ["wasm-bindgen/std", "js-sys/std", "wasm-bindgen-futures/std"]
 
