@@ -231,7 +231,7 @@ const _default = {};
 _default.Counter = Counter;
 _default.concat = concat;
 _default.uppercase = {};
-_default.uppercase.uppercase2 = uppercase2;
+_default.uppercase.uppercase = uppercase2;
 export default _default;
 
 /**
