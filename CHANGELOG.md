@@ -5,6 +5,14 @@
 
 ### Added
 
+### Fixed
+
+### Removed
+
+## [0.2.106](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.105...0.2.106)
+
+### Added
+
 * New MSRV policy, and bump of the MSRV fo 1.71.
   [#4801](https://github.com/wasm-bindgen/wasm-bindgen/pull4801)
 

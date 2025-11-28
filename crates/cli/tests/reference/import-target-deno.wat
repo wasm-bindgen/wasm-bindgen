@@ -9,7 +9,7 @@
   (type (;7;) (func (param f64 f64) (result f64)))
   (type (;8;) (func (param externref) (result i32)))
   (import "./snippets/import_reftest-a82831e16a4c30f1/inline0.js" "add" (func (;0;) (type 7)))
-  (import "__wbindgen_placeholder__" "__wbg___wbindgen_throw_b855445ff6a94295" (func (;1;) (type 6)))
+  (import "__wbindgen_placeholder__" "__wbg___wbindgen_throw_dd24417ed36fc46e" (func (;1;) (type 6)))
   (import "__wbindgen_placeholder__" "__wbg_catch_me_1d18acaa34acb005" (func (;2;) (type 0)))
   (import "__wbindgen_placeholder__" "__wbg_get_c871386e44ba8c35" (func (;3;) (type 8)))
   (import "__wbindgen_placeholder__" "__wbg_my_function_597f96bc4719408a" (func (;4;) (type 0)))

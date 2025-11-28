@@ -33,7 +33,7 @@ function add_that_might_fail(a, b) {
 }
 exports.add_that_might_fail = add_that_might_fail;
 
-exports.__wbg___wbindgen_throw_b855445ff6a94295 = function(arg0, arg1) {
+exports.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
