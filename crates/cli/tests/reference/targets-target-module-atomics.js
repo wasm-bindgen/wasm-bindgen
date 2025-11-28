@@ -34,7 +34,7 @@ export function add_that_might_fail(a, b) {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg___wbindgen_throw_b855445ff6a94295: function(arg0, arg1) {
+        __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_random_e2b253f0e987bd7c: function() {

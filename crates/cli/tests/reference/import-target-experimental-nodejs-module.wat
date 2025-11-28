@@ -8,7 +8,7 @@
   (type (;6;) (func (param i32 i32)))
   (type (;7;) (func (param f64 f64) (result f64)))
   (type (;8;) (func (param externref) (result i32)))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_b855445ff6a94295" (func (;0;) (type 6)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_dd24417ed36fc46e" (func (;0;) (type 6)))
   (import "./reference_test_bg.js" "__wbg_catch_me_1d18acaa34acb005" (func (;1;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_get_c871386e44ba8c35" (func (;2;) (type 8)))
   (import "./reference_test_bg.js" "__wbg_my_function_597f96bc4719408a" (func (;3;) (type 0)))

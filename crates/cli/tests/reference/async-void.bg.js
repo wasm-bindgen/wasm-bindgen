@@ -227,7 +227,7 @@ export function foo() {
     return ret;
 }
 
-export function __wbg___wbindgen_debug_string_df47ffb5e35e6763(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
@@ -235,40 +235,40 @@ export function __wbg___wbindgen_debug_string_df47ffb5e35e6763(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-export function __wbg___wbindgen_is_function_ee8a6c5833c90377(arg0) {
+export function __wbg___wbindgen_is_function_8d400b8b1af978cd(arg0) {
     const ret = typeof(arg0) === 'function';
     return ret;
 };
 
-export function __wbg___wbindgen_is_undefined_2d472862bd29a478(arg0) {
+export function __wbg___wbindgen_is_undefined_f6b95eab589e0269(arg0) {
     const ret = arg0 === undefined;
     return ret;
 };
 
-export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
+export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-export function __wbg__wbg_cb_unref_2454a539ea5790d9(arg0) {
+export function __wbg__wbg_cb_unref_87dfb5aaa0cbcea7(arg0) {
     arg0._wbg_cb_unref();
 };
 
-export function __wbg_call_525440f72fbfc0ea() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_3020136f7a2d6e44() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments) };
 
-export function __wbg_call_e762c39fa8ea36bf() { return handleError(function (arg0, arg1) {
+export function __wbg_call_abb4ff46ce38be40() { return handleError(function (arg0, arg1) {
     const ret = arg0.call(arg1);
     return ret;
 }, arguments) };
 
-export function __wbg_createTask_9ac11a42c24ef284() { return handleError(function (arg0, arg1) {
+export function __wbg_createTask_432d6d38dc688bee() { return handleError(function (arg0, arg1) {
     const ret = console.createTask(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments) };
 
-export function __wbg_new_3c3d849046688a66(arg0, arg1) {
+export function __wbg_new_ff12d2b041fb48f1(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {
@@ -287,26 +287,26 @@ export function __wbg_new_3c3d849046688a66(arg0, arg1) {
     }
 };
 
-export function __wbg_new_no_args_ee98eee5275000a4(arg0, arg1) {
+export function __wbg_new_no_args_cb138f77cf6151ee(arg0, arg1) {
     const ret = new Function(getStringFromWasm0(arg0, arg1));
     return ret;
 };
 
-export function __wbg_queueMicrotask_34d692c25c47d05b(arg0) {
+export function __wbg_queueMicrotask_9b549dfce8865860(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 };
 
-export function __wbg_queueMicrotask_9d76cacb20c84d58(arg0) {
+export function __wbg_queueMicrotask_fca69f5bfad613a5(arg0) {
     queueMicrotask(arg0);
 };
 
-export function __wbg_resolve_caf97c30b83f7053(arg0) {
+export function __wbg_resolve_fd5bfbaa4ce36e1e(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 };
 
-export function __wbg_run_e5e1ecccf06974b2(arg0, arg1, arg2) {
+export function __wbg_run_51bf644e39739ca6(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = () => {
@@ -325,27 +325,27 @@ export function __wbg_run_e5e1ecccf06974b2(arg0, arg1, arg2) {
     }
 };
 
-export function __wbg_static_accessor_GLOBAL_89e1d9ac6a1b250e() {
+export function __wbg_static_accessor_GLOBAL_769e6b65d6557335() {
     const ret = typeof global === 'undefined' ? null : global;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_GLOBAL_THIS_8b530f326a9e48ac() {
+export function __wbg_static_accessor_GLOBAL_THIS_60cf02db4de8e1c1() {
     const ret = typeof globalThis === 'undefined' ? null : globalThis;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_SELF_6fdf4b64710cc91b() {
+export function __wbg_static_accessor_SELF_08f5a74c69739274() {
     const ret = typeof self === 'undefined' ? null : self;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_static_accessor_WINDOW_b45bfc5a37f6cfa2() {
+export function __wbg_static_accessor_WINDOW_a8924b26aa92d024() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_then_4f46f6544e6b4a28(arg0, arg1) {
+export function __wbg_then_4f95312d68691235(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 };

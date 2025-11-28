@@ -27,3 +27,15 @@ Update fixtures:
 
 - `just test-cli-overwrite` - Run CLI tests overwriting reference tests
 - `just test-ui-overwrite` - Overwrite UI test outputs
+
+## Release Process
+
+The release process for Wasm Bindgen typically consists of the following steps:
+
+* `./publish bump`
+* Regenerate the reference tests (`just test-cli-overwrite`).
+* Check if the schema version must be bumped (did the schema hash in the shared crate change since the last release, without bumping the schema version?).
+* Bump the changelog.
+* Commit and publish as a PR.
+* Merge and wait for status checks to succeed.
+* Push a new tag, which then triggers the automated release process.

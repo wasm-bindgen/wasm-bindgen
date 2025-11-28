@@ -67,7 +67,7 @@ export function exported() {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg___wbindgen_throw_b855445ff6a94295: function(arg0, arg1) {
+        __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
