@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Counter</title>
+        <style>
+            * {
+                font-family: sans-serif;
+                font-size: 16pt;
+            }
+            h1 {
+                font-size: 18pt;
+                font-weight: bold;
+                margin: 0;
+            }
+            button {
+                padding: 5px 10px;
+                border: none;
+                background: slategrey;
+                margin: 10px auto;
+                color: white;
+            }
+            body {
+                width: 400px;
+                margin: auto;
+            }
+            #container,
+            .counter {
+                display: flex;
+                flex-flow: column;
+                justify-content: flex-start;
+                align-items: flex-start;
+                align-content: flex-start;
+            }
+            .counter {
+                margin-bottom: 10px;
+                background: steelblue;
+                color: white;
+                align-items: center;
+                width: 100%;
+            }
+            .field {
+                display: flex;
+                flex-flow: row;
+                justify-content: space-around;
+                width: 100%;
+            }
+        </style>
+    <script defer src="index.js"></script></head>
+    <body>
+        <button id="add-counter" type="button">add counter</button>
+        <div id="container">
+
+        </div>
+    </body>
+</html>
