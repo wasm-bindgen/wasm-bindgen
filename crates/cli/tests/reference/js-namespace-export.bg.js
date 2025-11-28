@@ -212,7 +212,7 @@ function concat(a, b) {
  * @param {string} s
  * @returns {string}
  */
-function uppercase(s) {
+function uppercase2(s) {
     let deferred2_0;
     let deferred2_1;
     try {
@@ -231,7 +231,7 @@ const _default = {};
 _default.Counter = Counter;
 _default.concat = concat;
 _default.uppercase = {};
-_default.uppercase.uppercase = uppercase;
+_default.uppercase.uppercase2 = uppercase2;
 export default _default;
 
 /**
@@ -402,7 +402,7 @@ types.http.HttpStatus = HttpStatus;
  * @param {string} s
  * @returns {string}
  */
-function uppercase2(s) {
+function uppercase(s) {
     let deferred2_0;
     let deferred2_1;
     try {
@@ -419,7 +419,7 @@ function uppercase2(s) {
 
 export const utils = {};
 utils.string = {};
-utils.string.uppercase = uppercase2;
+utils.string.uppercase = uppercase;
 
 export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
