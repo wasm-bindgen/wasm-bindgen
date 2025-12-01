@@ -91,6 +91,7 @@ pub enum AdapterType {
     Struct(String),
     Enum(String),
     StringEnum(String),
+    DiscriminatedUnion(String),
     NamedExternref(String),
     Function,
     NonNull,

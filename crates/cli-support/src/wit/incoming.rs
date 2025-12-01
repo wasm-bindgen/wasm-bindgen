@@ -126,6 +126,14 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32],
                 );
             },
+            Descriptor::DiscriminatedUnion { name, variant_types: _ } => {
+                // DiscriminatedEnum uses JsValue ABI (externref)
+                self.instruction(
+                    &[AdapterType::DiscriminatedUnion(name.clone())],
+                    Instruction::I32FromExternrefOwned,
+                    &[AdapterType::I32],
+                );
+            },
             Descriptor::Ref(d) => self.incoming_ref(false, d)?,
             Descriptor::RefMut(d) => self.incoming_ref(true, d)?,
             Descriptor::Option(d) => self.incoming_option(d)?,

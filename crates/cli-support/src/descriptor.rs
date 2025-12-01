@@ -38,6 +38,10 @@ pub enum Descriptor {
         invalid: u32,
         hole: u32,
     },
+    DiscriminatedUnion {
+        name: String,
+        variant_types: Vec<Descriptor>,
+    },
     RustStruct(String),
     Char,
     Option(Box<Descriptor>),
@@ -136,6 +140,18 @@ impl Descriptor {
                     name,
                     invalid,
                     hole,
+                }
+            }
+            DISCRIMINATED_UNION => {
+                let name = get_string(data);
+                let type_count = get(data);
+                let mut variant_types = Vec::new();
+                for _ in 0..type_count {
+                    variant_types.push(Descriptor::_decode(data, clamped));
+                }
+                Descriptor::DiscriminatedUnion {
+                    name,
+                    variant_types,
                 }
             }
             RUST_STRUCT => {
