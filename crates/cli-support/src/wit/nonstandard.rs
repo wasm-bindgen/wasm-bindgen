@@ -196,6 +196,8 @@ pub struct AuxEnum {
     pub variants: Vec<(String, i64, String)>,
     /// Whether typescript bindings should be generated for this enum.
     pub generate_typescript: bool,
+    /// Whether to not export this enum from the module exports
+    pub private: bool,
     /// The namespace to export the enum through, if any
     pub js_namespace: Option<Vec<String>>,
 }
@@ -227,6 +229,8 @@ pub struct AuxStruct {
     pub is_inspectable: bool,
     /// Whether typescript bindings should be generated for this struct.
     pub generate_typescript: bool,
+    /// Whether to not export this struct from the module exports
+    pub private: bool,
     /// The namespace to export the struct through, if any
     pub js_namespace: Option<Vec<String>>,
 }
