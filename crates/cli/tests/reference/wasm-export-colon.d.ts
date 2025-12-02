@@ -5,14 +5,6 @@ export class WasmBindgenTestContext {
   free(): void;
   [Symbol.dispose](): void;
   /**
-   * Handle filter argument.
-   */
-  filtered_count(filtered: number): void;
-  /**
-   * Handle `--include-ignored` flag.
-   */
-  include_ignored(include_ignored: boolean): void;
-  /**
    * Creates a new context ready to run tests.
    *
    * A `Context` is the main structure through which test execution is
@@ -20,6 +12,14 @@ export class WasmBindgenTestContext {
    * tests.
    */
   constructor(is_bench: boolean);
+  /**
+   * Handle filter argument.
+   */
+  filtered_count(filtered: number): void;
+  /**
+   * Handle `--include-ignored` flag.
+   */
+  include_ignored(include_ignored: boolean): void;
   /**
    * Executes a list of tests, returning a promise representing their
    * eventual completion.
@@ -79,34 +79,34 @@ export function __wbgtest_cov_dump(): Uint8Array | undefined;
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly memory: WebAssembly.Memory;
-  readonly "__wbgt__wasm_export_colon_reftest::colon_test": (a: number) => void;
+  readonly __externref_table_alloc: () => number;
   readonly __wbg_wasmbindgentestcontext_free: (a: number, b: number) => void;
   readonly __wbgbench_dump: () => [number, number];
   readonly __wbgbench_import: (a: number, b: number) => void;
+  readonly "__wbgt__wasm_export_colon_reftest::colon_test": (a: number) => void;
   readonly __wbgtest_console_debug: (a: any) => void;
   readonly __wbgtest_console_error: (a: any) => void;
   readonly __wbgtest_console_info: (a: any) => void;
   readonly __wbgtest_console_log: (a: any) => void;
   readonly __wbgtest_console_warn: (a: any) => void;
   readonly __wbgtest_cov_dump: () => [number, number];
+  readonly __wbindgen_exn_store: (a: number) => void;
+  readonly __wbindgen_externrefs: WebAssembly.Table;
+  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+  readonly __wbindgen_malloc: (a: number, b: number) => number;
+  readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+  readonly __wbindgen_start: () => void;
+  readonly memory: WebAssembly.Memory;
+  readonly wasm_bindgen__closure__destroy__h0000000000000001: (a: number, b: number) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000001: (a: number, b: number) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000002: (a: number, b: number) => number;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000000: (a: number, b: number, c: any) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number, c: any, d: number, e: any) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number, c: any, d: any) => void;
   readonly wasmbindgentestcontext_filtered_count: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_new: (a: number) => number;
   readonly wasmbindgentestcontext_run: (a: number, b: number, c: number) => any;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number, c: any) => void;
-  readonly wasm_bindgen__closure__destroy__h0000000000000008: (a: number, b: number) => void;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number) => void;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000005: (a: number, b: number) => number;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number, c: any, d: number, e: any) => void;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000007: (a: number, b: number, c: any, d: any) => void;
-  readonly __externref_table_alloc: () => number;
-  readonly __wbindgen_externrefs: WebAssembly.Table;
-  readonly __wbindgen_malloc: (a: number, b: number) => number;
-  readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
-  readonly __wbindgen_exn_store: (a: number) => void;
-  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
-  readonly __wbindgen_start: () => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

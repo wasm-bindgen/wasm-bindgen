@@ -69,6 +69,9 @@
 * Fixed a multithreaded wasm32+atomics race where `Atomics.waitAsync` promise callbacks could call `run` without waking first, causing sporadic panics.
   [#4821](https://github.com/wasm-bindgen/wasm-bindgen/pull/4821)
 
+* Fix non-deterministic output of generated js, .d.ts, and wasm files across compilation settings.
+  [#4800](https://github.com/wasm-bindgen/wasm-bindgen/pull/4800)
+
 ### Removed
 
 ## [0.2.105](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.104...0.2.105)

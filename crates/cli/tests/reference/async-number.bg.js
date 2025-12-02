@@ -206,17 +206,17 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1, arg2) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1, arg2);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
-    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1) {
+    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1);
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3);
 }
 
 /**
@@ -275,7 +275,7 @@ export function __wbg_new_ff12d2b041fb48f1(arg0, arg1) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, arg0, arg1);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1);
             } finally {
                 state0.a = a;
             }
@@ -313,7 +313,7 @@ export function __wbg_run_51bf644e39739ca6(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000001(a, state0.b, );
             } finally {
                 state0.a = a;
             }
@@ -350,15 +350,15 @@ export function __wbg_then_4f95312d68691235(arg0, arg1) {
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 6, function: Function { arguments: [Externref], shim_idx: 7, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000005, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
+export function __wbindgen_cast_0000000000000000(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
+    const ret = arg0;
     return ret;
 };
 
-export function __wbindgen_cast_0000000000000001(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
+export function __wbindgen_cast_0000000000000001(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 3, function: Function { arguments: [Externref], shim_idx: 4, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000001, wasm_bindgen__convert__closures_____invoke__h0000000000000000);
     return ret;
 };
 

@@ -45,6 +45,12 @@ export class Test {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_test_free(ptr, 0);
     }
+    constructor() {
+        const ret = wasm.test_new();
+        this.__wbg_ptr = ret >>> 0;
+        TestFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
     consume_self() {
         const ptr = this.__destroy_into_raw();
         wasm.test_consume_self(ptr);
@@ -52,24 +58,18 @@ export class Test {
     ref_mut_self() {
         wasm.test_ref_mut_self(this.__wbg_ptr);
     }
-    self_ref_Self() {
-        wasm.test_self_ref_Self(this.__wbg_ptr);
-    }
-    self_ref_mut_Self() {
-        wasm.test_self_ref_mut_Self(this.__wbg_ptr);
-    }
-    constructor() {
-        const ret = wasm.test_new();
-        this.__wbg_ptr = ret >>> 0;
-        TestFinalization.register(this, this.__wbg_ptr, this);
-        return this;
-    }
     ref_self() {
         wasm.test_ref_self(this.__wbg_ptr);
     }
     self_Self() {
         const ptr = this.__destroy_into_raw();
         wasm.test_self_Self(ptr);
+    }
+    self_ref_Self() {
+        wasm.test_self_ref_Self(this.__wbg_ptr);
+    }
+    self_ref_mut_Self() {
+        wasm.test_self_ref_mut_Self(this.__wbg_ptr);
     }
 }
 if (Symbol.dispose) Test.prototype[Symbol.dispose] = Test.prototype.free;

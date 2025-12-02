@@ -3,7 +3,7 @@ use std::char;
 use wasm_bindgen_shared::identifier::is_valid_ident;
 use wasm_bindgen_shared::tys::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Descriptor {
     I8,
     U8,
@@ -46,6 +46,7 @@ pub enum Descriptor {
     NonNull,
 }
 
+/// Represents a function signature for wasm-bindgen closures.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Function {
     pub arguments: Vec<Descriptor>,
@@ -54,11 +55,42 @@ pub struct Function {
     pub inner_ret: Option<Descriptor>,
 }
 
+impl PartialOrd for Function {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Function {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Comparison skips shim_idx which may be unstable
+        (&self.arguments, &self.ret, &self.inner_ret).cmp(&(
+            &other.arguments,
+            &other.ret,
+            &other.inner_ret,
+        ))
+    }
+}
+
+/// Represents a closure for wasm-bindgen.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Closure {
     pub dtor_idx: u32,
     pub function: Function,
     pub mutable: bool,
+}
+
+impl PartialOrd for Closure {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Closure {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Comparison skips dtor_idx which may be unstable
+        (&self.function, &self.mutable).cmp(&(&other.function, &other.mutable))
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

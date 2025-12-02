@@ -121,19 +121,6 @@ export class Rectangle {
     /**
      * @returns {number}
      */
-    get width() {
-        const ret = wasm.__wbg_get_rectangle_width(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set width(arg0) {
-        wasm.__wbg_set_rectangle_width(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @returns {number}
-     */
     get height() {
         const ret = wasm.__wbg_get_rectangle_height(this.__wbg_ptr);
         return ret;
@@ -143,6 +130,19 @@ export class Rectangle {
      */
     set height(arg0) {
         wasm.__wbg_set_rectangle_height(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get width() {
+        const ret = wasm.__wbg_get_rectangle_width(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set width(arg0) {
+        wasm.__wbg_set_rectangle_width(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) Rectangle.prototype[Symbol.dispose] = Rectangle.prototype.free;
@@ -167,15 +167,15 @@ class Counter {
         CounterFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
+    increment() {
+        wasm.counter_increment(this.__wbg_ptr);
+    }
     /**
      * @returns {number}
      */
     get value() {
         const ret = wasm.counter_value(this.__wbg_ptr);
         return ret;
-    }
-    increment() {
-        wasm.counter_increment(this.__wbg_ptr);
     }
     /**
      * @param {number} val

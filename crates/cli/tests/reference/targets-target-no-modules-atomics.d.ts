@@ -9,11 +9,11 @@ declare namespace wasm_bindgen {
 declare type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 declare interface InitOutput {
+  readonly __wbindgen_externrefs: WebAssembly.Table;
+  readonly __wbindgen_start: (a: number) => void;
+  readonly __wbindgen_thread_destroy: (a?: number, b?: number, c?: number) => void;
   readonly add_that_might_fail: (a: number, b: number) => number;
   readonly memory: WebAssembly.Memory;
-  readonly __wbindgen_externrefs: WebAssembly.Table;
-  readonly __wbindgen_thread_destroy: (a?: number, b?: number, c?: number) => void;
-  readonly __wbindgen_start: (a: number) => void;
 }
 
 /**

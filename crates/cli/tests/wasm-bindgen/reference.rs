@@ -53,7 +53,6 @@ use anyhow::Result;
 use assert_cmd::Command;
 use regex::Regex;
 use std::borrow::Cow;
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -98,13 +97,8 @@ impl Sanitizer {
     }
 
     fn sanitize(&mut self, s: &str) -> String {
-        // Cast descriptors for closures contain unstable function indices, so we need to sanitize the hash.
-        let s = self.sanitize_one(s, regex!(r"__wbindgen_cast_[0-9a-f]{16}"), |idx| {
-            format!("__wbindgen_cast_{idx:016x}")
-        });
-
         // `h...` are mangled generic function names with unstable type IDs.
-        let s = self.sanitize_one(&s, regex!(r"h[0-9a-f]{16}"), |idx| format!("h{idx:016x}"));
+        let s = self.sanitize_one(s, regex!(r"h[0-9a-f]{16}"), |idx| format!("h{idx:016x}"));
 
         // Cast descriptors contain `Closure`'s `Debug` impl which has unstable function indices.
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
@@ -286,7 +280,7 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
         .generate_producers_section(false)
         .parse_file(wasm)?;
 
-    sanitize_local_funcs(&mut module);
+    remove_function_bodies(&mut module);
 
     let ids = module.data.iter().map(|d| d.id()).collect::<Vec<_>>();
     for id in ids {
@@ -336,23 +330,12 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
     );
     walrus::passes::gc::run(&mut module);
     module.elements.delete(temp_element_id);
-    // Sort imports for deterministic snapshot.
-    std::mem::take(&mut module.imports)
-        .iter()
-        .map(|i| ((&i.module, &i.name), i.kind.clone()))
-        .collect::<BTreeMap<_, _>>()
-        .into_iter()
-        .for_each(|((module_name, name), kind)| {
-            module.imports.add(module_name, name, kind);
-        });
+
     wasmprinter::print_bytes(module.emit_wasm())
 }
 
-/// Sort all exported local functions by export order, and remove their bodies.
-///
-/// This removes inconsistency between toolchains on different OS producing
-/// local functions in different order, even though exports are consistent.
-fn sanitize_local_funcs(module: &mut Module) {
+/// Remove bodies from all exported local functions.
+fn remove_function_bodies(module: &mut Module) {
     let func_ids: Vec<_> = module
         .exports
         .iter()
@@ -368,9 +351,7 @@ fn sanitize_local_funcs(module: &mut Module) {
 
     for id in func_ids {
         let old_name = module.funcs.get_mut(id).name.take();
-        // Replace with an empty function. This ensures two things:
-        // 1. Because we replace in export order, the new local functions are sorted in the same way.
-        // 2. New functions don't have any instructions, which is what we want for comparisons anyway.
+        // Replace with an empty function so we only compare signatures, not implementations
         let new_id = module.replace_exported_func(id, |_| {}).unwrap();
         module.funcs.get_mut(new_id).name = old_name;
     }
