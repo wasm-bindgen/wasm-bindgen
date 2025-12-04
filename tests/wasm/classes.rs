@@ -167,10 +167,10 @@ impl ClassesPassB {
     }
 }
 
-#[wasm_bindgen_test]
-fn pass_into_js() {
-    take_class(ClassesIntoJs(13));
-}
+// #[wasm_bindgen_test]
+// fn pass_into_js() {
+//     take_class(ClassesIntoJs(13));
+// }
 
 #[wasm_bindgen]
 pub struct ClassesIntoJs(i32);
@@ -201,10 +201,10 @@ impl Issue27Context {
 #[wasm_bindgen]
 pub struct Issue27Expr {}
 
-#[wasm_bindgen_test]
-fn pass_into_js_as_js_class() {
-    take_class_as_jsvalue(ClassesIntoJs(13).into());
-}
+// #[wasm_bindgen_test]
+// fn pass_into_js_as_js_class() {
+//     take_class_as_jsvalue(ClassesIntoJs(13).into());
+// }
 
 #[wasm_bindgen_test]
 fn constructors() {

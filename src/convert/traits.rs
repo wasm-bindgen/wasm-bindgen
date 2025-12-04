@@ -1,5 +1,6 @@
 use core::borrow::Borrow;
 use core::ops::{Deref, DerefMut};
+use core::panic::AssertUnwindSafe;
 
 use crate::describe::*;
 use crate::JsValue;
@@ -357,4 +358,12 @@ pub trait TryFromJsValue: Sized {
 
     /// Performs the conversion.
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self>;
+}
+
+impl<T: FromWasmAbi> FromWasmAbi for AssertUnwindSafe<T> {
+    type Abi = T::Abi;
+
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        AssertUnwindSafe(T::from_abi(js))
+    }
 }

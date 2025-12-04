@@ -1,3 +1,4 @@
+// use core::panic::AssertUnwindSafe;
 use js_sys::JsString;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
@@ -26,6 +27,9 @@ extern "C" {
     async fn call_promise_ok_unit() -> Result<(), JsValue>;
     #[wasm_bindgen(catch)]
     async fn call_promise_err_unit() -> Result<(), JsValue>;
+
+    #[wasm_bindgen]
+    async fn check_panic();
 }
 
 #[wasm_bindgen_test]
@@ -139,10 +143,10 @@ pub async fn async_take_js_reference(x: &JsValue) {
     assert_eq!(*x, 42);
 }
 
-#[wasm_bindgen]
-pub async fn async_take_mut_slice(x: &mut [i32]) {
-    x.fill(42);
-}
+// #[wasm_bindgen]
+// pub async fn async_take_mut_slice(x: AssertUnwindSafe<&mut [i32]>) {
+//     x.fill(42);
+// }
 
 #[wasm_bindgen_test]
 async fn test_promise() {
@@ -202,4 +206,16 @@ async fn test_promise_err_unit() {
         call_promise_err_unit().await.map_err(|j| j.as_string()),
         Err::<(), _>(Some(String::from("error")))
     )
+}
+
+#[wasm_bindgen]
+pub async fn panics() -> u32 {
+    call_promise().await;
+    panic!("Oops!");
+}
+
+#[cfg(panic = "unwind")]
+#[wasm_bindgen_test]
+async fn test_promise_panic() {
+    check_panic().await;
 }

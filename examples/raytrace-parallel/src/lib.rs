@@ -92,12 +92,12 @@ impl Scene {
             drop(tx.send(rgb_data));
         })?;
 
-        let done = async move {
+        let done = core::panic::AssertUnwindSafe(async move {
             match rx.await {
                 Ok(_data) => Ok(image_data(base, len, width, height).into()),
                 Err(_) => Err(JsValue::undefined()),
             }
-        };
+        });
 
         Ok(RenderingScene {
             promise: wasm_bindgen_futures::future_to_promise(done),
