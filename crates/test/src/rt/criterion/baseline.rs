@@ -51,5 +51,8 @@ pub fn __wbgbench_import(baseline: Vec<u8>) {
 #[wasm_bindgen]
 pub fn __wbgbench_dump() -> Option<Vec<u8>> {
     let baseline = BASELINE.borrow();
+    if baseline.is_empty() {
+        return None;
+    }
     serde_json::to_vec(&*baseline).ok()
 }
