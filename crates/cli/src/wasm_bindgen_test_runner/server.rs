@@ -313,10 +313,16 @@ pub(crate) fn spawn(
 
                 {args}
 
-                {import_bench}
+                if ({is_bench}) {{
+                    {import_bench}
+                }}
+
                 await cx.run(test.map(s => wasm[s]));
                 {cov_dump}
-                {dump_bench}
+
+                if ({is_bench}) {{
+                    {dump_bench}
+                }}
             }}
 
             const tests = [];
@@ -438,8 +444,11 @@ pub(crate) fn spawn(
 }
 
 fn handle_benchmark_fetch(path: &Path) -> Response {
-    let data = std::fs::read(path).unwrap_or_default();
-    Response::from_data("application/octet-stream", data)
+    if let Ok(data) = std::fs::read(path) {
+        Response::from_data("application/octet-stream", data)
+    } else {
+        Response::empty_400()
+    }
 }
 
 fn handle_benchmark_dump(path: &Path, request: &Request) -> anyhow::Result<()> {
