@@ -123,3 +123,6 @@ mod coverage;
 //
 // A modified `criterion.rs`, retaining only the basic benchmark capabilities.
 pub use __rt::criterion::Criterion;
+
+// web_time Instant
+pub use __rt::web_time::Instant;
