@@ -1826,7 +1826,7 @@ impl StartFunctionsHandler {
         Self { start_function_id }
     }
 
-    fn append_start_function(&mut self, module: &mut Module, id: FunctionId) -> () {
+    fn append_start_function(&mut self, module: &mut Module, id: FunctionId) {
         let kind = &mut module.funcs.get_mut(self.start_function_id).kind;
         if let walrus::FunctionKind::Local(local) = kind {
             local.builder_mut().func_body().call(id);
