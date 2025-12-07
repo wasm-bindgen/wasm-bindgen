@@ -602,7 +602,7 @@ impl<'a> Context<'a> {
     }
 
     fn add_start_function(&mut self, id: FunctionId) -> Result<(), Error> {
-        #[cfg(not(feature = "multiple-start"))]
+        #[cfg(not(wasm_bindgen_allow_multiple_start_functions))]
         if self.start_found {
             bail!("cannot specify two `start` functions");
         }

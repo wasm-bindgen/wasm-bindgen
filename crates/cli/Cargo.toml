@@ -60,7 +60,6 @@ wasmprinter = "0.240"
 [features]
 default = ["rustls-tls"]
 
-multiple-start = ["wasm-bindgen-cli-support/multiple-start"]
 native-tls = ["ureq/native-tls"]
 rustls-tls = ["ureq/rustls"]
 

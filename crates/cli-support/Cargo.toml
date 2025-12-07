@@ -25,9 +25,6 @@ walrus = { version = "0.24.2", features = ['parallel'] }
 wasm-bindgen-shared = { path = "../shared", version = "=0.2.106" }
 wasmparser = "0.240"
 
-[features]
-multiple-start = []
-
 [dev-dependencies]
 rstest = "0.26"
 wasmprinter = "0.240"
