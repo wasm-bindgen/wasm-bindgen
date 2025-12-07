@@ -1,4 +1,5 @@
 use super::measurement::Measurement;
+use crate::__rt::web_time::Instant;
 use core::future::Future;
 use core::hint::black_box;
 use core::time::Duration;
@@ -26,9 +27,8 @@ use core::time::Duration;
 ///
 /// [`iter`]: Bencher::iter
 /// [`iter_custom`]: Bencher::iter_custom
-/// [`iter_with_large_drop`]: Bencher::iter_with_large_drop
-/// [`iter_batched`]: Bencher::iter_batched
-/// [`iter_batched_ref`]: Bencher::iter_batched_ref
+/// [`iter_future`]: Bencher::iter_future
+/// [`iter_custom_future`]: Bencher::iter_custom_future
 pub struct Bencher<'a, M: Measurement> {
     pub(crate) iterated: bool,         // Have we iterated this benchmark?
     pub(crate) iters: u64,             // Number of times to iterate this benchmark
@@ -66,6 +66,44 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.elapsed_time = end;
     }
 
+    /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
+    ///
+    /// # Timing model
+    /// Custom, the timing model is whatever is returned as the [`Duration`] from `routine`.
+    ///
+    /// # Example
+    /// ```rust
+    /// use wasm_bindgen_test::{Criterion, wasm_bindgen_bench, Instant};
+    ///
+    /// fn foo() {
+    ///     // ...
+    /// }
+    ///
+    /// #[wasm_bindgen_bench]
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("iter", move |b| {
+    ///         b.iter_custom(|iters| {
+    ///             let start = Instant::now();
+    ///             for _i in 0..iters {
+    ///                 std::hint::black_box(foo());
+    ///             }
+    ///             start.elapsed()
+    ///         })
+    ///     });
+    /// }
+    /// ```
+    ///
+    #[inline(never)]
+    pub fn iter_custom<R>(&mut self, mut routine: R)
+    where
+        R: FnMut(u64) -> Duration,
+    {
+        self.iterated = true;
+        let time_start = Instant::now();
+        self.value = routine(self.iters);
+        self.elapsed_time = time_start.elapsed();
+    }
+
     /// Times a `routine` by executing it many times and timing the total elapsed time.
     ///
     /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
@@ -93,5 +131,46 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         let end = self.measurement.end(start);
         self.value = end;
         self.elapsed_time = end;
+    }
+
+    /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
+    ///
+    /// # Timing model
+    /// Custom, the timing model is whatever is returned as the [`Duration`] from `routine`.
+    ///
+    /// # Example
+    /// ```rust
+    /// use wasm_bindgen_test::{Criterion, wasm_bindgen_bench, Instant};
+    ///
+    /// async fn foo() {
+    ///     // ...
+    /// }
+    ///
+    /// #[wasm_bindgen_bench]
+    /// async fn bench(c: &mut Criterion) {
+    ///     c.bench_async_function("iter", move |b| {
+    ///         Box::pin(
+    ///             b.iter_custom_future(async |iters| {
+    ///                 let start = Instant::now();
+    ///                 for _i in 0..iters {
+    ///                     std::hint::black_box(foo().await);
+    ///                 }
+    ///                 start.elapsed()
+    ///             })
+    ///         )
+    ///     }).await;
+    /// }
+    /// ```
+    ///
+    #[inline(never)]
+    pub async fn iter_custom_future<R, Fut>(&mut self, mut routine: R)
+    where
+        R: FnMut(u64) -> Fut,
+        Fut: Future<Output = Duration>,
+    {
+        self.iterated = true;
+        let time_start = Instant::now();
+        self.value = routine(self.iters).await;
+        self.elapsed_time = time_start.elapsed();
     }
 }
