@@ -2132,6 +2132,17 @@ extern "C" {
         elt: &Element,
         pseudo_elt: &str,
     ) -> Result<Option<CssStyleDeclaration>, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (method , structural , js_class = "Window" , js_name = getScreenDetails)]
+    #[doc = "The `getScreenDetails()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/getScreenDetails)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_screen_details(this: &Window) -> ::js_sys::Promise;
     #[cfg(feature = "Selection")]
     # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = getSelection)]
     #[doc = "The `getSelection()` method."]
