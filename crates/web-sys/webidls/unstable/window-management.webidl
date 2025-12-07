@@ -4,8 +4,9 @@ partial interface Screen /* : EventTarget */ {
   [SecureContext]
   readonly attribute boolean isExtended;
 
-  [SecureContext]
-  attribute EventHandler onchange;
+  // This clashes with an attribute from `Screen.webidl`.
+  // [SecureContext]
+  // attribute EventHandler onchange;
 };
 
 partial interface Window {
