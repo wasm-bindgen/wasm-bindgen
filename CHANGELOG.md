@@ -12,6 +12,11 @@
 
 * Added `iter_custom` and `iter_custom_future` for bench to do custom measurements.
   [#4841](https://github.com/wasm-bindgen/wasm-bindgen/pull4841)
+  
+* Added support for multiple `start` functions, enabling initialization of
+  global registries at module startup. Enable by compiling `wasm-bindgen-cli`
+  with `RUSTFLAGS='--cfg wasm_bindgen_allow_multiple_start_functions'`.
+  [#4842](https://github.com/wasm-bindgen/wasm-bindgen/pull/4842)
 
 ### Fixed
 

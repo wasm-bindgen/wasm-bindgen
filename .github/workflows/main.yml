@@ -111,6 +111,8 @@ jobs:
             run: cargo test --target wasm32-unknown-unknown --features serde-serialize
           - name: enable-interning
             run: cargo test --target wasm32-unknown-unknown --features enable-interning
+          - name: unsafe-single-threaded-traits
+            run: RUSTFLAGS="--cfg wasm_bindgen_allow_multiple_start_functions" cargo test --target wasm32-unknown-unknown
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:
