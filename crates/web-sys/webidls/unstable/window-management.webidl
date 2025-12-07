@@ -9,7 +9,7 @@ partial interface Screen /* : EventTarget */ {
 };
 
 partial interface Window {
-  [SecureContext]
+  [SecureContext, Throws]
   Promise<ScreenDetails> getScreenDetails();
 };
 
