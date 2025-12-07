@@ -36,6 +36,7 @@ struct Context<'a> {
     thread_count: Option<ThreadCount>,
     support_start: bool,
     linked_modules: bool,
+    start_functions_handler: Option<StartFunctionsHandler>,
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -67,6 +68,7 @@ pub fn process(
         thread_count,
         support_start: bindgen.emit_start,
         linked_modules: bindgen.split_linked_modules,
+        start_functions_handler: None,
     };
     cx.init()?;
 
@@ -600,6 +602,7 @@ impl<'a> Context<'a> {
     }
 
     fn add_start_function(&mut self, id: FunctionId) -> Result<(), Error> {
+        #[cfg(not(feature = "multiple-start"))]
         if self.start_found {
             bail!("cannot specify two `start` functions");
         }
@@ -610,20 +613,9 @@ impl<'a> Context<'a> {
             return Ok(());
         }
 
-        if let Some(thread_count) = self.thread_count {
-            let builder = wasm_conventions::get_or_insert_start_builder(self.module);
-            thread_count.wrap_start(builder, id);
-        } else if self.module.start.is_some() {
-            let builder = wasm_conventions::get_or_insert_start_builder(self.module);
-
-            // Note that we leave the previous start function, if any, first. This is
-            // because the start function currently only shows up when it's injected
-            // through thread/externref transforms. These injected start functions
-            // need to happen before user code, so we always schedule them first.
-            builder.func_body().call(id);
-        } else {
-            self.module.start = Some(id);
-        }
+        self.start_functions_handler
+            .get_or_insert_with(|| StartFunctionsHandler::new(&self.thread_count, self.module))
+            .append_start_function(self.module, id);
 
         Ok(())
     }
@@ -1799,4 +1791,47 @@ fn test_struct_packer() {
     assert_eq!(read_ty(double), 2); // f64, already aligned
     assert_eq!(read_ty(i32___), 4); // u32, already aligned
     assert_eq!(read_ty(double), 6); // f64, NOT already aligned, skips up to offset 6
+}
+
+const START_WRAPPER_FUNCTION_NAME: &str = "__wbindgen_start_wrapper";
+
+struct StartFunctionsHandler {
+    start_function_id: FunctionId,
+}
+
+impl StartFunctionsHandler {
+    fn new(thread_count: &Option<ThreadCount>, module: &mut Module) -> Self {
+        let start_function_id = {
+            let mut start_function_builder =
+                walrus::FunctionBuilder::new(&mut module.types, &[], &[]);
+            start_function_builder.name(START_WRAPPER_FUNCTION_NAME.into());
+            start_function_builder.finish(Vec::new(), &mut module.funcs)
+        };
+
+        if let Some(thread_count) = thread_count {
+            let builder = wasm_conventions::get_or_insert_start_builder(module);
+            thread_count.wrap_start(builder, start_function_id);
+        } else if module.start.is_some() {
+            let builder = wasm_conventions::get_or_insert_start_builder(module);
+
+            // Note that we leave the previous start function, if any, first. This is
+            // because the start function currently only shows up when it's injected
+            // through thread/externref transforms. These injected start functions
+            // need to happen before user code, so we always schedule them first.
+            builder.func_body().call(start_function_id);
+        } else {
+            module.start = Some(start_function_id);
+        }
+
+        Self { start_function_id }
+    }
+
+    fn append_start_function(&mut self, module: &mut Module, id: FunctionId) -> () {
+        let kind = &mut module.funcs.get_mut(self.start_function_id).kind;
+        if let walrus::FunctionKind::Local(local) = kind {
+            local.builder_mut().func_body().call(id);
+            return;
+        }
+        unreachable!("start function is not a local function");
+    }
 }

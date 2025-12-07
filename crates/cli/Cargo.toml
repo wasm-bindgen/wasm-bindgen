@@ -62,6 +62,7 @@ default = ["rustls-tls"]
 
 native-tls = ["ureq/native-tls"]
 rustls-tls = ["ureq/rustls"]
+multiple-start = ["wasm-bindgen-cli-support/multiple-start"]
 
 # Legacy support
 openssl = ["dep:native-tls"]
