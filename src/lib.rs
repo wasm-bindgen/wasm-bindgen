@@ -25,6 +25,10 @@
 //! All warnings the `#[wasm_bindgen]` macro emits are turned into hard errors.
 //! This mainly affects unused attribute options.
 //!
+//! ### `multiple-start`
+//!
+//! Enables support for multiple `start` functions.
+//!
 //! ### Deprecated features
 //!
 //! #### `serde-serialize`
