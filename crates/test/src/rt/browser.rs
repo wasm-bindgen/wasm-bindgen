@@ -40,7 +40,12 @@ impl Browser {
     /// (requires `Node::new()` to have return `None` first).
     pub fn new() -> Browser {
         let pre = DOCUMENT.with(|document| document.getElementById("output"));
-        pre.set_text_content("");
+        // Append a newline to separate any existing content (e.g., "Loading Wasm module...")
+        // from the test output. This matches the worker behavior and allows the headless
+        // runner to stream output correctly.
+        let mut content = pre.text_content();
+        content.push('\n');
+        pre.set_text_content(&content);
         Browser { pre }
     }
 }
