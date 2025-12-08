@@ -137,8 +137,10 @@ pub(crate) fn spawn(
             r#"
             const nocapture = {nocapture};
             const wrap = method => {{
+                const og = self.console[method];
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
+                    og.apply(this, args);
                     if (nocapture) {{
                         self.__wbg_test_output_writeln(args);
                     }}
