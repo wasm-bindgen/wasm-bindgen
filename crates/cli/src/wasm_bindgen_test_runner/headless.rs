@@ -183,42 +183,60 @@ pub fn run(
     shell.status("Waiting for test to finish...");
     let start = Instant::now();
     let max = Duration::new(test_timeout, 0);
+    let mut last_output_len = 0;
+    let mut shell_cleared = false;
     while start.elapsed() < max {
-        if client.text(&id, &output)?.contains("test result: ") {
+        let current_output = client.text(&id, &output)?;
+
+        // Print new output as it appears (real-time streaming)
+        if current_output.len() > last_output_len {
+            // Clear shell status before first output so they don't mix
+            if !shell_cleared {
+                shell.clear();
+                shell_cleared = true;
+            }
+            print!("{}", &current_output[last_output_len..]);
+            let _ = io::stdout().flush();
+            last_output_len = current_output.len();
+        }
+
+        if current_output.contains("test result: ") {
             break;
         }
         thread::sleep(Duration::from_millis(100));
     }
-    shell.clear();
+    if !shell_cleared {
+        shell.clear();
+    }
 
-    // Tests have now finished or have timed out. At this point we need to print
-    // what happened on the console. Currently we just do this by scraping the
-    // output of various fields and printing them out, hopefully providing
-    // enough diagnostic info to see what went wrong (if anything).
-    let output = client.text(&id, &output)?;
+    // Tests have now finished or have timed out. At this point we need to check
+    // what happened. Output was already streamed in real-time above.
+    let final_output = client.text(&id, &output)?;
+
+    // Print any remaining output that might have arrived after the last poll
+    if final_output.len() > last_output_len {
+        print!("{}", &final_output[last_output_len..]);
+        let _ = io::stdout().flush();
+    }
+
     let logs = client.text(&id, &logs)?;
     let errors = client.text(&id, &errors)?;
 
-    if output.contains("test result: ") {
-        println!("{output}");
-
+    if final_output.contains("test result: ") {
         // If the tests harness finished (either successfully or unsuccessfully)
         // then in theory all the info needed to debug the failure is in its own
         // output, so we shouldn't need the driver logs to get printed.
         drop_log();
     } else {
         println!("Failed to detect test as having been run. It might have timed out.");
-        if !output.is_empty() {
-            println!("output div contained:\n{}", tab(&output));
-        }
     }
 
-    if !output.contains("test result: ok") {
+    if !final_output.contains("test result: ok") {
         if !logs.is_empty() {
             println!("console.log div contained:\n{}", tab(&logs));
         }
         if !errors.is_empty() {
-            println!("console.log div contained:\n{}", tab(&errors));
+            println!("console.error div contained:\n{}", tab(&errors));
         }
 
         bail!("some tests failed")
