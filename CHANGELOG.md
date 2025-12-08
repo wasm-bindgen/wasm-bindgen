@@ -11,7 +11,10 @@
   [#4788](https://github.com/wasm-bindgen/wasm-bindgen/pull/4788)
 
 * Added `iter_custom` and `iter_custom_future` for bench to do custom measurements.
-  [#4841](https://github.com/wasm-bindgen/wasm-bindgen/pull4841)
+  [#4841](https://github.com/wasm-bindgen/wasm-bindgen/pull/4841)
+
+* Added [Window Management API](https://w3c.github.io/window-management/).
+  [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
 
 ### Fixed
 

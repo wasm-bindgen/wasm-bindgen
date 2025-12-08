@@ -8272,6 +8272,20 @@ mod gen_ScreenColorGamut;
 #[allow(unused_imports)]
 pub use gen_ScreenColorGamut::*;
 
+#[cfg(feature = "ScreenDetailed")]
+#[allow(non_snake_case)]
+mod gen_ScreenDetailed;
+#[cfg(feature = "ScreenDetailed")]
+#[allow(unused_imports)]
+pub use gen_ScreenDetailed::*;
+
+#[cfg(feature = "ScreenDetails")]
+#[allow(non_snake_case)]
+mod gen_ScreenDetails;
+#[cfg(feature = "ScreenDetails")]
+#[allow(unused_imports)]
+pub use gen_ScreenDetails::*;
+
 #[cfg(feature = "ScreenLuminance")]
 #[allow(non_snake_case)]
 mod gen_ScreenLuminance;

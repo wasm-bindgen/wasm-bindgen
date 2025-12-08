@@ -120,4 +120,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Screen`*"]
     pub fn set_onchange(this: &Screen, value: Option<&::js_sys::Function>);
+    #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (structural , method , getter , js_class = "Screen" , js_name = isExtended)]
+    #[doc = "Getter for the `isExtended` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Screen/isExtended)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Screen`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn is_extended(this: &Screen) -> bool;
 }
