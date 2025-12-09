@@ -6,13 +6,13 @@ export function exported(): void;
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly memory: WebAssembly.Memory;
-  readonly exported: () => [number, number];
-  readonly __wbindgen_exn_store: (a: number) => void;
   readonly __externref_table_alloc: () => number;
-  readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __externref_table_dealloc: (a: number) => void;
+  readonly __wbindgen_exn_store: (a: number) => void;
+  readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_start: () => void;
+  readonly exported: () => [number, number];
+  readonly memory: WebAssembly.Memory;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

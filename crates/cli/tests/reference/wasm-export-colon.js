@@ -225,25 +225,25 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1, arg2) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000000(arg0, arg1, arg2);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1) {
-    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {
+    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1);
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3);
 }
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -268,20 +268,6 @@ export class WasmBindgenTestContext {
         wasm.__wbg_wasmbindgentestcontext_free(ptr, 0);
     }
     /**
-     * Handle filter argument.
-     * @param {number} filtered
-     */
-    filtered_count(filtered) {
-        wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
-    }
-    /**
-     * Handle `--include-ignored` flag.
-     * @param {boolean} include_ignored
-     */
-    include_ignored(include_ignored) {
-        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
-    }
-    /**
      * Creates a new context ready to run tests.
      *
      * A `Context` is the main structure through which test execution is
@@ -294,6 +280,20 @@ export class WasmBindgenTestContext {
         this.__wbg_ptr = ret >>> 0;
         WasmBindgenTestContextFinalization.register(this, this.__wbg_ptr, this);
         return this;
+    }
+    /**
+     * Handle filter argument.
+     * @param {number} filtered
+     */
+    filtered_count(filtered) {
+        wasm.wasmbindgentestcontext_filtered_count(this.__wbg_ptr, filtered);
+    }
+    /**
+     * Handle `--include-ignored` flag.
+     * @param {boolean} include_ignored
+     */
+    include_ignored(include_ignored) {
+        wasm.wasmbindgentestcontext_include_ignored(this.__wbg_ptr, include_ignored);
     }
     /**
      * Executes a list of tests, returning a promise representing their
@@ -452,7 +452,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, );
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000001(a, state0.b, );
                 } finally {
                     state0.a = a;
                 }
@@ -523,7 +523,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1, arg2);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, arg0, arg1, arg2);
                 } finally {
                     state0.a = a;
                 }
@@ -566,7 +566,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -607,7 +607,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000005(a, state0.b, );
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, );
                 } finally {
                     state0.a = a;
                 }
@@ -678,19 +678,19 @@ function __wbg_get_imports() {
         const ret = arg0.then(arg1);
         return ret;
     };
-    imports.wbg.__wbindgen_cast_0000000000000000 = function(arg0, arg1) {
-        // Cast intrinsic for `Ref(String) -> Externref`.
-        const ret = getStringFromWasm0(arg0, arg1);
+    imports.wbg.__wbindgen_cast_0000000000000000 = function(arg0) {
+        // Cast intrinsic for `F64 -> Externref`.
+        const ret = arg0;
         return ret;
     };
     imports.wbg.__wbindgen_cast_0000000000000001 = function(arg0, arg1) {
-        // Cast intrinsic for `Closure(Closure { dtor_idx: 9, function: Function { arguments: [Externref], shim_idx: 10, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-        const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000008, wasm_bindgen__convert__closures_____invoke__h0000000000000003);
+        // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [Externref], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+        const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000001, wasm_bindgen__convert__closures_____invoke__h0000000000000000);
         return ret;
     };
-    imports.wbg.__wbindgen_cast_0000000000000002 = function(arg0) {
-        // Cast intrinsic for `F64 -> Externref`.
-        const ret = arg0;
+    imports.wbg.__wbindgen_cast_0000000000000002 = function(arg0, arg1) {
+        // Cast intrinsic for `Ref(String) -> Externref`.
+        const ret = getStringFromWasm0(arg0, arg1);
         return ret;
     };
     imports.wbg.__wbindgen_init_externref_table = function() {

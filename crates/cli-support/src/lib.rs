@@ -17,6 +17,7 @@ mod interpreter;
 mod intrinsic;
 mod js;
 mod multivalue;
+mod normalize;
 mod transforms;
 pub mod wasm2es6js;
 mod wasm_conventions;
@@ -435,6 +436,9 @@ impl Bindgen {
         gc_module_and_adapters(&mut module);
 
         let stem = self.stem()?;
+
+        // Normalize WASM exports
+        normalize::normalize_exports(&mut module).context("failed to normalize WASM exports")?;
 
         // Now we execute the JS generation passes to actually emit JS/TypeScript/etc.
         let aux = module
