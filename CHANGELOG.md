@@ -16,6 +16,11 @@
 * Added [Window Management API](https://w3c.github.io/window-management/).
   [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
 
+### Changed
+
+* Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
+  [#4367](https://github.com/wasm-bindgen/wasm-bindgen/pull/4367)
+
 ### Fixed
 
 ### Removed
@@ -359,9 +364,6 @@ Released 2025-01-12
 
 * `console.*()` calls in tests are now always intercepted by default. To show them use `--nocapture`. When shown they are always printed in-place instead of after test results, analogous to `cargo test`.
   [#4356](https://github.com/rustwasm/wasm-bindgen/pull/4356)
-
-* Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
-  [#4367](https://github.com/rustwasm/wasm-bindgen/pull/4367)
 
 ### Fixed
 
