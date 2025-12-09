@@ -76,6 +76,13 @@ export function __wbgtest_console_warn(args: Array<any>): void;
 
 export function __wbgtest_cov_dump(): Uint8Array | undefined;
 
+/**
+ * Path to use for coverage data.
+ */
+export function __wbgtest_coverage_path(env: string | null | undefined, pid: number, temp_dir: string, module_signature: bigint): string;
+
+export function __wbgtest_module_signature(): bigint | undefined;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
@@ -90,6 +97,8 @@ export interface InitOutput {
   readonly __wbgtest_console_log: (a: any) => void;
   readonly __wbgtest_console_warn: (a: any) => void;
   readonly __wbgtest_cov_dump: () => [number, number];
+  readonly __wbgtest_coverage_path: (a: number, b: number, c: number, d: number, e: number, f: bigint) => [number, number];
+  readonly __wbgtest_module_signature: () => [number, bigint];
   readonly wasmbindgentestcontext_filtered_count: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_new: (a: number) => number;

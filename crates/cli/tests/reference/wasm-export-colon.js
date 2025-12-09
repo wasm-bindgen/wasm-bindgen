@@ -399,6 +399,39 @@ export function __wbgtest_cov_dump() {
     return v1;
 }
 
+/**
+ * Path to use for coverage data.
+ * @param {string | null | undefined} env
+ * @param {number} pid
+ * @param {string} temp_dir
+ * @param {bigint} module_signature
+ * @returns {string}
+ */
+export function __wbgtest_coverage_path(env, pid, temp_dir, module_signature) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        var ptr0 = isLikeNone(env) ? 0 : passStringToWasm0(env, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(temp_dir, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.__wbgtest_coverage_path(ptr0, len0, pid, ptr1, len1, module_signature);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
+ * @returns {bigint | undefined}
+ */
+export function __wbgtest_module_signature() {
+    const ret = wasm.__wbgtest_module_signature();
+    return ret[0] === 0 ? undefined : BigInt.asUintN(64, ret[1]);
+}
+
 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
 async function __wbg_load(module, imports) {
