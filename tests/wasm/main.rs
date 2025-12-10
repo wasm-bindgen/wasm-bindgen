@@ -61,6 +61,7 @@ pub mod struct_vecs;
 pub mod structural;
 pub mod truthy_falsy;
 pub mod try_from_js_value;
+pub mod typed_js_value;
 pub mod usize;
 pub mod validate_prt;
 pub mod variadic;
