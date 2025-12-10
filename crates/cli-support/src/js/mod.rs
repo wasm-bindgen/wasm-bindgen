@@ -783,7 +783,7 @@ __wbg_set_wasm(wasm);"
 
                         // Generate TypeScript declarations for init functions
                         init.1 = self.ts_for_init_fn(
-                            false, // has_memory
+                            false,                                 // has_memory
                             !self.config.omit_default_module_path, // has_module_or_path_optional
                         )?;
                     }
