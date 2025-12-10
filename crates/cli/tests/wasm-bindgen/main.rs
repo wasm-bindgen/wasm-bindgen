@@ -371,20 +371,22 @@ fn default_module_path_target_web() {
 
     let contents = fs::read_to_string(out_dir.join("default_module_path_target_web.js")).unwrap();
     assert!(contents.contains(
-        r#"async function __wbg_init(module_or_path) {
-    if (wasm !== void 0) return wasm;
+        "\
+async function __wbg_init(module_or_path) {
+    if (wasm !== undefined) return wasm;
 
-    if (typeof module_or_path !== "undefined") {
+
+    if (typeof module_or_path !== 'undefined') {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
-            console.warn("using deprecated parameters for the initialization function; pass a single object instead")
+            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
         }
     }
 
-    if (typeof module_or_path === "undefined") {
-        module_or_path = new URL("default_module_path_target_web_bg.wasm", import.meta.url);
-    }"#,
+    if (typeof module_or_path === 'undefined') {
+        module_or_path = new URL('default_module_path_target_web_bg.wasm', import.meta.url);
+    }",
     ));
 }
 
@@ -441,16 +443,21 @@ fn omit_default_module_path_target_web() {
     let contents =
         fs::read_to_string(out_dir.join("omit_default_module_path_target_web.js")).unwrap();
     assert!(contents.contains(
-        r#"async function __wbg_init(module_or_path) {
-    if (wasm !== void 0) return wasm;
+        "\
+async function __wbg_init(module_or_path) {
+    if (wasm !== undefined) return wasm;
 
-    if (typeof module_or_path !== "undefined") {
+
+    if (typeof module_or_path !== 'undefined') {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
-            console.warn("using deprecated parameters for the initialization function; pass a single object instead")
+            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
         }
-    }"#,
+    }
+
+
+    const imports = __wbg_get_imports();",
     ));
 }
 

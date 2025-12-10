@@ -14,6 +14,7 @@ enum Target {
     Deno,
     ExperimentalNodejsModule,
     Module,
+    Esm,
 }
 
 #[derive(Debug, Parser)]
@@ -145,6 +146,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         Target::Deno => b.deno(true)?,
         Target::ExperimentalNodejsModule => b.nodejs_module(true)?,
         Target::Module => b.module(true)?,
+        Target::Esm => b.esm(true)?,
     };
     #[allow(deprecated)]
     b.input_path(&args.input)

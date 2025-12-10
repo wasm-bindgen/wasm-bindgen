@@ -68,6 +68,7 @@ enum OutputMode {
     Node { module: bool },
     Deno,
     Module,
+    Esm,
 }
 
 enum Input {
@@ -224,6 +225,13 @@ impl Bindgen {
         Ok(self)
     }
 
+    pub fn esm(&mut self, esm: bool) -> Result<&mut Bindgen, Error> {
+        if esm {
+            self.switch_mode(OutputMode::Esm, "--target esm")?;
+        }
+        Ok(self)
+    }
+
     pub fn no_modules_global(&mut self, name: &str) -> Result<&mut Bindgen, Error> {
         match &mut self.mode {
             OutputMode::NoModules { global } => *global = name.to_string(),
@@ -341,11 +349,11 @@ impl Bindgen {
             self.multi_value = true;
         }
 
-        // Check that no exported symbol is called "default" if we target web.
-        if matches!(self.mode, OutputMode::Web)
+        // Check that no exported symbol is called "default" if we target web or esm.
+        if matches!(self.mode, OutputMode::Web | OutputMode::Esm)
             && module.exports.iter().any(|export| export.name == "default")
         {
-            bail!("exported symbol \"default\" not allowed for --target web")
+            bail!("exported symbol \"default\" not allowed for --target web or --target esm")
         }
 
         // Check that reset_state is only used with --target module
@@ -579,6 +587,7 @@ impl OutputMode {
                 | OutputMode::Web
                 | OutputMode::Node { module: true }
                 | OutputMode::Deno
+                | OutputMode::Esm
         )
     }
 
@@ -593,7 +602,7 @@ impl OutputMode {
     fn esm_integration(&self) -> bool {
         matches!(
             self,
-            OutputMode::Bundler { .. } | OutputMode::Node { module: true } | OutputMode::Web
+            OutputMode::Bundler { .. } | OutputMode::Node { module: true } | OutputMode::Esm
         )
     }
 
@@ -605,7 +614,8 @@ impl OutputMode {
             | OutputMode::NoModules { .. }
             | OutputMode::Node { .. }
             | OutputMode::Deno
-            | OutputMode::Module => format!("{stem}.js"),
+            | OutputMode::Module
+            | OutputMode::Esm => format!("{stem}.js"),
         }
     }
 }
@@ -765,8 +775,8 @@ export * from \"./{js_name}\";",
                         ),
                     )?;
                 }
-                OutputMode::Web => {
-                    // Web mode: main entry with init functions is generated in js/mod.rs
+                OutputMode::Esm => {
+                    // Esm mode: main entry with init functions is generated in js/mod.rs
                     let start = gen.start.as_deref().unwrap_or("");
                     write(&js_path, start)?;
                 }

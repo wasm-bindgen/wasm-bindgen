@@ -1,22 +1,26 @@
-import * as import0 from "./reference_test_bg.js";
-import { __wbg_set_wasm } from "./reference_test_bg.js";
-export * from "./reference_test_bg.js";
 let wasm;
 
-let imports = { __proto__: null };
-imports["./reference_test_bg.js"] = import0;
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+export function add_that_might_fail(a, b) {
+    const ret = wasm.add_that_might_fail(a, b);
+    return ret >>> 0;
+}
 
-const EXPECTED_RESPONSE_TYPES = new Set(["basic", "cors", "default"]);
+const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
 async function __wbg_load(module, imports) {
-    if (typeof Response === "function" && module instanceof Response) {
-        if (typeof WebAssembly.instantiateStreaming === "function") {
+    if (typeof Response === 'function' && module instanceof Response) {
+        if (typeof WebAssembly.instantiateStreaming === 'function') {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
             } catch (e) {
                 const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
 
-                if (validResponse && module.headers.get("Content-Type") !== "application/wasm") {
+                if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
                     console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
 
                 } else {
@@ -38,15 +42,39 @@ async function __wbg_load(module, imports) {
     }
 }
 
+function __wbg_get_imports() {
+    const imports = {};
+    imports["./reference_test_bg.js"] = {};
+    imports["./reference_test_bg.js"].__wbg_random_9526caf33df4270d = function() {
+        const ret = Math.random();
+        return ret;
+    };
+
+    return imports;
+}
+
 function __wbg_finalize_init(instance, module) {
-    __wbg_set_wasm(wasm = instance.exports, module);
-    instance.exports.__wbindgen_start();
+    wasm = instance.exports;
+    __wbg_init.__wbindgen_wasm_module = module;
+
+
+
     return wasm;
 }
 
-export function initSync(module) {
-    if (wasm !== void 0) return wasm;
+function initSync(module) {
+    if (wasm !== undefined) return wasm;
 
+
+    if (typeof module !== 'undefined') {
+        if (Object.getPrototypeOf(module) === Object.prototype) {
+            ({module} = module)
+        } else {
+            console.warn('using deprecated parameters for `initSync()`; pass a single object instead')
+        }
+    }
+
+    const imports = __wbg_get_imports();
     if (!(module instanceof WebAssembly.Module)) {
         module = new WebAssembly.Module(module);
     }
@@ -54,21 +82,24 @@ export function initSync(module) {
     return __wbg_finalize_init(instance, module);
 }
 
-export default async function __wbg_init(module_or_path) {
-    if (wasm !== void 0) return wasm;
+async function __wbg_init(module_or_path) {
+    if (wasm !== undefined) return wasm;
 
-    if (typeof module_or_path !== "undefined") {
+
+    if (typeof module_or_path !== 'undefined') {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
-            console.warn("using deprecated parameters for the initialization function; pass a single object instead")
+            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
         }
     }
 
-    if (typeof module_or_path === "undefined") {
-        module_or_path = new URL("reference_test_bg.wasm", import.meta.url);
+    if (typeof module_or_path === 'undefined') {
+        module_or_path = new URL('reference_test_bg.wasm', import.meta.url);
     }
-    if (typeof module_or_path === "string" || (typeof Request === "function" && module_or_path instanceof Request) || (typeof URL === "function" && module_or_path instanceof URL)) {
+    const imports = __wbg_get_imports();
+
+    if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
         module_or_path = fetch(module_or_path);
     }
 
@@ -76,3 +107,6 @@ export default async function __wbg_init(module_or_path) {
 
     return __wbg_finalize_init(instance, module);
 }
+
+export { initSync };
+export default __wbg_init;

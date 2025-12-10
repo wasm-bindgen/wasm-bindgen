@@ -1,5 +1,6 @@
 // FLAGS: --target=bundler
 // FLAGS: --target=web
+// FLAGS: --target=esm
 // FLAGS: --target=nodejs
 // FLAGS: --target=experimental-nodejs-module
 // FLAGS: --target=deno
