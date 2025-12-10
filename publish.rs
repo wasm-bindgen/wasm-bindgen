@@ -18,6 +18,7 @@ use std::process::Command;
 // note that this list must be topologically sorted by dependencies
 const CRATES_TO_PUBLISH: &[&str] = &[
     "wasm-bindgen-shared",
+    "wasm-bindgen-test-shared",
     "wasm-bindgen-macro-support",
     "wasm-bindgen-macro",
     "wasm-bindgen",
@@ -28,7 +29,6 @@ const CRATES_TO_PUBLISH: &[&str] = &[
     "wasm-bindgen-cli",
     "wasm-bindgen-test-macro",
     "wasm-bindgen-test",
-    "wasm-bindgen-test-shared",
 ];
 
 const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
