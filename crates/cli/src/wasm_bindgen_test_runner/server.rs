@@ -145,7 +145,7 @@ pub(crate) fn spawn(
                 self.console[method] = function (...args) {{
                     og.apply(this, args);
                     if (nocapture) {{
-                        self.__wbg_test_output_writeln(args);
+                        self.__wbg_test_output_writeln(...args);
                     }}
                     if (self[on_method]) {{
                         self[on_method](args);
@@ -156,8 +156,8 @@ pub(crate) fn spawn(
 
             self.__wbg_test_invoke = f => f();
             self.__wbg_test_output = "";
-            self.__wbg_test_output_writeln = function (line) {{
-                self.__wbg_test_output += line + "\n";
+            self.__wbg_test_output_writeln = function (...args) {{
+                self.__wbg_test_output += args.map(String).join(' ') + "\n";
                 port.postMessage(["__wbgtest_output", self.__wbg_test_output]);
             }}
 
