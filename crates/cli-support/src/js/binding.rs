@@ -1019,11 +1019,11 @@ fn instruction(
             // If we're loading from the return pointer then we must have pushed
             // it earlier, and we always push the same value, so load that value
             // here
-            let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
-
-            if matches!(js.cx.config.mode, OutputMode::Emscripten) {
-                expr = format!("HEAP_DATA_VIEW.{method}(retptr + {size} * {scaled_offset}, true)");
-            }
+            let expr = if matches!(js.cx.config.mode, OutputMode::Emscripten) {
+                format!("HEAP_DATA_VIEW.{method}(retptr + {size} * {scaled_offset}, true)")
+            } else {
+                format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)")
+            };
 
             js.prelude(&format!("var r{offset} = {expr};"));
             js.push(format!("r{offset}"));

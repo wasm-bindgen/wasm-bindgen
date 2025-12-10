@@ -301,7 +301,7 @@ impl<'a> Context<'a> {
                 }
                 OutputMode::Emscripten => {
                     assert_eq!(export_name, definition_name);
-                    format!("{}\nModule.{} = {};\n", class, export_name, export_name)
+                    self.global(&format!("{}\nModule.{} = {};\n", class, export_name, export_name));
                 }
             },
             ExportJs::Function(function) => match self.config.mode {
@@ -324,12 +324,12 @@ impl<'a> Context<'a> {
                 OutputMode::Emscripten => {
                     let body = function.strip_prefix("function").unwrap();
                     if export_name == definition_name {
-                        format!("Module.{} = function{};\n", export_name, body)
+                        self.global(&format!("Module.{} = function{};\n", export_name, body));
                     } else {
-                        format!(
+                        self.global(&format!(
                             "function {}{}\nexport {{ {} as {} }};\n",
                             definition_name, body, definition_name, export_name,
-                        )
+                        ));
                     }
                 }
             },
@@ -1751,14 +1751,14 @@ wasm = wasmInstance.exports;
             mem_formatted = format!("{}", mem.name);
         };
         // TODO(walkingeye): this is probably wrong
-        let polyfill_encode_into = format!("{textEncoder}.encodeInto = function (arg, view) {{
+        let polyfill_encode_into = format!("{text_encoder}.encodeInto = function (arg, view) {{
             const buf = cachedTextEncoder.encode(arg);
             view.set(buf);
             return {{
                 read: arg.length,
                 written: buf.length
             }};
-        }}")
+        }}"
         );
 
         // `encodeInto` doesn't currently work in any browsers when the memory passed
@@ -1823,7 +1823,7 @@ wasm = wasmInstance.exports;
                         "
                         ));
                     } else {
-                        self.global(polyfill_encode_into);
+                        self.global(&polyfill_encode_into);
                     }
                 }
             }
@@ -1881,9 +1881,6 @@ wasm = wasmInstance.exports;
 
                 WASM_VECTOR_LEN = offset;
                 return ptr;",
-                debug = debug,
-                ascii = encode_as_ascii,
-                mem_formatted = mem_formatted,
                 debug_end = if self.config.debug {
                     "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
                 } else {
@@ -2203,9 +2200,10 @@ wasm = wasmInstance.exports;
         let is_shared = self.module.memories.get(memory).shared;
         let method = if is_shared { "slice" } else { "subarray" };
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            Ok(format!(
-                "UTF8Decoder.decode({mem.name}.{method}(ptr, ptr + len))",
-            ))
+            return Ok(format!(
+                "UTF8Decoder.decode({mem_name}.{method}(ptr, ptr + len))",
+                mem_name = mem.name,
+            ));
         }
         Ok(format!(
             "cachedTextDecoder.decode({mem}().{method}(ptr, ptr + len))",
@@ -2578,12 +2576,12 @@ wasm = wasmInstance.exports;
         kinds.insert(kind);
         if matches!(self.config.mode, OutputMode::Emscripten) {
             MemView {
-                name: format!("{kind}", kind).into(),
+                name: format!("{kind}").into(),
                 num,
             }
         } else {
             MemView {
-                name: format!("get{kind}Memory", kind).into(),
+                name: format!("get{kind}Memory").into(),
                 num,
             }
         }
@@ -3790,7 +3788,6 @@ wasm = wasmInstance.exports;
                 let mut code = if catch {
                     format!(
                         "function() {{ return handleError(function {code}, arguments) }}",
-                        code
                     )
                 } else if log_error {
                     format!("function() {{ return logError(function {code}, arguments) }}")
