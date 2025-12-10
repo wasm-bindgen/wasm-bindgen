@@ -353,7 +353,7 @@ impl Bindgen {
         if matches!(self.mode, OutputMode::Web | OutputMode::Esm)
             && module.exports.iter().any(|export| export.name == "default")
         {
-            bail!("exported symbol \"default\" not allowed for --target web or --target esm")
+            bail!("exported symbol \"default\" not allowed for `--target web` or `--target esm`")
         }
 
         // Check that reset_state is only used with --target module
