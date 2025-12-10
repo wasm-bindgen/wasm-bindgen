@@ -708,8 +708,11 @@ impl Output {
                 .with_context(|| format!("failed to write `{}`", path.display()))?;
         }
 
-        let is_esm_integration = gen.mode.esm_integration();
-        if !gen.npm_dependencies.is_empty() || is_esm_integration {
+        let needs_package_json = matches!(
+            gen.mode,
+            OutputMode::Node { module: true } | OutputMode::Esm
+        );
+        if !gen.npm_dependencies.is_empty() || needs_package_json {
             #[derive(serde::Serialize)]
             struct PackageJson<'a> {
                 #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
@@ -718,7 +721,7 @@ impl Output {
                 dependencies: BTreeMap<&'a str, &'a str>,
             }
             let pj = PackageJson {
-                ty: is_esm_integration.then_some("module"),
+                ty: needs_package_json.then_some("module"),
                 main: gen.mode.main_file(&self.stem),
                 dependencies: gen
                     .npm_dependencies
