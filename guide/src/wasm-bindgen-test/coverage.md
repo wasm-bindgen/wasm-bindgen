@@ -21,12 +21,9 @@ Due to the current limitation of `llvm-cov`, we can't collect profiling symbols 
 
 ### Arguments to the test runner
 
-The following environment variables can be used to control the coverage output when [executing the test runner][1]:
+Like with Rust test coverage, you can use the [`LLVM_PROFILE_FILE`][1] environment variable to specify a path for the generated `.profraw` files.
 
-- `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` to control the file name of the profraw or the directory in which it is placed. It might be necessary to provide the full path if e.g. running tests in a workspace.
-- `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` to add a custom prefix to the profraw files. This can be useful if you're running the tests automatically in succession.
-
-[1]: usage.html#appendix-using-wasm-bindgen-test-without-wasm-pack
+[1]: https://releases.llvm.org/19.1.0/tools/clang/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
 
 ### Target features
 

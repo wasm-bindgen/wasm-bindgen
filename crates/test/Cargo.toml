@@ -19,6 +19,7 @@ js-sys = { path = '../js-sys', version = '=0.3.83', default-features = false }
 wasm-bindgen = { path = '../..', version = '=0.2.106', default-features = false }
 wasm-bindgen-futures = { path = '../futures', version = '=0.4.56', default-features = false }
 wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.56' }
+wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.106" }
 
 # benchmark required start
 async-trait = "0.1.89"

@@ -17,7 +17,6 @@ use clap::ValueEnum;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
-use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
 use wasm_bindgen_cli_support::Bindgen;
@@ -130,12 +129,6 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    let file_name = cli
-        .file
-        .file_name()
-        .map(Path::new)
-        .context("file to test is not a valid file, can't extract file name")?;
-
     // Collect all tests that the test harness is supposed to run. We assume
     // that any exported function with the prefix `__wbg_test` is a test we need
     // to execute.
@@ -354,8 +347,6 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         b.keep_lld_exports(true);
     }
 
-    let coverage = coverage_args(file_name);
-
     // The path of benchmark baseline.
     let benchmark = if let Ok(path) = std::env::var("WASM_BINDGEN_BENCH_RESULT") {
         PathBuf::from(path)
@@ -383,15 +374,9 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     shell.clear();
 
     match test_mode {
-        TestMode::Node { no_modules } => node::execute(
-            module,
-            &tmpdir_path,
-            cli,
-            tests,
-            !no_modules,
-            coverage,
-            benchmark,
-        )?,
+        TestMode::Node { no_modules } => {
+            node::execute(module, &tmpdir_path, cli, tests, !no_modules, benchmark)?
+        }
         TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
@@ -412,7 +397,6 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
                 tests,
                 test_mode,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
-                coverage,
                 benchmark,
             )
             .context("failed to spawn server")?;
@@ -476,28 +460,6 @@ impl TestMode {
             TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
             TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
         }
-    }
-}
-
-fn coverage_args(file_name: &Path) -> PathBuf {
-    fn generated(file_name: &Path, prefix: &str) -> String {
-        let res = format!("{prefix}{}.profraw", file_name.display());
-        res
-    }
-
-    let prefix = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX")
-        .map(|s| s.to_str().unwrap().to_string())
-        .unwrap_or_default();
-
-    match env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT") {
-        Some(s) => {
-            let mut buf = PathBuf::from(s);
-            if buf.is_dir() {
-                buf.push(generated(file_name, &prefix));
-            }
-            buf
-        }
-        None => PathBuf::from(generated(file_name, &prefix)),
     }
 }
 
