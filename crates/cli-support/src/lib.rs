@@ -593,8 +593,20 @@ impl OutputMode {
     fn esm_integration(&self) -> bool {
         matches!(
             self,
-            OutputMode::Bundler { .. } | OutputMode::Node { module: true }
+            OutputMode::Bundler { .. } | OutputMode::Node { module: true } | OutputMode::Web
         )
+    }
+
+    /// Returns the main entry point file name for this output mode.
+    fn main_file(&self, stem: &str) -> String {
+        match self {
+            OutputMode::Bundler { .. }
+            | OutputMode::Web
+            | OutputMode::NoModules { .. }
+            | OutputMode::Node { .. }
+            | OutputMode::Deno
+            | OutputMode::Module => format!("{stem}.js"),
+        }
     }
 }
 
@@ -686,16 +698,18 @@ impl Output {
                 .with_context(|| format!("failed to write `{}`", path.display()))?;
         }
 
-        let is_genmode_nodemodule = matches!(gen.mode, OutputMode::Node { module: true });
-        if !gen.npm_dependencies.is_empty() || is_genmode_nodemodule {
+        let is_esm_integration = gen.mode.esm_integration();
+        if !gen.npm_dependencies.is_empty() || is_esm_integration {
             #[derive(serde::Serialize)]
             struct PackageJson<'a> {
                 #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
                 ty: Option<&'static str>,
+                main: String,
                 dependencies: BTreeMap<&'a str, &'a str>,
             }
             let pj = PackageJson {
-                ty: is_genmode_nodemodule.then_some("module"),
+                ty: is_esm_integration.then_some("module"),
+                main: gen.mode.main_file(&self.stem),
                 dependencies: gen
                     .npm_dependencies
                     .iter()
@@ -740,25 +754,34 @@ import source wasmModule from \"./{wasm_name}.wasm\";
 
             let start = gen.start.as_deref().unwrap_or("");
 
-            if matches!(gen.mode, OutputMode::Node { .. }) {
-                write(
-                    &js_path,
-                    format!(
-                        "\
+            match &gen.mode {
+                OutputMode::Node { module: true } => {
+                    write(
+                        &js_path,
+                        format!(
+                            "\
 {start}
 export * from \"./{js_name}\";",
-                    ),
-                )?;
-            } else {
-                write(
-                    &js_path,
-                    format!(
-                        "\
+                        ),
+                    )?;
+                }
+                OutputMode::Web => {
+                    // Web mode: main entry with init functions is generated in js/mod.rs
+                    let start = gen.start.as_deref().unwrap_or("");
+                    write(&js_path, start)?;
+                }
+                _ => {
+                    // Bundler mode
+                    write(
+                        &js_path,
+                        format!(
+                            "\
 import * as wasm from \"./{wasm_name}.wasm\";
 export * from \"./{js_name}\";
 {start}"
-                    ),
-                )?;
+                        ),
+                    )?;
+                }
             }
             write(out_dir.join(&js_name), reset_indentation(&gen.js))?;
         } else {
