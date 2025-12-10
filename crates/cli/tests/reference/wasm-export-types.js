@@ -144,11 +144,11 @@ async function __wbg_load(module, imports) {
 
 function __wbg_get_imports() {
     const imports = {};
-    imports.wbg = {};
-    imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
+    imports["./reference_test_bg.js"] = {};
+    imports["./reference_test_bg.js"].__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbindgen_init_externref_table = function() {
+    imports["./reference_test_bg.js"].__wbindgen_init_externref_table = function() {
         const table = wasm.__wbindgen_externrefs;
         const offset = table.grow(4);
         table.set(0, undefined);

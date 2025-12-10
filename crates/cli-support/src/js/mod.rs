@@ -529,7 +529,7 @@ impl<'a> Context<'a> {
                     }\n",
                 );
                 js.push_str("let wasm = undefined;\n");
-                init = self.gen_init(needs_manual_start, None)?;
+                init = self.gen_init(module_name, needs_manual_start, None)?;
                 footer.push_str(&format!(
                     "{global} = Object.assign(__wbg_init, {{ initSync }}, __exports);\n"
                 ));
@@ -646,7 +646,7 @@ __wbg_set_wasm(wasm);"
             // as the default export of the module.
             OutputMode::Web => {
                 self.imports_post.push_str("let wasm;\n");
-                init = self.gen_init(needs_manual_start, Some(&mut imports))?;
+                init = self.gen_init(module_name, needs_manual_start, Some(&mut imports))?;
                 footer.push_str("export { initSync };\n");
                 footer.push_str("export default __wbg_init;");
             }
@@ -875,10 +875,11 @@ wasm = wasmInstance.exports;
 
     fn gen_init(
         &mut self,
+        module_name: &str,
         needs_manual_start: bool,
         mut imports: Option<&mut String>,
     ) -> Result<(String, String), Error> {
-        let module_name = "wbg";
+        let module_name = format!("./{module_name}_bg.js");
         let mut init_memory_arg = "";
         let mut init_memory_arg_alone = "";
         let mut has_memory = false;
@@ -923,16 +924,16 @@ wasm = wasmInstance.exports;
         // directed to wire up.
         let mut imports_init = String::new();
 
-        imports_init.push_str("imports.");
-        imports_init.push_str(module_name);
-        imports_init.push_str(" = {};\n");
+        imports_init.push_str("imports[\"");
+        imports_init.push_str(&module_name);
+        imports_init.push_str("\"] = {};\n");
 
         for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
-            import.module = module_name.to_string();
-            imports_init.push_str("imports.");
-            imports_init.push_str(module_name);
-            imports_init.push('.');
+            import.module = module_name.clone();
+            imports_init.push_str("imports[\"");
+            imports_init.push_str(&module_name);
+            imports_init.push_str("\"].");
             imports_init.push_str(&import.name);
             imports_init.push_str(" = ");
             imports_init.push_str(js.trim());
