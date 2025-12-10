@@ -2648,7 +2648,11 @@ wasm = wasmInstance.exports;
 
     fn expose_panic_error(&mut self) {
         intrinsic(&mut self.intrinsics, "panic_error".into(), || {
-            "class PanicError extends Error {}".into()
+            "class PanicError extends Error {}
+            Object.defineProperty(PanicError.prototype, 'name', {
+                value: PanicError.name,
+            });
+            ".into()
         });
     }
 

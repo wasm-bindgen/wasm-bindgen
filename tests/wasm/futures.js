@@ -50,5 +50,7 @@ exports.call_promise_err_unit = async function() {
 }
 
 exports.check_panic = async function() {
-    await assert.rejects(wasm.panics(), "xxx");
+    await assert.rejects(wasm.panics(), (e) => {
+        return e.name === "PanicError" && e.message === "Oops!";
+    });
 }
