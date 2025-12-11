@@ -16,6 +16,10 @@
 * Added [Window Management API](https://w3c.github.io/window-management/).
   [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
 
+* Added `wasm_bindgen_test::forward_console_to_test_runner()` to capture console
+  output from custom dedicated workers in the test harness.
+  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+
 ### Changed
 
 * Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.

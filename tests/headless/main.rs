@@ -48,6 +48,7 @@ pub fn import_export_same_name() {
 }
 
 pub mod externref_heap_live_count;
+pub mod forward_console;
 pub mod modules;
 pub mod snippets;
 pub mod strings;
