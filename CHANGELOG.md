@@ -16,6 +16,10 @@
 * Added [Window Management API](https://w3c.github.io/window-management/).
   [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
 
+* Added `wasm_bindgen_test::forward_console_to_test_runner()` to capture console
+  output from custom dedicated workers in the test harness.
+  [#4856](https://github.com/wasm-bindgen/wasm-bindgen/pull/4856)
+
 ### Changed
 
 * Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
@@ -24,7 +28,7 @@
 ### Fixed
 
 * Forward worker errors to test output in the test runner.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+  [#4855](https://github.com/wasm-bindgen/wasm-bindgen/pull/4855)
 
 * Fix: Include doc comments in TypeScript definitions for classes
   [#4858](https://github.com/wasm-bindgen/wasm-bindgen/pull/4858)

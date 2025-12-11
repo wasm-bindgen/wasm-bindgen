@@ -128,3 +128,5 @@ pub use __rt::criterion::Criterion;
 
 // web_time Instant
 pub use __rt::web_time::Instant;
+
+pub use __rt::forward_console_to_test_runner;

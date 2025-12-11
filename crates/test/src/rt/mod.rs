@@ -463,6 +463,41 @@ pub fn __wbgtest_console_error(args: &Array) {
     record(args, |output| &mut output.error)
 }
 
+/// Forwards console output from a dedicated worker to the test runner.
+///
+/// Call this function at the start of your custom dedicated worker to ensure
+/// that `console.log`, `console.error`, etc. are captured by the test harness.
+///
+/// # Example
+///
+/// ```ignore
+/// // In your worker's entry point:
+/// wasm_bindgen_test::forward_console_to_test_runner();
+/// ```
+///
+/// # Panics
+///
+/// This function will panic if called outside of a dedicated worker context.
+#[wasm_bindgen(js_name = "__wbgtest_forward_console")]
+pub fn forward_console_to_test_runner() {
+    // Use inline JS to set up the forwarding since we need to replace console methods
+    js_sys::eval(
+        r#"
+        (function() {
+            const methods = ['debug', 'log', 'info', 'warn', 'error'];
+            for (const method of methods) {
+                const original = console[method].bind(console);
+                console[method] = function(...args) {
+                    self.postMessage(["__wbgtest_" + method, args]);
+                    original(...args);
+                };
+            }
+        })();
+        "#,
+    )
+    .expect("failed to set up console forwarding");
+}
+
 fn record(args: &Array, dst: impl FnOnce(&mut Output) -> &mut String) {
     if !CURRENT_OUTPUT.is_set() {
         return;

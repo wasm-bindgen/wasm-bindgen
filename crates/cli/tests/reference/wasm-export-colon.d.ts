@@ -87,6 +87,25 @@ export function __wbgtest_cov_dump(): Uint8Array | undefined;
  */
 export function __wbgtest_coverage_path(env: string | null | undefined, pid: number, temp_dir: string, module_signature: bigint): string;
 
+/**
+ * Forwards console output from a dedicated worker to the test runner.
+ *
+ * Call this function at the start of your custom dedicated worker to ensure
+ * that `console.log`, `console.error`, etc. are captured by the test harness.
+ *
+ * # Example
+ *
+ * ```ignore
+ * // In your worker's entry point:
+ * wasm_bindgen_test::forward_console_to_test_runner();
+ * ```
+ *
+ * # Panics
+ *
+ * This function will panic if called outside of a dedicated worker context.
+ */
+export function __wbgtest_forward_console(): void;
+
 export function __wbgtest_module_signature(): bigint | undefined;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -104,6 +123,7 @@ export interface InitOutput {
   readonly __wbgtest_console_warn: (a: any) => void;
   readonly __wbgtest_cov_dump: () => [number, number];
   readonly __wbgtest_coverage_path: (a: number, b: number, c: number, d: number, e: number, f: bigint) => [number, number];
+  readonly __wbgtest_forward_console: () => void;
   readonly __wbgtest_module_signature: () => [number, bigint];
   readonly wasmbindgentestcontext_filtered_count: (a: number, b: number) => void;
   readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
