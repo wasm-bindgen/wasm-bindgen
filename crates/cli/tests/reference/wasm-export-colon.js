@@ -425,6 +425,27 @@ export function __wbgtest_coverage_path(env, pid, temp_dir, module_signature) {
 }
 
 /**
+ * Forwards console output from a dedicated worker to the test runner.
+ *
+ * Call this function at the start of your custom dedicated worker to ensure
+ * that `console.log`, `console.error`, etc. are captured by the test harness.
+ *
+ * # Example
+ *
+ * ```ignore
+ * // In your worker's entry point:
+ * wasm_bindgen_test::forward_console_to_test_runner();
+ * ```
+ *
+ * # Panics
+ *
+ * This function will panic if called outside of a dedicated worker context.
+ */
+export function __wbgtest_forward_console() {
+    wasm.__wbgtest_forward_console();
+}
+
+/**
  * @returns {bigint | undefined}
  */
 export function __wbgtest_module_signature() {
@@ -549,6 +570,10 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_error_baba35349fd8e13c = function(arg0, arg1) {
         console.error(getStringFromWasm0(arg0, arg1));
     };
+    imports.wbg.__wbg_eval_aa18aa048f37d16d = function() { return handleError(function (arg0, arg1) {
+        const ret = eval(getStringFromWasm0(arg0, arg1));
+        return ret;
+    }, arguments) };
     imports.wbg.__wbg_forEach_fdfa9a663e9c9a9e = function(arg0, arg1, arg2) {
         try {
             var state0 = {a: arg1, b: arg2};
