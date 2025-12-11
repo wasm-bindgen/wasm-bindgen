@@ -255,7 +255,7 @@ fn runtest_with_opts(
         let mut sanitizer = Sanitizer::default();
 
         // These targets care about the `_bg.js` output.
-        if target == "bundler" || target == "experimental-nodejs-module" {
+        if target == "bundler" || target == "experimental-nodejs-module" || target == "esm" {
             let bg = fs::read_to_string(out_dir.join("reference_test_bg.js"))?;
             sanitizer.assert_same(&bg, &test.with_extension("bg.js"))?;
         }

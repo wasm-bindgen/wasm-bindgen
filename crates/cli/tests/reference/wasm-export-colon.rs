@@ -1,4 +1,5 @@
 // FLAGS: --target=web
+// FLAGS: --target=esm
 // DEPENDENCY: wasm-bindgen-test = { path = '{root}/crates/test' }
 
 use wasm_bindgen::prelude::*;

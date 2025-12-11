@@ -52,8 +52,8 @@ let wasm_bindgen;
 
     function __wbg_get_imports() {
         const imports = {};
-        imports.wbg = {};
-        imports.wbg.__wbg_random_9526caf33df4270d = function() {
+        imports["./reference_test_bg.js"] = {};
+        imports["./reference_test_bg.js"].__wbg_random_9526caf33df4270d = function() {
             const ret = Math.random();
             return ret;
         };

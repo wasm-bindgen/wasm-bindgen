@@ -263,7 +263,8 @@ impl<'a> Context<'a> {
                 | OutputMode::Node { module: true }
                 | OutputMode::Web
                 | OutputMode::Module
-                | OutputMode::Deno => {
+                | OutputMode::Deno
+                | OutputMode::Esm => {
                     if export_name == "default" {
                         self.globals.push_str(&format!("export default {id};\n"));
                     } else if export_name == id {
@@ -411,6 +412,137 @@ impl<'a> Context<'a> {
         }
 
         reset_indentation(&shim)
+    }
+
+    /// Generate imports for the Esm main entry file.
+    /// Similar to generate_node_imports but tailored for esm's init pattern.
+    fn generate_esm_imports(&self, module_name: &str) -> String {
+        let mut import_modules = BTreeSet::new();
+        for import in self
+            .module
+            .imports
+            .iter()
+            .filter(|i| !(matches!(i.kind, walrus::ImportKind::Memory(_))))
+        {
+            import_modules.insert(&import.module);
+        }
+
+        let mut shim = String::new();
+
+        // Import statements at the top
+        for (i, module) in import_modules.iter().enumerate() {
+            if module.as_str() != PLACEHOLDER_MODULE {
+                shim.push_str(&format!(r#"import * as import{i} from "{module}";"#));
+                shim.push('\n');
+            }
+        }
+
+        shim.push_str(&format!(
+            r#"import {{ __wbg_set_wasm }} from "./{module_name}_bg.js";"#
+        ));
+        shim.push('\n');
+
+        // Re-export from _bg.js
+        shim.push_str(&format!(r#"export * from "./{module_name}_bg.js";"#));
+        shim.push('\n');
+
+        // Build imports object at top level (like experimental-nodejs-module)
+        shim.push_str("let wasm;\n\n");
+        shim.push_str("let imports = { __proto__: null };\n");
+        for (i, module) in import_modules.iter().enumerate() {
+            if module.as_str() != PLACEHOLDER_MODULE {
+                shim.push_str(&format!(r#"imports["{module}"] = import{i};"#));
+                shim.push('\n');
+            }
+        }
+        shim.push('\n');
+
+        shim
+    }
+
+    /// Generate the init functions for Esm main entry.
+    fn generate_esm_init_functions(&self, module_name: &str) -> String {
+        let default_module_path = if !self.config.omit_default_module_path {
+            format!(
+                r#"
+    if (typeof module_or_path === "undefined") {{
+        module_or_path = new URL("{module_name}_bg.wasm", import.meta.url);
+    }}"#
+            )
+        } else {
+            String::new()
+        };
+
+        format!(
+            r#"const EXPECTED_RESPONSE_TYPES = new Set(["basic", "cors", "default"]);
+
+async function __wbg_load(module, imports) {{
+    if (typeof Response === "function" && module instanceof Response) {{
+        if (typeof WebAssembly.instantiateStreaming === "function") {{
+            try {{
+                return await WebAssembly.instantiateStreaming(module, imports);
+            }} catch (e) {{
+                const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+
+                if (validResponse && module.headers.get("Content-Type") !== "application/wasm") {{
+                    console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
+
+                }} else {{
+                    throw e;
+                }}
+            }}
+        }}
+
+        const bytes = await module.arrayBuffer();
+        return await WebAssembly.instantiate(bytes, imports);
+    }} else {{
+        const instance = await WebAssembly.instantiate(module, imports);
+
+        if (instance instanceof WebAssembly.Instance) {{
+            return {{ instance, module }};
+        }} else {{
+            return instance;
+        }}
+    }}
+}}
+
+function __wbg_finalize_init(instance, module) {{
+    __wbg_set_wasm(wasm = instance.exports, module);
+    instance.exports.__wbindgen_start();
+    return wasm;
+}}
+
+export function initSync(module) {{
+    if (wasm !== void 0) return wasm;
+
+    if (!(module instanceof WebAssembly.Module)) {{
+        module = new WebAssembly.Module(module);
+    }}
+    const instance = new WebAssembly.Instance(module, imports);
+    return __wbg_finalize_init(instance, module);
+}}
+
+export default async function __wbg_init(module_or_path) {{
+    if (wasm !== void 0) return wasm;
+
+    if (typeof module_or_path !== "undefined") {{
+        if (Object.getPrototypeOf(module_or_path) === Object.prototype) {{
+            ({{module_or_path}} = module_or_path)
+        }} else {{
+            console.warn("using deprecated parameters for the initialization function; pass a single object instead")
+        }}
+    }}
+{default_module_path}
+    if (typeof module_or_path === "string" || (typeof Request === "function" && module_or_path instanceof Request) || (typeof URL === "function" && module_or_path instanceof URL)) {{
+        module_or_path = fetch(module_or_path);
+    }}
+
+    const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
+
+    return __wbg_finalize_init(instance, module);
+}}
+"#
+        )
     }
 
     // generates something like
@@ -573,7 +705,9 @@ impl<'a> Context<'a> {
             // With Bundlers we can simply import the Wasm file as if it were an ES module
             // and let the bundler/runtime take care of it.
             // With Node we manually read the Wasm file from the filesystem and instantiate it.
-            OutputMode::Bundler { .. } | OutputMode::Node { module: true } => {
+            // With Esm we generate a _bg.js file with the bindings and a main entry with init functions.
+            OutputMode::Bundler { .. } | OutputMode::Node { module: true } | OutputMode::Esm => {
+                // Export glue functions for WASM to import from _bg.js
                 for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
                     let import = self.module.imports.get_mut(*id);
                     import.module = format!("./{module_name}_bg.js");
@@ -630,25 +764,45 @@ __wbg_set_wasm(wasm);"
                         ));
                     }
 
+                    OutputMode::Esm => {
+                        // Esm mode: generate _bg.js with __wbg_set_wasm, and main entry with init functions
+                        self.imports_post.push_str(
+                            "\
+                            let wasm;
+                            let wasmModule;
+                            export function __wbg_set_wasm(exports, module) {
+                                wasm = exports;
+                                wasmModule = module;
+                            }\
+                            ",
+                        );
+
+                        // Generate dynamic imports for the main entry file
+                        let start = start.get_or_insert_with(String::new);
+                        start.push_str(&self.generate_esm_imports(module_name));
+                        start.push_str(&self.generate_esm_init_functions(module_name));
+
+                        // Generate TypeScript declarations for init functions
+                        init.1 = self.ts_for_init_fn(
+                            false,                                 // has_memory
+                            !self.config.omit_default_module_path, // has_module_or_path_optional
+                        )?;
+                    }
+
                     _ => {}
                 }
 
                 if needs_manual_start {
-                    start
-                        .get_or_insert_with(String::new)
-                        .push_str("\nwasm.__wbindgen_start();\n");
+                    match self.config.mode {
+                        // For Esm mode, __wbindgen_start is called in __wbg_finalize_init
+                        OutputMode::Esm => {}
+                        _ => {
+                            start
+                                .get_or_insert_with(String::new)
+                                .push_str("\nwasm.__wbindgen_start();\n");
+                        }
+                    }
                 }
-            }
-
-            // With a browser-native output we're generating an ES module, but
-            // browsers don't support natively importing Wasm right now so we
-            // expose the same initialization function as `--target no-modules`
-            // as the default export of the module.
-            OutputMode::Web => {
-                self.imports_post.push_str("let wasm;\n");
-                init = self.gen_init(needs_manual_start, Some(&mut imports))?;
-                footer.push_str("export { initSync };\n");
-                footer.push_str("export default __wbg_init;");
             }
 
             // For source phase imports, we need to instantiate the module
@@ -671,6 +825,17 @@ wasm = wasmInstance.exports;
                 if needs_manual_start {
                     footer.push_str("\nwasm.__wbindgen_start();\n");
                 }
+            }
+
+            // With a browser-native output we're generating an ES module, but
+            // browsers don't support natively importing Wasm right now so we
+            // expose the same initialization function as `--target no-modules`
+            // as the default export of the module.
+            OutputMode::Web => {
+                self.imports_post.push_str("let wasm;\n");
+                init = self.gen_init(needs_manual_start, Some(&mut imports))?;
+                footer.push_str("export { initSync };\n");
+                footer.push_str("export default __wbg_init;");
             }
         }
 
@@ -772,7 +937,8 @@ wasm = wasmInstance.exports;
             | OutputMode::Node { module: true }
             | OutputMode::Web
             | OutputMode::Module
-            | OutputMode::Deno => {
+            | OutputMode::Deno
+            | OutputMode::Esm => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
                     imports.push_str("import { ");
                     for (i, (item, rename)) in items.iter().enumerate() {
@@ -878,7 +1044,8 @@ wasm = wasmInstance.exports;
         needs_manual_start: bool,
         mut imports: Option<&mut String>,
     ) -> Result<(String, String), Error> {
-        let module_name = "wbg";
+        let stem = self.config.stem()?;
+        let module_name = format!("./{stem}_bg.js");
         let mut init_memory_arg = "";
         let mut init_memory_arg_alone = "";
         let mut has_memory = false;
@@ -923,16 +1090,16 @@ wasm = wasmInstance.exports;
         // directed to wire up.
         let mut imports_init = String::new();
 
-        imports_init.push_str("imports.");
-        imports_init.push_str(module_name);
-        imports_init.push_str(" = {};\n");
+        imports_init.push_str("imports[\"");
+        imports_init.push_str(&module_name);
+        imports_init.push_str("\"] = {};\n");
 
         for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
-            import.module = module_name.to_string();
-            imports_init.push_str("imports.");
-            imports_init.push_str(module_name);
-            imports_init.push('.');
+            import.module = module_name.clone();
+            imports_init.push_str("imports[\"");
+            imports_init.push_str(&module_name);
+            imports_init.push_str("\"].");
             imports_init.push_str(&import.name);
             imports_init.push_str(" = ");
             imports_init.push_str(js.trim());
@@ -3715,6 +3882,7 @@ wasm = wasmInstance.exports;
                         | OutputMode::Bundler { .. }
                         | OutputMode::Module
                         | OutputMode::Deno
+                        | OutputMode::Esm
                         | OutputMode::Node { module: true } => "import.meta.url",
                         OutputMode::Node { module: false } => {
                             "require('url').pathToFileURL(__filename)"

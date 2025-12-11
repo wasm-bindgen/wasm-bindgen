@@ -1,4 +1,5 @@
 // FLAGS: --target=web
+// FLAGS: --target=esm
 
 use wasm_bindgen::prelude::*;
 

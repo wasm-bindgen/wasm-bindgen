@@ -95,38 +95,38 @@ async function __wbg_load(module, imports) {
 
 function __wbg_get_imports() {
     const imports = {};
-    imports.wbg = {};
-    imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
+    imports["./reference_test_bg.js"] = {};
+    imports["./reference_test_bg.js"].__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbg_catch_me_1d18acaa34acb005 = function() { return handleError(function () {
+    imports["./reference_test_bg.js"].__wbg_catch_me_1d18acaa34acb005 = function() { return handleError(function () {
         catch_me();
     }, arguments) };
-    imports.wbg.__wbg_get_c871386e44ba8c35 = function(arg0) {
+    imports["./reference_test_bg.js"].__wbg_get_c871386e44ba8c35 = function(arg0) {
         const ret = arg0.get();
         return ret;
     };
-    imports.wbg.__wbg_my_function_597f96bc4719408a = function() {
+    imports["./reference_test_bg.js"].__wbg_my_function_597f96bc4719408a = function() {
         b.my_function();
     };
-    imports.wbg.__wbg_new_c30895ccee9479d4 = function(arg0) {
+    imports["./reference_test_bg.js"].__wbg_new_c30895ccee9479d4 = function(arg0) {
         const ret = new _default(arg0);
         return ret;
     };
-    imports.wbg.__wbg_no_catch_757175fbf9e08b9e = function() {
+    imports["./reference_test_bg.js"].__wbg_no_catch_757175fbf9e08b9e = function() {
         no_catch();
     };
-    imports.wbg.__wbg_reload_b091d4dc4b1b3a74 = function() {
+    imports["./reference_test_bg.js"].__wbg_reload_b091d4dc4b1b3a74 = function() {
         window.location.reload();
     };
-    imports.wbg.__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
+    imports["./reference_test_bg.js"].__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
         const ret = a.CONST;
         return ret;
     };
-    imports.wbg.__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
+    imports["./reference_test_bg.js"].__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
         window.document.write(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbindgen_init_externref_table = function() {
+    imports["./reference_test_bg.js"].__wbindgen_init_externref_table = function() {
         const table = wasm.__wbindgen_externrefs;
         const offset = table.grow(4);
         table.set(0, undefined);

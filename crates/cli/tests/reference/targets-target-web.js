@@ -44,12 +44,12 @@ async function __wbg_load(module, imports) {
 
 function __wbg_get_imports() {
     const imports = {};
-    imports.wbg = {};
-    imports.wbg.__wbg_random_ae0b2256206ad108 = function() {
+    imports["./reference_test_bg.js"] = {};
+    imports["./reference_test_bg.js"].__wbg_random_ae0b2256206ad108 = function() {
         const ret = Math.random();
         return ret;
     };
-    imports.wbg.__wbindgen_init_externref_table = function() {
+    imports["./reference_test_bg.js"].__wbindgen_init_externref_table = function() {
         const table = wasm.__wbindgen_externrefs;
         const offset = table.grow(4);
         table.set(0, undefined);

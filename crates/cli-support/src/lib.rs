@@ -68,6 +68,7 @@ enum OutputMode {
     Node { module: bool },
     Deno,
     Module,
+    Esm,
 }
 
 enum Input {
@@ -224,6 +225,13 @@ impl Bindgen {
         Ok(self)
     }
 
+    pub fn esm(&mut self, esm: bool) -> Result<&mut Bindgen, Error> {
+        if esm {
+            self.switch_mode(OutputMode::Esm, "--target esm")?;
+        }
+        Ok(self)
+    }
+
     pub fn no_modules_global(&mut self, name: &str) -> Result<&mut Bindgen, Error> {
         match &mut self.mode {
             OutputMode::NoModules { global } => *global = name.to_string(),
@@ -341,11 +349,11 @@ impl Bindgen {
             self.multi_value = true;
         }
 
-        // Check that no exported symbol is called "default" if we target web.
-        if matches!(self.mode, OutputMode::Web)
+        // Check that no exported symbol is called "default" if we target web or esm.
+        if matches!(self.mode, OutputMode::Web | OutputMode::Esm)
             && module.exports.iter().any(|export| export.name == "default")
         {
-            bail!("exported symbol \"default\" not allowed for --target web")
+            bail!("exported symbol \"default\" not allowed for `--target web` or `--target esm`")
         }
 
         // Check that reset_state is only used with --target module
@@ -579,6 +587,7 @@ impl OutputMode {
                 | OutputMode::Web
                 | OutputMode::Node { module: true }
                 | OutputMode::Deno
+                | OutputMode::Esm
         )
     }
 
@@ -593,8 +602,21 @@ impl OutputMode {
     fn esm_integration(&self) -> bool {
         matches!(
             self,
-            OutputMode::Bundler { .. } | OutputMode::Node { module: true }
+            OutputMode::Bundler { .. } | OutputMode::Node { module: true } | OutputMode::Esm
         )
+    }
+
+    /// Returns the main entry point file name for this output mode.
+    fn main_file(&self, stem: &str) -> String {
+        match self {
+            OutputMode::Bundler { .. }
+            | OutputMode::Web
+            | OutputMode::NoModules { .. }
+            | OutputMode::Node { .. }
+            | OutputMode::Deno
+            | OutputMode::Module
+            | OutputMode::Esm => format!("{stem}.js"),
+        }
     }
 }
 
@@ -686,16 +708,21 @@ impl Output {
                 .with_context(|| format!("failed to write `{}`", path.display()))?;
         }
 
-        let is_genmode_nodemodule = matches!(gen.mode, OutputMode::Node { module: true });
-        if !gen.npm_dependencies.is_empty() || is_genmode_nodemodule {
+        let needs_package_json = matches!(
+            gen.mode,
+            OutputMode::Node { module: true } | OutputMode::Esm
+        );
+        if !gen.npm_dependencies.is_empty() || needs_package_json {
             #[derive(serde::Serialize)]
             struct PackageJson<'a> {
                 #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
                 ty: Option<&'static str>,
+                main: String,
                 dependencies: BTreeMap<&'a str, &'a str>,
             }
             let pj = PackageJson {
-                ty: is_genmode_nodemodule.then_some("module"),
+                ty: needs_package_json.then_some("module"),
+                main: gen.mode.main_file(&self.stem),
                 dependencies: gen
                     .npm_dependencies
                     .iter()
@@ -740,25 +767,34 @@ import source wasmModule from \"./{wasm_name}.wasm\";
 
             let start = gen.start.as_deref().unwrap_or("");
 
-            if matches!(gen.mode, OutputMode::Node { .. }) {
-                write(
-                    &js_path,
-                    format!(
-                        "\
+            match &gen.mode {
+                OutputMode::Node { module: true } => {
+                    write(
+                        &js_path,
+                        format!(
+                            "\
 {start}
 export * from \"./{js_name}\";",
-                    ),
-                )?;
-            } else {
-                write(
-                    &js_path,
-                    format!(
-                        "\
+                        ),
+                    )?;
+                }
+                OutputMode::Esm => {
+                    // Esm mode: main entry with init functions is generated in js/mod.rs
+                    let start = gen.start.as_deref().unwrap_or("");
+                    write(&js_path, start)?;
+                }
+                _ => {
+                    // Bundler mode
+                    write(
+                        &js_path,
+                        format!(
+                            "\
 import * as wasm from \"./{wasm_name}.wasm\";
 export * from \"./{js_name}\";
 {start}"
-                    ),
-                )?;
+                        ),
+                    )?;
+                }
             }
             write(out_dir.join(&js_name), reset_indentation(&gen.js))?;
         } else {

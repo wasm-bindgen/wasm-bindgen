@@ -16,7 +16,15 @@
 * Added [Window Management API](https://w3c.github.io/window-management/).
   [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
 
+* Added `--target esm` for generating ES modules with bundler-compatible WASM interface,
+  enabling the same WASM file to be shared across `esm`, `bundler`, and `experimental-nodejs-module` targets.
+  [#4850](https://github.com/rustwasm/wasm-bindgen/pull/4850)
+
 ### Changed
+
+* Changed WASM import namespace from `wbg` to `./{name}_bg.js` for `web` and `no-modules` targets,
+  aligning with `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
+  [#4850](https://github.com/rustwasm/wasm-bindgen/pull/4850)
 
 * Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
   [#4367](https://github.com/wasm-bindgen/wasm-bindgen/pull/4367)
