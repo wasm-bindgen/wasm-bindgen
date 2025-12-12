@@ -64,6 +64,7 @@ fn setup_input_oninput_callback(worker: Rc<RefCell<web_sys::Worker>>) {
     #[allow(unused_assignments)]
     let mut persistent_callback_handle = get_on_msg_callback();
 
+    #[allow(unused_assignments)]
     let callback = Closure::new(move || {
         console::log_1(&"oninput callback triggered".into());
         let document = web_sys::window().unwrap().document().unwrap();

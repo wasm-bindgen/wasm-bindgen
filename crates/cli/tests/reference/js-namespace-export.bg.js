@@ -121,6 +121,13 @@ export class Rectangle {
     /**
      * @returns {number}
      */
+    get height() {
+        const ret = wasm.__wbg_get_rectangle_height(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
     get width() {
         const ret = wasm.__wbg_get_rectangle_width(this.__wbg_ptr);
         return ret;
@@ -128,21 +135,14 @@ export class Rectangle {
     /**
      * @param {number} arg0
      */
-    set width(arg0) {
-        wasm.__wbg_set_rectangle_width(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @returns {number}
-     */
-    get height() {
-        const ret = wasm.__wbg_get_rectangle_height(this.__wbg_ptr);
-        return ret;
+    set height(arg0) {
+        wasm.__wbg_set_rectangle_height(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
-    set height(arg0) {
-        wasm.__wbg_set_rectangle_height(this.__wbg_ptr, arg0);
+    set width(arg0) {
+        wasm.__wbg_set_rectangle_width(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) Rectangle.prototype[Symbol.dispose] = Rectangle.prototype.free;
@@ -158,6 +158,9 @@ class Counter {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_counter_free(ptr, 0);
     }
+    increment() {
+        wasm.counter_increment(this.__wbg_ptr);
+    }
     /**
      * @param {number} initial
      */
@@ -168,20 +171,17 @@ class Counter {
         return this;
     }
     /**
+     * @param {number} val
+     */
+    set value(val) {
+        wasm.counter_set_value(this.__wbg_ptr, val);
+    }
+    /**
      * @returns {number}
      */
     get value() {
         const ret = wasm.counter_value(this.__wbg_ptr);
         return ret;
-    }
-    increment() {
-        wasm.counter_increment(this.__wbg_ptr);
-    }
-    /**
-     * @param {number} val
-     */
-    set value(val) {
-        wasm.counter_set_value(this.__wbg_ptr, val);
     }
 }
 if (Symbol.dispose) Counter.prototype[Symbol.dispose] = Counter.prototype.free;
@@ -212,7 +212,7 @@ function concat(a, b) {
  * @param {string} s
  * @returns {string}
  */
-function uppercase2(s) {
+function uppercase(s) {
     let deferred2_0;
     let deferred2_1;
     try {
@@ -231,7 +231,7 @@ const _default = {};
 _default.Counter = Counter;
 _default.concat = concat;
 _default.uppercase = {};
-_default.uppercase.uppercase = uppercase2;
+_default.uppercase.uppercase = uppercase;
 export default _default;
 
 /**
@@ -288,12 +288,6 @@ class Point3D {
         return ret;
     }
     /**
-     * @param {number} arg0
-     */
-    set x(arg0) {
-        wasm.__wbg_set_point3d_x(this.__wbg_ptr, arg0);
-    }
-    /**
      * @returns {number}
      */
     get y() {
@@ -301,17 +295,23 @@ class Point3D {
         return ret;
     }
     /**
-     * @param {number} arg0
-     */
-    set y(arg0) {
-        wasm.__wbg_set_point3d_y(this.__wbg_ptr, arg0);
-    }
-    /**
      * @returns {number}
      */
     get z() {
         const ret = wasm.__wbg_get_point3d_z(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set x(arg0) {
+        wasm.__wbg_set_point3d_x(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set y(arg0) {
+        wasm.__wbg_set_point3d_y(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
@@ -341,17 +341,17 @@ class Point {
         return ret;
     }
     /**
-     * @param {number} arg0
-     */
-    set x(arg0) {
-        wasm.__wbg_set_point_x(this.__wbg_ptr, arg0);
-    }
-    /**
      * @returns {number}
      */
     get y() {
         const ret = wasm.__wbg_get_point_y(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set x(arg0) {
+        wasm.__wbg_set_point_x(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
@@ -402,7 +402,7 @@ types.http.HttpStatus = HttpStatus;
  * @param {string} s
  * @returns {string}
  */
-function uppercase(s) {
+function uppercase2(s) {
     let deferred2_0;
     let deferred2_1;
     try {
@@ -419,7 +419,7 @@ function uppercase(s) {
 
 export const utils = {};
 utils.string = {};
-utils.string.uppercase = uppercase;
+utils.string.uppercase = uppercase2;
 
 export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
