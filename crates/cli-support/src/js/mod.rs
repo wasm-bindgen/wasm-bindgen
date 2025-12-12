@@ -1294,6 +1294,12 @@ wasm = wasmInstance.exports;
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
         ));
 
+        let ts_comments = if class.generate_typescript {
+            Some(class.comments.clone())
+        } else {
+            None
+        };
+
         define_export(
             &mut self.exports,
             name,
@@ -1307,7 +1313,7 @@ wasm = wasmInstance.exports;
                 } else {
                     String::new()
                 },
-                ts_comments: None,
+                ts_comments,
                 private: class.private,
             }),
         )?;

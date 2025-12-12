@@ -1,6 +1,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
+/**
+ * Description for HoldsNumber
+ */
 export class HoldsNumber {
   private constructor();
   free(): void;

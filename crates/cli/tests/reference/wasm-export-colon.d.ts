@@ -1,6 +1,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
+/**
+ * Runtime test harness support instantiated in JS.
+ *
+ * The node.js entry script instantiates a `Context` here which is used to
+ * drive test execution.
+ */
 export class WasmBindgenTestContext {
   free(): void;
   [Symbol.dispose](): void;
