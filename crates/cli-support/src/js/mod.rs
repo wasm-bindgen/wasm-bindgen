@@ -2972,7 +2972,13 @@ wasm = wasmInstance.exports;
             self.generate_struct(s)?;
         }
 
-        self.typescript.push_str(&self.aux.extra_typescript);
+        // Sort custom sections to avoid nondeterminism across CGUs.
+        let mut custom_sections: Vec<_> = self.aux.extra_typescript.iter().collect();
+        custom_sections.sort_unstable();
+        for section in custom_sections {
+            self.typescript.push_str(section);
+            self.typescript.push_str("\n\n");
+        }
 
         for path in self.aux.package_jsons.iter() {
             self.process_package_json(path)?;

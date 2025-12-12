@@ -477,10 +477,11 @@ impl<'a> Context<'a> {
         for struct_ in structs {
             self.struct_(struct_)?;
         }
-        for section in typescript_custom_sections {
-            self.aux.extra_typescript.push_str(&section);
-            self.aux.extra_typescript.push_str("\n\n");
-        }
+
+        // Collect custom sections to be sorted later when all CGUs encountered
+        self.aux
+            .extra_typescript
+            .extend(typescript_custom_sections.iter().map(|s| s.to_string()));
         self.aux
             .snippets
             .entry(unique_crate_identifier.to_string())
