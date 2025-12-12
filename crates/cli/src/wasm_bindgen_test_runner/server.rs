@@ -261,12 +261,23 @@ pub(crate) fn spawn(
 
                 match test_mode {
                     TestMode::DedicatedWorker { .. } => {
-                        format!("const port = new Worker('worker.js', {{type: '{module}'}});\n")
+                        format!(
+                            r#"const port = new Worker('worker.js', {{type: '{module}'}});
+                            port.onerror = function(e) {{
+                                console.error('Worker error:', e.message, e.filename, e.lineno);
+                                document.getElementById('output').textContent += '\nWorker error: ' + e.message;
+                            }};
+                            "#
+                        )
                     }
                     TestMode::SharedWorker { .. } => {
                         format!(
                             r#"
                             const worker = new SharedWorker("worker.js?random=" + crypto.randomUUID(), {{type: "{module}"}});
+                            worker.onerror = function(e) {{
+                                console.error('Worker error:', e.message, e.filename, e.lineno);
+                                document.getElementById('output').textContent += '\nWorker error: ' + e.message;
+                            }};
                             const port = worker.port;
                             port.start();
                             "#
@@ -276,7 +287,13 @@ pub(crate) fn spawn(
                         format!(
                             r#"
                             const url = "service.js?random=" + crypto.randomUUID();
-                            await navigator.serviceWorker.register(url, {{type: "{module}"}});
+                            const registration = await navigator.serviceWorker.register(url, {{type: "{module}"}});
+                            if (registration.installing) {{
+                                registration.installing.onerror = function(e) {{
+                                    console.error('ServiceWorker error:', e.message);
+                                    document.getElementById('output').textContent += '\nServiceWorker error: ' + e.message;
+                                }};
+                            }}
                             await new Promise((resolve) => {{
                                 navigator.serviceWorker.addEventListener('controllerchange', () => {{
                                     if (navigator.serviceWorker.controller.scriptURL != location.href + url) {{
