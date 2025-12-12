@@ -113,6 +113,106 @@ impl Project {
     }
 }
 
+/// Returns the path to a webdriver if one is available, or None if headless
+/// tests should be skipped.
+fn find_webdriver() -> Option<(&'static str, PathBuf)> {
+    // Check for explicit env vars first
+    if let Ok(path) = env::var("CHROMEDRIVER") {
+        return Some(("CHROMEDRIVER", PathBuf::from(path)));
+    }
+    if let Ok(path) = env::var("GECKODRIVER") {
+        return Some(("GECKODRIVER", PathBuf::from(path)));
+    }
+    if let Ok(path) = env::var("SAFARIDRIVER") {
+        return Some(("SAFARIDRIVER", PathBuf::from(path)));
+    }
+
+    // Try to find webdrivers in PATH
+    for (env_name, binary) in [
+        ("CHROMEDRIVER", "chromedriver"),
+        ("GECKODRIVER", "geckodriver"),
+        ("SAFARIDRIVER", "safaridriver"),
+    ] {
+        if let Ok(output) = std::process::Command::new("which").arg(binary).output() {
+            if output.status.success() {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !path.is_empty() {
+                    return Some((env_name, PathBuf::from(path)));
+                }
+            }
+        }
+    }
+
+    None
+}
+
+#[test]
+fn test_headless_worker_output_not_garbled() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_headless_worker_output_not_garbled");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_dedicated_worker);
+
+            #[wasm_bindgen_test]
+            fn test_1() {}
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // The output should contain the proper test output, not garbled text
+    // Correct: "running 1 test" and "test test_1 ... ok"
+    // Garbled: "Loading Wasm module...st_1 ... ok" (missing "running 1 test")
+    assert!(
+        stdout.contains("running 1 test") || stderr.contains("running 1 test"),
+        "Expected 'running 1 test' in output.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+    assert!(
+        stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
+        "Expected 'test test_1 ... ok' in output.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    // Make sure the test actually passed
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
 #[test]
 fn test_wasm_bindgen_test_runner_list() {
     let output = Project::new("test_wasm_bindgen_test_runner_list")
