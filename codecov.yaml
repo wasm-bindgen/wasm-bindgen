@@ -16,3 +16,7 @@ coverage:
         # todo: inc
         target: 30%
         paths: "crates/js-sys"
+    patch:
+      default:
+        target: 90%
+        threshold: 0%
