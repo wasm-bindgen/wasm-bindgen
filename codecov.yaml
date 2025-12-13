@@ -7,15 +7,15 @@ coverage:
         paths: "src/"
       wasm_bindgen_futures:
         target: 90%
-        paths: "crates/futures"
+        paths: "crates/futures/"
       wasm_bindgen_test:
         # todo: inc
         target: 60%
-        paths: "crates/test"
+        paths: "crates/test/"
       js_sys:
         # todo: inc
         target: 30%
-        paths: "crates/js-sys"
+        paths: "crates/js-sys/"
     patch:
       default:
         target: 90%
