@@ -225,6 +225,7 @@ jobs:
     - run: cargo test -p wasm-bindgen-futures
     - run: cargo test -p wasm-bindgen-shared
     - run: cargo test -p wasm-bindgen-test-shared
+    - run: WASM_BINDGEN_TEST_TIMEOUT=500 cargo bench
 
   test_with_geckodriver:
     strategy:
