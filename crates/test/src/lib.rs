@@ -118,6 +118,7 @@ pub mod __rt;
 // import minicov on other archs.
 // That way you can use normal cargo test without minicov
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 mod coverage;
 
 // <https://github.com/bheisler/criterion.rs>

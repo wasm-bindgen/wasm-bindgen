@@ -112,6 +112,9 @@ use wasm_bindgen_futures::future_to_promise;
 const CONCURRENCY: usize = 1;
 
 pub mod browser;
+
+/// A modified `criterion.rs`, retaining only the basic benchmark capabilities.
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 pub mod criterion;
 pub mod detect;
 pub mod node;
@@ -120,6 +123,7 @@ mod scoped_tls;
 /// as it creates a circular dependency that breaks their usage within `wasm-bindgen-test`.
 ///
 /// Let's copy web-time.
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 pub(crate) mod web_time;
 pub mod worker;
 

@@ -49,4 +49,5 @@ cov *ARGS="":
   -p wasm-bindgen \
   -p wasm-bindgen-futures \
   -p wasm-bindgen-test \
+  --all-features \
   --target wasm32-unknown-unknown {{ARGS}}
