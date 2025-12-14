@@ -4,17 +4,17 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
   </head>
   <body>
-    <pre id="output">Loading scripts...</pre>
-    <pre id="console_debug"></pre>
-    <pre id="console_log"></pre>
-    <pre id="console_info"></pre>
-    <pre id="console_warn"></pre>
-    <pre id="console_error"></pre>
+    <pre id="output" style="display:none">Loading scripts...</pre>
+    <pre id="console_debug" style="display:none"></pre>
+    <pre id="console_log" style="display:none"></pre>
+    <pre id="console_info" style="display:none"></pre>
+    <pre id="console_warn" style="display:none"></pre>
+    <pre id="console_error" style="display:none"></pre>
     <script>
      const orig = id => (...args) => {
          const logs = document.getElementById(id);
-         for (let msg of args) {
-             logs.textContent += `${msg}\n`;
+         for (const msg of args) {
+             logs.appendChild(document.createTextNode(`${msg}\n`));
          }
      };
 

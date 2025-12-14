@@ -38,12 +38,12 @@ fn performance_now() -> f64 {
 }
 
 #[wasm_bindgen_bench]
-async fn bench_console_log_50k(c: &mut Criterion) {
+async fn bench_console_log_10mb(c: &mut Criterion) {
     use std::time::Duration;
 
     let msg: wasm_bindgen::JsValue = "y".repeat(100).into();
-    prewarm(0).await;
-    c.bench_async_function("console_log_after_50k_lines", |b| {
+    prewarm(10_000).await;
+    c.bench_async_function("console_log_after_10mb", |b| {
         let msg = msg.clone();
         Box::pin(async move {
             b.iter_custom_future(|iters| {
