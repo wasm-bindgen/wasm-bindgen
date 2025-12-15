@@ -238,12 +238,12 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg
     return ret !== 0;
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1, arg2, arg3, arg4);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000007(arg0, arg1, arg2, arg3);
 }
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -556,7 +556,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1, arg2);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1, arg2);
                 } finally {
                     state0.a = a;
                 }
@@ -565,10 +565,6 @@ function __wbg_get_imports() {
         } finally {
             state0.a = state0.b = 0;
         }
-    };
-    imports.wbg.__wbg_getElementById_d260967894898392 = function(arg0, arg1, arg2) {
-        const ret = arg0.getElementById(getStringFromWasm0(arg1, arg2));
-        return ret;
     };
     imports.wbg.__wbg_log_975682382eef8e90 = function(arg0, arg1) {
         console.log(getStringFromWasm0(arg0, arg1));
@@ -599,7 +595,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, arg0, arg1);
+                    return wasm_bindgen__convert__closures_____invoke__h0000000000000007(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -655,9 +651,6 @@ function __wbg_get_imports() {
         const ret = arg0.self;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
     };
-    imports.wbg.__wbg_set_text_content_68f82877f6556044 = function(arg0, arg1, arg2) {
-        arg0.textContent = getStringFromWasm0(arg1, arg2);
-    };
     imports.wbg.__wbg_stack_3c19b4211e75a0c6 = function(arg0) {
         const ret = arg0.stack;
         return ret;
@@ -680,10 +673,6 @@ function __wbg_get_imports() {
         getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
         getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
-    imports.wbg.__wbg_static_accessor_DOCUMENT_2b3c7f862f75ffec = function() {
-        const ret = document;
-        return ret;
-    };
     imports.wbg.__wbg_static_accessor_GLOBAL_769e6b65d6557335 = function() {
         const ret = typeof global === 'undefined' ? null : global;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
@@ -699,13 +688,6 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_static_accessor_WINDOW_a8924b26aa92d024 = function() {
         const ret = typeof window === 'undefined' ? null : window;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_text_content_c3e9343d2b618173 = function(arg0, arg1) {
-        const ret = arg1.textContent;
-        const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len1 = WASM_VECTOR_LEN;
-        getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-        getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
     imports.wbg.__wbg_then_4f95312d68691235 = function(arg0, arg1) {
         const ret = arg0.then(arg1);
