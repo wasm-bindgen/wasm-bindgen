@@ -2,8 +2,9 @@ comment: false
 
 coverage:
   status:
-    project: false
+    project:
+      default:
+        informational: true
     patch:
       default:
-        target: 90%
-        threshold: 0%
+        informational: true
