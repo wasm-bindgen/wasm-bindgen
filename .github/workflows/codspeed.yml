@@ -27,9 +27,15 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@just
+
       - uses: actions/setup-node@v6
         with:
           node-version: '25'
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cargo-codspeed-${{ hashFiles('**/Cargo.toml') }}
+
       - run: just bench
 
       - name: Upload benchmark results
