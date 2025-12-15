@@ -1,6 +1,9 @@
+comment: false
+
 coverage:
   status:
     project:
+      default: false
       wasm_bindgen:
         # todo: inc
         target: 85%
