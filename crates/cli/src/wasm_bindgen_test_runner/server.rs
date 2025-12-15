@@ -155,10 +155,8 @@ pub(crate) fn spawn(
             }};
 
             self.__wbg_test_invoke = f => f();
-            self.__wbg_test_output = "";
             self.__wbg_test_output_writeln = function (...args) {{
-                self.__wbg_test_output += args.map(String).join(' ') + "\n";
-                port.postMessage(["__wbgtest_output", self.__wbg_test_output]);
+                port.postMessage(["__wbgtest_output_append", args.map(String).join(' ') + "\n"]);
             }}
 
             wrap("debug");
@@ -240,8 +238,13 @@ pub(crate) fn spawn(
                         method == "debug"
                     ) {{
                         console[method].apply(undefined, args[0]);
-                    }} else if (method == "output") {{
-                        document.getElementById("output").textContent = args[0];
+                    }} else if (method == "output_append") {{
+                        const el = document.getElementById("output");
+                        if (!el.dataset.appended) {{
+                            el.textContent += "\n";
+                            el.dataset.appended = "1";
+                        }}
+                        el.textContent += args[0];
                     }}
                 }}
             }});
