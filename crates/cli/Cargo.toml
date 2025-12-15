@@ -25,6 +25,10 @@ name = "wasm-bindgen"
 path = "src/bin/wasm-bindgen.rs"
 
 [[bin]]
+name = "wasm-bindgen-build"
+path = "src/bin/wasm-bindgen-build.rs"
+
+[[bin]]
 name = "wasm-bindgen-test-runner"
 path = "src/bin/wasm-bindgen-test-runner.rs"
 
@@ -34,11 +38,14 @@ path = "src/bin/wasm2es6js.rs"
 
 [dependencies]
 anyhow = "1.0"
+console = "0.16.0"
 clap = { version = "4", features = ["derive"] }
 env_logger = "0.11.5"
 log = "0.4"
 native-tls = { version = "0.2", default-features = false, optional = true }
+path-clean = "1.0.1"
 rouille = { version = "3.0.0", default-features = false }
+semver = "1.0.26"
 serde = { version = "1.0", features = ['derive'] }
 serde_derive = "1.0"
 serde_json = "1.0"

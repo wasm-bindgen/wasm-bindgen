@@ -16,14 +16,27 @@ version = "0.2.106"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.22"
+cargo_metadata = "0.20.0"
+console = "0.16.0"
+dirs-next = "2.0"
+flate2 = "1.1"
+glob = "0.3.1"
+heck = "0.5.0"
 leb128 = "0.2"
 log = "0.4"
 rustc-demangle = "0.1.13"
+semver = "1.0.26"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_ignored = "0.1.12"
+strsim = "0.11.1"
+tar = "0.4"
+toml = "0.9.5"
+ureq = { version = "3.1", features = ["gzip", "json"] }
 walrus = { version = "0.24.2", features = ['parallel'] }
 wasm-bindgen-shared = { path = "../shared", version = "=0.2.106" }
 wasmparser = "0.240"
+which = "8.0.0"
 
 [dev-dependencies]
 rstest = "0.26"
