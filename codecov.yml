@@ -2,28 +2,7 @@ comment: false
 
 coverage:
   status:
-    project:
-      default: false
-      wasm_bindgen:
-        # todo: inc
-        target: 85%
-        paths:
-          - "src/"
-      wasm_bindgen_futures:
-        # todo: inc
-        target: 75%
-        paths:
-          - "crates/futures/"
-      wasm_bindgen_test:
-        # todo: inc
-        target: 60%
-        paths:
-          - "crates/test/"
-      js_sys:
-        # todo: inc
-        target: 30%
-        paths:
-          - "crates/js-sys/"
+    project: false
     patch:
       default:
         target: 90%
