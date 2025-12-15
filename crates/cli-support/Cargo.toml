@@ -27,9 +27,9 @@ wasmparser = "0.240"
 
 [dev-dependencies]
 rstest = "0.26"
-wasmprinter = "0.240"
-wast = "240"
-wat = "1.0"
+wasmprinter = "0.243"
+wast = "243"
+wat = "1.243.0"
 
 [lints]
 workspace = true
