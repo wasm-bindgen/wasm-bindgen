@@ -102,43 +102,11 @@ export class Foo {
         wasm.__wbg_foo_free(ptr, 0);
     }
     /**
-     * @returns {number}
-     */
-    get x() {
-        const ret = wasm.__wbg_get_foo_x(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set x(arg0) {
-        wasm.__wbg_set_foo_x(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get y() {
-        const ret = wasm.__wbg_get_foo_y(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set y(arg0) {
-        wasm.__wbg_set_foo_y(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
-    }
-    /**
      * @returns {number | undefined}
      */
     get lone_getter() {
         const ret = wasm.foo_lone_getter(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {boolean | null} [value]
-     */
-    static set x(value) {
-        wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
     }
     /**
      * @param {number | null} [value]
@@ -147,11 +115,21 @@ export class Foo {
         wasm.foo_set_lone_setter(this.__wbg_ptr, isLikeNone(value) ? 0x100000001 : (value) >>> 0);
     }
     /**
-     * @returns {number | undefined}
+     * But you must write strings.
+     *
+     * Yes, this is totally fine in JS.
+     * @param {string | null} [value]
      */
-    get z() {
-        const ret = wasm.foo_z(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+    set weird(value) {
+        var ptr0 = isLikeNone(value) ? 0 : passStringToWasm0(value, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.foo_set_weird(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {boolean | null} [value]
+     */
+    static set x(value) {
+        wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
     }
     /**
      * @param {number | null} [z]
@@ -177,15 +155,37 @@ export class Foo {
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * But you must write strings.
-     *
-     * Yes, this is totally fine in JS.
-     * @param {string | null} [value]
+     * @returns {number | undefined}
      */
-    set weird(value) {
-        var ptr0 = isLikeNone(value) ? 0 : passStringToWasm0(value, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.foo_set_weird(this.__wbg_ptr, ptr0, len0);
+    get z() {
+        const ret = wasm.foo_z(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get x() {
+        const ret = wasm.__wbg_get_foo_x(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get y() {
+        const ret = wasm.__wbg_get_foo_y(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set x(arg0) {
+        wasm.__wbg_set_foo_x(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set y(arg0) {
+        wasm.__wbg_set_foo_y(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;

@@ -140,10 +140,12 @@ pub(crate) fn spawn(
             r#"
             const nocapture = {nocapture};
             const wrap = method => {{
+                const og = self.console[method];
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
+                    og.apply(this, args);
                     if (nocapture) {{
-                        self.__wbg_test_output_writeln(args);
+                        self.__wbg_test_output_writeln(...args);
                     }}
                     if (self[on_method]) {{
                         self[on_method](args);
@@ -153,8 +155,8 @@ pub(crate) fn spawn(
             }};
 
             self.__wbg_test_invoke = f => f();
-            self.__wbg_test_output_writeln = function (line) {{
-                port.postMessage(["__wbgtest_output_append", line + "\n"]);
+            self.__wbg_test_output_writeln = function (...args) {{
+                port.postMessage(["__wbgtest_output_append", args.map(String).join(' ') + "\n"]);
             }}
 
             wrap("debug");
@@ -262,12 +264,23 @@ pub(crate) fn spawn(
 
                 match test_mode {
                     TestMode::DedicatedWorker { .. } => {
-                        format!("const port = new Worker('worker.js', {{type: '{module}'}});\n")
+                        format!(
+                            r#"const port = new Worker('worker.js', {{type: '{module}'}});
+                            port.onerror = function(e) {{
+                                console.error('Worker error:', e.message, e.filename, e.lineno);
+                                document.getElementById('output').textContent += '\nWorker error: ' + e.message;
+                            }};
+                            "#
+                        )
                     }
                     TestMode::SharedWorker { .. } => {
                         format!(
                             r#"
                             const worker = new SharedWorker("worker.js?random=" + crypto.randomUUID(), {{type: "{module}"}});
+                            worker.onerror = function(e) {{
+                                console.error('Worker error:', e.message, e.filename, e.lineno);
+                                document.getElementById('output').textContent += '\nWorker error: ' + e.message;
+                            }};
                             const port = worker.port;
                             port.start();
                             "#
@@ -277,7 +290,13 @@ pub(crate) fn spawn(
                         format!(
                             r#"
                             const url = "service.js?random=" + crypto.randomUUID();
-                            await navigator.serviceWorker.register(url, {{type: "{module}"}});
+                            const registration = await navigator.serviceWorker.register(url, {{type: "{module}"}});
+                            if (registration.installing) {{
+                                registration.installing.onerror = function(e) {{
+                                    console.error('ServiceWorker error:', e.message);
+                                    document.getElementById('output').textContent += '\nServiceWorker error: ' + e.message;
+                                }};
+                            }}
                             await new Promise((resolve) => {{
                                 navigator.serviceWorker.addEventListener('controllerchange', () => {{
                                     if (navigator.serviceWorker.controller.scriptURL != location.href + url) {{

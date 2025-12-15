@@ -114,7 +114,6 @@ impl F64 {
         /// Put `debug_assert!` in a function to clap `coverage(off)` on it.
         ///
         /// See <https://github.com/rust-lang/rust/issues/80549>.
-        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
         fn check(this: f64) {
             debug_assert!(this.is_sign_positive(), "found negative input");
             debug_assert!(

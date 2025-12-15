@@ -46,6 +46,13 @@ class _default {
         wasm.__wbg_default_free(ptr, 0);
     }
     /**
+     * @returns {number}
+     */
+    get_value() {
+        const ret = wasm.default_get_value(this.__wbg_ptr);
+        return ret;
+    }
+    /**
      * @param {number} value
      */
     constructor(value) {
@@ -53,13 +60,6 @@ class _default {
         this.__wbg_ptr = ret >>> 0;
         defaultFinalization.register(this, this.__wbg_ptr, this);
         return this;
-    }
-    /**
-     * @returns {number}
-     */
-    get_value() {
-        const ret = wasm.default_get_value(this.__wbg_ptr);
-        return ret;
     }
 }
 if (Symbol.dispose) _default.prototype[Symbol.dispose] = _default.prototype.free;

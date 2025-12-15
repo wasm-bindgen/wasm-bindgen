@@ -1294,6 +1294,12 @@ wasm = wasmInstance.exports;
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
         ));
 
+        let ts_comments = if class.generate_typescript {
+            Some(class.comments.clone())
+        } else {
+            None
+        };
+
         define_export(
             &mut self.exports,
             name,
@@ -1307,7 +1313,7 @@ wasm = wasmInstance.exports;
                 } else {
                     String::new()
                 },
-                ts_comments: None,
+                ts_comments,
                 private: class.private,
             }),
         )?;
@@ -4513,7 +4519,8 @@ fn iter_adapter<'a>(
         })
         .collect();
 
-    // just sort imports here, exports are sorted separately by export_def btree collection
+    // Sort adapters by kind first (imports, exports, adapters), then by name within each kind
+    // to ensure deterministic ordering of generated code.
     adapters.sort_by(|(_, _, a), (_, _, b)| {
         fn get_kind_order(kind: &ContextAdapterKind) -> u8 {
             match kind {
@@ -4528,6 +4535,11 @@ fn iter_adapter<'a>(
                 let a = module.imports.get(*a);
                 let b = module.imports.get(*b);
                 a.name.cmp(&b.name)
+            }
+            (ContextAdapterKind::Export(a), ContextAdapterKind::Export(b)) => {
+                // Sort exports by debug_name to ensure deterministic identifier generation
+                // when multiple exports have the same JS name (e.g., due to js_name attribute).
+                a.debug_name.cmp(&b.debug_name)
             }
             _ => get_kind_order(a).cmp(&get_kind_order(b)),
         }

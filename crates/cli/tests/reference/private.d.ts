@@ -9,6 +9,9 @@ declare enum HiddenEnum {
   Variant2 = 1,
 }
 
+/**
+ * A hidden struct that is not exported but can be used as an argument type
+ */
 declare class HiddenStruct {
   private constructor();
   free(): void;
@@ -25,6 +28,9 @@ export enum PublicEnum {
   B = 1,
 }
 
+/**
+ * A public struct that is exported
+ */
 export class PublicStruct {
   private constructor();
   free(): void;

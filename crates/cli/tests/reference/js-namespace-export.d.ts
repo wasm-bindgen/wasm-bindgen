@@ -11,27 +11,27 @@ export class Rectangle {
   private constructor();
   free(): void;
   [Symbol.dispose](): void;
-  width: number;
   height: number;
+  width: number;
 }
 
 declare class Counter {
   free(): void;
   [Symbol.dispose](): void;
-  constructor(initial: number);
   increment(): void;
+  constructor(initial: number);
   value: number;
 }
 
 declare function concat(a: string, b: string): string;
 
-declare function uppercase2(s: string): string;
+declare function uppercase(s: string): string;
 
 declare let _default: {
   Counter: typeof Counter,
   concat: typeof concat,
   uppercase: {
-    uppercase: typeof uppercase2,
+    uppercase: typeof uppercase,
   },
 };
 export default _default;
@@ -93,10 +93,10 @@ export let types: {
   },
 };
 
-declare function uppercase(s: string): string;
+declare function uppercase2(s: string): string;
 
 export let utils: {
   string: {
-    uppercase: typeof uppercase,
+    uppercase: typeof uppercase2,
   },
 };

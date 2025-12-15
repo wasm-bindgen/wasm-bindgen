@@ -23,6 +23,15 @@
 
 ### Fixed
 
+* Forward worker errors to test output in the test runner.
+  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+
+* Fix: Include doc comments in TypeScript definitions for classes
+  [#4858](https://github.com/wasm-bindgen/wasm-bindgen/pull/4858)
+
+* Interpreter: support try_table blocks
+  [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4862)
+
 ### Removed
 
 ## [0.2.106](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.105...0.2.106)

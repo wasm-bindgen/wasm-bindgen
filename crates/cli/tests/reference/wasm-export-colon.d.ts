@@ -1,6 +1,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
+/**
+ * Runtime test harness support instantiated in JS.
+ *
+ * The node.js entry script instantiates a `Context` here which is used to
+ * drive test execution.
+ */
 export class WasmBindgenTestContext {
   free(): void;
   [Symbol.dispose](): void;
@@ -107,8 +113,8 @@ export interface InitOutput {
   readonly wasm_bindgen__closure__destroy__h0000000000000008: (a: number, b: number) => void;
   readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number) => void;
   readonly wasm_bindgen__convert__closures_____invoke__h0000000000000005: (a: number, b: number) => number;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number, c: any, d: number, e: any) => void;
-  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000007: (a: number, b: number, c: any, d: any) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number, c: any, d: any) => void;
+  readonly wasm_bindgen__convert__closures_____invoke__h0000000000000007: (a: number, b: number, c: any, d: number, e: any) => void;
   readonly __externref_table_alloc: () => number;
   readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;

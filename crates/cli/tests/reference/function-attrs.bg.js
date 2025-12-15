@@ -245,6 +245,14 @@ export class HoldsNumber {
         wasm.__wbg_holdsnumber_free(ptr, 0);
     }
     /**
+     * Inner value
+     * @returns {number}
+     */
+    get inner() {
+        const ret = wasm.holdsnumber_get_inner(this.__wbg_ptr);
+        return ret;
+    }
+    /**
      * Description for method_with_attr
      * @param {number} firstArg - some number
      * @param {boolean | undefined} secondArg
@@ -263,14 +271,6 @@ export class HoldsNumber {
     static static_fn_with_attr(firstArg, secondArg) {
         const ret = wasm.holdsnumber_static_fn_with_attr(firstArg, secondArg);
         return HoldsNumber.__wrap(ret);
-    }
-    /**
-     * Inner value
-     * @returns {number}
-     */
-    get inner() {
-        const ret = wasm.holdsnumber_get_inner(this.__wbg_ptr);
-        return ret;
     }
 }
 if (Symbol.dispose) HoldsNumber.prototype[Symbol.dispose] = HoldsNumber.prototype.free;
