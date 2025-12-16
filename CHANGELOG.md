@@ -24,6 +24,9 @@
 * Typescript custom sections sorted alphabetically across codegen-units.
   [#4738](https://github.com/wasm-bindgen/wasm-bindgen/pull/4738)
 
+* Optimized demangling performance by removing redundant string formatting
+  [#4867](https://github.com/wasm-bindgen/wasm-bindgen/pull/4867)
+
 ### Fixed
 
 * Forward worker errors to test output in the test runner.
