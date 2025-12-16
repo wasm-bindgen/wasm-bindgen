@@ -134,3 +134,41 @@ fn test_wasm_bindgen_test_runner_list() {
     assert_eq!(lines.next().as_deref(), Some("tests::test_foo: test"));
     assert_eq!(lines.next(), None);
 }
+
+/// Test that console.log output in dedicated worker mode is not duplicated.
+/// See: https://github.com/wasm-bindgen/wasm-bindgen/pull/4845#issuecomment-3660688206
+#[test]
+fn test_worker_console_log_no_duplicates() {
+    let output = Project::new("test_worker_console_log_no_duplicates")
+        .file(
+            "src/lib.rs",
+            r#"
+            #[cfg(test)]
+            mod tests {
+                use wasm_bindgen_test::*;
+
+                wasm_bindgen_test_configure!(run_in_dedicated_worker);
+
+                #[wasm_bindgen_test]
+                fn test_console_log() {
+                    console_log!("UNIQUE_TEST_MESSAGE_12345");
+                }
+            }
+        "#,
+        )
+        .wasm_bindgen_test("--nocapture")
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    // Count occurrences of the unique message
+    let count = combined.matches("UNIQUE_TEST_MESSAGE_12345").count();
+
+    assert_eq!(
+        count, 1,
+        "Expected console_log message to appear exactly once, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
+        count, stdout, stderr
+    );
+}
