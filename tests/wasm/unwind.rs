@@ -1,8 +1,8 @@
-use js_sys::{global, Array, Function, Object, Promise, Reflect};
-use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+use js_sys::{global, Array, Object, Promise, Reflect};
+use wasm_bindgen::{prelude::Closure, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use wasm_bindgen_macro::{__wasm_bindgen_class_marker, wasm_bindgen};
-use wasm_bindgen_test::{console_log, wasm_bindgen_test};
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_test::wasm_bindgen_test;
 
 // Array
 #[wasm_bindgen]
@@ -17,29 +17,6 @@ extern "C" {
     #[wasm_bindgen(method, js_class = Array)]
     pub fn push(this: &ArrayUnwind, value: &JsValue) -> u32;
 
-    // Predicate panic will panic, but panic will be unwind
-    // Unless a WebAssembly.RuntimeError, in which case, abort propagates
-    #[wasm_bindgen(method, js_class = Array, js_name = every)]
-    pub fn every(
-        this: &ArrayUnwind,
-        predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool,
-    ) -> bool;
-
-    // Predicate throw or panic will panic, but panic will be unwind
-    // Unless a WebAssembly.RuntimeError, in which case, abort propagates
-    #[wasm_bindgen(method, js_class = Array, js_name = every)]
-    pub fn every_result(
-        this: &ArrayUnwind,
-        predicate: &mut dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>,
-    ) -> bool;
-
-    // Predicate panic will panic, but be caught as Result::Err
-    // Unless a WebAssembly.RuntimeError, in which case, abort propagates
-    #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
-    pub fn try_every(
-        this: &ArrayUnwind,
-        predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool,
-    ) -> Result<bool, JsValue>;
 
     // Predicate throw or panic will panic, but be caught as Result::Err
     // Unless a WebAssembly.RuntimeError, in which case, abort propagates
@@ -68,10 +45,10 @@ macro_rules! js_array {
 #[wasm_bindgen_test]
 async fn try_promise_all() {
     let mut resolve_ = Default::default();
-    let promise = Promise::new(&mut |resolve, reject| {
+    let promise = Promise::new(&mut |resolve, _reject| {
         resolve_ = resolve;
     });
-    let closure1 = Closure::new(|v| {
+    let closure1 = Closure::new(|_v| {
         panic!("CLOSURE PANIC");
     });
     let promise2 = promise.then(&closure1);
@@ -84,8 +61,8 @@ async fn try_promise_all() {
     set_timeout(&closure2);
     let result = future.await;
     assert!(result.is_err());
-    let err = result.err().unwrap();
-    let msg = Reflect::get(&err, &"message".into()).unwrap();
+    // let err = result.err().unwrap();
+    // let msg = Reflect::get(&err, &"message".into()).unwrap();
     // console_log!("Panic error: {}", &msg.as_string().unwrap());
 }
 
