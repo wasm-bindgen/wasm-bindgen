@@ -18,7 +18,8 @@ The `catch-unwind` feature requires:
 - **`panic=unwind`** - The panic strategy must be set to `unwind` (not `abort`)
 - **`-Zbuild-std`** - Required to rebuild the standard library with the correct
   panic strategy
-- **`std` feature** - The feature depends on `std` support
+- **`std` feature** - The feature depends on `std` support because it needs
+  `std::panic::catch_unwind`.
 
 ## Enabling the Feature
 
