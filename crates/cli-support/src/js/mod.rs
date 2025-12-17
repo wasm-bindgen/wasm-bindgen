@@ -2658,8 +2658,7 @@ wasm = wasmInstance.exports;
             Object.defineProperty(PanicError.prototype, 'name', {
                 value: PanicError.name,
             });
-            "
-            .into()
+            ".into()
         });
     }
 
