@@ -1400,9 +1400,10 @@ pub fn throw(s: &str) -> ! {
 /// It's recommended to return a `Result` where possible to avoid the worry of
 /// leaks.
 ///
-/// If you need destructors to run, consider using `panic!` with the
-/// `catch-unwind` feature enabled, which catches panics and converts them to
-/// JavaScript exceptions while properly running destructors.
+/// If you need destructors to run, consider using `panic!` when building with
+/// `-Cpanic=unwind`. The `catch-unwind` feature can additionally be used to
+/// catch panics at the JavaScript boundary and convert them to JavaScript
+/// exceptions.
 #[cold]
 #[inline(never)]
 pub fn throw_str(s: &str) -> ! {
@@ -1421,9 +1422,10 @@ pub fn throw_str(s: &str) -> ! {
 /// It's recommended to return a `Result` where possible to avoid the worry of
 /// leaks.
 ///
-/// If you need destructors to run, consider using `panic!` with the
-/// `catch-unwind` feature enabled, which catches panics and converts them to
-/// JavaScript exceptions while properly running destructors.
+/// If you need destructors to run, consider using `panic!` when building with
+/// `-Cpanic=unwind`. The `catch-unwind` feature can additionally be used to
+/// catch panics at the JavaScript boundary and convert them to JavaScript
+/// exceptions.
 #[cold]
 #[inline(never)]
 pub fn throw_val(s: JsValue) -> ! {
