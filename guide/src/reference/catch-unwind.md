@@ -1,10 +1,9 @@
 # Catching Panics
 
-By default, when a Rust function exported to JavaScript panics, the WebAssembly
-module will abort and any allocated resources will be leaked. The `catch-unwind`
-feature provides a way to catch Rust panics at the JavaScript boundary and
-convert them to JavaScript exceptions, allowing proper cleanup and error
-handling.
+By default, when a Rust function exported to JavaScript panics, Rust will abort
+and any allocated resources will be leaked. The `catch-unwind` feature provides
+a way to catch Rust panics at the JavaScript boundary and convert them to
+JavaScript exceptions, allowing proper cleanup and error handling.
 
 When enabled, panics in exported Rust functions are caught and thrown as
 `PanicError` exceptions in JavaScript. For async functions, the returned promise
@@ -38,9 +37,7 @@ wasm-bindgen-futures = { version = "0.4", features = ["catch-unwind"] }
 Build your project with the required flags:
 
 ```bash
-cargo +nightly build --target wasm32-unknown-unknown \
-    -Zbuild-std=std,panic_unwind \
-    -Zbuild-std-features=panic_immediate_abort
+cargo +nightly build --target wasm32-unknown-unknown -Zbuild-std
 ```
 
 Or set these in `.cargo/config.toml`:
@@ -129,10 +126,14 @@ When a panic occurs, a `PanicError` JavaScript exception is created with:
 - `message` property containing the panic message (if the panic was created with
   a string message)
 
-If the panic payload is not a string (e.g., `panic_any(42)`), the message will
+If the panic payload is not a `String` or `&str` (e.g., `panic_any(42)`), the message will
 be `"No panic message available"`.
 
 ## Limitations
+
+### Nightly Only
+
+This feature requires a nightly Rust compiler and will not work on stable Rust.
 
 ### UnwindSafe Requirement
 
@@ -145,26 +146,6 @@ that this assumes your code handles potential inconsistent state after a panic.
 Functions with `&mut [T]` slice arguments cannot be used with `catch-unwind`
 because mutable slices are not `UnwindSafe`. Consider using owned types like
 `Vec<T>` instead.
-
-### Nightly Only
-
-This feature requires a nightly Rust compiler and will not work on stable Rust.
-
-### Panic Message Extraction
-
-Only panics created with string messages (via `panic!("message")` or
-`panic!("{}", formatted)`) will have their message preserved. Panics using
-`std::panic::panic_any` with non-string types will show a generic message.
-
-## Comparison with Default Behavior
-
-| Aspect | Default (panic=abort) | With catch-unwind |
-|--------|----------------------|-------------------|
-| Panic behavior | Module aborts | Exception thrown to JS |
-| Destructors | Do not run | Run properly |
-| Memory | May leak | Properly cleaned up |
-| Error handling | Cannot catch | Can catch in JS |
-| Compiler | Stable | Nightly only |
 
 ## See Also
 
