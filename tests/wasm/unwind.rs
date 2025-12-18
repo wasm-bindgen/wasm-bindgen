@@ -1,7 +1,7 @@
 use js_sys::{global, Array, Object, Promise, Reflect};
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::{prelude::Closure, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::wasm_bindgen_test;
 
 // Array
@@ -16,7 +16,6 @@ extern "C" {
 
     #[wasm_bindgen(method, js_class = Array)]
     pub fn push(this: &ArrayUnwind, value: &JsValue) -> u32;
-
 
     // Predicate throw or panic will panic, but be caught as Result::Err
     // Unless a WebAssembly.RuntimeError, in which case, abort propagates
