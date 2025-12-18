@@ -562,8 +562,7 @@ fn demangle(module: &mut Module) {
         let demangled = sym.to_string();
         match counter.entry(demangled) {
             Entry::Occupied(mut entry) => {
-                let count = *entry.get();
-                func.name = Some(format!("{}[{count}]", entry.key()));
+                func.name = Some(format!("{}[{}]", entry.key(), entry.get()));
                 *entry.get_mut() += 1;
             }
             Entry::Vacant(entry) => {
