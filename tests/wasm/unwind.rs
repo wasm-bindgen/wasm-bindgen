@@ -1,7 +1,7 @@
 use js_sys::{global, Array, Object, Promise, Reflect};
-use wasm_bindgen::{prelude::Closure, JsValue};
-use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsValue;
+use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::wasm_bindgen_test;
 
 // Array
@@ -16,7 +16,6 @@ extern "C" {
 
     #[wasm_bindgen(method, js_class = Array)]
     pub fn push(this: &ArrayUnwind, value: &JsValue) -> u32;
-
 
     // Predicate throw or panic will panic, but be caught as Result::Err
     // Unless a WebAssembly.RuntimeError, in which case, abort propagates
@@ -61,9 +60,9 @@ async fn try_promise_all() {
     set_timeout(&closure2);
     let result = future.await;
     assert!(result.is_err());
-    // let err = result.err().unwrap();
-    // let msg = Reflect::get(&err, &"message".into()).unwrap();
-    // console_log!("Panic error: {}", &msg.as_string().unwrap());
+    let err = result.err().unwrap();
+    let msg = Reflect::get(&err, &"message".into()).unwrap();
+    assert_eq!(msg, "CLOSURE PANIC");
 }
 
 #[wasm_bindgen_test]
