@@ -7,9 +7,7 @@
 ## `&[JsValue]` slices
 
 You can pass `&[JsValue]` slices from Rust to JavaScript. The slice is passed as
-a JavaScript `Array`. Since this is a borrowed slice, JavaScript receives a
-temporary view of the values - the array is only valid for the duration of the
-function call.
+a JavaScript `Array`.
 
 ```rust
 #[wasm_bindgen]
