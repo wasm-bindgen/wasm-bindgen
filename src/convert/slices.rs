@@ -455,3 +455,25 @@ impl<T: JsCast + WasmDescribe> VectorIntoWasmAbi for T {
         }
     }
 }
+
+// JsValue slice support (Rust-to-JS only)
+// JsValue is repr(transparent) over u32, so &[JsValue] is a contiguous array of heap indices
+
+impl<'a> IntoWasmAbi for &'a [JsValue] {
+    type Abi = WasmSlice;
+
+    #[inline]
+    fn into_abi(self) -> WasmSlice {
+        WasmSlice {
+            ptr: self.as_ptr() as u32,
+            len: self.len() as u32,
+        }
+    }
+}
+
+impl<'a> OptionIntoWasmAbi for &'a [JsValue] {
+    #[inline]
+    fn none() -> WasmSlice {
+        null_slice()
+    }
+}
