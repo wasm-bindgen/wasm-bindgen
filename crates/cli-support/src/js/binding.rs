@@ -1071,6 +1071,19 @@ fn instruction(
             js.push(format!("ptr{i}"));
         }
 
+        Instruction::I32FromOptionRustBorrow { class } => {
+            let val = js.pop();
+            js.cx.expose_is_like_none();
+            let i = js.tmp();
+            js.prelude(&format!("let ptr{i} = 0;"));
+            js.prelude(&format!("if (!isLikeNone({val})) {{"));
+            js.assert_class(&val, class);
+            js.assert_not_moved(&val);
+            js.prelude(&format!("ptr{i} = {val}.__wbg_ptr;"));
+            js.prelude("}");
+            js.push(format!("ptr{i}"));
+        }
+
         Instruction::I32FromOptionExternref { table_and_alloc } => {
             let val = js.pop();
             js.cx.expose_is_like_none();

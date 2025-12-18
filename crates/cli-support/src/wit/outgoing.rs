@@ -227,6 +227,9 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
 
+            // Handle &Option<T> - same representation as Option<&T>
+            Descriptor::Option(d) => self.outgoing_option_borrowed(d)?,
+
             _ => bail!(
                 "unsupported reference argument type for calling JS function from Rust: {arg:?}"
             ),
@@ -536,8 +539,19 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    fn outgoing_option_ref(&mut self, _mutable: bool, arg: &Descriptor) -> Result<(), Error> {
+    /// Handles both Option<&T> and &Option<T> - they have the same representation
+    fn outgoing_option_borrowed(&mut self, arg: &Descriptor) -> Result<(), Error> {
         match arg {
+            Descriptor::RustStruct(name) => {
+                // 0 means None, non-zero is a borrowed pointer to the struct
+                self.instruction(
+                    &[AdapterType::I32],
+                    Instruction::OptionRustFromI32 {
+                        class: name.to_string(),
+                    },
+                    &[AdapterType::Struct(name.clone()).option()],
+                );
+            }
             Descriptor::Externref => {
                 // If this is `Some` then it's the index, otherwise if it's
                 // `None` then it's the index pointing to undefined.
@@ -572,10 +586,14 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             _ => bail!(
-                "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
+                "unsupported optional borrowed type for calling JS function from Rust: {arg:?}"
             ),
         }
         Ok(())
+    }
+
+    fn outgoing_option_ref(&mut self, _mutable: bool, arg: &Descriptor) -> Result<(), Error> {
+        self.outgoing_option_borrowed(arg)
     }
 
     fn outgoing_string_enum(&mut self, name: &str) {

@@ -204,6 +204,12 @@ pub enum Instruction {
     I32FromOptionRust {
         class: String,
     },
+    /// Pops an `externref` from the stack, pushes 0 if it's "none" or the
+    /// borrowed pointer value if it's "some". Unlike `I32FromOptionRust`, this
+    /// does not take ownership.
+    I32FromOptionRustBorrow {
+        class: String,
+    },
     /// Pops an `externref` from the stack, pushes either 0 if it's "none" or and
     /// index into the owned Wasm table it was stored at if it's "some"
     I32FromOptionExternref {

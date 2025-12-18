@@ -49,6 +49,7 @@ pub mod math;
 pub mod no_shims;
 pub mod node;
 pub mod option;
+pub mod option_ref_struct;
 pub mod optional_primitives;
 pub mod reexport;
 pub mod result;
