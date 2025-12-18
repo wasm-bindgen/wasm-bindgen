@@ -36,6 +36,19 @@ extern "C" {
 
 when we call this function, the last argument will be expanded as the javascript expects.
 
+For functions that accept heterogeneous types (like `console.log`), you can use `&[JsValue]`:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console, variadic)]
+    fn log(args: &[JsValue]);
+}
+
+// Usage:
+log(&[JsValue::from("Hello"), JsValue::from(42), JsValue::TRUE]);
+```
+
 
 To export a rust function to javascript with a variadic argument, we will use the same bindgen variadic attribute and assume that the last argument will be the variadic array. For example the following rust function:
 
