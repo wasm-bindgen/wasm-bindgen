@@ -1,0 +1,7 @@
+{
+  "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+  "rust-analyzer.cargo.features": ["catch-unwind"],
+  "rust-analyzer.cargo.cfgs": [
+    "panic=unwind",
+  ]
+}
