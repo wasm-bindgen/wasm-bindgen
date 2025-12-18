@@ -25,6 +25,12 @@
 * Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
   [#4367](https://github.com/wasm-bindgen/wasm-bindgen/pull/4367)
 
+* Typescript custom sections sorted alphabetically across codegen-units.
+  [#4738](https://github.com/wasm-bindgen/wasm-bindgen/pull/4738)
+
+* Optimized demangling performance by removing redundant string formatting
+  [#4867](https://github.com/wasm-bindgen/wasm-bindgen/pull/4867)
+
 ### Fixed
 
 * Forward worker errors to test output in the test runner.

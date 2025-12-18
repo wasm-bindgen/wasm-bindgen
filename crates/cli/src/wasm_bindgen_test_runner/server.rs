@@ -140,10 +140,8 @@ pub(crate) fn spawn(
             r#"
             const nocapture = {nocapture};
             const wrap = method => {{
-                const og = self.console[method];
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
-                    og.apply(this, args);
                     if (nocapture) {{
                         self.__wbg_test_output_writeln(...args);
                     }}
@@ -237,7 +235,9 @@ pub(crate) fn spawn(
                         method == "warn" || method == "info" ||
                         method == "debug"
                     ) {{
-                        console[method].apply(undefined, args[0]);
+                        // Don't re-log to console - the output_append path handles test output.
+                        // We only need to process these for potential on_console_* handlers,
+                        // but those are handled in the worker via self[on_method].
                     }} else if (method == "output_append") {{
                         const el = document.getElementById("output");
                         if (!el.dataset.appended) {{
