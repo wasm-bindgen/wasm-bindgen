@@ -472,6 +472,13 @@ impl OptionIntoWasmAbi for JsValue {
     }
 }
 
+impl OptionIntoWasmAbi for &JsValue {
+    #[inline]
+    fn none() -> u32 {
+        crate::__rt::JSIDX_UNDEFINED
+    }
+}
+
 impl OptionFromWasmAbi for JsValue {
     #[inline]
     fn is_none(js: &u32) -> bool {

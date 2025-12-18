@@ -4,6 +4,23 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Yes | Yes | No | Yes | No | No | Any JavaScript value |
 
+## `&[JsValue]` slices
+
+You can pass `&[JsValue]` slices from Rust to JavaScript. The slice is passed as
+a JavaScript `Array`.
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    fn process_values(values: &[JsValue]);
+}
+
+pub fn call_js() {
+    let values: Vec<JsValue> = vec![1.into(), "hello".into(), true.into()];
+    process_values(&values);
+}
+```
+
 ## Example Rust Usage
 
 ```rust

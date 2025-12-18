@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added support for passing `&[JsValue]` slices from Rust to JavaScript functions.
+  [#4872](https://github.com/wasm-bindgen/wasm-bindgen/pull/4872)
+
 * Added `private` attribute on exported types to allow generating
   exports and structs as implicit internal exported types for function
   arguments and returns, without exporting them on the public interface.

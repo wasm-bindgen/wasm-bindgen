@@ -37,8 +37,8 @@ extern "C" {
     //                          rest: Vec<String>) -> String;
     #[wasm_bindgen(variadic)]
     fn variadic_sum_rest_vec(first: u8, second: u8, rest: Vec<u8>) -> u8;
-    //#[wasm_bindgen(variadic)]
-    //fn variadic_compare_pairs(first: JsValue, second: JsValue, rest: &[JsValue]);
+    #[wasm_bindgen(variadic)]
+    fn variadic_compare_pairs(first: JsValue, second: JsValue, rest: &[JsValue]);
     //TODO imported type
 }
 
@@ -126,9 +126,23 @@ fn rest_vec() {
     assert_eq!(variadic_sum_rest_vec(1, 2, vec![3, 4]), 10);
 }
 
-// JsValue
-//#[wasm_bindgen_test]
-//fn jsvalue() {
-//    variadic_compare_pairs_jsvalue(true, true, vec![]);
-//    variadic_compare_pairs_jsvalue(false, false, vec![3, 3]);
-//}
+// JsValue slice
+#[wasm_bindgen_test]
+fn jsvalue_slice() {
+    variadic_compare_pairs(JsValue::from(1), JsValue::from(1), &[]);
+    variadic_compare_pairs(
+        JsValue::from("a"),
+        JsValue::from("a"),
+        &[JsValue::from(2), JsValue::from(2)],
+    );
+    variadic_compare_pairs(
+        JsValue::TRUE,
+        JsValue::TRUE,
+        &[
+            JsValue::from(42),
+            JsValue::from(42),
+            JsValue::from("hello"),
+            JsValue::from("hello"),
+        ],
+    );
+}
