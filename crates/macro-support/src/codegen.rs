@@ -639,7 +639,48 @@ impl TryToTokens for ast::Export {
             }
             let ty = unwrap_nested_types(&arg.pat_type.ty);
 
+            // Helper to check if type is Option<&T> and extract the inner reference type
+            fn extract_option_ref_inner(ty: &syn::Type) -> Option<&syn::Type> {
+                if let syn::Type::Path(syn::TypePath { path, .. }) = ty {
+                    if let Some(seg) = path.segments.last() {
+                        if seg.ident == "Option" {
+                            if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+                                if let Some(syn::GenericArgument::Type(syn::Type::Reference(
+                                    syn::TypeReference { elem, .. },
+                                ))) = args.args.first()
+                                {
+                                    return Some(elem.as_ref());
+                                }
+                            }
+                        }
+                    }
+                }
+                None
+            }
+
             match &ty {
+                // Handle Option<&T> specially - uses RefFromWasmAbi with null check
+                _ if extract_option_ref_inner(ty).is_some() => {
+                    let elem = extract_option_ref_inner(ty).unwrap();
+                    let abi = quote! { <#elem as #wasm_bindgen::convert::RefFromWasmAbi>::Abi };
+                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+                    args.extend(prim_args);
+                    arg_conversions.push(quote! {
+                        let #ident = {
+                            let abi = <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*);
+                            if abi == 0 {
+                                None
+                            } else {
+                                let anchor = unsafe {
+                                    <#elem as #wasm_bindgen::convert::RefFromWasmAbi>
+                                        ::ref_from_abi(abi)
+                                };
+                                Some(anchor)
+                            }
+                        };
+                        let #ident = #ident.as_deref();
+                    });
+                }
                 syn::Type::Reference(syn::TypeReference {
                     mutability: Some(_),
                     elem,

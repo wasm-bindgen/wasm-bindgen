@@ -5,6 +5,11 @@
 
 ### Added
 
+* Added support for `Option<&T>` and `&Option<T>` as function parameters for
+  exported Rust structs. Both types have the same representation and can be
+  used interchangeably.
+  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+
 * Added `private` attribute on exported types to allow generating
   exports and structs as implicit internal exported types for function
   arguments and returns, without exporting them on the public interface.

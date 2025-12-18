@@ -254,6 +254,8 @@ impl InstructionBuilder<'_, '_> {
                     );
                 }
             }
+            // Handle &Option<T> - same representation as Option<&T>
+            Descriptor::Option(d) => self.incoming_option_borrowed(d)?,
             _ => bail!(
                 "unsupported reference argument type for calling Rust function from JS: {arg:?}"
             ),
@@ -386,8 +388,48 @@ impl InstructionBuilder<'_, '_> {
                 &[AdapterType::I32],
             ),
 
+            // Option<&T> - delegate to shared handler
+            Descriptor::Ref(d) => self.incoming_option_borrowed(d)?,
+
             _ => bail!(
                 "unsupported optional argument type for calling Rust function from JS: {arg:?}"
+            ),
+        }
+        Ok(())
+    }
+
+    /// Handles both Option<&T> and &Option<T> - they have the same representation
+    fn incoming_option_borrowed(&mut self, arg: &Descriptor) -> Result<(), Error> {
+        match arg {
+            Descriptor::RustStruct(name) => {
+                self.instruction(
+                    &[AdapterType::Struct(name.clone()).option()],
+                    Instruction::I32FromOptionRustBorrow {
+                        class: name.to_string(),
+                    },
+                    &[AdapterType::I32],
+                );
+            }
+            Descriptor::Externref => {
+                self.instruction(
+                    &[AdapterType::Externref.option()],
+                    Instruction::I32FromOptionExternref {
+                        table_and_alloc: None,
+                    },
+                    &[AdapterType::I32],
+                );
+            }
+            Descriptor::NamedExternref(name) => {
+                self.instruction(
+                    &[AdapterType::NamedExternref(name.clone()).option()],
+                    Instruction::I32FromOptionExternref {
+                        table_and_alloc: None,
+                    },
+                    &[AdapterType::I32],
+                );
+            }
+            _ => bail!(
+                "unsupported optional borrowed type for calling Rust function from JS: {arg:?}"
             ),
         }
         Ok(())
