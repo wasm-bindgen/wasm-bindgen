@@ -1,7 +1,7 @@
 
 let imports = {};
 imports['./snippets/import_reftest-a82831e16a4c30f1/inline0.js'] = require('./snippets/import_reftest-a82831e16a4c30f1/inline0.js');
-imports['__wbindgen_placeholder__'] = module.exports;
+imports['./reference_test_bg.js'] = module.exports;
 
 imports['foo-raw'] = require('foo-raw');
 imports['pure-extern'] = require('pure-extern');

@@ -341,7 +341,7 @@ impl<'a> Context<'a> {
         self.finalize_js(module_name, needs_manual_start)
     }
 
-    fn generate_node_imports(&self) -> String {
+    fn generate_node_imports(&self, module_name: &str) -> String {
         let mut imports = BTreeSet::new();
         for import in self
             .module
@@ -371,7 +371,7 @@ impl<'a> Context<'a> {
             for module in imports.iter() {
                 if module.as_str() == PLACEHOLDER_MODULE {
                     shim.push_str(&format!(
-                        "imports['{PLACEHOLDER_MODULE}'] = module.exports;\n\n"
+                        "imports['./{module_name}_bg.js'] = module.exports;\n\n"
                     ));
                 } else {
                     shim.push_str(&format!("imports['{module}'] = require('{module}');\n"));
@@ -538,10 +538,11 @@ impl<'a> Context<'a> {
             // With normal CommonJS node we need to defer requiring the wasm
             // until the end so most of our own exports are hooked up
             OutputMode::Node { module: false } => {
-                js.push_str(&self.generate_node_imports());
+                js.push_str(&self.generate_node_imports(module_name));
 
                 for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
-                    let import = self.module.imports.get(*id);
+                    let import = self.module.imports.get_mut(*id);
+                    import.module = format!("./{module_name}_bg.js");
                     footer.push_str("\nexports.");
                     footer.push_str(&import.name);
                     footer.push_str(" = ");
@@ -622,7 +623,7 @@ __wbg_set_wasm(wasm);"
                         );
 
                         let start = start.get_or_insert_with(String::new);
-                        start.push_str(&self.generate_node_imports());
+                        start.push_str(&self.generate_node_imports(module_name));
                         start.push_str(&self.generate_node_wasm_loading(module_name));
 
                         start.push_str(&format!(

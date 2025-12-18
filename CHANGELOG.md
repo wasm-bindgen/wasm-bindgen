@@ -24,6 +24,9 @@
 * Typescript custom sections sorted alphabetically across codegen-units.
   [#4738](https://github.com/wasm-bindgen/wasm-bindgen/pull/4738)
 
+* Changed WASM import namespace from `__wbindgen_placeholder__` to `./{name}_bg.js` for `node` targets, aligning with `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
+  [#4869](https://github.com/rustwasm/wasm-bindgen/pull/4869)
+
 ### Fixed
 
 * Forward worker errors to test output in the test runner.
