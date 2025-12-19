@@ -44,7 +44,8 @@ export function add_that_might_fail(a, b) {
 }
 
 const imports = {
-    __wbindgen_placeholder__: {
+    __proto__: null,
+    './reference_test_bg.js': {
         __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },

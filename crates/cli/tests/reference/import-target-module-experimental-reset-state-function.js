@@ -66,7 +66,8 @@ export function exported() {
 }
 
 const imports = {
-    __wbindgen_placeholder__: {
+    __proto__: null,
+    './reference_test_bg.js': {
         __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
@@ -107,7 +108,11 @@ const imports = {
             table.set(offset + 3, false);
         },
     },
-    'tests/wasm/imports.js': import0,  'foo-raw': import1,  './snippets/import_reftest-a82831e16a4c30f1/inline0.js': import2,  'pure-extern': import3,
+    'tests/wasm/imports.js': import0,
+    'foo-raw': import1,
+    './snippets/import_reftest-a82831e16a4c30f1/inline0.js': import2,
+    'pure-extern': import3,
+
 };
 
 const wasmInstance = new WebAssembly.Instance(wasmModule, imports);

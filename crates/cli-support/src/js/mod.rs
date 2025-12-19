@@ -420,22 +420,25 @@ impl<'a> Context<'a> {
     //
     // ```js
     // const imports = {
-    //   __wbindgen_placeholder__: {
+    //   __proto__: null,
+    //   "./{module_name}_bg.js": {
     //     __wbindgen_throw: function(..) { .. },
     //     ..
     //   },
     //   './snippets/deno-65e2634a84cc3c14/inline1.js': import0,
     // }
     // ```
-    fn generate_deno_imports(&self) -> (String, String) {
+    fn generate_deno_imports(&mut self, module_name: &str) -> (String, String) {
         let mut imports = String::new();
-        let mut wasm_import_object = "const imports = {\n".to_string();
+        let mut wasm_import_object = "const imports = {\n  __proto__: null,\n".to_string();
+        let self_module_name = format!("./{module_name}_bg.js");
 
-        wasm_import_object.push_str(&format!("  {}: {{\n", crate::PLACEHOLDER_MODULE));
+        wasm_import_object.push_str(&format!("  './{module_name}_bg.js': {{\n"));
 
         for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
-            let import = self.module.imports.get(*id);
+            let import = self.module.imports.get_mut(*id);
             wasm_import_object.push_str(&format!("{}: {},\n", &import.name, js.trim()));
+            import.module = self_module_name.clone();
         }
 
         wasm_import_object.push_str("\t},\n");
@@ -446,10 +449,10 @@ impl<'a> Context<'a> {
             .imports
             .iter()
             .map(|import| &import.module)
-            .filter(|module| module.as_str() != PLACEHOLDER_MODULE);
+            .filter(|module| module.as_str() != self_module_name);
         for (i, module) in import_modules.enumerate() {
             imports.push_str(&format!("import * as import{i} from '{module}'\n"));
-            wasm_import_object.push_str(&format!("  '{module}': import{i},"))
+            wasm_import_object.push_str(&format!("  '{module}': import{i},\n"))
         }
 
         wasm_import_object.push_str("\n};\n\n");
@@ -462,8 +465,10 @@ impl<'a> Context<'a> {
         // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
             "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
-            const wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports)).instance.exports;
-            export {{ wasm as __wasm }};"
+const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports);
+const wasm = wasmInstantiated.instance.exports;
+export {{ wasm as __wasm }};
+"
         )
     }
 
@@ -558,7 +563,7 @@ impl<'a> Context<'a> {
             }
 
             OutputMode::Deno => {
-                let (js_imports, wasm_import_object) = self.generate_deno_imports();
+                let (js_imports, wasm_import_object) = self.generate_deno_imports(module_name);
                 imports.push_str(&js_imports);
                 footer.push_str(&wasm_import_object);
 
@@ -657,7 +662,7 @@ __wbg_set_wasm(wasm);"
                 js.push_str("let wasm;\n");
 
                 // Generate the import object similar to Deno
-                let (js_imports, wasm_import_object) = self.generate_deno_imports();
+                let (js_imports, wasm_import_object) = self.generate_deno_imports(module_name);
                 imports.push_str(&js_imports);
 
                 // Add instantiation code using wasmModule from source import

@@ -13,7 +13,8 @@ export function add_that_might_fail(a, b) {
 }
 
 const imports = {
-    __wbindgen_placeholder__: {
+    __proto__: null,
+    './reference_test_bg.js': {
         __wbg_random_9526caf33df4270d: function() {
             const ret = Math.random();
             return ret;
