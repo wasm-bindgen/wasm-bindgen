@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Error};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{hash_map::Entry, BTreeMap, HashMap, HashSet};
 use std::env;
 use std::fs;
 use std::mem;
@@ -559,15 +559,17 @@ fn demangle(module: &mut Module) {
             continue;
         };
 
-        let count = counter.entry(sym.to_string()).or_insert(0);
-
-        func.name = Some(if *count > 0 {
-            format!("{sym}[{count}]")
-        } else {
-            sym.to_string()
-        });
-
-        *count += 1;
+        let demangled = sym.to_string();
+        match counter.entry(demangled) {
+            Entry::Occupied(mut entry) => {
+                func.name = Some(format!("{}[{}]", entry.key(), entry.get()));
+                *entry.get_mut() += 1;
+            }
+            Entry::Vacant(entry) => {
+                func.name = Some(entry.key().clone());
+                entry.insert(1);
+            }
+        }
     }
 }
 

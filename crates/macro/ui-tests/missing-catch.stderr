@@ -2,7 +2,7 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
  --> ui-tests/missing-catch.rs:6:12
   |
 3 | #[wasm_bindgen]
-  | --------------- in this attribute macro expansion
+  | --------------- in this procedural macro expansion
 ...
 6 |     pub fn foo() -> Result<JsValue, JsValue>;
   |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`

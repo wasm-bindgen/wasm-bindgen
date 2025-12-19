@@ -2,7 +2,7 @@ error[E0277]: the trait bound `String: std::marker::Copy` is not satisfied
  --> ui-tests/pub-not-copy.rs:5:16
   |
 3 | #[wasm_bindgen]
-  | --------------- in this attribute macro expansion
+  | --------------- in this procedural macro expansion
 4 | pub struct A {
 5 |     pub field: String,
   |                ^^^^^^ the trait `std::marker::Copy` is not implemented for `String`
