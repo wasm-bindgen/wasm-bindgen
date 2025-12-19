@@ -2088,6 +2088,57 @@ wasm = wasmInstance.exports;
         ret
     }
 
+    /// Like `expose_get_array_js_value_from_wasm` but for borrowed slices.
+    /// Uses `getObject` instead of `takeObject` and doesn't drop the heap entries.
+    fn expose_get_array_js_value_view_from_wasm(&mut self, memory: MemoryId) -> MemView {
+        let mem = self.expose_dataview_memory(memory);
+        let ret = MemView {
+            name: "getArrayJsValueViewFromWasm".into(),
+            num: mem.num,
+        };
+        match self.aux.externref_table {
+            Some(table) => {
+                let table = self.export_name_of(table);
+                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                    format!(
+                        "
+                        function {ret}(ptr, len) {{
+                            ptr = ptr >>> 0;
+                            const mem = {mem}();
+                            const result = [];
+                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
+                                result.push(wasm.{table}.get(mem.getUint32(i, true)));
+                            }}
+                            return result;
+                        }}
+                        ",
+                    )
+                    .into()
+                });
+            }
+            _ => {
+                self.expose_get_object();
+                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                    format!(
+                        "
+                        function {ret}(ptr, len) {{
+                            ptr = ptr >>> 0;
+                            const mem = {mem}();
+                            const result = [];
+                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
+                                result.push(getObject(mem.getUint32(i, true)));
+                            }}
+                            return result;
+                        }}
+                        ",
+                    )
+                    .into()
+                });
+            }
+        }
+        ret
+    }
+
     fn expose_get_array_i8_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_int8_memory(memory);
         self.arrayget("getArrayI8FromWasm", view, 1)
