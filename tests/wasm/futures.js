@@ -1,7 +1,7 @@
 const assert = require('assert');
 const wasm = require('wasm-bindgen-test');
 
-exports.call_exports = async function() {
+exports.call_exports = async function(catchUnwind) {
   await wasm.async_do_nothing();
   assert.strictEqual(1, await wasm.async_return_1());
   assert.strictEqual(2, await wasm.async_return_2());
@@ -19,9 +19,11 @@ exports.call_exports = async function() {
   const foo = await new wasm.AsyncStruct();
   assert.strictEqual(42, await foo.method());
   await wasm.async_take_js_reference(42);
-  const buffer = new Int32Array([1, 2, 3, 4]);
-  await wasm.async_take_mut_slice(buffer);
-  assert.deepStrictEqual(buffer, new Int32Array([42, 42, 42, 42]));
+  if (!catchUnwind) {
+      const buffer = new Int32Array([1, 2, 3, 4]);
+      await wasm.async_take_mut_slice(buffer);
+      assert.deepStrictEqual(buffer, new Int32Array([42, 42, 42, 42]));
+  }
 };
 
 exports.call_promise = async function() {
@@ -45,4 +47,10 @@ exports.call_promise_ok_unit = async function() {
 
 exports.call_promise_err_unit = async function() {
     throw "error";
+}
+
+exports.check_panic = async function() {
+    await assert.rejects(wasm.panics(), (e) => {
+        return e.name === "PanicError" && e.message === "Oops!";
+    });
 }

@@ -15,7 +15,9 @@ extern "C" {
     // `stack` attribute.
     type NodeError;
     #[wasm_bindgen(method, getter, js_class = "Error", structural)]
-    fn stack(this: &NodeError) -> String;
+    fn stack(this: &NodeError) -> Option<String>;
+    #[wasm_bindgen(method, js_class = "Error", js_name = toString, structural, catch)]
+    fn to_string(this: &NodeError) -> Result<String, JsValue>;
     #[wasm_bindgen(js_name = __wbgtest_og_console_log)]
     fn og_console_log(s: &str);
 }
@@ -34,7 +36,8 @@ impl super::Formatter for Node {
 
     fn stringify_error(&self, err: &JsValue) -> String {
         // TODO: should do a checked cast to `NodeError`
-        NodeError::from(err.clone()).stack()
+        let err = NodeError::from(err.clone());
+        err.stack().unwrap_or(err.to_string().unwrap_or("".into()))
     }
 }
 
