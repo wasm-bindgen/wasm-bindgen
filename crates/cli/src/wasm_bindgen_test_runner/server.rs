@@ -235,13 +235,15 @@ pub(crate) fn spawn(
                         method == "warn" || method == "info" ||
                         method == "debug"
                     ) {{
-                        // Don't re-log to console - the output_append path handles test output.
-                        // We only need to process these for potential on_console_* handlers,
-                        // but those are handled in the worker via self[on_method].
+                        // In non-headless mode, forward worker console output to the main
+                        // page's console so it appears in DevTools.
+                        if (!{headless}) {{
+                            console[method].apply(console, args[0]);
+                        }}
                     }} else if (method == "output_append") {{
                         const el = document.getElementById("output");
                         if (!el.dataset.appended) {{
-                            el.textContent += "\n";
+                            el.textContent = "";
                             el.dataset.appended = "1";
                         }}
                         el.textContent += args[0];

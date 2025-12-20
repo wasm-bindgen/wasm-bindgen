@@ -1,6 +1,6 @@
 
 let imports = {};
-imports['__wbindgen_placeholder__'] = module.exports;
+imports['./reference_test_bg.js'] = module.exports;
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
