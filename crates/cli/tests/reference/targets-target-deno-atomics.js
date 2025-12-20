@@ -31,7 +31,8 @@ export function add_that_might_fail(a, b) {
 }
 
 const imports = {
-    __wbindgen_placeholder__: {
+    __proto__: null,
+    './reference_test_bg.js': {
         __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
@@ -54,7 +55,8 @@ const imports = {
 };
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
-const wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports)).instance.exports;
+const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports);
+const wasm = wasmInstantiated.instance.exports;
 export { wasm as __wasm };
 
 wasm.__wbindgen_start();

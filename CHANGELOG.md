@@ -33,6 +33,9 @@
 * Changed WASM import namespace from `__wbindgen_placeholder__` to `./{name}_bg.js` for `node` targets, aligning with `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
   [#4869](https://github.com/rustwasm/wasm-bindgen/pull/4869)
 
+* Changed WASM import namespace from `__wbindgen_placeholder__` to `./{name}_bg.js` for `deno` and `module` targets, aligning with `node`, `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
+  [#4871](https://github.com/rustwasm/wasm-bindgen/pull/4871)
+
 ### Fixed
 
 * Forward worker errors to test output in the test runner.
