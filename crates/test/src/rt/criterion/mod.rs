@@ -350,11 +350,13 @@ where
     ///     // Setup (construct data, allocate memory, etc)
     ///     c.bench_async_function(
     ///         "bench desc",
-    ///         Box::pin(
-    ///             b.iter_future(|| async {
-    ///                 // Code to benchmark goes here
-    ///             })
-    ///         )
+    ///         |b| {
+    ///             Box::pin(
+    ///                 b.iter_future(|| async {
+    ///                     // Code to benchmark goes here
+    ///                 })
+    ///             )
+    ///         }
     ///     ).await;
     /// }
     /// ```

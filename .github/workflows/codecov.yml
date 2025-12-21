@@ -21,6 +21,11 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@just
       - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cargo-codecov-${{ hashFiles('**/Cargo.toml') }}
+
       - name: Generate code coverage
         run: just cov --lcov --output-path lcov.info
       - name: Upload coverage to Codecov
