@@ -592,11 +592,8 @@ impl OutputMode {
         matches!(self, OutputMode::NoModules { .. })
     }
 
-    fn esm_integration(&self) -> bool {
-        matches!(
-            self,
-            OutputMode::Bundler { .. } | OutputMode::Node { module: true }
-        )
+    fn bundler(&self) -> bool {
+        matches!(self, OutputMode::Bundler { .. })
     }
 }
 
@@ -722,61 +719,23 @@ impl Output {
         }
 
         let js_path = out_dir.join(&self.stem).with_extension(extension);
+        write(&js_path, reset_indentation(&gen.js))?;
 
-        if matches!(&gen.mode, OutputMode::Module) {
-            let wasm_name = format!("{}_bg", self.stem);
-            let start = gen.start.as_deref().unwrap_or("");
-
-            write(
-                &js_path,
-                format!(
-                    "\
-import source wasmModule from \"./{wasm_name}.wasm\";
-
-{start}{}",
-                    reset_indentation(&gen.js)
-                ),
-            )?;
-        } else if gen.mode.esm_integration() {
-            let js_name = format!("{}_bg.{extension}", self.stem);
-
-            let start = gen.start.as_deref().unwrap_or("");
-
-            if matches!(gen.mode, OutputMode::Node { .. }) {
-                write(
-                    &js_path,
-                    format!(
-                        "\
-{start}
-export * from \"./{js_name}\";",
-                    ),
-                )?;
-            } else {
-                write(
-                    &js_path,
-                    format!(
-                        "\
-import * as wasm from \"./{wasm_name}.wasm\";
-export * from \"./{js_name}\";
-{start}"
-                    ),
-                )?;
-            }
-            write(out_dir.join(&js_name), reset_indentation(&gen.js))?;
-        } else {
-            write(&js_path, reset_indentation(&gen.js))?;
+        if let Some(start) = &gen.start {
+            let js_path = out_dir.join(wasm_name).with_extension(extension);
+            write(&js_path, reset_indentation(start))?;
         }
 
         if gen.typescript {
             let ts_path = js_path.with_extension("d.ts");
-            fs::write(&ts_path, &gen.ts)
+            fs::write(&ts_path, reset_indentation(&gen.ts))
                 .with_context(|| format!("failed to write `{}`", ts_path.display()))?;
         }
 
         if gen.typescript {
             let ts_path = wasm_path.with_extension("wasm.d.ts");
             let ts = wasm2es6js::typescript(&self.module)?;
-            fs::write(&ts_path, ts)
+            fs::write(&ts_path, reset_indentation(&ts))
                 .with_context(|| format!("failed to write `{}`", ts_path.display()))?;
         }
 

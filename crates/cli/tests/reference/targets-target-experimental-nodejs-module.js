@@ -1,16 +1,50 @@
+/* @ts-self-types="./reference_test.d.ts" */
+//#region exports
 
-let imports = {};
-import * as import0 from './reference_test_bg.js';
-imports['./reference_test_bg.js'] = import0;
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+export function add_that_might_fail(a, b) {
+    const ret = wasm.add_that_might_fail(a, b);
+    return ret >>> 0;
+}
+//#endregion
 
+//#region wasm imports
+
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
+        __wbg_random_ae0b2256206ad108: function() {
+            const ret = Math.random();
+            return ret;
+        },
+        __wbindgen_init_externref_table: function() {
+            const table = wasm.__wbindgen_externrefs;
+            const offset = table.grow(4);
+            table.set(0, undefined);
+            table.set(offset + 0, undefined);
+            table.set(offset + 1, null);
+            table.set(offset + 2, true);
+            table.set(offset + 3, false);
+        },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+    };
+}
+//#endregion
+
+
+//#region wasm loading
 import { readFileSync } from 'node:fs';
-
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = readFileSync(wasmUrl);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-const wasm = new WebAssembly.Instance(wasmModule, imports).exports;
-export { wasm as __wasm };
-imports["./reference_test_bg.js"].__wbg_set_wasm(wasm, wasmModule);
+const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
 wasm.__wbindgen_start();
+//#endregion
 
-export * from "./reference_test_bg.js";

@@ -40,6 +40,17 @@
 * Changed WASM import namespace from `__wbindgen_placeholder__` to `./{name}_bg.js` for `deno` and `module` targets, aligning with `node`, `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
   [#4871](https://github.com/rustwasm/wasm-bindgen/pull/4871)
 
+* Consolidate JavaScript glue generation
+  Move target-specific JS emission into a single finalize phase, reducing
+  branching and making the generated output more consistent across targets.
+
+  - Centralize JS output assembly in a single finalize phase (exports/imports/wasm loading).
+  - Make `--target experimental-nodejs-module` emit one JS entrypoint (no separate `_bg.js`).
+  - Ensure Node (CJS/ESM) and bundler entrypoints only expose public exports (no internal import shims).
+  - Add `/* @ts-self-types="./<name>.d.ts" */` to JS entrypoints for JSR/Deno resolution.
+  - Refresh reference test fixtures.
+  [#4879](https://github.com/wasm-bindgen/wasm-bindgen/pull/4879)
+
 ### Fixed
 
 * Forward worker errors to test output in the test runner.

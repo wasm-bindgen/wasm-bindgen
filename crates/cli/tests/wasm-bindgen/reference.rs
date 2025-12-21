@@ -247,26 +247,16 @@ fn runtest_with_opts(
             test.to_owned()
         };
 
-        let main_js_file = match target {
-            "bundler" => "reference_test_bg.js",
-            _ => "reference_test.js",
-        };
-
         let mut sanitizer = Sanitizer::default();
 
         // These targets care about the `_bg.js` output.
-        if target == "bundler" || target == "experimental-nodejs-module" {
+        if target == "bundler" {
             let bg = fs::read_to_string(out_dir.join("reference_test_bg.js"))?;
             sanitizer.assert_same(&bg, &test.with_extension("bg.js"))?;
         }
 
-        // These targets care about the main JS output.
-        // Bundler doesn't care about the main JS file, because its
-        // reference_test.js just imports the reference_test_bg.js
-        if target != "bundler" {
-            let js = fs::read_to_string(out_dir.join(main_js_file))?;
-            sanitizer.assert_same(&js, &test.with_extension("js"))?;
-        }
+        let js = fs::read_to_string(out_dir.join("reference_test.js"))?;
+        sanitizer.assert_same(&js, &test.with_extension("js"))?;
 
         let wat = sanitize_wasm(out_dir.join("reference_test_bg.wasm"))?;
         sanitizer.assert_same(&wat, &test.with_extension("wat"))?;
