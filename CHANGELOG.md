@@ -6,7 +6,7 @@
 ### Added
 
 * Support catching panics, and raising JS Exceptions for them, when building
-  with panic=unwind on nightly, with the new `catch-unwind` feature.
+  with panic=unwind on nightly, with the `std` feature.
   [#4790](https://github.com/wasm-bindgen/wasm-bindgen/pull/4790)
 
 * Added support for passing `&[JsValue]` slices from Rust to JavaScript functions.

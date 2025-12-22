@@ -33,7 +33,7 @@ extern "C" {
 
 #[wasm_bindgen_test]
 async fn smoke() {
-    call_exports(cfg!(feature = "catch-unwind")).await.unwrap();
+    call_exports(cfg!(all(feature = "std", panic = "unwind"))).await.unwrap();
 }
 
 #[wasm_bindgen]

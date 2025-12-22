@@ -1401,9 +1401,8 @@ pub fn throw(s: &str) -> ! {
 /// leaks.
 ///
 /// If you need destructors to run, consider using `panic!` when building with
-/// `-Cpanic=unwind`. The `catch-unwind` feature can additionally be used to
-/// catch panics at the JavaScript boundary and convert them to JavaScript
-/// exceptions.
+/// `-Cpanic=unwind`. If the `std` feature is used panics will be caught at the
+/// JavaScript boundary and converted to JavaScript exceptions.
 #[cold]
 #[inline(never)]
 pub fn throw_str(s: &str) -> ! {
@@ -1423,9 +1422,8 @@ pub fn throw_str(s: &str) -> ! {
 /// leaks.
 ///
 /// If you need destructors to run, consider using `panic!` when building with
-/// `-Cpanic=unwind`. The `catch-unwind` feature can additionally be used to
-/// catch panics at the JavaScript boundary and convert them to JavaScript
-/// exceptions.
+/// `-Cpanic=unwind`. If the `std` feature is used panics will be caught at the
+/// JavaScript boundary and converted to JavaScript exceptions.
 #[cold]
 #[inline(never)]
 pub fn throw_val(s: JsValue) -> ! {

@@ -25,7 +25,6 @@ once_cell = { version = "1.12", default-features = false }
 wasm-bindgen = { path = "../..", version = '=0.2.106', default-features = false }
 
 [features]
-catch-unwind = ["std", "futures-util"]
 default = ["std"]
 futures-core-03-stream = ['futures-core']
 std = ["wasm-bindgen/std", "js-sys/std", "web-sys/std"]

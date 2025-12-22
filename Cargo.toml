@@ -22,7 +22,6 @@ features = ["serde-serialize"]
 test = false
 
 [features]
-catch-unwind = ["std"]
 default = ["std"]
 enable-interning = ["std"]
 serde-serialize = ["serde", "serde_json", "std"]

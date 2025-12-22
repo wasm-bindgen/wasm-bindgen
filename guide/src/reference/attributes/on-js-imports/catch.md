@@ -27,7 +27,7 @@ the result of the function.
 > stack unwinding and as a result Rust code **will not execute destructors**.
 > This can unfortunately cause memory leaks in Rust right now.
 >
-> This limitation is entirely avoided when building with `panic=unwind` and the
-> [`catch-unwind` feature](../catch-unwind.md) enabled. Unexpected JS exceptions
-> that would otherwise cause issues will result in a proper unwind, with the JS
+> [This limitation is entirely avoided when building with `-Cpanic=unwind` and
+> the `std` feature enabled.](../catch-unwind.md) Unexpected JS exceptions that
+> would otherwise cause issues will result in a proper unwind, with the JS
 > exception propagated to the caller and destructors running correctly.

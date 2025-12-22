@@ -1,9 +1,10 @@
 # Catching Panics
 
 By default, when a Rust function exported to JavaScript panics, Rust will abort
-and any allocated resources will be leaked. The `catch-unwind` feature provides
-a way to catch Rust panics at the JavaScript boundary and convert them to
-JavaScript exceptions, allowing proper cleanup and error handling.
+and any allocated resources will be leaked. If you build with with
+`-Cpanic=unwind` and the `std` feature, Rust panics will be caught at the
+JavaScript boundary and converted into JavaScript exceptions, allowing proper
+cleanup and error handling.
 
 When enabled, panics in exported Rust functions are caught and thrown as
 `PanicError` exceptions in JavaScript. For async functions, the returned promise
@@ -11,27 +12,12 @@ is rejected with the `PanicError`.
 
 ## Requirements
 
-The `catch-unwind` feature requires:
-
-- **Rust nightly compiler** - The feature relies on `-Zbuild-std` which is only
-  available on nightly
 - **`panic=unwind`** - The panic strategy must be set to `unwind` (not `abort`)
-- **`-Zbuild-std`** - Required to rebuild the standard library with the correct
+- **`-Zbuild-std`** - Required to rebuild the standard library with the `unwind`
   panic strategy
-- **`std` feature** - The feature depends on `std` support because it needs
-  `std::panic::catch_unwind`.
-
-## Enabling the Feature
-
-Add the `catch-unwind` feature to your `Cargo.toml`:
-
-```toml
-[dependencies]
-wasm-bindgen = { version = "0.2", features = ["catch-unwind"] }
-
-# If using async functions:
-wasm-bindgen-futures = { version = "0.4", features = ["catch-unwind"] }
-```
+- **Rust nightly compiler** - `-Zbuild-std` is only available on nightly
+- **`std` feature** - `std` support is required to use
+  `std::panic::catch_unwind`. to catch panics.
 
 ## Building
 
@@ -144,9 +130,8 @@ that this assumes your code handles potential inconsistent state after a panic.
 
 ### Mutable Slice Arguments
 
-Functions with `&mut [T]` slice arguments cannot be used with `catch-unwind`
-because mutable slices are not `UnwindSafe`. Consider using owned types like
-`Vec<T>` instead.
+Functions with `&mut [T]` slice arguments cannot be used because mutable slices
+are not `UnwindSafe`. Consider using owned types like `Vec<T>` instead.
 
 ## See Also
 
