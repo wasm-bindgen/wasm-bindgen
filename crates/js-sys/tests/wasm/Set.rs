@@ -124,3 +124,119 @@ fn values() {
     assert!(list.iter().any(|l| *l == 2));
     assert!(list.iter().any(|l| *l == 3));
 }
+
+// Typed Set tests
+#[wasm_bindgen_test]
+fn new_typed() {
+    let set: Set<JsString> = Set::new_typed();
+    assert_eq!(set.size(), 0);
+}
+
+#[wasm_bindgen_test]
+fn new_empty() {
+    let set: Set<JsString> = Set::new_empty();
+    assert_eq!(set.size(), 0);
+}
+
+#[wasm_bindgen_test]
+fn new_from_items() {
+    let set: Set<JsString> = Set::new_from_items(&[
+        JsString::from("a"),
+        JsString::from("b"),
+        JsString::from("c"),
+    ]);
+    assert_eq!(set.size(), 3);
+    assert!(set.has(&JsString::from("a")));
+    assert!(set.has(&JsString::from("b")));
+    assert!(set.has(&JsString::from("c")));
+}
+
+#[wasm_bindgen_test]
+fn typed_add_has() {
+    let set: Set<JsString> = Set::new_typed();
+    let val = JsString::from("test");
+    assert!(!set.has(&val));
+    set.add(&val);
+    assert!(set.has(&val));
+    assert_eq!(set.size(), 1);
+}
+
+#[wasm_bindgen_test]
+fn typed_delete() {
+    let set: Set<JsString> = Set::new_typed();
+    let val = JsString::from("delete_me");
+    set.add(&val);
+    assert!(set.has(&val));
+    assert!(set.delete(&val));
+    assert!(!set.has(&val));
+    assert!(!set.delete(&val));
+}
+
+#[wasm_bindgen_test]
+fn typed_clear() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("a"));
+    set.add(&JsString::from("b"));
+    set.add(&JsString::from("c"));
+    assert_eq!(set.size(), 3);
+    set.clear();
+    assert_eq!(set.size(), 0);
+}
+
+#[wasm_bindgen_test]
+fn typed_values_iterator() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("x"));
+    set.add(&JsString::from("y"));
+    set.add(&JsString::from("z"));
+
+    let values: Vec<JsString> = set.values().into_iter().map(|v| v.unwrap()).collect();
+    assert_eq!(values.len(), 3);
+    assert!(values.iter().any(|v| *v == "x"));
+    assert!(values.iter().any(|v| *v == "y"));
+    assert!(values.iter().any(|v| *v == "z"));
+}
+
+#[wasm_bindgen_test]
+fn typed_keys_iterator() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("key1"));
+    set.add(&JsString::from("key2"));
+
+    let keys: Vec<JsString> = set.keys().into_iter().map(|k| k.unwrap()).collect();
+    assert_eq!(keys.len(), 2);
+    assert!(keys.iter().any(|k| *k == "key1"));
+    assert!(keys.iter().any(|k| *k == "key2"));
+}
+
+#[wasm_bindgen_test]
+fn typed_entries_iterator() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("a"));
+    set.add(&JsString::from("b"));
+
+    let entries = set.entries_typed();
+    let mut count = 0;
+    for result in entries.into_iter() {
+        // entries_typed returns Iterator<ArrayTuple<T, T>> - the tuple is an Array
+        let arr: Array = result.unwrap().unchecked_into();
+        // For Set, entries are [value, value] pairs
+        assert_eq!(arr.length(), 2);
+        count += 1;
+    }
+    assert_eq!(count, 2);
+}
+
+#[wasm_bindgen_test]
+fn new_from_iterable() {
+    let arr: Array<JsString> = Array::of(&[
+        JsString::from("x"),
+        JsString::from("y"),
+        JsString::from("z"),
+    ]);
+    let set: Set<JsString> = Set::new_from_iterable(arr).unwrap();
+    assert_eq!(set.size(), 3);
+    assert!(set.has(&JsString::from("x")));
+    assert!(set.has(&JsString::from("y")));
+    assert!(set.has(&JsString::from("z")));
+}

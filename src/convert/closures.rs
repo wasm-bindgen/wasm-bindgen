@@ -9,6 +9,7 @@ use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
+use crate::__rt::marker::ErasableGeneric;
 
 macro_rules! closures {
     // A counter helper to count number of arguments.
@@ -40,6 +41,15 @@ macro_rules! closures {
                     WasmSlice { ptr: a as u32, len: b as u32 }
                 }
             }
+        }
+
+        unsafe impl<'a, $($var,)* R> ErasableGeneric for &'a $($mut)? (dyn $Fn $FnArgs -> R + 'a)
+        where
+            Self: WasmDescribe,
+            $($var: ErasableGeneric,)*
+            R: ErasableGeneric,
+        {
+            type Repr = &'a (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'a);
         }
 
         #[allow(non_snake_case)]

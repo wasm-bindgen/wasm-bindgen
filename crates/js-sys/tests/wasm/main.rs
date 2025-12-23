@@ -4,6 +4,8 @@
 pub mod Array;
 pub mod ArrayBuffer;
 pub mod ArrayIterator;
+pub mod ArrayTuple;
+pub mod ArrayTyped;
 pub mod BigInt;
 pub mod Boolean;
 pub mod DataView;

@@ -4,6 +4,7 @@ use core::char;
 use core::mem::{self, ManuallyDrop};
 use core::ptr::NonNull;
 
+use crate::__rt::marker::ErasableGeneric;
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::TryFromJsValue;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, RefFromWasmAbi};
@@ -167,6 +168,10 @@ macro_rules! type_wasm_native_f64_option {
             unsafe fn from_abi(js: $c) -> Self { js as $t }
         }
 
+        unsafe impl ErasableGeneric for $t {
+            type Repr = $t;
+        }
+
         impl IntoWasmAbi for Option<$t> {
             type Abi = f64;
 
@@ -231,6 +236,10 @@ macro_rules! type_abi_as_u32 {
             #[inline]
             fn is_none(js: &u32) -> bool { *js == U32_ABI_OPTION_SENTINEL }
         }
+
+        unsafe impl ErasableGeneric for $t {
+            type Repr = $t;
+        }
     )*)
 }
 
@@ -268,6 +277,10 @@ impl OptionFromWasmAbi for bool {
     }
 }
 
+unsafe impl ErasableGeneric for bool {
+    type Repr = bool;
+}
+
 impl IntoWasmAbi for char {
     type Abi = u32;
 
@@ -301,6 +314,10 @@ impl OptionFromWasmAbi for char {
     }
 }
 
+unsafe impl ErasableGeneric for char {
+    type Repr = char;
+}
+
 impl<T> IntoWasmAbi for *const T {
     type Abi = u32;
 
@@ -319,6 +336,10 @@ impl<T> FromWasmAbi for *const T {
     }
 }
 
+unsafe impl<T: ErasableGeneric> ErasableGeneric for *const T {
+    type Repr = *const T::Repr;
+}
+
 impl<T> IntoWasmAbi for Option<*const T> {
     type Abi = f64;
 
@@ -327,6 +348,10 @@ impl<T> IntoWasmAbi for Option<*const T> {
         self.map(|ptr| ptr as u32 as f64)
             .unwrap_or(F64_ABI_OPTION_SENTINEL)
     }
+}
+
+unsafe impl<T: ErasableGeneric> ErasableGeneric for Option<T> {
+    type Repr = Option<<T as ErasableGeneric>::Repr>;
 }
 
 impl<T> FromWasmAbi for Option<*const T> {
@@ -538,6 +563,10 @@ impl IntoWasmAbi for () {
     }
 }
 
+unsafe impl ErasableGeneric for () {
+    type Repr = ();
+}
+
 impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
     type Prim1 = T::Prim1;
     type Prim2 = T::Prim2;
@@ -588,6 +617,10 @@ where
             }
         }
     }
+}
+
+unsafe impl<T: ErasableGeneric, E: ErasableGeneric> ErasableGeneric for Result<T, E> {
+    type Repr = Result<<T as ErasableGeneric>::Repr, <E as ErasableGeneric>::Repr>;
 }
 
 impl IntoWasmAbi for JsError {

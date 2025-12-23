@@ -33,9 +33,10 @@ use core::mem::MaybeUninit;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
 use core::str;
 use core::str::FromStr;
+use wasm_bindgen::convert::FromWasmAbi;
 
 pub use wasm_bindgen;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, ErasableGeneric};
 
 // When adding new imports:
 //
@@ -302,90 +303,136 @@ extern "C" {
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = Array::is_array, typescript_type = "Array<any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type Array;
+    pub type Array<T>;
 
     /// Creates a new empty array.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Array;
 
+    /// Creates a new empty array.
+    #[wasm_bindgen(constructor, js_name = new)]
+    pub fn new_typed<T>() -> Array<T>;
+
     /// Creates a new array with the specified length (elements are initialized to `undefined`).
     #[wasm_bindgen(constructor)]
     pub fn new_with_length(len: u32) -> Array;
 
+    /// Creates a new array with the specified length (elements are initialized to `undefined`).
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_length_typed<T>(len: u32) -> Array<T>;
+
     /// Retrieves the element at the index, counting from the end if negative
     /// (returns `undefined` if the index is out of range).
     #[wasm_bindgen(method)]
-    pub fn at(this: &Array, index: i32) -> JsValue;
+    pub fn at<T>(this: &Array<T>, index: i32) -> T;
+
+    // Next major: Deprecate
+    /// Retrieves the element at the index (returns `undefined` if the index is out of range).
+    #[wasm_bindgen(method, indexing_getter)]
+    pub fn get<T>(this: &Array<T>, index: u32) -> T;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
-    #[wasm_bindgen(method, structural, indexing_getter)]
-    pub fn get(this: &Array, index: u32) -> JsValue;
+    #[wasm_bindgen(method, indexing_getter)]
+    pub fn get_checked<T>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
-    #[wasm_bindgen(method, structural, indexing_setter)]
-    pub fn set(this: &Array, index: u32, value: JsValue);
+    #[wasm_bindgen(method, indexing_setter)]
+    pub fn set<T>(this: &Array<T>, index: u32, value: T);
 
     /// Deletes the element at the index (does nothing if the index is out of range).
     ///
     /// The element at the index is set to `undefined`.
     ///
     /// This does not resize the array, the array will still be the same length.
-    #[wasm_bindgen(method, structural, indexing_deleter)]
-    pub fn delete(this: &Array, index: u32);
+    #[wasm_bindgen(method, indexing_deleter)]
+    pub fn delete<T>(this: &Array<T>, index: u32);
 
-    /// The `Array.from()` method creates a new, shallow-copied `Array` instance
+    // Next major: Deprecate
+    /// The `Array.from()` static method creates a new, shallow-copied `Array` instance
     /// from an array-like or iterable object.
     #[wasm_bindgen(static_method_of = Array)]
     pub fn from(val: &JsValue) -> Array;
+
+    /// The `Array.from()` static method creates a new, shallow-copied `Array` instance
+    /// from an array-like or iterable object.
+    #[wasm_bindgen(static_method_of = Array, catch, js_name = from)]
+    pub fn from_iterable<T, I: Iterable<Item = T>>(val: &I) -> Result<Array<T>, JsValue>;
+
+    /// The `Array.from()` static method creates a new, shallow-copied `Array` instance
+    /// from an array-like or iterable object.
+    #[wasm_bindgen(static_method_of = Array, catch, js_name = from)]
+    pub fn from_iterable_map<T, I: Iterable<Item = T>, U>(
+        val: &I,
+        map: &mut dyn FnMut(T, u32) -> U,
+    ) -> Result<Array<U>, JsValue>;
+
+    /// The `Array.fromAsync()` static method creates a new, shallow-copied `Array` instance
+    /// from an async iterable, iterable or array-like object.
+    #[wasm_bindgen(static_method_of = Array, catch, js_name = fromAsync)]
+    pub fn from_async<T, I: AsyncIterable<Item = T>>(val: &I) -> Result<Array<T>, JsValue>;
+
+    /// The `Array.fromAsync()` static method creates a new, shallow-copied `Array` instance
+    /// from an async iterable, iterable or array-like object.
+    #[wasm_bindgen(static_method_of = Array, catch, js_name = fromAsync)]
+    pub fn from_async_map<T, I: AsyncIterable<Item = T>, U: ErasableGeneric, R: Promising<U>>(
+        val: &I,
+        map: &mut dyn FnMut(T, u32) -> R,
+    ) -> Result<Array<T>, JsValue>;
 
     /// The `copyWithin()` method shallow copies part of an array to another
     /// location in the same array and returns it, without modifying its size.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/copyWithin)
     #[wasm_bindgen(method, js_name = copyWithin)]
-    pub fn copy_within(this: &Array, target: i32, start: i32, end: i32) -> Array;
+    pub fn copy_within<T>(this: &Array<T>, target: i32, start: i32, end: i32) -> Array<T>;
 
     /// The `concat()` method is used to merge two or more arrays. This method
     /// does not change the existing arrays, but instead returns a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
     #[wasm_bindgen(method)]
-    pub fn concat(this: &Array, array: &Array) -> Array;
+    pub fn concat<T>(this: &Array<T>, array: &Array<T>) -> Array<T>;
 
     /// The `every()` method tests whether all elements in the array pass the test
     /// implemented by the provided function.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every)
     #[wasm_bindgen(method)]
-    pub fn every(this: &Array, predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool) -> bool;
+    pub fn every<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> bool;
 
     /// The `fill()` method fills all the elements of an array from a start index
     /// to an end index with a static value. The end index is not included.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill)
     #[wasm_bindgen(method)]
-    pub fn fill(this: &Array, value: &JsValue, start: u32, end: u32) -> Array;
+    pub fn fill<T>(this: &Array<T>, value: &T, start: u32, end: u32) -> Array<T>;
 
     /// The `filter()` method creates a new array with all elements that pass the
     /// test implemented by the provided function.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
     #[wasm_bindgen(method)]
-    pub fn filter(this: &Array, predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool) -> Array;
+    pub fn filter<T>(
+        this: &Array<T>,
+        predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
+    ) -> Array<T>;
 
     /// The `find()` method returns the value of the first element in the array that satisfies
     ///  the provided testing function. Otherwise `undefined` is returned.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
     #[wasm_bindgen(method)]
-    pub fn find(this: &Array, predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool) -> JsValue;
+    pub fn find<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> T;
 
     /// The `findIndex()` method returns the index of the first element in the array that
     /// satisfies the provided testing function. Otherwise -1 is returned.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
     #[wasm_bindgen(method, js_name = findIndex)]
-    pub fn find_index(this: &Array, predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool) -> i32;
+    pub fn find_index<T>(
+        this: &Array<T>,
+        predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
+    ) -> i32;
 
     /// The `findLast()` method of Array instances iterates the array in reverse order
     /// and returns the value of the first element that satisfies the provided testing function.
@@ -393,10 +440,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
     #[wasm_bindgen(method, js_name = findLast)]
-    pub fn find_last(
-        this: &Array,
-        predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool,
-    ) -> JsValue;
+    pub fn find_last<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> T;
 
     /// The `findLastIndex()` method of Array instances iterates the array in reverse order
     /// and returns the index of the first element that satisfies the provided testing function.
@@ -404,9 +448,9 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)
     #[wasm_bindgen(method, js_name = findLastIndex)]
-    pub fn find_last_index(
-        this: &Array,
-        predicate: &mut dyn FnMut(JsValue, u32, Array) -> bool,
+    pub fn find_last_index<T>(
+        this: &Array<T>,
+        predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
     ) -> i32;
 
     /// The `flat()` method creates a new array with all sub-array elements concatenated into it
@@ -414,37 +458,37 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat)
     #[wasm_bindgen(method)]
-    pub fn flat(this: &Array, depth: i32) -> Array;
+    pub fn flat<T>(this: &Array<T>, depth: i32) -> Array<T>;
 
     /// The `flatMap()` method first maps each element using a mapping function, then flattens
     /// the result into a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
     #[wasm_bindgen(method, js_name = flatMap)]
-    pub fn flat_map(
-        this: &Array,
-        callback: &mut dyn FnMut(JsValue, u32, Array) -> Vec<JsValue>,
-    ) -> Array;
+    pub fn flat_map<T, U>(
+        this: &Array<T>,
+        callback: &mut dyn FnMut(T, u32, Array<T>) -> Vec<U>,
+    ) -> Array<U>;
 
     /// The `forEach()` method executes a provided function once for each array element.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
     #[wasm_bindgen(method, js_name = forEach)]
-    pub fn for_each(this: &Array, callback: &mut dyn FnMut(JsValue, u32, Array));
+    pub fn for_each<T>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
 
     /// The `includes()` method determines whether an array includes a certain
     /// element, returning true or false as appropriate.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes)
     #[wasm_bindgen(method)]
-    pub fn includes(this: &Array, value: &JsValue, from_index: i32) -> bool;
+    pub fn includes<T>(this: &Array<T>, value: &T, from_index: i32) -> bool;
 
     /// The `indexOf()` method returns the first index at which a given element
     /// can be found in the array, or -1 if it is not present.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf)
     #[wasm_bindgen(method, js_name = indexOf)]
-    pub fn index_of(this: &Array, value: &JsValue, from_index: i32) -> i32;
+    pub fn index_of<T>(this: &Array<T>, value: &T, from_index: i32) -> i32;
 
     /// The `Array.isArray()` method determines whether the passed value is an Array.
     ///
@@ -457,7 +501,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join)
     #[wasm_bindgen(method)]
-    pub fn join(this: &Array, delimiter: &str) -> JsString;
+    pub fn join<T>(this: &Array<T>, delimiter: &str) -> JsString;
 
     /// The `lastIndexOf()` method returns the last index at which a given element
     /// can be found in the array, or -1 if it is not present. The array is
@@ -465,7 +509,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf)
     #[wasm_bindgen(method, js_name = lastIndexOf)]
-    pub fn last_index_of(this: &Array, value: &JsValue, from_index: i32) -> i32;
+    pub fn last_index_of<T>(this: &Array<T>, value: &T, from_index: i32) -> i32;
 
     /// The length property of an object which is an instance of type Array
     /// sets or returns the number of elements in that array. The value is an
@@ -473,8 +517,8 @@ extern "C" {
     /// highest index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length)
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn length(this: &Array) -> u32;
+    #[wasm_bindgen(method, getter)]
+    pub fn length<T>(this: &Array<T>) -> u32;
 
     /// Sets the length of the array.
     ///
@@ -487,7 +531,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length)
     #[wasm_bindgen(method, setter)]
-    pub fn set_length(this: &Array, value: u32);
+    pub fn set_length<T>(this: &Array<T>, value: u32);
 
     /// `map()` calls a provided callback function once for each element in an array,
     /// in order, and constructs a new array from the results. callback is invoked
@@ -497,7 +541,8 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
     #[wasm_bindgen(method)]
-    pub fn map(this: &Array, predicate: &mut dyn FnMut(JsValue, u32, Array) -> JsValue) -> Array;
+    pub fn map<T, U>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> U)
+        -> Array<U>;
 
     /// The `Array.of()` method creates a new Array instance with a variable
     /// number of arguments, regardless of number or type of the arguments.
@@ -514,58 +559,84 @@ extern "C" {
     ///
     /// There are a few bindings to `of` in `js-sys`: `of1`, `of2`, etc...
     /// with different arities.
+    #[wasm_bindgen(static_method_of = Array, js_name = of, variadic)]
+    pub fn of<T>(values: &[T]) -> Array<T>;
+
+    // Next major: Deprecate
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
     pub fn of1(a: &JsValue) -> Array;
 
+    // Next major: Deprecate
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
     pub fn of2(a: &JsValue, b: &JsValue) -> Array;
 
+    // Next major: Deprecate
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
     pub fn of3(a: &JsValue, b: &JsValue, c: &JsValue) -> Array;
 
+    // Next major: Deprecate
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
     pub fn of4(a: &JsValue, b: &JsValue, c: &JsValue, d: &JsValue) -> Array;
 
+    // Next major: Deprecate
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
     pub fn of5(a: &JsValue, b: &JsValue, c: &JsValue, d: &JsValue, e: &JsValue) -> Array;
 
+    // Next major: Deprecate
     /// The `pop()` method removes the last element from an array and returns that
     /// element. This method changes the length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
     #[wasm_bindgen(method)]
-    pub fn pop(this: &Array) -> JsValue;
+    pub fn pop<T>(this: &Array<T>) -> T;
+
+    /// The `pop()` method removes the last element from an array and returns that
+    /// element. This method changes the length of the array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
+    #[wasm_bindgen(method, js_name = pop)]
+    pub fn pop_checked<T>(this: &Array<T>) -> Option<T>;
+
+    /// The `push()` method adds one element to the end of an array and
+    /// returns the new length of the array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
+    #[wasm_bindgen(method)]
+    pub fn push<T>(this: &Array<T>, value: &T) -> u32;
 
     /// The `push()` method adds one or more elements to the end of an array and
     /// returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
-    #[wasm_bindgen(method)]
-    pub fn push(this: &Array, value: &JsValue) -> u32;
+    #[wasm_bindgen(method, js_name = push, variadic)]
+    pub fn push_many<T>(this: &Array<T>, values: &[T]) -> u32;
 
+    // Next major: add A type
     /// The `reduce()` method applies a function against an accumulator and each element in
     /// the array (from left to right) to reduce it to a single value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
     #[wasm_bindgen(method)]
-    pub fn reduce(
-        this: &Array,
-        predicate: &mut dyn FnMut(JsValue, JsValue, u32, Array) -> JsValue,
+    pub fn reduce<T>(
+        this: &Array<T>,
+        predicate: &mut dyn FnMut(JsValue, T, u32, Array<T>) -> JsValue,
         initial_value: &JsValue,
     ) -> JsValue;
 
+    // Next major: add A type
     /// The `reduceRight()` method applies a function against an accumulator and each value
     /// of the array (from right-to-left) to reduce it to a single value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
     #[wasm_bindgen(method, js_name = reduceRight)]
-    pub fn reduce_right(
-        this: &Array,
-        predicate: &mut dyn FnMut(JsValue, JsValue, u32, Array) -> JsValue,
+    pub fn reduce_right<T>(
+        this: &Array<T>,
+        predicate: &mut dyn FnMut(JsValue, T, u32, Array<T>) -> JsValue,
         initial_value: &JsValue,
     ) -> JsValue;
 
@@ -574,29 +645,47 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse)
     #[wasm_bindgen(method)]
-    pub fn reverse(this: &Array) -> Array;
+    pub fn reverse<T>(this: &Array<T>) -> Array<T>;
 
+    // Next major: Deprecate
     /// The `shift()` method removes the first element from an array and returns
     /// that removed element. This method changes the length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)
     #[wasm_bindgen(method)]
-    pub fn shift(this: &Array) -> JsValue;
+    pub fn shift<T>(this: &Array<T>) -> T;
 
+    /// The `shift()` method removes the first element from an array and returns
+    /// that removed element. This method changes the length of the array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)
+    #[wasm_bindgen(method, js_name = shift)]
+    pub fn shift_checked<T>(this: &Array<T>) -> Option<T>;
+
+    // Next major: use i32
     /// The `slice()` method returns a shallow copy of a portion of an array into
     /// a new array object selected from begin to end (end not included).
     /// The original array will not be modified.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
     #[wasm_bindgen(method)]
-    pub fn slice(this: &Array, start: u32, end: u32) -> Array;
+    pub fn slice<T>(this: &Array<T>, start: u32, end: u32) -> Array<T>;
+
+    // Next major: use i32
+    /// The `slice()` method returns a shallow copy of a portion of an array into
+    /// a new array object selected from the given index to the end.
+    /// The original array will not be modified.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
+    #[wasm_bindgen(method, js_name = slice)]
+    pub fn slice_from<T>(this: &Array<T>, start: u32) -> Array<T>;
 
     /// The `some()` method tests whether at least one element in the array passes the test implemented
     /// by the provided function.
     /// Note: This method returns false for any condition put on an empty array.
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
     #[wasm_bindgen(method)]
-    pub fn some(this: &Array, predicate: &mut dyn FnMut(JsValue) -> bool) -> bool;
+    pub fn some<T>(this: &Array<T>, predicate: &mut dyn FnMut(T) -> bool) -> bool;
 
     /// The `sort()` method sorts the elements of an array in place and returns
     /// the array. The sort is not necessarily stable. The default sort
@@ -607,47 +696,436 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
     #[wasm_bindgen(method)]
-    pub fn sort(this: &Array) -> Array;
+    pub fn sort<T>(this: &Array<T>) -> Array<T>;
+
+    /// The `sort()` method with a custom compare function.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
+    #[wasm_bindgen(method, js_name = sort, catch)]
+    pub fn sort_by<T>(
+        this: &Array<T>,
+        compare_fn: &mut dyn FnMut(T, T) -> i32,
+    ) -> Result<Array<T>, JsValue>;
 
     /// The `splice()` method changes the contents of an array by removing existing elements and/or
     /// adding new elements.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
     #[wasm_bindgen(method)]
-    pub fn splice(this: &Array, start: u32, delete_count: u32, item: &JsValue) -> Array;
+    pub fn splice<T>(this: &Array<T>, start: u32, delete_count: u32, item: &T) -> Array<T>;
+
+    /// The `splice()` method changes the contents of an array by removing existing elements and/or
+    /// adding new elements.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
+    #[wasm_bindgen(method, js_name = splice, variadic)]
+    pub fn splice_many<T>(this: &Array<T>, start: u32, delete_count: u32, items: &[T]) -> Array<T>;
 
     /// The `toLocaleString()` method returns a string representing the elements of the array.
     /// The elements are converted to Strings using their toLocaleString methods and these
-    /// Strings are separated by a locale-specific String (such as a comma “,”).
+    /// Strings are separated by a locale-specific String (such as a comma ",").
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
-    pub fn to_locale_string(this: &Array, locales: &JsValue, options: &JsValue) -> JsString;
+    pub fn to_locale_string<T>(this: &Array<T>, locales: &JsValue, options: &JsValue) -> JsString;
+
+    /// The `toReversed()` method returns a new array with the elements in reversed order,
+    /// without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toReversed)
+    #[wasm_bindgen(method, js_name = toReversed)]
+    pub fn to_reversed<T>(this: &Array<T>) -> Array<T>;
+
+    /// The `toSorted()` method returns a new array with the elements sorted in ascending order,
+    /// without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
+    #[wasm_bindgen(method, js_name = toSorted)]
+    pub fn to_sorted<T>(this: &Array<T>) -> Array<T>;
+
+    /// The `toSorted()` method with a custom compare function.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
+    #[wasm_bindgen(method, js_name = toSorted)]
+    pub fn to_sorted_by<T>(this: &Array<T>, compare_fn: &mut dyn FnMut(T, T) -> i32) -> Array<T>;
+
+    /// The `toSpliced()` method returns a new array with some elements removed and/or
+    /// replaced at a given index, without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced)
+    #[wasm_bindgen(method, js_name = toSpliced, variadic)]
+    pub fn to_spliced<T>(this: &Array<T>, start: u32, delete_count: u32, items: &[T]) -> Array<T>;
 
     /// The `toString()` method returns a string representing the specified array
     /// and its elements.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_string(this: &Array) -> JsString;
+    pub fn to_string<T>(this: &Array<T>) -> JsString;
+
+    /// Converts the Array into a Vector.
+    #[wasm_bindgen(method, js_name = slice)]
+    pub fn to_vec<T>(this: &Array<T>) -> Vec<T>;
+
+    /// The `unshift()` method adds one element to the beginning of an
+    /// array and returns the new length of the array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)
+    #[wasm_bindgen(method)]
+    pub fn unshift<T>(this: &Array<T>, value: &T) -> u32;
 
     /// The `unshift()` method adds one or more elements to the beginning of an
     /// array and returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)
-    #[wasm_bindgen(method)]
-    pub fn unshift(this: &Array, value: &JsValue) -> u32;
+    #[wasm_bindgen(method, js_name = unshift, variadic)]
+    pub fn unshift_many<T>(this: &Array<T>, values: &[T]) -> u32;
+
+    /// The `with()` method returns a new array with the element at the given index
+    /// replaced with the given value, without modifying the original array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with)
+    #[wasm_bindgen(method, js_name = with)]
+    pub fn with<T>(this: &Array<T>, index: u32, value: &T) -> Array<T>;
 }
+
+/// Marker type for an unused generic argument
+/// This allows restricting implementations to a specified number of non-default args only.
+/// For example, for `tuple: ArrayTuple<JsString, Number>`, it will not support `tuple.get2`,
+/// because NeverArg does not support ErasableGeneric.
+pub enum NeverArg {}
+
+// Tuples as a typed array variant
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = Array, extends = Array, is_type_of = Array::is_array, typescript_type = "Array<any>")]
+    #[derive(Clone, Debug)]
+    pub type ArrayTuple<
+        T1 = NeverArg,
+        T2 = NeverArg,
+        T3 = NeverArg,
+        T4 = NeverArg,
+        T5 = NeverArg,
+        T6 = NeverArg,
+        T7 = NeverArg,
+        T8 = NeverArg,
+        T9 = NeverArg,
+    >;
+
+    /// Creates a new JS array typed as a 1-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new1<T1>(t1: &T1) -> ArrayTuple<T1>;
+
+    /// Creates a new JS array typed as a 2-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new2<T1, T2>(t1: &T1, t2: &T2) -> ArrayTuple<T1, T2>;
+
+    /// Creates a new JS array typed as a 3-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new3<T1, T2, T3>(t1: &T1, t2: &T2, t3: &T3) -> ArrayTuple<T1, T2, T3>;
+
+    /// Creates a new JS array typed as a 4-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new4<T1, T2, T3, T4>(t1: &T1, t2: &T2, t3: &T3, t4: &T4) -> ArrayTuple<T1, T2, T3, T4>;
+
+    /// Creates a new JS array typed as a 5-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new5<T1, T2, T3, T4, T5>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+    ) -> ArrayTuple<T1, T2, T3, T4, T5>;
+
+    /// Creates a new JS array typed as a 6-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new6<T1, T2, T3, T4, T5, T6>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+    ) -> ArrayTuple<T1, T2, T3, T4, T5, T6>;
+
+    /// Creates a new JS array typed as a 7-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new7<T1, T2, T3, T4, T5, T6, T7>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+        t7: &T7,
+    ) -> ArrayTuple<T1, T2, T3, T4, T5, T6, T7>;
+
+    /// Creates a new JS array typed as a 8-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new8<T1, T2, T3, T4, T5, T6, T7, T8>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+        t7: &T7,
+        t8: &T8,
+    ) -> ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8>;
+
+    /// Creates a new JS array typed as a 9-tuple.
+    #[wasm_bindgen(constructor, js_class = Array)]
+    pub fn new9<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+        t7: &T7,
+        t8: &T8,
+        t9: &T9,
+    ) -> ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>;
+
+    /// Gets the 1st item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "0"
+    )]
+    pub fn get0<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T1;
+
+    /// Gets the 2nd item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "1"
+    )]
+    pub fn get1<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T2;
+
+    /// Gets the 3rd item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "2"
+    )]
+    pub fn get2<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T3;
+
+    /// Gets the 4th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "3"
+    )]
+    pub fn get3<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T4;
+
+    /// Gets the 5th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "4"
+    )]
+    pub fn get4<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T5;
+
+    /// Gets the 6th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "5"
+    )]
+    pub fn get5<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T6;
+
+    /// Gets the 7th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "6"
+    )]
+    pub fn get6<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T7;
+
+    /// Gets the 8th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "7"
+    )]
+    pub fn get7<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T8;
+
+    /// Gets the 9th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "8"
+    )]
+    pub fn get8<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+    ) -> T9;
+
+    /// Sets the 1st item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "0"
+    )]
+    pub fn set0<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T1,
+    );
+
+    /// Sets the 2nd item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "1"
+    )]
+    pub fn set1<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T2,
+    );
+
+    /// Sets the 3rd item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "2"
+    )]
+    pub fn set2<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T3,
+    );
+
+    /// Sets the 4th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "3"
+    )]
+    pub fn set3<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T4,
+    );
+
+    /// Sets the 5th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "4"
+    )]
+    pub fn set4<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T5,
+    );
+
+    /// Sets the 6th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "5"
+    )]
+    pub fn set5<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T6,
+    );
+
+    /// Sets the 7th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "6"
+    )]
+    pub fn set6<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T7,
+    );
+
+    /// Sets the 8th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "7"
+    )]
+    pub fn set7<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T8,
+    );
+
+    /// Sets the 9th item
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "8"
+    )]
+    pub fn set8<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        this: &ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+        value: &T9,
+    );
+}
+
+// Implement a compile-time `static_len()` implementation based on the static tuple type
+macro_rules! impl_static_len {
+    ($Type:ident; [$($T:ident),*]; [$($Never:ident),*]; $len:expr) => {
+        impl<$($T: ErasableGeneric),*> $Type<$($T,)* $($Never),*> {
+            pub fn len() -> usize {
+                $len
+            }
+        }
+    };
+}
+
+impl_static_len!(ArrayTuple; [T1]; [NeverArg, NeverArg, NeverArg, NeverArg, NeverArg, NeverArg, NeverArg, NeverArg]; 1);
+impl_static_len!(ArrayTuple; [T1, T2]; [NeverArg, NeverArg, NeverArg, NeverArg, NeverArg, NeverArg, NeverArg]; 2);
+impl_static_len!(ArrayTuple; [T1, T2, T3]; [NeverArg, NeverArg, NeverArg, NeverArg, NeverArg, NeverArg]; 3);
+impl_static_len!(ArrayTuple; [T1, T2, T3, T4]; [NeverArg, NeverArg, NeverArg, NeverArg, NeverArg]; 4);
+impl_static_len!(ArrayTuple; [T1, T2, T3, T4, T5]; [NeverArg, NeverArg, NeverArg, NeverArg]; 5);
+impl_static_len!(ArrayTuple; [T1, T2, T3, T4, T5, T6]; [NeverArg, NeverArg, NeverArg]; 6);
+impl_static_len!(ArrayTuple; [T1, T2, T3, T4, T5, T6, T7]; [NeverArg, NeverArg]; 7);
+impl_static_len!(ArrayTuple; [T1, T2, T3, T4, T5, T6, T7, T8]; [NeverArg]; 8);
+impl_static_len!(ArrayTuple; [T1, T2, T3, T4, T5, T6, T7, T8, T9]; []; 9);
 
 /// Iterator returned by `Array::into_iter`
 #[derive(Debug, Clone)]
-pub struct ArrayIntoIter {
+pub struct ArrayIntoIter<T: ErasableGeneric<Repr = JsValue>> {
     range: core::ops::Range<u32>,
-    array: Array,
+    array: Array<T>,
 }
 
-impl core::iter::Iterator for ArrayIntoIter {
-    type Item = JsValue;
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::Iterator for ArrayIntoIter<T> {
+    type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
@@ -682,7 +1160,7 @@ impl core::iter::Iterator for ArrayIntoIter {
     }
 }
 
-impl core::iter::DoubleEndedIterator for ArrayIntoIter {
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         Some(self.array.get(index))
@@ -693,19 +1171,19 @@ impl core::iter::DoubleEndedIterator for ArrayIntoIter {
     }
 }
 
-impl core::iter::FusedIterator for ArrayIntoIter {}
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::FusedIterator for ArrayIntoIter<T> {}
 
-impl core::iter::ExactSizeIterator for ArrayIntoIter {}
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::ExactSizeIterator for ArrayIntoIter<T> {}
 
 /// Iterator returned by `Array::iter`
 #[derive(Debug, Clone)]
-pub struct ArrayIter<'a> {
+pub struct ArrayIter<'a, T: ErasableGeneric<Repr = JsValue>> {
     range: core::ops::Range<u32>,
-    array: &'a Array,
+    array: &'a Array<T>,
 }
 
-impl core::iter::Iterator for ArrayIter<'_> {
-    type Item = JsValue;
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::Iterator for ArrayIter<'_, T> {
+    type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
@@ -740,7 +1218,7 @@ impl core::iter::Iterator for ArrayIter<'_> {
     }
 }
 
-impl core::iter::DoubleEndedIterator for ArrayIter<'_> {
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::DoubleEndedIterator for ArrayIter<'_, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         Some(self.array.get(index))
@@ -751,36 +1229,23 @@ impl core::iter::DoubleEndedIterator for ArrayIter<'_> {
     }
 }
 
-impl core::iter::FusedIterator for ArrayIter<'_> {}
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::FusedIterator for ArrayIter<'_, T> {}
 
-impl core::iter::ExactSizeIterator for ArrayIter<'_> {}
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::ExactSizeIterator for ArrayIter<'_, T> {}
 
-impl Array {
+impl<T: ErasableGeneric<Repr = JsValue>> Array<T> {
     /// Returns an iterator over the values of the JS array.
-    pub fn iter(&self) -> ArrayIter<'_> {
+    pub fn iter(&self) -> ArrayIter<'_, T> {
         ArrayIter {
             range: 0..self.length(),
             array: self,
         }
     }
-
-    /// Converts the JS array into a new Vec.
-    pub fn to_vec(&self) -> Vec<JsValue> {
-        let len = self.length();
-
-        let mut output = Vec::with_capacity(len as usize);
-
-        for i in 0..len {
-            output.push(self.get(i));
-        }
-
-        output
-    }
 }
 
-impl core::iter::IntoIterator for Array {
-    type Item = JsValue;
-    type IntoIter = ArrayIntoIter;
+impl<T: ErasableGeneric<Repr = JsValue>> core::iter::IntoIterator for Array<T> {
+    type Item = T;
+    type IntoIter = ArrayIntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         ArrayIntoIter {
@@ -791,27 +1256,27 @@ impl core::iter::IntoIterator for Array {
 }
 
 // TODO pre-initialize the Array with the correct length using TrustedLen
-impl<A> core::iter::FromIterator<A> for Array
+impl<A, T: ErasableGeneric<Repr = JsValue>> core::iter::FromIterator<A> for Array<T>
 where
-    A: AsRef<JsValue>,
+    A: AsRef<T>,
 {
-    fn from_iter<T>(iter: T) -> Array
+    fn from_iter<I>(iter: I) -> Array<T>
     where
-        T: IntoIterator<Item = A>,
+        I: IntoIterator<Item = A>,
     {
-        let mut out = Array::new();
+        let mut out = Array::new_typed();
         out.extend(iter);
         out
     }
 }
 
-impl<A> core::iter::Extend<A> for Array
+impl<A, T: ErasableGeneric<Repr = JsValue>> core::iter::Extend<A> for Array<T>
 where
-    A: AsRef<JsValue>,
+    A: AsRef<T>,
 {
-    fn extend<T>(&mut self, iter: T)
+    fn extend<I>(&mut self, iter: I)
     where
-        T: IntoIterator<Item = A>,
+        I: IntoIterator<Item = A>,
     {
         for value in iter {
             self.push(value.as_ref());
@@ -825,6 +1290,41 @@ impl Default for Array {
     }
 }
 
+impl<T> Iterable for Array<T> {
+    type Item = T;
+}
+
+impl<T1, T2, T3, T4, T5, T6, T7, T8, T9> Iterable
+    for ArrayTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+{
+    type Item = JsValue;
+}
+
+// ArrayBufferOptions
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object, typescript_type = "ArrayBufferOptions")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type ArrayBufferOptions;
+
+    /// The maximum size, in bytes, that the array buffer can be resized to.
+    #[wasm_bindgen(method, setter, js_name = maxByteLength)]
+    pub fn set_max_byte_length(this: &ArrayBufferOptions, max_byte_length: usize);
+
+    /// The maximum size, in bytes, that the array buffer can be resized to.
+    #[wasm_bindgen(method, getter, js_name = maxByteLength)]
+    pub fn get_max_byte_length(this: &ArrayBufferOptions) -> usize;
+}
+
+impl ArrayBufferOptions {
+    pub fn new(max_byte_length: usize) -> ArrayBufferOptions {
+        let options = JsCast::unchecked_into::<ArrayBufferOptions>(Object::new());
+        options.set_max_byte_length(max_byte_length);
+        options
+    }
+}
+
+// Next major: use usize
 // ArrayBuffer
 #[wasm_bindgen]
 extern "C" {
@@ -843,7 +1343,18 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(length: u32) -> ArrayBuffer;
 
-    /// The byteLength property of an object which is an instance of type ArrayBuffer
+    /// The `ArrayBuffer` object is used to represent a generic,
+    /// fixed-length raw binary data buffer. You cannot directly
+    /// manipulate the contents of an `ArrayBuffer`; instead, you
+    /// create one of the typed array objects or a `DataView` object
+    /// which represents the buffer in a specific format, and use that
+    /// to read and write the contents of the buffer.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(length: u32, options: &ArrayBufferOptions) -> ArrayBuffer;
+
+    /// The `byteLength` property of an object which is an instance of type ArrayBuffer
     /// it's an accessor property whose set accessor function is undefined,
     /// meaning that you can only read this property.
     /// The value is established when the array is constructed and cannot be changed.
@@ -853,6 +1364,13 @@ extern "C" {
     #[wasm_bindgen(method, getter, js_name = byteLength)]
     pub fn byte_length(this: &ArrayBuffer) -> u32;
 
+    /// The `detached` accessor property of `ArrayBuffer` instances returns a boolean indicating
+    /// whether or not this buffer has been detached (transferred).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/detached)
+    #[wasm_bindgen(method, getter)]
+    pub fn detached(this: &ArrayBuffer) -> bool;
+
     /// The `isView()` method returns true if arg is one of the `ArrayBuffer`
     /// views, such as typed array objects or a DataView; false otherwise.
     ///
@@ -860,6 +1378,28 @@ extern "C" {
     #[wasm_bindgen(static_method_of = ArrayBuffer, js_name = isView)]
     pub fn is_view(value: &JsValue) -> bool;
 
+    /// The `maxByteLength` accessor property of ArrayBuffer instances returns the maximum
+    /// length (in bytes) that this array buffer can be resized to.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/maxByteLength)
+    #[wasm_bindgen(method, getter, js_name = maxByteLength)]
+    pub fn max_byte_length(this: &ArrayBuffer) -> usize;
+
+    /// The `resizable` accessor property of `ArrayBuffer` instances returns whether this array buffer
+    /// can be resized or not.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/resizable)
+    #[wasm_bindgen(method, getter)]
+    pub fn resizable(this: &ArrayBuffer) -> bool;
+
+    /// The `resize()` method of ArrayBuffer instances resizes the ArrayBuffer to the
+    /// specified size, in bytes.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/resize)
+    #[wasm_bindgen(method, catch)]
+    pub fn resize(this: &ArrayBuffer, new_len: u32) -> Result<(), JsValue>;
+
+    // Next major: use i64 (not i32 like Array), add second arg to match Array
     /// The `slice()` method returns a new `ArrayBuffer` whose contents
     /// are a copy of this `ArrayBuffer`'s bytes from begin, inclusive,
     /// up to end, exclusive.
@@ -868,13 +1408,49 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn slice(this: &ArrayBuffer, begin: u32) -> ArrayBuffer;
 
+    // Next major: use i64
     /// Like `slice()` but with the `end` argument.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/slice)
     #[wasm_bindgen(method, js_name = slice)]
     pub fn slice_with_end(this: &ArrayBuffer, begin: u32, end: u32) -> ArrayBuffer;
+
+    /// The `transfer()` method of ArrayBuffer instances creates a new `ArrayBuffer`
+    /// with the same byte content as this buffer, then detaches this buffer.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transfer)
+    #[wasm_bindgen(method, catch)]
+    pub fn transfer(this: &ArrayBuffer) -> Result<ArrayBuffer, JsValue>;
+
+    /// The `transfer()` method of `ArrayBuffer` instances creates a new `ArrayBuffer`
+    /// with the same byte content as this buffer, then detaches this buffer.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transfer)
+    #[wasm_bindgen(method, catch, js_name = transfer)]
+    pub fn transfer_with_length(
+        this: &ArrayBuffer,
+        new_byte_length: u32,
+    ) -> Result<ArrayBuffer, JsValue>;
+
+    /// The `transferToFixedLength()` method of `ArrayBuffer` instances creates a new non-resizable
+    /// ArrayBuffer with the same byte content as this buffer, then detaches this buffer.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transferToFixedLength)
+    #[wasm_bindgen(method, catch, js_name = transferToFixedLength)]
+    pub fn transfer_to_fixed_length(this: &ArrayBuffer) -> Result<ArrayBuffer, JsValue>;
+
+    /// The `transferToFixedLength()` method of `ArrayBuffer` instances creates a new non-resizable
+    /// `ArrayBuffer` with the same byte content as this buffer, then detaches this buffer.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transferToFixedLength)
+    #[wasm_bindgen(method, catch, js_name = transferToFixedLength)]
+    pub fn transfer_to_fixed_length_with_length(
+        this: &ArrayBuffer,
+        new_byte_length: u32,
+    ) -> Result<ArrayBuffer, JsValue>;
 }
 
+// Next major: use usize
 // SharedArrayBuffer
 #[wasm_bindgen]
 extern "C" {
@@ -892,7 +1468,18 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(length: u32) -> SharedArrayBuffer;
 
-    /// The byteLength accessor property represents the length of
+    /// The `SharedArrayBuffer` object is used to represent a generic,
+    /// fixed-length raw binary data buffer, similar to the `ArrayBuffer`
+    /// object, but in a way that they can be used to create views
+    /// on shared memory. Unlike an `ArrayBuffer`, a `SharedArrayBuffer`
+    /// cannot become detached.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(length: u32, options: &ArrayBufferOptions) -> SharedArrayBuffer;
+
+    // Next major: use i64
+    /// The `byteLength` accessor property represents the length of
     /// an `SharedArrayBuffer` in bytes. This is established when
     /// the `SharedArrayBuffer` is constructed and cannot be changed.
     ///
@@ -900,6 +1487,21 @@ extern "C" {
     #[wasm_bindgen(method, getter, js_name = byteLength)]
     pub fn byte_length(this: &SharedArrayBuffer) -> u32;
 
+    /// The `growable` accessor property of `SharedArrayBuffer` instances returns whether
+    /// this `SharedArrayBuffer` can be grow or not.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/byteLength)
+    #[wasm_bindgen(method, getter)]
+    pub fn growable(this: &SharedArrayBuffer) -> bool;
+
+    /// The `maxByteLength` accessor property of `SharedArrayBuffer` instances returns the maximum
+    /// length (in bytes) that this `SharedArrayBuffer` can be resized to.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/maxByteLength)
+    #[wasm_bindgen(method, getter, js_name = maxByteLength)]
+    pub fn max_byte_length(this: &SharedArrayBuffer) -> usize;
+
+    // Next major: use i64
     /// The `slice()` method returns a new `SharedArrayBuffer` whose contents
     /// are a copy of this `SharedArrayBuffer`'s bytes from begin, inclusive,
     /// up to end, exclusive.
@@ -908,6 +1510,7 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn slice(this: &SharedArrayBuffer, begin: u32) -> SharedArrayBuffer;
 
+    // Next major: use i64
     /// Like `slice()` but with the `end` argument.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/slice)
@@ -923,23 +1526,33 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/keys)
     #[wasm_bindgen(method)]
-    pub fn keys(this: &Array) -> Iterator;
+    pub fn keys<T>(this: &Array<T>) -> Iterator<T>;
 
     /// The `entries()` method returns a new Array Iterator object that contains
     /// the key/value pairs for each index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
     #[wasm_bindgen(method)]
-    pub fn entries(this: &Array) -> Iterator;
+    pub fn entries<T>(this: &Array<T>) -> Iterator<T>;
+
+    /// The `entries()` method returns a new Array Iterator object that contains
+    /// the key/value pairs for each index in the array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
+    #[wasm_bindgen(method, js_name = entries)]
+    pub fn entries_typed<T>(this: &Array<T>) -> Iterator<ArrayTuple<u32, T>>;
 
     /// The `values()` method returns a new Array Iterator object that
     /// contains the values for each index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values)
     #[wasm_bindgen(method)]
-    pub fn values(this: &Array) -> Iterator;
+    pub fn values<T>(this: &Array<T>) -> Iterator<T>;
 }
 
+pub trait TypedArray: ErasableGeneric<Repr = JsValue> {}
+
+// Next major: use usize
 /// The `Atomics` object provides atomic operations as static methods.
 /// They are used with `SharedArrayBuffer` objects.
 ///
@@ -964,7 +1577,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/add)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn add(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn add<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.add()` method adds a given value at a given
         /// position in the array and returns the old value at that position.
@@ -975,7 +1592,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/add)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = add)]
-        pub fn add_bigint(typed_array: &JsValue, index: u32, value: i64) -> Result<i64, JsValue>;
+        pub fn add_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i64,
+        ) -> Result<i64, JsValue>;
 
         /// The static `Atomics.and()` method computes a bitwise AND with a given
         /// value at a given position in the array, and returns the old value
@@ -987,7 +1608,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/and)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn and(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn and<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.and()` method computes a bitwise AND with a given
         /// value at a given position in the array, and returns the old value
@@ -999,7 +1624,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/and)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = and)]
-        pub fn and_bigint(typed_array: &JsValue, index: u32, value: i64) -> Result<i64, JsValue>;
+        pub fn and_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i64,
+        ) -> Result<i64, JsValue>;
 
         /// The static `Atomics.compareExchange()` method exchanges a given
         /// replacement value at a given position in the array, if a given expected
@@ -1012,8 +1641,8 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/compareExchange)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = compareExchange)]
-        pub fn compare_exchange(
-            typed_array: &JsValue,
+        pub fn compare_exchange<T: TypedArray = Int32Array>(
+            typed_array: &T,
             index: u32,
             expected_value: i32,
             replacement_value: i32,
@@ -1030,8 +1659,8 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/compareExchange)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = compareExchange)]
-        pub fn compare_exchange_bigint(
-            typed_array: &JsValue,
+        pub fn compare_exchange_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
             index: u32,
             expected_value: i64,
             replacement_value: i64,
@@ -1046,7 +1675,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/exchange)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn exchange(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn exchange<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.exchange()` method stores a given value at a given
         /// position in the array and returns the old value at that position.
@@ -1057,8 +1690,8 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/exchange)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = exchange)]
-        pub fn exchange_bigint(
-            typed_array: &JsValue,
+        pub fn exchange_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
             index: u32,
             value: i64,
         ) -> Result<i64, JsValue>;
@@ -1079,7 +1712,10 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/load)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn load(typed_array: &JsValue, index: u32) -> Result<i32, JsValue>;
+        pub fn load<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.load()` method returns a value at a given
         /// position in the array.
@@ -1088,7 +1724,10 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/load)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = load)]
-        pub fn load_bigint(typed_array: &JsValue, index: i64) -> Result<i64, JsValue>;
+        pub fn load_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: i64,
+        ) -> Result<i64, JsValue>;
 
         /// The static `Atomics.notify()` method notifies up some agents that
         /// are sleeping in the wait queue.
@@ -1099,10 +1738,27 @@ pub mod Atomics {
         #[wasm_bindgen(js_namespace = Atomics, catch)]
         pub fn notify(typed_array: &Int32Array, index: u32) -> Result<u32, JsValue>;
 
+        /// The static `Atomics.notify()` method notifies up some agents that
+        /// are sleeping in the wait queue.
+        /// Note: This operation works with a shared `Int32Array` only.
+        /// If `count` is not provided, notifies all the agents in the queue.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/notify)
+        #[wasm_bindgen(js_namespace = Atomics, catch)]
+        pub fn notify_bigint(typed_array: &BigInt64Array, index: u32) -> Result<u32, JsValue>;
+
         /// Notifies up to `count` agents in the wait queue.
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = notify)]
         pub fn notify_with_count(
             typed_array: &Int32Array,
+            index: u32,
+            count: u32,
+        ) -> Result<u32, JsValue>;
+
+        /// Notifies up to `count` agents in the wait queue.
+        #[wasm_bindgen(js_namespace = Atomics, catch, js_name = notify)]
+        pub fn notify_bigint_with_count(
+            typed_array: &BigInt64Array,
             index: u32,
             count: u32,
         ) -> Result<u32, JsValue>;
@@ -1116,7 +1772,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/or)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn or(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn or<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.or()` method computes a bitwise OR with a given value
         /// at a given position in the array, and returns the old value at that position.
@@ -1127,7 +1787,41 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/or)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = or)]
-        pub fn or_bigint(typed_array: &JsValue, index: u32, value: i64) -> Result<i64, JsValue>;
+        pub fn or_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i64,
+        ) -> Result<i64, JsValue>;
+
+        /// The static `Atomics.pause()` static method provides a micro-wait primitive that hints to the CPU
+        /// that the caller is spinning while waiting on access to a shared resource. This allows the system
+        /// to reduce the resources allocated to the core (such as power) or thread, without yielding the
+        /// current thread.
+        ///
+        /// `pause()` has no observable behavior other than timing. The exact behavior is dependent on the CPU
+        /// architecture and the operating system. For example, in Intel x86, it may be a pause instruction as
+        /// per Intel's optimization manual. It could be a no-op in certain platforms.
+        ///
+        /// This method is used to operate on a `BigInt64Array` or a `BigUint64Array`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/xor)
+        #[wasm_bindgen(js_namespace = Atomics)]
+        pub fn pause();
+
+        /// The static `Atomics.pause()` static method provides a micro-wait primitive that hints to the CPU
+        /// that the caller is spinning while waiting on access to a shared resource. This allows the system
+        /// to reduce the resources allocated to the core (such as power) or thread, without yielding the
+        /// current thread.
+        ///
+        /// `pause()` has no observable behavior other than timing. The exact behavior is dependent on the CPU
+        /// architecture and the operating system. For example, in Intel x86, it may be a pause instruction as
+        /// per Intel's optimization manual. It could be a no-op in certain platforms.
+        ///
+        /// This method is used to operate on a `BigInt64Array` or a `BigUint64Array`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/xor)
+        #[wasm_bindgen(js_namespace = Atomics)]
+        pub fn pause_with_hint(duration_hint: u32);
 
         /// The static `Atomics.store()` method stores a given value at the given
         /// position in the array and returns that value.
@@ -1136,7 +1830,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/store)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn store(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn store<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.store()` method stores a given value at the given
         /// position in the array and returns that value.
@@ -1145,7 +1843,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/store)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = store)]
-        pub fn store_bigint(typed_array: &JsValue, index: u32, value: i64) -> Result<i64, JsValue>;
+        pub fn store_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i64,
+        ) -> Result<i64, JsValue>;
 
         /// The static `Atomics.sub()` method subtracts a given value at a
         /// given position in the array and returns the old value at that position.
@@ -1156,7 +1858,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/sub)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn sub(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn sub<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.sub()` method subtracts a given value at a
         /// given position in the array and returns the old value at that position.
@@ -1167,7 +1873,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/sub)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = sub)]
-        pub fn sub_bigint(typed_array: &JsValue, index: u32, value: i64) -> Result<i64, JsValue>;
+        pub fn sub_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i64,
+        ) -> Result<i64, JsValue>;
 
         /// The static `Atomics.wait()` method verifies that a given
         /// position in an `Int32Array` still contains a given value
@@ -1299,7 +2009,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/xor)
         #[wasm_bindgen(js_namespace = Atomics, catch)]
-        pub fn xor(typed_array: &JsValue, index: u32, value: i32) -> Result<i32, JsValue>;
+        pub fn xor<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i32,
+        ) -> Result<i32, JsValue>;
 
         /// The static `Atomics.xor()` method computes a bitwise XOR
         /// with a given value at a given position in the array,
@@ -1311,7 +2025,11 @@ pub mod Atomics {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/xor)
         #[wasm_bindgen(js_namespace = Atomics, catch, js_name = xor)]
-        pub fn xor_bigint(typed_array: &JsValue, index: u32, value: i64) -> Result<i64, JsValue>;
+        pub fn xor_bigint<T: TypedArray = Int32Array>(
+            typed_array: &T,
+            index: u32,
+            value: i64,
+        ) -> Result<i64, JsValue>;
     }
 }
 
@@ -1652,21 +2370,21 @@ extern "C" {
     /// The ArrayBuffer referenced by this view. Fixed at construction time and thus read only.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/buffer)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn buffer(this: &DataView) -> ArrayBuffer;
 
     /// The length (in bytes) of this view from the start of its ArrayBuffer.
     /// Fixed at construction time and thus read only.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/byteLength)
-    #[wasm_bindgen(method, getter, structural, js_name = byteLength)]
+    #[wasm_bindgen(method, getter, js_name = byteLength)]
     pub fn byte_length(this: &DataView) -> usize;
 
     /// The offset (in bytes) of this view from the start of its ArrayBuffer.
     /// Fixed at construction time and thus read only.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/byteOffset)
-    #[wasm_bindgen(method, getter, structural, js_name = byteOffset)]
+    #[wasm_bindgen(method, getter, js_name = byteOffset)]
     pub fn byte_offset(this: &DataView) -> usize;
 
     /// The `getInt8()` method gets a signed 8-bit integer (byte) at the
@@ -1888,25 +2606,25 @@ extern "C" {
     /// Usually this is used to add context to re-thrown errors.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#differentiate_between_similar_errors)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn cause(this: &Error) -> JsValue;
-    #[wasm_bindgen(method, setter, structural)]
+    #[wasm_bindgen(method, setter)]
     pub fn set_cause(this: &Error, cause: &JsValue);
 
     /// The message property is a human-readable description of the error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn message(this: &Error) -> JsString;
-    #[wasm_bindgen(method, setter, structural)]
+    #[wasm_bindgen(method, setter)]
     pub fn set_message(this: &Error, message: &str);
 
     /// The name property represents a name for the type of error. The initial value is "Error".
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn name(this: &Error) -> JsString;
-    #[wasm_bindgen(method, setter, structural)]
+    #[wasm_bindgen(method, setter)]
     pub fn set_name(this: &Error, name: &str);
 
     /// The `toString()` method returns a string representing the specified Error object
@@ -1934,13 +2652,26 @@ extern "C" {
     pub fn new(message: &str) -> EvalError;
 }
 
+// Next major: replace JsValue default with NeverArg
 // Function
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = JsValue::is_function, typescript_type = "Function")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type Function;
+    pub type Function<
+        Return,
+        A1 = JsValue,
+        A2 = JsValue,
+        A3 = JsValue,
+        A4 = JsValue,
+        A5 = JsValue,
+        A6 = JsValue,
+        A7 = JsValue,
+        A8 = JsValue,
+        A9 = JsValue,
+    >;
 
+    // Next major: Deprecate
     /// The `Function` constructor creates a new `Function` object. Calling the
     /// constructor directly can create functions dynamically, but suffers from
     /// security and similar (but far less significant) performance issues
@@ -1952,6 +2683,7 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new_with_args(args: &str, body: &str) -> Function;
 
+    // Next major: Deprecate
     /// The `Function` constructor creates a new `Function` object. Calling the
     /// constructor directly can create functions dynamically, but suffers from
     /// security and similar (but far less significant) performance issues
@@ -1963,311 +2695,689 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new_no_args(body: &str) -> Function;
 
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new<R: ErasableGeneric>(body: &str) -> Function<R>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new1<R: ErasableGeneric, A1: ErasableGeneric>(arg1: &str, body: &str)
+        -> Function<R, A1>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new2<R: ErasableGeneric, A1: ErasableGeneric, A2: ErasableGeneric>(
+        arg1: &str,
+        arg2: &str,
+        body: &str,
+    ) -> Function<R, A1, A2>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new3<R: ErasableGeneric, A1: ErasableGeneric, A2: ErasableGeneric, A3: ErasableGeneric>(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new4<
+        R: ErasableGeneric,
+        A1: ErasableGeneric,
+        A2: ErasableGeneric,
+        A3: ErasableGeneric,
+        A4: ErasableGeneric,
+    >(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        arg4: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3, A4>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new5<
+        R: ErasableGeneric,
+        A1: ErasableGeneric,
+        A2: ErasableGeneric,
+        A3: ErasableGeneric,
+        A4: ErasableGeneric,
+        A5: ErasableGeneric,
+    >(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        arg4: &str,
+        arg5: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3, A4, A5>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new6<
+        R: ErasableGeneric,
+        A1: ErasableGeneric,
+        A2: ErasableGeneric,
+        A3: ErasableGeneric,
+        A4: ErasableGeneric,
+        A5: ErasableGeneric,
+        A6: ErasableGeneric,
+    >(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        arg4: &str,
+        arg5: &str,
+        arg6: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3, A4, A5, A6>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new7<
+        R: ErasableGeneric,
+        A1: ErasableGeneric,
+        A2: ErasableGeneric,
+        A3: ErasableGeneric,
+        A4: ErasableGeneric,
+        A5: ErasableGeneric,
+        A6: ErasableGeneric,
+        A7: ErasableGeneric,
+    >(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        arg4: &str,
+        arg5: &str,
+        arg6: &str,
+        arg7: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3, A4, A5, A6, A7>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new8<
+        R: ErasableGeneric,
+        A1: ErasableGeneric,
+        A2: ErasableGeneric,
+        A3: ErasableGeneric,
+        A4: ErasableGeneric,
+        A5: ErasableGeneric,
+        A6: ErasableGeneric,
+        A7: ErasableGeneric,
+        A8: ErasableGeneric,
+    >(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        arg4: &str,
+        arg5: &str,
+        arg6: &str,
+        arg7: &str,
+        arg8: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3, A4, A5, A6, A7, A8>;
+
+    /// The `Function` constructor creates a new `Function` object. Calling the
+    /// constructor directly can create functions dynamically, but suffers from
+    /// security and similar (but far less significant) performance issues
+    /// similar to `eval`. However, unlike `eval`, the `Function` constructor
+    /// allows executing code in the global scope, prompting better programming
+    /// habits and allowing for more efficient code minification.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[wasm_bindgen(constructor)]
+    pub fn new9<
+        R: ErasableGeneric,
+        A1: ErasableGeneric,
+        A2: ErasableGeneric,
+        A3: ErasableGeneric,
+        A4: ErasableGeneric,
+        A5: ErasableGeneric,
+        A6: ErasableGeneric,
+        A7: ErasableGeneric,
+        A8: ErasableGeneric,
+        A9,
+    >(
+        arg1: &str,
+        arg2: &str,
+        arg3: &str,
+        arg4: &str,
+        arg5: &str,
+        arg6: &str,
+        arg7: &str,
+        arg8: &str,
+        arg9: &str,
+        body: &str,
+    ) -> Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
+
     /// The `apply()` method calls a function with a given this value, and arguments provided as an array
     /// (or an array-like object).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
     #[wasm_bindgen(method, catch)]
-    pub fn apply(this: &Function, context: &JsValue, args: &Array) -> Result<JsValue, JsValue>;
+    pub fn apply<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &Array,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply_slice<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &[JsValue],
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply1<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply2<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply3<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply4<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3, A4>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply5<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3, A4, A5>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply6<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3, A4, A5, A6>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply7<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3, A4, A5, A6, A7>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply8<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3, A4, A5, A6, A7, A8>,
+    ) -> Result<R, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[wasm_bindgen(method, catch, js_name = apply)]
+    pub fn apply9<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        args: &ArrayTuple<A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call0(this: &Function, context: &JsValue) -> Result<JsValue, JsValue>;
+    pub fn call0<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call1(this: &Function, context: &JsValue, arg1: &JsValue) -> Result<JsValue, JsValue>;
+    pub fn call1<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        arg1: &A1,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call2(
-        this: &Function,
+    pub fn call2<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call3(
-        this: &Function,
+    pub fn call3<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call4(
-        this: &Function,
+    pub fn call4<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call5(
-        this: &Function,
+    pub fn call5<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call6(
-        this: &Function,
+    pub fn call6<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call7(
-        this: &Function,
+    pub fn call7<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+        arg7: &A7,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call8(
-        this: &Function,
+    pub fn call8<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+        arg7: &A7,
+        arg8: &A8,
+    ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call9(
-        this: &Function,
+    pub fn call9<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-        arg9: &JsValue,
-    ) -> Result<JsValue, JsValue>;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+        arg7: &A7,
+        arg8: &A8,
+        arg9: &A9,
+    ) -> Result<R, JsValue>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind(this: &Function, context: &JsValue) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind0(this: &Function, context: &JsValue) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind1(this: &Function, context: &JsValue, arg1: &JsValue) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind2(this: &Function, context: &JsValue, arg1: &JsValue, arg2: &JsValue) -> Function;
-
-    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
-    /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind3(
-        this: &Function,
+    pub fn bind<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-    ) -> Function;
+    ) -> Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind4(
-        this: &Function,
+    pub fn bind0<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-    ) -> Function;
+    ) -> Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind5(
-        this: &Function,
+    pub fn bind1<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-    ) -> Function;
+        arg1: &A1,
+    ) -> Function<R, A2, A3, A4, A5, A6, A7, A8, A9>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind6(
-        this: &Function,
+    pub fn bind2<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-    ) -> Function;
+        arg1: &A1,
+        arg2: &A2,
+    ) -> Function<R, A3, A4, A5, A6, A7, A8, A9>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind7(
-        this: &Function,
+    pub fn bind3<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-    ) -> Function;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+    ) -> Function<R, A4, A5, A6, A7, A8, A9>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind8(
-        this: &Function,
+    pub fn bind4<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-    ) -> Function;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+    ) -> Function<R, A5, A6, A7, A8, A9>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
-    pub fn bind9(
-        this: &Function,
+    pub fn bind5<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
-        arg1: &JsValue,
-        arg2: &JsValue,
-        arg3: &JsValue,
-        arg4: &JsValue,
-        arg5: &JsValue,
-        arg6: &JsValue,
-        arg7: &JsValue,
-        arg8: &JsValue,
-        arg9: &JsValue,
-    ) -> Function;
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+    ) -> Function<R, A6, A7, A8, A9>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind6<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+    ) -> Function<R, A7, A8, A9>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind7<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+        arg7: &A7,
+    ) -> Function<R, A8, A9>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind8<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+        arg7: &A7,
+        arg8: &A8,
+    ) -> Function<R, A9>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind9<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+        context: &JsValue,
+        arg1: &A1,
+        arg2: &A2,
+        arg3: &A3,
+        arg4: &A4,
+        arg5: &A5,
+        arg6: &A6,
+        arg7: &A7,
+        arg8: &A8,
+        arg9: &A9,
+    ) -> Function<R>;
 
     /// The length property indicates the number of arguments expected by the function.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length)
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn length(this: &Function) -> u32;
+    #[wasm_bindgen(method, getter)]
+    pub fn length<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+    ) -> u32;
 
     /// A Function object's read-only name property indicates the function's
     /// name as specified when it was created or "anonymous" for functions
     /// created anonymously.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn name(this: &Function) -> JsString;
+    #[wasm_bindgen(method, getter)]
+    pub fn name<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+    ) -> JsString;
 
     /// The `toString()` method returns a string representing the source code of the function.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_string(this: &Function) -> JsString;
+    pub fn to_string<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+    ) -> JsString;
 }
+
+/// Shorthand type for defining function argument types only
+/// instead of always having to state the return type first.
+pub type FunctionArgs<
+    A1,
+    A2 = JsValue,
+    A3 = JsValue,
+    A4 = JsValue,
+    A5 = JsValue,
+    A6 = JsValue,
+    A7 = JsValue,
+    A8 = JsValue,
+    A9 = JsValue,
+> = Function<JsValue, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
 
 impl Function {
     /// Returns the `Function` value of this JS value if it's an instance of a
@@ -2287,32 +3397,135 @@ impl Default for Function {
     }
 }
 
+// Next major: align with new AsyncGenerator result conventions
 // Generator
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Generator<any, any, any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type Generator;
+    pub type Generator<T>;
+
+    // Next major: return IteratorNext directly
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
+    #[wasm_bindgen(method, catch)]
+    pub fn next<T>(this: &Generator<T>, value: &T) -> Result<JsValue, JsValue>;
 
     /// The `next()` method returns an object with two properties done and value.
     /// You can also provide a parameter to the next method to send a value to the generator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
-    #[wasm_bindgen(method, structural, catch)]
-    pub fn next(this: &Generator, value: &JsValue) -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(method, catch)]
+    pub fn next_void<T: FromWasmAbi>(this: &Generator<T>) -> Result<IteratorNext<T>, JsValue>;
+
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
+    #[wasm_bindgen(method, catch)]
+    pub fn next_with_value<T: FromWasmAbi>(
+        this: &Generator<T>,
+        value: &T,
+    ) -> Result<IteratorNext<T>, JsValue>;
+
+    // Next major: return IteratorNext
+    /// The `return()` method returns the given value and finishes the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
+    #[wasm_bindgen(method, js_name = "return")]
+    pub fn return_<T>(this: &Generator<T>, value: &T) -> JsValue;
 
     /// The `return()` method returns the given value and finishes the generator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
-    #[wasm_bindgen(method, structural, js_name = return)]
-    pub fn return_(this: &Generator, value: &JsValue) -> JsValue;
+    #[wasm_bindgen(method, catch, js_name = "return")]
+    pub fn try_return<T: FromWasmAbi>(
+        this: &Generator<T>,
+        value: &T,
+    ) -> Result<IteratorNext<T>, JsValue>;
 
     /// The `throw()` method resumes the execution of a generator by throwing an error into it
     /// and returns an object with two properties done and value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/throw)
-    #[wasm_bindgen(method, structural, catch)]
-    pub fn throw(this: &Generator, error: &Error) -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(method, catch)]
+    pub fn throw<T>(this: &Generator<T>, error: &Error) -> Result<JsValue, JsValue>;
+
+    /// The `throw()` method resumes the execution of a generator by throwing an error into it
+    /// and returns an object with two properties done and value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/throw)
+    #[wasm_bindgen(method, catch, js_name = throw)]
+    pub fn throw_value<T: FromWasmAbi>(
+        this: &Generator<T>,
+        error: &JsValue,
+    ) -> Result<IteratorNext<T>, JsValue>;
+}
+
+impl<T: FromWasmAbi> Iterable for Generator<T> {
+    type Item = T;
+}
+
+// AsyncGenerator
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object, typescript_type = "AsyncGenerator<any, any, any>")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type AsyncGenerator<T>;
+
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/next)
+    #[wasm_bindgen(method, catch)]
+    pub fn next<T>(
+        this: &AsyncGenerator<T>,
+        value: &T,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/next)
+    #[wasm_bindgen(method, catch)]
+    pub fn next_void<T: FromWasmAbi>(
+        this: &AsyncGenerator<T>,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/next)
+    #[wasm_bindgen(method, catch)]
+    pub fn next_with_value<T: FromWasmAbi>(
+        this: &AsyncGenerator<T>,
+        value: &T,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+
+    /// The `return()` method returns the given value and finishes the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/return)
+    #[wasm_bindgen(method, js_name = "return", catch)]
+    pub fn return_<T>(
+        this: &AsyncGenerator<T>,
+        value: &T,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+
+    /// The `throw()` method resumes the execution of a generator by throwing an error into it
+    /// and returns an object with two properties done and value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/throw)
+    #[wasm_bindgen(method, catch)]
+    pub fn throw<T>(
+        this: &AsyncGenerator<T>,
+        error: &JsValue,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+}
+
+impl<T: FromWasmAbi> AsyncIterable for AsyncGenerator<T> {
+    type Item = T;
 }
 
 // Map
@@ -2320,19 +3533,40 @@ extern "C" {
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Map<any, any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type Map;
+    pub type Map<K, V>;
+
+    /// The Map object holds key-value pairs. Any value (both objects and
+    /// primitive values) maybe used as either a key or a value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Map;
+
+    /// The Map object holds key-value pairs. Any value (both objects and
+    /// primitive values) maybe used as either a key or a value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<K, V>() -> Map<K, V>;
+
+    /// The Map object holds key-value pairs. Any value (both objects and
+    /// primitive values) maybe used as either a key or a value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+    #[wasm_bindgen(constructor, js_name = new)]
+    pub fn new_from_entries<K, V, T: Iterable<Item = ArrayTuple<K, V>>>(entries: T) -> Map<K, V>;
 
     /// The `clear()` method removes all elements from a Map object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/clear)
     #[wasm_bindgen(method)]
-    pub fn clear(this: &Map);
+    pub fn clear<K, V>(this: &Map<K, V>);
 
     /// The `delete()` method removes the specified element from a Map object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/delete)
     #[wasm_bindgen(method)]
-    pub fn delete(this: &Map, key: &JsValue) -> bool;
+    pub fn delete<K, V>(this: &Map<K, V>, key: &K) -> bool;
 
     /// The `forEach()` method executes a provided function once per each
     /// key/value pair in the Map object, in insertion order.
@@ -2346,42 +3580,35 @@ extern "C" {
     /// ```
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach)
     #[wasm_bindgen(method, js_name = forEach)]
-    pub fn for_each(this: &Map, callback: &mut dyn FnMut(JsValue, JsValue));
+    pub fn for_each<K, V>(this: &Map<K, V>, callback: &mut dyn FnMut(K, V));
 
     /// The `get()` method returns a specified element from a Map object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
     #[wasm_bindgen(method)]
-    pub fn get(this: &Map, key: &JsValue) -> JsValue;
+    pub fn get<K, V>(this: &Map<K, V>, key: &K) -> V;
 
     /// The `has()` method returns a boolean indicating whether an element with
     /// the specified key exists or not.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/has)
     #[wasm_bindgen(method)]
-    pub fn has(this: &Map, key: &JsValue) -> bool;
-
-    /// The Map object holds key-value pairs. Any value (both objects and
-    /// primitive values) maybe used as either a key or a value.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Map;
+    pub fn has<K, V>(this: &Map<K, V>, key: &K) -> bool;
 
     /// The `set()` method adds or updates an element with a specified key
     /// and value to a Map object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/set)
     #[wasm_bindgen(method)]
-    pub fn set(this: &Map, key: &JsValue, value: &JsValue) -> Map;
+    pub fn set<K, V>(this: &Map<K, V>, key: &K, value: &V) -> Map;
 
     /// The value of size is an integer representing how many entries
     /// the Map object has. A set accessor function for size is undefined;
     /// you can not change this property.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/size)
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn size(this: &Map) -> u32;
+    #[wasm_bindgen(method, getter)]
+    pub fn size<K, V>(this: &Map<K, V>) -> u32;
 }
 
 impl Default for Map {
@@ -2399,21 +3626,33 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[wasm_bindgen(method)]
-    pub fn entries(this: &Map) -> Iterator;
+    pub fn entries<K, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator;
+
+    /// The `entries()` method returns a new Iterator object that contains
+    /// the [key, value] pairs for each element in the Map object in
+    /// insertion order.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
+    #[wasm_bindgen(method, js_name = entries)]
+    pub fn entries_typed<K, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator<ArrayTuple<K, V>>;
 
     /// The `keys()` method returns a new Iterator object that contains the
     /// keys for each element in the Map object in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/keys)
     #[wasm_bindgen(method)]
-    pub fn keys(this: &Map) -> Iterator;
+    pub fn keys<K: FromWasmAbi, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator<K>;
 
     /// The `values()` method returns a new Iterator object that contains the
     /// values for each element in the Map object in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/values)
     #[wasm_bindgen(method)]
-    pub fn values(this: &Map) -> Iterator;
+    pub fn values<K, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator<V>;
+}
+
+impl<K, V> Iterable for Map<K, V> {
+    type Item = ArrayTuple<K, V>;
 }
 
 // Iterator
@@ -2425,14 +3664,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
     #[derive(Clone, Debug)]
     #[wasm_bindgen(is_type_of = Iterator::looks_like_iterator, typescript_type = "Iterator<any>")]
-    pub type Iterator;
+    pub type Iterator<T>;
 
     /// The `next()` method always has to return an object with appropriate
     /// properties including done and value. If a non-object value gets returned
     /// (such as false or undefined), a TypeError ("iterator.next() returned a
     /// non-object value") will be thrown.
-    #[wasm_bindgen(catch, method, structural)]
-    pub fn next(this: &Iterator) -> Result<IteratorNext, JsValue>;
+    #[wasm_bindgen(catch, method)]
+    pub fn next<T: FromWasmAbi>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
 }
 
 impl Iterator {
@@ -2455,6 +3694,12 @@ impl Iterator {
     }
 }
 
+// iterators in JS are themselves iterable
+impl<T> Iterable for Iterator<T> {
+    type Item = T;
+}
+
+// Next major: next to return Promise<IteratorNext<T>>, deprecate next_result.
 // Async Iterator
 #[wasm_bindgen]
 extern "C" {
@@ -2464,29 +3709,43 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of)
     #[derive(Clone, Debug)]
     #[wasm_bindgen(is_type_of = Iterator::looks_like_iterator, typescript_type = "AsyncIterator<any>")]
-    pub type AsyncIterator;
+    pub type AsyncIterator<T>;
 
     /// The `next()` method always has to return a Promise which resolves to an object
     /// with appropriate properties including done and value. If a non-object value
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
-    #[wasm_bindgen(catch, method, structural)]
-    pub fn next(this: &AsyncIterator) -> Result<Promise, JsValue>;
+    #[wasm_bindgen(catch, method)]
+    pub fn next<T>(this: &AsyncIterator<T>) -> Result<Promise, JsValue>;
+
+    /// The `next()` method always has to return a Promise which resolves to an object
+    /// with appropriate properties including done and value. If a non-object value
+    /// gets returned (such as false or undefined), a TypeError ("iterator.next()
+    /// returned a non-object value") will be thrown.
+    #[wasm_bindgen(catch, method, js_name = next)]
+    pub fn next_result<T: FromWasmAbi>(
+        this: &AsyncIterator<T>,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+}
+
+// iterators in JS are themselves iterable
+impl<T> AsyncIterable for AsyncIterator<T> {
+    type Item = T;
 }
 
 /// An iterator over the JS `Symbol.iterator` iteration protocol.
 ///
 /// Use the `IntoIterator for &js_sys::Iterator` implementation to create this.
-pub struct Iter<'a> {
-    js: &'a Iterator,
+pub struct Iter<'a, T> {
+    js: &'a Iterator<T>,
     state: IterState,
 }
 
 /// An iterator over the JS `Symbol.iterator` iteration protocol.
 ///
 /// Use the `IntoIterator for js_sys::Iterator` implementation to create this.
-pub struct IntoIter {
-    js: Iterator,
+pub struct IntoIter<T = JsValue> {
+    js: Iterator<T>,
     state: IterState,
 }
 
@@ -2494,11 +3753,11 @@ struct IterState {
     done: bool,
 }
 
-impl<'a> IntoIterator for &'a Iterator {
-    type Item = Result<JsValue, JsValue>;
-    type IntoIter = Iter<'a>;
+impl<'a, T: FromWasmAbi + ErasableGeneric<Repr = JsValue>> IntoIterator for &'a Iterator<T> {
+    type Item = Result<T, JsValue>;
+    type IntoIter = Iter<'a, T>;
 
-    fn into_iter(self) -> Iter<'a> {
+    fn into_iter(self) -> Iter<'a, T> {
         Iter {
             js: self,
             state: IterState::new(),
@@ -2506,19 +3765,19 @@ impl<'a> IntoIterator for &'a Iterator {
     }
 }
 
-impl core::iter::Iterator for Iter<'_> {
-    type Item = Result<JsValue, JsValue>;
+impl<T: FromWasmAbi + ErasableGeneric<Repr = JsValue>> core::iter::Iterator for Iter<'_, T> {
+    type Item = Result<T, JsValue>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.state.next(self.js)
     }
 }
 
-impl IntoIterator for Iterator {
-    type Item = Result<JsValue, JsValue>;
-    type IntoIter = IntoIter;
+impl<T: FromWasmAbi + ErasableGeneric<Repr = JsValue>> IntoIterator for Iterator<T> {
+    type Item = Result<T, JsValue>;
+    type IntoIter = IntoIter<T>;
 
-    fn into_iter(self) -> IntoIter {
+    fn into_iter(self) -> IntoIter<T> {
         IntoIter {
             js: self,
             state: IterState::new(),
@@ -2526,8 +3785,8 @@ impl IntoIterator for Iterator {
     }
 }
 
-impl core::iter::Iterator for IntoIter {
-    type Item = Result<JsValue, JsValue>;
+impl<T: FromWasmAbi + ErasableGeneric<Repr = JsValue>> core::iter::Iterator for IntoIter<T> {
+    type Item = Result<T, JsValue>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.state.next(&self.js)
@@ -2539,7 +3798,10 @@ impl IterState {
         IterState { done: false }
     }
 
-    fn next(&mut self, js: &Iterator) -> Option<Result<JsValue, JsValue>> {
+    fn next<T: FromWasmAbi + ErasableGeneric<Repr = JsValue>>(
+        &mut self,
+        js: &Iterator<T>,
+    ) -> Option<Result<T, JsValue>> {
         if self.done {
             return None;
         }
@@ -2561,7 +3823,7 @@ impl IterState {
 
 /// Create an iterator over `val` using the JS iteration protocol and
 /// `Symbol.iterator`.
-pub fn try_iter(val: &JsValue) -> Result<Option<IntoIter>, JsValue> {
+pub fn try_iter(val: &JsValue) -> Result<Option<IntoIter<JsValue>>, JsValue> {
     let iter_sym = Symbol::iterator();
     let iter_fn = Reflect::get(val, iter_sym.as_ref())?;
 
@@ -2578,6 +3840,34 @@ pub fn try_iter(val: &JsValue) -> Result<Option<IntoIter>, JsValue> {
     Ok(Some(it.into_iter()))
 }
 
+/// Trait for types known to implement the iterator protocol on Symbol.iterator
+/// TODO: Add direct typed [Symbol.iterator] iterator function, when we support symbol functions.
+pub trait Iterable {
+    type Item;
+}
+
+impl<'a, T: Iterable> Iterable for &'a T {
+    type Item = &'a T::Item;
+}
+
+impl Iterable for JsValue {
+    type Item = JsValue;
+}
+
+/// Trait for types known to implement the iterator protocol on Symbol.iterator
+/// TODO: Add direct typed [Symbol.asyncIterator] iterator function, when we support symbol functions.
+pub trait AsyncIterable {
+    type Item;
+}
+
+impl<'a, T: AsyncIterable> AsyncIterable for &'a T {
+    type Item = &'a T::Item;
+}
+
+impl AsyncIterable for JsValue {
+    type Item = JsValue;
+}
+
 // IteratorNext
 #[wasm_bindgen]
 extern "C" {
@@ -2586,7 +3876,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
     #[wasm_bindgen(extends = Object, typescript_type = "IteratorResult<any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type IteratorNext;
+    pub type IteratorNext<T>;
 
     /// Has the value `true` if the iterator is past the end of the iterated
     /// sequence. In this case value optionally specifies the return value of
@@ -2595,13 +3885,13 @@ extern "C" {
     /// Has the value `false` if the iterator was able to produce the next value
     /// in the sequence. This is equivalent of not specifying the done property
     /// altogether.
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn done(this: &IteratorNext) -> bool;
+    #[wasm_bindgen(method, getter)]
+    pub fn done<T>(this: &IteratorNext<T>) -> bool;
 
     /// Any JavaScript value returned by the iterator. Can be omitted when done
     /// is true.
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn value(this: &IteratorNext) -> JsValue;
+    #[wasm_bindgen(method, getter)]
+    pub fn value<T>(this: &IteratorNext<T>) -> T;
 }
 
 #[allow(non_snake_case)]
@@ -3642,12 +4932,73 @@ extern "C" {
     pub fn value_of(this: &Date) -> f64;
 }
 
+// Property Descriptor.
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type PropertyDescriptor<T>;
+
+    #[wasm_bindgen(method, getter = writable)]
+    pub fn get_writable<T>(this: &PropertyDescriptor<T>) -> Option<bool>;
+
+    #[wasm_bindgen(method, setter = writable)]
+    pub fn set_writable<T>(this: &PropertyDescriptor<T>, writable: bool);
+
+    #[wasm_bindgen(method, getter = enumerable)]
+    pub fn get_enumerable<T>(this: &PropertyDescriptor<T>) -> Option<bool>;
+
+    #[wasm_bindgen(method, setter = enumerable)]
+    pub fn set_enumerable<T>(this: &PropertyDescriptor<T>, enumerable: bool);
+
+    #[wasm_bindgen(method, getter = configurable)]
+    pub fn get_configurable<T>(this: &PropertyDescriptor<T>) -> Option<bool>;
+
+    #[wasm_bindgen(method, setter = configurable)]
+    pub fn set_configurable<T>(this: &PropertyDescriptor<T>, configurable: bool);
+
+    #[wasm_bindgen(method, getter = get)]
+    pub fn get_get<T>(this: &PropertyDescriptor<T>) -> Option<Function<T>>;
+
+    #[wasm_bindgen(method, setter = get)]
+    pub fn set_get<T>(this: &PropertyDescriptor<T>, get: Function<T>);
+
+    #[wasm_bindgen(method, getter = set)]
+    pub fn get_set<T>(this: &PropertyDescriptor<T>) -> Option<FunctionArgs<T>>;
+
+    #[wasm_bindgen(method, setter = set)]
+    pub fn set_set<T>(this: &PropertyDescriptor<T>, set: FunctionArgs<T>);
+
+    #[wasm_bindgen(method, getter = value)]
+    pub fn get_value<T>(this: &PropertyDescriptor<T>) -> Option<T>;
+
+    #[wasm_bindgen(method, setter = value)]
+    pub fn set_value<T>(this: &PropertyDescriptor<T>, value: &T);
+}
+
+impl PropertyDescriptor {
+    pub fn new<T>() -> PropertyDescriptor<T> {
+        JsCast::unchecked_into(Object::new())
+    }
+    pub fn new_value<T: ErasableGeneric<Repr = JsValue>>(value: &T) -> PropertyDescriptor<T> {
+        let desc: PropertyDescriptor<T> = JsCast::unchecked_into(Object::new());
+        desc.set_value(value);
+        desc
+    }
+}
+
+impl Default for PropertyDescriptor {
+    fn default() -> Self {
+        PropertyDescriptor::new()
+    }
+}
+
 // Object.
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "object")]
     #[derive(Clone, Debug)]
-    pub type Object;
+    pub type Object<T>;
 
     /// The `Object.assign()` method is used to copy the values of all enumerable
     /// own properties from one or more source objects to a target object. It
@@ -3655,7 +5006,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn assign(target: &Object, source: &Object) -> Object;
+    pub fn assign<T>(target: &Object<T>, source: &Object<T>) -> Object<T>;
 
     /// The `Object.assign()` method is used to copy the values of all enumerable
     /// own properties from one or more source objects to a target object. It
@@ -3663,7 +5014,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
     #[wasm_bindgen(static_method_of = Object, js_name = assign)]
-    pub fn assign2(target: &Object, source1: &Object, source2: &Object) -> Object;
+    pub fn assign2<T>(target: &Object<T>, source1: &Object<T>, source2: &Object<T>) -> Object<T>;
 
     /// The `Object.assign()` method is used to copy the values of all enumerable
     /// own properties from one or more source objects to a target object. It
@@ -3671,22 +5022,50 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
     #[wasm_bindgen(static_method_of = Object, js_name = assign)]
-    pub fn assign3(target: &Object, source1: &Object, source2: &Object, source3: &Object)
-        -> Object;
+    pub fn assign3<T>(
+        target: &Object<T>,
+        source1: &Object<T>,
+        source2: &Object<T>,
+        source3: &Object<T>,
+    ) -> Object<T>;
+
+    /// The `Object.assign()` method is used to copy the values of all enumerable
+    /// own properties from one or more source objects to a target object. It
+    /// will return the target object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
+    #[wasm_bindgen(static_method_of = Object, js_name = assign, variadic)]
+    pub fn assign_many<T>(target: &Object<T>, sources: &[Object<T>]) -> Object<T>;
 
     /// The constructor property returns a reference to the `Object` constructor
     /// function that created the instance object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor)
     #[wasm_bindgen(method, getter)]
-    pub fn constructor(this: &Object) -> Function;
+    pub fn constructor<T>(this: &Object<T>) -> Function;
 
     /// The `Object.create()` method creates a new object, using an existing
     /// object to provide the newly created object's prototype.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn create(prototype: &Object) -> Object;
+    pub fn create<T>(prototype: &Object<T>) -> Object;
+
+    /// The `Object.create()` method creates a new object, using an existing
+    /// object to provide the newly created object's prototype.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
+    #[wasm_bindgen(static_method_of = Object)]
+    pub fn create_typed<T, U>(prototype: &Object<T>) -> Object<U>;
+
+    // Next major: descriptor as PropertyDescriptor<T>, prop as SymbolOrString
+    /// The static method `Object.defineProperty()` defines a new
+    /// property directly on an object, or modifies an existing
+    /// property on an object, and returns the object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty)]
+    pub fn define_property<T>(obj: &Object<T>, prop: &JsValue, descriptor: &Object) -> Object<T>;
 
     /// The static method `Object.defineProperty()` defines a new
     /// property directly on an object, or modifies an existing
@@ -3694,7 +5073,20 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty)]
-    pub fn define_property(obj: &Object, prop: &JsValue, descriptor: &Object) -> Object;
+    pub fn define_property_str<T>(
+        obj: &Object<T>,
+        prop: &str,
+        descriptor: &PropertyDescriptor<T>,
+    ) -> Object<T>;
+
+    // Next major: props as Object<PropertyDescriptor<T>>
+    /// The `Object.defineProperties()` method defines new or modifies
+    /// existing properties directly on an object, returning the
+    /// object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperties)]
+    pub fn define_properties<T>(obj: &Object<T>, props: &Object) -> Object<T>;
 
     /// The `Object.defineProperties()` method defines new or modifies
     /// existing properties directly on an object, returning the
@@ -3702,7 +5094,10 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperties)]
-    pub fn define_properties(obj: &Object, props: &Object) -> Object;
+    pub fn define_properties_descriptor<T>(
+        obj: &Object<T>,
+        props: &Object<PropertyDescriptor<T>>,
+    ) -> Object<T>;
 
     /// The `Object.entries()` method returns an array of a given
     /// object's own enumerable property [key, value] pairs, in the
@@ -3714,6 +5109,16 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Object)]
     pub fn entries(object: &Object) -> Array;
 
+    /// The `Object.entries()` method returns an array of a given
+    /// object's own enumerable property [key, value] pairs, in the
+    /// same order as that provided by a for...in loop (the difference
+    /// being that a for-in loop enumerates properties in the
+    /// prototype chain as well).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
+    #[wasm_bindgen(static_method_of = Object, js_name = entries)]
+    pub fn entries_typed<T>(object: &Object<T>) -> Array<ArrayTuple<JsString, T>>;
+
     /// The `Object.freeze()` method freezes an object: that is, prevents new
     /// properties from being added to it; prevents existing properties from
     /// being removed; and prevents existing properties, or their enumerability,
@@ -3722,15 +5127,25 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn freeze(value: &Object) -> Object;
+    pub fn freeze<T>(value: &Object<T>) -> Object<T>;
 
     /// The `Object.fromEntries()` method transforms a list of key-value pairs
     /// into an object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
     #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
-    pub fn from_entries(iterable: &JsValue) -> Result<Object, JsValue>;
+    pub fn from_entries(entries: &JsValue) -> Result<Object, JsValue>;
 
+    /// The `Object.fromEntries()` method transforms a list of key-value pairs
+    /// into an object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
+    pub fn from_entries_typed<T, I: Iterable<Item = ArrayTuple<JsString, T>>>(
+        entries: &I,
+    ) -> Result<Object<T>, JsValue>;
+
+    // Next major: return PropertyDescriptor<T>
     /// The `Object.getOwnPropertyDescriptor()` method returns a
     /// property descriptor for an own property (that is, one directly
     /// present on an object and not in the object's prototype chain)
@@ -3738,29 +5153,32 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor)]
-    pub fn get_own_property_descriptor(obj: &Object, prop: &JsValue) -> JsValue;
+    pub fn get_own_property_descriptor<T>(obj: &Object<T>, prop: &JsValue) -> JsValue;
 
+    // Next major: return Object<PropertyDescriptor<T>>
     /// The `Object.getOwnPropertyDescriptors()` method returns all own
     /// property descriptors of a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptors)
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptors)]
-    pub fn get_own_property_descriptors(obj: &Object) -> JsValue;
+    pub fn get_own_property_descriptors<T>(obj: &Object<T>) -> JsValue;
 
+    // Next major: return Array<JsString>
     /// The `Object.getOwnPropertyNames()` method returns an array of
     /// all properties (including non-enumerable properties except for
     /// those which use Symbol) found directly upon a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames)
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyNames)]
-    pub fn get_own_property_names(obj: &Object) -> Array;
+    pub fn get_own_property_names<T>(obj: &Object<T>) -> Array;
 
+    // Next major: return Array<Symbol>
     /// The `Object.getOwnPropertySymbols()` method returns an array of
     /// all symbol properties found directly upon a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertySymbols)]
-    pub fn get_own_property_symbols(obj: &Object) -> Array;
+    pub fn get_own_property_symbols<T>(obj: &Object<T>) -> Array;
 
     /// The `Object.getPrototypeOf()` method returns the prototype
     /// (i.e. the value of the internal [[Prototype]] property) of the
@@ -3776,7 +5194,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty)
     #[wasm_bindgen(method, js_name = hasOwnProperty)]
-    pub fn has_own_property(this: &Object, property: &JsValue) -> bool;
+    pub fn has_own_property<T>(this: &Object<T>, property: &JsValue) -> bool;
 
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
     /// object passed in has the specified property as its own property (as
@@ -3784,52 +5202,60 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn)]
-    pub fn has_own(instance: &Object, property: &JsValue) -> bool;
+    pub fn has_own<T>(instance: &Object<T>, property: &JsValue) -> bool;
 
     /// The `Object.is()` method determines whether two values are the same value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn is(value_1: &JsValue, value_2: &JsValue) -> bool;
+    pub fn is(value1: &JsValue, value_2: &JsValue) -> bool;
 
     /// The `Object.isExtensible()` method determines if an object is extensible
     /// (whether it can have new properties added to it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible)
     #[wasm_bindgen(static_method_of = Object, js_name = isExtensible)]
-    pub fn is_extensible(object: &Object) -> bool;
+    pub fn is_extensible<T>(object: &Object<T>) -> bool;
 
     /// The `Object.isFrozen()` determines if an object is frozen.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen)
     #[wasm_bindgen(static_method_of = Object, js_name = isFrozen)]
-    pub fn is_frozen(object: &Object) -> bool;
+    pub fn is_frozen<T>(object: &Object<T>) -> bool;
 
     /// The `Object.isSealed()` method determines if an object is sealed.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed)
     #[wasm_bindgen(static_method_of = Object, js_name = isSealed)]
-    pub fn is_sealed(object: &Object) -> bool;
+    pub fn is_sealed<T>(object: &Object<T>) -> bool;
 
     /// The `isPrototypeOf()` method checks if an object exists in another
     /// object's prototype chain.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf)
     #[wasm_bindgen(method, js_name = isPrototypeOf)]
-    pub fn is_prototype_of(this: &Object, value: &JsValue) -> bool;
+    pub fn is_prototype_of<T>(this: &Object<T>, value: &JsValue) -> bool;
 
+    // Next major: return Array<JsString>
     /// The `Object.keys()` method returns an array of a given object's property
     /// names, in the same order as we get with a normal loop.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn keys(object: &Object) -> Array;
+    pub fn keys<T>(object: &Object<T>) -> Array;
 
+    // Next major: typed by default
     /// The [`Object`] constructor creates an object wrapper.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)
     #[wasm_bindgen(constructor)]
     pub fn new() -> Object;
+
+    /// The [`Object`] constructor creates an object wrapper.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<T>() -> Object<T>;
 
     /// The `Object.preventExtensions()` method prevents new properties from
     /// ever being added to an object (i.e. prevents future extensions to the
@@ -3837,14 +5263,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/preventExtensions)
     #[wasm_bindgen(static_method_of = Object, js_name = preventExtensions)]
-    pub fn prevent_extensions(object: &Object);
+    pub fn prevent_extensions<T>(object: &Object<T>);
 
     /// The `propertyIsEnumerable()` method returns a Boolean indicating
     /// whether the specified property is enumerable.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
     #[wasm_bindgen(method, js_name = propertyIsEnumerable)]
-    pub fn property_is_enumerable(this: &Object, property: &JsValue) -> bool;
+    pub fn property_is_enumerable<T>(this: &Object<T>, property: &JsValue) -> bool;
 
     /// The `Object.seal()` method seals an object, preventing new properties
     /// from being added to it and marking all existing properties as
@@ -3853,7 +5279,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/seal)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn seal(value: &Object) -> Object;
+    pub fn seal<T>(value: &Object<T>) -> Object<T>;
 
     /// The `Object.setPrototypeOf()` method sets the prototype (i.e., the
     /// internal `[[Prototype]]` property) of a specified object to another
@@ -3861,7 +5287,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf)
     #[wasm_bindgen(static_method_of = Object, js_name = setPrototypeOf)]
-    pub fn set_prototype_of(object: &Object, prototype: &Object) -> Object;
+    pub fn set_prototype_of<T>(object: &Object<T>, prototype: &Object) -> Object<T>;
 
     /// The `toLocaleString()` method returns a string representing the object.
     /// This method is meant to be overridden by derived objects for
@@ -3869,20 +5295,20 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
-    pub fn to_locale_string(this: &Object) -> JsString;
+    pub fn to_locale_string<T>(this: &Object<T>) -> JsString;
 
     /// The `toString()` method returns a string representing the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_string(this: &Object) -> JsString;
+    pub fn to_string<T>(this: &Object<T>) -> JsString;
 
     /// The `valueOf()` method returns the primitive value of the
     /// specified object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf)
     #[wasm_bindgen(method, js_name = valueOf)]
-    pub fn value_of(this: &Object) -> Object;
+    pub fn value_of<T>(this: &Object<T>) -> Object;
 
     /// The `Object.values()` method returns an array of a given object's own
     /// enumerable property values, in the same order as that provided by a
@@ -3891,7 +5317,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values)
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn values(object: &Object) -> Array;
+    pub fn values<T>(object: &Object<T>) -> Array<T>;
 }
 
 impl Object {
@@ -3997,8 +5423,8 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply)
         #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn apply(
-            target: &Function,
+        pub fn apply<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+            target: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
             this_argument: &JsValue,
             arguments_list: &Array,
         ) -> Result<JsValue, JsValue>;
@@ -4009,7 +5435,10 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct)
         #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn construct(target: &Function, arguments_list: &Array) -> Result<JsValue, JsValue>;
+        pub fn construct<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+            target: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+            arguments_list: &Array,
+        ) -> Result<JsValue, JsValue>;
 
         /// The static `Reflect.construct()` method acts like the new operator, but
         /// as a function.  It is equivalent to calling `new target(...args)`. It
@@ -4023,15 +5452,27 @@ pub mod Reflect {
             new_target: &Function,
         ) -> Result<JsValue, JsValue>;
 
+        // Next major: update to PropertyDescriptor, K: SymbolOrString
         /// The static `Reflect.defineProperty()` method is like
         /// `Object.defineProperty()` but returns a `Boolean`.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
         #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
-        pub fn define_property(
-            target: &Object,
+        pub fn define_property<T>(
+            target: &Object<T>,
             property_key: &JsValue,
             attributes: &Object,
+        ) -> Result<bool, JsValue>;
+
+        /// The static `Reflect.defineProperty()` method is like
+        /// `Object.defineProperty()` but returns a `Boolean`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
+        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
+        pub fn define_property_str<T>(
+            target: &Object<T>,
+            property_key: &str,
+            attributes: &PropertyDescriptor<T>,
         ) -> Result<bool, JsValue>;
 
         /// The static `Reflect.deleteProperty()` method allows to delete
@@ -4039,7 +5480,14 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
         #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
-        pub fn delete_property(target: &Object, key: &JsValue) -> Result<bool, JsValue>;
+        pub fn delete_property<T>(target: &Object<T>, key: &JsValue) -> Result<bool, JsValue>;
+
+        /// The static `Reflect.deleteProperty()` method allows to delete
+        /// properties.  It is like the `delete` operator as a function.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
+        pub fn delete_property_str<T>(target: &Object<T>, key: &str) -> Result<bool, JsValue>;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
@@ -4050,13 +5498,20 @@ pub mod Reflect {
 
         /// The same as [`get`](fn.get.html)
         /// except the key is an `f64`, which is slightly faster.
-        #[wasm_bindgen(js_namespace = Reflect, js_name = "get", catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_f64(target: &JsValue, key: f64) -> Result<JsValue, JsValue>;
 
         /// The same as [`get`](fn.get.html)
         /// except the key is a `u32`, which is slightly faster.
-        #[wasm_bindgen(js_namespace = Reflect, js_name = "get", catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_u32(target: &JsValue, key: u32) -> Result<JsValue, JsValue>;
+
+        /// The static `Reflect.get()` method works like getting a property from
+        /// an object (`target[propertyKey]`) as a function.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
+        pub fn get_str<T>(target: &Object<T>, key: &str) -> Result<T, JsValue>;
 
         /// The static `Reflect.getOwnPropertyDescriptor()` method is similar to
         /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
@@ -4064,10 +5519,21 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
         #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
-        pub fn get_own_property_descriptor(
-            target: &Object,
+        pub fn get_own_property_descriptor<T>(
+            target: &Object<T>,
             property_key: &JsValue,
         ) -> Result<JsValue, JsValue>;
+
+        /// The static `Reflect.getOwnPropertyDescriptor()` method is similar to
+        /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
+        /// of the given property if it exists on the object, `undefined` otherwise.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
+        pub fn get_own_property_descriptor_str<T>(
+            target: &Object<T>,
+            property_key: &str,
+        ) -> Result<PropertyDescriptor<T>, JsValue>;
 
         /// The static `Reflect.getPrototypeOf()` method is almost the same
         /// method as `Object.getPrototypeOf()`. It returns the prototype
@@ -4085,13 +5551,20 @@ pub mod Reflect {
         #[wasm_bindgen(js_namespace = Reflect, catch)]
         pub fn has(target: &JsValue, property_key: &JsValue) -> Result<bool, JsValue>;
 
+        /// The static `Reflect.has()` method works like the in operator as a
+        /// function.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
+        #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
+        pub fn has_str<T>(target: &Object<T>, property_key: &str) -> Result<bool, JsValue>;
+
         /// The static `Reflect.isExtensible()` method determines if an object is
         /// extensible (whether it can have new properties added to it). It is
         /// similar to `Object.isExtensible()`, but with some differences.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/isExtensible)
         #[wasm_bindgen(js_namespace = Reflect, js_name = isExtensible, catch)]
-        pub fn is_extensible(target: &Object) -> Result<bool, JsValue>;
+        pub fn is_extensible<T>(target: &Object<T>) -> Result<bool, JsValue>;
 
         /// The static `Reflect.ownKeys()` method returns an array of the
         /// target object's own property keys.
@@ -4107,7 +5580,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/preventExtensions)
         #[wasm_bindgen(js_namespace = Reflect, js_name = preventExtensions, catch)]
-        pub fn prevent_extensions(target: &Object) -> Result<bool, JsValue>;
+        pub fn prevent_extensions<T>(target: &Object<T>) -> Result<bool, JsValue>;
 
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
@@ -4122,7 +5595,7 @@ pub mod Reflect {
 
         /// The same as [`set`](fn.set.html)
         /// except the key is an `f64`, which is slightly faster.
-        #[wasm_bindgen(js_namespace = Reflect, js_name = "set", catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
         pub fn set_f64(
             target: &JsValue,
             property_key: f64,
@@ -4131,7 +5604,7 @@ pub mod Reflect {
 
         /// The same as [`set`](fn.set.html)
         /// except the key is a `u32`, which is slightly faster.
-        #[wasm_bindgen(js_namespace = Reflect, js_name = "set", catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
         pub fn set_u32(
             target: &JsValue,
             property_key: u32,
@@ -4150,6 +5623,17 @@ pub mod Reflect {
             receiver: &JsValue,
         ) -> Result<bool, JsValue>;
 
+        /// The static `Reflect.set()` method works like setting a
+        /// property on an object.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
+        pub fn set_str<T>(
+            target: &Object<T>,
+            property_key: &str,
+            value: &T,
+        ) -> Result<bool, JsValue>;
+
         /// The static `Reflect.setPrototypeOf()` method is the same
         /// method as `Object.setPrototypeOf()`. It sets the prototype
         /// (i.e., the internal `[[Prototype]]` property) of a specified
@@ -4157,7 +5641,10 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/setPrototypeOf)
         #[wasm_bindgen(js_namespace = Reflect, js_name = setPrototypeOf, catch)]
-        pub fn set_prototype_of(target: &Object, prototype: &JsValue) -> Result<bool, JsValue>;
+        pub fn set_prototype_of<T>(
+            target: &Object<T>,
+            prototype: &JsValue,
+        ) -> Result<bool, JsValue>;
     }
 }
 
@@ -4173,7 +5660,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec)
     #[wasm_bindgen(method)]
-    pub fn exec(this: &RegExp, text: &str) -> Option<Array>;
+    pub fn exec(this: &RegExp, text: &str) -> Option<Array<JsString>>;
 
     /// The flags property returns a string consisting of the flags of
     /// the current regular expression object.
@@ -4343,27 +5830,62 @@ extern "C" {
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Set<any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type Set;
+    pub type Set<T>;
+
+    /// The [`Set`] object lets you store unique values of any type, whether
+    /// primitive values or object references.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
+    #[wasm_bindgen(constructor)]
+    pub fn new(init: &JsValue) -> Set;
+
+    /// The [`Set`] object lets you store unique values of any type, whether
+    /// primitive values or object references.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<T>() -> Set<T>;
+
+    /// The [`Set`] object lets you store unique values of any type, whether
+    /// primitive values or object references.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
+    #[wasm_bindgen(constructor, js_name = new)]
+    pub fn new_empty<T>() -> Set<T>;
+
+    /// The [`Set`] object lets you store unique values of any type, whether
+    /// primitive values or object references.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
+    #[wasm_bindgen(constructor, js_name = new)]
+    pub fn new_from_items<T>(items: &[T]) -> Set<T>;
+
+    /// The [`Set`] object lets you store unique values of any type, whether
+    /// primitive values or object references.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
+    #[wasm_bindgen(constructor, js_name = new, catch)]
+    pub fn new_from_iterable<T, I: Iterable<Item = T>>(iterable: I) -> Result<Set<T>, JsValue>;
 
     /// The `add()` method appends a new element with a specified value to the
     /// end of a [`Set`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/add)
     #[wasm_bindgen(method)]
-    pub fn add(this: &Set, value: &JsValue) -> Set;
+    pub fn add<T>(this: &Set<T>, value: &T) -> Set<T>;
 
     /// The `clear()` method removes all elements from a [`Set`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/clear)
     #[wasm_bindgen(method)]
-    pub fn clear(this: &Set);
+    pub fn clear<T>(this: &Set<T>);
 
     /// The `delete()` method removes the specified element from a [`Set`]
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/delete)
     #[wasm_bindgen(method)]
-    pub fn delete(this: &Set, value: &JsValue) -> bool;
+    pub fn delete<T>(this: &Set<T>, value: &T) -> bool;
 
     /// The `forEach()` method executes a provided function once for each value
     /// in the Set object, in insertion order.
@@ -4377,27 +5899,24 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/has)
     #[wasm_bindgen(method)]
-    pub fn has(this: &Set, value: &JsValue) -> bool;
-
-    /// The [`Set`] object lets you store unique values of any type, whether
-    /// primitive values or object references.
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
-    #[wasm_bindgen(constructor)]
-    pub fn new(init: &JsValue) -> Set;
+    pub fn has<T>(this: &Set<T>, value: &T) -> bool;
 
     /// The size accessor property returns the number of elements in a [`Set`]
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Set/size)
-    #[wasm_bindgen(method, getter, structural)]
-    pub fn size(this: &Set) -> u32;
+    #[wasm_bindgen(method, getter)]
+    pub fn size<T>(this: &Set<T>) -> u32;
 }
 
-impl Default for Set {
+impl<T> Default for Set<T> {
     fn default() -> Self {
-        Self::new(&JsValue::UNDEFINED)
+        Set::new_empty::<T>()
     }
+}
+
+impl<T> Iterable for Set<T> {
+    type Item = T;
 }
 
 // SetIterator
@@ -4411,7 +5930,17 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
     #[wasm_bindgen(method)]
-    pub fn entries(set: &Set) -> Iterator;
+    pub fn entries<T>(set: &Set<T>) -> Iterator;
+
+    /// The `entries()` method returns a new Iterator object that contains an
+    /// array of [value, value] for each element in the Set object, in insertion
+    /// order. For Set objects there is no key like in Map objects. However, to
+    /// keep the API similar to the Map object, each entry has the same value
+    /// for its key and value here, so that an array [value, value] is returned.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
+    #[wasm_bindgen(method, js_name = entries)]
+    pub fn entries_typed<T>(set: &Set<T>) -> Iterator<ArrayTuple<T, T>>;
 
     /// The `keys()` method is an alias for this method (for similarity with
     /// Map objects); it behaves exactly the same and returns values
@@ -4419,14 +5948,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/values)
     #[wasm_bindgen(method)]
-    pub fn keys(set: &Set) -> Iterator;
+    pub fn keys<T>(set: &Set<T>) -> Iterator<T>;
 
     /// The `values()` method returns a new Iterator object that contains the
     /// values for each element in the Set object in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/values)
     #[wasm_bindgen(method)]
-    pub fn values(set: &Set) -> Iterator;
+    pub fn values<T>(set: &Set<T>) -> Iterator<T>;
 }
 
 // SyntaxError
@@ -4493,7 +6022,7 @@ extern "C" {
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakMap<object, any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type WeakMap;
+    pub type WeakMap<K = Object, V>;
 
     /// The [`WeakMap`] object is a collection of key/value pairs in which the
     /// keys are weakly referenced.  The keys must be objects and the values can
@@ -4503,38 +6032,46 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WeakMap;
 
+    /// The [`WeakMap`] object is a collection of key/value pairs in which the
+    /// keys are weakly referenced.  The keys must be objects and the values can
+    /// be arbitrary values.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<K = Object, V = Object>() -> WeakMap<K, V>;
+
     /// The `set()` method sets the value for the key in the [`WeakMap`] object.
     /// Returns the [`WeakMap`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/set)
     #[wasm_bindgen(method, js_class = "WeakMap")]
-    pub fn set(this: &WeakMap, key: &Object, value: &JsValue) -> WeakMap;
+    pub fn set<K, V>(this: &WeakMap<K, V>, key: &K, value: &V) -> WeakMap<K, V>;
 
     /// The `get()` method returns a specified by key element
     /// from a [`WeakMap`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/get)
     #[wasm_bindgen(method)]
-    pub fn get(this: &WeakMap, key: &Object) -> JsValue;
+    pub fn get<K, V>(this: &WeakMap<K, V>, key: &K) -> V;
 
     /// The `has()` method returns a boolean indicating whether an element with
     /// the specified key exists in the [`WeakMap`] object or not.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/has)
     #[wasm_bindgen(method)]
-    pub fn has(this: &WeakMap, key: &Object) -> bool;
+    pub fn has<K, V>(this: &WeakMap<K, V>, key: &K) -> bool;
 
     /// The `delete()` method removes the specified element from a [`WeakMap`]
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/delete)
     #[wasm_bindgen(method)]
-    pub fn delete(this: &WeakMap, key: &Object) -> bool;
+    pub fn delete<K, V>(this: &WeakMap<K, V>, key: &K) -> bool;
 }
 
-impl Default for WeakMap {
+impl<T, V> Default for WeakMap<T, V> {
     fn default() -> Self {
-        Self::new()
+        WeakMap::new_typed::<T, V>()
     }
 }
 
@@ -4543,7 +6080,7 @@ impl Default for WeakMap {
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakSet<object>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type WeakSet;
+    pub type WeakSet<T = Object>;
 
     /// The `WeakSet` object lets you store weakly held objects in a collection.
     ///
@@ -4551,30 +6088,36 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WeakSet;
 
+    /// The `WeakSet` object lets you store weakly held objects in a collection.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet)
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<T = Object>() -> WeakSet<T>;
+
     /// The `has()` method returns a boolean indicating whether an object exists
     /// in a WeakSet or not.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/has)
     #[wasm_bindgen(method)]
-    pub fn has(this: &WeakSet, value: &Object) -> bool;
+    pub fn has<T>(this: &WeakSet<T>, value: &T) -> bool;
 
     /// The `add()` method appends a new object to the end of a WeakSet object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/add)
     #[wasm_bindgen(method)]
-    pub fn add(this: &WeakSet, value: &Object) -> WeakSet;
+    pub fn add<T>(this: &WeakSet<T>, value: &T) -> WeakSet<T>;
 
     /// The `delete()` method removes the specified element from a WeakSet
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/delete)
     #[wasm_bindgen(method)]
-    pub fn delete(this: &WeakSet, value: &Object) -> bool;
+    pub fn delete<T>(this: &WeakSet<T>, value: &T) -> bool;
 }
 
-impl Default for WeakSet {
+impl<T> Default for WeakSet<T> {
     fn default() -> Self {
-        Self::new()
+        WeakSet::new_typed::<T>()
     }
 }
 
@@ -4583,7 +6126,7 @@ impl Default for WeakSet {
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakRef<object>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type WeakRef;
+    pub type WeakRef<T = Object>;
 
     /// The `WeakRef` object contains a weak reference to an object. A weak
     /// reference to an object is a reference that does not prevent the object
@@ -4591,14 +6134,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef)
     #[wasm_bindgen(constructor)]
-    pub fn new(target: &Object) -> WeakRef;
+    pub fn new<T = Object>(target: &T) -> WeakRef<T>;
 
     /// Returns the `Object` this `WeakRef` points to, or `None` if the
     /// object has been garbage collected.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef/deref)
     #[wasm_bindgen(method)]
-    pub fn deref(this: &WeakRef) -> Option<Object>;
+    pub fn deref<T>(this: &WeakRef<T>) -> Option<T>;
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -4619,7 +6162,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compile)
         #[wasm_bindgen(js_namespace = WebAssembly)]
-        pub fn compile(buffer_source: &JsValue) -> Promise;
+        pub fn compile(buffer_source: &JsValue) -> Promise<WebAssembly::Module>;
 
         /// The `WebAssembly.compileStreaming()` function compiles a
         /// `WebAssembly.Module` module directly from a streamed underlying
@@ -4629,21 +6172,24 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compileStreaming)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = compileStreaming)]
-        pub fn compile_streaming(response: &Promise) -> Promise;
+        pub fn compile_streaming(response: &Promise) -> Promise<WebAssembly::Module>;
 
         /// The `WebAssembly.instantiate()` function allows you to compile and
         /// instantiate WebAssembly code.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiate)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = instantiate)]
-        pub fn instantiate_buffer(buffer: &[u8], imports: &Object) -> Promise;
+        pub fn instantiate_buffer(buffer: &[u8], imports: &Object) -> Promise<WebAssembly::Module>;
 
         /// The `WebAssembly.instantiate()` function allows you to compile and
         /// instantiate WebAssembly code.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiate)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = instantiate)]
-        pub fn instantiate_module(module: &Module, imports: &Object) -> Promise;
+        pub fn instantiate_module(
+            module: &Module,
+            imports: &Object,
+        ) -> Promise<WebAssembly::Instance>;
 
         /// The `WebAssembly.instantiateStreaming()` function compiles and
         /// instantiates a WebAssembly module directly from a streamed
@@ -4652,7 +6198,10 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiateStreaming)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = instantiateStreaming)]
-        pub fn instantiate_streaming(response: &Promise, imports: &Object) -> Promise;
+        pub fn instantiate_streaming(
+            response: &JsValue,
+            imports: &Object,
+        ) -> Promise<WebAssembly::Instance>;
 
         /// The `WebAssembly.validate()` function validates a given typed
         /// array of WebAssembly binary code, returning whether the bytes
@@ -4963,9 +6512,9 @@ pub mod WebAssembly {
         /// returns the value of the global.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Global)
-        #[wasm_bindgen(method, getter, structural, js_namespace = WebAssembly)]
+        #[wasm_bindgen(method, getter, js_namespace = WebAssembly)]
         pub fn value(this: &Global) -> JsValue;
-        #[wasm_bindgen(method, setter = value, structural, js_namespace = WebAssembly)]
+        #[wasm_bindgen(method, setter = value, js_namespace = WebAssembly)]
         pub fn set_value(this: &Global, value: &JsValue);
     }
 
@@ -5055,6 +6604,38 @@ pub mod JSON {
         /// in the JSON string. If this value is null or not provided, all properties
         /// of the object are included in the resulting JSON string.
         ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
+        #[wasm_bindgen(catch, js_namespace = JSON, js_name = stringify)]
+        pub fn stringify_with_replacer_func(
+            obj: &JsValue,
+            replacer: &mut dyn FnMut(JsString, JsValue) -> Result<Option<JsValue>, JsValue>,
+            space: Option<&str>,
+        ) -> Result<JsString, JsValue>;
+
+        /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
+        ///
+        /// The `replacer` argument is a function that alters the behavior of the stringification
+        /// process, or an array of String and Number objects that serve as a whitelist
+        /// for selecting/filtering the properties of the value object to be included
+        /// in the JSON string. If this value is null or not provided, all properties
+        /// of the object are included in the resulting JSON string.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
+        #[wasm_bindgen(catch, js_namespace = JSON, js_name = stringify)]
+        pub fn stringify_with_replacer_list(
+            obj: &JsValue,
+            include: Vec<String>,
+            space: Option<&str>,
+        ) -> Result<JsString, JsValue>;
+
+        /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
+        ///
+        /// The `replacer` argument is a function that alters the behavior of the stringification
+        /// process, or an array of String and Number objects that serve as a whitelist
+        /// for selecting/filtering the properties of the value object to be included
+        /// in the JSON string. If this value is null or not provided, all properties
+        /// of the object are included in the resulting JSON string.
+        ///
         /// The `space` argument is a String or Number object that's used to insert white space into
         /// the output JSON string for readability purposes. If this is a Number, it
         /// indicates the number of space characters to use as white space; this number
@@ -5071,10 +6652,10 @@ pub mod JSON {
             replacer: &JsValue,
             space: &JsValue,
         ) -> Result<JsString, JsValue>;
-
     }
 }
 
+// Next major: use typed functions for replacers
 // JsString
 #[wasm_bindgen]
 extern "C" {
@@ -5086,7 +6667,7 @@ extern "C" {
     /// in UTF-16 code units.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn length(this: &JsString) -> u32;
 
     /// The 'at()' method returns a new string consisting of the single UTF-16
@@ -5125,6 +6706,13 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt)
     #[wasm_bindgen(method, js_class = "String", js_name = codePointAt)]
     pub fn code_point_at(this: &JsString, pos: u32) -> JsValue;
+
+    /// The `codePointAt()` method returns a non-negative integer that is the
+    /// Unicode code point value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt)
+    #[wasm_bindgen(method, js_class = "String", js_name = codePointAt)]
+    pub fn try_code_point_at(this: &JsString, pos: u32) -> Option<u16>;
 
     /// The `concat()` method concatenates the string arguments to the calling
     /// string and returns a new string.
@@ -5427,6 +7015,7 @@ extern "C" {
     #[wasm_bindgen(method, js_class = "String", js_name = toLowerCase)]
     pub fn to_lower_case(this: &JsString) -> JsString;
 
+    // Next major: return String
     /// The `toString()` method returns a string representing the specified
     /// object.
     ///
@@ -5512,8 +7101,8 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = JsString, js_class = "String", js_name = raw)]
     pub fn raw_2(
         call_site: &Object,
-        substitutions_1: &str,
-        substitutions_2: &str,
+        substitutions1: &str,
+        substitutions2: &str,
     ) -> Result<JsString, JsValue>;
 
     /// The static `raw()` method is a tag function of template literals,
@@ -5523,9 +7112,9 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = JsString, js_class = "String", js_name = raw)]
     pub fn raw_3(
         call_site: &Object,
-        substitutions_1: &str,
-        substitutions_2: &str,
-        substitutions_3: &str,
+        substitutions1: &str,
+        substitutions2: &str,
+        substitutions3: &str,
     ) -> Result<JsString, JsValue>;
 
     /// The static `raw()` method is a tag function of template literals,
@@ -5535,10 +7124,10 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = JsString, js_class = "String", js_name = raw)]
     pub fn raw_4(
         call_site: &Object,
-        substitutions_1: &str,
-        substitutions_2: &str,
-        substitutions_3: &str,
-        substitutions_4: &str,
+        substitutions1: &str,
+        substitutions2: &str,
+        substitutions3: &str,
+        substitutions4: &str,
     ) -> Result<JsString, JsValue>;
 
     /// The static `raw()` method is a tag function of template literals,
@@ -5548,11 +7137,11 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = JsString, js_class = "String", js_name = raw)]
     pub fn raw_5(
         call_site: &Object,
-        substitutions_1: &str,
-        substitutions_2: &str,
-        substitutions_3: &str,
-        substitutions_4: &str,
-        substitutions_5: &str,
+        substitutions1: &str,
+        substitutions2: &str,
+        substitutions3: &str,
+        substitutions4: &str,
+        substitutions5: &str,
     ) -> Result<JsString, JsValue>;
 
     /// The static `raw()` method is a tag function of template literals,
@@ -5562,12 +7151,12 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = JsString, js_class = "String", js_name = raw)]
     pub fn raw_6(
         call_site: &Object,
-        substitutions_1: &str,
-        substitutions_2: &str,
-        substitutions_3: &str,
-        substitutions_4: &str,
-        substitutions_5: &str,
-        substitutions_6: &str,
+        substitutions1: &str,
+        substitutions2: &str,
+        substitutions3: &str,
+        substitutions4: &str,
+        substitutions5: &str,
+        substitutions6: &str,
     ) -> Result<JsString, JsValue>;
 
     /// The static `raw()` method is a tag function of template literals,
@@ -5577,13 +7166,13 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = JsString, js_class = "String", js_name = raw)]
     pub fn raw_7(
         call_site: &Object,
-        substitutions_1: &str,
-        substitutions_2: &str,
-        substitutions_3: &str,
-        substitutions_4: &str,
-        substitutions_5: &str,
-        substitutions_6: &str,
-        substitutions_7: &str,
+        substitutions1: &str,
+        substitutions2: &str,
+        substitutions3: &str,
+        substitutions4: &str,
+        substitutions5: &str,
+        substitutions6: &str,
+        substitutions7: &str,
     ) -> Result<JsString, JsValue>;
 }
 
@@ -5749,7 +7338,7 @@ extern "C" {
     /// The `instanceof` operator's behavior can be customized by this symbol.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural, js_name = hasInstance)]
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = hasInstance)]
     pub fn has_instance() -> Symbol;
 
     /// The `Symbol.isConcatSpreadable` well-known symbol is used to configure
@@ -5757,21 +7346,21 @@ extern "C" {
     /// `Array.prototype.concat()` method.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/isConcatSpreadable)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural, js_name = isConcatSpreadable)]
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = isConcatSpreadable)]
     pub fn is_concat_spreadable() -> Symbol;
 
     /// The `Symbol.asyncIterator` well-known symbol specifies the default AsyncIterator for an object.
     /// If this property is set on an object, it is an async iterable and can be used in a `for await...of` loop.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural, js_name = asyncIterator)]
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = asyncIterator)]
     pub fn async_iterator() -> Symbol;
 
     /// The `Symbol.iterator` well-known symbol specifies the default iterator
     /// for an object.  Used by `for...of`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural)]
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
     pub fn iterator() -> Symbol;
 
     /// The `Symbol.match` well-known symbol specifies the matching of a regular
@@ -5779,7 +7368,7 @@ extern "C" {
     /// `String.prototype.match()` method.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/match)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural, js_name = match)]
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = match)]
     pub fn match_() -> Symbol;
 
     /// The `Symbol.replace` well-known symbol specifies the method that
@@ -5790,7 +7379,7 @@ extern "C" {
     /// `String.prototype.replace()`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/replace)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural)]
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
     pub fn replace() -> Symbol;
 
     /// The `Symbol.search` well-known symbol specifies the method that returns
@@ -5801,14 +7390,14 @@ extern "C" {
     /// `String.prototype.search()`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/search)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural)]
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
     pub fn search() -> Symbol;
 
     /// The well-known symbol `Symbol.species` specifies a function-valued
     /// property that the constructor function uses to create derived objects.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural)]
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
     pub fn species() -> Symbol;
 
     /// The `Symbol.split` well-known symbol specifies the method that splits a
@@ -5818,7 +7407,7 @@ extern "C" {
     /// For more information, see `RegExp.prototype[@@split]()` and
     /// `String.prototype.split()`.
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/split)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural)]
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
     pub fn split() -> Symbol;
 
     /// The `Symbol.toPrimitive` is a symbol that specifies a function valued
@@ -5826,7 +7415,7 @@ extern "C" {
     /// primitive value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toPrimitive)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural, js_name = toPrimitive)]
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = toPrimitive)]
     pub fn to_primitive() -> Symbol;
 
     /// The `Symbol.toStringTag` well-known symbol is a string valued property
@@ -5835,7 +7424,7 @@ extern "C" {
     /// method.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toString)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural, js_name = toStringTag)]
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = toStringTag)]
     pub fn to_string_tag() -> Symbol;
 
     /// The `Symbol.for(key)` method searches for existing symbols in a runtime-wide symbol registry with
@@ -5863,7 +7452,7 @@ extern "C" {
     /// with environment bindings of the associated object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/unscopables)
-    #[wasm_bindgen(static_method_of = Symbol, getter, structural)]
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
     pub fn unscopables() -> Symbol;
 
     /// The `valueOf()` method returns the primitive value of a Symbol object.
@@ -5872,6 +7461,11 @@ extern "C" {
     #[wasm_bindgen(method, js_name = valueOf)]
     pub fn value_of(this: &Symbol) -> Symbol;
 }
+
+/// Symbol or string trait, useful to refine JsValue bounds to Symbol or JsString
+pub trait SymbolOrString {}
+impl SymbolOrString for Symbol {}
+impl SymbolOrString for JsString {}
 
 #[allow(non_snake_case)]
 pub mod Intl {
@@ -6171,6 +7765,45 @@ pub mod Intl {
     }
 }
 
+#[wasm_bindgen]
+extern "C" {
+    /// The `PromiseState` object represents the the status of the promise,
+    /// as used in `allSettled`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
+    #[must_use]
+    #[wasm_bindgen(extends = Object, typescript_type = "any")]
+    #[derive(Clone, Debug)]
+    pub type PromiseState<T>;
+
+    /// A string, either "fulfilled" or "rejected", indicating the eventual state of the promise.
+    #[wasm_bindgen(method, getter = status)]
+    pub fn get_status<T>(this: &PromiseState<T>) -> String;
+
+    /// Only present if status is "fulfilled". The value that the promise was fulfilled with.
+    #[wasm_bindgen(method, getter = value)]
+    pub fn get_value<T>(this: &PromiseState<T>) -> Option<T>;
+
+    /// Only present if status is "rejected". The reason that the promise was rejected with.
+    #[wasm_bindgen(method, getter = reason)]
+    pub fn get_reason<T>(this: &PromiseState<T>) -> Option<JsValue>;
+}
+
+impl<T> PromiseState<T> {
+    pub fn is_fulfilled(&self) -> bool {
+        self.get_status() == "fulfilled"
+    }
+
+    pub fn is_rejected(&self) -> bool {
+        self.get_status() == "rejected"
+    }
+}
+
+/// Promising trait used to represent that a function may return T or Promise<T>
+pub trait Promising<T: ErasableGeneric>: ErasableGeneric {}
+impl<T: ErasableGeneric> Promising<T> for T {}
+impl<T: ErasableGeneric> Promising<T> for Promise<T> {}
+
 // Promise
 #[wasm_bindgen]
 extern "C" {
@@ -6181,8 +7814,9 @@ extern "C" {
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>")]
     #[derive(Clone, Debug)]
-    pub type Promise;
+    pub type Promise<T>;
 
+    // Next major: typed by default
     /// Creates a new `Promise` with the provided executor `cb`
     ///
     /// The `cb` is a function that is passed with the arguments `resolve` and
@@ -6202,6 +7836,25 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(cb: &mut dyn FnMut(Function, Function)) -> Promise;
 
+    /// Creates a new `Promise` with the provided executor `cb`
+    ///
+    /// The `cb` is a function that is passed with the arguments `resolve` and
+    /// `reject`. The `cb` function is executed immediately by the `Promise`
+    /// implementation, passing `resolve` and `reject` functions (the executor
+    /// is called before the `Promise` constructor even returns the created
+    /// object). The `resolve` and `reject` functions, when called, resolve or
+    /// reject the promise, respectively. The executor normally initiates
+    /// some asynchronous work, and then, once that completes, either calls
+    /// the `resolve` function to resolve the promise or else rejects it if an
+    /// error occurred.
+    ///
+    /// If an error is thrown in the executor function, the promise is rejected.
+    /// The return value of the executor is ignored.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<T>(cb: &mut dyn FnMut(FunctionArgs<T>, Function)) -> Promise<T>;
+
     /// The `Promise.all(iterable)` method returns a single `Promise` that
     /// resolves when all of the promises in the iterable argument have resolved
     /// or when the iterable argument contains no promises. It rejects with the
@@ -6211,13 +7864,34 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Promise)]
     pub fn all(obj: &JsValue) -> Promise;
 
+    /// The `Promise.all(iterable)` method returns a single `Promise` that
+    /// resolves when all of the promises in the iterable argument have resolved
+    /// or when the iterable argument contains no promises. It rejects with the
+    /// reason of the first promise that rejects.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
+    #[wasm_bindgen(static_method_of = Promise, js_name = all)]
+    pub fn all_iterable<T: ErasableGeneric, U: Promising<T>, I: Iterable<Item = U>>(
+        obj: &I,
+    ) -> Promise<Array<T>>;
+
     /// The `Promise.allSettled(iterable)` method returns a single `Promise` that
     /// resolves when all of the promises in the iterable argument have either
     /// fulfilled or rejected or when the iterable argument contains no promises.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[wasm_bindgen(static_method_of = Promise, js_name = allSettled)]
-    pub fn all_settled(obj: &JsValue) -> Promise;
+    pub fn all_settled(obj: Object) -> Promise;
+
+    /// The `Promise.allSettled(iterable)` method returns a single `Promise` that
+    /// resolves when all of the promises in the iterable argument have either
+    /// fulfilled or rejected or when the iterable argument contains no promises.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
+    #[wasm_bindgen(static_method_of = Promise, js_name = allSettled)]
+    pub fn all_settled_iterable<T: ErasableGeneric, U: Promising<T>, I: Iterable<Item = U>>(
+        obj: &I,
+    ) -> Promise<Array<PromiseState<T>>>;
 
     /// The `Promise.any(iterable)` method returns a single `Promise` that
     /// resolves when any of the promises in the iterable argument have resolved
@@ -6228,6 +7902,17 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Promise)]
     pub fn any(obj: &JsValue) -> Promise;
 
+    /// The `Promise.any(iterable)` method returns a single `Promise` that
+    /// resolves when any of the promises in the iterable argument have resolved
+    /// or when the iterable argument contains no promises. It rejects with an
+    /// `AggregateError` if all promises in the iterable rejected.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)
+    #[wasm_bindgen(static_method_of = Promise, js_name = any)]
+    pub fn any_iterable<T: ErasableGeneric, U: Promising<T>, I: Iterable<Item = U>>(
+        obj: &I,
+    ) -> Promise<T>;
+
     /// The `Promise.race(iterable)` method returns a promise that resolves or
     /// rejects as soon as one of the promises in the iterable resolves or
     /// rejects, with the value or reason from that promise.
@@ -6236,6 +7921,17 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Promise)]
     pub fn race(obj: &JsValue) -> Promise;
 
+    /// The `Promise.race(iterable)` method returns a promise that resolves or
+    /// rejects as soon as one of the promises in the iterable resolves or
+    /// rejects, with the value or reason from that promise.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race)
+    #[wasm_bindgen(static_method_of = Promise, js_name = race)]
+    pub fn race_iterable<T: ErasableGeneric, U: Promising<T>, I: Iterable<Item = U>>(
+        obj: &I,
+    ) -> Promise<T>;
+
+    // Next major: combine into reject_typed
     /// The `Promise.reject(reason)` method returns a `Promise` object that is
     /// rejected with the given reason.
     ///
@@ -6243,6 +7939,14 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Promise)]
     pub fn reject(obj: &JsValue) -> Promise;
 
+    /// The `Promise.reject(reason)` method returns a `Promise` object that is
+    /// rejected with the given reason.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/reject)
+    #[wasm_bindgen(static_method_of = Promise, js_name = reject)]
+    pub fn reject_typed<T>(obj: &JsValue) -> Promise<T>;
+
+    // Next major: combine into resolved_typed
     /// The `Promise.resolve(value)` method returns a `Promise` object that is
     /// resolved with the given value. If the value is a promise, that promise
     /// is returned; if the value is a thenable (i.e. has a "then" method), the
@@ -6253,6 +7957,16 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Promise)]
     pub fn resolve(obj: &JsValue) -> Promise;
 
+    /// The `Promise.resolve(value)` method returns a `Promise` object that is
+    /// resolved with the given value. If the value is a promise, that promise
+    /// is returned; if the value is a thenable (i.e. has a "then" method), the
+    /// returned promise will "follow" that thenable, adopting its eventual
+    /// state; otherwise the returned promise will be fulfilled with the value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/resolve)
+    #[wasm_bindgen(static_method_of = Promise, js_name = resolve)]
+    pub fn resolve_typed<T>(obj: &T) -> Promise<T>;
+
     /// The `catch()` method returns a `Promise` and deals with rejected cases
     /// only.  It behaves the same as calling `Promise.prototype.then(undefined,
     /// onRejected)` (in fact, calling `obj.catch(onRejected)` internally calls
@@ -6260,22 +7974,44 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch)
     #[wasm_bindgen(method)]
-    pub fn catch(this: &Promise, cb: &Closure<dyn FnMut(JsValue)>) -> Promise;
+    pub fn catch<T>(this: &Promise<T>, cb: &Closure<dyn FnMut(JsValue)>) -> Promise;
+
+    /// Same as `catch`, but returning a result to become the new Promise value.
+    #[wasm_bindgen(method, js_name = catch)]
+    pub fn catch_map<T, U: ErasableGeneric, R: Promising<U>>(
+        this: &Promise<T>,
+        cb: &Closure<dyn FnMut(T) -> Result<R, JsValue>>,
+    ) -> Promise<U>;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
     /// callback functions for the success and failure cases of the `Promise`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[wasm_bindgen(method)]
-    pub fn then(this: &Promise, cb: &Closure<dyn FnMut(JsValue)>) -> Promise;
+    pub fn then<T>(this: &Promise<T>, cb: &Closure<dyn FnMut(T)>) -> Promise;
 
     /// Same as `then`, only with both arguments provided.
     #[wasm_bindgen(method, js_name = then)]
-    pub fn then2(
-        this: &Promise,
-        resolve: &Closure<dyn FnMut(JsValue)>,
+    pub fn then2<T>(
+        this: &Promise<T>,
+        resolve: &Closure<dyn FnMut(T)>,
         reject: &Closure<dyn FnMut(JsValue)>,
     ) -> Promise;
+
+    /// Same as `then`, but returning a result to become the new Promise value.
+    #[wasm_bindgen(method, js_name = then)]
+    pub fn map<T, U: ErasableGeneric, R: Promising<U>>(
+        this: &Promise<T>,
+        cb: &Closure<dyn FnMut(T) -> R>,
+    ) -> Promise<U>;
+
+    /// Same as `then`, but with two arguments and returning a result to become the new Promise value.
+    #[wasm_bindgen(method, js_name = then)]
+    pub fn map2<T, U: ErasableGeneric, R: Promising<U>>(
+        this: &Promise<T>,
+        resolve: &Closure<dyn FnMut(T) -> R>,
+        reject: &Closure<dyn FnMut(JsValue) -> R>,
+    ) -> Promise<U>;
 
     /// The `finally()` method returns a `Promise`. When the promise is settled,
     /// whether fulfilled or rejected, the specified callback function is
@@ -6288,7 +8024,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally)
     #[wasm_bindgen(method)]
-    pub fn finally(this: &Promise, cb: &Closure<dyn FnMut()>) -> Promise;
+    pub fn finally<T>(this: &Promise<T>, cb: &Closure<dyn FnMut()>) -> Promise<T>;
 }
 
 /// Returns a handle to the global scope object.
@@ -6504,11 +8240,11 @@ macro_rules! arrays {
             pub fn copy_within(this: &$name, target: i32, start: i32, end: i32) -> $name;
 
             /// Gets the value at `idx`, equivalent to the javascript `my_var = arr[idx]`.
-            #[wasm_bindgen(method, structural, indexing_getter)]
+            #[wasm_bindgen(method, indexing_getter)]
             pub fn get_index(this: &$name, idx: u32) -> $ty;
 
             /// Sets the value at `idx`, equivalent to the javascript `arr[idx] = value`.
-            #[wasm_bindgen(method, structural, indexing_setter)]
+            #[wasm_bindgen(method, indexing_setter)]
             pub fn set_index(this: &$name, idx: u32, value: $ty);
 
             /// Copies the Rust slice's data to self.
@@ -6670,6 +8406,8 @@ macro_rules! arrays {
                 Self::new(&JsValue::UNDEFINED.unchecked_into())
             }
         }
+
+        impl TypedArray for $name {}
     )*);
 }
 

@@ -317,13 +317,13 @@ export function __wbg__wbg_cb_unref_87dfb5aaa0cbcea7(arg0) {
     arg0._wbg_cb_unref();
 };
 
-export function __wbg_call_3020136f7a2d6e44() { return handleError(function (arg0, arg1, arg2) {
-    const ret = arg0.call(arg1, arg2);
+export function __wbg_call_1a2784c136287cfa() { return handleError(function (arg0, arg1) {
+    const ret = arg0.call(arg1);
     return ret;
 }, arguments) };
 
-export function __wbg_call_abb4ff46ce38be40() { return handleError(function (arg0, arg1) {
-    const ret = arg0.call(arg1);
+export function __wbg_call_8b6a1ddc356729fc() { return handleError(function (arg0, arg1, arg2) {
+    const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments) };
 
@@ -409,7 +409,7 @@ export function __wbg_static_accessor_WINDOW_a8924b26aa92d024() {
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 };
 
-export function __wbg_then_4f95312d68691235(arg0, arg1) {
+export function __wbg_then_84bf0ccdca910f4d(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 };

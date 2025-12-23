@@ -196,6 +196,8 @@ pub struct ImportFunction {
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures
     pub wasm_bindgen_futures: Path,
+    /// Generic parameters as validated simple type parameters for this function
+    pub generics: syn::Generics,
 }
 
 /// The type of a function being imported
@@ -334,6 +336,8 @@ pub struct ImportType {
     pub no_deref: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
+    /// Validated generics
+    pub generics: syn::Generics,
 }
 
 /// The metadata for a String Enum
