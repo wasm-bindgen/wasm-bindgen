@@ -1,12 +1,90 @@
-import source wasmModule from "./reference_test_bg.wasm";
-
-let wasm;
+/* @ts-self-types="./reference_test.d.ts" */
+//#region js imports
 import { default as _default } from 'tests/wasm/import_class.js';
-import * as import0 from 'tests/wasm/imports.js'
-import * as import1 from 'foo-raw'
-import * as import2 from './snippets/import_reftest-a82831e16a4c30f1/inline0.js'
-import * as import3 from 'pure-extern'
+//#endregion
 
+//#region exports
+
+export function __wbg_reset_state () {
+    __wbg_instance_id++;
+    cachedUint8ArrayMemory0 = null;
+    if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
+    const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+    wasm = wasmInstance.exports;
+    wasm.__wbindgen_start();
+}
+
+export function exported() {
+    const ret = wasm.exported();
+    if (ret[1]) {
+        throw takeFromExternrefTable0(ret[0]);
+    }
+}
+//#endregion
+
+//#region wasm imports
+const import1 = require("tests/wasm/imports.js")
+const import2 = require("foo-raw")
+const import3 = require("./snippets/import_reftest-a82831e16a4c30f1/inline0.js")
+const import4 = require("pure-extern")
+
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
+        __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
+            catch_me();
+        }, arguments) },
+        __wbg_get_c871386e44ba8c35: function(arg0) {
+            const ret = arg0.get();
+            return ret;
+        },
+        __wbg_my_function_597f96bc4719408a: function() {
+            b.my_function();
+        },
+        __wbg_new_c30895ccee9479d4: function(arg0) {
+            const ret = new _default(arg0);
+            return ret;
+        },
+        __wbg_no_catch_757175fbf9e08b9e: function() {
+            no_catch();
+        },
+        __wbg_reload_b091d4dc4b1b3a74: function() {
+            window.location.reload();
+        },
+        __wbg_static_accessor_CONST_85b96acb48be57e1: function() {
+            const ret = a.CONST;
+            return ret;
+        },
+        __wbg_write_691fc0d693f0c7b5: function(arg0, arg1) {
+            window.document.write(getStringFromWasm0(arg0, arg1));
+        },
+        __wbindgen_init_externref_table: function() {
+            const table = wasm.__wbindgen_externrefs;
+            const offset = table.grow(4);
+            table.set(0, undefined);
+            table.set(offset + 0, undefined);
+            table.set(offset + 1, null);
+            table.set(offset + 2, true);
+            table.set(offset + 3, false);
+        },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+        "tests/wasm/imports.js": import1,
+        "foo-raw": import2,
+        "./snippets/import_reftest-a82831e16a4c30f1/inline0.js": import3,
+        "pure-extern": import4,
+    };
+}
+//#endregion
+
+let __wbg_instance_id = 0;
+
+//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -47,75 +125,13 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-let __wbg_instance_id = 0;
+//#endregion
 
-export function __wbg_reset_state () {
-    __wbg_instance_id++;
-    cachedUint8ArrayMemory0 = null;
-    if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-    wasm = wasmInstance.exports;
-    wasm.__wbindgen_start();
-}
 
-export function exported() {
-    const ret = wasm.exported();
-    if (ret[1]) {
-        throw takeFromExternrefTable0(ret[0]);
-    }
-}
-
-const imports = {
-    __proto__: null,
-    './reference_test_bg.js': {
-        __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
-        },
-        __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
-            catch_me();
-        }, arguments) },
-        __wbg_get_c871386e44ba8c35: function(arg0) {
-            const ret = arg0.get();
-            return ret;
-        },
-        __wbg_my_function_597f96bc4719408a: function() {
-            b.my_function();
-        },
-        __wbg_new_c30895ccee9479d4: function(arg0) {
-            const ret = new _default(arg0);
-            return ret;
-        },
-        __wbg_no_catch_757175fbf9e08b9e: function() {
-            no_catch();
-        },
-        __wbg_reload_b091d4dc4b1b3a74: function() {
-            window.location.reload();
-        },
-        __wbg_static_accessor_CONST_85b96acb48be57e1: function() {
-            const ret = a.CONST;
-            return ret;
-        },
-        __wbg_write_691fc0d693f0c7b5: function(arg0, arg1) {
-            window.document.write(getStringFromWasm0(arg0, arg1));
-        },
-        __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_externrefs;
-            const offset = table.grow(4);
-            table.set(0, undefined);
-            table.set(offset + 0, undefined);
-            table.set(offset + 1, null);
-            table.set(offset + 2, true);
-            table.set(offset + 3, false);
-        },
-    },
-    'tests/wasm/imports.js': import0,
-    'foo-raw': import1,
-    './snippets/import_reftest-a82831e16a4c30f1/inline0.js': import2,
-    'pure-extern': import3,
-
-};
-
-const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-wasm = wasmInstance.exports;
-
+//#region wasm loading
+import source wasmModule from "./reference_test_bg.wasm";
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();
+//#endregion
+

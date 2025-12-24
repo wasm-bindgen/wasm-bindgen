@@ -1,11 +1,79 @@
+/* @ts-self-types="./reference_test.d.ts" */
+//#region js imports
 import { default as _default } from 'tests/wasm/import_class.js';
-import * as __wbg_star0 from './snippets/import_reftest-a82831e16a4c30f1/inline0.js';
-import * as __wbg_star1 from 'foo-raw';
-import * as __wbg_star2 from 'pure-extern';
-import * as __wbg_star3 from 'tests/wasm/imports.js';
+//#endregion
 
-let wasm;
+//#region exports
 
+export function exported() {
+    const ret = wasm.exported();
+    if (ret[1]) {
+        throw takeFromExternrefTable0(ret[0]);
+    }
+}
+//#endregion
+
+//#region wasm imports
+import * as import1 from "tests/wasm/imports.js"
+import * as import2 from "foo-raw"
+import * as import3 from "./snippets/import_reftest-a82831e16a4c30f1/inline0.js"
+import * as import4 from "pure-extern"
+
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
+        __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
+            catch_me();
+        }, arguments) },
+        __wbg_get_c871386e44ba8c35: function(arg0) {
+            const ret = arg0.get();
+            return ret;
+        },
+        __wbg_my_function_597f96bc4719408a: function() {
+            b.my_function();
+        },
+        __wbg_new_c30895ccee9479d4: function(arg0) {
+            const ret = new _default(arg0);
+            return ret;
+        },
+        __wbg_no_catch_757175fbf9e08b9e: function() {
+            no_catch();
+        },
+        __wbg_reload_b091d4dc4b1b3a74: function() {
+            window.location.reload();
+        },
+        __wbg_static_accessor_CONST_85b96acb48be57e1: function() {
+            const ret = a.CONST;
+            return ret;
+        },
+        __wbg_write_691fc0d693f0c7b5: function(arg0, arg1) {
+            window.document.write(getStringFromWasm0(arg0, arg1));
+        },
+        __wbindgen_init_externref_table: function() {
+            const table = wasm.__wbindgen_externrefs;
+            const offset = table.grow(4);
+            table.set(0, undefined);
+            table.set(offset + 0, undefined);
+            table.set(offset + 1, null);
+            table.set(offset + 2, true);
+            table.set(offset + 3, false);
+        },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+        "tests/wasm/imports.js": import1,
+        "foo-raw": import2,
+        "./snippets/import_reftest-a82831e16a4c30f1/inline0.js": import3,
+        "pure-extern": import4,
+    };
+}
+//#endregion
+
+//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -54,14 +122,18 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-export function exported() {
-    const ret = wasm.exported();
-    if (ret[1]) {
-        throw takeFromExternrefTable0(ret[0]);
-    }
-}
+//#endregion
 
-const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
+
+let wasmModule, wasm;
+function __wbg_finalize_init(instance, module) {
+    wasm = instance.exports, wasmModule = module;
+    cachedUint8ArrayMemory0 = null;
+
+
+    wasm.__wbindgen_start();
+    return wasm;
+}
 
 async function __wbg_load(module, imports) {
     if (typeof Response === 'function' && module instanceof Response) {
@@ -69,14 +141,12 @@ async function __wbg_load(module, imports) {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
             } catch (e) {
-                const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+                const validResponse = module.ok && expectedResponseType(module.type);
 
                 if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
                     console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
 
-                } else {
-                    throw e;
-                }
+                } else { throw e; }
             }
         }
 
@@ -91,73 +161,20 @@ async function __wbg_load(module, imports) {
             return instance;
         }
     }
-}
 
-function __wbg_get_imports() {
-    const imports = {};
-    imports["./reference_test_bg.js"] = {};
-    imports["./reference_test_bg.js"].__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
-        throw new Error(getStringFromWasm0(arg0, arg1));
-    };
-    imports["./reference_test_bg.js"].__wbg_catch_me_1d18acaa34acb005 = function() { return handleError(function () {
-        catch_me();
-    }, arguments) };
-    imports["./reference_test_bg.js"].__wbg_get_c871386e44ba8c35 = function(arg0) {
-        const ret = arg0.get();
-        return ret;
-    };
-    imports["./reference_test_bg.js"].__wbg_my_function_597f96bc4719408a = function() {
-        b.my_function();
-    };
-    imports["./reference_test_bg.js"].__wbg_new_c30895ccee9479d4 = function(arg0) {
-        const ret = new _default(arg0);
-        return ret;
-    };
-    imports["./reference_test_bg.js"].__wbg_no_catch_757175fbf9e08b9e = function() {
-        no_catch();
-    };
-    imports["./reference_test_bg.js"].__wbg_reload_b091d4dc4b1b3a74 = function() {
-        window.location.reload();
-    };
-    imports["./reference_test_bg.js"].__wbg_static_accessor_CONST_85b96acb48be57e1 = function() {
-        const ret = a.CONST;
-        return ret;
-    };
-    imports["./reference_test_bg.js"].__wbg_write_691fc0d693f0c7b5 = function(arg0, arg1) {
-        window.document.write(getStringFromWasm0(arg0, arg1));
-    };
-    imports["./reference_test_bg.js"].__wbindgen_init_externref_table = function() {
-        const table = wasm.__wbindgen_externrefs;
-        const offset = table.grow(4);
-        table.set(0, undefined);
-        table.set(offset + 0, undefined);
-        table.set(offset + 1, null);
-        table.set(offset + 2, true);
-        table.set(offset + 3, false);
-    };
-    imports['./snippets/import_reftest-a82831e16a4c30f1/inline0.js'] = __wbg_star0;
-    imports['foo-raw'] = __wbg_star1;
-    imports['pure-extern'] = __wbg_star2;
-    imports['tests/wasm/imports.js'] = __wbg_star3;
-
-    return imports;
-}
-
-function __wbg_finalize_init(instance, module) {
-    wasm = instance.exports;
-    __wbg_init.__wbindgen_wasm_module = module;
-    cachedUint8ArrayMemory0 = null;
-
-
-    wasm.__wbindgen_start();
-    return wasm;
+    function expectedResponseType(type) {
+        switch (type) {
+            case 'basic': case 'cors': case 'default': return true;
+        }
+        return false;
+    }
 }
 
 function initSync(module) {
     if (wasm !== undefined) return wasm;
 
 
-    if (typeof module !== 'undefined') {
+    if (module !== undefined) {
         if (Object.getPrototypeOf(module) === Object.prototype) {
             ({module} = module)
         } else {
@@ -177,7 +194,7 @@ async function __wbg_init(module_or_path) {
     if (wasm !== undefined) return wasm;
 
 
-    if (typeof module_or_path !== 'undefined') {
+    if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
@@ -185,7 +202,7 @@ async function __wbg_init(module_or_path) {
         }
     }
 
-    if (typeof module_or_path === 'undefined') {
+    if (module_or_path === undefined) {
         module_or_path = new URL('reference_test_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
@@ -198,6 +215,4 @@ async function __wbg_init(module_or_path) {
 
     return __wbg_finalize_init(instance, module);
 }
-
-export { initSync };
-export default __wbg_init;
+export { initSync, __wbg_init as default };

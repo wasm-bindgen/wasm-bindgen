@@ -1,3 +1,5 @@
+/* @ts-self-types="./reference_test.d.ts" */
+//#region exports
 
 /**
  * @param {number} a
@@ -8,10 +10,13 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
+//#endregion
 
-const imports = {
-    __proto__: null,
-    './reference_test_bg.js': {
+//#region wasm imports
+
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
         __wbg_random_ae0b2256206ad108: function() {
             const ret = Math.random();
             return ret;
@@ -25,13 +30,19 @@ const imports = {
             table.set(offset + 2, true);
             table.set(offset + 3, false);
         },
-    },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+    };
+}
+//#endregion
 
-};
 
+//#region wasm loading
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
-const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), imports);
+const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
 const wasm = wasmInstantiated.instance.exports;
-export { wasm as __wasm };
-
 wasm.__wbindgen_start();
+//#endregion
+

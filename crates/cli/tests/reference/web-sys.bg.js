@@ -1,8 +1,51 @@
-let wasm;
-export function __wbg_set_wasm(val) {
-    wasm = val;
+//#region exports
+
+/**
+ * @returns {MediaSourceEnum}
+ */
+export function get_media_source() {
+    const ret = wasm.get_media_source();
+    return __wbindgen_enum_MediaSourceEnum[ret];
 }
 
+/**
+ * @returns {URL}
+ */
+export function get_url() {
+    const ret = wasm.get_url();
+    return ret;
+}
+//#endregion
+
+//#region wasm imports
+export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
+    const ret = debugString(arg1);
+    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+    getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+}
+export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_new_79cb6b4c6069a31e() { return handleError(function (arg0, arg1) {
+    const ret = new URL(getStringFromWasm0(arg0, arg1));
+    return ret;
+}, arguments) }
+export function __wbindgen_init_externref_table() {
+    const table = wasm.__wbindgen_externrefs;
+    const offset = table.grow(4);
+    table.set(0, undefined);
+    table.set(offset + 0, undefined);
+    table.set(offset + 1, null);
+    table.set(offset + 2, true);
+    table.set(offset + 3, false);
+}
+//#endregion
+
+const __wbindgen_enum_MediaSourceEnum = ["camera", "screen", "application", "window", "browser", "microphone", "audioCapture", "other"];
+
+//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -170,47 +213,13 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-const __wbindgen_enum_MediaSourceEnum = ["camera", "screen", "application", "window", "browser", "microphone", "audioCapture", "other"];
+//#endregion
 
-/**
- * @returns {MediaSourceEnum}
- */
-export function get_media_source() {
-    const ret = wasm.get_media_source();
-    return __wbindgen_enum_MediaSourceEnum[ret];
+
+//#region wasm loading
+let wasm;
+export function __wbg_set_wasm(val) {
+    wasm = val;
 }
+//#endregion
 
-/**
- * @returns {URL}
- */
-export function get_url() {
-    const ret = wasm.get_url();
-    return ret;
-}
-
-export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
-    const ret = debugString(arg1);
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
-};
-
-export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-};
-
-export function __wbg_new_79cb6b4c6069a31e() { return handleError(function (arg0, arg1) {
-    const ret = new URL(getStringFromWasm0(arg0, arg1));
-    return ret;
-}, arguments) };
-
-export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_externrefs;
-    const offset = table.grow(4);
-    table.set(0, undefined);
-    table.set(offset + 0, undefined);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
-};

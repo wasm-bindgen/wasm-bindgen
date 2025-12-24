@@ -11,7 +11,7 @@ export { OriginalName as RenamedClass }
 declare function foo(): void;
 
 export let Snippet: {
-  foo: typeof foo,
+    foo: typeof foo,
 };
 
 declare let _default: unknown;

@@ -2,9 +2,9 @@
 /* eslint-disable */
 
 export class Foo {
-  private constructor();
-  free(): void;
-  [Symbol.dispose](): void;
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
 }
 
 export function echo_bool(a: boolean): boolean;

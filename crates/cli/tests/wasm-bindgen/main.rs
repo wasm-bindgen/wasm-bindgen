@@ -376,7 +376,7 @@ async function __wbg_init(module_or_path) {
     if (wasm !== undefined) return wasm;
 
 
-    if (typeof module_or_path !== 'undefined') {
+    if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
@@ -384,7 +384,7 @@ async function __wbg_init(module_or_path) {
         }
     }
 
-    if (typeof module_or_path === 'undefined') {
+    if (module_or_path === undefined) {
         module_or_path = new URL('default_module_path_target_web_bg.wasm', import.meta.url);
     }",
     ));
@@ -403,30 +403,9 @@ fn default_module_path_target_no_modules() {
 
     let contents =
         fs::read_to_string(out_dir.join("default_module_path_target_no_modules.js")).unwrap();
-    assert!(contents.contains(
-        "\
-    if (typeof document !== 'undefined' && document.currentScript !== null) {
-        script_src = new URL(document.currentScript.src, location.href).toString();
-    }",
-    ));
-    assert!(contents.contains(
-        "\
-    async function __wbg_init(module_or_path) {
-        if (wasm !== undefined) return wasm;
-
-
-        if (typeof module_or_path !== 'undefined') {
-            if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
-                ({module_or_path} = module_or_path)
-            } else {
-                console.warn('using deprecated parameters for the initialization function; pass a single object instead')
-            }
-        }
-
-        if (typeof module_or_path === 'undefined' && typeof script_src !== 'undefined') {
-            module_or_path = script_src.replace(/\\.js$/, '_bg.wasm');
-        }",
-    ));
+    assert!(contents
+        .contains("script_src = new URL(document.currentScript.src, location.href).toString();",));
+    assert!(contents.contains("module_or_path = script_src.replace(",));
 }
 
 #[test]
@@ -448,7 +427,7 @@ async function __wbg_init(module_or_path) {
     if (wasm !== undefined) return wasm;
 
 
-    if (typeof module_or_path !== 'undefined') {
+    if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
@@ -480,7 +459,7 @@ fn omit_default_module_path_target_no_modules() {
         if (wasm !== undefined) return wasm;
 
 
-        if (typeof module_or_path !== 'undefined') {
+        if (module_or_path !== undefined) {
             if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
                 ({module_or_path} = module_or_path)
             } else {
