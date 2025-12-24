@@ -110,6 +110,17 @@ pub struct JsFuture {
     inner: Rc<RefCell<Inner>>,
 }
 
+// SAFETY: JsFuture contains Rc<RefCell<Inner>> which is normally !Send.
+// However, in single-threaded WebAssembly environments, this is safe because
+// the Rc cannot actually be accessed from multiple threads. The Inner struct
+// contains JsValue and Closure, which are both made Send by the
+// unsafe_single_threaded_traits cfg.
+#[cfg(unsafe_single_threaded_traits)]
+unsafe impl Send for JsFuture {}
+
+#[cfg(unsafe_single_threaded_traits)]
+unsafe impl Sync for JsFuture {}
+
 impl fmt::Debug for JsFuture {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
