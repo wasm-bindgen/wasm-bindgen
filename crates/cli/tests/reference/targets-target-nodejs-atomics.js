@@ -54,9 +54,58 @@ exports.__wbindgen_init_externref_table = function() {
 
 exports.memory = new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 
-const wasmPath = `${__dirname}/reference_test_bg.wasm`;
-const wasmBytes = require('fs').readFileSync(wasmPath);
-const wasmModule = new WebAssembly.Module(wasmBytes);
-const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
+let __wbg_memory;
+exports.__wbg_get_imports = function(customMemory) {
+    __wbg_memory = customMemory !== undefined ? customMemory : new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
+    const imports = {};
+    const mod = {};
+    for (const key of Object.keys(exports)) {
+        if (key.startsWith('__wbg_') || key.startsWith('__wbindgen_')) {
+            mod[key] = exports[key];
+        }
+    }
+    mod.memory = __wbg_memory;
+    imports['./reference_test_bg.js'] = mod;
+    return imports;
+};
 
-wasm.__wbindgen_start();
+let wasm;
+let wasmModule;
+let __initialized = false;
+
+exports.initSync = function(opts) {
+    if (opts === undefined) opts = {};
+    if (__initialized) return wasm;
+
+    let module = opts.module;
+    let memory = opts.memory;
+    let thread_stack_size = opts.thread_stack_size;
+
+    if (module === undefined) {
+        const wasmPath = `${__dirname}/reference_test_bg.wasm`;
+        module = require('fs').readFileSync(wasmPath);
+    }
+
+    if (!(module instanceof WebAssembly.Module)) {
+        wasmModule = new WebAssembly.Module(module);
+    } else {
+        wasmModule = module;
+    }
+
+    const wasmImports = exports.__wbg_get_imports(memory);
+    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = instance.exports;
+    exports.__wasm = wasm;
+    exports.__wbindgen_wasm_module = wasmModule;
+    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) { throw new Error('invalid stack size'); }
+    wasm.__wbindgen_start(thread_stack_size);
+
+    __initialized = true;
+    return wasm;
+};
+
+// Auto-initialize for backwards compatibility (only on main thread)
+// Worker threads should call initSync({ module, memory }) explicitly
+if (require('worker_threads').isMainThread) {
+    exports.initSync();
+}

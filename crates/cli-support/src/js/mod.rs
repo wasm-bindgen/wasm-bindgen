@@ -545,20 +545,135 @@ export {{ wasm as __wasm }};
             OutputMode::Node { module: false } => {
                 js.push_str(&self.generate_node_imports(module_name));
 
-                for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
+                // Track import names for __wbg_get_imports generation
+                let mut import_names: Vec<(String, bool, String)> = Vec::new(); // (name, is_memory, js_expr)
+
+                for (id, js_expr) in iter_by_import(&self.wasm_import_definitions, self.module) {
+                    let is_memory = matches!(
+                        self.module.imports.get(*id).kind,
+                        walrus::ImportKind::Memory(_)
+                    );
                     let import = self.module.imports.get_mut(*id);
                     import.module = format!("./{module_name}_bg.js");
+                    import_names.push((import.name.clone(), is_memory, js_expr.clone()));
                     footer.push_str("\nexports.");
                     footer.push_str(&import.name);
                     footer.push_str(" = ");
-                    footer.push_str(js.trim());
+                    footer.push_str(js_expr.trim());
                     footer.push_str(";\n");
                 }
 
-                footer.push_str(&self.generate_node_wasm_loading(module_name));
+                if self.threads_enabled {
+                    // For threads: generate __wbg_get_imports and initSync
 
-                if needs_manual_start {
-                    footer.push_str("\nwasm.__wbindgen_start();\n");
+                    // Find the default memory expression
+                    let memory_default_expr = import_names
+                        .iter()
+                        .find(|(_, is_memory, _)| *is_memory)
+                        .map(|(_, _, js_expr)| js_expr.clone())
+                        .unwrap_or_default();
+
+                    // Find extra modules (snippets) that need to be required
+                    let extra_modules: Vec<_> = self
+                        .module
+                        .imports
+                        .iter()
+                        .filter(|i| !self.wasm_import_definitions.contains_key(&i.id()))
+                        .filter(|i| !matches!(i.kind, walrus::ImportKind::Memory(_)))
+                        .map(|i| i.module.clone())
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .into_iter()
+                        .collect();
+
+                    // Generate require statements for extra modules
+                    let mut extra_requires = String::new();
+                    let mut extra_imports_init = String::new();
+                    for (i, extra) in extra_modules.iter().enumerate() {
+                        extra_requires
+                            .push_str(&format!("const __wbg_star{i} = require('{extra}');\n"));
+                        extra_imports_init
+                            .push_str(&format!("    imports['{extra}'] = __wbg_star{i};\n"));
+                    }
+
+                    footer.push_str(&extra_requires);
+                    let import_module = format!("./{module_name}_bg.js");
+                    footer.push_str(&format!(
+                        r#"
+let __wbg_memory;
+exports.__wbg_get_imports = function(customMemory) {{
+    __wbg_memory = customMemory !== undefined ? customMemory : {memory_default_expr};
+    const imports = {{}};
+    const mod = {{}};
+    for (const key of Object.keys(exports)) {{
+        if (key.startsWith('__wbg_') || key.startsWith('__wbindgen_')) {{
+            mod[key] = exports[key];
+        }}
+    }}
+    mod.memory = __wbg_memory;
+    imports['{import_module}'] = mod;
+{extra_imports_init}    return imports;
+}};
+
+let wasm;
+let wasmModule;
+let __initialized = false;
+
+exports.initSync = function(opts) {{
+    if (opts === undefined) opts = {{}};
+    if (__initialized) return wasm;
+
+    let module = opts.module;
+    let memory = opts.memory;
+    let thread_stack_size = opts.thread_stack_size;
+
+    if (module === undefined) {{
+        const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
+        module = require('fs').readFileSync(wasmPath);
+    }}
+
+    if (!(module instanceof WebAssembly.Module)) {{
+        wasmModule = new WebAssembly.Module(module);
+    }} else {{
+        wasmModule = module;
+    }}
+
+    const wasmImports = exports.__wbg_get_imports(memory);
+    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = instance.exports;
+    exports.__wasm = wasm;
+    exports.__wbindgen_wasm_module = wasmModule;
+"#
+                    ));
+
+                    if needs_manual_start {
+                        let page_size = crate::transforms::threads::PAGE_SIZE;
+                        footer.push_str(&format!(
+                            r#"    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {page_size} !== 0)) {{ throw new Error('invalid stack size'); }}
+    wasm.__wbindgen_start(thread_stack_size);
+"#
+                        ));
+                    }
+
+                    footer.push_str(
+                        r#"
+    __initialized = true;
+    return wasm;
+};
+
+// Auto-initialize for backwards compatibility (only on main thread)
+// Worker threads should call initSync({ module, memory }) explicitly
+if (require('worker_threads').isMainThread) {
+    exports.initSync();
+}
+"#,
+                    );
+                } else {
+                    // Non-threaded: use existing simple loading
+                    footer.push_str(&self.generate_node_wasm_loading(module_name));
+
+                    if needs_manual_start {
+                        footer.push_str("\nwasm.__wbindgen_start();\n");
+                    }
                 }
             }
 
