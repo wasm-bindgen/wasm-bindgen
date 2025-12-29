@@ -23,6 +23,18 @@ use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
 
 mod binding;
 
+macro_rules! region {
+    ($ctx:expr, $name:literal, $code:block) => {
+        if $ctx.config.debug {
+            $ctx.globals.push_str(concat!("\n//#region ", $name, "\n"));
+        }
+        $code
+        if $ctx.config.debug {
+            $ctx.globals.push_str("\n//#endregion\n");
+        }
+    };
+}
+
 pub struct Context<'a> {
     globals: String,
     intrinsics: Option<BTreeMap<Cow<'static, str>, Cow<'static, str>>>,
@@ -330,23 +342,22 @@ impl<'a> Context<'a> {
 
         if self.config.typescript && !self.config.mode.no_modules() && !self.config.mode.bundler() {
             // jsr-self-types directive
-            self.globals
-                .push_str(&format!(r#"/* @ts-self-types="./{module_name}.d.ts" */"#));
-            self.globals.push('\n');
+            let directive = format!("/* @ts-self-types=\"./{module_name}.d.ts\" */\n");
+            self.globals.push_str(&directive);
         }
 
         if !self.js_imports.is_empty() {
-            self.globals.push_str("//#region js imports\n");
-            let imports = self.js_import_header()?;
-            self.globals.push_str(&imports);
-            self.globals.push_str("//#endregion\n\n");
+            region!(self, "js imports", {
+                let imports = self.js_import_header()?;
+                self.globals.push_str(&imports);
+            });
         }
 
         if !self.exports.is_empty() {
             // Write out all exports
-            self.globals.push_str("//#region exports\n");
-            self.write_exports()?;
-            self.globals.push_str("//#endregion\n\n");
+            region!(self, "exports", {
+                self.write_exports()?;
+            });
         }
 
         if let Some(mem) = self.module.memories.iter().next() {
@@ -377,12 +388,10 @@ impl<'a> Context<'a> {
             }
         }
 
-        {
-            self.globals.push_str("//#region wasm imports\n");
+        region!(self, "wasm imports", {
             let imports = self.generate_imports(module_name, has_memory);
             self.globals.push_str(&imports);
-            self.globals.push_str("//#endregion\n\n");
-        }
+        });
 
         let imports_post = std::mem::take(&mut self.imports_post);
         let imports_post = imports_post.trim();
@@ -398,12 +407,12 @@ impl<'a> Context<'a> {
 
         let intrinsics = self.intrinsics.take().unwrap();
         if !intrinsics.is_empty() {
-            self.globals.push_str("//#region intrinsics\n");
-            for code in intrinsics.values() {
-                self.globals.push_str(code.trim());
-                self.globals.push_str("\n\n");
-            }
-            self.globals.push_str("//#endregion\n\n");
+            region!(self, "intrinsics", {
+                for code in intrinsics.values() {
+                    self.globals.push_str(code.trim());
+                    self.globals.push_str("\n\n");
+                }
+            });
         }
 
         // Initialization is just flat out tricky and not something we
@@ -412,11 +421,11 @@ impl<'a> Context<'a> {
         // bindings glue then manually calls the start function (if it was
         // previously present).
         let needs_manual_start = unstart_start_function(self.module);
-        {
+        region!(self, "wasm loading", {
             let wasm_loading =
                 self.generate_wasm_loading(module_name, needs_manual_start, has_memory);
             self.globals.push_str(&wasm_loading);
-        }
+        });
 
         let mut start = self
             .config
@@ -508,7 +517,7 @@ impl<'a> Context<'a> {
             if self.config.mode.uses_es_modules() {
                 imports.push_str(&format!(r#"import * as import{i} from "{module}""#));
             } else {
-                imports.push_str(&format!(r#"const import{i} = require("{module}")"#));
+                imports.push_str(&format!(r#"const import{i} = require("{module}");"#));
             }
             imports.push('\n');
 
@@ -704,12 +713,10 @@ impl<'a> Context<'a> {
     fn generate_module_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
         format!(
             r#"
-            //#region wasm loading
             import source wasmModule from "./{module_name}_bg.wasm";
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             let wasm = wasmInstance.exports;
             {start}
-            //#endregion
             "#,
             start = if needs_manual_start {
                 "wasm.__wbindgen_start();"
@@ -721,13 +728,11 @@ impl<'a> Context<'a> {
 
     fn generate_bundler_wasm_loading(&self) -> String {
         r#"
-            //#region wasm loading
-            let wasm;
-            export function __wbg_set_wasm(val) {
-                wasm = val;
-            }
-            //#endregion
-            "#
+        let wasm;
+        export function __wbg_set_wasm(val) {
+            wasm = val;
+        }
+        "#
         .to_string()
     }
 
@@ -929,17 +934,15 @@ impl<'a> Context<'a> {
         )
     }
 
-    fn generate_deno_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
+    fn generate_deno_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
         // Deno added support for .wasm imports in 2024 in https://github.com/denoland/deno/issues/2552.
         // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
             "
-            //#region wasm loading
             const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
             const wasm = wasmInstantiated.instance.exports;
             {start}
-            //#endregion
             ",
             start = if needs_manual_start {
                 "wasm.__wbindgen_start();"
@@ -949,17 +952,19 @@ impl<'a> Context<'a> {
         )
     }
 
-    fn generate_node_esm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
+    fn generate_node_esm_wasm_loading(
+        &self,
+        module_name: &str,
+        needs_manual_start: bool,
+    ) -> String {
         format!(
             r#"
-            //#region wasm loading
             import {{ readFileSync }} from 'node:fs';
             const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmBytes = readFileSync(wasmUrl);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
             {start}
-            //#endregion
             "#,
             start = if needs_manual_start {
                 "wasm.__wbindgen_start();"
@@ -969,16 +974,18 @@ impl<'a> Context<'a> {
         )
     }
 
-    fn generate_node_cjs_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
+    fn generate_node_cjs_wasm_loading(
+        &self,
+        module_name: &str,
+        needs_manual_start: bool,
+    ) -> String {
         format!(
             r#"
-            //#region wasm loading
             const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
             const wasmBytes = require('fs').readFileSync(wasmPath);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
             {start}
-            //#endregion
             "#,
             start = if needs_manual_start {
                 "wasm.__wbindgen_start();"
@@ -999,12 +1006,12 @@ impl<'a> Context<'a> {
                 self.generate_module_wasm_loading(module_name, needs_manual_start)
             }
             OutputMode::Bundler { .. } => self.generate_bundler_wasm_loading(),
-            OutputMode::Deno => self.generate_deno_loading(module_name, needs_manual_start),
+            OutputMode::Deno => self.generate_deno_wasm_loading(module_name, needs_manual_start),
             OutputMode::Node { module: true } => {
-                self.generate_node_esm_loading(module_name, needs_manual_start)
+                self.generate_node_esm_wasm_loading(module_name, needs_manual_start)
             }
             OutputMode::Node { module: false } => {
-                self.generate_node_cjs_loading(module_name, needs_manual_start)
+                self.generate_node_cjs_wasm_loading(module_name, needs_manual_start)
             }
             OutputMode::Web => {
                 let default_module_path = if self.config.omit_default_module_path {
@@ -1764,7 +1771,7 @@ impl<'a> Context<'a> {
                     read: arg.length,
                     written: buf.length
                 };
-            }";
+            };";
 
             // `encodeInto` doesn't currently work in any browsers when the memory passed
             // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
@@ -2701,10 +2708,10 @@ impl<'a> Context<'a> {
         }
 
         reset_statements.push(
-            "\
-                const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-                wasm = wasmInstance.exports;
-                wasm.__wbindgen_start();
+            "
+            const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+            wasm = wasmInstance.exports;
+            wasm.__wbindgen_start();
             "
             .to_string(),
         );
@@ -3238,9 +3245,9 @@ impl<'a> Context<'a> {
             }
             ContextAdapterKind::Import(core) => {
                 let code = if catch {
-                    format!("function() {{ return handleError(function {code}, arguments) }}")
+                    format!("function() {{ return handleError(function {code}, arguments); }}")
                 } else if log_error {
-                    format!("function() {{ return logError(function {code}, arguments) }}")
+                    format!("function() {{ return logError(function {code}, arguments); }}")
                 } else {
                     format!("function{code}")
                 };

@@ -1,5 +1,3 @@
-//#region exports
-
 /**
  * Description for HoldsNumber
  */
@@ -62,9 +60,6 @@ export function fn_with_attr(firstArg, secondArg) {
     const ret = wasm.fn_with_attr(firstArg, secondArg);
     return ret;
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -93,15 +88,15 @@ export function __wbg__wbg_cb_unref_87dfb5aaa0cbcea7(arg0) {
 export function __wbg_call_3020136f7a2d6e44() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
-}, arguments) }
+}, arguments); }
 export function __wbg_call_abb4ff46ce38be40() { return handleError(function (arg0, arg1) {
     const ret = arg0.call(arg1);
     return ret;
-}, arguments) }
+}, arguments); }
 export function __wbg_createTask_432d6d38dc688bee() { return handleError(function (arg0, arg1) {
     const ret = console.createTask(getStringFromWasm0(arg0, arg1));
     return ret;
-}, arguments) }
+}, arguments); }
 export function __wbg_new_ff12d2b041fb48f1(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
@@ -192,8 +187,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2);
 }
@@ -212,7 +205,6 @@ const HoldsNumberFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_holdsnumber_free(ptr >>> 0, 1));
 
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -411,18 +403,13 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

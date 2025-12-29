@@ -1,5 +1,3 @@
-//#region exports
-
 /**
  * @returns {number}
  */
@@ -39,9 +37,6 @@ export function result_void() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg_Error_52673b7de5a0ca89(arg0, arg1) {
     const ret = Error(getStringFromWasm0(arg0, arg1));
     return ret;
@@ -63,9 +58,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
-//#region intrinsics
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -99,13 +91,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

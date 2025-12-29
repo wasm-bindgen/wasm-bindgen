@@ -1,8 +1,4 @@
-//#region js imports
 import { default as _default } from 'tests/wasm/import_class.js';
-//#endregion
-
-//#region exports
 
 export function exported() {
     const ret = wasm.exported();
@@ -10,15 +6,12 @@ export function exported() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_catch_me_1d18acaa34acb005() { return handleError(function () {
     catch_me();
-}, arguments) }
+}, arguments); }
 export function __wbg_get_c871386e44ba8c35(arg0) {
     const ret = arg0.get();
     return ret;
@@ -52,9 +45,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -103,13 +93,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

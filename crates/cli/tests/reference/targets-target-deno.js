@@ -1,5 +1,4 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region exports
 
 /**
  * @param {number} a
@@ -10,9 +9,6 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-//#endregion
-
-//#region wasm imports
 
 function __wbg_get_imports() {
     const import0 = {
@@ -36,13 +32,8 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
-//#endregion
 
-
-//#region wasm loading
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
 const wasm = wasmInstantiated.instance.exports;
 wasm.__wbindgen_start();
-//#endregion
-

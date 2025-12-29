@@ -1,9 +1,5 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region js imports
 import { default as _default } from 'tests/wasm/import_class.js';
-//#endregion
-
-//#region exports
 
 export function exported() {
     const ret = wasm.exported();
@@ -11,9 +7,6 @@ export function exported() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-//#endregion
-
-//#region wasm imports
 import * as import1 from "tests/wasm/imports.js"
 import * as import2 from "foo-raw"
 import * as import3 from "./snippets/import_reftest-a82831e16a4c30f1/inline0.js"
@@ -27,7 +20,7 @@ function __wbg_get_imports() {
         },
         __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
             catch_me();
-        }, arguments) },
+        }, arguments); },
         __wbg_get_c871386e44ba8c35: function(arg0) {
             const ret = arg0.get();
             return ret;
@@ -71,9 +64,6 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
-//#endregion
-
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -114,15 +104,10 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 import { readFileSync } from 'node:fs';
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = readFileSync(wasmUrl);
 const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
 wasm.__wbindgen_start();
-//#endregion
-

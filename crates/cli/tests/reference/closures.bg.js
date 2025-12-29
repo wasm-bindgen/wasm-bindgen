@@ -1,5 +1,3 @@
-//#region exports
-
 export function delayed_callback() {
     const ret = wasm.delayed_callback();
     if (ret[1]) {
@@ -13,9 +11,6 @@ export function delayed_callback() {
 export function use_stack_callback(a) {
     wasm.use_stack_callback(a);
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_is_undefined_f6b95eab589e0269(arg0) {
     const ret = arg0 === undefined;
     return ret;
@@ -29,7 +24,7 @@ export function __wbg__wbg_cb_unref_87dfb5aaa0cbcea7(arg0) {
 export function __wbg_call_abb4ff46ce38be40() { return handleError(function (arg0, arg1) {
     const ret = arg0.call(arg1);
     return ret;
-}, arguments) }
+}, arguments); }
 export function __wbg_forEach_fdfa9a663e9c9a9e(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
@@ -67,7 +62,7 @@ export function __wbg_new_no_args_cb138f77cf6151ee(arg0, arg1) {
 export function __wbg_setTimeout_780045617e4bd6d6() { return handleError(function (arg0, arg1) {
     const ret = arg0.setTimeout(arg1);
     return ret;
-}, arguments) }
+}, arguments); }
 export function __wbg_static_accessor_GLOBAL_769e6b65d6557335() {
     const ret = typeof global === 'undefined' ? null : global;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
@@ -103,8 +98,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1);
 }
@@ -113,7 +106,6 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3, arg4);
 }
 
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -198,13 +190,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

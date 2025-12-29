@@ -1,5 +1,3 @@
-//#region exports
-
 class _default {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -30,9 +28,6 @@ class _default {
 }
 if (Symbol.dispose) _default.prototype[Symbol.dispose] = _default.prototype.free;
 export { _default as default }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
@@ -45,13 +40,10 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 const _defaultFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_default_free(ptr >>> 0, 1));
 
-//#region intrinsics
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -79,13 +71,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

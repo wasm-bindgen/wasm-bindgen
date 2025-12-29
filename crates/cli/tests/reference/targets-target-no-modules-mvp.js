@@ -1,10 +1,8 @@
-
 let wasm_bindgen = (function(exports) {
     let script_src;
     if (typeof document !== 'undefined' && document.currentScript !== null) {
         script_src = new URL(document.currentScript.src, location.href).toString();
     }
-    //#region exports
 
     /**
      * @param {number} a
@@ -16,9 +14,6 @@ let wasm_bindgen = (function(exports) {
         return ret >>> 0;
     }
     exports.add_that_might_fail = add_that_might_fail;
-    //#endregion
-
-    //#region wasm imports
 
     function __wbg_get_imports() {
         const import0 = {
@@ -33,8 +28,6 @@ let wasm_bindgen = (function(exports) {
             "./reference_test_bg.js": import0,
         };
     }
-    //#endregion
-
 
     let wasmModule, wasm;
     function __wbg_finalize_init(instance, module) {
@@ -128,4 +121,3 @@ let wasm_bindgen = (function(exports) {
 
     return Object.assign(__wbg_init, { initSync }, exports);
 })({ __proto__: null });
-

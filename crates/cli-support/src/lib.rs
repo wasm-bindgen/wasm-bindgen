@@ -503,13 +503,15 @@ fn reset_indentation(s: &str) -> String {
         line.starts_with("*")
     }
 
-    for line in s.lines() {
+    static TAB: &str = "    ";
+
+    for line in s.trim().lines() {
         let line = line.trim();
 
         // handle doc comments separately
         if is_doc_comment(line) {
             for _ in 0..indent {
-                dst.push_str("    ");
+                dst.push_str(TAB);
             }
             dst.push(' ');
             dst.push_str(line);
@@ -528,7 +530,7 @@ fn reset_indentation(s: &str) -> String {
         };
         if !line.is_empty() {
             for _ in 0..indent + extra {
-                dst.push_str("    ");
+                dst.push_str(TAB);
             }
             dst.push_str(line);
         }

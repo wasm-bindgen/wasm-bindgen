@@ -1,14 +1,11 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region js imports
 import { default as _default } from 'tests/wasm/import_class.js';
-//#endregion
-
-//#region exports
 
 export function __wbg_reset_state () {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
+
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
@@ -20,13 +17,10 @@ export function exported() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-//#endregion
-
-//#region wasm imports
-const import1 = require("tests/wasm/imports.js")
-const import2 = require("foo-raw")
-const import3 = require("./snippets/import_reftest-a82831e16a4c30f1/inline0.js")
-const import4 = require("pure-extern")
+const import1 = require("tests/wasm/imports.js");
+const import2 = require("foo-raw");
+const import3 = require("./snippets/import_reftest-a82831e16a4c30f1/inline0.js");
+const import4 = require("pure-extern");
 
 function __wbg_get_imports() {
     const import0 = {
@@ -36,7 +30,7 @@ function __wbg_get_imports() {
         },
         __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
             catch_me();
-        }, arguments) },
+        }, arguments); },
         __wbg_get_c871386e44ba8c35: function(arg0) {
             const ret = arg0.get();
             return ret;
@@ -80,11 +74,8 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
-//#endregion
-
 let __wbg_instance_id = 0;
 
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -125,13 +116,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();
-//#endregion
-

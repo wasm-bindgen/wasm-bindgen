@@ -1,5 +1,3 @@
-//#region exports
-
 /**
  * @returns {MediaSourceEnum}
  */
@@ -15,9 +13,6 @@ export function get_url() {
     const ret = wasm.get_url();
     return ret;
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -31,7 +26,7 @@ export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
 export function __wbg_new_79cb6b4c6069a31e() { return handleError(function (arg0, arg1) {
     const ret = new URL(getStringFromWasm0(arg0, arg1));
     return ret;
-}, arguments) }
+}, arguments); }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
@@ -41,11 +36,8 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 const __wbindgen_enum_MediaSourceEnum = ["camera", "screen", "application", "window", "browser", "microphone", "audioCapture", "other"];
 
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -208,18 +200,13 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

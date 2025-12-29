@@ -1,9 +1,5 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region js imports
 const { default: _default } = require(`tests/wasm/import_class.js`);
-//#endregion
-
-//#region exports
 
 function exported() {
     const ret = wasm.exported();
@@ -12,13 +8,10 @@ function exported() {
     }
 }
 exports.exported = exported;
-//#endregion
-
-//#region wasm imports
-const import1 = require("tests/wasm/imports.js")
-const import2 = require("foo-raw")
-const import3 = require("./snippets/import_reftest-a82831e16a4c30f1/inline0.js")
-const import4 = require("pure-extern")
+const import1 = require("tests/wasm/imports.js");
+const import2 = require("foo-raw");
+const import3 = require("./snippets/import_reftest-a82831e16a4c30f1/inline0.js");
+const import4 = require("pure-extern");
 
 function __wbg_get_imports() {
     const import0 = {
@@ -28,7 +21,7 @@ function __wbg_get_imports() {
         },
         __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
             catch_me();
-        }, arguments) },
+        }, arguments); },
         __wbg_get_c871386e44ba8c35: function(arg0) {
             const ret = arg0.get();
             return ret;
@@ -72,9 +65,6 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
-//#endregion
-
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -115,14 +105,9 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
 wasm.__wbindgen_start();
-//#endregion
-

@@ -1,5 +1,3 @@
-//#region exports
-
 export class Foo {
     static __wrap(ptr) {
         ptr = ptr >>> 0;
@@ -900,9 +898,6 @@ export function echo_vec_uninit_u8(a) {
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -943,13 +938,10 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 const FooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo_free(ptr >>> 0, 1));
 
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -1262,18 +1254,13 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

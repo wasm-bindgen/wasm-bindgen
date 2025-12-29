@@ -1,5 +1,4 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region exports
 
 /**
  * @param {number} a
@@ -10,9 +9,6 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-//#endregion
-
-//#region wasm imports
 
 function __wbg_get_imports(memory) {
     const import0 = {
@@ -40,9 +36,6 @@ function __wbg_get_imports(memory) {
         "./reference_test_bg.js": import0,
     };
 }
-//#endregion
-
-//#region intrinsics
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -63,15 +56,10 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 import { readFileSync } from 'node:fs';
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = readFileSync(wasmUrl);
 const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
 wasm.__wbindgen_start();
-//#endregion
-

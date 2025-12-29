@@ -1,5 +1,3 @@
-//#region exports
-
 /**
  * A hidden enum that is not exported
  * @enum {0 | 1}
@@ -161,9 +159,6 @@ export function use_hidden_struct(hidden) {
     const ret = wasm.use_hidden_struct(ptr0);
     return ret;
 }
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
@@ -176,8 +171,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 const HiddenStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr >>> 0, 1));
@@ -192,7 +185,6 @@ const PublicStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_publicstruct_free(ptr >>> 0, 1));
 
-//#region intrinsics
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
         throw new Error(`expected instance of ${klass.name}`);
@@ -226,13 +218,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

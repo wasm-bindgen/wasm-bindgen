@@ -1,5 +1,4 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region exports
 
 /**
  * Runtime test harness support instantiated in JS.
@@ -182,9 +181,6 @@ export function __wbgtest_module_signature() {
     const ret = wasm.__wbgtest_module_signature();
     return ret[0] === 0 ? undefined : BigInt.asUintN(64, ret[1]);
 }
-//#endregion
-
-//#region wasm imports
 
 function __wbg_get_imports() {
     const import0 = {
@@ -216,7 +212,7 @@ function __wbg_get_imports() {
             } finally {
                 state0.a = state0.b = 0;
             }
-        }, arguments) },
+        }, arguments); },
         __wbg___wbg_test_output_writeln_3d38c4dc01294bce: function(arg0) {
             __wbg_test_output_writeln(arg0);
         },
@@ -255,11 +251,11 @@ function __wbg_get_imports() {
         __wbg_call_3020136f7a2d6e44: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = arg0.call(arg1, arg2);
             return ret;
-        }, arguments) },
+        }, arguments); },
         __wbg_call_abb4ff46ce38be40: function() { return handleError(function (arg0, arg1) {
             const ret = arg0.call(arg1);
             return ret;
-        }, arguments) },
+        }, arguments); },
         __wbg_constructor_8ac4184a07e5c62b: function(arg0) {
             const ret = arg0.constructor;
             return ret;
@@ -267,7 +263,7 @@ function __wbg_get_imports() {
         __wbg_createTask_432d6d38dc688bee: function() { return handleError(function (arg0, arg1) {
             const ret = console.createTask(getStringFromWasm0(arg0, arg1));
             return ret;
-        }, arguments) },
+        }, arguments); },
         __wbg_error_baba35349fd8e13c: function(arg0, arg1) {
             console.error(getStringFromWasm0(arg0, arg1));
         },
@@ -438,14 +434,14 @@ function __wbg_get_imports() {
             const ret = getStringFromWasm0(arg0, arg1);
             return ret;
         },
-        __wbindgen_cast_0000000000000001: function(arg0) {
-            // Cast intrinsic for `F64 -> Externref`.
-            const ret = arg0;
-            return ret;
-        },
-        __wbindgen_cast_0000000000000002: function(arg0, arg1) {
+        __wbindgen_cast_0000000000000001: function(arg0, arg1) {
             // Cast intrinsic for `Closure(Closure { dtor_idx: 9, function: Function { arguments: [Externref], shim_idx: 10, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000007, wasm_bindgen__convert__closures_____invoke__h0000000000000008);
+            return ret;
+        },
+        __wbindgen_cast_0000000000000002: function(arg0) {
+            // Cast intrinsic for `F64 -> Externref`.
+            const ret = arg0;
             return ret;
         },
         __wbindgen_init_externref_table: function() {
@@ -463,8 +459,6 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
-//#endregion
-
 function wasm_bindgen__convert__closures_____invoke__h0000000000000008(arg0, arg1, arg2) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000008(arg0, arg1, arg2);
 }
@@ -491,7 +485,6 @@ const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'und
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_wasmbindgentestcontext_free(ptr >>> 0, 1));
 
-//#region intrinsics
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -712,12 +705,10 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
-
-//#endregion
 
 
 let wasmModule, wasm;

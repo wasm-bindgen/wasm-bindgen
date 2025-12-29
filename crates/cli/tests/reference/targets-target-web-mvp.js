@@ -1,5 +1,4 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region exports
 
 /**
  * @param {number} a
@@ -10,9 +9,6 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-//#endregion
-
-//#region wasm imports
 
 function __wbg_get_imports() {
     const import0 = {
@@ -27,8 +23,6 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
-//#endregion
-
 
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {

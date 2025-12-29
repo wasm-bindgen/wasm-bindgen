@@ -1,5 +1,3 @@
-//#region exports
-
 /**
  * @param {number} input
  * @returns {number}
@@ -17,9 +15,6 @@ export function mut_pointer(input) {
     const ret = wasm.mut_pointer(input);
     return ret >>> 0;
 }
-//#endregion
-
-//#region wasm imports
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
@@ -29,13 +24,8 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

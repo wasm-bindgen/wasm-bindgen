@@ -1,5 +1,3 @@
-//#region exports
-
 /**
  * @enum {0 | 1 | 2}
  */
@@ -322,9 +320,6 @@ function uppercase2(s) {
 export const utils = {};
 utils.string = {};
 utils.string.uppercase = uppercase2;
-//#endregion
-
-//#region wasm imports
 export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
@@ -337,8 +332,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-//#endregion
-
 const CounterFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_counter_free(ptr >>> 0, 1));
@@ -358,7 +351,6 @@ const RectangleFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_rectangle_free(ptr >>> 0, 1));
 
-//#region intrinsics
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -433,18 +425,13 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
 
-//#endregion
 
-
-//#region wasm loading
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
 }
-//#endregion
-

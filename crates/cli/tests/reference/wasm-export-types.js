@@ -1,5 +1,4 @@
 /* @ts-self-types="./reference_test.d.ts" */
-//#region exports
 
 /**
  * @param {number} a
@@ -31,9 +30,6 @@ export function example_128(a) {
     const ret = wasm.example_128(a, a >> BigInt(64));
     return ret[0] === 0 ? undefined : (BigInt.asUintN(64, ret[1]) | (BigInt.asUintN(64, ret[2]) << BigInt(64)));
 }
-//#endregion
-
-//#region wasm imports
 
 function __wbg_get_imports() {
     const import0 = {
@@ -56,9 +52,6 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
-//#endregion
-
-//#region intrinsics
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -133,12 +126,10 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
-
-//#endregion
 
 
 let wasmModule, wasm;
