@@ -16,6 +16,9 @@ We welcome new members - if you are interested in joining the team, see the [mem
 
 * [Hood Chatham](https://github.com/hoodmane)
 * [Dan Carney](https://github.com/drcarney66)
+* [Spxg](https://github.com/spxg)
+* [Drew Crawford](https://github.com/drewcrawford)
+* [Magic Akari](https://github.com/magic-akari)
 
 ## Former Members
 
