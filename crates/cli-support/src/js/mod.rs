@@ -4542,12 +4542,17 @@ fn iter_adapter<'a>(
             (ContextAdapterKind::Adapter, ContextAdapterKind::Adapter) => {
                 let export_a = wit.exports.iter().find(|(_, id)| id == a_id);
                 let export_b = wit.exports.iter().find(|(_, id)| id == b_id);
-                if let (Some((export_id_a, _)), Some((export_id_b, _))) = (export_a, export_b) {
-                    let name_a = &module.exports.get(*export_id_a).name;
-                    let name_b = &module.exports.get(*export_id_b).name;
-                    name_a.cmp(name_b)
-                } else {
-                    a_id.cmp(b_id)
+
+                match (export_a, export_b) {
+                    (Some((export_id_a, _)), Some((export_id_b, _))) => {
+                        // Both have exports, compare by export name
+                        let name_a = &module.exports.get(*export_id_a).name;
+                        let name_b = &module.exports.get(*export_id_b).name;
+                        name_a.cmp(name_b)
+                    }
+                    (Some(_), None) => std::cmp::Ordering::Less, // Exported adapters come first
+                    (None, Some(_)) => std::cmp::Ordering::Greater, // Exported adapters come first
+                    (None, None) => a_id.cmp(b_id), // Both without exports, compare by ID
                 }
             }
             _ => get_kind_order(a).cmp(&get_kind_order(b)),

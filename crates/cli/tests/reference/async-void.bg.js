@@ -123,13 +123,13 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2);
-}
-
 function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1) {
     const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1);
     return ret !== 0;
+}
+
+function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2);
 }
 
 function wasm_bindgen__convert__closures_____invoke__h0000000000000001(arg0, arg1, arg2, arg3) {
