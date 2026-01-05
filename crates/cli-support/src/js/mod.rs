@@ -4545,10 +4545,30 @@ fn iter_adapter<'a>(
 
                 match (export_a, export_b) {
                     (Some((export_id_a, _)), Some((export_id_b, _))) => {
-                        // Both have exports, compare by export name
-                        let name_a = &module.exports.get(*export_id_a).name;
-                        let name_b = &module.exports.get(*export_id_b).name;
-                        name_a.cmp(name_b)
+                        let export_a = module.exports.get(*export_id_a);
+                        let export_b = module.exports.get(*export_id_b);
+
+                        // Demangle to get base name without hash disambiguators
+                        let demangled_a = rustc_demangle::demangle(&export_a.name).to_string();
+                        let demangled_b = rustc_demangle::demangle(&export_b.name).to_string();
+
+                        // Sort by demangled name, then by function signature for deterministic ordering
+                        // We cannot use hash suffixes as they vary between compilations
+                        demangled_a.cmp(&demangled_b).then_with(|| {
+                            // Get function types to compare signatures
+                            let get_type_key = |export: &walrus::Export| -> String {
+                                let func_id = match export.item {
+                                    walrus::ExportItem::Function(id) => id,
+                                    _ => return String::new(),
+                                };
+                                let ty_id = module.funcs.get(func_id).ty();
+                                let ty = module.types.get(ty_id);
+                                // Create a string representation of the type signature
+                                format!("{:?}-{:?}", ty.params(), ty.results())
+                            };
+
+                            get_type_key(export_a).cmp(&get_type_key(export_b))
+                        })
                     }
                     (Some(_), None) => std::cmp::Ordering::Less, // Exported adapters come first
                     (None, Some(_)) => std::cmp::Ordering::Greater, // Exported adapters come first
