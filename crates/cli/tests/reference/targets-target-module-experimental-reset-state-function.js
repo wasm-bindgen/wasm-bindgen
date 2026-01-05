@@ -1,12 +1,9 @@
-import source wasmModule from "./reference_test_bg.wasm";
-
-let wasm;
-
-let __wbg_instance_id = 0;
+/* @ts-self-types="./reference_test.d.ts" */
 
 export function __wbg_reset_state () {
     __wbg_instance_id++;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+
+    const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
@@ -21,9 +18,9 @@ export function add_that_might_fail(a, b) {
     return ret >>> 0;
 }
 
-const imports = {
-    __proto__: null,
-    './reference_test_bg.js': {
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
         __wbg_random_ae0b2256206ad108: function() {
             const ret = Math.random();
             return ret;
@@ -37,11 +34,16 @@ const imports = {
             table.set(offset + 2, true);
             table.set(offset + 3, false);
         },
-    },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+    };
+}
+let __wbg_instance_id = 0;
 
-};
 
-const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-wasm = wasmInstance.exports;
-
+import source wasmModule from "./reference_test_bg.wasm";
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

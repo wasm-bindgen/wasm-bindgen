@@ -1,6 +1,4 @@
-
-let imports = {};
-imports['./reference_test_bg.js'] = module.exports;
+/* @ts-self-types="./reference_test.d.ts" */
 
 /**
  * @param {number} a
@@ -13,12 +11,21 @@ function add_that_might_fail(a, b) {
 }
 exports.add_that_might_fail = add_that_might_fail;
 
-exports.__wbg_random_9526caf33df4270d = function() {
-    const ret = Math.random();
-    return ret;
-};
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
+        __wbg_random_9526caf33df4270d: function() {
+            const ret = Math.random();
+            return ret;
+        },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+    };
+}
 
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
+const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;

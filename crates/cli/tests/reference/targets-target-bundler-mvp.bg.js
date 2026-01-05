@@ -1,8 +1,3 @@
-let wasm;
-export function __wbg_set_wasm(val) {
-    wasm = val;
-}
-
 /**
  * @param {number} a
  * @param {number} b
@@ -12,8 +7,12 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-
 export function __wbg_random_9526caf33df4270d() {
     const ret = Math.random();
     return ret;
-};
+}
+
+let wasm;
+export function __wbg_set_wasm(val) {
+    wasm = val;
+}
