@@ -113,8 +113,8 @@ export interface InitOutput {
     readonly wasm_bindgen__closure__destroy__h0000000000000007: (a: number, b: number) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number) => number;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number, c: any, d: number, e: any) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000005: (a: number, b: number, c: any, d: any) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number, c: any, d: number, e: any) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
