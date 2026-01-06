@@ -654,49 +654,6 @@ impl Output {
         &mut self.module
     }
 
-    fn sort_exports_by_signature(&mut self) {
-        // Only collect adapter exports (like wasm_bindgen__convert__closures_____invoke__)
-        let mut adapter_exports: Vec<_> = self
-            .module
-            .exports
-            .iter()
-            .filter(|export| {
-                // Only sort auto-generated adapters, not user exports
-                export.name.contains("wasm_bindgen__convert__closures")
-                    || export.name.contains("__invoke__")
-            })
-            .map(|export| {
-                let sort_key = match export.item {
-                    walrus::ExportItem::Function(func_id) => {
-                        let ty_id = self.module.funcs.get(func_id).ty();
-                        let ty = self.module.types.get(ty_id);
-                        format!("{:?}-{:?}", ty.params(), ty.results())
-                    }
-                    _ => String::new(),
-                };
-                (export.id(), sort_key, export.name.clone(), export.item)
-            })
-            .collect();
-
-        if adapter_exports.is_empty() {
-            return;
-        }
-
-        // Sort by signature, then by name for stability
-        adapter_exports.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.2.cmp(&b.2)));
-
-        // Delete adapter exports and re-add them in sorted order
-        let export_ids: Vec<_> = adapter_exports.iter().map(|(id, _, _, _)| *id).collect();
-        for id in export_ids {
-            self.module.exports.delete(id);
-        }
-
-        // Re-add adapter exports in sorted order
-        for (_, _, name, item) in adapter_exports {
-            self.module.exports.add(&name, item);
-        }
-    }
-
     pub fn emit(&mut self, out_dir: impl AsRef<Path>) -> Result<(), Error> {
         self._emit(out_dir.as_ref())
     }
@@ -705,9 +662,6 @@ impl Output {
         let wasm_name = format!("{}_bg", self.stem);
         let wasm_path = out_dir.join(&wasm_name).with_extension("wasm");
         fs::create_dir_all(out_dir)?;
-
-        // Sort exports by function signature for deterministic output
-        self.sort_exports_by_signature();
 
         let wasm_bytes = self.module.emit_wasm();
         fs::write(&wasm_path, wasm_bytes)
