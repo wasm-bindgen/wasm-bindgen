@@ -174,13 +174,9 @@ export function __wbindgen_init_externref_table() {
 const HiddenStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr >>> 0, 1));
-
-
 const NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_namespacedhidden_free(ptr >>> 0, 1));
-
-
 const PublicStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_publicstruct_free(ptr >>> 0, 1));

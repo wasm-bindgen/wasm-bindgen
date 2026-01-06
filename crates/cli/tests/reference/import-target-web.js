@@ -64,6 +64,7 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -112,13 +113,11 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {
-    wasm = instance.exports, wasmModule = module;
+    wasm = instance.exports;
+    wasmModule = module;
     cachedUint8ArrayMemory0 = null;
-
-
     wasm.__wbindgen_start();
     return wasm;
 }
@@ -203,4 +202,5 @@ async function __wbg_init(module_or_path) {
 
     return __wbg_finalize_init(instance, module);
 }
+
 export { initSync, __wbg_init as default };

@@ -6,7 +6,6 @@ use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
-use std::hash::{DefaultHasher, Hash, Hasher};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
@@ -81,6 +80,76 @@ pub fn process(
     cx.verify()?;
 
     cx.unexport_intrinsics();
+
+    // Sort adapter exports by function signature for deterministic output.
+    // Only sort adapters that are ContextAdapterKind::Adapter (not in export_map, not in implements).
+    let implements_set: std::collections::HashSet<_> = cx
+        .adapters
+        .implements
+        .iter()
+        .map(|(_, _, id)| *id)
+        .collect();
+
+    // Filter and collect adapters that need sorting
+    let mut adapter_exports: Vec<_> = cx
+        .adapters
+        .exports
+        .iter()
+        .filter(|(_, adapter_id)| {
+            !cx.aux.export_map.contains_key(adapter_id) && !implements_set.contains(adapter_id)
+        })
+        .map(|(export_id, _)| {
+            let export = cx.module.exports.get(*export_id);
+            let sort_key = match export.item {
+                walrus::ExportItem::Function(func_id) => {
+                    let ty_id = cx.module.funcs.get(func_id).ty();
+                    let ty = cx.module.types.get(ty_id);
+                    format!("{:?}-{:?}", ty.params(), ty.results())
+                }
+                _ => String::new(),
+            };
+            (*export_id, sort_key, export.name.clone(), export.item)
+        })
+        .collect();
+
+    // Sort bare adapters by signature only to avoid machine-specific mangling non-determinism.
+    // Resorting with Walrus requires deleting and re-injecting, so we then update the stored ID again.
+    adapter_exports.sort_by(|a, b| a.1.cmp(&b.1));
+
+    // Build mapping of old to new ExportIds
+    let mut old_to_new: std::collections::HashMap<walrus::ExportId, walrus::ExportId> =
+        std::collections::HashMap::new();
+
+    for (old_export_id, _, name, item) in adapter_exports.iter() {
+        cx.module.exports.delete(*old_export_id);
+        let new_export_id = cx.module.exports.add(name, *item);
+        old_to_new.insert(*old_export_id, new_export_id);
+
+        // Update cx.adapters.exports
+        if let Some(pos) = cx
+            .adapters
+            .exports
+            .iter()
+            .position(|(eid, _)| eid == old_export_id)
+        {
+            cx.adapters.exports[pos].0 = new_export_id;
+        }
+    }
+
+    // Update CallExport instructions in all adapters to use new ExportIds
+    for adapter in cx.adapters.adapters.values_mut() {
+        let instructions = match &mut adapter.kind {
+            AdapterKind::Local { instructions } => instructions,
+            AdapterKind::Import { .. } => continue,
+        };
+        for instr in instructions {
+            if let Instruction::CallExport(export_id) = &mut instr.instr {
+                if let Some(&new_id) = old_to_new.get(export_id) {
+                    *export_id = new_id;
+                }
+            }
+        }
+    }
 
     let adapters = cx.module.customs.add(cx.adapters);
     let aux = cx.module.customs.add(cx.aux);
@@ -175,17 +244,25 @@ impl<'a> Context<'a> {
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
 
-            for (descriptor, orig_func_ids) in cast_imports {
-                let signature = descriptor.unwrap_function();
-                let [arg] = &signature.arguments[..] else {
-                    bail!("Cast function must take exactly one argument");
-                };
-                let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
+            // Sort cast imports by signature for deterministic output.
+            let mut sorted_casts: Vec<_> = cast_imports
+                .into_iter()
+                .map(|(descriptor, orig_func_ids)| {
+                    let signature = descriptor.unwrap_function();
+                    let [arg] = &signature.arguments[..] else {
+                        unreachable!("Cast function must take exactly one argument");
+                    };
+                    let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
+                    (sig_comment, signature, orig_func_ids)
+                })
+                .collect();
+            sorted_casts.sort_by(|a, b| a.0.cmp(&b.0));
 
-                // Hash the descriptor string to produce a stable import name.
-                let mut hasher = DefaultHasher::default();
-                sig_comment.hash(&mut hasher);
-                let import_name = format!("__wbindgen_cast_{:016x}", hasher.finish());
+            for (idx, (sig_comment, signature, orig_func_ids)) in
+                sorted_casts.into_iter().enumerate()
+            {
+                // Use the sort index for a deterministic import name.
+                let import_name = format!("__wbindgen_cast_{:016x}", idx + 1);
 
                 // Manufacture an import for this cast.
                 let ty = self.module.funcs.get(orig_func_ids[0]).ty();

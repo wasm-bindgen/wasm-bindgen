@@ -36,6 +36,7 @@ function __wbg_get_imports(memory) {
         "./reference_test_bg.js": import0,
     };
 }
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -64,13 +65,14 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module, thread_stack_size) {
-    wasm = instance.exports, wasmModule = module;
+    wasm = instance.exports;
+    wasmModule = module;
     cachedUint8ArrayMemory0 = null;
-
-    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) { throw 'invalid stack size' }
+    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) {
+        throw 'invalid stack size';
+    }
     wasm.__wbindgen_start(thread_stack_size);
     return wasm;
 }
@@ -155,4 +157,5 @@ async function __wbg_init(module_or_path, memory) {
 
     return __wbg_finalize_init(instance, module, thread_stack_size);
 }
+
 export { initSync, __wbg_init as default };

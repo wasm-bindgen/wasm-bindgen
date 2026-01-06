@@ -64,6 +64,7 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -103,7 +104,6 @@ cachedTextDecoder.decode();
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
-
 
 import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());

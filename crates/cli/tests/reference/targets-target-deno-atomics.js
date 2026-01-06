@@ -36,6 +36,7 @@ function __wbg_get_imports(memory) {
         "./reference_test_bg.js": import0,
     };
 }
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -55,7 +56,6 @@ if (cachedTextDecoder) cachedTextDecoder.decode();
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
-
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
