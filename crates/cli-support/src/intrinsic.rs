@@ -87,5 +87,6 @@ intrinsics! {
         CopyToTypedArray = "__wbindgen_copy_to_typed_array",
         ExternrefHeapLiveCount = "__wbindgen_externref_heap_live_count",
         InitExternrefTable = "__wbindgen_init_externref_table",
+        Log = "__wbindgen_log",
     }
 }

@@ -3993,6 +3993,11 @@ impl<'a> Context<'a> {
                 "typeof(v) === 'bigint' ? v : undefined".to_string()
             }
 
+            Intrinsic::Log => {
+                assert_eq!(args.len(), 1);
+                format!("console.log({})", args[0])
+            }
+
             Intrinsic::Throw => {
                 assert_eq!(args.len(), 1);
                 format!("throw new Error({})", args[0])
