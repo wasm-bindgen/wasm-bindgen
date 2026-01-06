@@ -6,7 +6,6 @@ use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, ensure, Error};
 use std::collections::{BTreeSet, HashMap};
-use std::hash::{DefaultHasher, Hash, Hasher};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
@@ -259,11 +258,11 @@ impl<'a> Context<'a> {
                 .collect();
             sorted_casts.sort_by(|a, b| a.0.cmp(&b.0));
 
-            for (sig_comment, signature, orig_func_ids) in sorted_casts {
-                // Hash the descriptor string to produce a stable import name.
-                let mut hasher = DefaultHasher::default();
-                sig_comment.hash(&mut hasher);
-                let import_name = format!("__wbindgen_cast_{:016x}", hasher.finish());
+            for (idx, (sig_comment, signature, orig_func_ids)) in
+                sorted_casts.into_iter().enumerate()
+            {
+                // Use the sort index for a deterministic import name.
+                let import_name = format!("__wbindgen_cast_{:016x}", idx + 1);
 
                 // Manufacture an import for this cast.
                 let ty = self.module.funcs.get(orig_func_ids[0]).ty();
