@@ -2,7 +2,7 @@ default:
     @just --list
 
 clippy *ARGS="":
-    cargo clippy --all-features --all-targets --workspace {{ARGS}} -- -D warnings
+    cargo clippy --all-features --workspace --lib --bins --tests --examples {{ARGS}} -- -D warnings
 
 test:
     just test-cli

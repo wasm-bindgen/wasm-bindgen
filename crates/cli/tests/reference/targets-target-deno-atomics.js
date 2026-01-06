@@ -57,7 +57,6 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
 const wasm = wasmInstantiated.instance.exports;

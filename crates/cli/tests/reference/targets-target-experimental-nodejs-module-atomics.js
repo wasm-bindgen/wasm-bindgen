@@ -57,7 +57,6 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-
 import { readFileSync } from 'node:fs';
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = readFileSync(wasmUrl);

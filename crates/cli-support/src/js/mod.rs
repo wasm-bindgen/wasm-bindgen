@@ -712,8 +712,7 @@ impl<'a> Context<'a> {
 
     fn generate_module_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
         format!(
-            r#"
-            import source wasmModule from "./{module_name}_bg.wasm";
+            r#"import source wasmModule from "./{module_name}_bg.wasm";
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             let wasm = wasmInstance.exports;
             {start}
@@ -742,12 +741,11 @@ impl<'a> Context<'a> {
         if self.config.typescript {
             // jsr-self-types directive
             start.push_str(&format!(r#"/* @ts-self-types="./{module_name}.d.ts" */"#));
-            start.push('\n');
+            start.push_str("\n\n");
         }
 
         start.push_str(&format!(
-            r#"
-            import * as wasm from "./{module_name}_bg.wasm";
+            r#"import * as wasm from "./{module_name}_bg.wasm";
             import {{ __wbg_set_wasm }} from "./{module_name}_bg.js";
             __wbg_set_wasm(wasm);
         "#
@@ -937,8 +935,7 @@ impl<'a> Context<'a> {
         // Deno added support for .wasm imports in 2024 in https://github.com/denoland/deno/issues/2552.
         // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
-            "
-            const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
+            "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
             const wasm = wasmInstantiated.instance.exports;
             {start}",
@@ -956,8 +953,7 @@ impl<'a> Context<'a> {
         needs_manual_start: bool,
     ) -> String {
         format!(
-            r#"
-            import {{ readFileSync }} from 'node:fs';
+            r#"import {{ readFileSync }} from 'node:fs';
             const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmBytes = readFileSync(wasmUrl);
             const wasmModule = new WebAssembly.Module(wasmBytes);
@@ -977,8 +973,7 @@ impl<'a> Context<'a> {
         needs_manual_start: bool,
     ) -> String {
         format!(
-            r#"
-            const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
+            r#"const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
             const wasmBytes = require('fs').readFileSync(wasmPath);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;

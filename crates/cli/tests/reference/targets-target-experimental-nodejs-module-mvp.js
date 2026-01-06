@@ -24,7 +24,6 @@ function __wbg_get_imports() {
     };
 }
 
-
 import { readFileSync } from 'node:fs';
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = readFileSync(wasmUrl);
