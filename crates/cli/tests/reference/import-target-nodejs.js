@@ -65,6 +65,7 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);

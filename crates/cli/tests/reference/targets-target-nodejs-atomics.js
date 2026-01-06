@@ -37,6 +37,7 @@ function __wbg_get_imports(memory) {
         "./reference_test_bg.js": import0,
     };
 }
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);

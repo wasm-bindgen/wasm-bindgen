@@ -398,7 +398,7 @@ impl<'a> Context<'a> {
 
         if !imports_post.is_empty() {
             self.globals.push_str(imports_post);
-            self.globals.push_str("\n\n");
+            self.globals.push('\n');
         }
         if !body.is_empty() {
             self.globals.push_str(body);
@@ -536,7 +536,7 @@ impl<'a> Context<'a> {
         fn_def.push_str(&return_stmt);
         fn_def.push_str("}\n");
 
-        format!("{imports}\n{fn_def}")
+        format!("{imports}\n{fn_def}\n")
     }
 
     fn generate_bundler_imports(&mut self, module_name: &str) -> String {
@@ -803,14 +803,11 @@ impl<'a> Context<'a> {
             }
         }
         format!(
-            "
-            let wasmModule, wasm;
+            "let wasmModule, wasm;
             function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
-                wasm = instance.exports, wasmModule = module;
-                {init_memviews}
-                {init_stack_size_check}
-                {start}
-                return wasm;
+                wasm = instance.exports;
+                wasmModule = module;
+                {init_memviews}{init_stack_size_check}{start}return wasm;
             }}
 
             async function __wbg_load(module, imports) {{
@@ -897,9 +894,9 @@ impl<'a> Context<'a> {
             }}
             ",
             start = if needs_manual_start && self.threads_enabled {
-                "wasm.__wbindgen_start(thread_stack_size);"
+                "wasm.__wbindgen_start(thread_stack_size);\n"
             } else if needs_manual_start {
-                "wasm.__wbindgen_start();"
+                "wasm.__wbindgen_start();\n"
             } else {
                 ""
             },
@@ -915,7 +912,9 @@ impl<'a> Context<'a> {
             },
             init_stack_size_check = if self.threads_enabled {
                 format!(
-                    "if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {} !== 0)) {{ throw 'invalid stack size' }}",
+                    "if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {} !== 0)) {{
+                        throw 'invalid stack size';
+                    }}\n",
                     threads_xform::PAGE_SIZE,
                 )
             } else {
@@ -942,10 +941,9 @@ impl<'a> Context<'a> {
             const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
             const wasm = wasmInstantiated.instance.exports;
-            {start}
-            ",
+            {start}",
             start = if needs_manual_start {
-                "wasm.__wbindgen_start();"
+                "wasm.__wbindgen_start();\n"
             } else {
                 ""
             },
@@ -964,10 +962,9 @@ impl<'a> Context<'a> {
             const wasmBytes = readFileSync(wasmUrl);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
-            {start}
-            "#,
+            {start}"#,
             start = if needs_manual_start {
-                "wasm.__wbindgen_start();"
+                "wasm.__wbindgen_start();\n"
             } else {
                 ""
             },
@@ -985,10 +982,9 @@ impl<'a> Context<'a> {
             const wasmBytes = require('fs').readFileSync(wasmPath);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
-            {start}
-            "#,
+            {start}"#,
             start = if needs_manual_start {
-                "wasm.__wbindgen_start();"
+                "wasm.__wbindgen_start();\n"
             } else {
                 ""
             },
@@ -1026,7 +1022,7 @@ impl<'a> Context<'a> {
                 let mut loading =
                     self.generate_web_loading(needs_manual_start, default_module_path, has_memory);
 
-                loading.push_str("export { initSync, __wbg_init as default };");
+                loading.push_str("\nexport { initSync, __wbg_init as default };");
 
                 loading
             }
@@ -1139,12 +1135,11 @@ impl<'a> Context<'a> {
             )
         };
 
-        self.global(&format!(
-            "
-            const {identifier}Finalization = (typeof FinalizationRegistry === 'undefined')
+        self.globals.push_str(
+            &format!("const {identifier}Finalization = (typeof FinalizationRegistry === 'undefined')
                 ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry({finalization_callback});",
-        ));
+                : new FinalizationRegistry({finalization_callback});\n"),
+        );
 
         // If the class is inspectable, generate `toJSON` and `toString`
         // to expose all readable properties of the class. Otherwise,
@@ -4547,28 +4542,20 @@ fn iter_adapter<'a>(
                     (Some((export_id_a, _)), Some((export_id_b, _))) => {
                         let export_a = module.exports.get(*export_id_a);
                         let export_b = module.exports.get(*export_id_b);
-
-                        // Demangle to get base name without hash disambiguators
-                        let demangled_a = rustc_demangle::demangle(&export_a.name).to_string();
-                        let demangled_b = rustc_demangle::demangle(&export_b.name).to_string();
-
-                        // Sort by demangled name, then by function signature for deterministic ordering
-                        // We cannot use hash suffixes as they vary between compilations
-                        demangled_a.cmp(&demangled_b).then_with(|| {
-                            // Get function types to compare signatures
-                            let get_type_key = |export: &walrus::Export| -> String {
-                                let func_id = match export.item {
-                                    walrus::ExportItem::Function(id) => id,
-                                    _ => return String::new(),
-                                };
-                                let ty_id = module.funcs.get(func_id).ty();
-                                let ty = module.types.get(ty_id);
-                                // Create a string representation of the type signature
-                                format!("{:?}-{:?}", ty.params(), ty.results())
+                        // We cannot sort mangled names as they are machine-dependent, therefore we instead
+                        // sort by function signature.
+                        let get_type_key = |export: &walrus::Export| -> String {
+                            let func_id = match export.item {
+                                walrus::ExportItem::Function(id) => id,
+                                _ => return String::new(),
                             };
+                            let ty_id = module.funcs.get(func_id).ty();
+                            let ty = module.types.get(ty_id);
+                            // Create a string representation of the type signature
+                            format!("{:?}-{:?}", ty.params(), ty.results())
+                        };
 
-                            get_type_key(export_a).cmp(&get_type_key(export_b))
-                        })
+                        get_type_key(export_b).cmp(&get_type_key(export_a))
                     }
                     (Some(_), None) => std::cmp::Ordering::Less, // Exported adapters come first
                     (None, Some(_)) => std::cmp::Ordering::Greater, // Exported adapters come first

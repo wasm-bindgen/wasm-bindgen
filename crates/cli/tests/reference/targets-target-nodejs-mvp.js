@@ -25,6 +25,7 @@ function __wbg_get_imports() {
     };
 }
 
+
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);

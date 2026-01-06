@@ -52,6 +52,7 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -131,13 +132,11 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {
-    wasm = instance.exports, wasmModule = module;
+    wasm = instance.exports;
+    wasmModule = module;
     cachedUint8ArrayMemory0 = null;
-
-
     wasm.__wbindgen_start();
     return wasm;
 }
@@ -222,4 +221,5 @@ async function __wbg_init(module_or_path) {
 
     return __wbg_finalize_init(instance, module);
 }
+
 export { initSync, __wbg_init as default };

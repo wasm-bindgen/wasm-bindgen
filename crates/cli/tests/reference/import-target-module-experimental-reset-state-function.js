@@ -74,6 +74,7 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
+
 let __wbg_instance_id = 0;
 
 function addToExternrefTable0(obj) {

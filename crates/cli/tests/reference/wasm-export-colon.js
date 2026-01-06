@@ -459,27 +459,27 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
+
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
+}
+
 function wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1) {
     const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000006(arg0, arg1);
     return ret !== 0;
-}
-
-function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3, arg4);
-}
-
-function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2, arg3);
 }
 
 function wasm_bindgen__convert__closures_____invoke__h0000000000000008(arg0, arg1, arg2) {
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000008(arg0, arg1, arg2);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2, arg3);
 }
 
+function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3, arg4);
+}
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
@@ -710,14 +710,12 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {
-    wasm = instance.exports, wasmModule = module;
+    wasm = instance.exports;
+    wasmModule = module;
     cachedDataViewMemory0 = null;
     cachedUint8ArrayMemory0 = null;
-
-
     wasm.__wbindgen_start();
     return wasm;
 }
@@ -802,4 +800,5 @@ async function __wbg_init(module_or_path) {
 
     return __wbg_finalize_init(instance, module);
 }
+
 export { initSync, __wbg_init as default };

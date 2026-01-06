@@ -26,10 +26,8 @@ function __wbg_get_imports() {
 
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {
-    wasm = instance.exports, wasmModule = module;
-
-
-
+    wasm = instance.exports;
+    wasmModule = module;
     return wasm;
 }
 
@@ -113,4 +111,5 @@ async function __wbg_init(module_or_path) {
 
     return __wbg_finalize_init(instance, module);
 }
+
 export { initSync, __wbg_init as default };

@@ -33,6 +33,7 @@ function __wbg_get_imports() {
     };
 }
 
+
 import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;
