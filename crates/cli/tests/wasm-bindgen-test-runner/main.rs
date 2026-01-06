@@ -161,14 +161,13 @@ fn test_worker_console_log_no_duplicates() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // Count occurrences of the unique message
     let count = combined.matches("UNIQUE_TEST_MESSAGE_12345").count();
 
     assert_eq!(
         count, 1,
-        "Expected console_log message to appear exactly once, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected console_log message to appear exactly once, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }

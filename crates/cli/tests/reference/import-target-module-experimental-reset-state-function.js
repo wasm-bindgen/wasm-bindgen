@@ -74,6 +74,7 @@ function __wbg_get_imports() {
         "pure-extern": import4,
     };
 }
+
 let __wbg_instance_id = 0;
 
 function addToExternrefTable0(obj) {
@@ -115,7 +116,6 @@ cachedTextDecoder.decode();
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
-
 
 import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());

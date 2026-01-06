@@ -40,8 +40,8 @@ function __wbg_get_imports() {
         "./reference_test_bg.js": import0,
     };
 }
-let __wbg_instance_id = 0;
 
+let __wbg_instance_id = 0;
 
 import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());

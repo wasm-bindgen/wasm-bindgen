@@ -37,6 +37,7 @@ function __wbg_get_imports(memory) {
         "./reference_test_bg.js": import0,
     };
 }
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -56,7 +57,6 @@ if (cachedTextDecoder) cachedTextDecoder.decode();
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
-
 
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);

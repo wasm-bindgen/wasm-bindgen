@@ -31,10 +31,8 @@ let wasm_bindgen = (function(exports) {
 
     let wasmModule, wasm;
     function __wbg_finalize_init(instance, module) {
-        wasm = instance.exports, wasmModule = module;
-
-
-
+        wasm = instance.exports;
+        wasmModule = module;
         return wasm;
     }
 
