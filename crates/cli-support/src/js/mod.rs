@@ -1135,11 +1135,11 @@ impl<'a> Context<'a> {
             )
         };
 
-        self.globals.push_str(
-            &format!("const {identifier}Finalization = (typeof FinalizationRegistry === 'undefined')
+        self.globals.push_str(&format!(
+            "const {identifier}Finalization = (typeof FinalizationRegistry === 'undefined')
                 ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry({finalization_callback});\n"),
-        );
+                : new FinalizationRegistry({finalization_callback});\n"
+        ));
 
         // If the class is inspectable, generate `toJSON` and `toString`
         // to expose all readable properties of the class. Otherwise,
