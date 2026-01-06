@@ -1,34 +1,43 @@
-error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
+error[E0277]: type `A` is not supported by wasm-bindgen
  --> ui-tests/traits-not-implemented.rs:5:1
   |
 5 | #[wasm_bindgen]
-  | ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `A`
+  | ^^^^^^^^^^^^^^^ `A` cannot be converted to/from JavaScript in this position
   |
-  = help: the following other types implement trait `IntoWasmAbi`:
-            &'a [MaybeUninit<f32>]
-            &'a [MaybeUninit<f64>]
-            &'a [MaybeUninit<i16>]
-            &'a [MaybeUninit<i32>]
-            &'a [MaybeUninit<i64>]
-            &'a [MaybeUninit<i8>]
-            &'a [MaybeUninit<isize>]
-            &'a [MaybeUninit<u16>]
-          and $N others
+  = help: the trait `WasmPrimitive` is not implemented for `A`
+  = note: if `A` is meant to be imported from or exported to JavaScript, annotate it with the `#[wasm_bindgen]` attribute
+  = help: the following other types implement trait `WasmPrimitive`:
+            ()
+            f32
+            f64
+            i32
+            i64
+            u32
+            u64
+  = note: required for `A` to implement `IntoWasmAbi`
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `A: IntoWasmAbi` is not satisfied
+error[E0277]: the trait bound `A: WasmDescribe` is not satisfied
  --> ui-tests/traits-not-implemented.rs:8:19
   |
 8 |     pub fn foo(a: A);
-  |                   ^ the trait `IntoWasmAbi` is not implemented for `A`
+  |                   ^ the trait `WasmDescribe` is not implemented for `A`
   |
-  = help: the following other types implement trait `IntoWasmAbi`:
-            &'a [MaybeUninit<f32>]
-            &'a [MaybeUninit<f64>]
-            &'a [MaybeUninit<i16>]
-            &'a [MaybeUninit<i32>]
-            &'a [MaybeUninit<i64>]
-            &'a [MaybeUninit<i8>]
-            &'a [MaybeUninit<isize>]
-            &'a [MaybeUninit<u16>]
+  = help: the following other types implement trait `WasmDescribe`:
+            &T
+            &mut T
+            ()
+            *const T
+            *mut T
+            Box<[T]>
+            Clamped<T>
+            Closure<T>
           and $N others
+note: required by a bound in `into_abi`
+ --> $WORKSPACE/src/convert/traits.rs
+  |
+  | pub trait IntoWasmAbi: WasmDescribe {
+  |                        ^^^^^^^^^^^^ required by this bound in `IntoWasmAbi::into_abi`
+...
+  |     fn into_abi(self) -> Self::Abi;
+  |        -------- required by a bound in this associated function
