@@ -72,6 +72,7 @@ workspace = true
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_unstable_test_coverage)',
   'cfg(xxx_debug_only_print_generated_code)',
+  'cfg(unsafe_single_threaded_traits)',
 ] }
 
 [workspace.lints.clippy]

@@ -62,6 +62,9 @@ pub mod struct_vecs;
 pub mod structural;
 pub mod truthy_falsy;
 pub mod try_from_js_value;
+
+#[cfg(unsafe_single_threaded_traits)]
+pub mod unsafe_send_sync;
 pub mod usize;
 pub mod validate_prt;
 pub mod variadic;
