@@ -245,13 +245,21 @@ impl<'a> Context<'a> {
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
 
-            for (descriptor, orig_func_ids) in cast_imports {
-                let signature = descriptor.unwrap_function();
-                let [arg] = &signature.arguments[..] else {
-                    bail!("Cast function must take exactly one argument");
-                };
-                let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
+            // Sort cast imports by signature for deterministic output.
+            let mut sorted_casts: Vec<_> = cast_imports
+                .into_iter()
+                .map(|(descriptor, orig_func_ids)| {
+                    let signature = descriptor.unwrap_function();
+                    let [arg] = &signature.arguments[..] else {
+                        unreachable!("Cast function must take exactly one argument");
+                    };
+                    let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
+                    (sig_comment, signature, orig_func_ids)
+                })
+                .collect();
+            sorted_casts.sort_by(|a, b| a.0.cmp(&b.0));
 
+            for (sig_comment, signature, orig_func_ids) in sorted_casts {
                 // Hash the descriptor string to produce a stable import name.
                 let mut hasher = DefaultHasher::default();
                 sig_comment.hash(&mut hasher);
