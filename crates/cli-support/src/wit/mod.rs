@@ -82,6 +82,76 @@ pub fn process(
 
     cx.unexport_intrinsics();
 
+    // Sort adapter exports by function signature for deterministic output.
+    // Only sort adapters that are ContextAdapterKind::Adapter (not in export_map, not in implements).
+    let implements_set: std::collections::HashSet<_> = cx
+        .adapters
+        .implements
+        .iter()
+        .map(|(_, _, id)| *id)
+        .collect();
+
+    // Filter and collect adapters that need sorting
+    let mut adapter_exports: Vec<_> = cx
+        .adapters
+        .exports
+        .iter()
+        .filter(|(_, adapter_id)| {
+            !cx.aux.export_map.contains_key(adapter_id) && !implements_set.contains(adapter_id)
+        })
+        .map(|(export_id, _)| {
+            let export = cx.module.exports.get(*export_id);
+            let sort_key = match export.item {
+                walrus::ExportItem::Function(func_id) => {
+                    let ty_id = cx.module.funcs.get(func_id).ty();
+                    let ty = cx.module.types.get(ty_id);
+                    format!("{:?}-{:?}", ty.params(), ty.results())
+                }
+                _ => String::new(),
+            };
+            (*export_id, sort_key, export.name.clone(), export.item)
+        })
+        .collect();
+
+    // Sort bare adapters by signature only to avoid machine-specific mangling non-determinism.
+    // Resorting with Walrus requires deleting and re-injecting, so we then update the stored ID again.
+    adapter_exports.sort_by(|a, b| a.1.cmp(&b.1));
+
+    // Build mapping of old to new ExportIds
+    let mut old_to_new: std::collections::HashMap<walrus::ExportId, walrus::ExportId> =
+        std::collections::HashMap::new();
+
+    for (old_export_id, _, name, item) in adapter_exports.iter() {
+        cx.module.exports.delete(*old_export_id);
+        let new_export_id = cx.module.exports.add(name, *item);
+        old_to_new.insert(*old_export_id, new_export_id);
+
+        // Update cx.adapters.exports
+        if let Some(pos) = cx
+            .adapters
+            .exports
+            .iter()
+            .position(|(eid, _)| eid == old_export_id)
+        {
+            cx.adapters.exports[pos].0 = new_export_id;
+        }
+    }
+
+    // Update CallExport instructions in all adapters to use new ExportIds
+    for adapter in cx.adapters.adapters.values_mut() {
+        let instructions = match &mut adapter.kind {
+            AdapterKind::Local { instructions } => instructions,
+            AdapterKind::Import { .. } => continue,
+        };
+        for instr in instructions {
+            if let Instruction::CallExport(export_id) = &mut instr.instr {
+                if let Some(&new_id) = old_to_new.get(export_id) {
+                    *export_id = new_id;
+                }
+            }
+        }
+    }
+
     let adapters = cx.module.customs.add(cx.adapters);
     let aux = cx.module.customs.add(cx.aux);
     Ok((adapters, aux))
