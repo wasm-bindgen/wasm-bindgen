@@ -44,6 +44,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::fmt;
 use core::future::Future;
+use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
@@ -168,12 +169,12 @@ impl From<Promise> for JsFuture {
         }
 
         let resolve = {
-            let state = state.clone();
+            let state = AssertUnwindSafe(state.clone());
             Closure::once(move |val| finish(&state, Ok(val)))
         };
 
         let reject = {
-            let state = state.clone();
+            let state = AssertUnwindSafe(state.clone());
             Closure::once(move |val| finish(&state, Err(val)))
         };
 

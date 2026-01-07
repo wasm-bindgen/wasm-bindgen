@@ -1,6 +1,7 @@
 use alloc::collections::VecDeque;
 use alloc::rc::Rc;
 use core::cell::{Cell, RefCell};
+use core::panic::AssertUnwindSafe;
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 
@@ -95,7 +96,7 @@ impl Queue {
             promise: Promise::resolve(&JsValue::undefined()),
 
             closure: {
-                let state = Rc::clone(&state);
+                let state = AssertUnwindSafe(Rc::clone(&state));
 
                 // This closure will only be called on the next microtask event
                 // tick
