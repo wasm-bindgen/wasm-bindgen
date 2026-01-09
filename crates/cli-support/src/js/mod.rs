@@ -28,7 +28,6 @@ pub struct Context<'a> {
     globals: String,
     intrinsics: Option<BTreeMap<Cow<'static, str>, Cow<'static, str>>>,
     emscripten_library: String,
-    emscripten_deps: HashSet<String>,
     imports_post: String,
     typescript: String,
     typescript_emscripten_classes: String,
@@ -87,6 +86,13 @@ pub struct Context<'a> {
 
     /// If threading is enabled.
     threads_enabled: bool,
+
+    /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
+    /// Must be cleared at the start of `generate_adapter`.
+    adapter_deps: HashSet<String>,
+
+    /// Tracks global emscripten dependencies as opposed to adapter-level dependencies.
+    emscripten_global_deps: HashSet<String>,
 }
 
 /// Definition of a module export
@@ -181,7 +187,6 @@ impl<'a> Context<'a> {
             globals: String::new(),
             intrinsics: Some(Default::default()),
             emscripten_library: String::new(),
-            emscripten_deps: HashSet::new(),
             imports_post: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
             typescript_emscripten_classes: String::new(),
@@ -202,6 +207,8 @@ impl<'a> Context<'a> {
             memories: Default::default(),
             table_indices: Default::default(),
             stack_pointer_shim_injected: false,
+            adapter_deps: HashSet::new(),
+            emscripten_global_deps: HashSet::new(),
         })
     }
 
@@ -209,6 +216,39 @@ impl<'a> Context<'a> {
         self.intrinsics.as_ref().unwrap().contains_key(name)
     }
 
+    fn intrinsic(
+        &mut self,
+        name: Cow<'static, str>,
+        js_name: Option<&str>,
+        val: Cow<'static, str>,
+    ) {
+    if self.intrinsics.as_ref().unwrap().contains_key(&name) {
+        return;
+    }
+
+    if matches!(self.config.mode, OutputMode::Emscripten) {
+
+        let actual_js_name: &str = js_name.unwrap_or(&name);
+        self.adapter_deps.insert(format!("\'${actual_js_name}\'"));
+
+        let mut content = val.replace("wasm.", "wasmExports.");
+
+        // Function signature replacement for Emscripten
+        // Replace all occurrences of "function name" -> "$name: function".
+        let old_decl = format!("function {actual_js_name}");
+        let new_decl = format!("${actual_js_name}: function");
+
+        content = content.replace(&old_decl, &new_decl);
+
+        self.emscripten_library(&content);
+
+        // Register empty string so standard generation skips this key
+        self.intrinsics.as_mut().unwrap().insert(name.into(), "".into());
+
+    } else {
+        self.intrinsics.as_mut().unwrap().insert(name.into(), val);
+    }
+}
     /// Writes an ExportDefinition to global and typescript buffers.
     /// Handles realising for invalid identifier export names.
     /// define_only used when only locally declared but not explicitly exported.
@@ -748,18 +788,20 @@ wasm = wasmInstance.exports;
         let set_to_list = |set: &HashSet<String>| -> Vec<String> { set.iter().cloned().collect() };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            push_with_newline("var LibraryWbg = {", true);
+            push_with_newline("var LibraryWbg = {\n", true);
+            push_with_newline(&self.emscripten_library, false);
+            if !self.emscripten_library.is_empty() {
+                push_with_newline(",", true);
+            }
             push_with_newline(&init_js, true);
             push_with_newline("$initBindgen__deps: ['$addOnInit'],", true);
             push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',", true);
             push_with_newline("$initBindgen: () => {\n
     wasmExports.__wbindgen_start();", true);
-            push_with_newline(&intrinsics, false);
-            push_with_newline(&self.emscripten_library, true);
-            self.globals = self.globals.replace("wasm.", "wasmExports.");
-            push_with_newline(&self.globals, true);
+            let exports_code = globals.replace("wasm.", "wasmExports.");
+            push_with_newline(&exports_code, true);
             push_with_newline("},", false);
-            let deps: Vec<String> = set_to_list(&self.emscripten_deps); 
+            let deps: Vec<String> = set_to_list(&self.emscripten_global_deps); 
             push_with_newline(
                 &format!("}};\n
                 extraLibraryFuncs.push('$initBindgen','$addOnInit',{});
@@ -1014,11 +1056,11 @@ wasm = wasmInstance.exports;
                 imports_init.push_str(&import.name);
                 if import.name == "__wbindgen_init_externref_table" {
                     imports_init.push_str(": () =>");
-                    imports_init.push_str(js.trim().strip_prefix("function()").unwrap());
+                    imports_init.push_str(&js.trim().strip_prefix("function()").unwrap().replace("wasm.", "wasmExports."));
                     imports_init.push_str(",\n");
                 } else {
                     imports_init.push_str(": ");
-                    imports_init.push_str(&js.trim().replace("wasm.", "_"));
+                    imports_init.push_str(&js.trim().replace("wasm.", "wasmExports."));
                     imports_init.push_str(",\n");
                 }
             }
@@ -1064,12 +1106,14 @@ wasm = wasmInstance.exports;
         let js = match &self.config.mode {
             OutputMode::Emscripten => {
             let mut global_emscripten_initializer: String = Default::default();
-            for global_dep in self.emscripten_deps.iter() {
+            for global_dep in self.emscripten_global_deps.iter() {
                 let mut global: String = "".to_string();
                 if global_dep == "'$WASM_VECTOR_LEN'" {
                     global = "$WASM_VECTOR_LEN: '0',".to_string();
-                } else if global_dep == "'$TextEncoder'" {
+                } else if global_dep == "'$textEncoder'" {
                     global = "$textEncoder: \"new TextEncoder()\",".to_string();
+                } else if global_dep == "'$textDecoder'" {
+                    global = "$textDecoder: \"new TextDecoder()\",".to_string();
                 } else if global_dep == "'$heap'" {
                     global = format!("
                     $heap: \"new Array({}).fill(undefined)\",
@@ -1666,7 +1710,7 @@ wasm = wasmInstance.exports;
         Ok(ts_dst)
     }
 
-    fn expose_drop_ref(&mut self, import_deps: &mut HashSet<String>) {
+    fn expose_drop_ref(&mut self) {
         // Note that here we check if `idx` shouldn't actually be dropped. This
         // is due to the fact that `JsValue::null()` and friends can be passed
         // by value to JS where we'll automatically call this method. Those
@@ -1677,7 +1721,7 @@ wasm = wasmInstance.exports;
         // the linked list of heap slots that are free.
         self.expose_global_heap();
         self.expose_global_heap_next();
-        intrinsic(&mut self.intrinsics, "drop_ref".into(), "dropObject".into(), import_deps, || {
+        self.intrinsic("drop_ref".into(), "dropObject".into(),
             format!(
                 "
                 function dropObject(idx) {{
@@ -1689,16 +1733,16 @@ wasm = wasmInstance.exports;
                 INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len(),
             )
             .into()
-        });
+        );
     }
 
-    fn expose_global_heap(&mut self, import_deps: &mut HashSet<String>) {
+    fn expose_global_heap(&mut self) {
         assert!(!self.config.externref);
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_deps.insert("'$heap'".to_string());
+            self.emscripten_global_deps.insert("'$heap'".to_string());
             return;
         }
-        intrinsic(&mut self.intrinsics, "heap".into(), None, import_deps, || {
+        self.intrinsic("heap".into(), None,
             format!(
                 "
                 let heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);
@@ -1707,53 +1751,53 @@ wasm = wasmInstance.exports;
                 INITIAL_HEAP_VALUES.join(", ")
             )
             .into()
-        });
+        );
     }
 
-    fn expose_global_heap_next(&mut self, import_deps: &mut HashSet<String>) {
+    fn expose_global_heap_next(&mut self) {
         self.expose_global_heap();
-        intrinsic(&mut self.intrinsics, "heap_next".into(), None, import_deps, || {
+        self.intrinsic("heap_next".into(), None,
             "\nlet heap_next = heap.length;\n".into()
-        });
+        );
     }
 
-    fn expose_get_object(&mut self, import_deps: &mut HashSet<String>) {
+    fn expose_get_object(&mut self) {
         // Accessing a heap object is just a simple index operation due to how
         // the stack/heap are laid out.
-        self.expose_global_heap(import_deps);
-        intrinsic(&mut self.intrinsics, "get_object".into(), "getObject".into(), import_deps, || {
+        self.expose_global_heap();
+        self.intrinsic("get_object".into(), "getObject".into(),
             "\nfunction getObject(idx) { return heap[idx]; }\n".into()
-        });
+        );
     }
 
-    fn expose_not_defined(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "not_defined".into(), "notDefined".into(), import_deps, || {
+    fn expose_not_defined(&mut self) {
+        self.intrinsic("not_defined".into(), "notDefined".into(),
             "\nfunction notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }\n".into()
-        });
+        );
     }
 
-    fn expose_assert_num(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "assert_num".into(), "_assertNum".into(), import_deps, || {
+    fn expose_assert_num(&mut self) {
+        self.intrinsic("assert_num".into(), "_assertNum".into(),
             "
             function _assertNum(n) {
                 if (typeof(n) !== 'number') throw new Error(`expected a number argument, found ${typeof(n)}`);
             }
             ".into()
-        });
+        );
     }
 
-    fn expose_assert_bigint(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "assert_bigint".into(), "_assertBigInt".into(), import_deps, || {
+    fn expose_assert_bigint(&mut self) {
+        self.intrinsic("assert_bigint".into(), "_assertBigInt".into(),
             "
             function _assertBigInt(n) {
                 if (typeof(n) !== 'bigint') throw new Error(`expected a bigint argument, found ${typeof(n)}`);
             }
             ".into()
-        });
+        );
     }
 
-    fn expose_assert_bool(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "assert_bool".into(), "_assertBoolean".into(), import_deps, || {
+    fn expose_assert_bool(&mut self) {
+        self.intrinsic("assert_bool".into(), "_assertBoolean".into(),
             "
             function _assertBoolean(n) {
                 if (typeof(n) !== 'boolean') {
@@ -1762,23 +1806,26 @@ wasm = wasmInstance.exports;
             }
             "
             .into()
-        });
+        );
     }
 
-    fn expose_wasm_vector_len(&mut self, import_deps: &mut HashSet<String>) {
-        import_deps.insert("'$WASM_VECTOR_LEN'".to_string());
+    fn expose_wasm_vector_len(&mut self) {
+        self.adapter_deps.insert("'$WASM_VECTOR_LEN'".to_string());
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_deps
+            self.emscripten_global_deps
                 .insert("'$WASM_VECTOR_LEN'".to_string());
+            self.intrinsic("wasm_vector_len".into(), "WASM_VECTOR_LEN".into(),
+            "".into()
+        );
+        } else {
+            self.intrinsic("wasm_vector_len".into(), None,
+                    "\nlet WASM_VECTOR_LEN = 0;\n".into()
+            );
         }
-
-        intrinsic(&mut self.intrinsics, "wasm_vector_len".into(), None, import_deps, || {
-            "\nlet WASM_VECTOR_LEN = 0;\n".into()
-        });
     }
 
-   fn expose_pass_string_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+   fn expose_pass_string_to_wasm(&mut self, memory: MemoryId) -> MemView {
     self.expose_wasm_vector_len();
     
     let mem = self.expose_uint8_memory(memory);
@@ -1790,167 +1837,158 @@ wasm = wasmInstance.exports;
     // Ensure the encoder and its polyfills are registered
     self.expose_text_encoder(memory);
 
-    intrinsic(
-        &mut self.intrinsics,
+    self.intrinsic(
         ret.to_string().into(),
         None,
-        import_deps,
-        || {
-            let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
+       
+        {
+        let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
 
-            // 1. Resolve Variable Names
-            // Emscripten uses the global 'textEncoder', others use the cached one.
-            let text_encoder_var = if is_emscripten { "textEncoder" } else { "cachedTextEncoder" };
-            // Emscripten accesses memory via 'HEAPU8', others via accessor function 'getUint8Memory0()'.
-            let mem_formatted = if is_emscripten { format!("{}", mem.name) } else { format!("{mem}()") };
+        // Emscripten uses the global 'textEncoder' and a global heap HEAPU8.
+        let text_encoder_var = if is_emscripten { "textEncoder" } else { "cachedTextEncoder" };
+        let mem_formatted = if is_emscripten { format!("{}", mem.name) } else { format!("{mem}()") };
 
-            // 2. Prepare Debugging Snippets
-            let debug = if self.config.debug {
-                "if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);\n"
-            } else {
-                ""
-            };
-            let debug_end = if self.config.debug {
-                "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
-            } else {
-                ""
-            };
+        let debug = if self.config.debug {
+            "if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);\n"
+        } else {
+            ""
+        };
+        let debug_end = if self.config.debug {
+            "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
+        } else {
+            ""
+        };
 
-            // 3. Generate Logic (ASCII Optimization + EncodeInto)
-            let encode_as_ascii = format!(
-                r#"
-                if (realloc === undefined) {{
-                    const buf = {text_encoder_var}.encode(arg);
-                    const ptr = malloc(buf.length, 1) >>> 0;
-                    {mem_formatted}.subarray(ptr, ptr + buf.length).set(buf);
-                    WASM_VECTOR_LEN = buf.length;
+        let encode_as_ascii = format!(
+            r#"
+            if (realloc === undefined) {{
+                const buf = {text_encoder_var}.encode(arg);
+                const ptr = malloc(buf.length, 1) >>> 0;
+                {mem_formatted}.subarray(ptr, ptr + buf.length).set(buf);
+                WASM_VECTOR_LEN = buf.length;
+                return ptr;
+            }}
+
+            let len = arg.length;
+            let ptr = malloc(len, 1) >>> 0;
+            const mem = {mem_formatted};
+            let offset = 0;
+
+            for (; offset < len; offset++) {{
+                const code = arg.charCodeAt(offset);
+                if (code > 0x7F) break;
+                mem[ptr + offset] = code;
+            }}
+            "#
+        );
+
+        if is_emscripten {
+            // Emscripten: Emit as Object Property + Dependency List
+            format!(
+                "${ret}: function(arg, malloc, realloc) {{
+                    {debug}
+                    {encode_as_ascii}
+                    if (offset !== len) {{
+                        if (offset !== 0) {{
+                            arg = arg.slice(offset);
+                        }}
+                        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+                        const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
+                        const ret = {text_encoder_var}.encodeInto(arg, view);
+                        {debug_end}
+                        offset += ret.written;
+                        ptr = realloc(ptr, len, offset, 1) >>> 0;
+                    }}
+                    WASM_VECTOR_LEN = offset;
                     return ptr;
-                }}
-
-                let len = arg.length;
-                let ptr = malloc(len, 1) >>> 0;
-                const mem = {mem_formatted};
-                let offset = 0;
-
-                for (; offset < len; offset++) {{
-                    const code = arg.charCodeAt(offset);
-                    if (code > 0x7F) break;
-                    mem[ptr + offset] = code;
-                }}
-                "#
-            );
-
-            // 4. Format the final output based on mode
-            if is_emscripten {
-                // Emscripten: Emit as Object Property + Dependency List
-                // Note the comma at the start to separate from previous library entries
-                format!(
-                    ",\n{ret}: function(arg, malloc, realloc) {{
-                        {debug}
-                        {encode_as_ascii}
-                        if (offset !== len) {{
-                            if (offset !== 0) {{
-                                arg = arg.slice(offset);
-                            }}
-                            ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
-                            const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
-                            const ret = {text_encoder_var}.encodeInto(arg, view);
-                            {debug_end}
-                            offset += ret.written;
-                            ptr = realloc(ptr, len, offset, 1) >>> 0;
+                }},
+                ${ret}__deps: ['$textEncoder', '$WASM_VECTOR_LEN']\n",
+            ).into()
+        } else {
+            format!(
+                "function {ret}(arg, malloc, realloc) {{
+                    {debug}
+                    {encode_as_ascii}
+                    if (offset !== len) {{
+                        if (offset !== 0) {{
+                            arg = arg.slice(offset);
                         }}
-                        WASM_VECTOR_LEN = offset;
-                        return ptr;
-                    }},
-                    {ret}__deps: ['$textEncoder', '$WASM_VECTOR_LEN']\n",
-                    ret = ret.name
-                ).into()
-            } else {
-                // Standard: Emit as Function Declaration
-                format!(
-                    "function {ret}(arg, malloc, realloc) {{
-                        {debug}
-                        {encode_as_ascii}
-                        if (offset !== len) {{
-                            if (offset !== 0) {{
-                                arg = arg.slice(offset);
-                            }}
-                            ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
-                            const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
-                            const ret = {text_encoder_var}.encodeInto(arg, view);
-                            {debug_end}
-                            offset += ret.written;
-                            ptr = realloc(ptr, len, offset, 1) >>> 0;
-                        }}
-                        WASM_VECTOR_LEN = offset;
-                        return ptr;
-                    }}",
-                    ret = ret.name
-                ).into()
-            }
+                        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+                        const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
+                        const ret = {text_encoder_var}.encodeInto(arg, view);
+                        {debug_end}
+                        offset += ret.written;
+                        ptr = realloc(ptr, len, offset, 1) >>> 0;
+                    }}
+                    WASM_VECTOR_LEN = offset;
+                    return ptr;
+                }}",
+            ).into()
+        }
         },
     );
 
     ret
 }
 
-    fn expose_pass_array8_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_pass_array8_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint8_memory(memory);
-        self.pass_array_to_wasm("passArray8ToWasm", view, 1, import_deps)
+        self.pass_array_to_wasm("passArray8ToWasm", view, 1)
     }
 
-    fn expose_pass_array16_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_pass_array16_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint16_memory(memory);
-        self.pass_array_to_wasm("passArray16ToWasm", view, 2, import_deps)
+        self.pass_array_to_wasm("passArray16ToWasm", view, 2)
     }
 
-    fn expose_pass_array32_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_pass_array32_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint32_memory(memory);
-        self.pass_array_to_wasm("passArray32ToWasm", view, 4, import_deps)
+        self.pass_array_to_wasm("passArray32ToWasm", view, 4)
     }
 
-    fn expose_pass_array64_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_pass_array64_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint64_memory(memory);
-        self.pass_array_to_wasm("passArray64ToWasm", view, 8, import_deps)
+        self.pass_array_to_wasm("passArray64ToWasm", view, 8)
     }
 
-    fn expose_pass_array_f32_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_pass_array_f32_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_f32_memory(memory);
-        self.pass_array_to_wasm("passArrayF32ToWasm", view, 4, import_deps)
+        self.pass_array_to_wasm("passArrayF32ToWasm", view, 4)
     }
 
-    fn expose_pass_array_f64_to_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_pass_array_f64_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_f64_memory(memory);
-        self.pass_array_to_wasm("passArrayF64ToWasm", view, 8, import_deps)
+        self.pass_array_to_wasm("passArrayF64ToWasm", view, 8)
     }
 
     fn expose_pass_array_jsvalue_to_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let mem = self.expose_dataview_memory(memory);
         let ret = MemView {
             name: "passArrayJsValueToWasm".into(),
             num: mem.num,
         };
-        self.expose_wasm_vector_len(import_deps);
+        self.expose_wasm_vector_len();
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 // TODO: using `addToExternrefTable` goes back and forth between wasm
                 // and JS a lot, we should have a bulk operation for this.
-                let add = self.expose_add_to_externref_table(table, alloc, import_deps);
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
-                    let loop_body = if matches!(self.config.mode, OutputMode::Emscripten) {
+                let add = self.expose_add_to_externref_table(table, alloc);
+
+                if self.config.mode.emscripten() {
+                    self.adapter_deps.insert("'${add}'".to_string());
+                }
+
+                self.intrinsic(ret.to_string().into(), None, {
+                    let loop_body = if self.config.mode.emscripten() {
                         format!("HEAP32[ptr + 4 * i >> 2] = {add}(array[i]);")
                     } else {
                         format!(
                             "const add = {add}(array[i]); {mem}().setUint32(ptr + 4 * i, add, true);"
                         )
                     };
-                    if matches!(self.config.mode, OutputMode::Emscripten) {
-                        import_deps.insert("'${add}'".to_string());
-                    }
                     format!(
                         "
                         function {ret}(array, malloc) {{
@@ -1968,7 +2006,7 @@ wasm = wasmInstance.exports;
             }
             _ => {
                 self.expose_add_heap_object();
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
+                self.intrinsic(ret.to_string().into(), None, {
                     let (setup, loop_body) =
                         if matches!(self.config.mode, OutputMode::Emscripten) {
                             (
@@ -2003,13 +2041,13 @@ wasm = wasmInstance.exports;
         ret
     }
 
-    fn pass_array_to_wasm(&mut self, name: &'static str, view: MemView, size: usize, import_deps: &mut HashSet<String>) -> MemView {
+    fn pass_array_to_wasm(&mut self, name: &'static str, view: MemView, size: usize) -> MemView {
         let ret = MemView {
             name: name.into(),
             num: view.num,
         };
-        self.expose_wasm_vector_len(import_deps);
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
+        self.expose_wasm_vector_len();
+        self.intrinsic(ret.to_string().into(), None, {
             format!(
                 "
                 function {ret}(arg, malloc) {{
@@ -2025,93 +2063,58 @@ wasm = wasmInstance.exports;
         ret
     }
 
-    fn expose_text_encoder(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "text_encoder".into(), None, import_deps, || {
-            let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
-            let shared = self.module.memories.get(memory).shared;
-            let mut dst = String::new();
-
-            if is_emscripten {
-                // --- Emscripten Path: Generate Object Properties ---
-                // Emscripten libraries are JS Objects. We must emit "key: value," pairs.
-                
-                // 1. Define the encoder dependency.
-                // Emscripten provides 'textEncoder' in its scope, so we map our internal 
-                // dependency '$textEncoder' to that global.
-                dst.push_str(",\n$textEncoder: textEncoder");
-
-                // 2. Inject the helper function '$encodeString'.
-                // This helper abstracts away the "polyfill vs native" check so other
-                // adapters (like passStringToWasm) can just call it.
-                match self.config.encode_into {
-                    EncodeInto::Always if !shared => {
-                        dst.push_str(&format!(
-                            ",\n$encodeString: {},\n$encodeString__deps: ['$textEncoder']",
-                            encode_into
-                        ));
-                    }
-                    EncodeInto::Test if !shared => {
-                        dst.push_str(&format!(
-                            ",\n$encodeString: function(arg, view) {{ \
-                                if (typeof TextEncoder.encodeInto === 'function') {{ return {ei} }} \
-                                return {e} \
-                            }},\n$encodeString__deps: ['$textEncoder']",
-                            ei = encode_into, 
-                            e = encode
-                        ));
-                    }
-                    _ => {
-                        // Default / Fallback case
-                        dst.push_str(&format!(
-                            ",\n$encodeString: {},\n$encodeString__deps: ['$textEncoder']",
-                            encode
-                        ));
-                    }
-                }
+    fn expose_text_encoder(&mut self, memory: MemoryId) {
+        self.emscripten_global_deps.insert("'$textEncoder'".to_string());
+        self.intrinsic("text_encoder".into(), "textEncoder".into(), {
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                "".into()
             } else {
-                // --- Standard Path: Generate JS Statements ---
-                // Standard JS targets expect "const x = ...;" statements.
-                
-                // 1. Generate the CachedTextEncoder definition
-                dst.push_str(&Self::write_text_processor(
-                    self.module, 
-                    memory, 
-                    "const", 
-                    "TextEncoder", 
-                    "()", 
-                    None
-                ));
+                let mut dst =
+                Self::write_text_processor(self.module, memory, "const", "TextEncoder", "()", None, self.config.mode.clone());
 
-                // 2. Generate the polyfill for encodeInto directly on the cached object
-                let polyfill = format!(
-                    "cachedTextEncoder.encodeInto = function (arg, view) {{ \
-                        const buf = cachedTextEncoder.encode(arg); \
-                        view.set(buf); \
-                        return {{ read: arg.length, written: buf.length }}; \
-                    }};"
-                );
+            let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
+                const buf = cachedTextEncoder.encode(arg);
+                view.set(buf);
+                return {
+                    read: arg.length,
+                    written: buf.length
+                };
+            }";
 
-                match self.config.encode_into {
-                    EncodeInto::Always if !shared => {
-                        // No polyfill needed logic here based on config
-                    }
-                    EncodeInto::Test if !shared => {
+            // `encodeInto` doesn't currently work in any browsers when the memory passed
+            // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
+            // a `SharedArrayBuffer` is in use.
+            let shared = self.module.memories.get(memory).shared;
+
+            match self.config.encode_into {
+                EncodeInto::Always if !shared => {}
+                EncodeInto::Test if !shared => {
+                    dst.push_str(&format!(
+                        "
+                        if (!('encodeInto' in cachedTextEncoder)) {{
+                            {polyfill_encode_into}
+                        }}
+                        "
+                    ));
+                }
+                _ => {
+                    // Support audio worklets when able to spawn them.
+                    if shared {
                         dst.push_str(&format!(
-                            "if (!('encodeInto' in cachedTextEncoder)) {{ {polyfill} }}\n"
+                            "
+                            if (cachedTextEncoder) {{
+                                {polyfill_encode_into}
+                            }}
+                            "
                         ));
-                    }
-                    _ => {
-                        if shared {
-                            dst.push_str(&format!("if (cachedTextEncoder) {{ {polyfill} }}\n"));
-                        } else {
-                            dst.push_str(&polyfill);
-                            dst.push('\n');
-                        }
+                    } else {
+                        dst.push_str(polyfill_encode_into);
                     }
                 }
             }
-
+            
             dst.into()
+        }
         });
     }
 
@@ -2119,13 +2122,13 @@ wasm = wasmInstance.exports;
         &mut self,
         mem: &MemView,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) {
-        intrinsic(&mut self.intrinsics, "text_decoder".into(), None, import_deps, || {
-            if matches!(self.config.mode, OutputMode::Emscripten) {
-                import_deps.insert("'$TextDecoder'".to_string());
-            }
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.adapter_deps.insert("'$textDecoder'".to_string());
+            self.emscripten_global_deps.insert("'$textDecoder'".to_string());
+        }
 
+        self.intrinsic("text_decoder".into(), "decodeText".into(), {
             // This is needed to workaround a bug in Safari
             // See: https://github.com/wasm-bindgen/wasm-bindgen/issues/1825
             let init = Some("cachedTextDecoder.decode();");
@@ -2246,14 +2249,14 @@ wasm = wasmInstance.exports;
         dst
     }
 
-    fn expose_get_string_from_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_get_string_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let mem = self.expose_uint8_memory(memory);
         self.expose_text_decoder(&mem, memory);
         let ret = MemView {
             name: "getStringFromWasm".into(),
             num: mem.num,
         };
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
+        self.intrinsic(ret.to_string().into(), None, {
             format!(
                 "
                 function {ret}(ptr, len) {{
@@ -2271,12 +2274,11 @@ wasm = wasmInstance.exports;
         &mut self,
         memory: MemoryId,
         table: Option<TableId>,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let get_object = if let Some(table) = table {
             self.expose_get_from_externref_table(table).to_string()
         } else {
-            self.expose_get_object(import_deps);
+            self.expose_get_object();
             "getObject".to_string()
         };
         let get_string = self.expose_get_string_from_wasm(memory);
@@ -2292,7 +2294,7 @@ wasm = wasmInstance.exports;
         //
         // If `ptr` and `len` are both `0` then that means it's `None`, in that case we rely upon
         // the fact that `getObject(0)` is guaranteed to be `undefined`.
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
+        self.intrinsic(ret.to_string().into(), None, {
             format!(
                 "
                 function {ret}(ptr, len) {{
@@ -2309,7 +2311,7 @@ wasm = wasmInstance.exports;
         ret
     }
 
-    fn expose_get_array_js_value_from_wasm(&mut self, memory: MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_get_array_js_value_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let mem = self.expose_dataview_memory(memory);
         let ret = MemView {
             name: "getArrayJsValueFromWasm".into(),
@@ -2319,7 +2321,7 @@ wasm = wasmInstance.exports;
             (Some(table), Some(drop)) => {
                 let table = self.export_name_of(table);
                 let drop = self.export_name_of(drop);
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
+                self.intrinsic(ret.to_string().into(), None, {
                     format!(
                         "
                         function {ret}(ptr, len) {{
@@ -2339,7 +2341,7 @@ wasm = wasmInstance.exports;
             }
             _ => {
                 self.expose_take_object();
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), None, import_deps, || {
+                self.intrinsic(ret.to_string().into(), None, {
                     format!(
                         "
                         function {ret}(ptr, len) {{
@@ -2363,113 +2365,107 @@ wasm = wasmInstance.exports;
     fn expose_get_array_i8_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_int8_memory(memory);
-        self.arrayget("getArrayI8FromWasm", view, 1, import_deps)
+        self.arrayget("getArrayI8FromWasm", view, 1)
     }
 
     fn expose_get_array_u8_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_uint8_memory(memory);
-        self.arrayget("getArrayU8FromWasm", view, 1, import_deps)
+        self.arrayget("getArrayU8FromWasm", view, 1)
     }
 
     fn expose_get_clamped_array_u8_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_clamped_uint8_memory(memory);
-        self.arrayget("getClampedArrayU8FromWasm", view, 1, import_deps)
+        self.arrayget("getClampedArrayU8FromWasm", view, 1)
     }
 
     fn expose_get_array_i16_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_int16_memory(memory);
-        self.arrayget("getArrayI16FromWasm", view, 2, import_deps)
+        self.arrayget("getArrayI16FromWasm", view, 2)
     }
 
     fn expose_get_array_u16_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_uint16_memory(memory);
-        self.arrayget("getArrayU16FromWasm", view, 2, import_deps)
+        self.arrayget("getArrayU16FromWasm", view, 2)
     }
 
     fn expose_get_array_i32_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_int32_memory(memory);
-        self.arrayget("getArrayI32FromWasm", view, 4, import_deps)
+        self.arrayget("getArrayI32FromWasm", view, 4)
     }
 
     fn expose_get_array_u32_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_uint32_memory(memory);
-        self.arrayget("getArrayU32FromWasm", view, 4, import_deps)
+        self.arrayget("getArrayU32FromWasm", view, 4)
     }
 
     fn expose_get_array_i64_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_int64_memory(memory);
-        self.arrayget("getArrayI64FromWasm", view, 8, import_deps)
+        self.arrayget("getArrayI64FromWasm", view, 8)
     }
 
     fn expose_get_array_u64_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_uint64_memory(memory);
-        self.arrayget("getArrayU64FromWasm", view, 8, import_deps)
+        self.arrayget("getArrayU64FromWasm", view, 8)
     }
 
     fn expose_get_array_f32_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_f32_memory(memory);
-        self.arrayget("getArrayF32FromWasm", view, 4, import_deps)
+        self.arrayget("getArrayF32FromWasm", view, 4)
     }
 
     fn expose_get_array_f64_from_wasm(
         &mut self,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.expose_f64_memory(memory);
-        self.arrayget("getArrayF64FromWasm", view, 8, import_deps)
+        self.arrayget("getArrayF64FromWasm", view, 8)
     }
 
-    fn arrayget(&mut self, name: &'static str, view: MemView, size: usize, import_deps: &mut HashSet<String>) -> MemView {
+    fn arrayget(&mut self, name: &'static str, view: MemView, size: usize) -> MemView {
         let ret = MemView {
             name: name.into(),
             num: view.num,
         };
-        intrinsic(&mut self.intrinsics, name.into(), None, import_deps, || {
+        let heap_view = if self.config.mode.emscripten() {
+            format!("{}", view.name)
+        } else {
+            format!("{view}()")
+        };
+        self.intrinsic(name.into(), Some(&ret.to_string()), {
             format!(
                 "
                 function {ret}(ptr, len) {{
                     ptr = ptr >>> 0;
-                    return {view}().subarray(ptr / {size}, ptr / {size} + len);
+                    return {heap_view}.subarray(ptr / {size}, ptr / {size} + len);
                 }}
                 ",
             )
@@ -2526,7 +2522,7 @@ wasm = wasmInstance.exports;
         self.memview("DataView", memory)
     }
 
-    fn memview(&mut self, kind: &'static str, memory: walrus::MemoryId, import_deps: &mut HashSet<String>) -> MemView {
+    fn memview(&mut self, kind: &'static str, memory: walrus::MemoryId) -> MemView {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             // Emscripten provides its own version of getMemory
             // so don't write out the memory function.
@@ -2542,20 +2538,18 @@ wasm = wasmInstance.exports;
                 "Float32Array" => "HEAPF32",
                 "Float64Array" => "HEAPF64",
                 "DataView" => "HEAP_DATA_VIEW",
-                _ => "",
+                _ => "HEAPU8",
             };
             // Emscripten provides its own version of getMemory
             // so don't write out the memory function.
             // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
             // for more details.
-            intrinsic(&mut self.intrinsics, view.name.to_string().into(), None, import_deps, || {
-                "".into()
-            });
-            return self.memview_memory(emscripten_heap, memory);
+            let view = self.memview_memory(emscripten_heap, memory);
+            return view;
         }
         let view = self.memview_memory(kind, memory);
         let mem = self.export_name_of(memory);
-        intrinsic(&mut self.intrinsics, view.name.to_string().into(), None, import_deps, || {
+        self.intrinsic(view.name.to_string().into(), None, {
             let cache = format!("cached{kind}Memory{}", view.num);
             let resized_check = if self.module.memories.get(memory).shared {
                 // When it's backed by a `SharedArrayBuffer`, growing the Wasm module's memory
@@ -2617,8 +2611,8 @@ wasm = wasmInstance.exports;
         }
     }
 
-    fn expose_assert_class(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "assert_class".into(), "_assertClass".into(), import_deps, || {
+    fn expose_assert_class(&mut self) {
+        self.intrinsic("assert_class".into(), "_assertClass".into(), {
             "
             function _assertClass(instance, klass) {
                 if (!(instance instanceof klass)) {
@@ -2630,21 +2624,25 @@ wasm = wasmInstance.exports;
         });
     }
 
-    fn expose_global_stack_pointer(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "stack_pointer".into(), None, import_deps, || {
+    fn expose_global_stack_pointer(&mut self) {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps.insert("'$stack_pointer'".to_string());
+            return;
+        }
+        self.intrinsic("stack_pointer".into(), None, {
             format!("\nlet stack_pointer = {INITIAL_HEAP_OFFSET};\n").into()
         });
     }
 
-    fn expose_borrowed_objects(&mut self, import_deps: &mut HashSet<String>) {
-        self.expose_global_heap(import_deps);
-        self.expose_global_stack_pointer(import_deps);
+    fn expose_borrowed_objects(&mut self) {
+        self.expose_global_heap();
+        self.expose_global_stack_pointer();
         // Our `stack_pointer` points to where we should start writing stack
         // objects, and the `stack_pointer` is incremented in a `finally` block
         // after executing this. Once we've reserved stack space we write the
         // value. Eventually underflow will throw an exception, but JS sort of
         // just handles it today...
-        intrinsic(&mut self.intrinsics, "borrowed_objects".into(), "addBorrowedObject".into(), import_deps,|| {
+        self.intrinsic("borrowed_objects".into(), "addBorrowedObject".into(), {
             "
             function addBorrowedObject(obj) {
                 if (stack_pointer == 1) throw new Error('out of js stack');
@@ -2656,10 +2654,10 @@ wasm = wasmInstance.exports;
         });
     }
 
-    fn expose_take_object(&mut self, import_deps: &mut HashSet<String>) {
-        self.expose_get_object(import_deps);
-        self.expose_drop_ref(import_deps);
-        intrinsic(&mut self.intrinsics, "take_object".into(), "takeObject".into(), import_deps, || {
+    fn expose_take_object(&mut self) {
+        self.expose_get_object();
+        self.expose_drop_ref();
+        self.intrinsic("take_object".into(), "takeObject".into(), {
             "
             function takeObject(idx) {
                 const ret = getObject(idx);
@@ -2671,15 +2669,15 @@ wasm = wasmInstance.exports;
         });
     }
 
-    fn expose_add_heap_object(&mut self, import_deps: &mut HashSet<String>) {
-        self.expose_global_heap(import_deps);
-        self.expose_global_heap_next(import_deps);
+    fn expose_add_heap_object(&mut self) {
+        self.expose_global_heap();
+        self.expose_global_heap_next();
 
         // Allocating a slot on the heap first goes through the linked list
         // (starting at `heap_next`). Once that linked list is exhausted we'll
         // be pointing beyond the end of the array, at which point we'll reserve
         // one more slot and use that.
-        intrinsic(&mut self.intrinsics, "add_heap_object".into(), "addHeapObject".into(), import_deps, || {
+        self.intrinsic("add_heap_object".into(), "addHeapObject".into(), {
             format!(
                 "
                 function addHeapObject(obj) {{
@@ -2701,7 +2699,7 @@ wasm = wasmInstance.exports;
         });
     }
 
-fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(), Error> {
+    fn expose_handle_error(&mut self) -> Result<(), Error> {
         let store_intrinsic = self
             .aux
             .exn_store
@@ -2710,9 +2708,9 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
 
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
-                let add = self.expose_add_to_externref_table(table, alloc, import_deps);
+                let add = self.expose_add_to_externref_table(table, alloc);
                 
-                self.intrinsic(&mut self.intrinsics, "handle_error".into(), "handleError".into(), import_deps, || {
+                self.intrinsic("handle_error".into(), "handleError".into(), {
                     format!(
                         "
                         function handleError(f, args) {{
@@ -2729,11 +2727,10 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             }
             _ => {
                 self.expose_add_heap_object();
-                self.intrinsic(&mut self.intrinsics, "handle_error".into(), "handleError".into(), import_deps, || {
-                    if matches!(self.config.mode, OutputMode::Emscripten) {
-                        import_deps.insert("'$addHeapObject'".to_string());
-                    }
-
+                if self.config.mode.emscripten(){
+                    self.adapter_deps.insert("'$addHeapObject'".to_string());
+                }
+                self.intrinsic("handle_error".into(), "handleError".into(), {
                     format!(
                         "
                         function handleError(f, args) {{
@@ -2751,8 +2748,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         Ok(())
     }
 
-    fn expose_log_error(&mut self, import_deps: &mut HashSet<String>) {
-        self.intrinsic(&mut self.intrinsics, "log_error".into(), "logError".into(), import_deps, || {
+    fn expose_log_error(&mut self) {
+        self.intrinsic("log_error".into(), "logError".into(), {
             "
             function logError(f, args) {
                 try {
@@ -2782,57 +2779,56 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         &mut self,
         t: VectorKind,
         memory: MemoryId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         match t {
-            VectorKind::String => self.expose_pass_string_to_wasm(memory, import_deps),
+            VectorKind::String => self.expose_pass_string_to_wasm(memory),
             VectorKind::I8 | VectorKind::U8 | VectorKind::ClampedU8 => {
-                self.expose_pass_array8_to_wasm(memory, import_deps)
+                self.expose_pass_array8_to_wasm(memory)
             }
             VectorKind::U16 | VectorKind::I16 => {
-                self.expose_pass_array16_to_wasm(memory, import_deps)
+                self.expose_pass_array16_to_wasm(memory)
             }
             VectorKind::I32 | VectorKind::U32 => {
-                self.expose_pass_array32_to_wasm(memory, import_deps)
+                self.expose_pass_array32_to_wasm(memory)
             }
             VectorKind::I64 | VectorKind::U64 => {
-                self.expose_pass_array64_to_wasm(memory, import_deps)
+                self.expose_pass_array64_to_wasm(memory)
             }
-            VectorKind::F32 => self.expose_pass_array_f32_to_wasm(memory, import_deps),
-            VectorKind::F64 => self.expose_pass_array_f64_to_wasm(memory, import_deps),
-            VectorKind::Externref => self.expose_pass_array_jsvalue_to_wasm(memory, import_deps),
+            VectorKind::F32 => self.expose_pass_array_f32_to_wasm(memory),
+            VectorKind::F64 => self.expose_pass_array_f64_to_wasm(memory),
+            VectorKind::Externref => self.expose_pass_array_jsvalue_to_wasm(memory),
             VectorKind::NamedExternref(_) => {
-                self.expose_pass_array_jsvalue_to_wasm(memory, import_deps)
+                self.expose_pass_array_jsvalue_to_wasm(memory)
             }
         }
     }
 
-    fn expose_get_vector_from_wasm(&mut self, ty: VectorKind, import_deps: &mut HashSet<String>, memory: MemoryId) -> MemView {
+    fn expose_get_vector_from_wasm(&mut self, ty: VectorKind, memory: MemoryId) -> MemView {
         match ty {
-            VectorKind::String => self.expose_get_string_from_wasm(memory)?,
-            VectorKind::I8 => self.expose_get_array_i8_from_wasm(memory, import_deps),
-            VectorKind::U8 => self.expose_get_array_u8_from_wasm(memory, import_deps),
+            VectorKind::String => self.expose_get_string_from_wasm(memory),
+            VectorKind::I8 => self.expose_get_array_i8_from_wasm(memory),
+            VectorKind::U8 => self.expose_get_array_u8_from_wasm(memory),
             VectorKind::ClampedU8 => {
-                self.expose_get_clamped_array_u8_from_wasm(memory, import_deps)
+                self.expose_get_clamped_array_u8_from_wasm(memory)
             }
-            VectorKind::I16 => self.expose_get_array_i16_from_wasm(memory, import_deps),
-            VectorKind::U16 => self.expose_get_array_u16_from_wasm(memory, import_deps),
-            VectorKind::I32 => self.expose_get_array_i32_from_wasm(memory, import_deps),
-            VectorKind::U32 => self.expose_get_array_u32_from_wasm(memory, import_deps),
-            VectorKind::I64 => self.expose_get_array_i64_from_wasm(memory, import_deps),
-            VectorKind::U64 => self.expose_get_array_u64_from_wasm(memory, import_deps),
-            VectorKind::F32 => self.expose_get_array_f32_from_wasm(memory, import_deps),
-            VectorKind::F64 => self.expose_get_array_f64_from_wasm(memory, import_deps),
+            VectorKind::I16 => self.expose_get_array_i16_from_wasm(memory),
+            VectorKind::U16 => self.expose_get_array_u16_from_wasm(memory),
+            VectorKind::I32 => self.expose_get_array_i32_from_wasm(memory),
+            VectorKind::U32 => self.expose_get_array_u32_from_wasm(memory),
+            VectorKind::I64 => self.expose_get_array_i64_from_wasm(memory),
+            VectorKind::U64 => self.expose_get_array_u64_from_wasm(memory),
+            VectorKind::F32 => self.expose_get_array_f32_from_wasm(memory),
+            VectorKind::F64 => self.expose_get_array_f64_from_wasm(memory),
             VectorKind::Externref => {
-                self.expose_get_array_js_value_from_wasm(memory, import_deps)?
+                self.expose_get_array_js_value_from_wasm(memory)
             }
             VectorKind::NamedExternref(_) => {
-                self.expose_get_array_js_value_from_wasm(memory, import_deps)?
+                self.expose_get_array_js_value_from_wasm(memory)
             }
         }
     }
 
-    fn expose_get_inherited_descriptor(&mut self, import_deps: &mut HashSet<String>) {
+    fn expose_get_inherited_descriptor(&mut self) {
         // It looks like while rare some browsers will move descriptors up the
         // property chain which runs the risk of breaking wasm-bindgen-generated
         // code because we're looking for precise descriptor functions rather
@@ -2842,12 +2838,11 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         // As a result we have a small helper here which will walk the prototype
         // chain looking for a descriptor. For some more information on this see
         // #109
-        intrinsic(
-            &mut self.intrinsics,
+        self.intrinsic(
             "get_inherited_descriptor".into(),
             "GetOwnOrInheritedPropertyDescriptor".into(),
-            import_deps,
-            || {
+           
+            {
                 "
                 function GetOwnOrInheritedPropertyDescriptor(obj, id) {
                     while (obj) {
@@ -2863,8 +2858,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         );
     }
 
-    fn expose_is_like_none(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "is_like_none".into(), "isLikeNone".into(), import_deps, || {
+    fn expose_is_like_none(&mut self) {
+        self.intrinsic("is_like_none".into(), "isLikeNone".into(), {
             "
             function isLikeNone(x) {
                 return x === undefined || x === null;
@@ -2874,8 +2869,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         });
     }
 
-    fn expose_assert_non_null(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "assert_non_null".into(), "_assertNonNull".into(), import_deps, || {
+    fn expose_assert_non_null(&mut self) {
+        self.intrinsic("assert_non_null".into(), "_assertNonNull".into(), {
             "
             function _assertNonNull(n) {
                 if (typeof(n) !== 'number' || n === 0) throw new Error(`expected a number argument that is not 0, found ${n}`);
@@ -2884,8 +2879,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         });
     }
 
-    fn expose_assert_char(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "assert_char".into(), "_assertChar".into(), import_deps, || {
+    fn expose_assert_char(&mut self) {
+        self.intrinsic("assert_char".into(), "_assertChar".into(), {
             "
             function _assertChar(c) {
                 if (typeof(c) === 'number' && (c >= 0x110000 || (c >= 0xD800 && c < 0xE000))) throw new Error(`expected a valid Unicode scalar value, found ${c}`);
@@ -2894,15 +2889,18 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         });
     }
 
-    fn expose_make_mut_closure(&mut self, import_deps: &mut HashSet<String>) {
-        self.expose_closure_finalization(import_deps);
+    fn expose_make_mut_closure(&mut self) {
+        self.expose_closure_finalization();
 
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps.insert("'$CLOSURE_DTORS'".to_string());
+        }
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
-        intrinsic(&mut self.intrinsics, "make_mut_closure".into(), None, import_deps, || {
+        self.intrinsic("make_mut_closure".into(), "makeMutClosure".into(), {
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2916,14 +2914,21 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                 ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
             if matches!(self.config.mode, OutputMode::Emscripten) {
-            //self.emscripten_library.push_str(&
-                self.emscripten_deps.insert("'$CLOSURE_DTORS'".to_string());
                 format!(
                     "
                     $makeMutClosure: function(arg0, arg1, dtor, f) {{
                         {state_init}
                         const real = (...args) => {{
                             {instance_check}
+                            // First up with a closure we increment the internal reference
+                            // count. This ensures that the Rust closure environment won't
+                            // be deallocated while we're invoking it.
+                            state.cnt++;
+                            const a = state.a;
+                            state.a = 0;
+                            try {{
+                                return f(a, state.b, ...args);
+                            }} finally {{
                                 state.a = a;
                                 real._wbg_cb_unref();
                             }}
@@ -2947,7 +2952,15 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                     function makeMutClosure(arg0, arg1, dtor, f) {{
                         {state_init}
                         const real = (...args) => {{
-                            {instance_check}
+                            // First up with a closure we increment the internal reference
+                            // count. This ensures that the Rust closure environment won't
+                            // be deallocated while we're invoking it.
+                            state.cnt++;
+                            const a = state.a;
+                            state.a = 0;
+                            try {{
+                                return f(a, state.b, ...args);
+                            }} finally {{
                                 state.a = a;
                                 real._wbg_cb_unref();
                             }}
@@ -2969,14 +2982,17 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         });
     }
 
-    fn expose_make_closure(&mut self, import_deps: &mut HashSet<String>) {
-        self.expose_closure_finalization(import_deps);
+    fn expose_make_closure(&mut self) {
+        self.expose_closure_finalization();
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps.insert("'$CLOSURE_DTORS'".to_string());
+        }
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
-        intrinsic(&mut self.intrinsics, "make_closure".into(), None, import_deps, || {
+        self.intrinsic("make_closure".into(), "makeMutClosure".into(), {
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2990,8 +3006,6 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                 ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
             if matches!(self.config.mode, OutputMode::Emscripten) {
-            //self.emscripten_library.push_str(&
-                self.emscripten_deps.insert("'$CLOSURE_DTORS'".to_string());
                 format!(
                     "
                     $makeMutClosure: function(arg0, arg1, dtor, f) {{
@@ -3055,8 +3069,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         });
     }
 
-    fn expose_closure_finalization(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "closure_finalization".into(), None, import_deps, || {
+    fn expose_closure_finalization(&mut self) {
+        self.intrinsic("closure_finalization".into(), "CLOSURE_DTORS".into(), {
             if matches!(self.config.mode, OutputMode::Emscripten) {
                 format!(
                     "
@@ -3196,55 +3210,23 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
 
     fn emscripten_library(&mut self, s: &str) {
         let s = s.trim();
-
-        // Ensure a blank line between adjacent items, and ensure everything is
-        // terminated with a newline.
-        while !self.emscripten_library.ends_with("\n\n\n")
-            && !self.emscripten_library.ends_with("*/\n")
-        {
-            self.emscripten_library.push('\n');
+        if s.is_empty() {
+            return;
         }
-        self.emscripten_library.push_str(s);
-        self.emscripten_library.push('\n');
-    }
 
-    fn write_js_function(&mut self, body: &str, func_name: &str, args: &str, deps: &[String]) {
-        if matches!(self.config.mode, OutputMode::Emscripten) {
-            let re = Regex::new(r"(?:wasmExports|wasm)\.([a-zA-Z0-9_$]*)").unwrap();
-            let formatted_body = if let Some(_) = re.captures(body) {
-                re.replace_all(body, "wasmExports[\'$1\']").to_string()
-            } else {
-                body.to_string()
-            };
+        // Check if we need to append a comma separator
+        let needs_comma = !self.emscripten_library.trim_end().is_empty() 
+            && !self.emscripten_library.trim_end().ends_with(',');
 
-            self.emscripten_library(&format!(
-                "${}: function{} {{
-                {}
-                }},
-                ",
-                func_name,
-                args,
-                formatted_body.trim()
-            ));
-            if !deps.is_empty() {
-                self.emscripten_library.push_str(&format!(
-                    "${}_deps: [{}],
-                    ",
-                    func_name,
-                    deps.join(",")
-                ));
+        if needs_comma {
+            if self.emscripten_library.ends_with('\n') {
+                self.emscripten_library.pop();
             }
-        } else {
-            self.global(&format!(
-                "function {}{} {{
-                {}
-            }}
-            ",
-                func_name,
-                args,
-                body.trim()
-            ));
+            self.emscripten_library.push_str(",\n\n");
         }
+        
+        self.emscripten_library.push_str(s);
+        self.emscripten_library.push_str("\n");
     }
 
     fn require_class_wrap(&mut self, name: &str) -> String {
@@ -3383,22 +3365,22 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         Ok(name)
     }
 
-    fn expose_get_from_externref_table(&mut self, table: TableId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_get_from_externref_table(&mut self, table: TableId) -> MemView {
         let view = self.memview_table("getFromExternrefTable", table);
         assert!(self.config.externref);
         let table = self.export_name_of(table);
-        intrinsic(&mut self.intrinsics, view.to_string().into(), None, import_deps, || {
+        self.intrinsic(view.to_string().into(), None, {
             format!("\nfunction {view}(idx) {{ return wasm.{table}.get(idx); }}\n").into()
         });
         view
     }
 
-    fn expose_take_from_externref_table(&mut self, table: TableId, drop: FunctionId, import_deps: &mut HashSet<String>) -> MemView {
+    fn expose_take_from_externref_table(&mut self, table: TableId, drop: FunctionId) -> MemView {
         let view = self.memview_table("takeFromExternrefTable", table);
         assert!(self.config.externref);
         let drop = self.export_name_of(drop);
         let table = self.export_name_of(table);
-        intrinsic(&mut self.intrinsics, view.to_string().into(), None, import_deps, || {
+        self.intrinsic(view.to_string().into(), None, {
             format!(
                 "
                 function {view}(idx) {{
@@ -3418,14 +3400,13 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         &mut self,
         table: TableId,
         alloc: FunctionId,
-        import_deps: &mut HashSet<String>,
     ) -> MemView {
         let view = self.memview_table("addToExternrefTable", table);
         assert!(self.config.externref);
         let alloc = self.export_name_of(alloc);
         let table = self.export_name_of(table);
 
-        self.intrinsic(&mut self.intrinsics, &view.to_string(), None, import_deps, || {
+        self.intrinsic(view.to_string().into(), None, {
             format!(
                 "
                 function {view}(obj) {{
@@ -3537,6 +3518,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         instrs: &[InstructionData],
         kind: ContextAdapterKind,
     ) -> Result<(), Error> {
+        self.adapter_deps.clear();
         let catch = self.aux.imports_with_catch.contains(&id);
         if let ContextAdapterKind::Import(core) = kind {
             if !catch && self.attempt_direct_import(core, instrs)? {
@@ -3592,7 +3574,6 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
-        let mut import_deps: HashSet<String> = Default::default();
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -3616,7 +3597,6 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                 &debug_name,
                 ret_ty_override,
                 ret_desc,
-                &mut import_deps,
             )
             .with_context(|| "failed to generates bindings for ".to_string() + &debug_name)?;
 
@@ -3677,7 +3657,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                                 identifier,
                                 comments: Some(js_docs),
                                 definition,
-                                ts_definition: typescript,
+                                ts_definition: ts_definition,
                                 ts_comments,
                                 private: false,
                             }),
@@ -3755,17 +3735,15 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             ContextAdapterKind::Import(core) => {
                 let mut code = if catch {
                     format!(
-                        "function() {{ return handleError(function {code}, arguments) }}",
-                        code
-                    )
+                        "function() {{ return handleError(function {code}, arguments) }}")
                 } else if log_error {
                     format!("function() {{ return logError(function {code}, arguments) }}")
                 } else {
                     format!("function{code}")
                 };
 
-                if matches!(self.config.mode, OutputMode::Emscripten) && !import_deps.is_empty() {
-                    let mut import_deps_vec = import_deps
+                if matches!(self.config.mode, OutputMode::Emscripten) && !self.adapter_deps.is_empty() {
+                    let mut import_deps_vec = self.adapter_deps
                         .iter()
                         .map(|s| s.as_str())
                         .collect::<Vec<&str>>();
@@ -3786,12 +3764,11 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
                 assert!(!log_error);
 
                 if matches!(self.config.mode, OutputMode::Emscripten) {
-                    self.emscripten_library.push_str("$");
-                    self.emscripten_library.push_str(&self.export_adapter_name(id));
-                    self.emscripten_library.push_str(": function");
-                    self.emscripten_library
-                        .push_str(&code.replace("wasm.", "_"));
-                    self.emscripten_library.push_str(",\n\n");
+                    self.emscripten_library(&format!(
+                        "${}: function{}",
+                        self.export_adapter_name(id),
+                        code.replace("wasm.", "wasmExports.")
+                    ));
                 } else {
                     self.globals.push_str("function ");
                     self.globals.push_str(&self.export_adapter_name(id));
@@ -4016,7 +3993,6 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         args: &[String],
         variadic: bool,
         prelude: &mut String,
-        import_deps: &mut HashSet<String>,
     ) -> Result<String, Error> {
         let variadic_args = |js_arguments: &[String]| {
             Ok(if !variadic {
@@ -4040,7 +4016,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             let re = Regex::new(r"([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(").unwrap();
             for arg in args {
                 if let Some(result) = re.captures(arg) {
-                    import_deps.insert(format!("'${}'", &result[1]));
+                    self.adapter_deps.insert(format!("'${}'", &result[1]));
                 }
             }
         }
@@ -4257,7 +4233,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             AuxImport::Intrinsic(intrinsic) => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
-                self.invoke_intrinsic(intrinsic, args, prelude, import_deps)
+                self.invoke_intrinsic(intrinsic, args, prelude)
             }
 
             AuxImport::LinkTo(path, content) => {
@@ -4324,7 +4300,6 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         intrinsic: &Intrinsic,
         args: &[String],
         prelude: &mut String,
-        import_deps: &mut HashSet<String>,
     ) -> Result<String, Error> {
         let expr = match intrinsic {
             Intrinsic::JsvalEq => {
@@ -4614,7 +4589,7 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
             Intrinsic::DebugString => {
                 assert_eq!(args.len(), 1);
                 self.expose_debug_string();
-                import_deps.insert("'$debugString'".to_string());
+                self.adapter_deps.insert("'$debugString'".to_string());
                 format!("debugString({})", args[0])
             }
 
@@ -4866,8 +4841,8 @@ fn expose_handle_error(&mut self, import_deps: &mut HashSet<String>) -> Result<(
         Ok(())
     }
 
-    fn expose_debug_string(&mut self, import_deps: &mut HashSet<String>) {
-        intrinsic(&mut self.intrinsics, "debug_string".into(), "debugString".into(), import_deps, || {
+    fn expose_debug_string(&mut self) {
+        self.intrinsic("debug_string".into(), "debugString".into(), {
             "
             function debugString(val) {
                 // primitive types
@@ -5360,48 +5335,6 @@ impl ExportedClass {
     }
 }
 
-type Intrinsics = BTreeMap<Cow<'static, str>, Cow<'static, str>>;
-
-fn intrinsic(
-    intrinsics: &mut Option<Intrinsics>,
-    name: Cow<'static, str>,
-    js_name: Option<&str>,
-    import_deps: &mut HashSet<String>,
-    get_body: impl FnOnce() -> Cow<'static, str>,
-) {
-    if intrinsics.as_ref().unwrap().contains_key(&name) {
-        return;
-    }
-    let val = get_body();
-
-    if matches!(self.config.mode, OutputMode::Emscripten) {
-
-        let actual_js_name: &str = js_name.unwrap_or(&name);
-        import_deps.insert(format!("'${actual_js_name: &str}'"));
-
-        // 1. Global "wasm." replacement
-        let mut content = val.replace("wasm.", "wasmExports.");
-
-        // 2. Function signature replacement
-        // Replace all occurrences of "function name" -> "$name: function".
-        // This is robust against whitespace and ensures the actual function 
-        // is transformed even if comments containing the name appear earlier.
-        let old_decl = format!("function {actual_js_name: &str}");
-        let new_decl = format!("${actual_js_name: &str}: function");
-        
-        content = content.replace(&old_decl, &new_decl);
-
-        self.emscripten_library.push_str(&content);
-        self.emscripten_library.push_str(",\n");
-
-        // Register empty string so standard generation skips this key
-        self.intrinsics.as_mut().unwrap().insert(name.into(), "".into());
-
-    } else {
-        // Standard Mode
-        self.intrinsics.as_mut().unwrap().insert(name.into(), val);
-    }
-}
 
 struct MemView {
     name: Cow<'static, str>,

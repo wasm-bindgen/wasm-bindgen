@@ -134,13 +134,10 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
     // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
     // file as the primary executor which is inconsitent with what is expected here.
-    if file_name.extension().unwrap() == "js" {
-        file_name_buf.pop();
-        file_name_buf.push(file_name.file_stem().unwrap());
+    if file_name_buf.extension().unwrap() == "js" {
         file_name_buf.set_extension("wasm");
-        file_name = Path::new(&file_name_buf);
     }
-    let wasm = fs::read(&cli.file).context("failed to read Wasm file")?;
+    let wasm = fs::read(file_name_buf).context("failed to read Wasm file")?;
     let mut wasm = walrus::ModuleConfig::new()
         // generate dwarf by default, it can be controlled by debug profile
         //
@@ -391,7 +388,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         TestMode::Emscripten => {
             let srv = server::spawn_emscripten(
                 &"127.0.0.1:0".parse().unwrap(),
-                tmpdir.path(),
+                &tmpdir_path,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
             )
             .context("failed to spawn server")?;

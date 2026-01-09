@@ -598,6 +598,10 @@ impl OutputMode {
         matches!(self, OutputMode::NoModules { .. })
     }
 
+    fn emscripten(&self) -> bool {
+        matches!(self, OutputMode::Emscripten { .. })
+    }
+
     fn esm_integration(&self) -> bool {
         matches!(
             self,
