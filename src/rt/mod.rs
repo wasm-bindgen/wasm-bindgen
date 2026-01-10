@@ -1,10 +1,13 @@
 use crate::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmRet};
 use crate::describe::inform;
 use crate::JsValue;
+#[cfg(all(feature = "std", panic = "unwind"))]
+use core::any::Any;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::{Cell, UnsafeCell};
 use core::convert::Infallible;
 use core::ops::{Deref, DerefMut};
+use core::panic::{RefUnwindSafe, UnwindSafe};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
 use wasm_bindgen_shared::tys::FUNCTION;
@@ -292,6 +295,9 @@ pub struct WasmRefCell<T: ?Sized> {
     value: UnsafeCell<T>,
 }
 
+impl<T: ?Sized> UnwindSafe for WasmRefCell<T> {}
+impl<T: ?Sized> RefUnwindSafe for WasmRefCell<T> {}
+
 impl<T: ?Sized> WasmRefCell<T> {
     pub fn new(value: T) -> WasmRefCell<T>
     where
@@ -433,6 +439,8 @@ pub struct RcRef<T: ?Sized + 'static> {
     ref_: Ref<'static, T>,
     _rc: Rc<WasmRefCell<T>>,
 }
+
+impl<T: ?Sized> UnwindSafe for RcRef<T> {}
 
 impl<T: ?Sized> RcRef<T> {
     pub fn new(rc: Rc<WasmRefCell<T>>) -> Self {
@@ -764,4 +772,41 @@ pub const fn encode_u32_to_fixed_len_bytes(value: u32) -> [u8; 5] {
     }
     result[4] = (value >> (7 * 4)) as u8;
     result
+}
+
+#[cfg(all(feature = "std", panic = "unwind"))]
+#[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate, raw_module = "__wbindgen_placeholder__")]
+extern "C" {
+    fn __wbindgen_panic_error(msg: &JsValue) -> JsValue;
+}
+
+#[cfg(all(feature = "std", panic = "unwind"))]
+pub fn panic_to_panic_error(val: std::boxed::Box<dyn Any + Send>) -> JsValue {
+    let maybe_panic_msg: Option<&str> = if let Some(s) = val.downcast_ref::<&str>() {
+        Some(s)
+    } else if let Some(s) = val.downcast_ref::<std::string::String>() {
+        Some(s)
+    } else {
+        None
+    };
+    let err: JsValue = __wbindgen_panic_error(&JsValue::from_str(
+        maybe_panic_msg.unwrap_or("No panic message available"),
+    ));
+    err
+}
+
+#[cfg(all(feature = "std", panic = "unwind"))]
+pub fn maybe_catch_unwind<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) -> R {
+    let result = std::panic::catch_unwind(f);
+    match result {
+        Ok(val) => val,
+        Err(e) => {
+            crate::throw_val(panic_to_panic_error(e));
+        }
+    }
+}
+
+#[cfg(not(all(feature = "std", panic = "unwind")))]
+pub fn maybe_catch_unwind<F: FnOnce() -> R, R>(f: F) -> R {
+    f()
 }
