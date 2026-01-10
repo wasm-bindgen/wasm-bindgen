@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLLinkElement , typescript_type = "HTMLLinkElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HtmlLinkElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement)"]
@@ -219,3 +219,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`, `StyleSheet`*"]
     pub fn sheet(this: &HtmlLinkElement) -> Option<StyleSheet>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlLinkElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for HtmlLinkElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for HtmlLinkElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlLinkElement {}

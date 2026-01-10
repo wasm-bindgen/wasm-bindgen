@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLOutputElement , typescript_type = "HTMLOutputElement")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `HtmlOutputElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement)"]
@@ -130,3 +130,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn set_custom_validity(this: &HtmlOutputElement, error: &str);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlOutputElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Element> for HtmlOutputElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for HtmlOutputElement {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlOutputElement {}

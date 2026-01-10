@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = XrSpace , extends = EventTarget , extends = :: js_sys :: Object , js_name = XRReferenceSpace , typescript_type = "XRReferenceSpace")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `XrReferenceSpace` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpace)"]
@@ -54,3 +54,9 @@ extern "C" {
         origin_offset: &XrRigidTransform,
     ) -> XrReferenceSpace;
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<XrSpace> for XrReferenceSpace {}
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for XrReferenceSpace {}

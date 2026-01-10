@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AbortSignal , extends = EventTarget , extends = :: js_sys :: Object , js_name = TaskSignal , typescript_type = "TaskSignal")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `TaskSignal` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TaskSignal)"]
@@ -75,3 +75,9 @@ extern "C" {
     pub fn any_with_init(signals: &::wasm_bindgen::JsValue, init: &TaskSignalAnyInit)
         -> TaskSignal;
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<AbortSignal> for TaskSignal {}
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for TaskSignal {}

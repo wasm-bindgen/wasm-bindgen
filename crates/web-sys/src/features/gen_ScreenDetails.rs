@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = ScreenDetails , typescript_type = "ScreenDetails")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `ScreenDetails` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScreenDetails)"]
@@ -84,3 +84,6 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_oncurrentscreenchange(this: &ScreenDetails, value: Option<&::js_sys::Function>);
 }
+#[cfg(web_sys_unstable_apis)]
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for ScreenDetails {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = RTCPeerConnectionIceErrorEvent , typescript_type = "RTCPeerConnectionIceErrorEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `RtcPeerConnectionIceErrorEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceErrorEvent)"]
@@ -48,3 +48,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceErrorEvent`*"]
     pub fn error_text(this: &RtcPeerConnectionIceErrorEvent) -> ::alloc::string::String;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for RtcPeerConnectionIceErrorEvent {}

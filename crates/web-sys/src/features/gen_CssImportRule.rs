@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssRule , extends = :: js_sys :: Object , js_name = CSSImportRule , typescript_type = "CSSImportRule")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `CssImportRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSImportRule)"]
@@ -36,3 +36,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssImportRule`, `CssStyleSheet`*"]
     pub fn style_sheet(this: &CssImportRule) -> Option<CssStyleSheet>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<CssRule> for CssImportRule {}

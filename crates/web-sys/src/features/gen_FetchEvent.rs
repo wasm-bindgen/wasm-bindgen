@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = ExtendableEvent , extends = Event , extends = :: js_sys :: Object , js_name = FetchEvent , typescript_type = "FetchEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `FetchEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent)"]
@@ -50,3 +50,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FetchEvent`*"]
     pub fn respond_with(this: &FetchEvent, r: &::js_sys::Promise) -> Result<(), JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<ExtendableEvent> for FetchEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for FetchEvent {}

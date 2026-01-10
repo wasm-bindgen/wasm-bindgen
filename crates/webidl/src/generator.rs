@@ -7,10 +7,10 @@ use std::collections::BTreeSet;
 use syn::{Ident, Type};
 
 use crate::constants::{BUILTIN_IDENTS, POLYFILL_INTERFACES};
-use crate::idl_type::IdlType;
 use crate::traverse::TraverseType;
 use crate::util::shared_ref;
 use crate::util::{get_cfg_features, mdn_doc, required_doc_string};
+use crate::wbg_type::WbgType;
 use crate::Options;
 
 fn add_features(features: &mut BTreeSet<String>, ty: &impl TraverseType) {
@@ -64,7 +64,7 @@ fn maybe_unstable_docs(unstable: bool) -> Option<proc_macro2::TokenStream> {
 }
 
 fn generate_arguments(
-    arguments: &[(Ident, IdlType<'_>, Type)],
+    arguments: &[(Ident, WbgType<'_>, Type)],
     variadic: bool,
 ) -> Vec<TokenStream> {
     arguments
@@ -377,12 +377,13 @@ pub enum InterfaceMethodKind {
     IndexingDeleter,
 }
 
+#[derive(Clone)]
 pub struct InterfaceMethod<'a> {
     pub name: Ident,
     pub js_name: String,
     pub deprecated: Option<Option<String>>,
-    pub arguments: Vec<(Ident, IdlType<'a>, Type)>,
-    pub variadic_type: Option<IdlType<'a>>,
+    pub arguments: Vec<(Ident, WbgType<'a>, Type)>,
+    pub variadic_type: Option<WbgType<'a>>,
     pub ret_ty: Option<Type>,
     pub kind: InterfaceMethodKind,
     pub is_static: bool,
@@ -393,7 +394,7 @@ pub struct InterfaceMethod<'a> {
 }
 
 impl InterfaceMethod<'_> {
-    fn generate(
+    pub(crate) fn generate(
         &self,
         options: &Options,
         parent_name: &Ident,
@@ -597,6 +598,19 @@ impl Interface<'_> {
             .map(|x| quote!( extends = #x, ))
             .collect::<Vec<_>>();
 
+        // Generate Upcast implementations for each parent type
+        let upcast_impls = parents
+            .iter()
+            .map(|parent| {
+                quote! {
+                    #unstable_attr
+                    #[automatically_derived]
+                    impl ::wasm_bindgen::convert::Upcast<#parent> for #name {
+                    }
+                }
+            })
+            .collect::<Vec<_>>();
+
         let consts = consts
             .iter()
             .map(|x| x.generate(options, name, js_name, deprecated))
@@ -646,7 +660,7 @@ impl Interface<'_> {
                     js_name = #js_ident,
                     typescript_type = #js_name
                 )]
-                #[derive(Debug, Clone, PartialEq, Eq)]
+                #[derive(Debug, Clone, PartialEq, Eq, ::wasm_bindgen::Upcast)]
                 #doc_comment
                 #unstable_docs
                 #deprecated
@@ -657,6 +671,9 @@ impl Interface<'_> {
             }
 
             #consts
+
+            // Manual Upcast implementations for parent types
+            #(#upcast_impls)*
         }
     }
 }
@@ -879,7 +896,7 @@ impl Dictionary {
             #[wasm_bindgen]
             extern "C" {
                 #[wasm_bindgen(extends = ::js_sys::Object, js_name = #js_name)]
-                #[derive(Debug, Clone, PartialEq, Eq)]
+                #[derive(Debug, Clone, PartialEq, Eq, ::wasm_bindgen::Upcast)]
                 #doc_comment
                 #unstable_docs
                 #deprecated
@@ -925,7 +942,7 @@ impl Dictionary {
 pub struct Function<'a> {
     pub name: Ident,
     pub js_name: String,
-    pub arguments: Vec<(Ident, IdlType<'a>, Type)>,
+    pub arguments: Vec<(Ident, WbgType<'a>, Type)>,
     pub ret_ty: Option<Type>,
     pub catch: bool,
     pub variadic: bool,
@@ -933,7 +950,7 @@ pub struct Function<'a> {
 }
 
 impl Function<'_> {
-    fn generate(
+    pub(crate) fn generate(
         &self,
         options: &Options,
         parent_name: &Ident,

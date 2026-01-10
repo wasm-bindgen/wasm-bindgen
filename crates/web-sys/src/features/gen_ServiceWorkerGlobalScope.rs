@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = WorkerGlobalScope , extends = EventTarget , extends = :: js_sys :: Object , js_name = ServiceWorkerGlobalScope , typescript_type = "ServiceWorkerGlobalScope")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `ServiceWorkerGlobalScope` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope)"]
@@ -179,3 +179,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerGlobalScope`*"]
     pub fn skip_waiting(this: &ServiceWorkerGlobalScope) -> Result<::js_sys::Promise, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<WorkerGlobalScope> for ServiceWorkerGlobalScope {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for ServiceWorkerGlobalScope {}

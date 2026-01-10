@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CharacterData , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = Text , typescript_type = "Text")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `Text` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Text)"]
@@ -328,3 +328,9 @@ extern "C" {
         options: &BoxQuadOptions,
     ) -> Result<::js_sys::Array, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<CharacterData> for Text {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Node> for Text {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for Text {}

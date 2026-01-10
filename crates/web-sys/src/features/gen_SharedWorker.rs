@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = SharedWorker , typescript_type = "SharedWorker")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `SharedWorker` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker)"]
@@ -60,3 +60,5 @@ extern "C" {
         options: &WorkerOptions,
     ) -> Result<SharedWorker, JsValue>;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for SharedWorker {}

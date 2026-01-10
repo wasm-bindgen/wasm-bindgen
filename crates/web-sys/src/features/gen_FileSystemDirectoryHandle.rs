@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = FileSystemHandle , extends = :: js_sys :: Object , js_name = FileSystemDirectoryHandle , typescript_type = "FileSystemDirectoryHandle")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `FileSystemDirectoryHandle` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle)"]
@@ -101,3 +101,5 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn values(this: &FileSystemDirectoryHandle) -> ::js_sys::AsyncIterator;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<FileSystemHandle> for FileSystemDirectoryHandle {}

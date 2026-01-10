@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = DomRequest , extends = EventTarget , extends = :: js_sys :: Object , js_name = IDBFileRequest , typescript_type = "IDBFileRequest")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `IdbFileRequest` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBFileRequest)"]
@@ -48,3 +48,7 @@ extern "C" {
     #[deprecated]
     pub fn set_onprogress(this: &IdbFileRequest, value: Option<&::js_sys::Function>);
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<DomRequest> for IdbFileRequest {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<EventTarget> for IdbFileRequest {}

@@ -8,6 +8,7 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
+            ()
             *const T
             *mut T
             AssertUnwindSafe<T>
@@ -26,6 +27,7 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   | ^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
+            ()
             *const T
             *mut T
             AssertUnwindSafe<T>
@@ -44,6 +46,7 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
   |                     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
   = help: the following other types implement trait `FromWasmAbi`:
+            ()
             *const T
             *mut T
             AssertUnwindSafe<T>

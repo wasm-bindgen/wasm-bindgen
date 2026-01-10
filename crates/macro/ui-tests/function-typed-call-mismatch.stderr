@@ -1,0 +1,17 @@
+error[E0277]: Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function
+ --> ui-tests/function-typed-call-mismatch.rs:9:24
+  |
+9 |     let _result = func.call1(&JsValue::undefined(), &42);
+  |                        ^^^^^ concrete generic type does not match the expected generic repr type
+  |
+  = help: the trait `ErasableGenericBorrow<wasm_bindgen::JsValue>` is not implemented for `i32`
+  = note: Try adding the trait bound to the generic parameter for `ErasableGeneric<Repr = JsValue>` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only
+note: required by a bound in `Function::<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>::call1`
+ --> $WORKSPACE/crates/js-sys/src/lib.rs
+  |
+  | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ required by this bound in `Function::<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>::call1`
+...
+  |     pub fn call1<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+  |            ----- required by a bound in this associated function
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

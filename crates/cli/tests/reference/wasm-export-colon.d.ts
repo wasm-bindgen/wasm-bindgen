@@ -111,8 +111,8 @@ export interface InitOutput {
     readonly wasmbindgentestcontext_run: (a: number, b: number, c: number) => any;
     readonly wasm_bindgen__closure__destroy__h0000000000000007: (a: number, b: number) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number, c: any, d: number, e: any) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000008: (a: number, b: number, c: any) => [number, number];
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000005: (a: number, b: number, c: any, d: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000008: (a: number, b: number, c: any) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number) => number;
     readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number) => void;
     readonly __externref_table_alloc: () => number;
@@ -121,6 +121,7 @@ export interface InitOutput {
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly __externref_table_dealloc: (a: number) => void;
     readonly __wbindgen_start: () => void;
 }
 

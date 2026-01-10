@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MouseEvent , extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = PointerEvent , typescript_type = "PointerEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
     #[doc = "The `PointerEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent)"]
@@ -108,3 +108,9 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PointerEvent`*"]
     pub fn get_coalesced_events(this: &PointerEvent) -> ::js_sys::Array;
 }
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<MouseEvent> for PointerEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<UiEvent> for PointerEvent {}
+#[automatically_derived]
+impl ::wasm_bindgen::convert::Upcast<Event> for PointerEvent {}
