@@ -1,3 +1,5 @@
+use wasm_bindgen_test::wasm_bindgen_test;
+
 #[wasm_bindgen_test]
 #[should_panic]
 fn should_panic() {
