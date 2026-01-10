@@ -1,5 +1,7 @@
 //! A small test suite for the `wasm-bindgen-test-runner` CLI command itself
 
+mod headless_streaming_tests;
+
 use assert_cmd::Command;
 use predicates::str;
 use std::env;
