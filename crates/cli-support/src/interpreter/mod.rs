@@ -28,7 +28,7 @@ use walrus::{ExportId, FunctionId, LocalFunction, LocalId, Module};
 /// An interpreter currently represents effectively cached state. It is reused
 /// between calls to `interpret` and is precomputed from a `Module`. It houses
 /// state like the Wasm stack, Wasm memory, etc.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Interpreter {
     // Function index of the `__wbindgen_describe` and
     // `__wbindgen_describe_cast` imported functions. We special case this
@@ -53,6 +53,7 @@ pub struct Interpreter {
     /// Some functions that need to skip interpret, such as `__wasm_call_ctors`
     /// and `__wasm_call_dtors`.
     skip_calls: HashSet<FunctionId>,
+    stopped: bool,
 }
 
 fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
@@ -158,6 +159,7 @@ impl Interpreter {
     /// not found in the `module`.
     pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> &[u32] {
         self.descriptor.truncate(0);
+        self.stopped = false;
 
         // We should have a blank Wasm and LLVM stack at both the start and end
         // of the call.
@@ -204,6 +206,7 @@ impl Interpreter {
             frame.locals.insert(*arg, *val);
         }
 
+        dbg!(&module.funcs.get(id).name);
         frame.eval(local.entry_block()).unwrap_or_else(|err| {
             if let Some(name) = &module.funcs.get(id).name {
                 panic!("{name}: {err}")
@@ -214,6 +217,7 @@ impl Interpreter {
     }
 }
 
+#[derive(Debug)]
 struct Frame<'a> {
     module: &'a Module,
     func: &'a LocalFunction,
@@ -273,7 +277,7 @@ impl Frame<'_> {
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     let width = e.kind.width();
-                    ensure!(address % width == 0);
+                    ensure!(address % width == 0, "bad load");
                     let val = self.interp.mem[address as usize / 4];
                     if width == 4 {
                         stack.push(val)
@@ -303,7 +307,7 @@ impl Frame<'_> {
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     let width = e.kind.width();
-                    ensure!(address % width == 0);
+                    ensure!(address % width == 0, "bad store");
                     let index = address as usize / 4;
                     if width == 8 {
                         // Oops our stack is of i32s so we can't really handle a
@@ -352,6 +356,7 @@ impl Frame<'_> {
                         // `__wbindgen_describe_cast` marks the end of the cast
                         // descriptor. Stop here, ignoring anything on the stack.
                         self.interp.sp = self.interp.mem.len() as i32;
+                        self.interp.stopped = true;
                         break;
 
                     // ... otherwise this is a normal call so we recurse.
@@ -402,14 +407,23 @@ impl Frame<'_> {
 
                 Instr::Block(block) => {
                     self.eval(block.seq)?;
+                    if self.interp.stopped {
+                        break;
+                    }
                 }
 
                 Instr::Try(block) => {
                     self.eval(block.seq)?;
+                    if self.interp.stopped {
+                        break;
+                    }
                 }
 
                 Instr::TryTable(block) => {
                     self.eval(block.seq)?;
+                    if self.interp.stopped {
+                        break;
+                    }
                 }
 
                 // All other instructions shouldn't be used by our various
