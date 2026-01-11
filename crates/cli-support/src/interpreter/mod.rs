@@ -28,7 +28,7 @@ use walrus::{ExportId, FunctionId, LocalFunction, LocalId, Module};
 /// An interpreter currently represents effectively cached state. It is reused
 /// between calls to `interpret` and is precomputed from a `Module`. It houses
 /// state like the Wasm stack, Wasm memory, etc.
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct Interpreter {
     // Function index of the `__wbindgen_describe` and
     // `__wbindgen_describe_cast` imported functions. We special case this
@@ -206,7 +206,6 @@ impl Interpreter {
             frame.locals.insert(*arg, *val);
         }
 
-        dbg!(&module.funcs.get(id).name);
         frame.eval(local.entry_block()).unwrap_or_else(|err| {
             if let Some(name) = &module.funcs.get(id).name {
                 panic!("{name}: {err}")
@@ -217,7 +216,6 @@ impl Interpreter {
     }
 }
 
-#[derive(Debug)]
 struct Frame<'a> {
     module: &'a Module,
     func: &'a LocalFunction,
@@ -277,7 +275,7 @@ impl Frame<'_> {
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     let width = e.kind.width();
-                    ensure!(address % width == 0, "bad load");
+                    ensure!(address % width == 0);
                     let val = self.interp.mem[address as usize / 4];
                     if width == 4 {
                         stack.push(val)
@@ -307,7 +305,7 @@ impl Frame<'_> {
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     let width = e.kind.width();
-                    ensure!(address % width == 0, "bad store");
+                    ensure!(address % width == 0);
                     let index = address as usize / 4;
                     if width == 8 {
                         // Oops our stack is of i32s so we can't really handle a
