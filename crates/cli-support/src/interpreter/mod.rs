@@ -53,6 +53,7 @@ pub struct Interpreter {
     /// Some functions that need to skip interpret, such as `__wasm_call_ctors`
     /// and `__wasm_call_dtors`.
     skip_calls: HashSet<FunctionId>,
+    stopped: bool,
 }
 
 fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
@@ -158,6 +159,7 @@ impl Interpreter {
     /// not found in the `module`.
     pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> &[u32] {
         self.descriptor.truncate(0);
+        self.stopped = false;
 
         // We should have a blank Wasm and LLVM stack at both the start and end
         // of the call.
@@ -352,6 +354,7 @@ impl Frame<'_> {
                         // `__wbindgen_describe_cast` marks the end of the cast
                         // descriptor. Stop here, ignoring anything on the stack.
                         self.interp.sp = self.interp.mem.len() as i32;
+                        self.interp.stopped = true;
                         break;
 
                     // ... otherwise this is a normal call so we recurse.
@@ -402,14 +405,23 @@ impl Frame<'_> {
 
                 Instr::Block(block) => {
                     self.eval(block.seq)?;
+                    if self.interp.stopped {
+                        break;
+                    }
                 }
 
                 Instr::Try(block) => {
                     self.eval(block.seq)?;
+                    if self.interp.stopped {
+                        break;
+                    }
                 }
 
                 Instr::TryTable(block) => {
                     self.eval(block.seq)?;
+                    if self.interp.stopped {
+                        break;
+                    }
                 }
 
                 // All other instructions shouldn't be used by our various
