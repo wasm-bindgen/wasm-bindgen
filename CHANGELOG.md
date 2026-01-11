@@ -62,6 +62,9 @@
 * Interpreter: support try_table blocks
   [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4862)
 
+* Interpreter: Stop interpretting descriptor after `__wbindgen_describe_cast`
+  [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4898)
+
 ### Removed
 
 ## [0.2.106](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.105...0.2.106)
