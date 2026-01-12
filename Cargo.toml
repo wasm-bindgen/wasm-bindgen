@@ -51,7 +51,7 @@ wasm-bindgen-shared = { path = "crates/shared", version = "=0.2.106" }
 
 [build-dependencies]
 # In older MSRVs, dependencies and crate features can't have the same name.
-rustversion-compat = { package = "rustversion", version = "1.0" }
+rustversion-compat = { package = "rustversion", version = "1.0.6" }
 
 [dev-dependencies]
 once_cell = "1"
