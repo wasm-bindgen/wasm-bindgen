@@ -128,6 +128,8 @@ members = [
   "examples/without-a-bundler-no-modules",
   "examples/synchronous-instantiation",
   "tests/no-std",
+  "crates/cargo-wasm-bindgen",
+  "crates/wasm-bindgen-build",
 ]
 resolver = "2"
 
