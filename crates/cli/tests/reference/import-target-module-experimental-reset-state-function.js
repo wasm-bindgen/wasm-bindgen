@@ -17,10 +17,10 @@ export function exported() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-const import1 = require("tests/wasm/imports.js");
-const import2 = require("foo-raw");
-const import3 = require("./snippets/import_reftest-a82831e16a4c30f1/inline0.js");
-const import4 = require("pure-extern");
+import * as import1 from "tests/wasm/imports.js"
+import * as import2 from "foo-raw"
+import * as import3 from "./snippets/import_reftest-a82831e16a4c30f1/inline0.js"
+import * as import4 from "pure-extern"
 
 function __wbg_get_imports() {
     const import0 = {
