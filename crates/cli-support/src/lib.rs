@@ -583,6 +583,7 @@ impl OutputMode {
                 | OutputMode::Web
                 | OutputMode::Node { module: true }
                 | OutputMode::Deno
+                | OutputMode::Module
         )
     }
 
