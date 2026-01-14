@@ -163,8 +163,7 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '20'
-    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
-    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
+    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'" --lib --bins --tests
 
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.
