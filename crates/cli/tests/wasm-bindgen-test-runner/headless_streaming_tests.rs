@@ -170,23 +170,17 @@ fn test_headless_worker_output_not_garbled() {
     // Garbled: "Loading Wasm module...st_1 ... ok" (missing "running 1 test")
     assert!(
         stdout.contains("running 1 test") || stderr.contains("running 1 test"),
-        "Expected 'running 1 test' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'running 1 test' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
     assert!(
         stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
-        "Expected 'test test_1 ... ok' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'test test_1 ... ok' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     // Make sure the test actually passed
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -238,15 +232,14 @@ fn test_worker_console_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // Count occurrences of "hello" - should be exactly 1 for a failing test
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 1,
-        "Expected 'hello' to appear exactly once for failing test, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly once for failing test, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -297,23 +290,20 @@ fn test_worker_console_no_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // Count occurrences of "hello" - should be 0 for a passing test (output captured)
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 0,
-        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     // Verify test actually passed
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -366,15 +356,14 @@ fn test_worker_console_panic_nocapture() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // Count occurrences of "hello" - should be exactly 2 (1 from nocapture, 1 from panic)
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 2,
-        "Expected 'hello' to appear exactly twice, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly twice, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -426,23 +415,20 @@ fn test_worker_console_no_panic_nocapture() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // Count occurrences of "hello" - should be exactly 1 with --nocapture
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 1,
-        "Expected 'hello' to appear exactly once, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly once, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     // Verify test actually passed
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -493,22 +479,16 @@ fn test_default_output_not_garbled() {
 
     assert!(
         stdout.contains("running 1 test") || stderr.contains("running 1 test"),
-        "Expected 'running 1 test' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'running 1 test' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
     assert!(
         stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
-        "Expected 'test test_1 ... ok' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'test test_1 ... ok' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -555,14 +535,13 @@ fn test_default_console_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 1,
-        "Expected 'hello' to appear exactly once for failing test, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly once for failing test, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -608,21 +587,18 @@ fn test_default_console_no_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 0,
-        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -671,22 +647,16 @@ fn test_browser_output_not_garbled() {
 
     assert!(
         stdout.contains("running 1 test") || stderr.contains("running 1 test"),
-        "Expected 'running 1 test' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'running 1 test' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
     assert!(
         stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
-        "Expected 'test test_1 ... ok' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'test test_1 ... ok' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -738,7 +708,7 @@ fn test_browser_console_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // In browser mode, "hello" appears twice: once in "log output:" and once in
     // "console.log div contained:" (pre-existing runner behavior for debugging).
@@ -746,8 +716,7 @@ fn test_browser_console_panic_headless() {
 
     assert_eq!(
         count, 2,
-        "Expected 'hello' to appear exactly twice for failing test in browser mode, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly twice for failing test in browser mode, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -795,21 +764,18 @@ fn test_browser_console_no_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 0,
-        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -858,22 +824,16 @@ fn test_shared_worker_output_not_garbled() {
 
     assert!(
         stdout.contains("running 1 test") || stderr.contains("running 1 test"),
-        "Expected 'running 1 test' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'running 1 test' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
     assert!(
         stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
-        "Expected 'test test_1 ... ok' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'test test_1 ... ok' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -922,14 +882,13 @@ fn test_shared_worker_console_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 1,
-        "Expected 'hello' to appear exactly once for failing test, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly once for failing test, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -977,21 +936,18 @@ fn test_shared_worker_console_no_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 0,
-        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -1040,22 +996,16 @@ fn test_service_worker_output_not_garbled() {
 
     assert!(
         stdout.contains("running 1 test") || stderr.contains("running 1 test"),
-        "Expected 'running 1 test' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'running 1 test' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
     assert!(
         stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
-        "Expected 'test test_1 ... ok' in output.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Expected 'test test_1 ... ok' in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -1104,14 +1054,13 @@ fn test_service_worker_console_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 1,
-        "Expected 'hello' to appear exactly once for failing test, but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to appear exactly once for failing test, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -1159,21 +1108,18 @@ fn test_service_worker_console_no_panic_headless() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     let count = combined.matches("hello").count();
 
     assert_eq!(
         count, 0,
-        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {} times.\nstdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected 'hello' to NOT appear for passing test (output should be captured), but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
 
@@ -1260,14 +1206,12 @@ globalThis.spawnWorkerWithLog = function() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should pass
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     // Check all log levels - each should appear exactly once
@@ -1280,26 +1224,21 @@ globalThis.spawnWorkerWithLog = function() {
     ];
 
     // Print combined output for debugging
-    eprintln!(
-        "=== Combined output ===\n{}\n=== End combined output ===",
-        combined
-    );
+    eprintln!("=== Combined output ===\n{combined}\n=== End combined output ===");
 
     let mut failures = Vec::new();
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
+         stdout:\n{stdout}\nstderr:\n{stderr}",
         failures.join("\n"),
-        stdout,
-        stderr
     );
 }
 
@@ -1385,14 +1324,12 @@ globalThis.spawnWorkerWithLog = function() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should pass
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
     );
 
     // Check all 5 log levels - each should appear exactly once
@@ -1408,17 +1345,15 @@ globalThis.spawnWorkerWithLog = function() {
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
+         stdout:\n{stdout}\nstderr:\n{stderr}",
         failures.join("\n"),
-        stdout,
-        stderr
     );
 }
 
@@ -1504,31 +1439,26 @@ globalThis.spawnWorkerWithLogThenFail = function() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should FAIL (worker throws)
     assert!(
         !output.status.success(),
-        "Inner test should fail.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should fail.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Verify the log marker appears
     let count = combined.matches("NODE_WORKER_FAILURE_MARKER_7X9K3").count();
     assert_eq!(
         count, 1,
-        "Expected worker log marker to appear exactly once in failure output, but it appeared {} times.\n\
-         stdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected worker log marker to appear exactly once in failure output, but it appeared {count} times.\n\
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Verify the worker's error message appears in the output
     assert!(
         combined.contains("Intentional node worker failure"),
         "Expected worker error message 'Intentional node worker failure' to appear in output.\n\
-         stdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }

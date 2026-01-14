@@ -5,6 +5,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.2.107](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.106...0.2.107)
+
+### Added
+
 * Support catching panics, and raising JS Exceptions for them, when building
   with panic=unwind on nightly, with the `std` feature.
   [#4790](https://github.com/wasm-bindgen/wasm-bindgen/pull/4790)
@@ -47,7 +55,6 @@
 * Consolidate JavaScript glue generation
   Move target-specific JS emission into a single finalize phase, reducing
   branching and making the generated output more consistent across targets.
-
   - Centralize JS output assembly in a single finalize phase (exports/imports/wasm loading).
   - Make `--target experimental-nodejs-module` emit one JS entrypoint (no separate `_bg.js`).
   - Ensure Node (CJS/ESM) and bundler entrypoints only expose public exports (no internal import shims).
@@ -55,10 +62,10 @@
   - Refresh reference test fixtures.
   [#4879](https://github.com/wasm-bindgen/wasm-bindgen/pull/4879)
 
-### Fixed
-
 * Forward worker errors to test output in the test runner.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+  [#4855](https://github.com/wasm-bindgen/wasm-bindgen/pull/4855)
+
+### Fixed
 
 * Fix: Include doc comments in TypeScript definitions for classes
   [#4858](https://github.com/wasm-bindgen/wasm-bindgen/pull/4858)
