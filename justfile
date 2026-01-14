@@ -16,8 +16,8 @@ test:
 test-cli *ARGS="":
     cargo test -p wasm-bindgen-cli {{ARGS}}
 
-test-cli-overwrite *ARGS="":
-    BLESS=1 cargo test -p wasm-bindgen-cli {{ARGS}}
+test-cli-overwrite:
+    BLESS=1 cargo test -p wasm-bindgen-cli -- --skip headless_streaming_tests
 
 test-macro *ARGS="":
     cargo test -p wasm-bindgen-test-macro {{ARGS}}
