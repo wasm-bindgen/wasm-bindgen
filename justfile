@@ -14,7 +14,7 @@ test:
     just test-wasm-bindgen-futures
 
 test-cli *ARGS="":
-    cargo test -p wasm-bindgen-cli {{ARGS}}
+    cargo test -p wasm-bindgen-cli {{ARGS}} > /tmp/test-cli.log 2>&1 || (cat /tmp/test-cli.log && exit 1)
 
 test-cli-overwrite:
     BLESS=1 cargo test -p wasm-bindgen-cli -- --skip headless_streaming_tests
@@ -44,6 +44,7 @@ bench:
     cargo bench --target wasm32-unknown-unknown
     cargo bench --target wasm32-unknown-unknown -p js-sys
     cargo bench --target wasm32-unknown-unknown -p wasm-bindgen-futures
+    cargo bench --target wasm32-unknown-unknown -p wasm-bindgen-test
 
 cov *ARGS="":
   CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage" \
