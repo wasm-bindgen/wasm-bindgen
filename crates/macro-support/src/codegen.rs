@@ -773,7 +773,7 @@ impl TryToTokens for ast::Export {
                     }).into()
                 }
             }
-        } else if cfg!(panic = "unwind") {
+        } else {
             call = quote! {
                 #wasm_bindgen::__rt::maybe_catch_unwind(|| {
                     #call
