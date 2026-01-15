@@ -4,7 +4,7 @@ export function exported() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-export function __wbg___wbindgen_throw_6ea4cf636881bef8(arg0, arg1) {
+export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_foo_9ceaa09e9e1e3047() { return handleError(function () {

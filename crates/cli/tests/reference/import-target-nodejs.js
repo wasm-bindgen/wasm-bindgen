@@ -16,7 +16,7 @@ const import4 = require("pure-extern");
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_6ea4cf636881bef8: function(arg0, arg1) {
+        __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
