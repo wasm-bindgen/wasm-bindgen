@@ -835,7 +835,7 @@ extern "C" {
     /// The `ArrayBuffer` object is used to represent a generic,
     /// fixed-length raw binary data buffer. You cannot directly
     /// manipulate the contents of an `ArrayBuffer`; instead, you
-    /// create one of the typed array objects or a `DataView` object
+    /// create one of the typed array objects ([Uint8Array] etc.) or a `DataView` object
     /// which represents the buffer in a specific format, and use that
     /// to read and write the contents of the buffer.
     ///
@@ -1625,6 +1625,12 @@ partialord_ord!(Boolean);
 // DataView
 #[wasm_bindgen]
 extern "C" {
+    /// An accessor to binary data stored inside an [ArrayBuffer]
+    ///
+    /// For statically typed views on the same buffer (which also offer tools for interacting with
+    /// Rust slices), see [Uint8Array], [Int64Array], [Float32Array] and so on. Beware that
+    /// `Uint8Array::new(&my_data_view)` *not* contain the full memory area; using the underlying
+    /// ArrayBuffer (`Uint8Array::new(&my_data_view.buffer())`) does.
     #[wasm_bindgen(extends = Object, typescript_type = "DataView")]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type DataView;
