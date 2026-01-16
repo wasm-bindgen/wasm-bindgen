@@ -369,6 +369,21 @@ extern "C" {
         feature = "MediaStreamTrack",
         feature = "RtcRtpSender",
     ))]
+    #[wasm_bindgen (method , structural , variadic , js_class = "RTCPeerConnection" , js_name = addTrack)]
+    #[doc = "The `addTrack()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStream`, `MediaStreamTrack`, `RtcPeerConnection`, `RtcRtpSender`*"]
+    pub fn add_track_without_streams(
+        this: &RtcPeerConnection,
+        track: &MediaStreamTrack,
+    ) -> RtcRtpSender;
+    #[cfg(all(
+        feature = "MediaStream",
+        feature = "MediaStreamTrack",
+        feature = "RtcRtpSender",
+    ))]
     # [wasm_bindgen (method , structural , js_class = "RTCPeerConnection" , js_name = addTrack)]
     #[doc = "The `addTrack()` method."]
     #[doc = ""]
