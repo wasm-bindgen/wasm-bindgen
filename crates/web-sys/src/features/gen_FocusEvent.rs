@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = FocusEvent , typescript_type = "FocusEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FocusEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent)"]
@@ -39,7 +39,3 @@ extern "C" {
         focus_event_init_dict: &FocusEventInit,
     ) -> Result<FocusEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<UiEvent> for FocusEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for FocusEvent {}

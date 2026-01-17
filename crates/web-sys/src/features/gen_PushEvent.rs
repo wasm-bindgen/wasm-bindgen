@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = ExtendableEvent , extends = Event , extends = :: js_sys :: Object , js_name = PushEvent , typescript_type = "PushEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PushEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PushEvent)"]
@@ -39,7 +39,3 @@ extern "C" {
         event_init_dict: &PushEventInit,
     ) -> Result<PushEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<ExtendableEvent> for PushEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for PushEvent {}

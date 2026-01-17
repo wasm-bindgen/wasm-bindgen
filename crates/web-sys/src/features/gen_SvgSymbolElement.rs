@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGSymbolElement , typescript_type = "SVGSymbolElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgSymbolElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGSymbolElement)"]
@@ -60,11 +60,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgSymbolElement`*"]
     pub fn has_extension(this: &SvgSymbolElement, extension: &str) -> bool;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgSymbolElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgSymbolElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgSymbolElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgSymbolElement {}

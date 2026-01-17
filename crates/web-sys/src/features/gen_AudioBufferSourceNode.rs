@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioScheduledSourceNode , extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = AudioBufferSourceNode , typescript_type = "AudioBufferSourceNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AudioBufferSourceNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode)"]
@@ -175,9 +175,3 @@ extern "C" {
     #[deprecated]
     pub fn stop_with_when(this: &AudioBufferSourceNode, when: f64) -> Result<(), JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioScheduledSourceNode> for AudioBufferSourceNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for AudioBufferSourceNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for AudioBufferSourceNode {}

@@ -598,19 +598,6 @@ impl Interface<'_> {
             .map(|x| quote!( extends = #x, ))
             .collect::<Vec<_>>();
 
-        // Generate Upcast implementations for each parent type
-        let upcast_impls = parents
-            .iter()
-            .map(|parent| {
-                quote! {
-                    #unstable_attr
-                    #[automatically_derived]
-                    impl ::wasm_bindgen::convert::Upcast<#parent> for #name {
-                    }
-                }
-            })
-            .collect::<Vec<_>>();
-
         let consts = consts
             .iter()
             .map(|x| x.generate(options, name, js_name, deprecated))
@@ -660,7 +647,7 @@ impl Interface<'_> {
                     js_name = #js_ident,
                     typescript_type = #js_name
                 )]
-                #[derive(Debug, Clone, PartialEq, Eq, ::wasm_bindgen::Upcast)]
+                #[derive(Debug, Clone, PartialEq, Eq)]
                 #doc_comment
                 #unstable_docs
                 #deprecated
@@ -671,9 +658,6 @@ impl Interface<'_> {
             }
 
             #consts
-
-            // Manual Upcast implementations for parent types
-            #(#upcast_impls)*
         }
     }
 }
@@ -896,7 +880,7 @@ impl Dictionary {
             #[wasm_bindgen]
             extern "C" {
                 #[wasm_bindgen(extends = ::js_sys::Object, js_name = #js_name)]
-                #[derive(Debug, Clone, PartialEq, Eq, ::wasm_bindgen::Upcast)]
+                #[derive(Debug, Clone, PartialEq, Eq)]
                 #doc_comment
                 #unstable_docs
                 #deprecated

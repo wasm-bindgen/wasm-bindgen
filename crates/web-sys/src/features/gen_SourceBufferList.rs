@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = SourceBufferList , typescript_type = "SourceBufferList")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SourceBufferList` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SourceBufferList)"]
@@ -56,5 +56,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SourceBuffer`, `SourceBufferList`*"]
     pub fn get(this: &SourceBufferList, index: u32) -> Option<SourceBuffer>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SourceBufferList {}

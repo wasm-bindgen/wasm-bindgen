@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = DocumentFragment , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = ShadowRoot , typescript_type = "ShadowRoot")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ShadowRoot` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot)"]
@@ -152,9 +152,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
     pub fn elements_from_point(this: &ShadowRoot, x: f32, y: f32) -> ::js_sys::Array;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<DocumentFragment> for ShadowRoot {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for ShadowRoot {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for ShadowRoot {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = CompositionEvent , typescript_type = "CompositionEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CompositionEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent)"]
@@ -120,7 +120,3 @@ extern "C" {
         locale_arg: &str,
     );
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<UiEvent> for CompositionEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for CompositionEvent {}

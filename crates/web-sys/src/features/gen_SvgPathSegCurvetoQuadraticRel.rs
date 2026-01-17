@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = SvgPathSeg , extends = :: js_sys :: Object , js_name = SVGPathSegCurvetoQuadraticRel , typescript_type = "SVGPathSegCurvetoQuadraticRel")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgPathSegCurvetoQuadraticRel` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSegCurvetoQuadraticRel)"]
@@ -69,5 +69,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSegCurvetoQuadraticRel`*"]
     pub fn set_y1(this: &SvgPathSegCurvetoQuadraticRel, value: f32);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgPathSeg> for SvgPathSegCurvetoQuadraticRel {}

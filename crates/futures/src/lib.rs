@@ -49,13 +49,12 @@ use core::task::{Context, Poll, Waker};
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use futures_util::FutureExt;
 use js_sys::Promise;
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
-use js_sys::{Function, Promise};
+use js_sys::{AnyFunction, TypedFunction};
 use wasm_bindgen::__rt::marker::ErasableGeneric;
-#[cfg(all(feature = "std", panic = "unwind"))]
+#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
-use wasm_bindgen::convert::FromWasmAbi;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::convert::{FromWasmAbi, Upcast};
+use wasm_bindgen::{prelude::*, AsUpcast};
 
 mod queue;
 #[cfg_attr(docsrs, doc(cfg(feature = "futures-core-03-stream")))]
@@ -126,6 +125,10 @@ impl core::panic::UnwindSafe for JsFuture {}
 unsafe impl<T> ErasableGeneric for JsFuture<T> {
     type Repr = JsFuture<JsValue>;
 }
+
+// Upcast for JsFuture is covariant in T (the success type)
+// JsFuture<T> can upcast to JsFuture<Target> if T: Upcast<Target>
+impl<T, Target> Upcast<JsFuture<Target>> for JsFuture<T> where T: Upcast<Target> {}
 
 impl<T> fmt::Debug for JsFuture<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -246,7 +249,7 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&mut move |resolve: Function, reject: Function| {
+    Promise::new(&mut move |resolve: AnyFunction, reject: AnyFunction| {
         let future = future.take().unwrap_throw();
 
         spawn_local(async move {
@@ -325,22 +328,20 @@ where
 /// If the `future` provided panics then the returned `Promise` **will not
 /// resolve**. Instead it will be a leaked promise. This is an unfortunate
 /// limitation of Wasm currently that's hoped to be fixed one day!
-pub fn future_to_promise_typed<F, T: FromWasmAbi + ErasableGeneric<Repr = JsValue> + 'static>(
-    future: F,
-) -> Promise<T>
+pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
 where
     F: Future<Output = Result<T, JsValue>> + 'static,
+    T: FromWasmAbi + ErasableGeneric<Repr = JsValue> + AsUpcast<T, JsValue> + 'static,
 {
     let mut future = Some(future);
 
     Promise::new_typed(
-        &mut move |resolve: Function<JsValue, T>, reject: Function| {
+        &mut move |resolve: TypedFunction<JsValue, T>, reject: AnyFunction| {
             let future = future.take().unwrap_throw();
-
             spawn_local(async move {
                 match future.await {
                     Ok(val) => {
-                        resolve.call1(&JsValue::undefined(), &val).unwrap_throw();
+                        resolve.call(&JsValue::undefined(), &val).unwrap_throw();
                     }
                     Err(val) => {
                         reject.call1(&JsValue::undefined(), &val).unwrap_throw();

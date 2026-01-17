@@ -405,6 +405,8 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
     type Repr = Box<[T::Repr]>;
 }
 
+impl Upcast<&str> for &str {}
+
 impl<T, Target> Upcast<Box<[Target]>> for Box<[T]> where T: Upcast<Target> {}
 
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Vec<T> {

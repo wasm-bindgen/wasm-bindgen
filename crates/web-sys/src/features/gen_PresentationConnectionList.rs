@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = PresentationConnectionList , typescript_type = "PresentationConnectionList")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PresentationConnectionList` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationConnectionList)"]
@@ -37,5 +37,3 @@ extern "C" {
         value: Option<&::js_sys::Function>,
     );
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for PresentationConnectionList {}

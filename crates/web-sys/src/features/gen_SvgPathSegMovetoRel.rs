@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = SvgPathSeg , extends = :: js_sys :: Object , js_name = SVGPathSegMovetoRel , typescript_type = "SVGPathSegMovetoRel")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgPathSegMovetoRel` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSegMovetoRel)"]
@@ -41,5 +41,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSegMovetoRel`*"]
     pub fn set_y(this: &SvgPathSegMovetoRel, value: f32);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgPathSeg> for SvgPathSegMovetoRel {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlCollection , extends = :: js_sys :: Object , js_name = HTMLOptionsCollection , typescript_type = "HTMLOptionsCollection")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlOptionsCollection` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOptionsCollection)"]
@@ -136,5 +136,3 @@ extern "C" {
         option: Option<&HtmlOptionElement>,
     ) -> Result<(), JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<HtmlCollection> for HtmlOptionsCollection {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGeometryElement , extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGLineElement , typescript_type = "SVGLineElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgLineElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGLineElement)"]
@@ -45,15 +45,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgLineElement`*"]
     pub fn y2(this: &SvgLineElement) -> SvgAnimatedLength;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgGeometryElement> for SvgLineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgLineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgLineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgLineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgLineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgLineElement {}

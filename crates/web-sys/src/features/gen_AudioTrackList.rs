@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = AudioTrackList , typescript_type = "AudioTrackList")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AudioTrackList` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioTrackList)"]
@@ -78,5 +78,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioTrack`, `AudioTrackList`*"]
     pub fn get(this: &AudioTrackList, index: u32) -> Option<AudioTrack>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for AudioTrackList {}

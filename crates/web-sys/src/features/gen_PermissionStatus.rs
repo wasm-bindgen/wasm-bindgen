@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = PermissionStatus , typescript_type = "PermissionStatus")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PermissionStatus` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PermissionStatus)"]
@@ -35,5 +35,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PermissionStatus`*"]
     pub fn set_onchange(this: &PermissionStatus, value: Option<&::js_sys::Function>);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for PermissionStatus {}

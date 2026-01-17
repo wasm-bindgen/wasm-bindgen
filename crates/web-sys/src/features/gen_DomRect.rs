@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = DomRectReadOnly , extends = :: js_sys :: Object , js_name = DOMRect , typescript_type = "DOMRect")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomRect` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect)"]
@@ -109,5 +109,3 @@ extern "C" {
         height: f64,
     ) -> Result<DomRect, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<DomRectReadOnly> for DomRect {}

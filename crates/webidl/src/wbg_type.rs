@@ -964,7 +964,7 @@ impl<'a> WbgType<'a> {
                     Ok(js_sys("Function"))
                 } else {
                     // New mode: with generics
-                    // Generate js_sys::BoundedFunction<Return, A1, ...> or VoidBoundedFunction<A1, ...>
+                    // Generate js_sys::TypedFunction<Return, A1, ...> or VoidFunction<A1, ...>
                     // Use Callback position for both arguments and returns (conservative generalization)
 
                     // Convert up to 9 parameters - use Callback position for generalized types
@@ -977,34 +977,34 @@ impl<'a> WbgType<'a> {
                     }
 
                     // Build the appropriate function type based on return type
-                    // BoundedFunction and VoidBoundedFunction have default parameters,
-                    // so we don't need to pad with Never (which is now hidden)
+                    // TypedFunction and VoidFunction have default parameters,
+                    // so we don't need to pad with None (which is now hidden)
                     let ty: syn::Type = match return_type {
                         Some(rt) => {
-                            // Has a return type: use BoundedFunction<Return, A1, A2, ...>
+                            // Has a return type: use TypedFunction<Return, A1, A2, ...>
                             let ret_ty = rt
                                 .to_syn_type(TypePosition::Callback, legacy, false)?
                                 .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
 
                             if param_types.is_empty() {
                                 parse_quote! {
-                                    ::js_sys::BoundedFunction<#ret_ty>
+                                    ::js_sys::TypedFunction<#ret_ty>
                                 }
                             } else {
                                 parse_quote! {
-                                    ::js_sys::BoundedFunction<#ret_ty, #(#param_types),*>
+                                    ::js_sys::TypedFunction<#ret_ty, #(#param_types),*>
                                 }
                             }
                         }
                         None => {
-                            // No return type (void): use VoidBoundedFunction<A1, A2, ...>
+                            // No return type (void): use VoidFunction<A1, A2, ...>
                             if param_types.is_empty() {
                                 parse_quote! {
-                                    ::js_sys::VoidBoundedFunction
+                                    ::js_sys::VoidFunction
                                 }
                             } else {
                                 parse_quote! {
-                                    ::js_sys::VoidBoundedFunction<#(#param_types),*>
+                                    ::js_sys::VoidFunction<#(#param_types),*>
                                 }
                             }
                         }

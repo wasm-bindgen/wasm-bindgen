@@ -334,6 +334,8 @@ pub struct ImportType {
     pub vendor_prefixes: Vec<Ident>,
     /// If present, don't generate a `Deref` impl
     pub no_deref: bool,
+    /// If present, don't generate `Upcast` impls
+    pub no_upcast: bool,
     /// If present, don't generate a `Promising` impl
     pub no_promising: bool,
     /// Path to wasm_bindgen

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AuthenticatorResponse , extends = :: js_sys :: Object , js_name = AuthenticatorAttestationResponse , typescript_type = "AuthenticatorAttestationResponse")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AuthenticatorAttestationResponse` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AuthenticatorAttestationResponse)"]
@@ -54,5 +54,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponse`*"]
     pub fn get_transports(this: &AuthenticatorAttestationResponse) -> ::js_sys::Array;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AuthenticatorResponse> for AuthenticatorAttestationResponse {}

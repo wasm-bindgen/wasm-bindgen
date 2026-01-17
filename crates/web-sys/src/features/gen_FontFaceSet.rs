@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = FontFaceSet , typescript_type = "FontFaceSet")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FontFaceSet` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet)"]
@@ -170,5 +170,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`, `FontFaceSetIterator`*"]
     pub fn values(this: &FontFaceSet) -> FontFaceSetIterator;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for FontFaceSet {}

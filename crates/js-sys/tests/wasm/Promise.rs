@@ -217,7 +217,7 @@ async fn test_round_trip_rust_js_rust() {
 async fn test_future_to_promise_success() {
     let future = async {
         let val = TestValue::new(&JsString::from("async_value"));
-        Ok(val.into())
+        Ok(val)
     };
 
     let promise: Promise<TestValue> = future_to_promise_typed(future);

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Document , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLDocument , typescript_type = "HTMLDocument")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlDocument` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument)"]
@@ -484,9 +484,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn get(this: &HtmlDocument, name: &str) -> Result<::js_sys::Object, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Document> for HtmlDocument {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for HtmlDocument {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlDocument {}

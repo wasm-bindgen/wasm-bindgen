@@ -229,13 +229,13 @@ fn property_descriptor_get_set() {
     let desc: js_sys::PropertyDescriptor<Number> = js_sys::PropertyDescriptor::new();
 
     // Create and set a getter function
-    let getter: BoundedFunction<Number> = BoundedFunction::new_no_args_typed("return 123");
+    let getter: TypedFunction<Number> = Function::new_no_args_typed("return 123");
     desc.set_get(getter.clone());
     let retrieved_getter = desc.get_get();
     assert!(retrieved_getter.is_some());
 
     // Create and set a setter function
-    let setter: VoidBoundedFunction<Number> = Function::new_with_args_typed("x", "");
+    let setter: VoidFunction<Number> = Function::new_with_args_typed("x", "");
     desc.set_set(setter.clone().upcast());
     let retrieved_setter = desc.get_set();
     assert!(retrieved_setter.is_some());

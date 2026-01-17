@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CharacterData , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = Comment , typescript_type = "Comment")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Comment` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Comment)"]
@@ -27,9 +27,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Comment`*"]
     pub fn new_with_data(data: &str) -> Result<Comment, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CharacterData> for Comment {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for Comment {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for Comment {}

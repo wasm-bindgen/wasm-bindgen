@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = PaymentRequestUpdateEvent , extends = Event , extends = :: js_sys :: Object , js_name = PaymentMethodChangeEvent , typescript_type = "PaymentMethodChangeEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PaymentMethodChangeEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentMethodChangeEvent)"]
@@ -45,7 +45,3 @@ extern "C" {
         event_init_dict: &PaymentMethodChangeEventInit,
     ) -> Result<PaymentMethodChangeEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<PaymentRequestUpdateEvent> for PaymentMethodChangeEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for PaymentMethodChangeEvent {}

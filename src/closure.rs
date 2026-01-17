@@ -538,7 +538,7 @@ pub trait IntoWasmClosure<T: ?Sized> {
     fn unsize(self: Box<Self>) -> Box<T>;
 }
 
-unsafe impl<T: ?Sized> ErasableGeneric for Closure<T> {
+unsafe impl<T: ?Sized + WasmClosure> ErasableGeneric for Closure<T> {
     type Repr = Closure<JsValue>;
 }
 

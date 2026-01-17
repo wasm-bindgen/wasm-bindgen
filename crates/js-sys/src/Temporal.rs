@@ -1,10 +1,9 @@
 use super::*;
-use wasm_bindgen::Upcast;
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type Instant;
 
     #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal)]
@@ -76,7 +75,7 @@ impl Upcast<Object> for Instant {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PlainDateTime;
 
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal)]
@@ -229,7 +228,7 @@ impl Upcast<Object> for PlainDateTime {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type ZonedDateTime;
 
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal)]
@@ -408,7 +407,7 @@ impl Upcast<Object> for ZonedDateTime {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type Duration;
 
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal)]
@@ -507,7 +506,7 @@ impl Upcast<Object> for Duration {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PlainTime;
 
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal)]
@@ -584,7 +583,7 @@ extern "C" {
     /// could be used to represent a particular instance of a monthly recurring event, like "the
     /// June 2019 meeting".
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PlainYearMonth;
 
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal)]
@@ -765,7 +764,7 @@ extern "C" {
     /// A date without a year component. This is useful to express
     /// things like "Bastille Day is on the 14th of July".
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PlainMonthDay;
 
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal)]
@@ -834,7 +833,7 @@ impl Upcast<Object> for PlainMonthDay {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PlainDate;
 
     #[wasm_bindgen(js_namespace = Temporal, constructor)]

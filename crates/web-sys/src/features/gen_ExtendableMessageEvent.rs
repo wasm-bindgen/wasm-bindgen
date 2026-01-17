@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = ExtendableEvent , extends = Event , extends = :: js_sys :: Object , js_name = ExtendableMessageEvent , typescript_type = "ExtendableMessageEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ExtendableMessageEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent)"]
@@ -66,7 +66,3 @@ extern "C" {
         event_init_dict: &ExtendableMessageEventInit,
     ) -> Result<ExtendableMessageEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<ExtendableEvent> for ExtendableMessageEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for ExtendableMessageEvent {}

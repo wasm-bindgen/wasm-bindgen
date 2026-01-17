@@ -136,7 +136,6 @@ use externref::__wbindgen_externref_heap_live_count;
 
 pub use crate::__rt::marker::{ErasableGeneric, Promising};
 pub use crate::convert::AsUpcast;
-pub use wasm_bindgen_macro::{Upcast, UpcastCore};
 
 mod cast;
 pub use crate::cast::JsCast;
@@ -1209,6 +1208,9 @@ impl fmt::Display for Undefined {
         f.write_str("undefined")
     }
 }
+
+impl Upcast<Undefined> for () {}
+impl Upcast<()> for Undefined {}
 
 // Null
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]

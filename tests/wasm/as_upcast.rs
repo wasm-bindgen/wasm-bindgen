@@ -1,14 +1,12 @@
 use js_sys::Promise;
-use wasm_bindgen::convert::{AsUpcast, Upcast};
-use wasm_bindgen::{prelude::*, UpcastCore};
+use wasm_bindgen::convert::AsUpcast;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/as_upcast.js")]
 extern "C" {
-    #[derive(UpcastCore)]
     type Parent;
 
-    #[derive(UpcastCore)]
     #[wasm_bindgen(extends = Parent)]
     type Child;
 
@@ -20,11 +18,11 @@ extern "C" {
 
     fn process_parent(obj: impl AsUpcast<Parent>) -> i32;
 
+    #[wasm_bindgen(js_name = "process_parent")]
+    fn process_parent_ref<'a>(obj: impl AsUpcast<&'a Parent>) -> i32;
+
     fn process_promise(p: impl AsUpcast<Promise<Parent>>) -> Promise<i32>;
 }
-
-// Manually implement inheritance upcast
-impl Upcast<Parent> for Child {}
 
 #[wasm_bindgen_test]
 fn test_as_upcast_by_value() {
@@ -52,4 +50,20 @@ async fn test_as_upcast_generic_promise() {
     let result = future.await.unwrap();
 
     assert_eq!(result, 123);
+}
+
+#[wasm_bindgen_test]
+fn test_as_upcast_ref_with_lifetime() {
+    let parent = Parent::new(42);
+
+    let result = process_parent_ref(&parent);
+    assert_eq!(result, 42);
+}
+
+#[wasm_bindgen_test]
+fn test_as_upcast_ref_child_to_parent() {
+    let child = Child::new_child(99);
+
+    let result = process_parent_ref(&child);
+    assert_eq!(result, 99);
 }

@@ -99,7 +99,7 @@ use core::future::Future;
 use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{self, Poll};
-use js_sys::{Array, Function, Promise};
+use js_sys::{Array, Number, Promise, VoidFunction};
 pub use wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
@@ -400,9 +400,12 @@ impl Context {
         // to pass native function pointers around here). Each test will
         // execute one of the `execute_*` tests below which will push a
         // future onto our `remaining` list, which we'll process later.
-        let cx_arg = (self as *const Context as u32).into();
+        let cx_arg = Number::from(self as *const Context as u32);
         for test in tests {
-            match Function::from(test).call1(&JsValue::null(), &cx_arg) {
+            match test
+                .unchecked_into::<VoidFunction<Number>>()
+                .call(&JsValue::null(), &cx_arg)
+            {
                 Ok(_) => {}
                 Err(e) => {
                     panic!(
