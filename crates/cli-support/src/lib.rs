@@ -349,8 +349,13 @@ impl Bindgen {
         }
 
         // Check that reset_state is only used with --target module
-        if self.generate_reset_state && !matches!(self.mode, OutputMode::Module) {
-            bail!("--experimental-reset-state-function is only supported for --target module")
+        if self.generate_reset_state
+            && !matches!(
+                self.mode,
+                OutputMode::Module | OutputMode::Web | OutputMode::Node { module: false }
+            )
+        {
+            bail!("--experimental-reset-state-function is only supported for --target module, --target web, or --target nodejs")
         }
 
         let thread_count = transforms::threads::run(&mut module)
