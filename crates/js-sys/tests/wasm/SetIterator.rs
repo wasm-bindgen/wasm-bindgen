@@ -9,7 +9,7 @@ fn entries() {
     let iter = s.entries();
     let obj = iter.next().unwrap();
     assert!(!obj.done());
-    let array = Array::from(&obj.value());
+    let array = Array::from_iterable(&obj.value()).unwrap();
     assert_eq!(array.length(), 2);
     array.for_each(&mut |a, _, _| {
         assert_eq!(a, 1);

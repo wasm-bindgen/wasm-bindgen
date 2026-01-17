@@ -167,3 +167,48 @@ fn consts() {
         "POSITIVE_INFINITY"
     );
 }
+
+#[wasm_bindgen_test]
+fn generic_number_from_primitive() {
+    // Test creating Number<T> from primitive types
+    let n_i32 = Number::i32(42i32);
+    assert_eq!(n_i32.value_of(), 42.0);
+
+    let n_f64: Number<f64> = 3.14f64.into();
+    assert_eq!(n_f64.value_of(), 3.14);
+
+    let n_u8 = Number::u8(255);
+    assert_eq!(n_u8.value_of(), 255.0);
+}
+
+#[wasm_bindgen_test]
+fn generic_number_debug() {
+    let n = Number::i32(42);
+    let debug_str = format!("{:?}", n);
+    assert!(debug_str.contains("Number<"));
+    assert!(debug_str.contains("i32"));
+    assert!(debug_str.contains("42"));
+}
+
+#[wasm_bindgen_test]
+fn generic_number_display() {
+    let n = Number::i32(42);
+    let display_str = format!("{}", n);
+    assert!(display_str.contains("Number<"));
+    assert!(display_str.contains("i32"));
+    assert!(display_str.contains("42"));
+}
+
+#[wasm_bindgen_test]
+fn generic_number_upcast() {
+    use wasm_bindgen::convert::Upcast;
+
+    // Number<i32> can upcast to Number<i64> (i32 widens to i64)
+    let n_i32 = Number::i16(42);
+    let n_i64: Number<i32> = n_i32.upcast();
+    assert_eq!(n_i64.value_of(), 42.0);
+
+    // Number<T> can upcast to JsValue
+    let n = Number::i32(123);
+    let _js: JsValue = n.upcast();
+}

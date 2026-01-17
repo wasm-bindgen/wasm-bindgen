@@ -5,6 +5,10 @@ name = "webidl-tests"
 publish = false
 version = "0.0.0"
 
+[features]
+# When enabled, generates bindings without generics for backwards compatibility
+idl-generics-compat = []
+
 [lib]
 doctest = false
 path = 'lib.rs'

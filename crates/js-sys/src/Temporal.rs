@@ -68,8 +68,9 @@ extern "C" {
     /// The locales and options arguments are the same as in the constructor to Intl.DateTimeFormat.
     #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string(this: &Instant, locales: &JsValue, options: &JsValue) -> JsString;
-
 }
+
+impl Upcast<Object> for Instant {}
 
 #[wasm_bindgen]
 extern "C" {
@@ -221,6 +222,8 @@ extern "C" {
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainDateTime) -> JsValue;
 }
+
+impl Upcast<Object> for PlainDateTime {}
 
 #[wasm_bindgen]
 extern "C" {
@@ -399,6 +402,8 @@ extern "C" {
     pub fn get_iso_fields(this: &ZonedDateTime) -> JsValue;
 }
 
+impl Upcast<Object> for ZonedDateTime {}
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
@@ -494,8 +499,9 @@ extern "C" {
     /// The locales and options arguments are the same as in the constructor to Intl.DurationFormat.
     #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string(this: &Duration, locales: &JsValue, options: &JsValue) -> JsString;
-
 }
+
+impl Upcast<Object> for Duration {}
 
 #[wasm_bindgen]
 extern "C" {
@@ -567,8 +573,9 @@ extern "C" {
     /// developers will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainTime) -> JsValue;
-
 }
+
+impl Upcast<Object> for PlainTime {}
 
 #[wasm_bindgen]
 extern "C" {
@@ -748,8 +755,9 @@ extern "C" {
     /// code will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainYearMonth) -> JsValue;
-
 }
+
+impl Upcast<Object> for PlainYearMonth {}
 
 #[wasm_bindgen]
 extern "C" {
@@ -818,8 +826,9 @@ extern "C" {
     /// code will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainMonthDay) -> JsValue;
-
 }
+
+impl Upcast<Object> for PlainMonthDay {}
 
 #[wasm_bindgen]
 extern "C" {
@@ -1027,8 +1036,9 @@ extern "C" {
     /// code will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainDate) -> JsValue;
-
 }
+
+impl Upcast<Object> for PlainDate {}
 
 pub mod Now {
     use super::*;
