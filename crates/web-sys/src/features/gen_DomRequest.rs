@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = DOMRequest , typescript_type = "DOMRequest")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomRequest` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRequest)"]
@@ -92,5 +92,3 @@ extern "C" {
         reject_callback: Option<&::js_sys::Function>,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for DomRequest {}

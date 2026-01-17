@@ -1,4 +1,4 @@
-use js_sys::{Array, ArrayTuple, BoundedFunction, Function, JsString, Number, Promise};
+use js_sys::{Array, ArrayTuple, Function, JsString, Number, Promise, TypedFunction};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_test::*;
 
@@ -278,16 +278,16 @@ fn covariance_to_array() {
 fn complex_nested_covariance() {
     use wasm_bindgen::prelude::Upcast;
 
-    let func: BoundedFunction<Number> = Function::new_no_args_typed("return 42");
+    let func: TypedFunction<Number> = Function::new_no_args_typed("return 42");
 
-    let promise_func: Promise<BoundedFunction<Number>> = Promise::resolve(&func);
+    let promise_func: Promise<TypedFunction<Number>> = Promise::resolve(&func);
 
     let num: Number = Number::from(42);
     let num_as_jsvalue: JsValue = num.upcast();
     assert!(num_as_jsvalue.as_f64().is_some());
 
-    let func_num: BoundedFunction<Number> = Function::new_no_args_typed("return 42");
-    let func_jsvalue: BoundedFunction<JsValue> = func_num.upcast();
+    let func_num: TypedFunction<Number> = Function::new_no_args_typed("return 42");
+    let func_jsvalue: TypedFunction<JsValue> = func_num.upcast();
     assert!(func_jsvalue.is_function());
 
     let promise_func_num: Promise<Function<Number>> = Promise::resolve(&func).upcast();

@@ -1,6 +1,6 @@
 use js_sys::{Array, JsString, Number};
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsError};
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/ArrayTyped.js")]
@@ -827,7 +827,7 @@ fn test_array_try_every_error() {
 
     let result = arr.try_every(&mut |val: TestItem, _| {
         if val.id() == 2 {
-            Err(JsValue::from_str("error at 2"))
+            Err(JsError::new("error at 2"))
         } else {
             Ok(true)
         }
@@ -859,7 +859,7 @@ fn test_array_try_filter_error() {
 
     let result = arr.try_filter(&mut |val: TestItem, _| {
         if val.id() == 2 {
-            Err(JsValue::from_str("filter error"))
+            Err(JsError::new("filter error"))
         } else {
             Ok(true)
         }
@@ -890,7 +890,7 @@ fn test_array_try_find_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_find(&mut |_val: TestItem, _| Err(JsValue::from_str("find error")));
+    let result = arr.try_find(&mut |_val: TestItem, _| Err(JsError::new("find error")));
     assert!(result.is_err());
 }
 
@@ -915,8 +915,7 @@ fn test_array_try_find_index_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result =
-        arr.try_find_index(&mut |_val: TestItem, _| Err(JsValue::from_str("find_index error")));
+    let result = arr.try_find_index(&mut |_val: TestItem, _| Err(JsError::new("find_index error")));
     assert!(result.is_err());
 }
 
@@ -938,8 +937,7 @@ fn test_array_try_find_last_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result =
-        arr.try_find_last(&mut |_val: TestItem, _| Err(JsValue::from_str("find_last error")));
+    let result = arr.try_find_last(&mut |_val: TestItem, _| Err(JsError::new("find_last error")));
     assert!(result.is_err());
 }
 
@@ -960,9 +958,8 @@ fn test_array_try_find_last_index_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_find_last_index(&mut |_val: TestItem, _| {
-        Err(JsValue::from_str("find_last_index error"))
-    });
+    let result = arr
+        .try_find_last_index(&mut |_val: TestItem, _| Err(JsError::new("find_last_index error")));
     assert!(result.is_err());
 }
 
@@ -990,7 +987,7 @@ fn test_array_try_for_each_error() {
 
     let result = arr.try_for_each(&mut |val: TestItem, _| {
         if val.id() == 2 {
-            Err(JsValue::from_str("for_each error"))
+            Err(JsError::new("for_each error"))
         } else {
             Ok(())
         }
@@ -1021,7 +1018,7 @@ fn test_array_try_map_error() {
 
     let result: Result<Array<TestItem>, JsValue> = arr.try_map(&mut |val: TestItem, _| {
         if val.id() == 2 {
-            Err(JsValue::from_str("map error"))
+            Err(JsError::new("map error"))
         } else {
             Ok(val)
         }
@@ -1055,7 +1052,7 @@ fn test_array_try_reduce_error() {
     let result = arr.try_reduce(
         &mut |_acc: Number, val: Number, _| {
             if val.value_of() == 2.0 {
-                Err(JsValue::from_str("reduce error"))
+                Err(JsError::new("reduce error"))
             } else {
                 Ok(val)
             }
@@ -1094,7 +1091,7 @@ fn test_array_try_reduce_right_error() {
     let result = arr.try_reduce_right(
         &mut |_acc: JsValue, val: Number, _| {
             if val.value_of() == 1.0 {
-                Err(JsValue::from_str("reduce_right error"))
+                Err(JsError::new("reduce_right error"))
             } else {
                 Ok(val)
             }
@@ -1125,7 +1122,7 @@ fn test_array_try_some_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_some(&mut |_val: TestItem| Err(JsValue::from_str("some error")));
+    let result = arr.try_some(&mut |_val: TestItem| Err(JsError::new("some error")));
     assert!(result.is_err());
 }
 
@@ -1151,8 +1148,7 @@ fn test_array_try_sort_by_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result =
-        arr.try_sort_by(&mut |_a: TestItem, _b: TestItem| Err(JsValue::from_str("sort error")));
+    let result = arr.try_sort_by(&mut |_a: TestItem, _b: TestItem| Err(JsError::new("sort error")));
     assert!(result.is_err());
 }
 
@@ -1179,9 +1175,8 @@ fn test_array_try_to_sorted_by_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_to_sorted_by(&mut |_a: TestItem, _b: TestItem| {
-        Err(JsValue::from_str("to_sorted error"))
-    });
+    let result = arr
+        .try_to_sorted_by(&mut |_a: TestItem, _b: TestItem| Err(JsError::new("to_sorted error")));
     assert!(result.is_err());
 }
 

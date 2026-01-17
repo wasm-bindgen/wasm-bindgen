@@ -1,5 +1,6 @@
 use js_sys::*;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsError;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
@@ -206,7 +207,7 @@ fn stringify_with_replacer_func_typed() {
     // Replacer function that doubles numbers
     let output: String = JSON::stringify_with_replacer_func(
         &JsValue::from(obj),
-        &mut |_key: JsString, value: JsValue| -> Result<Option<JsValue>, JsValue> {
+        &mut |_key: JsString, value: JsValue| -> Result<Option<JsValue>, JsError> {
             if let Some(n) = value.as_f64() {
                 Ok(Some(JsValue::from(n * 2.0)))
             } else {

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = OES_vertex_array_object , typescript_type = "OES_vertex_array_object")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OesVertexArrayObject` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object)"]

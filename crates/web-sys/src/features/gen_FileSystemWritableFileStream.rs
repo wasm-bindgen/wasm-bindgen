@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = WritableStream , extends = :: js_sys :: Object , js_name = FileSystemWritableFileStream , typescript_type = "FileSystemWritableFileStream")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FileSystemWritableFileStream` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream)"]
@@ -115,5 +115,3 @@ extern "C" {
         data: &WriteParams,
     ) -> Result<::js_sys::Promise, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<WritableStream> for FileSystemWritableFileStream {}

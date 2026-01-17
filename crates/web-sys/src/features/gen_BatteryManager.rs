@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = BatteryManager , typescript_type = "BatteryManager")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `BatteryManager` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BatteryManager)"]
@@ -97,5 +97,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BatteryManager`*"]
     pub fn set_onlevelchange(this: &BatteryManager, value: Option<&::js_sys::Function>);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for BatteryManager {}

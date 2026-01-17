@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = UserProximityEvent , typescript_type = "UserProximityEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UserProximityEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UserProximityEvent)"]
@@ -38,5 +38,3 @@ extern "C" {
         event_init_dict: &UserProximityEventInit,
     ) -> Result<UserProximityEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for UserProximityEvent {}

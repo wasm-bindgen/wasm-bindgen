@@ -159,7 +159,7 @@ macro_rules! closures {
         where
             Self: WasmDescribe,
             $($var: ErasableGeneric,)*
-            R: ErasableGeneric,
+            R: ErasableGeneric
         {
             type Repr = &'a (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'a);
         }

@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = PermissionStatus , extends = EventTarget , extends = :: js_sys :: Object , js_name = USBPermissionResult , typescript_type = "USBPermissionResult")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UsbPermissionResult` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBPermissionResult)"]
@@ -39,9 +39,3 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_devices(this: &UsbPermissionResult, value: &::wasm_bindgen::JsValue);
 }
-#[cfg(web_sys_unstable_apis)]
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<PermissionStatus> for UsbPermissionResult {}
-#[cfg(web_sys_unstable_apis)]
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for UsbPermissionResult {}

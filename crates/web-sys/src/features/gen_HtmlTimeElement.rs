@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLTimeElement , typescript_type = "HTMLTimeElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlTimeElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTimeElement)"]
@@ -27,11 +27,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlTimeElement`*"]
     pub fn set_date_time(this: &HtmlTimeElement, value: &str);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlTimeElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for HtmlTimeElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for HtmlTimeElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlTimeElement {}

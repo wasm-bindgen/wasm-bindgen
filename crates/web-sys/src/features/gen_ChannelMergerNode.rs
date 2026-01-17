@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = ChannelMergerNode , typescript_type = "ChannelMergerNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ChannelMergerNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ChannelMergerNode)"]
@@ -32,7 +32,3 @@ extern "C" {
         options: &ChannelMergerOptions,
     ) -> Result<ChannelMergerNode, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for ChannelMergerNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for ChannelMergerNode {}

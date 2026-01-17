@@ -1,6 +1,6 @@
 use js_sys::*;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsError};
 use wasm_bindgen_futures::{future_to_promise_typed, JsFuture};
 use wasm_bindgen_test::*;
 
@@ -75,10 +75,13 @@ async fn test_promise_map_with_closure() {
     let test_val = TestValue::new(&JsString::from("start"));
     let promise = Promise::resolve(&test_val);
 
-    let closure = Closure::new(|val: TestValue| val.transform(&JsString::from("_mapped")));
+    let closure = Closure::new(|val: TestValue| {
+        val.transform(&JsString::from("_mapped"))
+            .map_err(|e| JsError::new(&e.as_string().unwrap_or_default()))
+    });
     let result_promise = promise.then_map(&closure);
 
-    let result = JsFuture::from(result_promise).await.unwrap();
+    let result: TestValue = JsFuture::from(result_promise).await.unwrap();
     assert_eq!(result.value(), "start_mapped");
 }
 
@@ -174,13 +177,14 @@ pub fn rust_create_test_value_promise(value: &str) -> Promise<TestValue> {
 #[wasm_bindgen]
 pub fn rust_process_test_value_promise(promise: Promise<TestValue>) -> Promise<TestValue> {
     use std::sync::Once;
-    static mut CLOSURE: Option<Closure<dyn FnMut(TestValue) -> Result<TestValue, JsValue>>> = None;
+    static mut CLOSURE: Option<Closure<dyn FnMut(TestValue) -> Result<TestValue, JsError>>> = None;
     static INIT: Once = Once::new();
 
     unsafe {
         INIT.call_once(|| {
             CLOSURE = Some(Closure::new(|val: TestValue| {
                 val.transform(&JsString::from("_rust_processed"))
+                    .map_err(|e| JsError::new(&e.as_string().unwrap_or_default()))
             }));
         });
         promise.then_map(CLOSURE.as_ref().unwrap())
@@ -217,7 +221,7 @@ async fn test_round_trip_rust_js_rust() {
 async fn test_future_to_promise_success() {
     let future = async {
         let val = TestValue::new(&JsString::from("async_value"));
-        Ok(val.into())
+        Ok(val)
     };
 
     let promise: Promise<TestValue> = future_to_promise_typed(future);
@@ -244,10 +248,13 @@ async fn test_future_to_promise_chaining_with_closure() {
     };
 
     let promise: Promise<TestValue> = future_to_promise_typed(future);
-    let closure = Closure::new(|val: TestValue| val.transform(&JsString::from("_then")));
+    let closure = Closure::new(|val: TestValue| {
+        val.transform(&JsString::from("_then"))
+            .map_err(|e| JsError::new(&e.as_string().unwrap_or_default()))
+    });
     let chained = promise.then_map(&closure);
 
-    let result = JsFuture::from(chained).await.unwrap();
+    let result: TestValue = JsFuture::from(chained).await.unwrap();
     assert_eq!(result.value(), "chained_then");
 }
 
@@ -317,8 +324,12 @@ async fn test_promise_map2() {
     let test_val = TestValue::new(&JsString::from("map2_test"));
     let promise: Promise<TestValue> = Promise::resolve(&test_val);
 
-    let resolve = Closure::new(|val: TestValue| val.transform(&JsString::from("_resolved")));
-    let reject = Closure::new(|_err: JsValue| Ok(TestValue::new(&JsString::from("rejected"))));
+    let resolve = Closure::new(|val: TestValue| {
+        val.transform(&JsString::from("_resolved"))
+            .map_err(|e| JsError::new(&e.as_string().unwrap_or_default()))
+    });
+    let reject =
+        Closure::new(|_err: JsValue| Ok::<_, JsError>(TestValue::new(&JsString::from("rejected"))));
     let result_promise: Promise<TestValue> = promise.then_with_reject(&resolve, &reject);
 
     let result = JsFuture::from(result_promise).await.unwrap();
@@ -330,8 +341,13 @@ async fn test_promise_map2() {
 async fn test_promise_map2_reject() {
     let promise: Promise<TestValue> = Promise::reject_typed(&JsValue::from("error"));
 
-    let resolve = Closure::new(|val: TestValue| val.transform(&JsString::from("_resolved")));
-    let reject = Closure::new(|_err: JsValue| Ok(TestValue::new(&JsString::from("recovered"))));
+    let resolve = Closure::new(|val: TestValue| {
+        val.transform(&JsString::from("_resolved"))
+            .map_err(|e| JsError::new(&e.as_string().unwrap_or_default()))
+    });
+    let reject = Closure::new(|_err: JsValue| {
+        Ok::<_, JsError>(TestValue::new(&JsString::from("recovered")))
+    });
     let result_promise: Promise<TestValue> = promise.then_with_reject(&resolve, &reject);
 
     let result = JsFuture::from(result_promise).await.unwrap();
@@ -389,7 +405,7 @@ pub fn rust_create_string_promise(value: &str) -> Promise<JsString> {
 #[wasm_bindgen]
 pub fn rust_double_number_promise(promise: Promise<Number>) -> Promise<Number> {
     use std::sync::Once;
-    static mut CLOSURE: Option<Closure<dyn FnMut(Number) -> Result<Number, JsValue>>> = None;
+    static mut CLOSURE: Option<Closure<dyn FnMut(Number) -> Result<Number, JsError>>> = None;
     static INIT: Once = Once::new();
 
     unsafe {

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = MIDIPort , typescript_type = "MIDIPort")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MidiPort` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIPort)"]
@@ -93,5 +93,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
     pub fn open(this: &MidiPort) -> ::js_sys::Promise;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for MidiPort {}

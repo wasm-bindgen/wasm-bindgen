@@ -1276,6 +1276,99 @@ impl TryToTokens for ast::ImportType {
             .to_tokens(tokens);
         }
 
+        // Generate Upcast implementations (unless no_upcast is set)
+        if !self.no_upcast {
+            // 1. Always generate Upcast<JsValue>
+            (quote! {
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::convert::Upcast<#wasm_bindgen::JsValue>
+                    for #rust_name #ty_generics
+                #where_clause
+                {
+                }
+            })
+            .to_tokens(tokens);
+
+            // 2. For non-generic types: generate identity upcast (Upcast<Self>)
+            // 3. For generic types: generate structural covariance
+            let type_params: Vec<_> = self.generics.type_params().collect();
+            if type_params.is_empty() {
+                // Identity impl for non-generic types
+                (quote! {
+                    #[automatically_derived]
+                    impl #impl_generics #wasm_bindgen::convert::Upcast<#rust_name #ty_generics>
+                        for #rust_name #ty_generics
+                    #where_clause
+                    {
+                    }
+                })
+                .to_tokens(tokens);
+            } else {
+                // Structural covariance impl for generic types
+                // Build impl generics: all original params plus a Target param for each
+                let mut impl_generics_extended = self.generics.clone();
+                let target_param_names: Vec<syn::Ident> = type_params
+                    .iter()
+                    .enumerate()
+                    .map(|(i, tp)| {
+                        let target_name = quote::format_ident!("__UpcastTarget{}", i);
+                        // Copy bounds from the original type param to the target param
+                        let bounds = &tp.bounds;
+                        impl_generics_extended
+                            .params
+                            .push(syn::parse_quote!(#target_name: #bounds));
+                        target_name
+                    })
+                    .collect();
+
+                // Build where clause: T: Upcast<Target>
+                let mut where_clause_extended =
+                    self.generics
+                        .where_clause
+                        .clone()
+                        .unwrap_or_else(|| syn::WhereClause {
+                            where_token: Default::default(),
+                            predicates: Default::default(),
+                        });
+
+                for (type_param, target_name) in type_params.iter().zip(&target_param_names) {
+                    let param_ident = &type_param.ident;
+                    where_clause_extended.predicates.push(syn::parse_quote!(
+                        #param_ident: #wasm_bindgen::convert::Upcast<#target_name>
+                    ));
+                }
+
+                // Build the target type with Target params
+                let target_type = quote! { #rust_name<#(#target_param_names),*> };
+
+                let (impl_generics_split, _, _) = impl_generics_extended.split_for_impl();
+
+                // Structural covariance - Type<T1, T2, ...> can widen to Type<Target0, Target1, ...>
+                (quote! {
+                    #[automatically_derived]
+                    impl #impl_generics_split #wasm_bindgen::convert::Upcast<#target_type>
+                        for #rust_name #ty_generics
+                    #where_clause_extended
+                    {
+                    }
+                })
+                .to_tokens(tokens);
+            }
+
+            // 4. For each superclass in extends, generate Upcast<superclass>
+            for superclass in self.extends.iter() {
+                (quote! {
+                    #[automatically_derived]
+                    impl #impl_generics #wasm_bindgen::convert::Upcast<#superclass>
+                        for #rust_name #ty_generics
+                    #where_clause
+                    {
+                    }
+                })
+                .to_tokens(tokens);
+            }
+        }
+
         Ok(())
     }
 }
@@ -1445,7 +1538,8 @@ impl TryToTokens for ast::ImportFunction {
 
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let impl_ty = &*arg.pat_type.ty;
-            let ty = is_as_upcast_impl(impl_ty).unwrap_or(impl_ty);
+            let as_upcast_ty = is_as_upcast_impl(impl_ty);
+            let ty = as_upcast_ty.as_ref().unwrap_or(impl_ty);
             let name = match &*arg.pat_type.pat {
                 syn::Pat::Ident(syn::PatIdent {
                     by_ref: None,
@@ -1470,16 +1564,18 @@ impl TryToTokens for ast::ImportFunction {
             let convert_arg;
 
             if generics::uses_generic_params(ty, &fn_generic_param_names) {
-                let (inner_ty, ref_mut) = if let syn::Type::Reference(syn::TypeReference {
-                    elem,
-                    mutability: mut_,
-                    ..
-                }) = ty
-                {
-                    ((**elem).clone(), Some(mut_))
-                } else {
-                    (ty.clone(), None)
-                };
+                let (inner_ty, ref_mut, ref_lifetime) =
+                    if let syn::Type::Reference(syn::TypeReference {
+                        elem,
+                        mutability: mut_,
+                        lifetime,
+                        ..
+                    }) = ty
+                    {
+                        ((**elem).clone(), Some(mut_), lifetime.clone())
+                    } else {
+                        (ty.clone(), None, None)
+                    };
                 let concrete_ty =
                     generic_to_concrete(inner_ty.clone(), &fn_class_generics.concrete_defaults)?;
                 if i > 0 || !is_method {
@@ -1500,7 +1596,7 @@ impl TryToTokens for ast::ImportFunction {
                             arguments.push(quote! { #name: &#arg_lt #mut_ #inner_ty });
                             (&inner_ty_bounded, &concrete_ty_bounded)
                         } else {
-                            arguments.push(quote! { #name: & #mut_ #inner_ty });
+                            arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
                             (&inner_ty, &concrete_ty)
                         };
                         if mut_.is_some() {
@@ -1514,7 +1610,7 @@ impl TryToTokens for ast::ImportFunction {
                     });
                 }
                 abi_ty = if let Some(mut_) = ref_mut {
-                    quote! { & #mut_ #concrete_ty }
+                    quote! { & #ref_lifetime #mut_ #concrete_ty }
                 } else {
                     quote! { #concrete_ty }
                 };
@@ -1696,10 +1792,13 @@ impl TryToTokens for ast::ImportFunction {
                     segment.arguments = syn::PathArguments::None;
                 }
             }
-            if !is_method && !is_constructor || fn_class_generics.class_generic_params.is_empty() {
+            let has_class_generics = !fn_class_generics.class_generic_params.is_empty()
+                || !fn_class_generics.class_lifetime_params.is_empty();
+            if !is_method && !is_constructor || !has_class_generics {
                 // For static functions not the constructor, we impl on generic default
                 class_impl_def = Some(quote! { impl #class });
             } else {
+                let class_lifetime_params = &fn_class_generics.class_lifetime_params;
                 let class_generic_params = &fn_class_generics.class_generic_params;
                 let class_generic_exprs = &fn_class_generics.class_generic_exprs;
                 let impl_where_clause = if !fn_class_generics.class_bounds.is_empty() {
@@ -1709,18 +1808,22 @@ impl TryToTokens for ast::ImportFunction {
                     quote! {}
                 };
                 class_impl_def = Some(
-                    quote! { impl<#(#class_generic_params),*> #class <#(#class_generic_exprs),*> #impl_where_clause },
+                    quote! { impl<#(#class_lifetime_params,)* #(#class_generic_params),*> #class <#(#class_lifetime_params,)* #(#class_generic_exprs),*> #impl_where_clause },
                 );
             }
         };
 
-        let impl_generics =
-            if fn_class_generics.fn_generic_params.is_empty() && lifetimes.is_empty() {
-                quote! {}
-            } else {
-                let fn_generic_params = fn_class_generics.fn_generic_params;
-                quote! { <#(#lifetimes,)* #(#fn_generic_params),*> }
-            };
+        // Combine generated lifetimes (for trait objects) with function-level lifetime params
+        let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
+        let impl_generics = if fn_class_generics.fn_generic_params.is_empty()
+            && lifetimes.is_empty()
+            && fn_lifetime_params.is_empty()
+        {
+            quote! {}
+        } else {
+            let fn_generic_params = fn_class_generics.fn_generic_params;
+            quote! { <#(#fn_lifetime_params,)* #(#lifetimes,)* #(#fn_generic_params),*> }
+        };
         let where_clause = if fn_class_generics.fn_bounds.is_empty() {
             quote! {}
         } else {
@@ -1786,6 +1889,10 @@ struct FnClassGenerics<'a> {
     // the union of class-level defaults (for identifier generics) and function defaults
     // this is used to form the concrete type via replacement (using JsValue otherwise)
     concrete_defaults: BTreeMap<&'a syn::Ident, Option<Cow<'a, syn::Type>>>,
+    // hoisted class-level lifetime params
+    class_lifetime_params: Vec<&'a syn::Lifetime>,
+    // the remaining non-hoisted function-level lifetime params
+    fn_lifetime_params: Vec<&'a syn::Lifetime>,
 }
 
 impl<'a> FnClassGenerics<'a> {
@@ -1800,11 +1907,16 @@ impl<'a> FnClassGenerics<'a> {
 impl ast::ImportFunction {
     fn get_fn_generics<'a>(&'a self) -> Result<FnClassGenerics<'a>, Diagnostic> {
         let original_fn_generics = generics::generic_params(&self.generics);
-        let mut fn_generic_params = original_fn_generics.iter().map(|p| p.0).collect();
+        let mut fn_generic_params: Vec<&syn::Ident> =
+            original_fn_generics.iter().map(|p| p.0).collect();
         let concrete_defaults: BTreeMap<_, _> = original_fn_generics
             .into_iter()
             .map(|(i, d)| (i, d.map(Cow::Borrowed)))
             .collect();
+
+        // Extract lifetime parameters
+        let all_lifetime_params = generics::lifetime_params(&self.generics);
+        let mut fn_lifetime_params: Vec<&syn::Lifetime> = all_lifetime_params.clone();
 
         let mut where_predicates: Vec<Cow<syn::WherePredicate>> = Vec::new();
         for param in &self.generics.params {
@@ -1826,6 +1938,7 @@ impl ast::ImportFunction {
         let mut class_bounds = Vec::new();
         let mut fn_bounds = generics::generic_bounds(&self.generics);
         let mut class_generic_params_set = BTreeSet::new();
+        let mut class_lifetime_params_set = BTreeSet::new();
         let mut class_generic_params = Vec::new();
         let mut class_generic_exprs = Vec::new();
 
@@ -1854,6 +1967,14 @@ impl ast::ImportFunction {
             {
                 // Iterate the &self<expr1, expr2, ...> gen args, as the class_generic_exprs Vec
                 for gen_arg in gen_args.args.iter() {
+                    // Handle lifetime arguments for hoisting
+                    if let syn::GenericArgument::Lifetime(lt) = gen_arg {
+                        if all_lifetime_params.contains(&lt) {
+                            class_lifetime_params_set.insert(lt.clone());
+                        }
+                        continue;
+                    }
+
                     let syn::GenericArgument::Type(ty) = gen_arg else {
                         bail_span!(gen_arg, "Functions must provide generic arguments");
                     };
@@ -1866,6 +1987,10 @@ impl ast::ImportFunction {
                         &fn_generic_params,
                         class_generic_params_set,
                     );
+
+                    // Also find lifetimes used in class generic expressions
+                    let used_lifetimes = generics::used_lifetimes_in_type(ty, &all_lifetime_params);
+                    class_lifetime_params_set.extend(used_lifetimes);
                 }
 
                 class_generic_params = class_generic_params_set.into_iter().collect();
@@ -1877,6 +2002,9 @@ impl ast::ImportFunction {
                     .copied()
                     .filter(|&p| !class_generic_params.contains(p))
                     .collect();
+
+                // fn lifetime params are all lifetime params not hoisted as class lifetime params
+                fn_lifetime_params.retain(|&lt| !class_lifetime_params_set.contains(lt));
 
                 // hoist function where bounds on class generic params
                 let mut i = 0;
@@ -1892,6 +2020,13 @@ impl ast::ImportFunction {
             }
         }
 
+        // Convert class_lifetime_params_set to Vec, maintaining order from original params
+        let class_lifetime_params: Vec<&syn::Lifetime> = all_lifetime_params
+            .iter()
+            .copied()
+            .filter(|lt| class_lifetime_params_set.contains(*lt))
+            .collect();
+
         Ok(FnClassGenerics {
             class_generic_params,
             class_generic_exprs,
@@ -1899,6 +2034,8 @@ impl ast::ImportFunction {
             fn_generic_params,
             fn_bounds,
             concrete_defaults,
+            class_lifetime_params,
+            fn_lifetime_params,
         })
     }
 }
@@ -1918,12 +2055,9 @@ impl TryToTokens for DescribeImport<'_> {
             .arguments
             .iter()
             .map(|arg| {
-                generics::generic_to_concrete(
-                    is_as_upcast_impl(&arg.pat_type.ty)
-                        .unwrap_or(&arg.pat_type.ty)
-                        .clone(),
-                    &fn_class_generics.concrete_defaults,
-                )
+                let ty = is_as_upcast_impl(&arg.pat_type.ty)
+                    .unwrap_or_else(|| (*arg.pat_type.ty).clone());
+                generics::generic_to_concrete(ty, &fn_class_generics.concrete_defaults)
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;

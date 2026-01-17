@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLScriptElement , typescript_type = "HTMLScriptElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlScriptElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement)"]
@@ -167,11 +167,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_integrity(this: &HtmlScriptElement, value: &str);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlScriptElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for HtmlScriptElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for HtmlScriptElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlScriptElement {}

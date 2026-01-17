@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGFEDiffuseLightingElement , typescript_type = "SVGFEDiffuseLightingElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgfeDiffuseLightingElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDiffuseLightingElement)"]
@@ -93,11 +93,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`, `SvgfeDiffuseLightingElement`*"]
     pub fn result(this: &SvgfeDiffuseLightingElement) -> SvgAnimatedString;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgfeDiffuseLightingElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgfeDiffuseLightingElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgfeDiffuseLightingElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgfeDiffuseLightingElement {}

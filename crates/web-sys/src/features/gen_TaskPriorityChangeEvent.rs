@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = TaskPriorityChangeEvent , typescript_type = "TaskPriorityChangeEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TaskPriorityChangeEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TaskPriorityChangeEvent)"]
@@ -44,6 +44,3 @@ extern "C" {
         priority_change_event_init_dict: &TaskPriorityChangeEventInit,
     ) -> Result<TaskPriorityChangeEvent, JsValue>;
 }
-#[cfg(web_sys_unstable_apis)]
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for TaskPriorityChangeEvent {}

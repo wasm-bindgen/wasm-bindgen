@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = PaymentRequestUpdateEvent , typescript_type = "PaymentRequestUpdateEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PaymentRequestUpdateEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentRequestUpdateEvent)"]
@@ -41,5 +41,3 @@ extern "C" {
         details_promise: &::js_sys::Promise,
     ) -> Result<(), JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for PaymentRequestUpdateEvent {}

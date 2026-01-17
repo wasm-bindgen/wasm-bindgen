@@ -193,7 +193,6 @@ The Upcast trait implements a formal fully well-defined zero-cost type system ac
 
 ```rust
 use js_sys::{Array, Number, Object};
-use wasm_bindgen::Upcast;
 
 // Number → JsValue
 let num = Number::from(42);
@@ -207,9 +206,9 @@ let js_array: Array<JsValue> = num_array.upcast();
 let obj: Object = num_array.upcast();
 ```
 
-### The Upcast Derive Macro
+### Automatic Upcast Generation
 
-Upcast can either be implemented manually, or the `#[derive(Upcast)]` can be used when defining custom JavaScript types:
+Upcast implementations are automatically generated for all imported JavaScript types based on their `extends` attribute:
 
 ```rust
 use wasm_bindgen::prelude::*;
@@ -218,33 +217,39 @@ use js_sys::Object;
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object)]
-    #[derive(Upcast)]
     pub type MyCustomType;
 
     #[wasm_bindgen(extends = Object)]
-    #[derive(Upcast)]
     pub type MyCollection<T>;
 }
 
-// Now you can upcast to Object, JsValue, and handle generics:
+// Upcast implementations are automatically generated:
 let my_type = MyCustomType::new();
-let obj: Object = my_type.clone().upcast(); // ✓ Object upcast
-let js_val: JsValue = my_type.upcast(); // ✓ JsValue upcast
+let obj: Object = my_type.clone().upcast(); // ✓ Object upcast (from extends)
+let js_val: JsValue = my_type.upcast(); // ✓ JsValue upcast (always generated)
 ```
 
-`#[derive(Upcast)]` provides:
+The following Upcast implementations are automatically generated:
 * **JsValue upcast**: All types → `JsValue`
-* **Object upcast**: All types → `Object`
-* **Identity upcast**: Non-generic types → themselves
+* **Identity upcast**: Non-generic types → themselves  
 * **Structural upcast**: `Container<T>` → `Container<U>` when `T: Upcast<U>`
+* **Inheritance upcast**: For each type in the `extends` attribute
 
-**Note**: `#[derive(Upcast)]` requires `js-sys` as a dependency for the Object upcast. If js-sys is not available as a dependency, use `#[derive(UpcastCore)]` instead, which provides JsValue and structural upcast only (no Object upcast).
+To disable automatic Upcast generation (e.g., for types with custom implementations), use the `no_upcast` attribute:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object, no_upcast)]
+    pub type MyCustomType;
+}
+```
 
 ### Upcast Rules
 
 1. **JsValue upcast**: All types can upcast to `JsValue`
 2. **Identity upcast**: Non-generic types can upcast to themselves
-3. **Object upcast**: All JS types extend Object (except primitives like Number, JsString)
+3. **Inheritance upcast**: Types upcast to their `extends` targets (e.g., Object)
 4. **Structural upcast**: Generic types like `Array<T>` → `Array<U>` when `T` → `U`
 5. **Nested upcast**: `Promise<Array<Number>>` → `Promise<Array<JsValue>>`
 
@@ -264,21 +269,22 @@ See [Converting Closures to Typed Functions](../passing-rust-closures-to-js.html
 
 ### Manual Upcast Implementations
 
-For inheritance relationships (beyond Object) or custom upcast requirements, implement `Upcast` manually:
+For custom upcast relationships not covered by `extends`, implement `Upcast` manually:
 
 ```rust
+use wasm_bindgen::convert::Upcast;
+
 #[wasm_bindgen]
 extern "C" {
-    #[derive(Upcast)]
     pub type BaseClass;
 
     #[wasm_bindgen(extends = BaseClass)]
-    #[derive(Upcast)]
     pub type SubClass;
 }
 
-// Manually implement inheritance upcast
-impl Upcast<BaseClass> for SubClass {}
+// The extends attribute automatically generates Upcast<BaseClass> for SubClass
+// For additional upcast relationships, implement manually:
+impl Upcast<SomeOtherType> for SubClass {}
 ```
 
 ### Special Cases

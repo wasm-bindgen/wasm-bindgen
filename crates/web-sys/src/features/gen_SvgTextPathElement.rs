@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgTextContentElement , extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGTextPathElement , typescript_type = "SVGTextPathElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgTextPathElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTextPathElement)"]
@@ -71,15 +71,3 @@ impl SvgTextPathElement {
     #[doc = "*This API requires the following crate features to be activated: `SvgTextPathElement`*"]
     pub const TEXTPATH_SPACINGTYPE_EXACT: u16 = 2u64 as u16;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgTextContentElement> for SvgTextPathElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgTextPathElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgTextPathElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgTextPathElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgTextPathElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgTextPathElement {}

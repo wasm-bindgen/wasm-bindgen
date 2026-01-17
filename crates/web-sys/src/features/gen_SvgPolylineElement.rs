@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGeometryElement , extends = SvgGraphicsElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGPolylineElement , typescript_type = "SVGPolylineElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgPolylineElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPolylineElement)"]
@@ -29,15 +29,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPointList`, `SvgPolylineElement`*"]
     pub fn animated_points(this: &SvgPolylineElement) -> SvgPointList;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgGeometryElement> for SvgPolylineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgGraphicsElement> for SvgPolylineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgPolylineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgPolylineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgPolylineElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgPolylineElement {}

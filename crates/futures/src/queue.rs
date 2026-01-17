@@ -4,11 +4,12 @@ use core::cell::{Cell, RefCell};
 use core::panic::AssertUnwindSafe;
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsError;
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen]
-    fn queueMicrotask(closure: &Closure<dyn FnMut(JsValue) -> Result<(), JsValue>>);
+    fn queueMicrotask(closure: &Closure<dyn FnMut(JsValue) -> Result<(), JsError>>);
 
     type Global;
 
@@ -53,7 +54,7 @@ impl QueueState {
 pub(crate) struct Queue {
     state: Rc<QueueState>,
     promise: Promise,
-    closure: Closure<dyn FnMut(JsValue) -> Result<(), JsValue>>,
+    closure: Closure<dyn FnMut(JsValue) -> Result<(), JsError>>,
     has_queue_microtask: bool,
 }
 

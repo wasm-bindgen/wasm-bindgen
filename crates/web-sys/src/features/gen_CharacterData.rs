@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = CharacterData , typescript_type = "CharacterData")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CharacterData` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData)"]
@@ -719,7 +719,3 @@ extern "C" {
         nodes_7: &str,
     ) -> Result<(), JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for CharacterData {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for CharacterData {}

@@ -97,7 +97,7 @@ pub trait Promising: ErasableGeneric {
     diagnostic::on_unimplemented(
         message = "Unable to call function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
         label = "passed concrete generic type does not match the expected generic repr type",
-        note = "Try adding the trait bound to the generic parameter for `ErasableGeneric<Repr = JsValue>` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only",
+        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
     )
 )]
 pub trait ErasableGenericOwn<ConcreteTarget>: ErasableGeneric {}
@@ -119,7 +119,7 @@ where
     diagnostic::on_unimplemented(
         message = "Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
         label = "concrete generic type does not match the expected generic repr type",
-        note = "Try adding the trait bound to the generic parameter for `ErasableGeneric<Repr = JsValue>` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only",
+        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
     )
 )]
 pub trait ErasableGenericBorrow<Target: ?Sized> {}
@@ -141,7 +141,7 @@ where
     diagnostic::on_unimplemented(
         message = "Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
         label = "concrete generic type does not match the expected generic repr type",
-        note = "Try adding the trait bound to the generic parameter for `ErasableGeneric<Repr = JsValue>` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only",
+        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
     )
 )]
 pub trait ErasableGenericBorrowMut<Target: ?Sized> {}

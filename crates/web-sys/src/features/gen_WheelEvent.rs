@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = MouseEvent , extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = WheelEvent , typescript_type = "WheelEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WheelEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent)"]
@@ -73,9 +73,3 @@ impl WheelEvent {
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
     pub const DOM_DELTA_PAGE: u32 = 2u64 as u32;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<MouseEvent> for WheelEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<UiEvent> for WheelEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for WheelEvent {}

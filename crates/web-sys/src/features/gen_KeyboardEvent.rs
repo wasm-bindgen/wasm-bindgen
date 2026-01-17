@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = KeyboardEvent , typescript_type = "KeyboardEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `KeyboardEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent)"]
@@ -282,7 +282,3 @@ impl KeyboardEvent {
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub const DOM_KEY_LOCATION_NUMPAD: u32 = 3u64 as u32;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<UiEvent> for KeyboardEvent {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for KeyboardEvent {}

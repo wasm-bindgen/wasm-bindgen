@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = DomException , extends = :: js_sys :: Object , js_name = WebTransportError , typescript_type = "WebTransportError")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebTransportError` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransportError)"]
@@ -77,6 +77,3 @@ extern "C" {
         options: &WebTransportErrorOptions,
     ) -> Result<WebTransportError, JsValue>;
 }
-#[cfg(web_sys_unstable_apis)]
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<DomException> for WebTransportError {}

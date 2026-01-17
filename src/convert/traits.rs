@@ -376,27 +376,27 @@ impl<T: FromWasmAbi> FromWasmAbi for AssertUnwindSafe<T> {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait Upcast<T: ?Sized> {
-    /// Perform a zero-cost type-safe upcast to a wider type within the wasm
-    /// bindgen generics type system, to arbitrary levels of type nesting.
+    /// Perform a zero-cost type-safe upcast to a wider type within the Wasm
+    /// bindgen generics type system.
     ///
     /// This enables proper nested conversions that obey subtyping rules,
     /// supporting strict API type checking.
     ///
-    /// The common pattern when passing a narrow type is to call upcast(),
-    /// to obtain the correct type for the function usage, while ensuring
-    /// safe type checked usage unlike unchecked casting.
+    /// The common pattern when passing a narrow type is to call `upcast()`
+    /// or `upcast_ref()` to obtain the correct type for the function usage,
+    /// while ensuring safe type checked usage.
     ///
     /// For example, if passing `Promise<Number>` as an argument to a function
     /// where `Promise<JsValue>` is expected, or `FunctionArgs<JsValue>` as an
     /// argument where `FunctionArgs<Number>` is expected.
     ///
     /// This is a compile time conversion only by the nature of the erasable
-    /// generics type system, and incurs zero runtime overhead.
+    /// generics type system, therefore incurs zero runtime overhead.
     #[inline]
     fn upcast(self) -> T
     where
-        Self: Sized,
-        T: Sized,
+        Self: Sized + ErasableGeneric,
+        T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
     {
         unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
     }
@@ -404,7 +404,8 @@ pub trait Upcast<T: ?Sized> {
     #[inline]
     fn upcast_ref(&self) -> &T
     where
-        T: Sized,
+        Self: ErasableGeneric,
+        T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
     {
         unsafe { &*(self as *const Self as *const T) }
     }
@@ -417,15 +418,14 @@ impl<'a, T, Target> Upcast<&'a mut Target> for &'a mut T where T: Upcast<Target>
 impl<'a, T, Target> Upcast<&'a Target> for &'a T where T: Upcast<Target> {}
 
 /// Marker trait to indicate a callable upcast type
-pub trait AsUpcast<T, Repr = JsValue>: Upcast<T> + ErasableGeneric<Repr = Repr>
-where
-    T: ErasableGeneric<Repr = Repr>,
+pub trait AsUpcast<T: ErasableGeneric, R = <T as ErasableGeneric>::Repr>:
+    Upcast<T> + ErasableGeneric<Repr = R>
 {
 }
 
-impl<S, T, Repr> AsUpcast<T, Repr> for S
+impl<S, T> AsUpcast<T> for S
 where
-    S: Upcast<T> + ErasableGeneric<Repr = Repr>,
-    T: ErasableGeneric<Repr = Repr>,
+    S: Upcast<T> + ErasableGeneric<Repr = T::Repr>,
+    T: ErasableGeneric,
 {
 }

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgGradientElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGLinearGradientElement , typescript_type = "SVGLinearGradientElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgLinearGradientElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGLinearGradientElement)"]
@@ -45,13 +45,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgLinearGradientElement`*"]
     pub fn y2(this: &SvgLinearGradientElement) -> SvgAnimatedLength;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgGradientElement> for SvgLinearGradientElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgLinearGradientElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgLinearGradientElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgLinearGradientElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgLinearGradientElement {}

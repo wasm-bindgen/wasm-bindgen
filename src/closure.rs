@@ -725,7 +725,7 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
     }
 }
 
-unsafe impl<T: ?Sized> ErasableGeneric for Closure<T> {
+unsafe impl<T: ?Sized + WasmClosure> ErasableGeneric for Closure<T> {
     type Repr = Closure<JsValue>;
 }
 

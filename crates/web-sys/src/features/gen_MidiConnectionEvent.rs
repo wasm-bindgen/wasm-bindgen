@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MIDIConnectionEvent , typescript_type = "MIDIConnectionEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MidiConnectionEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIConnectionEvent)"]
@@ -39,5 +39,3 @@ extern "C" {
         event_init_dict: &MidiConnectionEventInit,
     ) -> Result<MidiConnectionEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for MidiConnectionEvent {}

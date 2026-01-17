@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = SecurityPolicyViolationEvent , typescript_type = "SecurityPolicyViolationEvent")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SecurityPolicyViolationEvent` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent)"]
@@ -118,5 +118,3 @@ extern "C" {
         event_init_dict: &SecurityPolicyViolationEventInit,
     ) -> Result<SecurityPolicyViolationEvent, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Event> for SecurityPolicyViolationEvent {}

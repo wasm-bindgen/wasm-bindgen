@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = MIDIAccess , typescript_type = "MIDIAccess")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MidiAccess` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIAccess)"]
@@ -50,5 +50,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MidiAccess`*"]
     pub fn sysex_enabled(this: &MidiAccess) -> bool;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for MidiAccess {}

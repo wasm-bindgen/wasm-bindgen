@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssRule , extends = :: js_sys :: Object , js_name = CSSStyleRule , typescript_type = "CSSStyleRule")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CssStyleRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleRule)"]
@@ -35,5 +35,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`, `CssStyleRule`*"]
     pub fn style(this: &CssStyleRule) -> CssStyleDeclaration;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CssRule> for CssStyleRule {}

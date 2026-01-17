@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLPreElement , typescript_type = "HTMLPreElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlPreElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLPreElement)"]
@@ -27,11 +27,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlPreElement`*"]
     pub fn set_width(this: &HtmlPreElement, value: i32);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlPreElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for HtmlPreElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for HtmlPreElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlPreElement {}

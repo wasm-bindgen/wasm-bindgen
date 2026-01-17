@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AbortController , extends = :: js_sys :: Object , js_name = TaskController , typescript_type = "TaskController")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TaskController` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TaskController)"]
@@ -52,6 +52,3 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_priority(this: &TaskController, priority: TaskPriority) -> Result<(), JsValue>;
 }
-#[cfg(web_sys_unstable_apis)]
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AbortController> for TaskController {}

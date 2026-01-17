@@ -148,7 +148,7 @@ fn test_object_callback() {
 
         let obj = Object::new();
         Reflect::set(&obj, &"test".into(), &123.into()).unwrap();
-        test.invoke_object_callback(&Function::from_closure_void(closure), &obj);
+        test.invoke_object_callback(&Function::from_closure_upcast(closure), &obj);
     }
 
     assert!(was_called.get(), "Object callback should have been invoked");

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLFormElement , typescript_type = "HTMLFormElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlFormElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement)"]
@@ -213,11 +213,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn get_with_name(this: &HtmlFormElement, name: &str) -> Option<::js_sys::Object>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlFormElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for HtmlFormElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for HtmlFormElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlFormElement {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssRule , extends = :: js_sys :: Object , js_name = CSSCounterStyleRule , typescript_type = "CSSCounterStyleRule")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CssCounterStyleRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule)"]
@@ -167,5 +167,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn set_fallback(this: &CssCounterStyleRule, value: &str);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CssRule> for CssCounterStyleRule {}

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLDetailsElement , typescript_type = "HTMLDetailsElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlDetailsElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDetailsElement)"]
@@ -27,11 +27,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlDetailsElement`*"]
     pub fn set_open(this: &HtmlDetailsElement, value: bool);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<HtmlElement> for HtmlDetailsElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for HtmlDetailsElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for HtmlDetailsElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for HtmlDetailsElement {}

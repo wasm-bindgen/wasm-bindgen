@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = NetworkInformation , typescript_type = "NetworkInformation")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `NetworkInformation` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation)"]
@@ -35,5 +35,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkInformation`*"]
     pub fn set_ontypechange(this: &NetworkInformation, value: Option<&::js_sys::Function>);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for NetworkInformation {}

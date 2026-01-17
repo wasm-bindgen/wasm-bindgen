@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = WorkerDebuggerGlobalScope , typescript_type = "WorkerDebuggerGlobalScope")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WorkerDebuggerGlobalScope` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope)"]
@@ -134,5 +134,3 @@ extern "C" {
         handler: &::js_sys::Function,
     ) -> Result<(), JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for WorkerDebuggerGlobalScope {}

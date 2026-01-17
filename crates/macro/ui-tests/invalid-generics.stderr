@@ -5,22 +5,10 @@ error: structs with #[wasm_bindgen] cannot have lifetime or type parameters curr
   |                                  ^^^
 
 error: unsupported in wasm-bindgen generics
-  --> ui-tests/invalid-generics.rs:22:31
-   |
-22 |     pub type TypeWithLifetime<'a, T>;
-   |                               ^^
-
-error: unsupported in wasm-bindgen generics
   --> ui-tests/invalid-generics.rs:25:28
    |
 25 |     pub type TypeWithConst<const N: usize>;
    |                            ^^^^^^^^^^^^^^
-
-error: it is currently not sound to use lifetimes in function signatures
-  --> ui-tests/invalid-generics.rs:34:31
-   |
-34 |     pub fn func_with_lifetime<'a, T>() -> T;
-   |                               ^^
 
 error: unsupported in wasm-bindgen generics
   --> ui-tests/invalid-generics.rs:37:28

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGScriptElement , typescript_type = "SVGScriptElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgScriptElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGScriptElement)"]
@@ -49,11 +49,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`, `SvgScriptElement`*"]
     pub fn href(this: &SvgScriptElement) -> SvgAnimatedString;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgScriptElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgScriptElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgScriptElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgScriptElement {}

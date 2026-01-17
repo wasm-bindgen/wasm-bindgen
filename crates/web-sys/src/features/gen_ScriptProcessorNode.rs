@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = ScriptProcessorNode , typescript_type = "ScriptProcessorNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ScriptProcessorNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode)"]
@@ -34,7 +34,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ScriptProcessorNode`*"]
     pub fn buffer_size(this: &ScriptProcessorNode) -> i32;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for ScriptProcessorNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for ScriptProcessorNode {}

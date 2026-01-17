@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = GainNode , typescript_type = "GainNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GainNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GainNode)"]
@@ -40,7 +40,3 @@ extern "C" {
         options: &GainOptions,
     ) -> Result<GainNode, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for GainNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for GainNode {}

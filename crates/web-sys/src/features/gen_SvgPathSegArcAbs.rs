@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = SvgPathSeg , extends = :: js_sys :: Object , js_name = SVGPathSegArcAbs , typescript_type = "SVGPathSegArcAbs")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgPathSegArcAbs` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSegArcAbs)"]
@@ -111,5 +111,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSegArcAbs`*"]
     pub fn set_sweep_flag(this: &SvgPathSegArcAbs, value: bool);
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgPathSeg> for SvgPathSegArcAbs {}

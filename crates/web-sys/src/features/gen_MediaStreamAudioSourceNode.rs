@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = MediaStreamAudioSourceNode , typescript_type = "MediaStreamAudioSourceNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaStreamAudioSourceNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioSourceNode)"]
@@ -24,7 +24,3 @@ extern "C" {
         options: &MediaStreamAudioSourceOptions,
     ) -> Result<MediaStreamAudioSourceNode, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for MediaStreamAudioSourceNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for MediaStreamAudioSourceNode {}

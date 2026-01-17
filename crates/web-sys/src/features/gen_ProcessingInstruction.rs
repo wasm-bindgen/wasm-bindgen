@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CharacterData , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = ProcessingInstruction , typescript_type = "ProcessingInstruction")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ProcessingInstruction` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ProcessingInstruction)"]
@@ -28,9 +28,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProcessingInstruction`, `StyleSheet`*"]
     pub fn sheet(this: &ProcessingInstruction) -> Option<StyleSheet>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CharacterData> for ProcessingInstruction {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for ProcessingInstruction {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for ProcessingInstruction {}

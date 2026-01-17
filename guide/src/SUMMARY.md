@@ -81,6 +81,7 @@
       - [`module = "blah"`](./reference/attributes/on-js-imports/module.md)
       - [`raw_module = "blah"`](./reference/attributes/on-js-imports/raw_module.md)
       - [`no_deref`](./reference/attributes/on-js-imports/no_deref.md)
+      - [`no_upcast`](./reference/attributes/on-js-imports/no_upcast.md)
       - [`no_promising`](./reference/attributes/on-js-imports/no_promising.md)
       - [`reexport`](./reference/attributes/on-js-imports/reexport.md)
       - [`static_method_of = Blah`](./reference/attributes/on-js-imports/static_method_of.md)

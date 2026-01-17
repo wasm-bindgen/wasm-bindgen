@@ -97,6 +97,7 @@ macro_rules! attrgen {
             (is_type_of, false, IsTypeOf(Span, syn::Expr)),
             (extends, false, Extends(Span, syn::Path)),
             (no_deref, false, NoDeref(Span)),
+            (no_upcast, false, NoUpcast(Span)),
             (no_promising, false, NoPromising(Span)),
             (vendor_prefix, false, VendorPrefix(Span, Ident)),
             (variadic, false, Variadic(Span)),
@@ -809,6 +810,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         let mut extends = Vec::new();
         let mut vendor_prefixes = Vec::new();
         let no_deref = attrs.no_deref().is_some();
+        let no_upcast = attrs.no_upcast().is_some();
         let no_promising = attrs.no_promising().is_some();
         for (used, attr) in attrs.attrs.iter() {
             match attr {
@@ -850,6 +852,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
             extends,
             vendor_prefixes,
             no_deref,
+            no_upcast,
             no_promising,
             wasm_bindgen: program.wasm_bindgen.clone(),
             generics: generics.unwrap_or(self.generics),
@@ -1053,8 +1056,6 @@ fn function_from_decl(
             "can't #[wasm_bindgen] functions with lifetime or type parameters"
         );
     }
-
-    assert_no_lifetimes(&sig)?;
 
     let syn::Signature { inputs, output, .. } = sig;
 
@@ -2169,30 +2170,8 @@ fn unescape_unicode(chars: &mut Chars) -> Option<(char, char)> {
     None
 }
 
-/// Check there are no lifetimes on the function.
-fn assert_no_lifetimes(sig: &syn::Signature) -> Result<(), Diagnostic> {
-    struct Walk {
-        diagnostics: Vec<Diagnostic>,
-    }
-
-    impl<'ast> syn::visit::Visit<'ast> for Walk {
-        fn visit_lifetime(&mut self, i: &'ast syn::Lifetime) {
-            self.diagnostics.push(err_span!(
-                i,
-                "it is currently not sound to use lifetimes in function \
-                 signatures"
-            ));
-        }
-    }
-    let mut walk = Walk {
-        diagnostics: Vec::new(),
-    };
-    syn::visit::Visit::visit_signature(&mut walk, sig);
-    Diagnostic::from_vec(walk.diagnostics)
-}
-
 /// Extracts the last ident from the path
-/// If generics is enabled, generics are validated (lifetimes remain unsupported)
+/// If generics is enabled, generics are validated
 fn extract_path_ident(path: &syn::Path, allow_generics: bool) -> Result<Ident, Diagnostic> {
     for segment in path.segments.iter() {
         match &segment.arguments {
@@ -2219,13 +2198,6 @@ fn extract_path_ident(path: &syn::Path, allow_generics: bool) -> Result<Ident, D
     }
 }
 
-fn bail_generic_lifetime(span: impl Spanned + ToTokens) -> Result<(), Diagnostic> {
-    bail_span!(
-        span,
-        "lifetime bounds are unsupported in wasm-bindgen generics"
-    );
-}
-
 fn bail_generic_unsupported(span: impl Spanned + ToTokens) -> Result<(), Diagnostic> {
     bail_span!(span, "unsupported in wasm-bindgen generics");
 }
@@ -2233,14 +2205,14 @@ fn bail_generic_unsupported(span: impl Spanned + ToTokens) -> Result<(), Diagnos
 fn validate_generic_type_param_bound(bound: &syn::TypeParamBound) -> Result<(), Diagnostic> {
     match bound {
         syn::TypeParamBound::Trait(trait_bound) => {
-            if let Some(lifetimes) = &trait_bound.lifetimes {
-                bail_generic_lifetime(lifetimes)?;
-            }
+            // Higher-ranked trait bounds (for<'a>) are now supported
             if let syn::TraitBoundModifier::Maybe(question) = trait_bound.modifier {
                 bail_generic_unsupported(question)?;
             }
         }
-        syn::TypeParamBound::Lifetime(lifetime) => bail_generic_lifetime(lifetime)?,
+        syn::TypeParamBound::Lifetime(_) => {
+            // Lifetime bounds (e.g., T: 'a) are now supported
+        }
         syn::TypeParamBound::Verbatim(_) => {}
         _ => {}
     }
@@ -2248,21 +2220,21 @@ fn validate_generic_type_param_bound(bound: &syn::TypeParamBound) -> Result<(), 
 }
 
 /// Validates generic type parameters and their bounds both for inline parameters and where clauses.
-/// Bails for const params and lifetimes which are not supported.
+/// Bails for const params. Lifetimes are supported via hoisting.
 fn validate_generics(generics: &syn::Generics) -> Result<(), Diagnostic> {
     if let Some(where_clause) = &generics.where_clause {
         for predicate in &where_clause.predicates {
             match predicate {
                 syn::WherePredicate::Type(predicate_type) => {
-                    if let Some(lifetimes) = &predicate_type.lifetimes {
-                        bail_generic_lifetime(lifetimes)?;
-                    };
+                    // Lifetime bounds on types (for<'a>) are now supported
                     predicate_type
                         .bounds
                         .iter()
                         .try_for_each(validate_generic_type_param_bound)?;
                 }
-                syn::WherePredicate::Lifetime(lifetime) => bail_generic_lifetime(lifetime)?,
+                syn::WherePredicate::Lifetime(_) => {
+                    // Lifetime bounds (e.g., 'a: 'b) are now supported
+                }
                 _ => bail_generic_unsupported(predicate)?,
             }
         }
@@ -2270,8 +2242,8 @@ fn validate_generics(generics: &syn::Generics) -> Result<(), Diagnostic> {
 
     for param in &generics.params {
         match param {
-            syn::GenericParam::Lifetime(lifetime_param) => {
-                bail_generic_unsupported(lifetime_param)?;
+            syn::GenericParam::Lifetime(_) => {
+                // Lifetimes are now supported via hoisting
             }
             syn::GenericParam::Type(type_param) => {
                 type_param

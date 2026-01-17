@@ -198,7 +198,8 @@ pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn
 }
 
 /// Detects if a type is `impl AsUpcast<T>` or `&impl AsUpcast<T>` pattern
-pub fn is_as_upcast_impl(ty: &syn::Type) -> Option<&syn::Type> {
+/// Returns the inner type T with lifetimes stripped (for use in ABI contexts)
+pub fn is_as_upcast_impl(ty: &syn::Type) -> Option<syn::Type> {
     match ty {
         // Pattern: &impl AsUpcast<T>
         syn::Type::Reference(type_ref) => {
@@ -215,7 +216,8 @@ pub fn is_as_upcast_impl(ty: &syn::Type) -> Option<&syn::Type> {
 }
 
 /// Checks if impl trait has AsUpcast<T> bound
-fn is_as_upcast(impl_trait: &syn::TypeImplTrait) -> Option<&syn::Type> {
+/// Returns the inner type with lifetimes stripped from references
+fn is_as_upcast(impl_trait: &syn::TypeImplTrait) -> Option<syn::Type> {
     let mut bounds_iter = impl_trait.bounds.iter();
     if let Some(syn::TypeParamBound::Trait(trait_bound)) = bounds_iter.next() {
         if bounds_iter.next().is_some() {
@@ -230,7 +232,8 @@ fn is_as_upcast(impl_trait: &syn::TypeImplTrait) -> Option<&syn::Type> {
                 return None;
             }
             if let syn::GenericArgument::Type(ty) = &arguments.args[0] {
-                Some(ty)
+                // Strip lifetimes from reference types
+                Some(strip_lifetimes(ty.clone()))
             } else {
                 None
             }
@@ -242,9 +245,63 @@ fn is_as_upcast(impl_trait: &syn::TypeImplTrait) -> Option<&syn::Type> {
     }
 }
 
+/// Strip lifetimes from a type (replace with elided lifetimes)
+fn strip_lifetimes(mut ty: syn::Type) -> syn::Type {
+    struct LifetimeStripper;
+    impl VisitMut for LifetimeStripper {
+        fn visit_lifetime_mut(&mut self, lifetime: &mut syn::Lifetime) {
+            *lifetime = syn::Lifetime::new("'_", lifetime.span());
+        }
+    }
+    LifetimeStripper.visit_type_mut(&mut ty);
+    ty
+}
+
 /// Obtain the generic parameters and their optional defaults
 pub(crate) fn generic_param_names(generics: &syn::Generics) -> Vec<&Ident> {
     generics.type_params().map(|tp| &tp.ident).collect()
+}
+
+/// Obtain all lifetime parameters from generics
+pub(crate) fn lifetime_params(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
+    generics.lifetimes().map(|lp| &lp.lifetime).collect()
+}
+
+/// Helper visitor for lifetime usage detection in types
+pub struct LifetimeVisitor<'a> {
+    lifetime_params: &'a [&'a syn::Lifetime],
+    found_set: BTreeSet<syn::Lifetime>,
+}
+
+impl<'a> LifetimeVisitor<'a> {
+    pub fn new(lifetime_params: &'a [&'a syn::Lifetime]) -> Self {
+        Self {
+            lifetime_params,
+            found_set: BTreeSet::new(),
+        }
+    }
+
+    pub fn into_found(self) -> BTreeSet<syn::Lifetime> {
+        self.found_set
+    }
+}
+
+impl<'ast> syn::visit::Visit<'ast> for LifetimeVisitor<'_> {
+    fn visit_lifetime(&mut self, lifetime: &'ast syn::Lifetime) {
+        if self.lifetime_params.contains(&lifetime) {
+            self.found_set.insert(lifetime.clone());
+        }
+    }
+}
+
+/// Find all lifetimes from the given set that are used in a type
+pub(crate) fn used_lifetimes_in_type<'a>(
+    ty: &syn::Type,
+    lifetime_params: &'a [&'a syn::Lifetime],
+) -> BTreeSet<syn::Lifetime> {
+    let mut visitor = LifetimeVisitor::new(lifetime_params);
+    syn::visit::Visit::visit_type(&mut visitor, ty);
+    visitor.into_found()
 }
 
 pub(crate) fn uses_generic_params(ty: &syn::Type, generic_names: &Vec<&Ident>) -> bool {

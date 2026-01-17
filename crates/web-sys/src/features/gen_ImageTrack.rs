@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = ImageTrack , typescript_type = "ImageTrack")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ImageTrack` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageTrack)"]
@@ -94,6 +94,3 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_selected(this: &ImageTrack, value: bool);
 }
-#[cfg(web_sys_unstable_apis)]
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for ImageTrack {}

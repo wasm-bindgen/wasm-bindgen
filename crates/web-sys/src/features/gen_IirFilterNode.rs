@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = IIRFilterNode , typescript_type = "IIRFilterNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `IirFilterNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IIRFilterNode)"]
@@ -120,7 +120,3 @@ extern "C" {
         phase_response: &::js_sys::Float32Array,
     );
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for IirFilterNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for IirFilterNode {}

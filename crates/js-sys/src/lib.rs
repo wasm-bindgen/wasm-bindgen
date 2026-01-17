@@ -35,10 +35,10 @@ use core::str;
 use core::str::FromStr;
 use wasm_bindgen::closure::WasmClosure;
 use wasm_bindgen::convert::{AsUpcast, FromWasmAbi, Upcast};
-use wasm_bindgen::{Undefined, UpcastCore};
+use wasm_bindgen::Undefined;
 
 pub use wasm_bindgen;
-use wasm_bindgen::{prelude::*, ErasableGeneric, Promising};
+use wasm_bindgen::{prelude::*, ErasableGeneric, JsError, Promising};
 
 // When adding new imports:
 //
@@ -63,6 +63,16 @@ use wasm_bindgen::{prelude::*, ErasableGeneric, Promising};
 macro_rules! forward_deref_unop {
     (impl $imp:ident, $method:ident for $t:ty) => {
         impl $imp for $t {
+            type Output = <&'static $t as $imp>::Output;
+
+            #[inline]
+            fn $method(self) -> Self::Output {
+                $imp::$method(&self)
+            }
+        }
+    };
+    (impl<$($gen:ident),+> $imp:ident, $method:ident for $t:ty) => {
+        impl<$($gen),+> $imp for $t {
             type Output = <&'static $t as $imp>::Output;
 
             #[inline]
@@ -102,6 +112,34 @@ macro_rules! forward_deref_binop {
             }
         }
     };
+    (impl<$($gen:ident),+> $imp:ident, $method:ident for $t:ty) => {
+        impl<'a, $($gen),+> $imp<$t> for &'a $t {
+            type Output = <&'static $t as $imp<&'static $t>>::Output;
+
+            #[inline]
+            fn $method(self, other: $t) -> Self::Output {
+                $imp::$method(self, &other)
+            }
+        }
+
+        impl<$($gen),+> $imp<&$t> for $t {
+            type Output = <&'static $t as $imp<&'static $t>>::Output;
+
+            #[inline]
+            fn $method(self, other: &$t) -> Self::Output {
+                $imp::$method(&self, other)
+            }
+        }
+
+        impl<$($gen),+> $imp<$t> for $t {
+            type Output = <&'static $t as $imp<&'static $t>>::Output;
+
+            #[inline]
+            fn $method(self, other: $t) -> Self::Output {
+                $imp::$method(&self, &other)
+            }
+        }
+    };
 }
 
 macro_rules! forward_js_unop {
@@ -117,6 +155,18 @@ macro_rules! forward_js_unop {
 
         forward_deref_unop!(impl $imp, $method for $t);
     };
+    (impl<$($gen:ident),+> $imp:ident, $method:ident for $t:ty) => {
+        impl<$($gen),+> $imp for &$t {
+            type Output = $t;
+
+            #[inline]
+            fn $method(self) -> Self::Output {
+                $imp::$method(JsValue::as_ref(self)).unchecked_into()
+            }
+        }
+
+        forward_deref_unop!(impl<$($gen),+> $imp, $method for $t);
+    };
 }
 
 macro_rules! forward_js_binop {
@@ -131,6 +181,18 @@ macro_rules! forward_js_binop {
         }
 
         forward_deref_binop!(impl $imp, $method for $t);
+    };
+    (impl<$($gen:ident),+> $imp:ident, $method:ident for $t:ty) => {
+        impl<$($gen),+> $imp<&$t> for &$t {
+            type Output = $t;
+
+            #[inline]
+            fn $method(self, other: &$t) -> Self::Output {
+                $imp::$method(JsValue::as_ref(self), JsValue::as_ref(other)).unchecked_into()
+            }
+        }
+
+        forward_deref_binop!(impl<$($gen),+> $imp, $method for $t);
     };
 }
 
@@ -174,7 +236,64 @@ macro_rules! sum_product {
                 )
             }
         }
-    )*)
+    )*);
+    // Generic variant: impl<T> for Type<T>
+    (impl<$gen:ident> $a:ident<$g2:ident>) => {
+        impl<$gen> Sum for $a<$g2>
+        where
+            $a<$g2>: From<$gen>,
+            $g2: From<u32>
+        {
+            #[inline]
+            fn sum<I: iter::Iterator<Item=Self>>(iter: I) -> Self {
+                iter.fold(
+                    $a::from($g2::from(0)),
+                    |a, b| a + b,
+                )
+            }
+        }
+
+        impl<$gen> Product for $a<$g2>
+        where
+            $a<$g2>: From<$gen>,
+            $g2: From<u32>
+        {
+            #[inline]
+            fn product<I: iter::Iterator<Item=Self>>(iter: I) -> Self {
+                iter.fold(
+                    $a::from($g2::from(1)),
+                    |a, b| a * b,
+                )
+            }
+        }
+
+        impl<'a, $gen> Sum<&'a $a<$g2>> for $a<$g2>
+        where
+            $a<$g2>: From<$gen>,
+            $g2: From<u32>
+        {
+            fn sum<I: iter::Iterator<Item=&'a Self>>(iter: I) -> Self {
+                iter.fold(
+                    $a::from($g2::from(0)),
+                    |a, b| a + b,
+                )
+            }
+        }
+
+        impl<'a, $gen> Product<&'a $a<$g2>> for $a<$g2>
+        where
+            $a<$g2>: From<$gen>,
+            $g2: From<u32>
+        {
+            #[inline]
+            fn product<I: iter::Iterator<Item=&'a Self>>(iter: I) -> Self {
+                iter.fold(
+                    $a::from($g2::from(1)),
+                    |a, b| a * b,
+                )
+            }
+        }
+    };
 }
 
 macro_rules! partialord_ord {
@@ -305,7 +424,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = Array::is_array, typescript_type = "Array<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Array<T>;
 
     // Next major: typed by default, deprecate typed
@@ -398,7 +517,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Array, catch, js_name = from)]
     pub fn from_iterable_map<T, I: Iterable<Item = T>, U>(
         val: &I,
-        map: &mut dyn FnMut(T, u32) -> Result<U, JsValue>,
+        map: &mut dyn FnMut(T, u32) -> Result<U, JsError>,
     ) -> Result<Array<U>, JsValue>;
 
     /// The `Array.fromAsync()` static method creates a new, shallow-copied `Array` instance
@@ -417,7 +536,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Array, catch, js_name = fromAsync)]
     pub fn from_async_map<T, U, I: AsyncIterable<Item = T>, R: Promising<Resolution = U>>(
         val: &I,
-        map: &Closure<dyn FnMut(T, u32) -> Result<R, JsValue>>,
+        map: &Closure<dyn FnMut(T, u32) -> Result<R, JsError>>,
     ) -> Result<Promise<Array<U>>, JsValue>;
 
     /// The `copyWithin()` method shallow copies part of an array to another
@@ -450,7 +569,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = every, catch)]
     pub fn try_every<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
     ) -> Result<bool, JsValue>;
 
     /// The `fill()` method fills all the elements of an array from a start index
@@ -479,7 +598,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = filter, catch)]
     pub fn try_filter<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
     ) -> Result<Array<T>, JsValue>;
 
     // Next major: return an Option<T>
@@ -500,7 +619,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = find, catch)]
     pub fn try_find<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
     ) -> Result<Option<T>, JsValue>;
 
     /// The `findIndex()` method returns the index of the first element in the array that
@@ -522,7 +641,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = findIndex, catch)]
     pub fn try_find_index<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
     ) -> Result<i32, JsValue>;
 
     // Next major: return Option<T>
@@ -545,7 +664,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = findLast, catch)]
     pub fn try_find_last<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
     ) -> Result<T, JsValue>;
 
     /// The `findLastIndex()` method of Array instances iterates the array in reverse order
@@ -569,7 +688,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = findLastIndex, catch)]
     pub fn try_find_last_index<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
     ) -> Result<i32, JsValue>;
 
     /// The `flat()` method creates a new array with all sub-array elements concatenated into it
@@ -605,7 +724,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<T>(
         this: &Array<T>,
-        callback: &mut dyn FnMut(T, u32) -> Result<(), JsValue>,
+        callback: &mut dyn FnMut(T, u32) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
 
     /// The `includes()` method determines whether an array includes a certain
@@ -689,7 +808,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = map, catch)]
     pub fn try_map<T, U>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T, u32) -> Result<U, JsValue>,
+        predicate: &mut dyn FnMut(T, u32) -> Result<U, JsError>,
     ) -> Result<Array<U>, JsValue>;
 
     /// The `Array.of()` method creates a new Array instance with a variable
@@ -787,7 +906,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = reduce, catch)]
     pub fn try_reduce<T, A>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(A, T, u32) -> Result<A, JsValue>,
+        predicate: &mut dyn FnMut(A, T, u32) -> Result<A, JsError>,
         initial_value: &A,
     ) -> Result<A, JsValue>;
 
@@ -812,7 +931,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = reduceRight, catch)]
     pub fn try_reduce_right<T, A>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(JsValue, T, u32) -> Result<A, JsValue>,
+        predicate: &mut dyn FnMut(JsValue, T, u32) -> Result<A, JsError>,
         initial_value: &A,
     ) -> Result<A, JsValue>;
 
@@ -875,7 +994,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = some, catch)]
     pub fn try_some<T>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(T) -> Result<bool, JsValue>,
+        predicate: &mut dyn FnMut(T) -> Result<bool, JsError>,
     ) -> Result<bool, JsValue>;
 
     /// The `sort()` method sorts the elements of an array in place and returns
@@ -903,7 +1022,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = sort, catch)]
     pub fn try_sort_by<T>(
         this: &Array<T>,
-        compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsValue>,
+        compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsError>,
     ) -> Result<Array<T>, JsValue>;
 
     /// The `splice()` method changes the contents of an array by removing existing elements and/or
@@ -956,7 +1075,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toSorted, catch)]
     pub fn try_to_sorted_by<T>(
         this: &Array<T>,
-        compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsValue>,
+        compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsError>,
     ) -> Result<Array<T>, JsValue>;
 
     /// The `toSpliced()` method returns a new array with some elements removed and/or
@@ -999,42 +1118,40 @@ extern "C" {
     pub fn with<T>(this: &Array<T>, index: u32, value: &T) -> Array<T>;
 }
 
-impl<T> Upcast<Object> for Array<T> {}
-
-// This uses the Voldemort type hack to avoid leaking the Never type in the public API of js-sys.
-mod never {
+// This uses the Voldemort type hack to avoid leaking the None type in the public API of js-sys.
+mod none {
     /// Marker type for an unused generic argument
     /// This type does not itself implement ErasableGeneric, which allows restricting implementations to defined args only.
     /// For example, for `tuple: ArrayTuple<JsString, Number>`, it will not support `tuple.get2`,
-    /// because Never does not support ErasableGeneric.
+    /// because None does not support ErasableGeneric.
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub enum Never {}
+    pub enum None {}
 }
 
-use never::Never;
+use none::None;
 
-// Never is an uninhabited type, so it's vacuously covariant to any type,
+// None is an uninhabited type, so it's vacuously covariant to any type,
 // and contravariant Undefined.
-impl<T: ?Sized> Upcast<T> for Never {}
-impl Upcast<Never> for Undefined {}
-impl Upcast<Never> for () {}
-impl Upcast<Never> for JsValue {} // Never can widen to Any!
+impl<T: ?Sized> Upcast<T> for None {}
+impl Upcast<None> for Undefined {}
+impl Upcast<None> for () {}
+impl Upcast<None> for JsValue {} // None can widen to Any!
 
 // Tuples as a typed array variant
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_name = Array, extends = Array, is_type_of = Array::is_array, typescript_type = "Array<any>")]
+    #[wasm_bindgen(js_name = Array, extends = Array, is_type_of = Array::is_array, no_upcast, typescript_type = "Array<any>")]
     #[derive(Clone, Debug)]
     pub type ArrayTuple<
-        T1 = Never,
-        T2 = Never,
-        T3 = Never,
-        T4 = Never,
-        T5 = Never,
-        T6 = Never,
-        T7 = Never,
-        T8 = Never,
-        T9 = Never,
+        T1 = None,
+        T2 = None,
+        T3 = None,
+        T4 = None,
+        T5 = None,
+        T6 = None,
+        T7 = None,
+        T8 = None,
+        T9 = None,
     >;
 
     /// Creates a new JS array typed as a 1-tuple.
@@ -1355,14 +1472,14 @@ macro_rules! impl_tuple_variant {
     };
 }
 
-impl_tuple_variant!([T1]; [get0]; [Never, Never, Never, Never, Never, Never, Never, Never]; 1; T1; get0);
-impl_tuple_variant!([T1, T2]; [get0, get1]; [Never, Never, Never, Never, Never, Never, Never]; 2; T2; get1);
-impl_tuple_variant!([T1, T2, T3]; [get0, get1, get2]; [Never, Never, Never, Never, Never, Never]; 3; T3; get2);
-impl_tuple_variant!([T1, T2, T3, T4]; [get0, get1, get2, get3]; [Never, Never, Never, Never, Never]; 4; T4; get3);
-impl_tuple_variant!([T1, T2, T3, T4, T5]; [get0, get1, get2, get3, get4]; [Never, Never, Never, Never]; 5; T5; get4);
-impl_tuple_variant!([T1, T2, T3, T4, T5, T6]; [get0, get1, get2, get3, get4, get5]; [Never, Never, Never]; 6; T6; get5);
-impl_tuple_variant!([T1, T2, T3, T4, T5, T6, T7]; [get0, get1, get2, get3, get4, get5, get6]; [Never, Never]; 7; T7; get6);
-impl_tuple_variant!([T1, T2, T3, T4, T5, T6, T7, T8]; [get0, get1, get2, get3, get4, get5, get6, get7]; [Never]; 8; T8; get7);
+impl_tuple_variant!([T1]; [get0]; [None, None, None, None, None, None, None, None]; 1; T1; get0);
+impl_tuple_variant!([T1, T2]; [get0, get1]; [None, None, None, None, None, None, None]; 2; T2; get1);
+impl_tuple_variant!([T1, T2, T3]; [get0, get1, get2]; [None, None, None, None, None, None]; 3; T3; get2);
+impl_tuple_variant!([T1, T2, T3, T4]; [get0, get1, get2, get3]; [None, None, None, None, None]; 4; T4; get3);
+impl_tuple_variant!([T1, T2, T3, T4, T5]; [get0, get1, get2, get3, get4]; [None, None, None, None]; 5; T5; get4);
+impl_tuple_variant!([T1, T2, T3, T4, T5, T6]; [get0, get1, get2, get3, get4, get5]; [None, None, None]; 6; T6; get5);
+impl_tuple_variant!([T1, T2, T3, T4, T5, T6, T7]; [get0, get1, get2, get3, get4, get5, get6]; [None, None]; 7; T7; get6);
+impl_tuple_variant!([T1, T2, T3, T4, T5, T6, T7, T8]; [get0, get1, get2, get3, get4, get5, get6, get7]; [None]; 8; T8; get7);
 impl_tuple_variant!([T1, T2, T3, T4, T5, T6, T7, T8, T9]; [get0, get1, get2, get3, get4, get5, get6, get7, get8]; []; 9; T9; get8);
 
 // Macro to generate structural covariance impls for each arity
@@ -1380,14 +1497,14 @@ macro_rules! impl_tuple_covariance {
     };
 }
 
-impl_tuple_covariance!([T1]; [Never, Never, Never, Never, Never, Never, Never, Never]; [Target1]);
-impl_tuple_covariance!([T1, T2]; [Never, Never, Never, Never, Never, Never, Never]; [Target1, Target2]);
-impl_tuple_covariance!([T1, T2, T3]; [Never, Never, Never, Never, Never, Never]; [Target1, Target2, Target3]);
-impl_tuple_covariance!([T1, T2, T3, T4]; [Never, Never, Never, Never, Never]; [Target1, Target2, Target3, Target4]);
-impl_tuple_covariance!([T1, T2, T3, T4, T5]; [Never, Never, Never, Never]; [Target1, Target2, Target3, Target4, Target5]);
-impl_tuple_covariance!([T1, T2, T3, T4, T5, T6]; [Never, Never, Never]; [Target1, Target2, Target3, Target4, Target5, Target6]);
-impl_tuple_covariance!([T1, T2, T3, T4, T5, T6, T7]; [Never, Never]; [Target1, Target2, Target3, Target4, Target5, Target6, Target7]);
-impl_tuple_covariance!([T1, T2, T3, T4, T5, T6, T7, T8]; [Never]; [Target1, Target2, Target3, Target4, Target5, Target6, Target7, Target8]);
+impl_tuple_covariance!([T1]; [None, None, None, None, None, None, None, None]; [Target1]);
+impl_tuple_covariance!([T1, T2]; [None, None, None, None, None, None, None]; [Target1, Target2]);
+impl_tuple_covariance!([T1, T2, T3]; [None, None, None, None, None, None]; [Target1, Target2, Target3]);
+impl_tuple_covariance!([T1, T2, T3, T4]; [None, None, None, None, None]; [Target1, Target2, Target3, Target4]);
+impl_tuple_covariance!([T1, T2, T3, T4, T5]; [None, None, None, None]; [Target1, Target2, Target3, Target4, Target5]);
+impl_tuple_covariance!([T1, T2, T3, T4, T5, T6]; [None, None, None]; [Target1, Target2, Target3, Target4, Target5, Target6]);
+impl_tuple_covariance!([T1, T2, T3, T4, T5, T6, T7]; [None, None]; [Target1, Target2, Target3, Target4, Target5, Target6, Target7]);
+impl_tuple_covariance!([T1, T2, T3, T4, T5, T6, T7, T8]; [None]; [Target1, Target2, Target3, Target4, Target5, Target6, Target7, Target8]);
 impl_tuple_covariance!([T1, T2, T3, T4, T5, T6, T7, T8, T9]; []; [Target1, Target2, Target3, Target4, Target5, Target6, Target7, Target8, Target9]);
 
 // Covariance from ArrayTuple to Array
@@ -1600,7 +1717,7 @@ impl<T1, T2, T3, T4, T5, T6, T7, T8, T9> Iterable
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "ArrayBufferOptions")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type ArrayBufferOptions;
 
     /// The maximum size, in bytes, that the array buffer can be resized to.
@@ -1611,8 +1728,6 @@ extern "C" {
     #[wasm_bindgen(method, getter, js_name = maxByteLength)]
     pub fn get_max_byte_length(this: &ArrayBufferOptions) -> usize;
 }
-
-impl Upcast<Object> for ArrayBufferOptions {}
 
 impl ArrayBufferOptions {
     pub fn new(max_byte_length: usize) -> ArrayBufferOptions {
@@ -1627,7 +1742,7 @@ impl ArrayBufferOptions {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "ArrayBuffer")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type ArrayBuffer;
 
     /// The `ArrayBuffer` object is used to represent a generic,
@@ -1756,7 +1871,6 @@ extern "C" {
     ) -> Result<ArrayBuffer, JsValue>;
 }
 
-impl Upcast<Object> for ArrayBuffer {}
 impl Upcast<ArrayBuffer> for &[u8] {}
 
 // Next major: use usize/isize for all
@@ -1764,7 +1878,7 @@ impl Upcast<ArrayBuffer> for &[u8] {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "SharedArrayBuffer")]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type SharedArrayBuffer;
 
     /// The `SharedArrayBuffer` object is used to represent a generic,
@@ -1834,8 +1948,6 @@ extern "C" {
     #[wasm_bindgen(method, js_name = slice)]
     pub fn slice_with_end(this: &SharedArrayBuffer, begin: u32, end: u32) -> SharedArrayBuffer;
 }
-
-impl Upcast<Object> for SharedArrayBuffer {}
 
 // Array Iterator
 #[wasm_bindgen]
@@ -2359,7 +2471,7 @@ pub mod Atomics {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = |v| v.is_bigint(), typescript_type = "bigint")]
-    #[derive(Clone, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, PartialEq, Eq)]
     pub type BigInt;
 
     #[wasm_bindgen(catch, js_name = BigInt)]
@@ -2401,8 +2513,6 @@ extern "C" {
     #[wasm_bindgen(method, js_name = valueOf)]
     pub fn value_of(this: &BigInt, radix: u8) -> BigInt;
 }
-
-impl Upcast<Object> for BigInt {}
 
 impl BigInt {
     /// Creates a new BigInt value.
@@ -2594,7 +2704,7 @@ impl fmt::UpperHex for BigInt {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = |v| v.as_bool().is_some(), typescript_type = "boolean")]
-    #[derive(Clone, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, PartialEq, Eq)]
     pub type Boolean;
 
     /// The `Boolean()` constructor creates an object wrapper for a boolean value.
@@ -2613,7 +2723,7 @@ extern "C" {
 }
 
 impl Upcast<Boolean> for bool {}
-impl Upcast<Object> for Boolean {}
+impl Upcast<bool> for Boolean {}
 
 impl Boolean {
     /// Typed Boolean true constant.
@@ -2679,7 +2789,7 @@ partialord_ord!(Boolean);
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "DataView")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type DataView;
 
     /// The `DataView` view provides a low-level interface for reading and
@@ -2919,13 +3029,11 @@ extern "C" {
     pub fn set_float64_endian(this: &DataView, byte_offset: usize, value: f64, little_endian: bool);
 }
 
-impl Upcast<Object> for DataView {}
-
 // Error
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Error")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Error;
 
     /// The Error constructor creates an error object.
@@ -2971,18 +3079,16 @@ extern "C" {
     pub fn to_string(this: &Error) -> JsString;
 }
 
-impl Upcast<Object> for Error {}
-
 partialord_ord!(JsString);
 
 // EvalError
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, extends = Error, typescript_type = "EvalError")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type EvalError;
 
-    /// The EvalError object indicates an error regarding the global eval() function. This
+    /// The `EvalError` object indicates an error regarding the global eval() function. This
     /// exception is not thrown by JavaScript anymore, however the EvalError object remains for
     /// compatibility.
     ///
@@ -2991,16 +3097,64 @@ extern "C" {
     pub fn new(message: &str) -> EvalError;
 }
 
-// EvalError extends Error and Object
-impl Upcast<Error> for EvalError {}
-impl Upcast<Object> for EvalError {}
+/// `TypedFunction` is the recommended form for a JS Function as it provides a proper type
+/// checked `func.call()`, which both infers argument length, and provides
+/// zero-cost type-safe type conversions without explicit casting.
+///
+/// To pass where a generic Function is expected, `upcast()` may be used to convert
+/// into any generic `Function` at zero cost with type-safety.
+pub type TypedFunction<
+    Ret = None,
+    Arg1 = None,
+    Arg2 = None,
+    Arg3 = None,
+    Arg4 = None,
+    Arg5 = None,
+    Arg6 = None,
+    Arg7 = None,
+    Arg8 = None,
+    Arg9 = None,
+> = Function<Ret, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9>;
 
-// Next major: replace JsValue default with Never
-// Function
+/// `AnyFunction` represents any generic Function in JS
+pub type AnyFunction = Function<
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+    JsValue,
+>;
+
+/// `VoidFunction` is an alias type for typed functions with no return type,
+/// while retaining strict arg type and count checks.
+pub type VoidFunction<
+    A1 = None,
+    A2 = None,
+    A3 = None,
+    A4 = None,
+    A5 = None,
+    A6 = None,
+    A7 = None,
+    A8 = None,
+    A9 = None,
+> = Function<Undefined, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
+
+// Next major: Rename Function over Function, deprecating untyped Function as AnyFunction.
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object, is_type_of = JsValue::is_function, typescript_type = "Function")]
+    #[wasm_bindgen(extends = Object, is_type_of = JsValue::is_function, no_upcast, typescript_type = "Function")]
     #[derive(Clone, Debug, PartialEq, Eq)]
+    /// `Function` represents any generic Function in JS
+    ///
+    /// **Note:** Instead use [`AnyFunction`] to represent an arbitrary generic function,
+    /// or [`Function`] to represent a specific generic function.
+    ///
+    /// _`Function` will be aliased to `Function` in a future major release._
     pub type Function<
         Ret = JsValue,
         Arg1 = JsValue,
@@ -3014,6 +3168,7 @@ extern "C" {
         Arg9 = JsValue,
     >;
 
+    // Next major: Deprecate and rename over new_with_args
     /// The `Function` constructor creates a new `Function` object. Calling the
     /// constructor directly can create functions dynamically, but suffers from
     /// security and similar (but far less significant) performance issues
@@ -3036,6 +3191,8 @@ extern "C" {
     /// allows executing code in the global scope, prompting better programming
     /// habits and allowing for more efficient code minification.
     ///
+    /// **Note:** Consider using [`Function::new_with_args_typed`] for typing support.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
     #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
@@ -3054,13 +3211,11 @@ extern "C" {
     /// **Note:** Consider using [`Function::new_no_args_typed`] for typing support.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
     pub fn new_no_args(body: &str) -> Function;
 
     // Next major: Deprecate and rename over new_no_args
-    /// This is a typed version of the function constructor, returning a
-    /// BoundedFunction without JsValue arguments.
-    ///
     /// The `Function` constructor creates a new `Function` object. Calling the
     /// constructor directly can create functions dynamically, but suffers from
     /// security and similar (but far less significant) performance issues
@@ -3068,11 +3223,14 @@ extern "C" {
     /// allows executing code in the global scope, prompting better programming
     /// habits and allowing for more efficient code minification.
     ///
+    /// **Note:** Consider using [`Function::new_no_args_typed`] for typing support.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
     pub fn new_no_args_typed<R>(
         body: &str,
-    ) -> Function<R, Never, Never, Never, Never, Never, Never, Never, Never, Never>;
+    ) -> Function<R, None, None, None, None, None, None, None, None, None>;
 
     /// The `apply()` method calls a function with a given this value, and arguments provided as an array
     /// (or an array-like object).
@@ -3085,23 +3243,14 @@ extern "C" {
         args: &Array,
     ) -> Result<R, JsValue>;
 
-    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
-    /// (or an array-like object).
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
-    #[wasm_bindgen(method, catch)]
-    pub fn apply<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        args: &Array,
-    ) -> Result<(), JsValue>;
-
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call0<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call0<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
     ) -> Result<R, JsValue>;
@@ -3109,9 +3258,11 @@ extern "C" {
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call1<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call1<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3120,9 +3271,11 @@ extern "C" {
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call2<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call2<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3132,9 +3285,11 @@ extern "C" {
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call3<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call3<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3145,38 +3300,27 @@ extern "C" {
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call4<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-        arg4: &A4,
-    ) -> Result<R, JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call5<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call4<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
         arg2: &A2,
         arg3: &A3,
         arg4: &A4,
-        arg5: &A5,
     ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call6<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call5<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3184,15 +3328,16 @@ extern "C" {
         arg3: &A3,
         arg4: &A4,
         arg5: &A5,
-        arg6: &A6,
     ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call7<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call6<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3201,15 +3346,16 @@ extern "C" {
         arg4: &A4,
         arg5: &A5,
         arg6: &A6,
-        arg7: &A7,
     ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call8<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call7<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3219,15 +3365,16 @@ extern "C" {
         arg5: &A5,
         arg6: &A6,
         arg7: &A7,
-        arg8: &A8,
     ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call9<R: ErasableGeneric, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+    pub fn call8<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
         this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
@@ -3238,162 +3385,17 @@ extern "C" {
         arg6: &A6,
         arg7: &A7,
         arg8: &A8,
-        arg9: &A9,
     ) -> Result<R, JsValue>;
 
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call0<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call1<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call2<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call3<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call4<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-        arg4: &A4,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call5<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-        arg4: &A4,
-        arg5: &A5,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call6<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-        arg4: &A4,
-        arg5: &A5,
-        arg6: &A6,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call7<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-        arg4: &A4,
-        arg5: &A5,
-        arg6: &A6,
-        arg7: &A7,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call8<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
-        context: &JsValue,
-        arg1: &A1,
-        arg2: &A2,
-        arg3: &A3,
-        arg4: &A4,
-        arg5: &A5,
-        arg6: &A6,
-        arg7: &A7,
-        arg8: &A8,
-    ) -> Result<(), JsValue>;
-
-    /// The `call()` method calls a function with a given this value and
-    /// arguments provided individually.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
-    pub fn call9<A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-        this: &Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
+    pub fn call9<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
+        this: &Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>,
         context: &JsValue,
         arg1: &A1,
         arg2: &A2,
@@ -3404,12 +3406,12 @@ extern "C" {
         arg7: &A7,
         arg8: &A8,
         arg9: &A9,
-    ) -> Result<(), JsValue>;
+    ) -> Result<R, JsValue>;
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
@@ -3421,8 +3423,6 @@ extern "C" {
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind0<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
@@ -3432,8 +3432,6 @@ extern "C" {
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
@@ -3446,8 +3444,6 @@ extern "C" {
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind2<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
@@ -3459,8 +3455,6 @@ extern "C" {
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
@@ -3475,8 +3469,6 @@ extern "C" {
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind4<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
@@ -3490,8 +3482,6 @@ extern "C" {
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
@@ -3508,8 +3498,6 @@ extern "C" {
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind6<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
@@ -3525,8 +3513,6 @@ extern "C" {
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
@@ -3545,8 +3531,6 @@ extern "C" {
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
-    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind8<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
@@ -3564,8 +3548,6 @@ extern "C" {
 
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
-    ///
-    /// **Note: Use [`call()`](Function::call) to get exact arity and also strict dynamic type checking.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[wasm_bindgen(method, js_name = bind)]
@@ -3677,9 +3659,8 @@ impl<R, A1, A2, A3, A4, A5, A6, A7, A8, A9> Upcast<Object>
 
 // Implement compile-time variant implementations based on the static tuple type
 macro_rules! impl_fn_variant {
-    ([$($T:ident),*]; [$($arg:ident : $ArgT:ident),*]; [$($Never:ident),*]; $len:expr; $call:ident) => {
-        // Functions with a return
-        impl<R: ErasableGeneric<Repr = JsValue>, $($T: ErasableGeneric<Repr = JsValue>),*> Function<R, $($T,)* $($Never),*> {
+    ([$($T:ident),*]; [$($arg:ident : $ArgT:ident),*]; [$($None:ident),*]; $len:expr; $call:ident) => {
+        impl<R: ErasableGeneric<Repr = JsValue>, $($T: ErasableGeneric<Repr = JsValue>),*> Function<R, $($T,)* $($None),*> {
             /// Get the static length of the Function type
             #[allow(clippy::len_without_is_empty)]
             pub fn len(&self) -> usize {
@@ -3689,49 +3670,30 @@ macro_rules! impl_fn_variant {
             /// The `call()` method calls a function with a given this value and
             /// arguments provided individually.
             ///
-            /// **Typed for the function arity with compile time type casts of arguments and return values.**
+            /// **Typed for the function arity with compile time checked generic type casts of arguments and return values.**
             ///
             /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
             pub fn call(&self, context: &JsValue $(, $arg: &impl AsUpcast<$ArgT>)*) -> Result<R, JsValue> {
                 self.$call(context $(, Upcast::<$ArgT>::upcast_ref($arg))*)
             }
         }
-
-        // Functions without a return
-        impl<$($T: ErasableGeneric<Repr = JsValue>),*> Function<Never, $($T,)* $($Never),*> {
-            /// Get the static length of the Function type
-            #[allow(clippy::len_without_is_empty)]
-            pub fn len(&self) -> usize {
-                $len
-            }
-
-            /// The `call()` method calls a function with a given this value and
-            /// arguments provided individually.
-            ///
-            /// **Typed for the function arity with compile time type casts of arguments and return values.**
-            ///
-            /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-            pub fn call(&self, context: &JsValue $(, $arg: &impl AsUpcast<$ArgT>)*) -> Result<(), JsValue> {
-                self.$call(context $(, Upcast::<$ArgT>::upcast_ref($arg))*)
-            }
-        }
     };
 }
 
-impl_fn_variant!([]; []; [Never, Never, Never, Never, Never, Never, Never, Never, Never]; 0; call0);
-impl_fn_variant!([A1]; [arg0: A1]; [Never, Never, Never, Never, Never, Never, Never, Never]; 1; call1);
-impl_fn_variant!([A1, A2]; [arg0: A1, arg1: A2]; [Never, Never, Never, Never, Never, Never, Never]; 2; call2);
-impl_fn_variant!([A1, A2, A3]; [arg0: A1, arg1: A2, arg2: A3]; [Never, Never, Never, Never, Never, Never]; 3; call3);
-impl_fn_variant!([A1, A2, A3, A4]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4]; [Never, Never, Never, Never, Never]; 4; call4);
-impl_fn_variant!([A1, A2, A3, A4, A5]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5]; [Never, Never, Never, Never]; 5; call5);
-impl_fn_variant!([A1, A2, A3, A4, A5, A6]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6]; [Never, Never, Never]; 6; call6);
-impl_fn_variant!([A1, A2, A3, A4, A5, A6, A7]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6, arg6: A7]; [Never, Never]; 7; call7);
-impl_fn_variant!([A1, A2, A3, A4, A5, A6, A7, A8]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6, arg6: A7, arg7: A8]; [Never]; 8; call8);
+impl_fn_variant!([]; []; [None, None, None, None, None, None, None, None, None]; 0; call0);
+impl_fn_variant!([A1]; [arg0: A1]; [None, None, None, None, None, None, None, None]; 1; call1);
+impl_fn_variant!([A1, A2]; [arg0: A1, arg1: A2]; [None, None, None, None, None, None, None]; 2; call2);
+impl_fn_variant!([A1, A2, A3]; [arg0: A1, arg1: A2, arg2: A3]; [None, None, None, None, None, None]; 3; call3);
+impl_fn_variant!([A1, A2, A3, A4]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4]; [None, None, None, None, None]; 4; call4);
+impl_fn_variant!([A1, A2, A3, A4, A5]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5]; [None, None, None, None]; 5; call5);
+impl_fn_variant!([A1, A2, A3, A4, A5, A6]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6]; [None, None, None]; 6; call6);
+impl_fn_variant!([A1, A2, A3, A4, A5, A6, A7]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6, arg6: A7]; [None, None]; 7; call7);
+impl_fn_variant!([A1, A2, A3, A4, A5, A6, A7, A8]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6, arg6: A7, arg7: A8]; [None]; 8; call8);
 impl_fn_variant!([A1, A2, A3, A4, A5, A6, A7, A8, A9]; [arg0: A1, arg1: A2, arg2: A3, arg3: A4, arg4: A5, arg5: A6, arg6: A7, arg7: A8, arg8: A9]; []; 9; call9);
 
 #[doc(hidden)]
 /// Map closure types to their corresponding Function types
-/// matching the arity and converting () into Never, while
+/// matching the arity and converting () into None, while
 /// ensuring fully surjective type flow.
 ///
 /// The benefit of surjective inferrence here is that:
@@ -3749,13 +3711,13 @@ impl_fn_variant!([A1, A2, A3, A4, A5, A6, A7, A8, A9]; [arg0: A1, arg1: A2, arg2
 /// generic types are otherwise erasure-inhabitable.
 ///
 /// We repeat what is in Closure here to achieve this because () is used for
-/// Closure, while Never is used for Function. And the whole benefit of Never
+/// Closure, while None is used for Function. And the whole benefit of None
 /// is that it is a type that is disjoint permissing arity implementations
-/// alongside blanket ErasableGeneric implementations. If we migrate Never into
+/// alongside blanket ErasableGeneric implementations. If we migrate None into
 /// core, it would not support disjointness anymore since "upstream crates may
-/// add a new impl of trait ErasableGeneric for Never in future versions".
+/// add a new impl of trait ErasableGeneric for None in future versions".
 /// Thus, short of fully unifying js_sys and core, the only way to maintain
-/// Never disjointness for blanket implementations requires the brief
+/// None disjointness for blanket implementations requires the brief
 /// repetition of closure types here.
 pub trait ClosureIntoFunction {
     type Ret;
@@ -3772,54 +3734,54 @@ pub trait ClosureIntoFunction {
 macro_rules! impl_closure_into_function {
     // Base case: no args
     (@assign_fn_types) => {
-        type Arg1 = Never;
-        type Arg2 = Never;
-        type Arg3 = Never;
-        type Arg4 = Never;
-        type Arg5 = Never;
-        type Arg6 = Never;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg1 = None;
+        type Arg2 = None;
+        type Arg3 = None;
+        type Arg4 = None;
+        type Arg5 = None;
+        type Arg6 = None;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident) => {
         type Arg1 = $t1;
-        type Arg2 = Never;
-        type Arg3 = Never;
-        type Arg4 = Never;
-        type Arg5 = Never;
-        type Arg6 = Never;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg2 = None;
+        type Arg3 = None;
+        type Arg4 = None;
+        type Arg5 = None;
+        type Arg6 = None;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident) => {
         type Arg1 = $t1;
         type Arg2 = $t2;
-        type Arg3 = Never;
-        type Arg4 = Never;
-        type Arg5 = Never;
-        type Arg6 = Never;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg3 = None;
+        type Arg4 = None;
+        type Arg5 = None;
+        type Arg6 = None;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident $t3:ident) => {
         type Arg1 = $t1;
         type Arg2 = $t2;
         type Arg3 = $t3;
-        type Arg4 = Never;
-        type Arg5 = Never;
-        type Arg6 = Never;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg4 = None;
+        type Arg5 = None;
+        type Arg6 = None;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident $t3:ident $t4:ident) => {
         type Arg1 = $t1;
         type Arg2 = $t2;
         type Arg3 = $t3;
         type Arg4 = $t4;
-        type Arg5 = Never;
-        type Arg6 = Never;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg5 = None;
+        type Arg6 = None;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident) => {
         type Arg1 = $t1;
@@ -3827,9 +3789,9 @@ macro_rules! impl_closure_into_function {
         type Arg3 = $t3;
         type Arg4 = $t4;
         type Arg5 = $t5;
-        type Arg6 = Never;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg6 = None;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident $t6:ident) => {
         type Arg1 = $t1;
@@ -3838,8 +3800,8 @@ macro_rules! impl_closure_into_function {
         type Arg4 = $t4;
         type Arg5 = $t5;
         type Arg6 = $t6;
-        type Arg7 = Never;
-        type Arg8 = Never;
+        type Arg7 = None;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident $t6:ident $t7:ident) => {
         type Arg1 = $t1;
@@ -3849,7 +3811,7 @@ macro_rules! impl_closure_into_function {
         type Arg5 = $t5;
         type Arg6 = $t6;
         type Arg7 = $t7;
-        type Arg8 = Never;
+        type Arg8 = None;
     };
     (@assign_fn_types $t1:ident $t2:ident $t3:ident $t4:ident $t5:ident $t6:ident $t7:ident $t8:ident) => {
         type Arg1 = $t1;
@@ -3863,7 +3825,7 @@ macro_rules! impl_closure_into_function {
     };
 
     (@impl_for_fn $Fn:ident ($($var:ident),*)) => {
-        impl<$($var,)* R> ClosureIntoFunction for dyn $Fn($($var),*) -> R + '_ {
+        impl<$($var,)* R: Upcast<JsValue>> ClosureIntoFunction for dyn $Fn($($var),*) -> R + '_ {
             type Ret = R;
             impl_closure_into_function!(@assign_fn_types $($var)*);
         }
@@ -3891,7 +3853,16 @@ impl Function {
     /// Convert a Rust closure into a typed JavaScript Function.
     ///
     /// Type parameters are inferred from the closure's signature.
-    /// Unused argument slots become `Never`.
+    /// Unused argument slots become `None`.
+    ///
+    /// Use [`Function::from_closure_upcast`] instead if the Function
+    /// type is known, to simultaneously perform a compile time
+    /// type-safe upcast.
+    ///
+    /// **Note:** Closure generics cannot typically be called directly
+    /// and the function will need to be explicitly upcast into a function
+    /// on JS ABI types. For example a return value of `()` must be cast
+    /// into `Undefined` to call the function from JS.
     pub fn from_closure<T>(
         closure: Closure<T>,
     ) -> Function<
@@ -3904,7 +3875,7 @@ impl Function {
         <T as ClosureIntoFunction>::Arg6,
         <T as ClosureIntoFunction>::Arg7,
         <T as ClosureIntoFunction>::Arg8,
-        Never,
+        None,
     >
     where
         T: WasmClosure + ClosureIntoFunction + ?Sized,
@@ -3912,74 +3883,28 @@ impl Function {
         closure.into_js_value().unchecked_into()
     }
 
-    /// Convert Rust closure into a typed JavaScript Function with no return.
-    pub fn from_closure_void<T>(
+    /// Convert Rust closure into a typed JavaScript function with explicit type parameters,
+    /// allowing compile time type-safe upcasting.
+    pub fn from_closure_upcast<T, Ret, A1, A2, A3, A4, A5, A6, A7, A8>(
         closure: Closure<T>,
-    ) -> Function<
-        Never,
-        <T as ClosureIntoFunction>::Arg1,
-        <T as ClosureIntoFunction>::Arg2,
-        <T as ClosureIntoFunction>::Arg3,
-        <T as ClosureIntoFunction>::Arg4,
-        <T as ClosureIntoFunction>::Arg5,
-        <T as ClosureIntoFunction>::Arg6,
-        <T as ClosureIntoFunction>::Arg7,
-        <T as ClosureIntoFunction>::Arg8,
-        Never,
-    >
+    ) -> TypedFunction<Ret, A1, A2, A3, A4, A5, A6, A7, A8, None>
     where
-        T: WasmClosure<Ret = ()> + ClosureIntoFunction + ?Sized,
+        T: WasmClosure + ClosureIntoFunction + ?Sized,
+        // Covariant return: closure's ret upcasts to Function's ret
+        <T as ClosureIntoFunction>::Ret: Upcast<Ret>,
+        // Contravariant args: Function's args upcast to closure's args
+        A1: Upcast<<T as ClosureIntoFunction>::Arg1>,
+        A2: Upcast<<T as ClosureIntoFunction>::Arg2>,
+        A3: Upcast<<T as ClosureIntoFunction>::Arg3>,
+        A4: Upcast<<T as ClosureIntoFunction>::Arg4>,
+        A5: Upcast<<T as ClosureIntoFunction>::Arg5>,
+        A6: Upcast<<T as ClosureIntoFunction>::Arg6>,
+        A7: Upcast<<T as ClosureIntoFunction>::Arg7>,
+        A8: Upcast<<T as ClosureIntoFunction>::Arg8>,
     {
         closure.into_js_value().unchecked_into()
     }
 }
-
-/// BoundedFunction is an alias type for functions with strict arg type
-/// and count checks.
-///
-/// This is the recommended form for Function as it provides a proper type
-/// checked `func.call()`, which both infers argument length, and provides
-/// zero-cost type-safe type conversions without explicit casting.
-///
-/// To use where Function is expected, upcast() must be used to get from
-/// BoundedFunction<..> to Function<...>.
-///
-/// In general, older APIs use Function, while newer ones will use BoundedFunction.
-pub type BoundedFunction<
-    R = Never,
-    A1 = Never,
-    A2 = Never,
-    A3 = Never,
-    A4 = Never,
-    A5 = Never,
-    A6 = Never,
-    A7 = Never,
-    A8 = Never,
-    A9 = Never,
-> = Function<R, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
-
-/// VoidBoundedFunction is an alias type for functions with no return type,
-/// while retaining strict arg type and count checks.
-///
-/// This is the recommended form for Function as it provides a proper type
-/// checked `func.call()`, which both infers argument length, and provides
-/// zero-cost type-safe type conversions without explicit casting.
-///
-/// To use where Function is expected, upcast() must be used to get from
-/// BoundedFunction<..> to Function<...>.
-///
-/// In general, older APIs use Function, while newer ones will use BoundedFunction.
-pub type VoidBoundedFunction<
-    A1 = Never,
-    A2 = Never,
-    A3 = Never,
-    A4 = Never,
-    A5 = Never,
-    A6 = Never,
-    A7 = Never,
-    A8 = Never,
-    A9 = Never,
-> = Function<Never, A1, A2, A3, A4, A5, A6, A7, A8, A9>;
 
 impl Function {
     /// Returns the `Function` value of this JS value if it's an instance of a
@@ -4005,7 +3930,7 @@ impl Default for Function {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Generator<any, any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Generator<T>;
 
     // Next major: return IteratorNext directly
@@ -4063,8 +3988,6 @@ extern "C" {
     ) -> Result<IteratorNext<T>, JsValue>;
 }
 
-impl<T> Upcast<Object> for Generator<T> {}
-
 impl<T: FromWasmAbi> Iterable for Generator<T> {
     type Item = T;
 }
@@ -4073,7 +3996,7 @@ impl<T: FromWasmAbi> Iterable for Generator<T> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "AsyncGenerator<any, any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type AsyncGenerator<T>;
 
     /// The `next()` method returns an object with two properties done and value.
@@ -4106,8 +4029,6 @@ extern "C" {
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
 }
 
-impl<T> Upcast<Object> for AsyncGenerator<T> {}
-
 impl<T: FromWasmAbi> AsyncIterable for AsyncGenerator<T> {
     type Item = T;
 }
@@ -4116,7 +4037,7 @@ impl<T: FromWasmAbi> AsyncIterable for AsyncGenerator<T> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Map<any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Map<K, V>;
 
     /// The Map object holds key-value pairs. Any value (both objects and
@@ -4186,7 +4107,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<K, V>(
         this: &Map<K, V>,
-        callback: &mut dyn FnMut(V, K) -> Result<(), JsValue>,
+        callback: &mut dyn FnMut(V, K) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
 
     /// The `get()` method returns a specified element from a Map object.
@@ -4217,8 +4138,6 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn size<K, V>(this: &Map<K, V>) -> u32;
 }
-
-impl<K, V> Upcast<Object> for Map<K, V> {}
 
 impl Default for Map {
     fn default() -> Self {
@@ -4273,7 +4192,7 @@ extern "C" {
     /// something returned by `myArray[Symbol.iterator]()`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     #[wasm_bindgen(is_type_of = Iterator::looks_like_iterator, typescript_type = "Iterator<any>")]
     pub type Iterator<T>;
 
@@ -4319,7 +4238,7 @@ extern "C" {
     /// something returned by `myObject[Symbol.asyncIterator]()`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of)
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     #[wasm_bindgen(is_type_of = Iterator::looks_like_iterator, typescript_type = "AsyncIterator<any>")]
     pub type AsyncIterator<T>;
 
@@ -4488,7 +4407,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
     #[wasm_bindgen(extends = Object, typescript_type = "IteratorResult<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type IteratorNext<T>;
 
     /// Has the value `true` if the iterator is past the end of the iterated
@@ -4506,8 +4425,6 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn value<T>(this: &IteratorNext<T>) -> T;
 }
-
-impl<T> Upcast<Object> for IteratorNext<T> {}
 
 #[allow(non_snake_case)]
 pub mod Math {
@@ -4769,7 +4686,7 @@ pub mod Math {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = |v| v.as_f64().is_some(), typescript_type = "number")]
-    #[derive(Clone, PartialEq, UpcastCore)]
+    #[derive(Clone, PartialEq)]
     pub type Number;
 
     /// The `Number.isFinite()` method determines whether the passed value is a finite number.
@@ -4868,14 +4785,6 @@ extern "C" {
     pub fn value_of(this: &Number) -> f64;
 }
 
-macro_rules! impl_upcast_number {
-    ($($ty:ty),*) => {
-        $(impl Upcast<Number> for $ty {})*
-    };
-}
-
-impl_upcast_number!(i8, i16, i32, i64, u8, u16, u32, u64, f32, f64, isize, usize);
-
 impl Number {
     /// The smallest interval between two representable numbers.
     ///
@@ -4946,6 +4855,9 @@ macro_rules! number_from {
                 self.value_of() == f64::from(*other)
             }
         }
+
+        impl Upcast<$x> for Number {}
+        impl Upcast<Number> for $x {}
     )*)
 }
 number_from!(i8 u8 i16 u16 i32 u32 f32 f64);
@@ -5110,7 +5022,7 @@ impl FromStr for Number {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Date")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Date;
 
     /// The `getDate()` method returns the day of the month for the
@@ -5555,13 +5467,11 @@ extern "C" {
     pub fn value_of(this: &Date) -> f64;
 }
 
-impl Upcast<Object> for Date {}
-
 // Property Descriptor.
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PropertyDescriptor<T>;
 
     #[wasm_bindgen(method, getter = writable)]
@@ -5583,16 +5493,16 @@ extern "C" {
     pub fn set_configurable<T>(this: &PropertyDescriptor<T>, configurable: bool);
 
     #[wasm_bindgen(method, getter = get)]
-    pub fn get_get<T>(this: &PropertyDescriptor<T>) -> Option<BoundedFunction<T>>;
+    pub fn get_get<T>(this: &PropertyDescriptor<T>) -> Option<TypedFunction<T>>;
 
     #[wasm_bindgen(method, setter = get)]
-    pub fn set_get<T>(this: &PropertyDescriptor<T>, get: BoundedFunction<T>);
+    pub fn set_get<T>(this: &PropertyDescriptor<T>, get: TypedFunction<T>);
 
     #[wasm_bindgen(method, getter = set)]
-    pub fn get_set<T>(this: &PropertyDescriptor<T>) -> Option<BoundedFunction<JsValue, T>>;
+    pub fn get_set<T>(this: &PropertyDescriptor<T>) -> Option<TypedFunction<JsValue, T>>;
 
     #[wasm_bindgen(method, setter = set)]
-    pub fn set_set<T>(this: &PropertyDescriptor<T>, set: BoundedFunction<JsValue, T>);
+    pub fn set_set<T>(this: &PropertyDescriptor<T>, set: TypedFunction<JsValue, T>);
 
     #[wasm_bindgen(method, getter = value)]
     pub fn get_value<T>(this: &PropertyDescriptor<T>) -> Option<T>;
@@ -5600,8 +5510,6 @@ extern "C" {
     #[wasm_bindgen(method, setter = value)]
     pub fn set_value<T>(this: &PropertyDescriptor<T>, value: &T);
 }
-
-impl<T> Upcast<Object> for PropertyDescriptor<T> {}
 
 impl PropertyDescriptor {
     pub fn new<T>() -> PropertyDescriptor<T> {
@@ -5624,7 +5532,7 @@ impl Default for PropertyDescriptor {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "object")]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type Object<T>;
 
     /// The `Object.assign()` method is used to copy the values of all enumerable
@@ -6020,7 +5928,7 @@ impl Default for Object {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "ProxyConstructor")]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type Proxy;
 
     /// The [`Proxy`] object is used to define custom behavior for fundamental
@@ -6039,8 +5947,6 @@ extern "C" {
     pub fn revocable(target: &JsValue, handler: &Object) -> Object;
 }
 
-impl Upcast<Object> for Proxy {}
-
 // RangeError
 #[wasm_bindgen]
 extern "C" {
@@ -6049,7 +5955,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError)
     #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "RangeError")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type RangeError;
 
     /// The `RangeError` object indicates an error when a value is not in the set
@@ -6060,10 +5966,6 @@ extern "C" {
     pub fn new(message: &str) -> RangeError;
 }
 
-// RangeError extends Error and Object
-impl Upcast<Error> for RangeError {}
-impl Upcast<Object> for RangeError {}
-
 // ReferenceError
 #[wasm_bindgen]
 extern "C" {
@@ -6072,7 +5974,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError)
     #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "ReferenceError")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type ReferenceError;
 
     /// The `ReferenceError` object represents an error when a non-existent
@@ -6082,10 +5984,6 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> ReferenceError;
 }
-
-// ReferenceError extends Error and Object
-impl Upcast<Error> for ReferenceError {}
-impl Upcast<Object> for ReferenceError {}
 
 #[allow(non_snake_case)]
 pub mod Reflect {
@@ -6123,9 +6021,9 @@ pub mod Reflect {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct)
         #[wasm_bindgen(js_namespace = Reflect, js_name = construct, catch)]
         pub fn construct_with_new_target(
-            target: &Function,
+            target: &AnyFunction,
             arguments_list: &Array,
-            new_target: &Function,
+            new_target: &AnyFunction,
         ) -> Result<JsValue, JsValue>;
 
         // Next major: update to PropertyDescriptor, K: SymbolOrString
@@ -6328,7 +6226,7 @@ pub mod Reflect {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "RegExp")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type RegExp;
 
     /// The `exec()` method executes a search for a match in a specified
@@ -6501,13 +6399,11 @@ extern "C" {
     pub fn unicode(this: &RegExp) -> bool;
 }
 
-impl Upcast<Object> for RegExp {}
-
 // Set
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Set<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Set<T>;
 
     /// The [`Set`] object lets you store unique values of any type, whether
@@ -6585,7 +6481,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<T>(
         this: &Set<T>,
-        callback: &mut dyn FnMut(T) -> Result<(), JsValue>,
+        callback: &mut dyn FnMut(T) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
 
     /// The `has()` method returns a boolean indicating whether an element with
@@ -6652,8 +6548,6 @@ extern "C" {
     pub fn is_disjoint_from<T>(this: &Set<T>, other: &Set<T>) -> bool;
 }
 
-impl<T> Upcast<Object> for Set<T> {}
-
 impl<T> Default for Set<T> {
     fn default() -> Self {
         Self::new_empty()
@@ -6713,7 +6607,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError)
     #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "SyntaxError")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type SyntaxError;
 
     /// A `SyntaxError` is thrown when the JavaScript engine encounters tokens or
@@ -6725,10 +6619,6 @@ extern "C" {
     pub fn new(message: &str) -> SyntaxError;
 }
 
-// SyntaxError extends Error and Object
-impl Upcast<Error> for SyntaxError {}
-impl Upcast<Object> for SyntaxError {}
-
 // TypeError
 #[wasm_bindgen]
 extern "C" {
@@ -6737,7 +6627,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError)
     #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "TypeError")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type TypeError;
 
     /// The `TypeError` object represents an error when a value is not of the
@@ -6748,10 +6638,6 @@ extern "C" {
     pub fn new(message: &str) -> TypeError;
 }
 
-// TypeError extends Error and Object
-impl Upcast<Error> for TypeError {}
-impl Upcast<Object> for TypeError {}
-
 // URIError
 #[wasm_bindgen]
 extern "C" {
@@ -6760,7 +6646,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError)
     #[wasm_bindgen(extends = Error, extends = Object, js_name = URIError, typescript_type = "URIError")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type UriError;
 
     /// The `URIError` object represents an error when a global URI handling
@@ -6771,15 +6657,11 @@ extern "C" {
     pub fn new(message: &str) -> UriError;
 }
 
-// UriError extends Error and Object
-impl Upcast<Error> for UriError {}
-impl Upcast<Object> for UriError {}
-
 // WeakMap
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakMap<object, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type WeakMap<K = Object, V>;
 
     /// The [`WeakMap`] object is a collection of key/value pairs in which the
@@ -6830,8 +6712,6 @@ extern "C" {
     pub fn delete<K, V>(this: &WeakMap<K, V>, key: &K) -> bool;
 }
 
-impl<K, V> Upcast<Object> for WeakMap<K, V> {}
-
 impl<T, V> Default for WeakMap<T, V> {
     fn default() -> Self {
         Self::new_typed()
@@ -6842,7 +6722,7 @@ impl<T, V> Default for WeakMap<T, V> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakSet<object>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type WeakSet<T = Object>;
 
     /// The `WeakSet` object lets you store weakly held objects in a collection.
@@ -6881,8 +6761,6 @@ extern "C" {
     pub fn delete<T>(this: &WeakSet<T>, value: &T) -> bool;
 }
 
-impl<T> Upcast<Object> for WeakSet<T> {}
-
 impl<T> Default for WeakSet<T> {
     fn default() -> Self {
         Self::new_typed()
@@ -6893,7 +6771,7 @@ impl<T> Default for WeakSet<T> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakRef<object>")]
-    #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type WeakRef<T = Object>;
 
     /// The `WeakRef` object contains a weak reference to an object. A weak
@@ -6911,8 +6789,6 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn deref<T>(this: &WeakRef<T>) -> Option<T>;
 }
-
-impl<T> Upcast<Object> for WeakRef<T> {}
 
 #[cfg(js_sys_unstable_apis)]
 #[allow(non_snake_case)]
@@ -6989,7 +6865,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/CompileError)
         #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.CompileError")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type CompileError;
 
         /// The `WebAssembly.CompileError()` constructor creates a new
@@ -7001,10 +6877,6 @@ pub mod WebAssembly {
         pub fn new(message: &str) -> CompileError;
     }
 
-    // CompileError extends Error and Object
-    impl Upcast<Error> for CompileError {}
-    impl Upcast<Object> for CompileError {}
-
     // WebAssembly.Instance
     #[wasm_bindgen]
     extern "C" {
@@ -7015,7 +6887,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Instance)
         #[wasm_bindgen(extends = Object, js_namespace = WebAssembly, typescript_type = "WebAssembly.Instance")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Instance;
 
         /// The `WebAssembly.Instance()` constructor function can be called to
@@ -7037,8 +6909,6 @@ pub mod WebAssembly {
         pub fn exports(this: &Instance) -> Object;
     }
 
-    impl Upcast<Object> for Instance {}
-
     // WebAssembly.LinkError
     #[wasm_bindgen]
     extern "C" {
@@ -7048,7 +6918,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/LinkError)
         #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.LinkError")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type LinkError;
 
         /// The `WebAssembly.LinkError()` constructor creates a new WebAssembly
@@ -7060,10 +6930,6 @@ pub mod WebAssembly {
         pub fn new(message: &str) -> LinkError;
     }
 
-    // LinkError extends Error and Object
-    impl Upcast<Error> for LinkError {}
-    impl Upcast<Object> for LinkError {}
-
     // WebAssembly.RuntimeError
     #[wasm_bindgen]
     extern "C" {
@@ -7073,7 +6939,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/RuntimeError)
         #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.RuntimeError")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type RuntimeError;
 
         /// The `WebAssembly.RuntimeError()` constructor creates a new WebAssembly
@@ -7085,10 +6951,6 @@ pub mod WebAssembly {
         pub fn new(message: &str) -> RuntimeError;
     }
 
-    // RuntimeError extends Error and Object
-    impl Upcast<Error> for RuntimeError {}
-    impl Upcast<Object> for RuntimeError {}
-
     // WebAssembly.Module
     #[wasm_bindgen]
     extern "C" {
@@ -7098,7 +6960,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Module)
         #[wasm_bindgen(js_namespace = WebAssembly, extends = Object, typescript_type = "WebAssembly.Module")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Module;
 
         /// A `WebAssembly.Module` object contains stateless WebAssembly code
@@ -7132,8 +6994,6 @@ pub mod WebAssembly {
         pub fn imports(module: &Module) -> Array;
     }
 
-    impl Upcast<Object> for Module {}
-
     // WebAssembly.Table
     #[wasm_bindgen]
     extern "C" {
@@ -7142,7 +7002,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table)
         #[wasm_bindgen(js_namespace = WebAssembly, extends = Object, typescript_type = "WebAssembly.Table")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Table;
 
         /// The `WebAssembly.Table()` constructor creates a new `Table` object
@@ -7216,8 +7076,6 @@ pub mod WebAssembly {
         pub fn set_raw(this: &Table, index: u32, value: &JsValue) -> Result<(), JsValue>;
     }
 
-    impl Upcast<Object> for Table {}
-
     // WebAssembly.Tag
     #[wasm_bindgen]
     extern "C" {
@@ -7225,7 +7083,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Tag)
         #[wasm_bindgen(js_namespace = WebAssembly, extends = Object, typescript_type = "WebAssembly.Tag")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Tag;
 
         /// The `WebAssembly.Tag()` constructor creates a new `Tag` object
@@ -7235,8 +7093,6 @@ pub mod WebAssembly {
         pub fn new(tag_descriptor: &Object) -> Result<Tag, JsValue>;
     }
 
-    impl Upcast<Object> for Tag {}
-
     // WebAssembly.Exception
     #[wasm_bindgen]
     extern "C" {
@@ -7244,7 +7100,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Exception)
         #[wasm_bindgen(js_namespace = WebAssembly, extends = Object, typescript_type = "WebAssembly.Exception")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Exception;
 
         /// The `WebAssembly.Exception()` constructor creates a new `Exception` object
@@ -7278,8 +7134,6 @@ pub mod WebAssembly {
         pub fn get_arg(this: &Exception, tag: &Tag, index: u32) -> Result<JsValue, JsValue>;
     }
 
-    impl Upcast<Object> for Exception {}
-
     // WebAssembly.Global
     #[wasm_bindgen]
     extern "C" {
@@ -7288,7 +7142,7 @@ pub mod WebAssembly {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Global)
         #[wasm_bindgen(js_namespace = WebAssembly, extends = Object, typescript_type = "WebAssembly.Global")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Global;
 
         /// The `WebAssembly.Global()` constructor creates a new `Global` object
@@ -7308,14 +7162,12 @@ pub mod WebAssembly {
         pub fn set_value(this: &Global, value: &JsValue);
     }
 
-    impl Upcast<Object> for Global {}
-
     // WebAssembly.Memory
     #[wasm_bindgen]
     extern "C" {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory)
         #[wasm_bindgen(js_namespace = WebAssembly, extends = Object, typescript_type = "WebAssembly.Memory")]
-        #[derive(Clone, Debug, PartialEq, Eq, UpcastCore)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Memory;
 
         /// The `WebAssembly.Memory()` constructor creates a new `Memory` object
@@ -7347,8 +7199,6 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, js_namespace = WebAssembly)]
         pub fn grow(this: &Memory, pages: u32) -> u32;
     }
-
-    impl Upcast<Object> for Memory {}
 }
 
 /// The `JSON` object contains methods for parsing [JavaScript Object
@@ -7402,7 +7252,7 @@ pub mod JSON {
         #[wasm_bindgen(catch, js_namespace = JSON, js_name = stringify)]
         pub fn stringify_with_replacer_func(
             obj: &JsValue,
-            replacer: &mut dyn FnMut(JsString, JsValue) -> Result<Option<JsValue>, JsValue>,
+            replacer: &mut dyn FnMut(JsString, JsValue) -> Result<Option<JsValue>, JsError>,
             space: Option<&str>,
         ) -> Result<JsString, JsValue>;
 
@@ -7454,7 +7304,7 @@ pub mod JSON {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_name = String, extends = Object, is_type_of = JsValue::is_string, typescript_type = "string")]
-    #[derive(Clone, PartialEq, Eq, UpcastCore)]
+    #[derive(Clone, PartialEq, Eq)]
     pub type JsString;
 
     /// The length property of a String object indicates the length of a string,
@@ -7689,7 +7539,7 @@ extern "C" {
     pub fn replace_with_function(
         this: &JsString,
         pattern: &str,
-        replacement: &Function,
+        replacement: &AnyFunction,
     ) -> JsString;
 
     #[wasm_bindgen(method, js_class = "String", js_name = replace)]
@@ -7700,7 +7550,7 @@ extern "C" {
     pub fn replace_by_pattern_with_function(
         this: &JsString,
         pattern: &RegExp,
-        replacement: &Function,
+        replacement: &AnyFunction,
     ) -> JsString;
 
     /// The `replace_all()` method returns a new string with all matches of a pattern
@@ -7718,7 +7568,7 @@ extern "C" {
     pub fn replace_all_with_function(
         this: &JsString,
         pattern: &str,
-        replacement: &Function,
+        replacement: &AnyFunction,
     ) -> JsString;
 
     #[wasm_bindgen(method, js_class = "String", js_name = replaceAll)]
@@ -7730,7 +7580,7 @@ extern "C" {
     pub fn replace_all_by_pattern_with_function(
         this: &JsString,
         pattern: &RegExp,
-        replacement: &Function,
+        replacement: &AnyFunction,
     ) -> JsString;
 
     /// The `search()` method executes a search for a match between
@@ -8136,7 +7986,7 @@ impl str::FromStr for JsString {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(is_type_of = JsValue::is_symbol, typescript_type = "Symbol")]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type Symbol;
 
     /// The `Symbol.hasInstance` well-known symbol is used to determine
@@ -8297,7 +8147,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.Collator")]
-        #[derive(Clone, Debug, UpcastCore)]
+        #[derive(Clone, Debug)]
         pub type Collator;
 
         /// The `Intl.Collator` object is a constructor for collators, objects
@@ -8333,8 +8183,6 @@ pub mod Intl {
         pub fn supported_locales_of(locales: &Array, options: &Object) -> Array;
     }
 
-    impl Upcast<Object> for Collator {}
-
     impl Default for Collator {
         fn default() -> Self {
             Self::new(
@@ -8352,7 +8200,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.DateTimeFormat")]
-        #[derive(Clone, Debug, UpcastCore)]
+        #[derive(Clone, Debug)]
         pub type DateTimeFormat;
 
         /// The `Intl.DateTimeFormat` object is a constructor for objects
@@ -8395,8 +8243,6 @@ pub mod Intl {
         pub fn supported_locales_of(locales: &Array, options: &Object) -> Array;
     }
 
-    impl Upcast<Object> for DateTimeFormat {}
-
     impl Default for DateTimeFormat {
         fn default() -> Self {
             Self::new(
@@ -8414,7 +8260,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.NumberFormat")]
-        #[derive(Clone, Debug, UpcastCore)]
+        #[derive(Clone, Debug)]
         pub type NumberFormat;
 
         /// The `Intl.NumberFormat` object is a constructor for objects
@@ -8456,8 +8302,6 @@ pub mod Intl {
         pub fn supported_locales_of(locales: &Array, options: &Object) -> Array;
     }
 
-    impl Upcast<Object> for NumberFormat {}
-
     impl Default for NumberFormat {
         fn default() -> Self {
             Self::new(
@@ -8475,7 +8319,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.PluralRules")]
-        #[derive(Clone, Debug, UpcastCore)]
+        #[derive(Clone, Debug)]
         pub type PluralRules;
 
         /// The `Intl.PluralRules` object is a constructor for objects
@@ -8509,8 +8353,6 @@ pub mod Intl {
         pub fn supported_locales_of(locales: &Array, options: &Object) -> Array;
     }
 
-    impl Upcast<Object> for PluralRules {}
-
     impl Default for PluralRules {
         fn default() -> Self {
             Self::new(
@@ -8528,7 +8370,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.RelativeTimeFormat")]
-        #[derive(Clone, Debug, UpcastCore)]
+        #[derive(Clone, Debug)]
         pub type RelativeTimeFormat;
 
         /// The `Intl.RelativeTimeFormat` object is a constructor for objects
@@ -8569,8 +8411,6 @@ pub mod Intl {
         pub fn supported_locales_of(locales: &Array, options: &Object) -> Array;
     }
 
-    impl Upcast<Object> for RelativeTimeFormat {}
-
     impl Default for RelativeTimeFormat {
         fn default() -> Self {
             Self::new(
@@ -8589,7 +8429,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "any")]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type PromiseState<T>;
 
     /// A string, either "fulfilled" or "rejected", indicating the eventual state of the promise.
@@ -8615,8 +8455,6 @@ impl<T> PromiseState<T> {
     }
 }
 
-impl<T> Upcast<Object> for PromiseState<T> {}
-
 // Promise
 #[wasm_bindgen]
 extern "C" {
@@ -8626,7 +8464,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>", no_promising)]
-    #[derive(Clone, Debug, UpcastCore)]
+    #[derive(Clone, Debug)]
     pub type Promise<T>;
 
     // Next major: typed by default, deprecate typed
@@ -8669,7 +8507,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[wasm_bindgen(constructor)]
-    pub fn new_typed<T>(cb: &mut dyn FnMut(Function<JsValue, T>, Function)) -> Promise<T>;
+    pub fn new_typed<T>(cb: &mut dyn FnMut(TypedFunction<JsValue, T>, AnyFunction)) -> Promise<T>;
 
     // Next major: typed by default, deprecate all_iterable
     /// The `Promise.all(iterable)` method returns a single `Promise` that
@@ -8794,7 +8632,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = catch)]
     pub fn catch_map<T, R: Promising<Resolution = T>>(
         this: &Promise<T>,
-        cb: &Closure<dyn FnMut(T) -> Result<R, JsValue>>,
+        cb: &Closure<dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<T>;
 
     // Next major: then_map for then, deprecate then_map
@@ -8812,8 +8650,8 @@ extern "C" {
     #[wasm_bindgen(method, js_name = then)]
     pub fn then_with_reject<T, U: ErasableGeneric, R: Promising<Resolution = U>>(
         this: &Promise<T>,
-        resolve: &Closure<dyn FnMut(T) -> Result<R, JsValue>>,
-        reject: &Closure<dyn FnMut(JsValue) -> Result<R, JsValue>>,
+        resolve: &Closure<dyn FnMut(T) -> Result<R, JsError>>,
+        reject: &Closure<dyn FnMut(JsValue) -> Result<R, JsError>>,
     ) -> Promise<U>;
 
     /// Alias for `then()` with a return value.
@@ -8824,7 +8662,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = then)]
     pub fn then_map<T, U: ErasableGeneric, R: Promising<Resolution = U>>(
         this: &Promise<T>,
-        cb: &Closure<dyn FnMut(T) -> Result<R, JsValue>>,
+        cb: &Closure<dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<U>;
 
     /// The `finally()` method returns a `Promise`. When the promise is settled,
@@ -8840,8 +8678,6 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn finally<T>(this: &Promise<T>, cb: &Closure<dyn FnMut()>) -> Promise<JsValue>;
 }
-
-impl<T> Upcast<Object> for Promise<T> {}
 
 impl<T: ErasableGeneric> Promising for Promise<T> {
     type Resolution = T;
@@ -8917,7 +8753,7 @@ macro_rules! arrays {
         #[wasm_bindgen]
         extern "C" {
             #[wasm_bindgen(extends = Object, typescript_type = $name)]
-            #[derive(Clone, Debug, UpcastCore)]
+            #[derive(Clone, Debug)]
             pub type $name;
 
             /// The
@@ -9209,7 +9045,7 @@ macro_rules! arrays {
 
         impl TypedArray for $name {}
 
-        impl Upcast<Object> for $name {}
+
     )*);
 }
 

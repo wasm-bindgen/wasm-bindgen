@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = IDBMutableFile , typescript_type = "IDBMutableFile")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `IdbMutableFile` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBMutableFile)"]
@@ -89,5 +89,3 @@ extern "C" {
     #[deprecated]
     pub fn open(this: &IdbMutableFile) -> Result<IdbFileHandle, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for IdbMutableFile {}

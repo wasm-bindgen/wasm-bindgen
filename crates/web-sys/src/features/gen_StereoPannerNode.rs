@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = StereoPannerNode , typescript_type = "StereoPannerNode")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `StereoPannerNode` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StereoPannerNode)"]
@@ -40,7 +40,3 @@ extern "C" {
         options: &StereoPannerOptions,
     ) -> Result<StereoPannerNode, JsValue>;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<AudioNode> for StereoPannerNode {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for StereoPannerNode {}

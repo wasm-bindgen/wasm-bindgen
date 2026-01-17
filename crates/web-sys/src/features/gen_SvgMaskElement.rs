@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGMaskElement , typescript_type = "SVGMaskElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgMaskElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMaskElement)"]
@@ -71,11 +71,3 @@ impl SvgMaskElement {
     #[doc = "*This API requires the following crate features to be activated: `SvgMaskElement`*"]
     pub const SVG_MASKTYPE_ALPHA: u16 = 1u64 as u16;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgMaskElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgMaskElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgMaskElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgMaskElement {}

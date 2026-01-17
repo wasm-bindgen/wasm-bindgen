@@ -133,6 +133,9 @@ macro_rules! type_wasm_native {
                 js.map(|v: $c| v as $t)
             }
         }
+
+        impl Upcast<JsValue> for $t {}
+        impl Upcast<$t> for $t {}
     )*)
 }
 
@@ -143,6 +146,9 @@ type_wasm_native!(
     u128 as u128
     f64 as f64
 );
+
+impl Upcast<u128> for u64 {}
+impl Upcast<i128> for i64 {}
 
 /// The sentinel value is 2^32 + 1 for 32-bit primitive types.
 ///
@@ -198,6 +204,9 @@ macro_rules! type_wasm_native_f64_option {
                 }
             }
         }
+
+        impl Upcast<JsValue> for $t {}
+        impl Upcast<$t> for $t {}
     )*)
 }
 
@@ -208,6 +217,27 @@ type_wasm_native_f64_option!(
     usize as u32
     f32 as f32
 );
+
+#[cfg(target_pointer_width = "32")]
+impl Upcast<i32> for isize {}
+
+impl Upcast<i64> for isize {}
+impl Upcast<i128> for isize {}
+
+impl Upcast<isize> for i32 {}
+impl Upcast<i64> for i32 {}
+impl Upcast<i128> for i32 {}
+
+impl Upcast<usize> for u32 {}
+impl Upcast<u64> for u32 {}
+impl Upcast<u128> for u32 {}
+
+#[cfg(target_pointer_width = "32")]
+impl Upcast<u32> for usize {}
+impl Upcast<u64> for usize {}
+impl Upcast<u128> for usize {}
+
+impl Upcast<f64> for f32 {}
 
 /// The sentinel value is 0xFF_FFFF for primitives with less than 32 bits.
 ///
@@ -249,10 +279,31 @@ macro_rules! type_abi_as_u32 {
         impl Promising for $t {
             type Resolution = $t;
         }
+
+        impl Upcast<JsValue> for $t {}
+        impl Upcast<$t> for $t {}
     )*)
 }
 
 type_abi_as_u32!(i8 u8 i16 u16);
+
+impl Upcast<i16> for i8 {}
+impl Upcast<i32> for i8 {}
+impl Upcast<i64> for i8 {}
+impl Upcast<i128> for i8 {}
+
+impl Upcast<u16> for u8 {}
+impl Upcast<u32> for u8 {}
+impl Upcast<u64> for u8 {}
+impl Upcast<u128> for u8 {}
+
+impl Upcast<i32> for i16 {}
+impl Upcast<i64> for i16 {}
+impl Upcast<i128> for i16 {}
+
+impl Upcast<u32> for u16 {}
+impl Upcast<u64> for u16 {}
+impl Upcast<u128> for u16 {}
 
 impl IntoWasmAbi for bool {
     type Abi = u32;
@@ -294,6 +345,9 @@ impl Promising for bool {
     type Resolution = bool;
 }
 
+impl Upcast<JsValue> for bool {}
+impl Upcast<bool> for bool {}
+
 impl IntoWasmAbi for char {
     type Abi = u32;
 
@@ -334,6 +388,9 @@ unsafe impl ErasableGeneric for char {
 impl Promising for char {
     type Resolution = char;
 }
+
+impl Upcast<JsValue> for char {}
+impl Upcast<char> for char {}
 
 impl<T> IntoWasmAbi for *const T {
     type Abi = u32;
@@ -557,6 +614,10 @@ impl<T: OptionFromWasmAbi> FromWasmAbi for Option<T> {
     }
 }
 
+impl<T: OptionIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising for Option<T> {
+    type Resolution = Option<<T as Promising>::Resolution>;
+}
+
 impl<T: IntoWasmAbi> IntoWasmAbi for Clamped<T> {
     type Abi = T::Abi;
 
@@ -594,6 +655,9 @@ impl FromWasmAbi for () {
 impl Promising for () {
     type Resolution = Undefined;
 }
+
+impl Upcast<JsValue> for () {}
+impl Upcast<()> for () {}
 
 unsafe impl ErasableGeneric for () {
     type Repr = ();
@@ -655,11 +719,19 @@ unsafe impl<T: ErasableGeneric, E: ErasableGeneric> ErasableGeneric for Result<T
     type Repr = Result<<T as ErasableGeneric>::Repr, <E as ErasableGeneric>::Repr>;
 }
 
+impl<T: ErasableGeneric + Promising, E: ErasableGeneric> Promising for Result<T, E> {
+    type Resolution = Result<<T as Promising>::Resolution, E>;
+}
+
 impl<T, E, TargetT, TargetE> Upcast<Result<TargetT, TargetE>> for Result<T, E>
 where
     T: Upcast<TargetT>,
     E: Upcast<TargetE>,
 {
+}
+
+unsafe impl ErasableGeneric for JsError {
+    type Repr = JsValue;
 }
 
 impl IntoWasmAbi for JsError {
@@ -669,6 +741,13 @@ impl IntoWasmAbi for JsError {
         self.value.into_abi()
     }
 }
+
+impl Promising for JsError {
+    type Resolution = JsError;
+}
+
+impl Upcast<JsValue> for JsError {}
+impl Upcast<JsError> for JsError {}
 
 /// # ⚠️ Unstable
 ///

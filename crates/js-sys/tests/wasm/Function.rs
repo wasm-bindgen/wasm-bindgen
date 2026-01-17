@@ -1,6 +1,7 @@
 use js_sys::*;
 use wasm_bindgen::convert::Upcast;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::AsUpcast;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::Undefined;
 use wasm_bindgen_test::*;
@@ -45,16 +46,15 @@ extern "C" {
     fn get_value_to_bind_to() -> JsValue;
     fn list() -> Function;
     fn add_arguments() -> Function;
-    fn call_function(f: &Function) -> JsValue;
+    fn call_function<'a>(f: impl AsUpcast<&'a Function>) -> JsValue;
     #[wasm_bindgen(js_name = call_function)]
-    fn call_function_num(f: &Function<Number>) -> Number;
+    fn call_function_none(f: &Function) -> Number;
     fn call_function_arg(f: &Function, arg0: JsValue) -> JsValue;
     #[wasm_bindgen(js_name = call_function_arg)]
-    fn call_function_arg_num(f: &Function<Number, Number>, arg0: Number) -> Number;
+    fn call_function_arg_num(f: &VoidFunction<Number>, arg0: Number);
     fn sum_many_arguments() -> Function;
     fn test_context() -> JsValue;
     fn multiply_sum() -> Function;
-
 }
 
 #[wasm_bindgen_test]
@@ -88,8 +88,11 @@ fn bind1() {
     let adder = add_arguments();
     let add_42 = adder.bind1(&JsValue::NULL, &JsValue::from(42));
 
-    assert_eq!(call_function_arg(&add_42, JsValue::from(1)), 43);
-    assert_eq!(call_function_arg(&add_42, JsValue::from(378)), 420);
+    assert_eq!(call_function_arg(add_42.upcast_ref(), JsValue::from(1)), 43);
+    assert_eq!(
+        call_function_arg(add_42.upcast_ref(), JsValue::from(378)),
+        420
+    );
 }
 
 #[wasm_bindgen_test]
@@ -359,19 +362,19 @@ fn call9() {
 
 #[wasm_bindgen_test]
 fn generic_function_new() {
-    let f: BoundedFunction<Number> = Function::new_no_args_typed("return 42");
-    assert_eq!(call_function_num(f.upcast_ref()), 42);
+    let f: TypedFunction<Number> = Function::new_no_args_typed("return 42");
+    assert_eq!(call_function_none(f.upcast_ref()), 42);
 }
 
 #[wasm_bindgen_test]
 fn generic_function_new1() {
     let f = Function::new_with_args_typed("x", "return x * 2");
-    assert_eq!(call_function_arg_num(&f, Number::from(21)), 42);
+    call_function_arg_num(&f, Number::from(21));
 }
 
 #[wasm_bindgen_test]
 fn generic_function_new2() {
-    let f = Function::<Number, Number, Number>::new_with_args_typed("x, y", "return x + y");
+    let f = TypedFunction::<Number, Number, Number>::new_with_args_typed("x, y", "return x + y");
     let result = f
         .call2(&JsValue::NULL, &Number::from(10), &Number::from(32))
         .unwrap();
@@ -380,31 +383,38 @@ fn generic_function_new2() {
 
 #[wasm_bindgen_test]
 fn closure_to_function_covariance() {
-    let closure: Closure<dyn Fn() -> u32> = Closure::new(|| -> u32 { 42 });
-    let func: Function<Number> = Function::from_closure(closure).upcast();
+    let closure: Closure<dyn Fn(i32) -> ()> = Closure::new(|_: i32| -> () {});
+    let foo = Function::from_closure(closure);
+    let foo_uc: &VoidFunction<Number> = foo.upcast_ref();
+    let _ret1 = foo_uc.call(&JsValue::UNDEFINED, &Number::from(5)).unwrap();
 
-    let result = call_function_num(&func);
-    assert_eq!(result.value_of(), 42.0);
+    let closure: Closure<dyn Fn(u32) -> ()> = Closure::new(|_: u32| -> () {});
+    let foo = Function::from_closure(closure);
+    let foo: TypedFunction<Undefined, Number> = foo.upcast();
+    let _ret1 = foo.call(&JsValue::UNDEFINED, &Number::from(5)).unwrap();
 
-    let closure_i32: Closure<dyn Fn() -> i32> = Closure::new(|| -> i32 { -100 });
-    let func_i32: Function<Number> = Function::from_closure(closure_i32).upcast();
+    call_function_arg_num(foo.upcast_ref(), Number::from(42));
 
-    let result_i32 = call_function_num(&func_i32);
-    assert_eq!(result_i32.value_of(), -100.0);
+    let closure_i32: Closure<dyn Fn(i32) -> i32> = Closure::new(|foo| -> i32 { foo + 5 });
+    let func_i32: TypedFunction<Number, Number> = Function::from_closure_upcast(closure_i32);
+    let bound = func_i32.bind1(&JsValue::UNDEFINED, &Number::from(5));
 
-    let closure_f64: Closure<dyn Fn() -> f64> = Closure::new(|| -> f64 { 3.14 });
-    let func_f64: Function<Number> = Function::from_closure(closure_f64).upcast();
+    let result_f32 = call_function_none(bound.upcast_ref());
+    assert_eq!(result_f32.value_of(), 10.0);
 
-    let result_f64 = call_function_num(&func_f64);
-    assert_eq!(result_f64.value_of(), 3.14);
+    let closure_f32: Closure<dyn Fn() -> f32> = Closure::new(|| -> f32 { 3.14 });
+    let func_f32: TypedFunction<Number> = Function::from_closure_upcast(closure_f32);
+
+    let result_f32 = call_function_none(func_f32.upcast_ref());
+    assert_eq!(result_f32.value_of() as f32, 3.14);
 }
 
 #[wasm_bindgen_test]
 fn function_returning_array_of_functions() {
-    let outer: BoundedFunction<Array<BoundedFunction<Number>>> =
-        BoundedFunction::new_no_args_typed("return [function() { return 42; }]");
+    let outer: TypedFunction<Array<TypedFunction<Number>>> =
+        TypedFunction::new_no_args_typed("return [function() { return 42; }]");
 
-    let outer_cast: BoundedFunction<Array<BoundedFunction<JsValue>>> = outer.upcast();
+    let outer_cast: TypedFunction<Array<TypedFunction<JsValue>>> = outer.upcast();
 
     let arr = outer_cast.call(&JsValue::NULL).unwrap();
     assert_eq!(arr.length(), 1);
@@ -412,11 +422,11 @@ fn function_returning_array_of_functions() {
 
 #[wasm_bindgen_test]
 fn function_accepting_array_of_functions() {
-    let outer: BoundedFunction<Number, Array<BoundedFunction<Number, Array<i32>>>> =
+    let outer: TypedFunction<Number, Array<TypedFunction<Number, Array<Number>>>> =
         Function::new_with_args_typed("funcs", "return funcs[0]([1, 2])");
 
-    let arr: Array<BoundedFunction<Number, Array<Number>>> = Array::new_typed();
-    let f: BoundedFunction<Number, Array<Number>> =
+    let arr: Array<TypedFunction<Number, Array<Number>>> = Array::new_typed();
+    let f: TypedFunction<Number, Array<Number>> =
         Function::new_with_args_typed("x", "return x.length");
     arr.push(&f);
 

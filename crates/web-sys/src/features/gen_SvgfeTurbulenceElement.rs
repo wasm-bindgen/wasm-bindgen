@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGFETurbulenceElement , typescript_type = "SVGFETurbulenceElement")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgfeTurbulenceElement` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFETurbulenceElement)"]
@@ -127,11 +127,3 @@ impl SvgfeTurbulenceElement {
     #[doc = "*This API requires the following crate features to be activated: `SvgfeTurbulenceElement`*"]
     pub const SVG_STITCHTYPE_NOSTITCH: u16 = 2u64 as u16;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<SvgElement> for SvgfeTurbulenceElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Element> for SvgfeTurbulenceElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<Node> for SvgfeTurbulenceElement {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<EventTarget> for SvgfeTurbulenceElement {}

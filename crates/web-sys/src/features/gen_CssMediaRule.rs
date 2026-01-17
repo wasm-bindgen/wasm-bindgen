@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     # [wasm_bindgen (extends = CssConditionRule , extends = CssGroupingRule , extends = CssRule , extends = :: js_sys :: Object , js_name = CSSMediaRule , typescript_type = "CSSMediaRule")]
-    #[derive(Debug, Clone, PartialEq, Eq, :: wasm_bindgen :: Upcast)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CssMediaRule` class."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSMediaRule)"]
@@ -21,9 +21,3 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssMediaRule`, `MediaList`*"]
     pub fn media(this: &CssMediaRule) -> MediaList;
 }
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CssConditionRule> for CssMediaRule {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CssGroupingRule> for CssMediaRule {}
-#[automatically_derived]
-impl ::wasm_bindgen::convert::Upcast<CssRule> for CssMediaRule {}

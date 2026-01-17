@@ -58,9 +58,6 @@
 * Added [Window Management API](https://w3c.github.io/window-management/).
   [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
 
-* Forward worker errors to test output in the test runner.
-  [#4855](https://github.com/wasm-bindgen/wasm-bindgen/pull/4855)
-
 ### Changed
 
 * Changed WASM import namespace from `wbg` to `./{name}_bg.js` for `web` and `no-modules` targets,
