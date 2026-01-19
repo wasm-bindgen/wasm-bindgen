@@ -1631,7 +1631,12 @@ impl Invocation {
         match self {
             Invocation::Core { id, .. } => {
                 let name = cx.export_name_of(*id);
-                Ok(format!("wasm.{name}({})", args.join(", ")))
+                let call = format!("wasm.{name}({})", args.join(", "));
+                if cx.config.generate_reset_state {
+                    Ok(format!("__wbg_handle_panic(() => {call})"))
+                } else {
+                    Ok(call)
+                }
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];

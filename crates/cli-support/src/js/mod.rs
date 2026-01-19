@@ -2649,10 +2649,12 @@ impl<'a> Context<'a> {
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
+        self.global("let __wbg_aborted = false;");
 
         let mut reset_statements = Vec::new();
 
         reset_statements.push("__wbg_instance_id++;".to_string());
+        reset_statements.push("__wbg_aborted = false;".to_string());
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
@@ -2734,6 +2736,25 @@ impl<'a> Context<'a> {
                 private: false,
             }),
         )?;
+
+        intrinsic(&mut self.intrinsics, "handle_panic".into(), || {
+            "function __wbg_handle_panic(f) {
+                if (__wbg_aborted === true) {
+                    __wbg_reset_state();
+                }
+                try {
+                    return f();
+                } catch (e) {
+                    if (e instanceof WebAssembly.RuntimeError) {
+                        __wbg_aborted = true;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            "
+            .into()
+        });
 
         Ok(())
     }
