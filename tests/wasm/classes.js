@@ -30,7 +30,7 @@ exports.js_strings = () => {
     bar.free();
 };
 
-exports.js_exceptions = () => {
+exports.js_exceptions = (is_panic_unwind) => {
     // this test only works when `--debug` is passed to `wasm-bindgen` (or the
     // equivalent thereof)
     if (require('process').env.WASM_BINDGEN_NO_DEBUG)
@@ -43,10 +43,15 @@ exports.js_exceptions = () => {
     let b = wasm.ClassesExceptions1.new();
     b.foo(b);
     assert.throws(() => b.bar(b), /recursive use of an object/);
-    // TODO: throws because it tries to borrow_mut, but the throw_str from the previous line doesn't clean up the
-    // RefMut so the object is left in a broken state.
-    // We still try to call free here so the object is removed from the FinalizationRegistry when weak refs are enabled.
-    assert.throws(() => b.free(), /attempted to take ownership/);
+    if (is_panic_unwind) {
+        // In this case it works
+        b.free();
+    } else {
+        // throws because it tries to borrow_mut, but the throw_str from the previous line doesn't clean up the
+        // RefMut so the object is left in a broken state.
+        // We still try to call free here so the object is removed from the FinalizationRegistry when weak refs are enabled.
+        assert.throws(() => b.free(), /attempted to take ownership/);
+    }
 
     let c = wasm.ClassesExceptions1.new();
     let d = wasm.ClassesExceptions2.new();
@@ -254,4 +259,21 @@ exports.js_test_class_defined_in_macro = () => {
     assert.strictEqual(macroClass.a, 3);
     macroClass.a = 5;
     assert.strictEqual(macroClass.a, 5);
+};
+
+exports.js_classless_this = () => {
+    const obj1 = { number: 42 };
+    const result1 = wasm.classless_this_get_number.call(obj1);
+    assert.strictEqual(result1, 42);
+
+    const obj2 = { count: 10 };
+    const result2 = wasm.classless_this_add.call(obj2, 5);
+    assert.strictEqual(result2, 15);
+
+    const result3 = wasm.classless_this_add.apply(obj2, [7]);
+    assert.strictEqual(result3, 17);
+
+    const obj3 = { test: 'value' };
+    const result4 = wasm.classless_this_consume_jsvalue.call(obj3);
+    assert.strictEqual(result4, true);
 };

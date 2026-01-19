@@ -1,0 +1,13 @@
+(module $default_function_reftest.wasm
+  (type (;0;) (func))
+  (type (;1;) (func (param i32 i32) (result i32)))
+  (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
+  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (memory (;0;) 17)
+  (export "memory" (memory 0))
+  (export "default" (func $default))
+  (export "__wbindgen_externrefs" (table $__wbindgen_externrefs))
+  (export "__wbindgen_start" (func 0))
+  (func $default (;1;) (type 1) (param i32 i32) (result i32))
+  (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")
+)

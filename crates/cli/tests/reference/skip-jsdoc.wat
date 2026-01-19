@@ -1,16 +1,15 @@
-(module $reference_test.wasm
+(module $skip_jsdoc_reftest.wasm
   (type (;0;) (func))
   (type (;1;) (func (param i32) (result i32)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
-  (func $docme (;1;) (type 1) (param i32) (result i32))
-  (func $i_has_docs (;2;) (type 1) (param i32) (result i32))
-  (table (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 128 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "docme" (func $docme))
   (export "i_has_docs" (func $i_has_docs))
-  (export "__wbindgen_export_0" (table 0))
+  (export "__wbindgen_externrefs" (table $__wbindgen_externrefs))
   (export "__wbindgen_start" (func 0))
-  (@custom "target_features" (after code) "\04+\0amultivalue+\0fmutable-globals+\0freference-types+\08sign-ext")
+  (func $docme (;1;) (type 1) (param i32) (result i32))
+  (func $i_has_docs (;2;) (type 1) (param i32) (result i32))
+  (@custom "target_features" (after code) "\08+\0bbulk-memory+\0fbulk-memory-opt+\16call-indirect-overlong+\0amultivalue+\0fmutable-globals+\13nontrapping-fptoint+\0freference-types+\08sign-ext")
 )
-

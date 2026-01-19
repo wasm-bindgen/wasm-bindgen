@@ -1,11 +1,10 @@
+use crate::util::{leading_colon_path_ty, raw_ident, rust_ident};
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use quote::format_ident;
 use quote::quote;
 use std::collections::BTreeSet;
 use syn::{Ident, Type};
-use wasm_bindgen_backend::util::leading_colon_path_ty;
-use wasm_bindgen_backend::util::{raw_ident, rust_ident};
 
 use crate::constants::{BUILTIN_IDENTS, POLYFILL_INTERFACES};
 use crate::idl_type::IdlType;
@@ -57,7 +56,7 @@ fn maybe_unstable_docs(unstable: bool) -> Option<proc_macro2::TokenStream> {
         Some(quote! {
             #[doc = ""]
             #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-            #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+            #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
         })
     } else {
         None
@@ -120,7 +119,7 @@ impl Enum {
         let unstable_docs = maybe_unstable_docs(*unstable);
 
         let doc_comment = comment(
-            format!("The `{}` enum.", name),
+            format!("The `{name}` enum."),
             &get_features_doc(options, name.to_string()),
         );
 
@@ -210,7 +209,7 @@ impl Const {
         let unstable_docs = maybe_unstable_docs(unstable);
 
         let doc_comment = comment(
-            format!("The `{}.{}` const.", parent_js_name, js_name),
+            format!("The `{parent_js_name}.{js_name}` const."),
             &get_features_doc(options, parent_name.to_string()),
         );
 
@@ -344,10 +343,7 @@ impl InterfaceAttribute {
             });
 
         let doc_comment = comment(
-            format!(
-                "{} for the `{}` field of this object.\n\n{}",
-                prefix, js_name, mdn_docs
-            ),
+            format!("{prefix} for the `{js_name}` field of this object.\n\n{mdn_docs}"),
             &doc_comment,
         );
 
@@ -434,9 +430,8 @@ impl InterfaceMethod<'_> {
                     extra_args[0] = quote!( js_class = #name );
                 }
                 format!(
-                    "The `new {}(..)` constructor, creating a new \
-                     instance of `{0}`.\n\n{}",
-                    parent_name,
+                    "The `new {parent_name}(..)` constructor, creating a new \
+                     instance of `{parent_name}`.\n\n{}",
                     mdn_doc(&parent_js_name, Some(&parent_js_name))
                 )
             }
@@ -451,8 +446,7 @@ impl InterfaceMethod<'_> {
                     js_name
                 };
                 format!(
-                    "The `{}()` method.\n\n{}",
-                    js_name,
+                    "The `{js_name}()` method.\n\n{}",
                     mdn_doc(&parent_js_name, Some(method))
                 )
             }
@@ -582,7 +576,7 @@ impl Interface<'_> {
         let unstable_docs = maybe_unstable_docs(*unstable);
 
         let doc_comment = comment(
-            format!("The `{}` class.\n\n{}", name, mdn_doc(js_name, None)),
+            format!("The `{name}` class.\n\n{}", mdn_doc(js_name, None)),
             &get_features_doc(options, name.to_string()),
         );
 
@@ -712,12 +706,12 @@ impl DictionaryField {
         });
 
         let getter_doc_comment = comment(
-            format!("Get the `{}` field of this object.", js_name),
+            format!("Get the `{js_name}` field of this object."),
             &required_doc_string(options, features),
         );
 
         let setter_doc_comment = comment(
-            format!("Change the `{}` field of this object.", js_name),
+            format!("Change the `{js_name}` field of this object."),
             &required_doc_string(options, features),
         );
 
@@ -756,7 +750,7 @@ impl DictionaryField {
         let unstable_attr = maybe_unstable_attr(*unstable);
 
         let setter_name = self.setter_name();
-        let deprecated = format!("Use `{}()` instead.", setter_name);
+        let deprecated = format!("Use `{setter_name}()` instead.");
 
         let shim_args = if self.is_js_value_ref_option_type {
             quote! { val.unwrap_or(&::wasm_bindgen::JsValue::NULL) }
@@ -847,11 +841,11 @@ impl Dictionary {
         required_features.insert(name.to_string());
 
         let doc_comment = comment(
-            format!("The `{}` dictionary.", name),
+            format!("The `{name}` dictionary."),
             &get_features_doc(options, name.to_string()),
         );
         let ctor_doc_comment = comment(
-            format!("Construct a new `{}`.", name),
+            format!("Construct a new `{name}`."),
             &required_doc_string(options, &required_features),
         );
 
@@ -961,9 +955,7 @@ impl Function<'_> {
         let js_namespace = raw_ident(&parent_js_name);
 
         let doc_comment = format!(
-            "The `{}.{}()` function.\n\n{}",
-            parent_js_name,
-            js_name,
+            "The `{parent_js_name}.{js_name}()` function.\n\n{}",
             mdn_doc(&parent_js_name, Some(js_name))
         );
 

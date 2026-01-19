@@ -6,7 +6,7 @@ use wasm_bindgen_test::*;
 #[wasm_bindgen(module = "tests/wasm/futures.js")]
 extern "C" {
     #[wasm_bindgen(catch)]
-    async fn call_exports() -> Result<JsValue, JsValue>;
+    async fn call_exports(catch_unwind: bool) -> Result<JsValue, JsValue>;
 
     async fn call_promise() -> JsValue;
     #[wasm_bindgen(js_name = call_promise)]
@@ -26,11 +26,16 @@ extern "C" {
     async fn call_promise_ok_unit() -> Result<(), JsValue>;
     #[wasm_bindgen(catch)]
     async fn call_promise_err_unit() -> Result<(), JsValue>;
+
+    #[wasm_bindgen]
+    async fn check_panic();
 }
 
 #[wasm_bindgen_test]
 async fn smoke() {
-    call_exports().await.unwrap();
+    call_exports(cfg!(all(feature = "std", panic = "unwind")))
+        .await
+        .unwrap();
 }
 
 #[wasm_bindgen]
@@ -139,6 +144,9 @@ pub async fn async_take_js_reference(x: &JsValue) {
     assert_eq!(*x, 42);
 }
 
+// TODO: Not sure how to mark the slice argument as unwind safe while also
+// preserving WasmAbi trait impl.
+#[cfg(not(all(feature = "std", panic = "unwind")))]
 #[wasm_bindgen]
 pub async fn async_take_mut_slice(x: &mut [i32]) {
     x.fill(42);
@@ -202,4 +210,16 @@ async fn test_promise_err_unit() {
         call_promise_err_unit().await.map_err(|j| j.as_string()),
         Err::<(), _>(Some(String::from("error")))
     )
+}
+
+#[wasm_bindgen]
+pub async fn panics() -> u32 {
+    call_promise().await;
+    panic!("Oops!");
+}
+
+#[cfg(all(panic = "unwind", feature = "std"))]
+#[wasm_bindgen_test]
+async fn test_promise_panic() {
+    check_panic().await;
 }

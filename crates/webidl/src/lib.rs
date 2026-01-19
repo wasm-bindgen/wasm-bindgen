@@ -26,8 +26,8 @@ use crate::idl_type::ToIdlType;
 use crate::traverse::TraverseType;
 use crate::util::{
     camel_case_ident, get_rust_deprecated, getter_throws, is_structural, is_type_unstable,
-    optional_return_ty, read_dir, setter_throws, shouty_snake_case_ident, snake_case_ident, throws,
-    webidl_const_v_to_backend_const_v, TypePosition,
+    optional_return_ty, read_dir, rust_ident, setter_throws, shouty_snake_case_ident,
+    snake_case_ident, throws, webidl_const_v_to_backend_const_v, TypePosition,
 };
 use anyhow::Context;
 use anyhow::Result;
@@ -42,7 +42,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fmt, iter};
-use wasm_bindgen_backend::util::rust_ident;
 use weedle::attribute::ExtendedAttributeList;
 use weedle::common::Identifier;
 use weedle::dictionary::DictionaryMember;
@@ -84,8 +83,9 @@ impl fmt::Display for WebIDLParseError {
 
 impl std::error::Error for WebIDLParseError {}
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub(crate) enum ApiStability {
+    #[default]
     Stable,
     Unstable,
 }
@@ -96,13 +96,7 @@ impl ApiStability {
     }
 }
 
-impl Default for ApiStability {
-    fn default() -> Self {
-        Self::Stable
-    }
-}
-
-fn parse_source(source: &str) -> Result<Vec<weedle::Definition>> {
+fn parse_source(source: &str) -> Result<Vec<weedle::Definition<'_>>> {
     match weedle::Definitions::parse(source) {
         Ok(("", parsed)) => Ok(parsed),
 
@@ -113,7 +107,7 @@ fn parse_source(source: &str) -> Result<Vec<weedle::Definition>> {
         }
 
         Err(weedle::Err::Incomplete(needed)) => {
-            Err(anyhow::anyhow!("needed {:?} more bytes", needed))
+            Err(anyhow::anyhow!("needed {needed:?} more bytes"))
         }
     }
 }
@@ -555,7 +549,7 @@ impl<'src> FirstPassRecord<'src> {
             | OperationId::IndexingGetter
             | OperationId::IndexingSetter
             | OperationId::IndexingDeleter => {
-                log::warn!("Unsupported unnamed operation: on {:?}", js_name);
+                log::warn!("Unsupported unnamed operation: on {js_name:?}");
                 return;
             }
         }
@@ -938,16 +932,16 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
     fs::create_dir_all(to).context("Creating features directory")?;
 
     for (name, feature) in features.iter() {
-        let out_file_path = to.join(format!("gen_{}.rs", name));
+        let out_file_path = to.join(format!("gen_{name}.rs"));
 
         fs::write(&out_file_path, &feature.code)?;
     }
 
     let binding_file = features.keys().map(|name| {
         if generate_features {
-            format!("#[cfg(feature = \"{name}\")] #[allow(non_snake_case)] mod gen_{name};\n#[cfg(feature = \"{name}\")] #[allow(unused_imports)] pub use gen_{name}::*;", name = name)
+            format!("#[cfg(feature = \"{name}\")] #[allow(non_snake_case)] mod gen_{name};\n#[cfg(feature = \"{name}\")] #[allow(unused_imports)] pub use gen_{name}::*;")
         } else {
-            format!("#[allow(non_snake_case)] mod gen_{name};\n#[allow(unused_imports)] pub use gen_{name}::*;", name = name)
+            format!("#[allow(non_snake_case)] mod gen_{name};\n#[allow(unused_imports)] pub use gen_{name}::*;")
         }
     }).collect::<Vec<_>>().join("\n\n");
 
@@ -955,7 +949,7 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
 
     let to_format = features
         .keys()
-        .map(|name| to.join(format!("gen_{}.rs", name)))
+        .map(|name| to.join(format!("gen_{name}.rs")))
         .chain([to.join("mod.rs")]);
 
     rustfmt(to_format)?;
@@ -967,10 +961,10 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
                 let features = feature
                     .required_features
                     .iter()
-                    .map(|x| format!("\"{}\"", x))
+                    .map(|x| format!("\"{x}\""))
                     .collect::<Vec<_>>()
                     .join(", ");
-                format!("{} = [{}]", name, features)
+                format!("{name} = [{features}]")
             })
             .collect::<Vec<_>>()
             .join("\n");

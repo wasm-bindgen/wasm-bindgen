@@ -88,7 +88,7 @@ pub(crate) struct Task {
 }
 
 impl Task {
-    pub(crate) fn spawn(future: Pin<Box<dyn Future<Output = ()> + 'static>>) {
+    pub(crate) fn spawn(future: impl Future<Output = ()> + 'static) {
         let atomic = AtomicWaker::new();
         let waker = unsafe { Waker::from_raw(AtomicWaker::into_raw_waker(atomic.clone())) };
         let this = Rc::new(Task {
@@ -99,9 +99,17 @@ impl Task {
 
         let closure = {
             let this = Rc::clone(&this);
-            Closure::new(move |_| this.run())
+            Closure::new(move |_| {
+                // The promise resolution acts like a wake, so ensure the state
+                // transitions to AWAKE before entering `run`.
+                this.atomic.wake_by_ref();
+                this.run();
+            })
         };
-        *this.inner.borrow_mut() = Some(Inner { future, closure });
+        *this.inner.borrow_mut() = Some(Inner {
+            future: Box::pin(future),
+            closure,
+        });
 
         // Queue up the Future's work to happen on the next microtask tick.
         crate::queue::Queue::with(move |queue| queue.schedule_task(this));

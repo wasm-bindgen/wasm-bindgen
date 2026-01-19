@@ -60,6 +60,55 @@ pub fn api_test_is_null_undefined(a: &JsValue, b: &JsValue, c: &JsValue) {
 }
 
 #[wasm_bindgen]
+pub fn api_test_is_null_or_undefined(a: &JsValue, b: &JsValue, c: &JsValue) {
+    // a is null
+    assert!(a.is_null_or_undefined());
+    // b is undefined
+    assert!(b.is_null_or_undefined());
+    // c is neither null nor undefined
+    assert!(!c.is_null_or_undefined());
+}
+
+#[wasm_bindgen]
+pub fn api_test_if_defined(a: &JsValue, b: &JsValue, c: &JsValue) -> JsValue {
+    // Test with null value - should return None
+    let result_null = if a.is_null_or_undefined() {
+        None
+    } else {
+        Some(a.clone())
+    };
+    assert_eq!(result_null, None);
+
+    // Test with undefined value - should return None
+    let result_undefined = if b.is_null_or_undefined() {
+        None
+    } else {
+        Some(b.clone())
+    };
+    assert_eq!(result_undefined, None);
+
+    // Test with defined value - should return Some(JsValue)
+    let result_defined = if c.is_null_or_undefined() {
+        None
+    } else {
+        Some(c.clone())
+    };
+    assert!(result_defined.is_some());
+    assert_eq!(result_defined.unwrap(), *c);
+
+    // Test chaining with local variable logic and map
+    let chained_result = if c.is_null_or_undefined() {
+        None
+    } else {
+        Some(c.clone())
+    }
+    .and_then(|v| v.as_string())
+    .unwrap_or_else(|| "default".to_string());
+
+    JsValue::from_str(&chained_result)
+}
+
+#[wasm_bindgen]
 pub fn api_get_true() -> JsValue {
     JsValue::from(true)
 }
@@ -191,7 +240,7 @@ fn debug_output() {
 fn function_table_is() {
     assert_function_table(
         wasm_bindgen::function_table(),
-        function_table_lookup as usize,
+        function_table_lookup as *const () as usize,
     );
 }
 

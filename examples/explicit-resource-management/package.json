@@ -1,0 +1,9 @@
+{
+	"scripts": {
+		"build": "cross-env wasm-pack build --target deno --out-dir ../dist/explicit-resource-management",
+		"postbuild": "node ../cp-dist.mjs index.html"
+	},
+	"dependencies": {
+		"cross-env": "catalog:"
+	}
+}

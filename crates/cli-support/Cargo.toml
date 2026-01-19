@@ -5,29 +5,31 @@ Shared support for the wasm-bindgen-cli package, an internal dependency
 """
 documentation = "https://docs.rs/wasm-bindgen-cli-support"
 edition = "2021"
-homepage = "https://rustwasm.github.io/wasm-bindgen/"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen/"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-cli-support"
-repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/cli-support"
-rust-version = "1.76"
-version = "0.2.100"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/cli-support"
+rust-version = "1.82"
+version = "0.2.108"
 
 [dependencies]
 anyhow = "1.0"
 base64 = "0.22"
+leb128 = "0.2"
 log = "0.4"
 rustc-demangle = "0.1.13"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tempfile = "3.0"
-walrus = { version = "0.23", features = ['parallel'] }
-wasm-bindgen-externref-xform = { path = '../externref-xform', version = '=0.2.100' }
-wasm-bindgen-multi-value-xform = { path = '../multi-value-xform', version = '=0.2.100' }
-wasm-bindgen-shared = { path = "../shared", version = '=0.2.100' }
-wasm-bindgen-threads-xform = { path = '../threads-xform', version = '=0.2.100' }
-wasm-bindgen-wasm-conventions = { path = '../wasm-conventions', version = '=0.2.100' }
-wasm-bindgen-wasm-interpreter = { path = "../wasm-interpreter", version = '=0.2.100' }
+walrus = { version = "0.24.2", features = ['parallel'] }
+wasm-bindgen-shared = { path = "../shared", version = "=0.2.108" }
+wasmparser = "0.240"
+
+[dev-dependencies]
+rstest = "0.26"
+wasmprinter = "0.243"
+wast = "243"
+wat = "1.243.0"
 
 [lints]
 workspace = true

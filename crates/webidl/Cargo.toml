@@ -17,8 +17,7 @@ proc-macro2 = "1.0"
 quote = '1.0'
 sourcefile = "0.2"
 syn = { version = '2.0', features = ['extra-traits', 'full'] }
-wasm-bindgen-backend = { path = "../backend" }
-weedle = { git = "https://github.com/rustwasm/weedle.git" }
+weedle = { git = "https://github.com/wasm-bindgen/weedle.git", rev = "e9e131229ba0477c34f09e136ed0a89a9fb1e448" }
 
 [lints]
 workspace = true

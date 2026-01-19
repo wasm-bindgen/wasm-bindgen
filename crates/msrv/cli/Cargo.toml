@@ -5,4 +5,23 @@ publish = false
 version = "0.0.0"
 
 [dependencies]
+# Pin ICU dependencies to versions compatible with Rust 1.82
+icu_collections = "=2.0.0"
+icu_locale_core = "=2.0.0"
+icu_normalizer = "=2.0.0"
+icu_normalizer_data = "=2.0.0"
+icu_properties = "=2.0.0"
+icu_properties_data = "=2.0.0"
+icu_provider = "=2.0.0"
+
+# Pin time dependencies to versions compatible with Rust 1.82
+time = "=0.3.34"
+time-core = "=0.1.2"
+
+# Pin other problematic dependencies
+rouille = "=3.6.2"
+
+# enable default feature for icu
+writeable = "0.6.0"
+
 wasm-bindgen-cli = { path = "../../cli" }

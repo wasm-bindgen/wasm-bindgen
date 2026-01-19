@@ -178,7 +178,10 @@ enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
 dictionary ScrollIntoViewOptions : ScrollOptions {
   ScrollLogicalPosition block = "start";
   ScrollLogicalPosition inline = "nearest";
+  ScrollIntoViewContainer container = "all";
 };
+
+enum ScrollIntoViewContainer { "all", "nearest" };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-element-interface
 partial interface Element {

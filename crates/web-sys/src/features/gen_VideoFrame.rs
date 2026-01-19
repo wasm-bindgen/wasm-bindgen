@@ -14,7 +14,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type VideoFrame;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoPixelFormat")]
@@ -26,7 +26,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoPixelFormat`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn format(this: &VideoFrame) -> Option<VideoPixelFormat>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = codedWidth)]
@@ -37,7 +37,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn coded_width(this: &VideoFrame) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = codedHeight)]
@@ -48,7 +48,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn coded_height(this: &VideoFrame) -> u32;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomRectReadOnly")]
@@ -60,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomRectReadOnly`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn coded_rect(this: &VideoFrame) -> Option<DomRectReadOnly>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomRectReadOnly")]
@@ -72,7 +72,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomRectReadOnly`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn visible_rect(this: &VideoFrame) -> Option<DomRectReadOnly>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = displayWidth)]
@@ -83,7 +83,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn display_width(this: &VideoFrame) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = displayHeight)]
@@ -94,7 +94,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn display_height(this: &VideoFrame) -> u32;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = duration)]
@@ -105,7 +105,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn duration(this: &VideoFrame) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = timestamp)]
@@ -116,7 +116,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn timestamp(this: &VideoFrame) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoColorSpace")]
@@ -128,7 +128,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoColorSpace`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn color_space(this: &VideoFrame) -> VideoColorSpace;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HtmlImageElement")]
@@ -140,7 +140,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_html_image_element(image: &HtmlImageElement) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SvgImageElement")]
@@ -152,7 +152,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgImageElement`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_svg_image_element(image: &SvgImageElement) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HtmlCanvasElement")]
@@ -164,7 +164,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_html_canvas_element(image: &HtmlCanvasElement) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HtmlVideoElement")]
@@ -176,7 +176,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_html_video_element(image: &HtmlVideoElement) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ImageBitmap")]
@@ -188,7 +188,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_image_bitmap(image: &ImageBitmap) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "OffscreenCanvas")]
@@ -200,7 +200,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_offscreen_canvas(image: &OffscreenCanvas) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(catch, constructor, js_class = "VideoFrame")]
@@ -211,7 +211,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_video_frame(image: &VideoFrame) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "HtmlImageElement", feature = "VideoFrameInit",))]
@@ -223,7 +223,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_html_image_element_and_video_frame_init(
         image: &HtmlImageElement,
         init: &VideoFrameInit,
@@ -238,7 +238,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgImageElement`, `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_svg_image_element_and_video_frame_init(
         image: &SvgImageElement,
         init: &VideoFrameInit,
@@ -253,7 +253,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_html_canvas_element_and_video_frame_init(
         image: &HtmlCanvasElement,
         init: &VideoFrameInit,
@@ -268,7 +268,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_html_video_element_and_video_frame_init(
         image: &HtmlVideoElement,
         init: &VideoFrameInit,
@@ -283,7 +283,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_image_bitmap_and_video_frame_init(
         image: &ImageBitmap,
         init: &VideoFrameInit,
@@ -298,7 +298,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`, `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_offscreen_canvas_and_video_frame_init(
         image: &OffscreenCanvas,
         init: &VideoFrameInit,
@@ -313,7 +313,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_video_frame_and_video_frame_init(
         image: &VideoFrame,
         init: &VideoFrameInit,
@@ -328,7 +328,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameBufferInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_buffer_source_and_video_frame_buffer_init(
         data: &::js_sys::Object,
         init: &VideoFrameBufferInit,
@@ -343,7 +343,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameBufferInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_u8_slice_and_video_frame_buffer_init(
         data: &mut [u8],
         init: &VideoFrameBufferInit,
@@ -358,7 +358,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameBufferInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_u8_array_and_video_frame_buffer_init(
         data: &::js_sys::Uint8Array,
         init: &VideoFrameBufferInit,
@@ -372,7 +372,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn allocation_size(this: &VideoFrame) -> Result<u32, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoFrameCopyToOptions")]
@@ -384,7 +384,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn allocation_size_with_options(
         this: &VideoFrame,
         options: &VideoFrameCopyToOptions,
@@ -398,7 +398,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn clone(this: &VideoFrame) -> Result<VideoFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = close)]
@@ -409,7 +409,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn close(this: &VideoFrame);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
@@ -420,7 +420,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_to_with_buffer_source(
         this: &VideoFrame,
         destination: &::js_sys::Object,
@@ -434,7 +434,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_to_with_u8_slice(this: &VideoFrame, destination: &mut [u8]) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
@@ -445,7 +445,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_to_with_u8_array(
         this: &VideoFrame,
         destination: &::js_sys::Uint8Array,
@@ -460,7 +460,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_to_with_buffer_source_and_options(
         this: &VideoFrame,
         destination: &::js_sys::Object,
@@ -476,7 +476,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_to_with_u8_slice_and_options(
         this: &VideoFrame,
         destination: &mut [u8],
@@ -492,7 +492,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn copy_to_with_u8_array_and_options(
         this: &VideoFrame,
         destination: &::js_sys::Uint8Array,

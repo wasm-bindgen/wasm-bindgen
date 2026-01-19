@@ -1,5 +1,6 @@
 use core::borrow::Borrow;
 use core::ops::{Deref, DerefMut};
+use core::panic::AssertUnwindSafe;
 
 use crate::describe::*;
 use crate::JsValue;
@@ -331,6 +332,15 @@ impl<T: WasmAbi> WasmRet<T> {
 /// into a Rust type. It is used by the [`wasm_bindgen`](wasm_bindgen_macro::wasm_bindgen)
 /// proc-macro to allow conversion to user types.
 ///
+/// The semantics of this trait for various types are designed to provide a runtime
+/// analog of the static semantics implemented by the IntoWasmAbi function bindgen,
+/// with the exception that conversions are constrained to not cast invalid types.
+///
+/// For example, where the Wasm static semantics will permit `foo(x: i32)` when passed
+/// from JS `foo("5")` to treat that as `foo(5)`, this trait will instead throw. Apart
+/// from these reduced type conversion cases, behaviours should otherwise match the
+/// static semantics.
+///
 /// Types implementing this trait must specify their conversion logic from
 /// [`JsValue`] to the Rust type, handling any potential errors that may occur
 /// during the conversion process.
@@ -341,9 +351,19 @@ impl<T: WasmAbi> WasmRet<T> {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait TryFromJsValue: Sized {
-    /// The type returned in the event of a conversion error.
-    type Error;
+    /// Performs the conversion.
+    fn try_from_js_value(value: JsValue) -> Result<Self, JsValue> {
+        Self::try_from_js_value_ref(&value).ok_or(value)
+    }
 
     /// Performs the conversion.
-    fn try_from_js_value(value: JsValue) -> Result<Self, Self::Error>;
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self>;
+}
+
+impl<T: FromWasmAbi> FromWasmAbi for AssertUnwindSafe<T> {
+    type Abi = T::Abi;
+
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        AssertUnwindSafe(T::from_abi(js))
+    }
 }

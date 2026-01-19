@@ -8,8 +8,6 @@ use alloc::string::String;
 use js_sys::Error;
 use wasm_bindgen::prelude::*;
 
-use super::TestResult;
-
 /// Implementation of `Formatter` for browsers.
 ///
 /// Routes all output to a `pre` on the page currently. Eventually this probably
@@ -36,10 +34,6 @@ impl Worker {
 impl super::Formatter for Worker {
     fn writeln(&self, line: &str) {
         write_output_line(JsValue::from(String::from(line)));
-    }
-
-    fn log_test(&self, name: &str, result: &TestResult) {
-        self.writeln(&format!("test {} ... {}", name, result));
     }
 
     fn stringify_error(&self, err: &JsValue) -> String {

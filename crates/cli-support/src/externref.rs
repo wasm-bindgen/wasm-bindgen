@@ -1,17 +1,14 @@
 use crate::descriptor::VectorKind;
-use crate::intrinsic::Intrinsic;
-use crate::wit::AuxImport;
+use crate::transforms::externref::Context;
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection};
 use crate::wit::{AdapterType, InstructionData, StackChange, WasmBindgenAux};
 use anyhow::Result;
 use std::collections::HashMap;
 use walrus::ElementItems;
 use walrus::{ir::Value, ConstExpr, ElementKind, Module};
-use wasm_bindgen_externref_xform::Context;
 
 pub fn process(module: &mut Module) -> Result<()> {
-    let mut cfg = Context::default();
-    cfg.prepare(module)?;
+    let mut cfg = Context::new(module)?;
     let section = module
         .customs
         .get_typed_mut::<NonstandardWitSection>()
@@ -39,11 +36,8 @@ pub fn process(module: &mut Module) -> Result<()> {
                 &mut adapter.params,
                 &mut adapter.results,
             );
-            continue;
-        }
-        if let Some(id) = find_call_export(instructions) {
-            export_xform(&mut cfg, id, instructions);
-            continue;
+        } else {
+            export_xform(&mut cfg, instructions);
         }
     }
 
@@ -85,24 +79,6 @@ pub fn process(module: &mut Module) -> Result<()> {
         };
         for instr in instrs {
             match instr.instr {
-                // Calls to the heap live count intrinsic are now routed to the
-                // actual Wasm function which keeps track of this.
-                Instruction::CallAdapter(adapter) => {
-                    let id = match meta.live_count {
-                        Some(id) => id,
-                        None => continue,
-                    };
-                    let import = match aux.import_map.get(&adapter) {
-                        Some(import) => import,
-                        None => continue,
-                    };
-                    match import {
-                        AuxImport::Intrinsic(Intrinsic::ExternrefHeapLiveCount) => {}
-                        _ => continue,
-                    }
-                    instr.instr = Instruction::CallCore(id);
-                }
-
                 // Optional externref values are now managed in the Wasm module, so
                 // we need to store where they're managed.
                 Instruction::I32FromOptionExternref {
@@ -131,30 +107,6 @@ pub fn process(module: &mut Module) -> Result<()> {
     module.customs.add(*aux);
 
     Ok(())
-}
-
-fn find_call_export(instrs: &[InstructionData]) -> Option<Export> {
-    instrs
-        .iter()
-        .enumerate()
-        .find_map(|(i, instr)| match instr.instr {
-            Instruction::CallExport(e) => Some(Export::Export(e)),
-            Instruction::CallTableElement(e) => Some(Export::TableElement {
-                idx: e,
-                call_idx: i,
-            }),
-            _ => None,
-        })
-}
-
-enum Export {
-    Export(walrus::ExportId),
-    TableElement {
-        /// Table element that we're calling
-        idx: u32,
-        /// Index in the instruction stream where the call instruction is found
-        call_idx: usize,
-    },
 }
 
 /// Adapts the `instrs` given which are an implementation of the import of `id`.
@@ -253,7 +205,7 @@ fn import_xform(
 /// pattern matched below to pass off to the externref transformation pass. The
 /// signature of the adapter doesn't change (it remains as externref-aware) but the
 /// signature of the export we're calling will change during the transformation.
-fn export_xform(cx: &mut Context, export: Export, instrs: &mut Vec<InstructionData>) {
+fn export_xform(cx: &mut Context, instrs: &mut Vec<InstructionData>) {
     let mut to_delete = Vec::new();
     let mut iter = instrs.iter().enumerate();
     let mut args = Vec::new();
@@ -265,34 +217,38 @@ fn export_xform(cx: &mut Context, export: Export, instrs: &mut Vec<InstructionDa
     //
     // Note that we're going to delete the `I32FromExternref*` instructions, so we
     // also maintain indices of the instructions to delete.
-    for (i, instr) in iter.by_ref() {
-        match instr.instr {
-            Instruction::CallExport(_) | Instruction::CallTableElement(_) => break,
-            Instruction::I32FromExternrefOwned => {
-                args.pop();
-                args.push(Some(true));
-                to_delete.push(i);
-            }
-            Instruction::I32FromExternrefBorrow => {
-                args.pop();
-                args.push(Some(false));
-                to_delete.push(i);
-            }
-            _ => match instr.stack_change {
-                StackChange::Modified { pushed, popped } => {
-                    for _ in 0..popped {
-                        args.pop();
-                    }
-                    for _ in 0..pushed {
-                        args.push(None);
-                    }
+    let export = iter
+        .by_ref()
+        .find_map(|(i, instr)| {
+            match instr.instr {
+                Instruction::CallExport(export) => return Some(export),
+                Instruction::I32FromExternrefOwned => {
+                    args.pop();
+                    args.push(Some(true));
+                    to_delete.push(i);
                 }
-                StackChange::Unknown => {
-                    panic!("must have stack change data");
+                Instruction::I32FromExternrefBorrow => {
+                    args.pop();
+                    args.push(Some(false));
+                    to_delete.push(i);
                 }
-            },
-        }
-    }
+                _ => match instr.stack_change {
+                    StackChange::Modified { pushed, popped } => {
+                        for _ in 0..popped {
+                            args.pop();
+                        }
+                        for _ in 0..pushed {
+                            args.push(None);
+                        }
+                    }
+                    StackChange::Unknown => {
+                        panic!("must have stack change data");
+                    }
+                },
+            }
+            None
+        })
+        .expect("must call an export");
 
     // If one of the instructions after the call is an `ExternrefLoadOwned`,
     // and a retptr isn't used, the function must return an externref.
@@ -321,16 +277,7 @@ fn export_xform(cx: &mut Context, export: Export, instrs: &mut Vec<InstructionDa
 
     // ... and register this entire transformation with the externref
     // transformation pass.
-    match export {
-        Export::Export(id) => {
-            cx.export_xform(id, &args, ret_externref);
-        }
-        Export::TableElement { idx, call_idx } => {
-            if let Some(new_idx) = cx.table_element_xform(idx, &args, ret_externref) {
-                instrs[call_idx].instr = Instruction::CallTableElement(new_idx);
-            }
-        }
-    }
+    cx.export_xform(export, &args, ret_externref);
 
     // Delete all unnecessary externref management instructions. We're going to
     // sink these instructions into the Wasm module itself.
@@ -460,7 +407,7 @@ pub fn force_contiguous_elements(module: &mut Module) -> Result<()> {
                 }
                 // If we find a function, then we either start a new block or
                 // push it onto the existing block.
-                _ => block.get_or_insert(Vec::new()).push(*expr),
+                _ => block.get_or_insert(Vec::new()).push(expr.clone()),
             }
         }
 

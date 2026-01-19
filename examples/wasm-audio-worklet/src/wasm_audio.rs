@@ -1,4 +1,5 @@
-use crate::dependent_module;
+use core::panic::AssertUnwindSafe;
+use core::pin::Pin;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
@@ -24,14 +25,17 @@ impl WasmAudioProcessor {
 // whose samples should be played directly. Ideally, call wasm_audio based on
 // user interaction. Otherwise, resume the context on user interaction, so
 // playback starts reliably on all browsers.
-pub async fn wasm_audio(
+pub fn wasm_audio(
     process: Box<dyn FnMut(&mut [f32]) -> bool>,
-) -> Result<AudioContext, JsValue> {
-    let ctx = AudioContext::new()?;
-    prepare_wasm_audio(&ctx).await?;
-    let node = wasm_audio_node(&ctx, process)?;
-    node.connect_with_audio_node(&ctx.destination())?;
-    Ok(ctx)
+) -> AssertUnwindSafe<Pin<Box<dyn std::future::Future<Output = Result<AudioContext, JsValue>>>>> {
+    let process = AssertUnwindSafe(process);
+    AssertUnwindSafe(Box::pin(async {
+        let ctx = AudioContext::new()?;
+        prepare_wasm_audio(&ctx).await?;
+        let node = wasm_audio_node(&ctx, process.0)?;
+        node.connect_with_audio_node(&ctx.destination())?;
+        Ok(ctx)
+    }))
 }
 
 // wasm_audio_node creates an AudioWorkletNode running a Wasm audio processor.
@@ -51,7 +55,7 @@ pub fn wasm_audio_node(
 }
 
 pub async fn prepare_wasm_audio(ctx: &AudioContext) -> Result<(), JsValue> {
-    let mod_url = dependent_module!("worklet.js")?;
+    let mod_url = wasm_bindgen::link_to!(module = "/src/worklet.js");
     JsFuture::from(ctx.audio_worklet()?.add_module(&mod_url)?).await?;
     Ok(())
 }

@@ -5,8 +5,6 @@ use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::str;
 
-use crate::__wbindgen_copy_to_typed_array;
-use crate::cast::JsObject;
 use crate::convert::{js_value_vector_from_abi, js_value_vector_into_abi};
 use crate::convert::{
     FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
@@ -14,6 +12,7 @@ use crate::convert::{
 };
 use crate::describe::*;
 use crate::JsValue;
+use crate::{JsCast, __wbindgen_copy_to_typed_array};
 
 use cfg_if::cfg_if;
 
@@ -93,13 +92,13 @@ pub struct MutSlice<T> {
 
 impl<T> Drop for MutSlice<T> {
     fn drop(&mut self) {
-        unsafe {
-            __wbindgen_copy_to_typed_array(
+        let byte_slice = unsafe {
+            core::slice::from_raw_parts(
                 self.contents.as_ptr() as *const u8,
                 self.contents.len() * mem::size_of::<T>(),
-                self.js.idx,
-            );
-        }
+            )
+        };
+        __wbindgen_copy_to_typed_array(byte_slice, &self.js);
     }
 }
 
@@ -431,36 +430,18 @@ where
     }
 }
 
-impl VectorIntoWasmAbi for JsValue {
-    type Abi = WasmSlice;
-
-    #[inline]
-    fn vector_into_abi(vector: Box<[Self]>) -> WasmSlice {
-        let ptr = vector.as_ptr();
-        let len = vector.len();
-        mem::forget(vector);
-        WasmSlice {
-            ptr: ptr.into_abi(),
-            len: len as u32,
-        }
-    }
-}
-
-impl VectorFromWasmAbi for JsValue {
+impl<T: JsCast + WasmDescribe> VectorFromWasmAbi for T {
     type Abi = WasmSlice;
 
     #[inline]
     unsafe fn vector_from_abi(js: WasmSlice) -> Box<[Self]> {
-        let ptr = <*mut JsValue>::from_abi(js.ptr);
+        let ptr = <*mut T>::from_abi(js.ptr);
         let len = js.len as usize;
         Vec::from_raw_parts(ptr, len, len).into_boxed_slice()
     }
 }
 
-impl<T> VectorIntoWasmAbi for T
-where
-    T: JsObject,
-{
+impl<T: JsCast + WasmDescribe> VectorIntoWasmAbi for T {
     type Abi = WasmSlice;
 
     #[inline]
@@ -475,20 +456,24 @@ where
     }
 }
 
-impl<T> VectorFromWasmAbi for T
-where
-    T: JsObject,
-{
+// JsValue slice support (Rust-to-JS only)
+// JsValue is repr(transparent) over u32, so &[JsValue] is a contiguous array of heap indices
+
+impl IntoWasmAbi for &[JsValue] {
     type Abi = WasmSlice;
 
     #[inline]
-    unsafe fn vector_from_abi(js: WasmSlice) -> Box<[T]> {
-        let ptr = <*mut JsValue>::from_abi(js.ptr);
-        let len = js.len as usize;
-        let vec: Vec<T> = Vec::from_raw_parts(ptr, len, len)
-            .drain(..)
-            .map(|js_value| T::unchecked_from_js(js_value))
-            .collect();
-        vec.into_boxed_slice()
+    fn into_abi(self) -> WasmSlice {
+        WasmSlice {
+            ptr: self.as_ptr() as u32,
+            len: self.len() as u32,
+        }
+    }
+}
+
+impl OptionIntoWasmAbi for &[JsValue] {
+    #[inline]
+    fn none() -> WasmSlice {
+        null_slice()
     }
 }

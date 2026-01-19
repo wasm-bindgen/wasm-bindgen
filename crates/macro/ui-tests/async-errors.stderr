@@ -1,7 +1,7 @@
 error[E0277]: the trait bound `Result<(), ()>: IntoJsResult` is not satisfied
-  --> ui-tests/async-errors.rs:31:24
+  --> ui-tests/async-errors.rs:51:24
    |
-31 | pub async fn bad1() -> Result<(), ()> { loop {} }
+51 | pub async fn bad1() -> Result<(), ()> {
    |                        ^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<(), ()>`
    |
    = help: the following other types implement trait `IntoJsResult`:
@@ -9,9 +9,9 @@ error[E0277]: the trait bound `Result<(), ()>: IntoJsResult` is not satisfied
              Result<T, E>
 
 error[E0277]: the trait bound `Result<(), BadType>: IntoJsResult` is not satisfied
-  --> ui-tests/async-errors.rs:33:24
+  --> ui-tests/async-errors.rs:55:24
    |
-33 | pub async fn bad2() -> Result<(), BadType> { loop {} }
+55 | pub async fn bad2() -> Result<(), BadType> {
    |                        ^^^^^^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<(), BadType>`
    |
    = help: the following other types implement trait `IntoJsResult`:
@@ -19,28 +19,28 @@ error[E0277]: the trait bound `Result<(), BadType>: IntoJsResult` is not satisfi
              Result<T, E>
 
 error[E0277]: the trait bound `wasm_bindgen::JsValue: From<BadType>` is not satisfied
-  --> ui-tests/async-errors.rs:35:24
+  --> ui-tests/async-errors.rs:59:24
    |
-35 | pub async fn bad3() -> BadType { loop {} }
-   |                        ^^^^^^^ the trait `From<BadType>` is not implemented for `wasm_bindgen::JsValue`, which is required by `BadType: IntoJsResult`
+59 | pub async fn bad3() -> BadType {
+   |                        ^^^^^^^ the trait `From<BadType>` is not implemented for `wasm_bindgen::JsValue`
    |
    = help: the following other types implement trait `From<T>`:
-             <wasm_bindgen::JsValue as From<bool>>
-             <wasm_bindgen::JsValue as From<isize>>
-             <wasm_bindgen::JsValue as From<i8>>
-             <wasm_bindgen::JsValue as From<i16>>
-             <wasm_bindgen::JsValue as From<i32>>
-             <wasm_bindgen::JsValue as From<i64>>
-             <wasm_bindgen::JsValue as From<i128>>
-             <wasm_bindgen::JsValue as From<usize>>
+             `wasm_bindgen::JsValue` implements `From<&String>`
+             `wasm_bindgen::JsValue` implements `From<&T>`
+             `wasm_bindgen::JsValue` implements `From<&str>`
+             `wasm_bindgen::JsValue` implements `From<*const T>`
+             `wasm_bindgen::JsValue` implements `From<*mut T>`
+             `wasm_bindgen::JsValue` implements `From<Array>`
+             `wasm_bindgen::JsValue` implements `From<ArrayBuffer>`
+             `wasm_bindgen::JsValue` implements `From<BigInt64Array>`
            and $N others
    = note: required for `BadType` to implement `Into<wasm_bindgen::JsValue>`
    = note: required for `BadType` to implement `IntoJsResult`
 
 error[E0277]: the trait bound `Result<BadType, wasm_bindgen::JsValue>: IntoJsResult` is not satisfied
-  --> ui-tests/async-errors.rs:37:24
+  --> ui-tests/async-errors.rs:63:24
    |
-37 | pub async fn bad4() -> Result<BadType, JsValue> { loop {} }
+63 | pub async fn bad4() -> Result<BadType, JsValue> {
    |                        ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<BadType, wasm_bindgen::JsValue>`
    |
    = help: the following other types implement trait `IntoJsResult`:

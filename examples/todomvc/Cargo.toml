@@ -9,10 +9,10 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-askama = "0.12"
+askama = "0.15"
 
 [dependencies]
-askama = "0.12"
+askama = "0.15"
 console_error_panic_hook = "0.1.5"
 js-sys = { path = "../../crates/js-sys" }
 wasm-bindgen = { path = "../../" }

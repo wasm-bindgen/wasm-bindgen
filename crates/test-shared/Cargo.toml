@@ -1,0 +1,19 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+description = """
+Shared support between wasm-bindgen-test and wasm-bindgen-test-runner, an internal
+dependency.
+"""
+documentation = "https://docs.rs/wasm-bindgen-test-shared"
+edition = "2021"
+homepage = "https://rustwasm.github.io/wasm-bindgen/"
+include = ["/LICENSE-*", "/src"]
+license = "MIT OR Apache-2.0"
+name = "wasm-bindgen-test-shared"
+repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/test-shared"
+rust-version = "1.71"
+
+version = "0.2.108"
+
+[lints]
+workspace = true

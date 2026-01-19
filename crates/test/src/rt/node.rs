@@ -3,11 +3,8 @@
 //! This currently uses the same output as `libtest`, only reimplemented here
 //! for node itself.
 
-use alloc::format;
 use alloc::string::String;
 use wasm_bindgen::prelude::*;
-
-use super::TestResult;
 
 /// Implementation of the `Formatter` trait for node.js
 pub struct Node {}
@@ -18,7 +15,9 @@ extern "C" {
     // `stack` attribute.
     type NodeError;
     #[wasm_bindgen(method, getter, js_class = "Error", structural)]
-    fn stack(this: &NodeError) -> String;
+    fn stack(this: &NodeError) -> Option<String>;
+    #[wasm_bindgen(method, js_class = "Error", js_name = toString, structural, catch)]
+    fn to_string(this: &NodeError) -> Result<String, JsValue>;
     #[wasm_bindgen(js_name = __wbgtest_og_console_log)]
     fn og_console_log(s: &str);
 }
@@ -35,12 +34,20 @@ impl super::Formatter for Node {
         og_console_log(line);
     }
 
-    fn log_test(&self, name: &str, result: &TestResult) {
-        self.writeln(&format!("test {} ... {}", name, result));
-    }
-
     fn stringify_error(&self, err: &JsValue) -> String {
         // TODO: should do a checked cast to `NodeError`
-        NodeError::from(err.clone()).stack()
+        let err = NodeError::from(err.clone());
+        err.stack().unwrap_or(err.to_string().unwrap_or("".into()))
     }
+}
+
+/// Path to use for coverage data.
+#[wasm_bindgen]
+pub fn __wbgtest_coverage_path(
+    env: Option<String>,
+    pid: u32,
+    temp_dir: &str,
+    module_signature: u64,
+) -> String {
+    wasm_bindgen_test_shared::coverage_path(env.as_deref(), pid, temp_dir, module_signature)
 }

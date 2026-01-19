@@ -29,7 +29,7 @@ use core::convert::{self, Infallible, TryFrom};
 use core::f64;
 use core::fmt;
 use core::iter::{self, Product, Sum};
-use core::mem::{self, MaybeUninit};
+use core::mem::MaybeUninit;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
 use core::str;
 use core::str::FromStr;
@@ -2009,6 +2009,105 @@ extern "C" {
         arg3: &JsValue,
     ) -> Result<JsValue, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call4(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call5(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call6(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call7(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call8(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[wasm_bindgen(method, catch, js_name = call)]
+    pub fn call9(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+        arg9: &JsValue,
+    ) -> Result<JsValue, JsValue>;
+
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
@@ -2048,6 +2147,105 @@ extern "C" {
         arg1: &JsValue,
         arg2: &JsValue,
         arg3: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind4(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind5(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind6(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind7(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind8(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+    ) -> Function;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[wasm_bindgen(method, js_name = bind)]
+    pub fn bind9(
+        this: &Function,
+        context: &JsValue,
+        arg1: &JsValue,
+        arg2: &JsValue,
+        arg3: &JsValue,
+        arg4: &JsValue,
+        arg5: &JsValue,
+        arg6: &JsValue,
+        arg7: &JsValue,
+        arg8: &JsValue,
+        arg9: &JsValue,
     ) -> Function;
 
     /// The length property indicates the number of arguments expected by the function.
@@ -2652,6 +2850,13 @@ pub mod Math {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc)
         #[wasm_bindgen(js_namespace = Math)]
         pub fn trunc(x: f64) -> f64;
+
+        /// The `Math.PI` property represents the ratio of the circumference of a circle to its diameter,
+        /// approximately 3.14159.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/PI)
+        #[wasm_bindgen(thread_local_v2, js_namespace = Math)]
+        pub static PI: f64;
     }
 }
 
@@ -4373,6 +4578,29 @@ impl Default for WeakSet {
     }
 }
 
+// WeakRef
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object, typescript_type = "WeakRef<object>")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type WeakRef;
+
+    /// The `WeakRef` object contains a weak reference to an object. A weak
+    /// reference to an object is a reference that does not prevent the object
+    /// from being reclaimed by the garbage collector.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef)
+    #[wasm_bindgen(constructor)]
+    pub fn new(target: &Object) -> WeakRef;
+
+    /// Returns the `Object` this `WeakRef` points to, or `None` if the
+    /// object has been garbage collected.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef/deref)
+    #[wasm_bindgen(method)]
+    pub fn deref(this: &WeakRef) -> Option<Object>;
+}
+
 #[cfg(js_sys_unstable_apis)]
 #[allow(non_snake_case)]
 pub mod Temporal;
@@ -4591,6 +4819,13 @@ pub mod WebAssembly {
         #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
         pub fn new(table_descriptor: &Object) -> Result<Table, JsValue>;
 
+        /// The `WebAssembly.Table()` constructor creates a new `Table` object
+        /// of the given size and element type.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table)
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
+        pub fn new_with_value(table_descriptor: &Object, value: JsValue) -> Result<Table, JsValue>;
+
         /// The length prototype property of the `WebAssembly.Table` object
         /// returns the length of the table, i.e. the number of elements in the
         /// table.
@@ -4606,6 +4841,13 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn get(this: &Table, index: u32) -> Result<Function, JsValue>;
 
+        /// The `get()` prototype method of the `WebAssembly.Table()` object
+        /// retrieves a function reference stored at a given index.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/get)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = get)]
+        pub fn get_raw(this: &Table, index: u32) -> Result<JsValue, JsValue>;
+
         /// The `grow()` prototype method of the `WebAssembly.Table` object
         /// increases the size of the `Table` instance by a specified number of
         /// elements.
@@ -4614,12 +4856,31 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn grow(this: &Table, additional_capacity: u32) -> Result<u32, JsValue>;
 
+        /// The `grow()` prototype method of the `WebAssembly.Table` object
+        /// increases the size of the `Table` instance by a specified number of
+        /// elements.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/grow)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = grow)]
+        pub fn grow_with_value(
+            this: &Table,
+            additional_capacity: u32,
+            value: JsValue,
+        ) -> Result<u32, JsValue>;
+
         /// The `set()` prototype method of the `WebAssembly.Table` object mutates a
         /// reference stored at a given index to a different value.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/set)
         #[wasm_bindgen(method, catch, js_namespace = WebAssembly)]
         pub fn set(this: &Table, index: u32, function: &Function) -> Result<(), JsValue>;
+
+        /// The `set()` prototype method of the `WebAssembly.Table` object mutates a
+        /// reference stored at a given index to a different value.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Table/set)
+        #[wasm_bindgen(method, catch, js_namespace = WebAssembly, js_name = set)]
+        pub fn set_raw(this: &Table, index: u32, value: &JsValue) -> Result<(), JsValue>;
     }
 
     // WebAssembly.Tag
@@ -4891,7 +5152,7 @@ extern "C" {
     ///
     /// Additionally, this function accepts `u16` for character codes, but
     /// fixing others requires a breaking change release
-    /// (see https://github.com/rustwasm/wasm-bindgen/issues/1460 for details).
+    /// (see https://github.com/wasm-bindgen/wasm-bindgen/issues/1460 for details).
     #[wasm_bindgen(static_method_of = JsString, js_class = "String", js_name = fromCharCode, variadic)]
     pub fn from_char_code(char_codes: &[u16]) -> JsString;
 
@@ -5352,7 +5613,7 @@ impl JsString {
     /// For more information, see the documentation on [JS strings vs Rust
     /// strings][docs]
     ///
-    /// [docs]: https://rustwasm.github.io/docs/wasm-bindgen/reference/types/str.html
+    /// [docs]: https://wasm-bindgen.github.io/wasm-bindgen/reference/types/str.html
     pub fn is_valid_utf16(&self) -> bool {
         core::char::decode_utf16(self.iter()).all(|i| i.is_ok())
     }
@@ -5386,7 +5647,7 @@ impl JsString {
         }
 
         // This will be simplified when definitions are fixed:
-        // https://github.com/rustwasm/wasm-bindgen/issues/1362
+        // https://github.com/wasm-bindgen/wasm-bindgen/issues/1362
         let cp = self.code_point_at(0).as_f64().unwrap_throw() as u32;
 
         let c = core::char::from_u32(cp)?;
@@ -6146,6 +6407,16 @@ macro_rules! arrays {
 
             /// An
             #[doc = $ctor]
+            /// which creates an array from a Rust slice.
+            ///
+            /// [MDN documentation](
+            #[doc = $mdn]
+            /// )
+            #[wasm_bindgen(constructor)]
+            pub fn new_from_slice(slice: &[$ty]) -> $name;
+
+            /// An
+            #[doc = $ctor]
             /// which creates an array with the given buffer but is a
             /// view starting at `byte_offset`.
             ///
@@ -6239,6 +6510,29 @@ macro_rules! arrays {
             /// Sets the value at `idx`, equivalent to the javascript `arr[idx] = value`.
             #[wasm_bindgen(method, structural, indexing_setter)]
             pub fn set_index(this: &$name, idx: u32, value: $ty);
+
+            /// Copies the Rust slice's data to self.
+            ///
+            /// This method is not expected to be public. It requires the length of the
+            /// TypedArray to be the same as the slice, use `self.copy_from(slice)` instead.
+            #[wasm_bindgen(method, js_name = set)]
+            fn copy_from_slice(this: &$name, slice: &[$ty]);
+
+            /// Copies this TypedArray's data to Rust slice;
+            ///
+            /// This method is not expected to be public. It requires the length of the
+            /// TypedArray to be the same as the slice, use `self.copy_to(slice)` instead.
+            ///
+            /// # Workaround
+            ///
+            /// We actually need `slice.set(typed_array)` here, but since slice cannot be treated as
+            /// `Uint8Array` on the Rust side, we use `Uint8Array.prototype.set.call`, which allows
+            /// us to specify the `this` value inside the function.
+            ///
+            /// Therefore, `Uint8Array.prototype.set.call(slice, typed_array)` is equivalent to
+            /// `slice.set(typed_array)`.
+            #[wasm_bindgen(js_namespace = $name, js_name = "prototype.set.call")]
+            fn copy_to_slice(slice: &mut [$ty], this: &$name);
         }
 
         impl $name {
@@ -6262,13 +6556,7 @@ macro_rules! arrays {
             /// slice's lifetime, so there's no guarantee that the data is read
             /// at the right time.
             pub unsafe fn view(rust: &[$ty]) -> $name {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                $name::new_with_byte_offset_and_length(
-                    &mem.buffer(),
-                    rust.as_ptr() as u32,
-                    rust.len() as u32,
-                )
+                wasm_bindgen::__rt::wbg_cast(rust)
             }
 
             /// Creates a JS typed array which is a view into wasm's linear
@@ -6287,15 +6575,9 @@ macro_rules! arrays {
             /// Additionally the returned object can be safely mutated,
             /// the changes are guaranteed to be reflected in the input array.
             pub unsafe fn view_mut_raw(ptr: *mut $ty, length: usize) -> $name {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                $name::new_with_byte_offset_and_length(
-                    &mem.buffer(),
-                    ptr as u32,
-                    length as u32
-                )
+                let slice = core::slice::from_raw_parts_mut(ptr, length);
+                Self::view(slice)
             }
-
 
             /// Copy the contents of this JS typed array into the destination
             /// Rust pointer.
@@ -6309,11 +6591,8 @@ macro_rules! arrays {
             /// This function requires `dst` to point to a buffer
             /// large enough to fit this array's contents.
             pub unsafe fn raw_copy_to_ptr(&self, dst: *mut $ty) {
-                let buf = wasm_bindgen::memory();
-                let mem = buf.unchecked_ref::<WebAssembly::Memory>();
-                let all_wasm_memory = $name::new(&mem.buffer());
-                let offset = dst as usize / mem::size_of::<$ty>();
-                all_wasm_memory.set(self, offset as u32);
+                let slice = core::slice::from_raw_parts_mut(dst, self.length() as usize);
+                self.copy_to(slice);
             }
 
             /// Copy the contents of this JS typed array into the destination
@@ -6329,7 +6608,7 @@ macro_rules! arrays {
             /// different than the length of the provided `dst` array.
             pub fn copy_to(&self, dst: &mut [$ty]) {
                 core::assert_eq!(self.length() as usize, dst.len());
-                unsafe { self.raw_copy_to_ptr(dst.as_mut_ptr()); }
+                $name::copy_to_slice(dst, self);
             }
 
             /// Copy the contents of this JS typed array into the destination
@@ -6345,8 +6624,9 @@ macro_rules! arrays {
             /// different than the length of the provided `dst` array.
             pub fn copy_to_uninit<'dst>(&self, dst: &'dst mut [MaybeUninit<$ty>]) -> &'dst mut [$ty] {
                 core::assert_eq!(self.length() as usize, dst.len());
-                unsafe { self.raw_copy_to_ptr(dst.as_mut_ptr().cast()); }
-                unsafe { &mut *(dst as *mut [MaybeUninit<$ty>] as *mut [$ty]) }
+                let dst = unsafe { &mut *(dst as *mut [MaybeUninit<$ty>] as *mut [$ty]) };
+                self.copy_to(dst);
+                dst
             }
 
             /// Copy the contents of the source Rust slice into this
@@ -6361,16 +6641,17 @@ macro_rules! arrays {
             /// different than the length of the provided `src` array.
             pub fn copy_from(&self, src: &[$ty]) {
                 core::assert_eq!(self.length() as usize, src.len());
-                // This is safe because the `set` function copies from its TypedArray argument
-                unsafe { self.set(&$name::view(src), 0) }
+                self.copy_from_slice(src);
             }
 
             /// Efficiently copies the contents of this JS typed array into a new Vec.
             pub fn to_vec(&self) -> Vec<$ty> {
-                let mut output = Vec::with_capacity(self.length() as usize);
+                let len = self.length() as usize;
+                let mut output = Vec::with_capacity(len);
+                // Safety: the capacity has been set
                 unsafe {
                     self.raw_copy_to_ptr(output.as_mut_ptr());
-                    output.set_len(self.length() as usize);
+                    output.set_len(len);
                 }
                 output
             }
@@ -6380,7 +6661,7 @@ macro_rules! arrays {
             #[inline]
             fn from(slice: &'a [$ty]) -> $name {
                 // This is safe because the `new` function makes a copy if its argument is a TypedArray
-                unsafe { $name::new(&$name::view(slice)) }
+                $name::new_from_slice(slice)
             }
         }
 

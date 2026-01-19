@@ -16,6 +16,7 @@ The methods of deployment and integration here are primarily tied to the
 | [`deno`]        | Loadable using imports from Deno modules                   |
 | [`no-modules`]  | Like `web`, but older and doesn't use ES modules           |
 | [`experimental-nodejs-module`]  | Loadable via `import` as a Node.js ESM module. |
+| [`module`] | Uses the new source phase imports syntax to obtain the compiled WebAssembly module |
 
 [`bundler`]: #bundlers
 [`web`]: #without-a-bundler
@@ -23,6 +24,7 @@ The methods of deployment and integration here are primarily tied to the
 [`nodejs`]: #nodejs
 [`deno`]: #deno
 [`experimental-nodejs-module`]: #nodejs-module
+[`module`]: #source-phase-imports
 
 ## Bundlers
 
@@ -91,7 +93,7 @@ which is currently Node 8 and above.
 
 ## Node.js Module
 
-**`--target experemintal-nodejs-module`**
+**`--target experimental-nodejs-module`**
 
 If you're deploying WebAssembly into Node.js as a JavaScript module,
 then you'll want to pass the `--target experimental-nodejs-module` flag to `wasm-bindgen`.
@@ -116,6 +118,30 @@ To then import your module inside deno, use
 // @deno-types="./out/crate_name.d.ts"
 import { yourFunction } from "./out/crate_name.js";
 ```
+
+## Module
+
+**`--target module`**
+
+The `--target module` option generates a new cross-toolchain ES module target, that by default uses the new source phase imports syntax to obtain uninstantiated WebAssembly modules.
+
+[Source phase imports](https://github.com/tc39/proposal-source-phase-imports) allow importing the compiled WebAssembly module (rather than its instance) using the Wasm ESM Integration.
+
+_Note that source phase imports are currently only supported in ESBuild and Node.js 24._
+
+For example:
+
+```js
+import source wasmModule from "./module.wasm";
+
+// Example illustrative usage:
+const instance = new WebAssembly.Instance(wasmModule, imports);
+export function foo () {
+  instance.doFoo();
+}
+```
+
+This replaces the need for `compileStreaming` and platform-specific Wasm-loading paths which previously required separate target implementations.
 
 ## NPM
 

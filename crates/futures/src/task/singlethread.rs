@@ -11,7 +11,31 @@ struct Inner {
     waker: Waker,
 }
 
+impl Inner {
+    fn is_ready(&mut self) -> bool {
+        let mut cx = Context::from_waker(&self.waker);
+        self.future.as_mut().poll(&mut cx).is_ready()
+    }
+}
+
+#[cfg(debug_assertions)]
+#[wasm_bindgen::prelude::wasm_bindgen]
+extern "C" {
+    type ConsoleTask;
+
+    #[wasm_bindgen(js_namespace = console, js_name = createTask, catch)]
+    fn create_task(name: &str) -> Result<ConsoleTask, wasm_bindgen::JsValue>;
+
+    #[wasm_bindgen(method)]
+    fn run(this: &ConsoleTask, poll: &mut dyn FnMut() -> bool) -> bool;
+}
+
 pub(crate) struct Task {
+    // Console tracking for this task to avoid deeply nested stacks from individual `poll()` calls.
+    // See [Linked Stack Traces](https://developer.chrome.com/blog/devtools-modern-web-debugging#linked_stack_traces).
+    #[cfg(debug_assertions)]
+    console: Option<ConsoleTask>,
+
     // The actual Future that we're executing as part of this task.
     //
     // This is an Option so that the Future can be immediately dropped when it's
@@ -23,15 +47,20 @@ pub(crate) struct Task {
 }
 
 impl Task {
-    pub(crate) fn spawn(future: Pin<Box<dyn Future<Output = ()> + 'static>>) {
+    pub(crate) fn spawn<F: Future<Output = ()> + 'static>(future: F) {
         let this = Rc::new(Self {
+            #[cfg(debug_assertions)]
+            console: create_task(core::any::type_name::<F>()).ok(),
             inner: RefCell::new(None),
             is_queued: Cell::new(true),
         });
 
         let waker = unsafe { Waker::from_raw(Task::into_raw_waker(Rc::clone(&this))) };
 
-        *this.inner.borrow_mut() = Some(Inner { future, waker });
+        *this.inner.borrow_mut() = Some(Inner {
+            future: Box::pin(future),
+            waker,
+        });
 
         crate::queue::Queue::with(|queue| queue.schedule_task(this));
     }
@@ -113,10 +142,18 @@ impl Task {
         // the run queue.
         self.is_queued.set(false);
 
-        let poll = {
-            let mut cx = Context::from_waker(&inner.waker);
-            inner.future.as_mut().poll(&mut cx)
+        // In debug mode we want to avoid deeply nested stacks from individual
+        // `poll()` calls, so we use `task.run` on a task created per future.
+        #[cfg(debug_assertions)]
+        let is_ready = match self.console.as_ref() {
+            Some(console) => console.run(&mut move || inner.is_ready()),
+            None => inner.is_ready(),
         };
+
+        // In release mode we prefer to avoid the overhead of the JS wrapper
+        // and just poll directly.
+        #[cfg(not(debug_assertions))]
+        let is_ready = inner.is_ready();
 
         // If a future has finished (`Ready`) then clean up resources associated
         // with the future ASAP. This ensures that we don't keep anything extra
@@ -124,7 +161,7 @@ impl Task {
         // actually go away until all wakers referencing us go away, which may
         // take quite some time, so ensure that the heaviest of resources are
         // released early.
-        if poll.is_ready() {
+        if is_ready {
             *borrow = None;
         }
     }
