@@ -2736,26 +2736,6 @@ impl<'a> Context<'a> {
                 private: false,
             }),
         )?;
-
-        intrinsic(&mut self.intrinsics, "handle_panic".into(), || {
-            "function __wbg_handle_panic(f) {
-                if (__wbg_aborted === true) {
-                    __wbg_reset_state();
-                }
-                try {
-                    return f();
-                } catch (e) {
-                    if (e instanceof WebAssembly.RuntimeError) {
-                        __wbg_aborted = true;
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-            "
-            .into()
-        });
-
         Ok(())
     }
 
