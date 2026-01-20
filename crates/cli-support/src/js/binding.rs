@@ -829,8 +829,23 @@ fn instruction(
             // Call the function through an export of the underlying module.
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
-            const CHECK_ABORTED: &str = "if (__wbg_aborted === true) {\n  __wbg_reset_state();\n}";
-            const CATCH_EXCEPTION: &str = "catch(e) {\n  __wbg_aborted = true;\n  throw e;\n}";
+            const CHECK_ABORTED: &str = "if (__wbg_aborted === true) {
+              __wbg_reset_state();
+            }";
+            // If the module is compiled with panic=unwind, panics are not critical errors
+            let catch_exception = if js.cx.has_intrinsic("panic_error") {
+                "catch(e) {
+                    if (!(e instanceof PanicError)) {
+                        __wbg_aborted = true;
+                    }
+                    throw e;
+                }"
+            } else {
+                "catch(e) {
+                  __wbg_aborted = true;
+                    throw e;
+                }"
+            };
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
@@ -838,13 +853,13 @@ fn instruction(
             match (invoc.defer(), results) {
                 (true, 0) => {
                     js.finally(&format!("{call};"));
-                    if js.cx.config.generate_reset_state {
+                    if js.cx.config.abort_reinit {
                         js.finally(&format!(
                             "
                             {CHECK_ABORTED}
                             try {{
                                 {call}
-                            }} {CATCH_EXCEPTION}
+                            }} {catch_exception}
                             "
                         ));
                     } else {
@@ -853,13 +868,13 @@ fn instruction(
                 }
                 (true, _) => panic!("deferred calls must have no results"),
                 (false, 0) => {
-                    if js.cx.config.generate_reset_state {
+                    if js.cx.config.abort_reinit {
                         js.prelude(&format!(
                             "
                             {CHECK_ABORTED}
                             try {{
                                 {call}
-                            }} {CATCH_EXCEPTION}
+                            }} {catch_exception}
                             "
                         ));
                     } else {
@@ -867,13 +882,13 @@ fn instruction(
                     }
                 }
                 (false, n) => {
-                    if js.cx.config.generate_reset_state {
+                    if js.cx.config.abort_reinit {
                         js.prelude(&format!(
                             "let ret;
                             {CHECK_ABORTED}
                             try {{
                                 ret = {call};
-                            }} {CATCH_EXCEPTION}"
+                            }} {catch_exception}"
                         ));
                     } else {
                         js.prelude(&format!("const ret = {call};"));

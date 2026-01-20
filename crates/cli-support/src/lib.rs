@@ -41,6 +41,7 @@ pub struct Bindgen {
     encode_into: EncodeInto,
     split_linked_modules: bool,
     generate_reset_state: bool,
+    abort_reinit: bool,
 }
 
 pub struct Output {
@@ -110,6 +111,7 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             generate_reset_state: false,
+            abort_reinit: false,
         }
     }
 
@@ -294,6 +296,12 @@ impl Bindgen {
 
     pub fn reset_state_function(&mut self, generate_reset_state: bool) -> &mut Bindgen {
         self.generate_reset_state = generate_reset_state;
+        self
+    }
+
+    pub fn abort_reinit(&mut self, abort_reinit: bool) -> &mut Bindgen {
+        self.abort_reinit = abort_reinit;
+        self.generate_reset_state |= abort_reinit;
         self
     }
 
