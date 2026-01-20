@@ -24,7 +24,7 @@ is rejected with the `PanicError`.
 Build your project with the required flags:
 
 ```bash
-cargo +nightly build --target wasm32-unknown-unknown -Zbuild-std
+RUSTFLAGS="-Cpanic=unwind" cargo +nightly build --target wasm32-unknown-unknown -Zbuild-std=std,panic_unwind
 ```
 
 Or set these in `.cargo/config.toml`:
@@ -35,6 +35,7 @@ build-std = ["std", "panic_unwind"]
 
 [build]
 target = "wasm32-unknown-unknown"
+rustflags = ["-C", "panic=unwind"]
 
 [profile.release]
 panic = "unwind"
