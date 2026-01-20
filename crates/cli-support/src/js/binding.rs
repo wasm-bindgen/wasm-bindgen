@@ -852,7 +852,6 @@ fn instruction(
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    js.finally(&format!("{call};"));
                     if js.cx.config.abort_reinit {
                         js.finally(&format!(
                             "
