@@ -68,7 +68,7 @@ enum OutputMode {
     Node { module: bool },
     Deno,
     Module,
-    Emscripten,    
+    Emscripten,
 }
 
 enum Input {

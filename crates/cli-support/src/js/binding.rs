@@ -9,8 +9,8 @@ use crate::wit::InstructionData;
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, Instruction,
 };
-use anyhow::{bail, Error};
 use crate::OutputMode;
+use anyhow::{bail, Error};
 use std::collections::HashSet;
 use std::fmt::Write;
 use walrus::{Module, ValType};
@@ -1422,7 +1422,7 @@ fn instruction(
             let b = js.pop();
             let a = js.pop();
             let wrapper = js.cx.export_adapter_name(*adapter);
-            
+
             if matches!(js.cx.config.mode, OutputMode::Emscripten) {
                 // We format it with the '$' prefix and quotes, just like intrinsic() does.
                 // This ensures it gets added to the global 'extraLibraryFuncs' list,

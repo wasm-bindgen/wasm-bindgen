@@ -222,33 +222,34 @@ impl<'a> Context<'a> {
         js_name: Option<&str>,
         val: Cow<'static, str>,
     ) {
-    if self.intrinsics.as_ref().unwrap().contains_key(&name) {
-        return;
+        if self.intrinsics.as_ref().unwrap().contains_key(&name) {
+            return;
+        }
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            let actual_js_name: &str = js_name.unwrap_or(&name);
+            self.adapter_deps.insert(format!("\'${actual_js_name}\'"));
+
+            let mut content = val.replace("wasm.", "wasmExports.");
+
+            // Function signature replacement for Emscripten
+            // Replace all occurrences of "function name" -> "$name: function".
+            let old_decl = format!("function {actual_js_name}");
+            let new_decl = format!("${actual_js_name}: function");
+
+            content = content.replace(&old_decl, &new_decl);
+
+            self.emscripten_library(&content);
+
+            // Register empty string so standard generation skips this key
+            self.intrinsics
+                .as_mut()
+                .unwrap()
+                .insert(name.into(), "".into());
+        } else {
+            self.intrinsics.as_mut().unwrap().insert(name.into(), val);
+        }
     }
-
-    if matches!(self.config.mode, OutputMode::Emscripten) {
-
-        let actual_js_name: &str = js_name.unwrap_or(&name);
-        self.adapter_deps.insert(format!("\'${actual_js_name}\'"));
-
-        let mut content = val.replace("wasm.", "wasmExports.");
-
-        // Function signature replacement for Emscripten
-        // Replace all occurrences of "function name" -> "$name: function".
-        let old_decl = format!("function {actual_js_name}");
-        let new_decl = format!("${actual_js_name}: function");
-
-        content = content.replace(&old_decl, &new_decl);
-
-        self.emscripten_library(&content);
-
-        // Register empty string so standard generation skips this key
-        self.intrinsics.as_mut().unwrap().insert(name.into(), "".into());
-
-    } else {
-        self.intrinsics.as_mut().unwrap().insert(name.into(), val);
-    }
-}
     /// Writes an ExportDefinition to global and typescript buffers.
     /// Handles realising for invalid identifier export names.
     /// define_only used when only locally declared but not explicitly exported.
@@ -327,7 +328,7 @@ impl<'a> Context<'a> {
                         self.globals
                             .push_str(&format!("export {{ {id} as '{export_name}' }}\n"));
                     }
-                },
+                }
                 OutputMode::Emscripten => {
                     let decl_modified = decl.replace("wasm", "wasmExports");
 
@@ -342,7 +343,7 @@ impl<'a> Context<'a> {
                         self.globals.push_str(&decl_modified);
 
                         if export_name == id {
-                                self.global(&format!("Module.{} = {};\n", export_name, id));
+                            self.global(&format!("Module.{} = {};\n", export_name, id));
                         } else {
                             self.global(&format!("export {{ {} as {} }};\n", id, export_name));
                         }
@@ -796,17 +797,23 @@ wasm = wasmInstance.exports;
             push_with_newline(&init_js, true);
             push_with_newline("$initBindgen__deps: ['$addOnInit'],", true);
             push_with_newline("$initBindgen__postset: 'addOnInit(initBindgen);',", true);
-            push_with_newline("$initBindgen: () => {\n
-    wasmExports.__wbindgen_start();", true);
+            push_with_newline(
+                "$initBindgen: () => {\n
+    wasmExports.__wbindgen_start();",
+                true,
+            );
             let exports_code = globals.replace("wasm.", "wasmExports.");
             push_with_newline(&exports_code, true);
             push_with_newline("},", false);
-            let deps: Vec<String> = set_to_list(&self.emscripten_global_deps); 
+            let deps: Vec<String> = set_to_list(&self.emscripten_global_deps);
             push_with_newline(
-                &format!("}};\n
+                &format!(
+                    "}};\n
                 extraLibraryFuncs.push('$initBindgen','$addOnInit',{});
-                addToLibrary(LibraryWbg);", deps.join(",")),
-                true
+                addToLibrary(LibraryWbg);",
+                    deps.join(",")
+                ),
+                true,
             );
         } else {
             let nl = push_with_newline(&imports, false);
@@ -911,7 +918,7 @@ wasm = wasmInstance.exports;
         has_module_or_path_optional: bool,
     ) -> Result<String, Error> {
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            return Ok("".to_string())
+            return Ok("".to_string());
         }
         let output = crate::wasm2es6js::interface(self.module)?;
 
@@ -1056,7 +1063,12 @@ wasm = wasmInstance.exports;
                 imports_init.push_str(&import.name);
                 if import.name == "__wbindgen_init_externref_table" {
                     imports_init.push_str(": () =>");
-                    imports_init.push_str(&js.trim().strip_prefix("function()").unwrap().replace("wasm.", "wasmExports."));
+                    imports_init.push_str(
+                        &js.trim()
+                            .strip_prefix("function()")
+                            .unwrap()
+                            .replace("wasm.", "wasmExports."),
+                    );
                     imports_init.push_str(",\n");
                 } else {
                     imports_init.push_str(": ");
@@ -1456,7 +1468,8 @@ wasm = wasmInstance.exports;
                 self.typescript_emscripten_classes.push_str(&ts_dst);
                 self.typescript_emscripten_classes.push('\n');
 
-                self.typescript.push_str(&format!("{}: typeof {};\n", name, name));
+                self.typescript
+                    .push_str(&format!("{}: typeof {};\n", name, name));
 
                 String::new()
             } else {
@@ -1470,7 +1483,6 @@ wasm = wasmInstance.exports;
         } else {
             String::new()
         };
-
 
         dst.push_str(&format!(
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
@@ -1721,7 +1733,9 @@ wasm = wasmInstance.exports;
         // the linked list of heap slots that are free.
         self.expose_global_heap();
         self.expose_global_heap_next();
-        self.intrinsic("drop_ref".into(), "dropObject".into(),
+        self.intrinsic(
+            "drop_ref".into(),
+            "dropObject".into(),
             format!(
                 "
                 function dropObject(idx) {{
@@ -1732,7 +1746,7 @@ wasm = wasmInstance.exports;
                 ",
                 INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len(),
             )
-            .into()
+            .into(),
         );
     }
 
@@ -1742,7 +1756,9 @@ wasm = wasmInstance.exports;
             self.emscripten_global_deps.insert("'$heap'".to_string());
             return;
         }
-        self.intrinsic("heap".into(), None,
+        self.intrinsic(
+            "heap".into(),
+            None,
             format!(
                 "
                 let heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);
@@ -1750,14 +1766,16 @@ wasm = wasmInstance.exports;
                 ",
                 INITIAL_HEAP_VALUES.join(", ")
             )
-            .into()
+            .into(),
         );
     }
 
     fn expose_global_heap_next(&mut self) {
         self.expose_global_heap();
-        self.intrinsic("heap_next".into(), None,
-            "\nlet heap_next = heap.length;\n".into()
+        self.intrinsic(
+            "heap_next".into(),
+            None,
+            "\nlet heap_next = heap.length;\n".into(),
         );
     }
 
@@ -1765,8 +1783,10 @@ wasm = wasmInstance.exports;
         // Accessing a heap object is just a simple index operation due to how
         // the stack/heap are laid out.
         self.expose_global_heap();
-        self.intrinsic("get_object".into(), "getObject".into(),
-            "\nfunction getObject(idx) { return heap[idx]; }\n".into()
+        self.intrinsic(
+            "get_object".into(),
+            "getObject".into(),
+            "\nfunction getObject(idx) { return heap[idx]; }\n".into(),
         );
     }
 
@@ -1797,7 +1817,9 @@ wasm = wasmInstance.exports;
     }
 
     fn expose_assert_bool(&mut self) {
-        self.intrinsic("assert_bool".into(), "_assertBoolean".into(),
+        self.intrinsic(
+            "assert_bool".into(),
+            "_assertBoolean".into(),
             "
             function _assertBoolean(n) {
                 if (typeof(n) !== 'boolean') {
@@ -1805,7 +1827,7 @@ wasm = wasmInstance.exports;
                 }
             }
             "
-            .into()
+            .into(),
         );
     }
 
@@ -1815,32 +1837,36 @@ wasm = wasmInstance.exports;
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_global_deps
                 .insert("'$WASM_VECTOR_LEN'".to_string());
-            self.intrinsic("wasm_vector_len".into(), "WASM_VECTOR_LEN".into(),
-            "".into()
-        );
+            self.intrinsic(
+                "wasm_vector_len".into(),
+                "WASM_VECTOR_LEN".into(),
+                "".into(),
+            );
         } else {
-            self.intrinsic("wasm_vector_len".into(), None,
-                    "\nlet WASM_VECTOR_LEN = 0;\n".into()
+            self.intrinsic(
+                "wasm_vector_len".into(),
+                None,
+                "\nlet WASM_VECTOR_LEN = 0;\n".into(),
             );
         }
     }
 
-   fn expose_pass_string_to_wasm(&mut self, memory: MemoryId) -> MemView {
-    self.expose_wasm_vector_len();
-    
-    let mem = self.expose_uint8_memory(memory);
-    let ret = MemView {
-        name: "passStringToWasm".into(),
-        num: mem.num,
-    };
+    fn expose_pass_string_to_wasm(&mut self, memory: MemoryId) -> MemView {
+        self.expose_wasm_vector_len();
 
-    // Ensure the encoder and its polyfills are registered
-    self.expose_text_encoder(memory);
+        let mem = self.expose_uint8_memory(memory);
+        let ret = MemView {
+            name: "passStringToWasm".into(),
+            num: mem.num,
+        };
 
-    self.intrinsic(
+        // Ensure the encoder and its polyfills are registered
+        self.expose_text_encoder(memory);
+
+        self.intrinsic(
         ret.to_string().into(),
         None,
-       
+
         {
         let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
 
@@ -1928,8 +1954,8 @@ wasm = wasmInstance.exports;
         },
     );
 
-    ret
-}
+        ret
+    }
 
     fn expose_pass_array8_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint8_memory(memory);
@@ -1961,10 +1987,7 @@ wasm = wasmInstance.exports;
         self.pass_array_to_wasm("passArrayF64ToWasm", view, 8)
     }
 
-    fn expose_pass_array_jsvalue_to_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_pass_array_jsvalue_to_wasm(&mut self, memory: MemoryId) -> MemView {
         let mem = self.expose_dataview_memory(memory);
         let ret = MemView {
             name: "passArrayJsValueToWasm".into(),
@@ -2007,19 +2030,18 @@ wasm = wasmInstance.exports;
             _ => {
                 self.expose_add_heap_object();
                 self.intrinsic(ret.to_string().into(), None, {
-                    let (setup, loop_body) =
-                        if matches!(self.config.mode, OutputMode::Emscripten) {
-                            (
-                                "".to_string(),
-                                "HEAP32[ptr + 4 * i >> 2] = addHeapObject(array[i]);".to_string(),
-                            )
-                        } else {
-                            (
-                                format!("const mem = {mem}();"),
-                                "mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);"
-                                    .to_string(),
-                            )
-                        };
+                    let (setup, loop_body) = if matches!(self.config.mode, OutputMode::Emscripten) {
+                        (
+                            "".to_string(),
+                            "HEAP32[ptr + 4 * i >> 2] = addHeapObject(array[i]);".to_string(),
+                        )
+                    } else {
+                        (
+                            format!("const mem = {mem}();"),
+                            "mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);"
+                                .to_string(),
+                        )
+                    };
 
                     format!(
                         "
@@ -2064,15 +2086,23 @@ wasm = wasmInstance.exports;
     }
 
     fn expose_text_encoder(&mut self, memory: MemoryId) {
-        self.emscripten_global_deps.insert("'$textEncoder'".to_string());
+        self.emscripten_global_deps
+            .insert("'$textEncoder'".to_string());
         self.intrinsic("text_encoder".into(), "textEncoder".into(), {
             if matches!(self.config.mode, OutputMode::Emscripten) {
                 "".into()
             } else {
-                let mut dst =
-                Self::write_text_processor(self.module, memory, "const", "TextEncoder", "()", None, self.config.mode.clone());
+                let mut dst = Self::write_text_processor(
+                    self.module,
+                    memory,
+                    "const",
+                    "TextEncoder",
+                    "()",
+                    None,
+                    self.config.mode.clone(),
+                );
 
-            let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
+                let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
                 const buf = cachedTextEncoder.encode(arg);
                 view.set(buf);
                 return {
@@ -2081,51 +2111,48 @@ wasm = wasmInstance.exports;
                 };
             }";
 
-            // `encodeInto` doesn't currently work in any browsers when the memory passed
-            // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
-            // a `SharedArrayBuffer` is in use.
-            let shared = self.module.memories.get(memory).shared;
+                // `encodeInto` doesn't currently work in any browsers when the memory passed
+                // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
+                // a `SharedArrayBuffer` is in use.
+                let shared = self.module.memories.get(memory).shared;
 
-            match self.config.encode_into {
-                EncodeInto::Always if !shared => {}
-                EncodeInto::Test if !shared => {
-                    dst.push_str(&format!(
-                        "
+                match self.config.encode_into {
+                    EncodeInto::Always if !shared => {}
+                    EncodeInto::Test if !shared => {
+                        dst.push_str(&format!(
+                            "
                         if (!('encodeInto' in cachedTextEncoder)) {{
                             {polyfill_encode_into}
                         }}
                         "
-                    ));
-                }
-                _ => {
-                    // Support audio worklets when able to spawn them.
-                    if shared {
-                        dst.push_str(&format!(
-                            "
+                        ));
+                    }
+                    _ => {
+                        // Support audio worklets when able to spawn them.
+                        if shared {
+                            dst.push_str(&format!(
+                                "
                             if (cachedTextEncoder) {{
                                 {polyfill_encode_into}
                             }}
                             "
-                        ));
-                    } else {
-                        dst.push_str(polyfill_encode_into);
+                            ));
+                        } else {
+                            dst.push_str(polyfill_encode_into);
+                        }
                     }
                 }
+
+                dst.into()
             }
-            
-            dst.into()
-        }
         });
     }
 
-    fn expose_text_decoder(
-        &mut self,
-        mem: &MemView,
-        memory: MemoryId,
-    ) {
+    fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.adapter_deps.insert("'$textDecoder'".to_string());
-            self.emscripten_global_deps.insert("'$textDecoder'".to_string());
+            self.emscripten_global_deps
+                .insert("'$textDecoder'".to_string());
         }
 
         self.intrinsic("text_decoder".into(), "decodeText".into(), {
@@ -2225,7 +2252,7 @@ wasm = wasmInstance.exports;
     ) -> String {
         let mut dst: String = String::new();
         if matches!(config_mode, OutputMode::Emscripten) {
-            return dst
+            return dst;
         }
         // Audio worklets don't support `TextDe/Encoder`. When using audio worklets directly,
         // users will have to make sure themselves not to use any corresponding APIs. But
@@ -2362,90 +2389,57 @@ wasm = wasmInstance.exports;
         ret
     }
 
-    fn expose_get_array_i8_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_i8_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_int8_memory(memory);
         self.arrayget("getArrayI8FromWasm", view, 1)
     }
 
-    fn expose_get_array_u8_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_u8_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint8_memory(memory);
         self.arrayget("getArrayU8FromWasm", view, 1)
     }
 
-    fn expose_get_clamped_array_u8_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_clamped_array_u8_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_clamped_uint8_memory(memory);
         self.arrayget("getClampedArrayU8FromWasm", view, 1)
     }
 
-    fn expose_get_array_i16_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_i16_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_int16_memory(memory);
         self.arrayget("getArrayI16FromWasm", view, 2)
     }
 
-    fn expose_get_array_u16_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_u16_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint16_memory(memory);
         self.arrayget("getArrayU16FromWasm", view, 2)
     }
 
-    fn expose_get_array_i32_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_i32_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_int32_memory(memory);
         self.arrayget("getArrayI32FromWasm", view, 4)
     }
 
-    fn expose_get_array_u32_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_u32_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint32_memory(memory);
         self.arrayget("getArrayU32FromWasm", view, 4)
     }
 
-    fn expose_get_array_i64_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_i64_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_int64_memory(memory);
         self.arrayget("getArrayI64FromWasm", view, 8)
     }
 
-    fn expose_get_array_u64_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_u64_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_uint64_memory(memory);
         self.arrayget("getArrayU64FromWasm", view, 8)
     }
 
-    fn expose_get_array_f32_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_f32_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_f32_memory(memory);
         self.arrayget("getArrayF32FromWasm", view, 4)
     }
 
-    fn expose_get_array_f64_from_wasm(
-        &mut self,
-        memory: MemoryId,
-    ) -> MemView {
+    fn expose_get_array_f64_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let view = self.expose_f64_memory(memory);
         self.arrayget("getArrayF64FromWasm", view, 8)
     }
@@ -2626,7 +2620,8 @@ wasm = wasmInstance.exports;
 
     fn expose_global_stack_pointer(&mut self) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_global_deps.insert("'$stack_pointer'".to_string());
+            self.emscripten_global_deps
+                .insert("'$stack_pointer'".to_string());
             return;
         }
         self.intrinsic("stack_pointer".into(), None, {
@@ -2709,7 +2704,7 @@ wasm = wasmInstance.exports;
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 let add = self.expose_add_to_externref_table(table, alloc);
-                
+
                 self.intrinsic("handle_error".into(), "handleError".into(), {
                     format!(
                         "
@@ -2722,12 +2717,13 @@ wasm = wasmInstance.exports;
                             }}
                         }}
                         "
-                    ).into()
+                    )
+                    .into()
                 });
             }
             _ => {
                 self.expose_add_heap_object();
-                if self.config.mode.emscripten(){
+                if self.config.mode.emscripten() {
                     self.adapter_deps.insert("'$addHeapObject'".to_string());
                 }
                 self.intrinsic("handle_error".into(), "handleError".into(), {
@@ -2741,7 +2737,8 @@ wasm = wasmInstance.exports;
                             }}
                         }}
                         "
-                    ).into()
+                    )
+                    .into()
                 });
             }
         }
@@ -2775,31 +2772,19 @@ wasm = wasmInstance.exports;
         });
     }
 
-    fn pass_to_wasm_function(
-        &mut self,
-        t: VectorKind,
-        memory: MemoryId,
-    ) -> MemView {
+    fn pass_to_wasm_function(&mut self, t: VectorKind, memory: MemoryId) -> MemView {
         match t {
             VectorKind::String => self.expose_pass_string_to_wasm(memory),
             VectorKind::I8 | VectorKind::U8 | VectorKind::ClampedU8 => {
                 self.expose_pass_array8_to_wasm(memory)
             }
-            VectorKind::U16 | VectorKind::I16 => {
-                self.expose_pass_array16_to_wasm(memory)
-            }
-            VectorKind::I32 | VectorKind::U32 => {
-                self.expose_pass_array32_to_wasm(memory)
-            }
-            VectorKind::I64 | VectorKind::U64 => {
-                self.expose_pass_array64_to_wasm(memory)
-            }
+            VectorKind::U16 | VectorKind::I16 => self.expose_pass_array16_to_wasm(memory),
+            VectorKind::I32 | VectorKind::U32 => self.expose_pass_array32_to_wasm(memory),
+            VectorKind::I64 | VectorKind::U64 => self.expose_pass_array64_to_wasm(memory),
             VectorKind::F32 => self.expose_pass_array_f32_to_wasm(memory),
             VectorKind::F64 => self.expose_pass_array_f64_to_wasm(memory),
             VectorKind::Externref => self.expose_pass_array_jsvalue_to_wasm(memory),
-            VectorKind::NamedExternref(_) => {
-                self.expose_pass_array_jsvalue_to_wasm(memory)
-            }
+            VectorKind::NamedExternref(_) => self.expose_pass_array_jsvalue_to_wasm(memory),
         }
     }
 
@@ -2808,9 +2793,7 @@ wasm = wasmInstance.exports;
             VectorKind::String => self.expose_get_string_from_wasm(memory),
             VectorKind::I8 => self.expose_get_array_i8_from_wasm(memory),
             VectorKind::U8 => self.expose_get_array_u8_from_wasm(memory),
-            VectorKind::ClampedU8 => {
-                self.expose_get_clamped_array_u8_from_wasm(memory)
-            }
+            VectorKind::ClampedU8 => self.expose_get_clamped_array_u8_from_wasm(memory),
             VectorKind::I16 => self.expose_get_array_i16_from_wasm(memory),
             VectorKind::U16 => self.expose_get_array_u16_from_wasm(memory),
             VectorKind::I32 => self.expose_get_array_i32_from_wasm(memory),
@@ -2819,12 +2802,8 @@ wasm = wasmInstance.exports;
             VectorKind::U64 => self.expose_get_array_u64_from_wasm(memory),
             VectorKind::F32 => self.expose_get_array_f32_from_wasm(memory),
             VectorKind::F64 => self.expose_get_array_f64_from_wasm(memory),
-            VectorKind::Externref => {
-                self.expose_get_array_js_value_from_wasm(memory)
-            }
-            VectorKind::NamedExternref(_) => {
-                self.expose_get_array_js_value_from_wasm(memory)
-            }
+            VectorKind::Externref => self.expose_get_array_js_value_from_wasm(memory),
+            VectorKind::NamedExternref(_) => self.expose_get_array_js_value_from_wasm(memory),
         }
     }
 
@@ -2841,7 +2820,6 @@ wasm = wasmInstance.exports;
         self.intrinsic(
             "get_inherited_descriptor".into(),
             "GetOwnOrInheritedPropertyDescriptor".into(),
-           
             {
                 "
                 function GetOwnOrInheritedPropertyDescriptor(obj, id) {
@@ -2893,7 +2871,8 @@ wasm = wasmInstance.exports;
         self.expose_closure_finalization();
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_global_deps.insert("'$CLOSURE_DTORS'".to_string());
+            self.emscripten_global_deps
+                .insert("'$CLOSURE_DTORS'".to_string());
         }
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
@@ -2985,7 +2964,8 @@ wasm = wasmInstance.exports;
     fn expose_make_closure(&mut self) {
         self.expose_closure_finalization();
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_global_deps.insert("'$CLOSURE_DTORS'".to_string());
+            self.emscripten_global_deps
+                .insert("'$CLOSURE_DTORS'".to_string());
         }
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
@@ -3080,7 +3060,8 @@ wasm = wasmInstance.exports;
                         wasmExports['__indirect_function_table'].get(state.dtor)(state.a, state.b)
                     }})`,\n
                     ",
-                ).into()
+                )
+                .into()
             } else {
                 format!(
                     "
@@ -3099,10 +3080,10 @@ wasm = wasmInstance.exports;
                     } else {
                         "state => state.dtor(state.a, state.b)"
                     }
-                ).into()
+                )
+                .into()
             }
         })
-            
     }
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {
@@ -3215,7 +3196,7 @@ wasm = wasmInstance.exports;
         }
 
         // Check if we need to append a comma separator
-        let needs_comma = !self.emscripten_library.trim_end().is_empty() 
+        let needs_comma = !self.emscripten_library.trim_end().is_empty()
             && !self.emscripten_library.trim_end().ends_with(',');
 
         if needs_comma {
@@ -3224,7 +3205,7 @@ wasm = wasmInstance.exports;
             }
             self.emscripten_library.push_str(",\n\n");
         }
-        
+
         self.emscripten_library.push_str(s);
         self.emscripten_library.push_str("\n");
     }
@@ -3396,11 +3377,7 @@ wasm = wasmInstance.exports;
         view
     }
 
-    fn expose_add_to_externref_table(
-        &mut self,
-        table: TableId,
-        alloc: FunctionId,
-    ) -> MemView {
+    fn expose_add_to_externref_table(&mut self, table: TableId, alloc: FunctionId) -> MemView {
         let view = self.memview_table("addToExternrefTable", table);
         assert!(self.config.externref);
         let alloc = self.export_name_of(alloc);
@@ -3634,7 +3611,7 @@ wasm = wasmInstance.exports;
                                 self.typescript.push_str(&identifier); // No "function" prefix
                                 self.typescript.push_str(ts_sig);
                                 self.typescript.push_str(";\n");
-                                
+
                                 (String::new(), None)
                             } else {
                                 let mut typescript = String::new();
@@ -3734,16 +3711,18 @@ wasm = wasmInstance.exports;
             }
             ContextAdapterKind::Import(core) => {
                 let mut code = if catch {
-                    format!(
-                        "function() {{ return handleError(function {code}, arguments) }}")
+                    format!("function() {{ return handleError(function {code}, arguments) }}")
                 } else if log_error {
                     format!("function() {{ return logError(function {code}, arguments) }}")
                 } else {
                     format!("function{code}")
                 };
 
-                if matches!(self.config.mode, OutputMode::Emscripten) && !self.adapter_deps.is_empty() {
-                    let mut import_deps_vec = self.adapter_deps
+                if matches!(self.config.mode, OutputMode::Emscripten)
+                    && !self.adapter_deps.is_empty()
+                {
+                    let mut import_deps_vec = self
+                        .adapter_deps
                         .iter()
                         .map(|s| s.as_str())
                         .collect::<Vec<&str>>();
@@ -5334,7 +5313,6 @@ impl ExportedClass {
         }
     }
 }
-
 
 struct MemView {
     name: Cow<'static, str>,
