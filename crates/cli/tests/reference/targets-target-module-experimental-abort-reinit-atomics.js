@@ -1,6 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
-function __wbg_reset_state () {
+export function __wbg_reset_state () {
     __wbg_instance_id++;
     __wbg_aborted = false;
     cachedUint8ArrayMemory0 = null;
@@ -10,37 +10,69 @@ function __wbg_reset_state () {
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
-exports.__wbg_reset_state = __wbg_reset_state;
 
 /**
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
-function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
+export function add_that_might_fail(a, b) {
+    let ret;
+    if (__wbg_aborted === true) {
+        __wbg_reset_state();
+    }
+    try {
+        ret = wasm.add_that_might_fail(a, b);
+    } catch(e) {
+        __wbg_aborted = true;
+        throw e;
+    }
     return ret >>> 0;
 }
-exports.add_that_might_fail = add_that_might_fail;
 
 function __wbg_get_imports(memory) {
     const import0 = {
         __proto__: null,
         __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
+            if (__wbg_aborted === true) {
+                __wbg_reset_state();
+            }
+            try {
+                throw new Error(getStringFromWasm0(arg0, arg1))
+            } catch(e) {
+                __wbg_aborted = true;
+                throw e;
+            }
         },
         __wbg_random_e2b253f0e987bd7c: function() {
-            const ret = Math.random();
+            let ret;
+            if (__wbg_aborted === true) {
+                __wbg_reset_state();
+            }
+            try {
+                ret = Math.random();
+            } catch(e) {
+                __wbg_aborted = true;
+                throw e;
+            }
             return ret;
         },
         __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_externrefs;
-            const offset = table.grow(4);
-            table.set(0, undefined);
-            table.set(offset + 0, undefined);
-            table.set(offset + 1, null);
-            table.set(offset + 2, true);
-            table.set(offset + 3, false);
+            if (__wbg_aborted === true) {
+                __wbg_reset_state();
+            }
+            try {
+                const table = wasm.__wbindgen_externrefs;
+                const offset = table.grow(4);
+                table.set(0, undefined);
+                table.set(offset + 0, undefined);
+                table.set(offset + 1, null);
+                table.set(offset + 2, true);
+                table.set(offset + 3, false)
+            } catch(e) {
+                __wbg_aborted = true;
+                throw e;
+            }
         },
         memory: memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true}),
     };
@@ -75,8 +107,7 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-const wasmPath = `${__dirname}/reference_test_bg.wasm`;
-const wasmBytes = require('fs').readFileSync(wasmPath);
-const wasmModule = new WebAssembly.Module(wasmBytes);
-const wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
+import source wasmModule from "./reference_test_bg.wasm";
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

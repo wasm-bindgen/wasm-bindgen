@@ -356,7 +356,18 @@ impl Bindgen {
             bail!("exported symbol \"default\" not allowed for --target web")
         }
 
-        // Check that reset_state is only used with --target module
+        // The `abort_reinit` flag implicitly enables `generate_reset_state`.
+        // This check provides a more helpful error message for this case
+        if self.abort_reinit
+            && !matches!(
+                self.mode,
+                OutputMode::Module | OutputMode::Web | OutputMode::Node { module: false }
+            )
+        {
+            bail!("--experimental-abort-reinit is only supported for --target module, --target web, or --target nodejs")
+        }
+
+        // Check that reset_state is only used with --target module, web, or node
         if self.generate_reset_state
             && !matches!(
                 self.mode,

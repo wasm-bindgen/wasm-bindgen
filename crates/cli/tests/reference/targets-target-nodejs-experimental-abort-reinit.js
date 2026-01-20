@@ -16,7 +16,16 @@ exports.__wbg_reset_state = __wbg_reset_state;
  * @returns {number}
  */
 function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
+    let ret;
+    if (__wbg_aborted === true) {
+        __wbg_reset_state();
+    }
+    try {
+        ret = wasm.add_that_might_fail(a, b);
+    } catch(e) {
+        __wbg_aborted = true;
+        throw e;
+    }
     return ret >>> 0;
 }
 exports.add_that_might_fail = add_that_might_fail;
@@ -25,17 +34,34 @@ function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
         __wbg_random_ae0b2256206ad108: function() {
-            const ret = Math.random();
+            let ret;
+            if (__wbg_aborted === true) {
+                __wbg_reset_state();
+            }
+            try {
+                ret = Math.random();
+            } catch(e) {
+                __wbg_aborted = true;
+                throw e;
+            }
             return ret;
         },
         __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_externrefs;
-            const offset = table.grow(4);
-            table.set(0, undefined);
-            table.set(offset + 0, undefined);
-            table.set(offset + 1, null);
-            table.set(offset + 2, true);
-            table.set(offset + 3, false);
+            if (__wbg_aborted === true) {
+                __wbg_reset_state();
+            }
+            try {
+                const table = wasm.__wbindgen_externrefs;
+                const offset = table.grow(4);
+                table.set(0, undefined);
+                table.set(offset + 0, undefined);
+                table.set(offset + 1, null);
+                table.set(offset + 2, true);
+                table.set(offset + 3, false)
+            } catch(e) {
+                __wbg_aborted = true;
+                throw e;
+            }
         },
     };
     return {

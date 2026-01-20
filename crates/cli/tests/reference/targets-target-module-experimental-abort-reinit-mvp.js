@@ -15,7 +15,16 @@ export function __wbg_reset_state () {
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
+    let ret;
+    if (__wbg_aborted === true) {
+        __wbg_reset_state();
+    }
+    try {
+        ret = wasm.add_that_might_fail(a, b);
+    } catch(e) {
+        __wbg_aborted = true;
+        throw e;
+    }
     return ret >>> 0;
 }
 
@@ -23,7 +32,16 @@ function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
         __wbg_random_9526caf33df4270d: function() {
-            const ret = Math.random();
+            let ret;
+            if (__wbg_aborted === true) {
+                __wbg_reset_state();
+            }
+            try {
+                ret = Math.random();
+            } catch(e) {
+                __wbg_aborted = true;
+                throw e;
+            }
             return ret;
         },
     };
