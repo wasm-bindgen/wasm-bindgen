@@ -829,17 +829,55 @@ fn instruction(
             // Call the function through an export of the underlying module.
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
+            const CHECK_ABORTED: &str = "if (__wbg_aborted === true) { __wbg_reset_state(); }";
+            const CATCH_EXCEPTION: &str = "catch(e) { __wbg_aborted = true; throw e; }";
+
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
                     js.finally(&format!("{call};"));
+                    if js.cx.config.generate_reset_state {
+                        js.finally(&format!(
+                            "
+                            {CHECK_ABORTED}
+                            try {{
+                                {call}
+                            }} {CATCH_EXCEPTION}
+                            "
+                        ));
+                    } else {
+                        js.finally(&format!("{call};"));
+                    }
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => js.prelude(&format!("{call};")),
+                (false, 0) => {
+                    if js.cx.config.generate_reset_state {
+                        js.prelude(&format!(
+                            "
+                            {CHECK_ABORTED}
+                            try {{
+                                {call}
+                            }} {CATCH_EXCEPTION}
+                            "
+                        ));
+                    } else {
+                        js.prelude(&format!("{call};"));
+                    }
+                }
                 (false, n) => {
-                    js.prelude(&format!("const ret = {call};"));
+                    if js.cx.config.generate_reset_state {
+                        js.prelude(&format!(
+                            "let ret;
+                            {CHECK_ABORTED}
+                            try {{
+                                ret = {call};
+                            }} {CATCH_EXCEPTION}"
+                        ));
+                    } else {
+                        js.prelude(&format!("const ret = {call};"));
+                    }
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {
@@ -1631,12 +1669,7 @@ impl Invocation {
         match self {
             Invocation::Core { id, .. } => {
                 let name = cx.export_name_of(*id);
-                let call = format!("wasm.{name}({})", args.join(", "));
-                if cx.config.generate_reset_state {
-                    Ok(format!("__wbg_handle_panic(() => {call})"))
-                } else {
-                    Ok(call)
-                }
+                Ok(format!("wasm.{name}({})", args.join(", ")))
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];
