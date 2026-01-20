@@ -10,7 +10,7 @@ use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, Instruction,
 };
 use crate::OutputMode;
-use anyhow::{anyhow, bail, Error};
+use anyhow::{bail, Error};
 use std::collections::HashSet;
 use std::fmt::Write;
 use walrus::{Module, ValType};
@@ -138,7 +138,6 @@ impl<'a, 'b> Builder<'a, 'b> {
         debug_name: &str,
         ret_ty_override: &Option<String>,
         ret_desc: &Option<String>,
-        import_deps: &mut HashSet<String>,
     ) -> Result<JsFunction, Error> {
         if self
             .cx
@@ -215,7 +214,6 @@ impl<'a, 'b> Builder<'a, 'b> {
                 &instr.instr,
                 &mut self.log_error,
                 &self.constructor,
-                import_deps,
             )?;
         }
 
@@ -276,7 +274,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         };
 
         if self.catch {
-            js.cx.expose_handle_error(import_deps)?;
+            js.cx.expose_handle_error()?;
         }
 
         // Generate a try/catch block in debug mode which handles unexpected and
@@ -284,7 +282,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         // logs what happened, but keeps the exception being thrown to propagate
         // elsewhere.
         if self.log_error {
-            js.cx.expose_log_error(import_deps);
+            js.cx.expose_log_error();
         }
 
         code.push_str(&call);
@@ -631,42 +629,42 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stack.push(arg);
     }
 
-    fn assert_class(&mut self, arg: &str, class: &str, import_deps: &mut HashSet<String>) {
-        self.cx.expose_assert_class(import_deps);
+    fn assert_class(&mut self, arg: &str, class: &str) {
+        self.cx.expose_assert_class();
         self.prelude(&format!("_assertClass({arg}, {class});"));
     }
 
-    fn assert_number(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
+    fn assert_number(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_assert_num(import_deps);
+        self.cx.expose_assert_num();
         self.prelude(&format!("_assertNum({arg});"));
     }
 
-    fn assert_bigint(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
+    fn assert_bigint(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_assert_bigint(import_deps);
+        self.cx.expose_assert_bigint();
         self.prelude(&format!("_assertBigInt({arg});"));
     }
 
-    fn assert_bool(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
+    fn assert_bool(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_assert_bool(import_deps);
+        self.cx.expose_assert_bool();
         self.prelude(&format!("_assertBoolean({arg});"));
     }
 
-    fn assert_optional_number(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
+    fn assert_optional_number(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none(import_deps);
+        self.cx.expose_is_like_none();
         self.prelude(&format!("if (!isLikeNone({arg})) {{"));
-        self.assert_number(arg, import_deps);
+        self.assert_number(arg);
         self.prelude("}");
     }
 
@@ -680,22 +678,23 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("_assertChar({arg});"));
     }
 
-    fn assert_optional_bigint(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
+    fn assert_optional_bigint(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none(import_deps);
+        self.cx.expose_is_like_none();
         self.prelude(&format!("if (!isLikeNone({arg})) {{"));
-        self.assert_bigint(arg, import_deps);
+        self.assert_bigint(arg);
         self.prelude("}");
     }
 
-    fn assert_optional_bool(&mut self, arg: &str, import_deps: &mut HashSet<String>) {
+    fn assert_optional_bool(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none(import_deps);
-        self.assert_bool(arg, import_deps);
+        self.cx.expose_is_like_none();
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
+        self.assert_bool(arg);
         self.prelude("}");
     }
 
@@ -727,9 +726,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         mem: walrus::MemoryId,
         malloc: walrus::FunctionId,
         realloc: Option<walrus::FunctionId>,
-        import_deps: &mut HashSet<String>,
-    ) -> Result<(), Error> {
-        let pass = self.cx.expose_pass_string_to_wasm(mem, import_deps)?;
+    ) {
+        let pass = self.cx.expose_pass_string_to_wasm(mem);
         let val = self.pop();
         let malloc = self.cx.export_name_of(malloc);
         let i = self.tmp();
@@ -743,8 +741,6 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
         self.push(format!("ptr{i}"));
         self.push(format!("len{i}"));
-        import_deps.insert(format!("'${pass}'"));
-        Ok(())
     }
 }
 
@@ -753,7 +749,6 @@ fn instruction(
     instr: &Instruction,
     log_error: &mut bool,
     constructor: &Option<String>,
-    import_deps: &mut HashSet<String>,
 ) -> Result<(), Error> {
     fn wasm_to_string_enum(name: &str, index: &str) -> String {
         // e.g. ["a","b","c"][someIndex]
@@ -800,7 +795,7 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
-            let invoc = Invocation::from(instr, js.cx.module)?;
+            let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
 
             let mut args = Vec::new();
@@ -832,7 +827,7 @@ fn instruction(
             }
 
             // Call the function through an export of the underlying module.
-            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error, import_deps)?;
+            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
@@ -858,7 +853,7 @@ fn instruction(
 
         Instruction::Int32ToWasm => {
             let val = js.pop();
-            js.assert_number(&val, import_deps);
+            js.assert_number(&val);
             js.push(val);
         }
         Instruction::WasmToInt32 { unsigned_32 } => {
@@ -875,7 +870,7 @@ fn instruction(
 
         Instruction::Int64ToWasm => {
             let val = js.pop();
-            js.assert_bigint(&val, import_deps);
+            js.assert_bigint(&val);
             js.push(val);
         }
         Instruction::WasmToInt64 { unsigned } => {
@@ -889,7 +884,7 @@ fn instruction(
 
         Instruction::Int128ToWasm => {
             let val = js.pop();
-            js.assert_bigint(&val, import_deps);
+            js.assert_bigint(&val);
             let (low, high) = int128_to_int64x2(&val);
             js.push(low);
             js.push(high);
@@ -902,8 +897,8 @@ fn instruction(
 
         Instruction::OptionInt128ToWasm => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_bigint(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_bigint(&val);
             let (low, high) = int128_to_int64x2(&val);
             js.push(format!("!isLikeNone({val})"));
             js.push(format!("isLikeNone({val}) ? BigInt(0) : {low}"));
@@ -946,7 +941,7 @@ fn instruction(
             let enum_val = js.pop();
             js.cx.expose_string_enum(name);
             let enum_val_expr = string_enum_to_wasm(name, *invalid, &enum_val);
-            js.cx.expose_is_like_none(import_deps);
+            js.cx.expose_is_like_none();
 
             // e.g. isLikeNone(someEnumVal) ? 4 : (string_enum_to_wasm(someEnumVal))
             js.push(format!(
@@ -957,7 +952,7 @@ fn instruction(
         Instruction::MemoryToString(mem) => {
             let len = js.pop();
             let ptr = js.pop();
-            let get = js.cx.expose_get_string_from_wasm(*mem)?;
+            let get = js.cx.expose_get_string_from_wasm(*mem);
             js.push(format!("{get}({ptr}, {len})"));
         }
 
@@ -966,7 +961,7 @@ fn instruction(
             malloc,
             realloc,
         } => {
-            js.string_to_memory(*mem, *malloc, *realloc, import_deps)?;
+            js.string_to_memory(*mem, *malloc, *realloc);
         }
 
         Instruction::Retptr { size } => {
@@ -996,8 +991,12 @@ fn instruction(
             );
             if matches!(js.cx.config.mode, OutputMode::Emscripten) {
                 expr = format!(
-                    "HEAP_DATA_VIEW.{method}({} + {size} * {offset}, {val}, true);",
+                    "HEAP_DATA_VIEW.{}({} + {} * {}, {}, true);",
+                    method,
                     js.arg(0),
+                    size,
+                    offset,
+                    val,
                 );
             }
             js.prelude(&expr);
@@ -1019,19 +1018,20 @@ fn instruction(
             // If we're loading from the return pointer then we must have pushed
             // it earlier, and we always push the same value, so load that value
             // here
-            let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
-
+            let mut expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
             if matches!(js.cx.config.mode, OutputMode::Emscripten) {
-                expr = format!("HEAP_DATA_VIEW.{method}(retptr + {size} * {scaled_offset}, true)");
+                expr = format!(
+                    "HEAP_DATA_VIEW.{}(retptr + {} * {}, true)",
+                    method, size, scaled_offset
+                );
             }
-
             js.prelude(&format!("var r{offset} = {expr};"));
             js.push(format!("r{offset}"));
         }
 
         Instruction::I32FromBool => {
             let val = js.pop();
-            js.assert_bool(&val, import_deps);
+            js.assert_bool(&val);
             // JS will already coerce booleans into numbers for us
             js.push(val);
         }
@@ -1052,7 +1052,7 @@ fn instruction(
         }
 
         Instruction::I32FromExternrefBorrow => {
-            js.cx.expose_borrowed_objects(import_deps);
+            js.cx.expose_borrowed_objects();
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
             js.push(format!("addBorrowedObject({val})"));
@@ -1061,7 +1061,7 @@ fn instruction(
 
         Instruction::I32FromExternrefRustOwned { class } => {
             let val = js.pop();
-            js.assert_class(&val, class, import_deps);
+            js.assert_class(&val, class);
             js.assert_not_moved(&val);
             let i = js.tmp();
             js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
@@ -1070,18 +1070,18 @@ fn instruction(
 
         Instruction::I32FromExternrefRustBorrow { class } => {
             let val = js.pop();
-            js.assert_class(&val, class, import_deps);
+            js.assert_class(&val, class);
             js.assert_not_moved(&val);
             js.push(format!("{val}.__wbg_ptr"));
         }
 
         Instruction::I32FromOptionRust { class } => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
+            js.cx.expose_is_like_none();
             let i = js.tmp();
             js.prelude(&format!("let ptr{i} = 0;"));
             js.prelude(&format!("if (!isLikeNone({val})) {{"));
-            js.assert_class(&val, class, import_deps);
+            js.assert_class(&val, class);
             js.assert_not_moved(&val);
             js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
             js.prelude("}");
@@ -1090,10 +1090,10 @@ fn instruction(
 
         Instruction::I32FromOptionExternref { table_and_alloc } => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
+            js.cx.expose_is_like_none();
             match table_and_alloc {
                 Some((table, alloc)) => {
-                    let alloc = js.cx.expose_add_to_externref_table(*table, *alloc, import_deps)?;
+                    let alloc = js.cx.expose_add_to_externref_table(*table, *alloc);
                     js.push(format!("isLikeNone({val}) ? 0 : {alloc}({val})"));
                 }
                 None => {
@@ -1105,22 +1105,22 @@ fn instruction(
 
         Instruction::I32FromOptionU32Sentinel => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_number(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_number(&val);
             js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val}"));
         }
 
         Instruction::I32FromOptionBool => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_bool(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_bool(&val);
             js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val} ? 1 : 0"));
         }
 
         Instruction::I32FromOptionChar => {
             let val = js.pop();
             let i = js.tmp();
-            js.cx.expose_is_like_none(import_deps);
+            js.cx.expose_is_like_none();
             js.prelude(&format!(
                 "const char{i} = isLikeNone({val}) ? 0xFFFFFF : {val}.codePointAt(0);"
             ));
@@ -1134,15 +1134,15 @@ fn instruction(
 
         Instruction::I32FromOptionEnum { hole } => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_number(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_number(&val);
             js.push(format!("isLikeNone({val}) ? {hole} : {val}"));
         }
 
         Instruction::F64FromOptionSentinelInt { signed } => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_number(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_number(&val);
 
             // We need to convert the given number to a 32-bit integer before
             // passing it to the ABI for 2 reasons:
@@ -1164,8 +1164,8 @@ fn instruction(
         }
         Instruction::F64FromOptionSentinelF32 => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_number(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_number(&val);
 
             // Similar to the above 32-bit integer variant, we convert the
             // number to a 32-bit *float* before passing it to the ABI. This
@@ -1179,11 +1179,11 @@ fn instruction(
 
         Instruction::FromOptionNative { ty } => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
+            js.cx.expose_is_like_none();
             if *ty == ValType::I64 {
-                js.assert_optional_bigint(&val, import_deps);
+                js.assert_optional_bigint(&val);
             } else {
-                js.assert_optional_number(&val, import_deps);
+                js.assert_optional_number(&val);
             }
             js.push(format!("!isLikeNone({val})"));
             js.push(format!(
@@ -1200,25 +1200,22 @@ fn instruction(
 
         Instruction::VectorToMemory { kind, malloc, mem } => {
             let val = js.pop();
-            let func = js
-                .cx
-                .pass_to_wasm_function(kind.clone(), *mem, import_deps)?;
+            let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
             js.prelude(&format!("const ptr{i} = {func}({val}, wasm.{malloc});",));
             js.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
             js.push(format!("len{i}"));
-            import_deps.insert(format!("'${func}'"));
         }
 
         Instruction::UnwrapResult { table_and_drop } => {
             let take_object = if let Some((table, drop)) = *table_and_drop {
                 js.cx
-                    .expose_take_from_externref_table(table, drop)?
+                    .expose_take_from_externref_table(table, drop)
                     .to_string()
             } else {
-                js.cx.expose_take_object(import_deps);
+                js.cx.expose_take_object();
                 "takeObject".to_string()
             };
             // is_err is popped first. The original layout was: ResultAbi {
@@ -1241,10 +1238,10 @@ fn instruction(
         Instruction::UnwrapResultString { table_and_drop } => {
             let take_object = if let Some((table, drop)) = *table_and_drop {
                 js.cx
-                    .expose_take_from_externref_table(table, drop)?
+                    .expose_take_from_externref_table(table, drop)
                     .to_string()
             } else {
-                js.cx.expose_take_object(import_deps);
+                js.cx.expose_take_object();
                 "takeObject".to_string()
             };
             let is_err = js.pop();
@@ -1271,8 +1268,8 @@ fn instruction(
             malloc,
             realloc,
         } => {
-            let func = js.cx.expose_pass_string_to_wasm(*mem, import_deps)?;
-            js.cx.expose_is_like_none(import_deps);
+            let func = js.cx.expose_pass_string_to_wasm(*mem);
+            js.cx.expose_is_like_none();
             let i = js.tmp();
             let malloc = js.cx.export_name_of(*malloc);
             let val = js.pop();
@@ -1286,14 +1283,11 @@ fn instruction(
             js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
             js.push(format!("len{i}"));
-            import_deps.insert(format!("'${func}'"));
         }
 
         Instruction::OptionVector { kind, mem, malloc } => {
-            let func = js
-                .cx
-                .pass_to_wasm_function(kind.clone(), *mem, import_deps)?;
-            js.cx.expose_is_like_none(import_deps);
+            let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
+            js.cx.expose_is_like_none();
             let i = js.tmp();
             let malloc = js.cx.export_name_of(*malloc);
             let val = js.pop();
@@ -1303,15 +1297,12 @@ fn instruction(
             js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
             js.push(format!("len{i}"));
-            import_deps.insert(format!("'${func}'"));
         }
 
         Instruction::MutableSliceToMemory { kind, malloc, mem } => {
             // Copy the contents of the typed array into wasm.
             let val = js.pop();
-            let func = js
-                .cx
-                .pass_to_wasm_function(kind.clone(), *mem, import_deps)?;
+            let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             let malloc = js.cx.export_name_of(*malloc);
             let i = js.tmp();
             js.prelude(&format!("var ptr{i} = {func}({val}, wasm.{malloc});",));
@@ -1322,7 +1313,6 @@ fn instruction(
             // Then we give Wasm a reference to the original typed array, so that it can
             // update it with modifications made on the Wasm side before returning.
             js.push(val);
-            import_deps.insert(format!("'${}'", func));
         }
 
         Instruction::BoolFromI32 => {
@@ -1333,10 +1323,10 @@ fn instruction(
         Instruction::ExternrefLoadOwned { table_and_drop } => {
             let take_object = if let Some((table, drop)) = *table_and_drop {
                 js.cx
-                    .expose_take_from_externref_table(table, drop)?
+                    .expose_take_from_externref_table(table, drop)
                     .to_string()
             } else {
-                js.cx.expose_take_object(import_deps);
+                js.cx.expose_take_object();
                 "takeObject".to_string()
             };
             let val = js.pop();
@@ -1378,8 +1368,8 @@ fn instruction(
                     js.push(String::from("this"));
                 }
                 Some(_) | None => {
-                    js.cx.require_class_wrap(class);
-                    js.push(format!("{class}.__wrap({val})"));
+                    let identifier = js.cx.require_class_wrap(class);
+                    js.push(format!("{identifier}.__wrap({val})"));
                 }
             }
         }
@@ -1387,8 +1377,10 @@ fn instruction(
         Instruction::OptionRustFromI32 { class } => {
             assert!(constructor.is_none());
             let val = js.pop();
-            js.cx.require_class_wrap(class);
-            js.push(format!("{val} === 0 ? undefined : {class}.__wrap({val})",));
+            let identifier = js.cx.require_class_wrap(class);
+            js.push(format!(
+                "{val} === 0 ? undefined : {identifier}.__wrap({val})",
+            ));
         }
 
         Instruction::CachedStringLoad {
@@ -1401,9 +1393,7 @@ fn instruction(
             let ptr = js.pop();
             let tmp = js.tmp();
 
-            let get = js
-                .cx
-                .expose_get_cached_string_from_wasm(*mem, *table, import_deps)?;
+            let get = js.cx.expose_get_cached_string_from_wasm(*mem, *table);
 
             js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
@@ -1419,7 +1409,7 @@ fn instruction(
 
         Instruction::TableGet => {
             let val = js.pop();
-            js.cx.expose_get_object(import_deps);
+            js.cx.expose_get_object();
             js.push(format!("getObject({val})"));
         }
 
@@ -1432,17 +1422,24 @@ fn instruction(
             let b = js.pop();
             let a = js.pop();
             let wrapper = js.cx.export_adapter_name(*adapter);
-            import_deps.insert(format!("'${wrapper}'"));
+
+            if matches!(js.cx.config.mode, OutputMode::Emscripten) {
+                // We format it with the '$' prefix and quotes, just like intrinsic() does.
+                // This ensures it gets added to the global 'extraLibraryFuncs' list,
+                // making it available to the linker.
+                let dep_entry = format!("'${}'", wrapper);
+                js.cx.adapter_deps.insert(dep_entry);
+            }
 
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership
             // integration.
             if let Some(dtor) = dtor_if_persistent {
                 let make_closure = if *mutable {
-                    js.cx.expose_make_mut_closure()?;
+                    js.cx.expose_make_mut_closure();
                     "makeMutClosure"
                 } else {
-                    js.cx.expose_make_closure()?;
+                    js.cx.expose_make_closure();
                     "makeClosure"
                 };
 
@@ -1489,9 +1486,7 @@ fn instruction(
         Instruction::VectorLoad { kind, mem, free } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js
-                .cx
-                .expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
@@ -1505,9 +1500,7 @@ fn instruction(
         Instruction::OptionVectorLoad { kind, mem, free } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js
-                .cx
-                .expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("let v{i};"));
@@ -1524,14 +1517,14 @@ fn instruction(
         Instruction::View { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             js.push(format!("{f}({ptr}, {len})"));
         }
 
         Instruction::OptionView { kind, mem } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem, import_deps)?;
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             js.push(format!("{ptr} === 0 ? undefined : {f}({ptr}, {len})"));
         }
 
@@ -1587,8 +1580,8 @@ fn instruction(
 
         Instruction::I32FromOptionNonNull => {
             let val = js.pop();
-            js.cx.expose_is_like_none(import_deps);
-            js.assert_optional_number(&val, import_deps);
+            js.cx.expose_is_like_none();
+            js.assert_optional_number(&val);
             js.push(format!("isLikeNone({val}) ? 0 : {val}"));
         }
 
@@ -1606,9 +1599,9 @@ enum Invocation {
 }
 
 impl Invocation {
-    fn from(instr: &Instruction, module: &Module) -> Result<Invocation, Error> {
+    fn from(instr: &Instruction, module: &Module) -> Invocation {
         use Instruction::*;
-        Ok(match instr {
+        match instr {
             DeferFree { free, .. } => Invocation::Core {
                 id: *free,
                 defer: true,
@@ -1623,7 +1616,7 @@ impl Invocation {
 
             // this function is only called for the above instructions
             _ => unreachable!(),
-        })
+        }
     }
 
     fn params_results(&self, cx: &Context) -> (usize, usize) {
@@ -1646,7 +1639,6 @@ impl Invocation {
         args: &[String],
         prelude: &mut String,
         log_error: &mut bool,
-        import_deps: &mut HashSet<String>,
     ) -> Result<String, Error> {
         match self {
             Invocation::Core { id, .. } => {
@@ -1666,7 +1658,7 @@ impl Invocation {
                 if cx.import_never_log_error(import) {
                     *log_error = false;
                 }
-                cx.invoke_import(import, kind, args, variadic, prelude, import_deps)
+                cx.invoke_import(import, kind, args, variadic, prelude)
             }
         }
     }

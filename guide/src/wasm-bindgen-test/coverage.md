@@ -21,12 +21,9 @@ Due to the current limitation of `llvm-cov`, we can't collect profiling symbols 
 
 ### Arguments to the test runner
 
-The following environment variables can be used to control the coverage output when [executing the test runner][1]:
+Like with Rust test coverage, you can use the [`LLVM_PROFILE_FILE`][1] environment variable to specify a path for the generated `.profraw` files.
 
-- `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` to control the file name of the profraw or the directory in which it is placed. It might be necessary to provide the full path if e.g. running tests in a workspace.
-- `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` to add a custom prefix to the profraw files. This can be useful if you're running the tests automatically in succession.
-
-[1]: usage.html#appendix-using-wasm-bindgen-test-without-wasm-pack
+[1]: https://releases.llvm.org/19.1.0/tools/clang/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
 
 ### Target features
 
@@ -38,45 +35,15 @@ This feature relies on the [minicov] crate, which provides a profiling runtime f
 
 ### Example
 
-This adapts code taken from the [Rustc book], see that for more examples and general information on test coverage as well.
+_Requires rust >= 1.87.0 and wasm-bindgen-test >= 0.3.57._
+
+Install [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) and run with:
 
 ```sh
-# Run the tests:
-# `--tests` to not run documentation tests, which is currently not supported.
-RUSTFLAGS="-Cinstrument-coverage -Zno-profiler-runtime --emit=llvm-ir --cfg=wasm_bindgen_unstable_test_coverage" \
 CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER=wasm-bindgen-test-runner \
-cargo +nightly test --tests
-# Compile to object files:
-# - Extract a list of compiled artifacts from Cargo and filter them with `jq`.
-# - Figure out the path to the LLVM IR file corresponding to an artifact.
-# - Compile to object file with Clang and store for later usage with `llvm-cov`.
-crate_name=name_of_the_tested_crate_in_snake_case
-objects=()
-IFS=$'\n'
-for file in $(
-    RUSTFLAGS="-Cinstrument-coverage -Zno-profiler-runtime --emit=llvm-ir --cfg=wasm_bindgen_unstable_test_coverage" \
-    cargo +nightly test --tests --no-run --message-format=json | \
-    jq -r "select(.reason == \"compiler-artifact\") | (select(.target.kind == [\"test\"]) // select(.target.name == \"$crate_name\")) | .filenames[0]"
-)
-do
-    if [[ ${file##*.} == "rlib" ]]; then
-        base=$(basename $file .rlib)
-        file=$(dirname $file)/${base#"lib"}.ll
-    else
-        file=$(dirname $file)/$(basename $file .wasm).ll
-    fi
-
-    output = $(basename $file .ll).o
-    clang-19 $file -Wno-override-module -c -o $output
-    objects+=(-object $output)
-done
-# Merge all generated raw profiling data.
-llvm-profdata-19 merge -sparse *.profraw -o coverage.profdata
-# Produce test coverage data in the HTML format and pass the object files we generated earlier.
-llvm-cov-19 show -show-instantiations=false -Xdemangler=rustfilt -output-dir coverage -format=html -instr-profile=coverage.profdata ${objects[@]} -sources src
+CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage" \
+cargo +nightly llvm-cov test --target wasm32-unknown-unknown
 ```
-
-[rustc book]: https://doc.rust-lang.org/nightly/rustc/instrument-coverage.html
 
 ## Attribution
 

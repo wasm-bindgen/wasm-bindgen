@@ -7,8 +7,12 @@ let wasm_bindgen;
     }
     let wasm = undefined;
 
-    let cachedUint8ArrayMemory0 = null;
+    function getStringFromWasm0(ptr, len) {
+        ptr = ptr >>> 0;
+        return decodeText(ptr, len);
+    }
 
+    let cachedUint8ArrayMemory0 = null;
     function getUint8ArrayMemory0() {
         if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.buffer !== wasm.memory.buffer) {
             cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
@@ -17,26 +21,22 @@ let wasm_bindgen;
     }
 
     let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : undefined);
-
     if (cachedTextDecoder) cachedTextDecoder.decode();
 
     function decodeText(ptr, len) {
         return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
     }
 
-    function getStringFromWasm0(ptr, len) {
-        ptr = ptr >>> 0;
-        return decodeText(ptr, len);
-    }
     /**
      * @param {number} a
      * @param {number} b
      * @returns {number}
      */
-    __exports.add_that_might_fail = function(a, b) {
+    function add_that_might_fail(a, b) {
         const ret = wasm.add_that_might_fail(a, b);
         return ret >>> 0;
-    };
+    }
+    __exports.add_that_might_fail = add_that_might_fail;
 
     const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
@@ -45,7 +45,6 @@ let wasm_bindgen;
             if (typeof WebAssembly.instantiateStreaming === 'function') {
                 try {
                     return await WebAssembly.instantiateStreaming(module, imports);
-
                 } catch (e) {
                     const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
 
@@ -60,13 +59,11 @@ let wasm_bindgen;
 
             const bytes = await module.arrayBuffer();
             return await WebAssembly.instantiate(bytes, imports);
-
         } else {
             const instance = await WebAssembly.instantiate(module, imports);
 
             if (instance instanceof WebAssembly.Instance) {
                 return { instance, module };
-
             } else {
                 return instance;
             }
@@ -76,7 +73,7 @@ let wasm_bindgen;
     function __wbg_get_imports(memory) {
         const imports = {};
         imports.wbg = {};
-        imports.wbg.__wbg___wbindgen_throw_b855445ff6a94295 = function(arg0, arg1) {
+        imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         };
         imports.wbg.__wbg_random_e2b253f0e987bd7c = function() {
@@ -91,7 +88,6 @@ let wasm_bindgen;
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         };
         imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 
@@ -121,13 +117,10 @@ let wasm_bindgen;
         }
 
         const imports = __wbg_get_imports(memory);
-
         if (!(module instanceof WebAssembly.Module)) {
             module = new WebAssembly.Module(module);
         }
-
         const instance = new WebAssembly.Instance(module, imports);
-
         return __wbg_finalize_init(instance, module, thread_stack_size);
     }
 
@@ -158,5 +151,4 @@ let wasm_bindgen;
     }
 
     wasm_bindgen = Object.assign(__wbg_init, { initSync }, __exports);
-
 })();

@@ -5,6 +5,42 @@
 
 ### Added
 
+* Added `private` attribute on exported types to allow generating
+  exports and structs as implicit internal exported types for function
+  arguments and returns, without exporting them on the public interface.
+  [#4788](https://github.com/wasm-bindgen/wasm-bindgen/pull/4788)
+
+* Added `iter_custom` and `iter_custom_future` for bench to do custom measurements.
+  [#4841](https://github.com/wasm-bindgen/wasm-bindgen/pull/4841)
+
+* Added [Window Management API](https://w3c.github.io/window-management/).
+  [#4843](https://github.com/wasm-bindgen/wasm-bindgen/pull/4843)
+
+### Changed
+
+* Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
+  [#4367](https://github.com/wasm-bindgen/wasm-bindgen/pull/4367)
+
+### Fixed
+
+* Forward worker errors to test output in the test runner.
+  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+
+* Fix: Include doc comments in TypeScript definitions for classes
+  [#4858](https://github.com/wasm-bindgen/wasm-bindgen/pull/4858)
+
+* Interpreter: support try_table blocks
+  [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4862)
+
+### Removed
+
+## [0.2.106](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.105...0.2.106)
+
+### Added
+
+* New MSRV policy, and bump of the MSRV fo 1.71.
+  [#4801](https://github.com/wasm-bindgen/wasm-bindgen/pull4801)
+
 * Added typed `this` support in the first argument in free function exports via
   a new `#[wasm_bindgen(this)]` attribute.
   [#4757](https://github.com/wasm-bindgen/wasm-bindgen/pull/4757)
@@ -19,6 +55,14 @@
 
 * Added 'container' attribute to `ScrollIntoViewOptions`
   [#4806](https://github.com/wasm-bindgen/wasm-bindgen/pull/4806)
+
+* Updated and refactored output generation to use alphabetical ordering
+  of declarations.
+  [#4813](https://github.com/wasm-bindgen/wasm-bindgen/pull/4813)
+
+* Added benchmark support to `wasm-bindgen-test`.
+  [#4812](https://github.com/wasm-bindgen/wasm-bindgen/pull/4812)
+  [#4823](https://github.com/wasm-bindgen/wasm-bindgen/pull/4823)
 
 ### Fixed
 
@@ -38,6 +82,12 @@
   [#4796](https://github.com/wasm-bindgen/wasm-bindgen/pull/4796)
   [#4783](https://github.com/wasm-bindgen/wasm-bindgen/pull/4783)
   [#4782](https://github.com/wasm-bindgen/wasm-bindgen/pull/4782)
+
+* Fixed duplicate symbols caused by enabling v0 mangling.
+  [#4822](https://github.com/wasm-bindgen/wasm-bindgen/pull/4822)
+
+* Fixed a multithreaded wasm32+atomics race where `Atomics.waitAsync` promise callbacks could call `run` without waking first, causing sporadic panics.
+  [#4821](https://github.com/wasm-bindgen/wasm-bindgen/pull/4821)
 
 ### Removed
 

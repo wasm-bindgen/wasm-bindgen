@@ -1576,8 +1576,7 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
                 val
             } else if cfg!(debug_assertions) {
                 let loc = core::panic::Location::caller();
-                let msg =
-                    alloc::format!("{} ({}:{}:{})", MSG, loc.file(), loc.line(), loc.column(),);
+                let msg = alloc::format!("{MSG} ({}:{}:{})", loc.file(), loc.line(), loc.column(),);
 
                 throw_str(&msg)
             } else {
@@ -1601,13 +1600,8 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
                 val
             } else if cfg!(debug_assertions) {
                 let loc = core::panic::Location::caller();
-                let msg = alloc::format!(
-                    "{} ({}:{}:{})",
-                    message,
-                    loc.file(),
-                    loc.line(),
-                    loc.column(),
-                );
+                let msg =
+                    alloc::format!("{message} ({}:{}:{})", loc.file(), loc.line(), loc.column(),);
 
                 throw_str(&msg)
             } else {
@@ -1640,12 +1634,10 @@ where
                     if cfg!(debug_assertions) {
                         let loc = core::panic::Location::caller();
                         let msg = alloc::format!(
-                            "{} ({}:{}:{}): {:?}",
-                            MSG,
+                            "{MSG} ({}:{}:{}): {err:?}",
                             loc.file(),
                             loc.line(),
                             loc.column(),
-                            err
                         );
 
                         throw_str(&msg)
@@ -1674,12 +1666,10 @@ where
                     if cfg!(debug_assertions) {
                         let loc = core::panic::Location::caller();
                         let msg = alloc::format!(
-                            "{} ({}:{}:{}): {:?}",
-                            message,
+                            "{message} ({}:{}:{}): {err:?}",
                             loc.file(),
                             loc.line(),
                             loc.column(),
-                            err
                         );
 
                         throw_str(&msg)

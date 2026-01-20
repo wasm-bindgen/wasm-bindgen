@@ -3,9 +3,12 @@ export function __wbg_set_wasm(val) {
     wasm = val;
 }
 
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
 
 let cachedUint8ArrayMemory0 = null;
-
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
@@ -14,9 +17,7 @@ function getUint8ArrayMemory0() {
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
 cachedTextDecoder.decode();
-
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
 let numBytesDecoded = 0;
 function decodeText(ptr, len) {
@@ -29,25 +30,11 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
-}
-/**
- * @param {number} test
- * @returns {number}
- */
-export function test1(test) {
-    const ret = wasm.test1(test);
-    return ret >>> 0;
-}
-
 const TestFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_test_free(ptr >>> 0, 1));
 
 export class Test {
-
     static __wrap(ptr) {
         ptr = ptr >>> 0;
         const obj = Object.create(Test.prototype);
@@ -55,14 +42,12 @@ export class Test {
         TestFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
-
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
         TestFinalization.unregister(this);
         return ptr;
     }
-
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_test_free(ptr, 0);
@@ -84,7 +69,16 @@ export class Test {
 }
 if (Symbol.dispose) Test.prototype[Symbol.dispose] = Test.prototype.free;
 
-export function __wbg___wbindgen_throw_b855445ff6a94295(arg0, arg1) {
+/**
+ * @param {number} test
+ * @returns {number}
+ */
+export function test1(test) {
+    const ret = wasm.test1(test);
+    return ret >>> 0;
+}
+
+export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
@@ -96,6 +90,4 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 1, null);
     table.set(offset + 2, true);
     table.set(offset + 3, false);
-    ;
 };
-

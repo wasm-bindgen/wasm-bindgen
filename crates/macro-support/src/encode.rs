@@ -108,7 +108,7 @@ impl Interner {
 
         // Generate a unique ID which is somewhat readable as well, so mix in
         // the crate name, hash to make it unique, and then the original path.
-        let new_identifier = format!("{}{}", self.unique_crate_identifier(), id);
+        let new_identifier = format!("{}{id}", self.unique_crate_identifier());
         let file = LocalFile {
             path,
             definition: span,
@@ -179,7 +179,7 @@ fn shared_program<'a>(
                         linked_module: file.linked_module,
                     })
                     .map_err(|e| {
-                        let msg = format!("failed to read file `{}`: {}", file.path.display(), e);
+                        let msg = format!("failed to read file `{}`: {e}", file.path.display());
                         Diagnostic::span_error(file.definition, msg)
                     })
             })
@@ -209,7 +209,10 @@ fn shared_export<'a>(
         comments: export.comments.iter().map(|s| &**s).collect(),
         consumed,
         function: shared_function(&export.function, intern),
-        js_namespace: export.js_namespace.clone(),
+        js_namespace: export
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
         method_kind,
         start: export.start,
     })
@@ -227,7 +230,7 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
                     if let syn::Pat::Ident(x) = &*arg.pat_type.pat {
                         x.ident.unraw().to_string()
                     } else {
-                        format!("arg{}", idx)
+                        format!("arg{idx}")
                     },
                 ),
                 ty_override: arg.js_type.as_deref(),
@@ -258,7 +261,11 @@ fn shared_enum<'a>(e: &'a ast::Enum, intern: &'a Interner) -> Enum<'a> {
             .collect(),
         comments: e.comments.iter().map(|s| &**s).collect(),
         generate_typescript: e.generate_typescript,
-        js_namespace: e.js_namespace.clone(),
+        js_namespace: e
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
+        private: e.private,
     }
 }
 
@@ -271,6 +278,19 @@ fn shared_variant<'a>(v: &'a ast::Variant, intern: &'a Interner) -> EnumVariant<
 }
 
 fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<'a>, Diagnostic> {
+    // Resolve reexport name: use explicit rename if provided, otherwise use the import's name
+    let reexport = i.reexport.as_ref().map(|rename_opt| {
+        rename_opt.clone().unwrap_or_else(|| {
+            // Get the default name from the import kind
+            match &i.kind {
+                ast::ImportKind::Type(t) => t.js_name.clone(),
+                ast::ImportKind::Function(f) => f.function.name.clone(),
+                ast::ImportKind::Static(s) => s.js_name.clone(),
+                _ => unreachable!("reexport only supported on types, functions, and statics"),
+            }
+        })
+    });
+
     Ok(Import {
         module: i
             .module
@@ -278,7 +298,7 @@ fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<
             .map(|m| shared_module(m, intern, false))
             .transpose()?,
         js_namespace: i.js_namespace.clone(),
-        reexport: i.reexport.clone(),
+        reexport,
         kind: shared_import_kind(&i.kind, intern)?,
     })
 }
@@ -375,11 +395,14 @@ fn shared_import_type<'a>(i: &'a ast::ImportType, intern: &'a Interner) -> Impor
 
 fn shared_import_enum<'a>(i: &'a ast::StringEnum, _intern: &'a Interner) -> StringEnum<'a> {
     StringEnum {
-        name: &i.js_name,
+        name: &i.export_name,
         generate_typescript: i.generate_typescript,
         variant_values: i.variant_values.iter().map(|x| &**x).collect(),
         comments: i.comments.iter().map(|s| &**s).collect(),
-        js_namespace: i.js_namespace.clone(),
+        js_namespace: i
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
     }
 }
 
@@ -394,7 +417,11 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
         comments: s.comments.iter().map(|s| &**s).collect(),
         is_inspectable: s.is_inspectable,
         generate_typescript: s.generate_typescript,
-        js_namespace: s.js_namespace.clone(),
+        js_namespace: s
+            .js_namespace
+            .as_ref()
+            .map(|ns| ns.iter().map(|s| &**s).collect()),
+        private: s.private,
     }
 }
 

@@ -17,7 +17,6 @@ use clap::ValueEnum;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
-use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
 use wasm_bindgen_cli_support::Bindgen;
@@ -36,6 +35,8 @@ struct Cli {
         help = "The file to test. `cargo test` passes this argument for you."
     )]
     file: PathBuf,
+    #[arg(long, help = "Run benchmarks")]
+    bench: bool,
     #[arg(long, conflicts_with = "ignored", help = "Run ignored tests")]
     include_ignored: bool,
     #[arg(long, conflicts_with = "include_ignored", help = "Run ignored tests")]
@@ -72,7 +73,7 @@ struct Cli {
 }
 
 impl Cli {
-    fn into_args(self, tests: &Tests) -> String {
+    fn get_args(&self, tests: &Tests) -> String {
         let include_ignored = self.include_ignored;
         let filtered = tests.filtered;
 
@@ -128,27 +129,15 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    let mut file_name = cli
-        .file
-        .file_name()
-        .map(Path::new)
-        .context("file to test is not a valid file, can't extract file name")?;
-
-    let mut file_name_buf = cli.file.clone();
+    let mut file_name_buf = PathBuf::from(cli.file.clone());
 
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
     // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
     // file as the primary executor which is inconsitent with what is expected here.
-    if file_name.extension().unwrap() == "js" {
-        file_name_buf.pop();
-        file_name_buf.push(file_name.file_stem().unwrap());
+    if file_name_buf.extension().unwrap() == "js" {
         file_name_buf.set_extension("wasm");
-        file_name = Path::new(&file_name_buf);
     }
-    // Collect all tests that the test harness is supposed to run. We assume
-    // that any exported function with the prefix `__wbg_test` is a test we need
-    // to execute.
-    let wasm = fs::read(&file_name_buf).context("failed to read Wasm file")?;
+    let wasm = fs::read(file_name_buf).context("failed to read Wasm file")?;
     let mut wasm = walrus::ModuleConfig::new()
         // generate dwarf by default, it can be controlled by debug profile
         //
@@ -158,8 +147,11 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         .context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
 
+    // benchmark or test
+    let prefix = if cli.bench { "__wbgb_" } else { "__wbgt_" };
+
     'outer: for export in wasm.exports.iter() {
-        let Some(name) = export.name.strip_prefix("__wbgt_") else {
+        let Some(name) = export.name.strip_prefix(prefix) else {
             continue;
         };
         let modifiers = name.split_once('_').expect("found invalid identifier").0;
@@ -209,7 +201,11 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
 
     if cli.list {
         for test in tests.tests {
-            println!("{}: test", test.name);
+            if cli.bench {
+                println!("{}: benchmark", test.name);
+            } else {
+                println!("{}: test", test.name);
+            }
         }
 
         return Ok(());
@@ -358,7 +354,20 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         b.keep_lld_exports(true);
     }
 
-    let coverage = coverage_args(file_name);
+    // The path of benchmark baseline.
+    let benchmark = if let Ok(path) = std::env::var("WASM_BINDGEN_BENCH_RESULT") {
+        PathBuf::from(path)
+    } else {
+        // such as `js-sys/target/wbg_benchmark.json`
+        let path = env::current_dir()
+            .context("Failed to get current dir")?
+            .join("target");
+        // crates in the workspace that do not have a target dir.
+        if cli.bench {
+            fs::create_dir_all(&path)?;
+        }
+        path.join("wbg_benchmark.json")
+    };
 
     // The debug here means adding some assertions and some error messages to the generated js
     // code.
@@ -373,13 +382,13 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
 
     match test_mode {
         TestMode::Node { no_modules } => {
-            node::execute(module, &tmpdir_path, cli, tests, !no_modules, coverage)?
+            node::execute(module, &tmpdir_path, cli, tests, !no_modules, benchmark)?
         }
-<<<<<<< HEAD
+        TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
         TestMode::Emscripten => {
             let srv = server::spawn_emscripten(
                 &"127.0.0.1:0".parse().unwrap(),
-                tmpdir.path(),
+                &tmpdir_path,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
             )
             .context("failed to spawn server")?;
@@ -388,10 +397,6 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             thread::spawn(|| srv.run());
             headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
         }
-        TestMode::Deno => deno::execute(module, tmpdir.path(), cli, tests)?,
-=======
-        TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
->>>>>>> upstream/main
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
         | TestMode::SharedWorker { .. }
@@ -411,7 +416,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
                 tests,
                 test_mode,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
-                coverage,
+                benchmark,
             )
             .context("failed to spawn server")?;
             let addr = srv.server_addr();
@@ -476,28 +481,6 @@ impl TestMode {
             TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
             TestMode::Emscripten { .. } => "WASM_BINDGEN_USE_EMSCRIPTEN",
         }
-    }
-}
-
-fn coverage_args(file_name: &Path) -> PathBuf {
-    fn generated(file_name: &Path, prefix: &str) -> String {
-        let res = format!("{prefix}{}.profraw", file_name.display());
-        res
-    }
-
-    let prefix = env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX")
-        .map(|s| s.to_str().unwrap().to_string())
-        .unwrap_or_default();
-
-    match env::var_os("WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT") {
-        Some(s) => {
-            let mut buf = PathBuf::from(s);
-            if buf.is_dir() {
-                buf.push(generated(file_name, &prefix));
-            }
-            buf
-        }
-        None => PathBuf::from(generated(file_name, &prefix)),
     }
 }
 

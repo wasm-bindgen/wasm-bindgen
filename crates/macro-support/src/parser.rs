@@ -12,7 +12,7 @@ use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
 use syn::Token;
 use syn::{ItemFn, Lit, MacroDelimiter, ReturnType};
-use wasm_bindgen_shared::identifier::is_valid_ident;
+use wasm_bindgen_shared::identifier::{is_js_keyword, is_non_value_js_keyword, is_valid_ident};
 
 use crate::ast::{self, ThreadLocal};
 use crate::hash::ShortHash;
@@ -20,90 +20,6 @@ use crate::ClassMarker;
 use crate::Diagnostic;
 
 thread_local!(static ATTRS: AttributeParseState = Default::default());
-
-/// Javascript keywords.
-///
-/// Note that some of these keywords are only reserved in strict mode. Since we
-/// generate strict mode JS code, we treat all of these as reserved.
-///
-/// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_words
-const JS_KEYWORDS: [&str; 47] = [
-    "arguments",
-    "break",
-    "case",
-    "catch",
-    "class",
-    "const",
-    "continue",
-    "debugger",
-    "default",
-    "delete",
-    "do",
-    "else",
-    "enum",
-    "eval",
-    "export",
-    "extends",
-    "false",
-    "finally",
-    "for",
-    "function",
-    "if",
-    "implements",
-    "import",
-    "in",
-    "instanceof",
-    "interface",
-    "let",
-    "new",
-    "null",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "return",
-    "static",
-    "super",
-    "switch",
-    "this",
-    "throw",
-    "true",
-    "try",
-    "typeof",
-    "var",
-    "void",
-    "while",
-    "with",
-    "yield",
-];
-
-/// Javascript keywords that behave like values in that they can be called like
-/// functions or have properties accessed on them.
-///
-/// Naturally, this list is a subset of `JS_KEYWORDS`.
-const VALUE_LIKE_JS_KEYWORDS: [&str; 7] = [
-    "eval",   // eval is a function-like keyword, so e.g. `eval(...)` is valid
-    "false",  // false resolves to a boolean value, so e.g. `false.toString()` is valid
-    "import", // import.meta and import()
-    "new",    // new.target
-    "super", // super can be used for a function call (`super(...)`) or property lookup (`super.prop`)
-    "this",  // this obviously can be used as a value
-    "true",  // true resolves to a boolean value, so e.g. `false.toString()` is valid
-];
-
-/// Returns whether the given string is a JS keyword.
-fn is_js_keyword(keyword: &str) -> bool {
-    JS_KEYWORDS.contains(&keyword)
-}
-/// Returns whether the given string is a JS keyword that does NOT behave like
-/// a value.
-///
-/// Value-like keywords can be called like functions or have properties
-/// accessed, which makes it possible to use them in imports. In general,
-/// imports should use this function to check for reserved keywords.
-fn is_non_value_js_keyword(keyword: &str) -> bool {
-    JS_KEYWORDS.contains(&keyword) && !VALUE_LIKE_JS_KEYWORDS.contains(&keyword)
-}
 
 /// Return an [`Err`] if the given string contains a comment close syntax (`*/``).
 fn check_js_comment_close(str: &str, span: Span) -> Result<(), Diagnostic> {
@@ -186,6 +102,7 @@ macro_rules! attrgen {
             (typescript_custom_section, false, TypescriptCustomSection(Span)),
             (skip_typescript, false, SkipTypescript(Span)),
             (skip_jsdoc, false, SkipJsDoc(Span)),
+            (private, false, Hide(Span)),
             (main, false, Main(Span)),
             (start, false, Start(Span)),
             (wasm_bindgen, false, WasmBindgen(Span, syn::Path)),
@@ -405,7 +322,7 @@ impl Parse for BindgenAttr {
         let attr = attr.0;
         let attr_span = attr.span();
         let attr_string = attr.to_string();
-        let raw_attr_string = format!("r#{}", attr_string);
+        let raw_attr_string = format!("r#{attr_string}");
 
         macro_rules! parsers {
             ($(($name:ident, $_:literal, $($contents:tt)*),)*) => {
@@ -617,6 +534,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             attrs.check_used();
         }
         let generate_typescript = attrs.skip_typescript().is_none();
+        let private = attrs.private().is_some();
         let comments: Vec<String> = extract_doc_comments(&self.attrs);
         let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
         attrs.check_used();
@@ -627,6 +545,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             comments,
             is_inspectable,
             generate_typescript,
+            private,
             js_namespace,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
@@ -1053,6 +972,7 @@ impl ConvertToAst<(BindgenAttrs, Vec<FnArgAttrs>)> for syn::ItemFn {
         )?;
         attrs.check_used();
 
+        // TODO: Deprecate this for next major
         // Due to legacy behavior, we need to escape all keyword identifiers as
         // `_keyword`, except `default`
         if is_js_keyword(&ret.name) && ret.name != "default" {
@@ -1148,7 +1068,7 @@ fn function_from_decl(
             // names are considered an implementation detail in JS, we can
             // safely rename them to avoid collisions.
             if is_js_keyword(&ident) {
-                i.ident = Ident::new(format!("_{}", ident).as_str(), i.ident.span());
+                i.ident = Ident::new(format!("_{ident}").as_str(), i.ident.span());
             }
         }
     };
@@ -1239,7 +1159,7 @@ fn function_from_decl(
             OperationKind::Setter(_) => "set_",
             _ => "",
         };
-        (format!("{}{}", prefix, js_name), js_name_span)
+        (format!("{prefix}{js_name}"), js_name_span)
     } else {
         (decl_name.unraw().to_string(), decl_name.span())
     };
@@ -1672,7 +1592,7 @@ fn string_enum(
         kind: ast::ImportKind::Enum(ast::StringEnum {
             vis: enum_.vis,
             name: enum_.ident,
-            js_name,
+            export_name: js_name,
             variants,
             variant_values,
             comments,
@@ -1746,6 +1666,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         }
 
         let generate_typescript = opts.skip_typescript().is_none();
+        let private = opts.private().is_some();
         let comments = extract_doc_comments(&self.attrs);
         let js_name = opts
             .js_name()
@@ -1796,7 +1717,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         // values yet, we just need to know their sign. The actual parsing is
         // done in a second pass.
         let signed = self.variants.iter().any(|v| match &v.discriminant {
-            Some((_, expr)) => NumericValue::from_expr(expr).map_or(false, |n| n.negative),
+            Some((_, expr)) => NumericValue::from_expr(expr).is_some_and(|n| n.negative),
             None => false,
         });
         let underlying_min = if signed { i32::MIN as i64 } else { 0 };
@@ -1893,6 +1814,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
             comments,
             hole,
             generate_typescript,
+            private,
             js_namespace,
             wasm_bindgen: program.wasm_bindgen.clone(),
         });
@@ -2277,7 +2199,7 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
         if !unused_attrs.is_empty() {
             let unused_attrs = unused_attrs.iter().map(|UnusedState { error, ident }| {
                 if *error {
-                    let text = format!("invalid attribute {} in this position", ident);
+                    let text = format!("invalid attribute {ident} in this position");
                     quote::quote_spanned! { ident.span() => ::core::compile_error!(#text); }
                 } else {
                     quote::quote! { let #ident: (); }

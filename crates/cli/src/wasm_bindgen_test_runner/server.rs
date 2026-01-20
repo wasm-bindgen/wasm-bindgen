@@ -1,8 +1,8 @@
 use std::borrow::Cow;
-use std::fs;
 use std::io::{Read, Write};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
+use std::{env, fs, process};
 
 use anyhow::{anyhow, Context, Error};
 use rouille::{Request, Response, Server};
@@ -18,15 +18,17 @@ pub(crate) fn spawn(
     tests: Tests,
     test_mode: TestMode,
     isolate_origin: bool,
-    coverage: PathBuf,
+    benchmark: PathBuf,
 ) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
     let mut js_to_execute = String::new();
 
     let cov_import = if test_mode.no_modules() {
-        "let __wbgtest_cov_dump = wasm_bindgen.__wbgtest_cov_dump;"
+        "let __wbgtest_cov_dump = wasm_bindgen.__wbgtest_cov_dump;\n\
+         let __wbgtest_module_signature = wasm_bindgen.__wbgtest_module_signature;"
     } else {
-        "__wbgtest_cov_dump,"
+        "__wbgtest_cov_dump,__wbgtest_module_signature,"
     };
+
     let cov_dump = r#"
         // Dump the coverage data collected during the tests
         const coverage = __wbgtest_cov_dump();
@@ -34,7 +36,38 @@ pub(crate) fn spawn(
         if (coverage !== undefined) {
             await fetch("/__wasm_bindgen/coverage", {
                 method: "POST",
+                headers: {
+                    "Module-Signature": __wbgtest_module_signature(),
+                },
                 body: coverage
+            });
+        }
+    "#;
+
+    let bench_import = if test_mode.no_modules() {
+        "let __wbgbench_import = wasm_bindgen.__wbgbench_import;
+        let __wbgbench_dump = wasm_bindgen.__wbgbench_dump;"
+    } else {
+        "__wbgbench_import,__wbgbench_dump,"
+    };
+
+    let import_bench = r#"
+        // Import the benchmark data before benches
+        const response = await fetch("/__wasm_bindgen/bench/fetch");
+        if (response.ok) {
+            const array = await response.arrayBuffer();
+            __wbgbench_import(new Uint8Array(array));
+        }
+    "#;
+
+    let dump_bench = r#"
+        // Dump the benchmark data collected during the benches
+        const benchmark_dump = __wbgbench_dump();
+
+        if (benchmark_dump !== undefined) {
+            await fetch("/__wasm_bindgen/bench/dump", {
+                method: "POST",
+                body: benchmark_dump
             });
         }
     "#;
@@ -49,6 +82,7 @@ pub(crate) fn spawn(
             let __wbgtest_console_warn = wasm_bindgen.__wbgtest_console_warn;
             let __wbgtest_console_error = wasm_bindgen.__wbgtest_console_error;
             {cov_import}
+            {bench_import}
             let init = wasm_bindgen;
             "#,
         )
@@ -63,14 +97,16 @@ pub(crate) fn spawn(
                 __wbgtest_console_warn,
                 __wbgtest_console_error,
                 {cov_import}
+                {bench_import}
                 default as init,
             }} from './{module}';
             "#,
         )
     };
 
-    let nocapture = cli.nocapture;
-    let args = cli.into_args(&tests);
+    let nocapture = cli.nocapture || cli.bench;
+    let is_bench = cli.bench;
+    let args = cli.get_args(&tests);
 
     if test_mode.is_worker() {
         let mut worker_script = if test_mode.no_modules() {
@@ -104,10 +140,12 @@ pub(crate) fn spawn(
             r#"
             const nocapture = {nocapture};
             const wrap = method => {{
+                const og = self.console[method];
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
+                    og.apply(this, args);
                     if (nocapture) {{
-                        self.__wbg_test_output_writeln(args);
+                        self.__wbg_test_output_writeln(...args);
                     }}
                     if (self[on_method]) {{
                         self[on_method](args);
@@ -117,10 +155,8 @@ pub(crate) fn spawn(
             }};
 
             self.__wbg_test_invoke = f => f();
-            self.__wbg_test_output = "";
-            self.__wbg_test_output_writeln = function (line) {{
-                self.__wbg_test_output += line + "\n";
-                port.postMessage(["__wbgtest_output", self.__wbg_test_output]);
+            self.__wbg_test_output_writeln = function (...args) {{
+                port.postMessage(["__wbgtest_output_append", args.map(String).join(' ') + "\n"]);
             }}
 
             wrap("debug");
@@ -132,7 +168,7 @@ pub(crate) fn spawn(
             async function run_in_worker(tests) {{
                 const wasm = await init("./{module}_bg.wasm");
                 const t = self;
-                const cx = new Context();
+                const cx = new Context({is_bench});
 
                 self.on_console_debug = __wbgtest_console_debug;
                 self.on_console_log = __wbgtest_console_log;
@@ -142,8 +178,16 @@ pub(crate) fn spawn(
 
                 {args}
 
+                if ({is_bench}) {{
+                    {import_bench}
+                }}
+
                 await cx.run(tests.map(s => wasm[s]));
                 {cov_dump}
+
+                if ({is_bench}) {{
+                    {dump_bench}
+                }}
             }}
 
             port.onmessage = function(e) {{
@@ -194,8 +238,13 @@ pub(crate) fn spawn(
                         method == "debug"
                     ) {{
                         console[method].apply(undefined, args[0]);
-                    }} else if (method == "output") {{
-                        document.getElementById("output").textContent = args[0];
+                    }} else if (method == "output_append") {{
+                        const el = document.getElementById("output");
+                        if (!el.dataset.appended) {{
+                            el.textContent += "\n";
+                            el.dataset.appended = "1";
+                        }}
+                        el.textContent += args[0];
                     }}
                 }}
             }});
@@ -215,12 +264,23 @@ pub(crate) fn spawn(
 
                 match test_mode {
                     TestMode::DedicatedWorker { .. } => {
-                        format!("const port = new Worker('worker.js', {{type: '{module}'}});\n")
+                        format!(
+                            r#"const port = new Worker('worker.js', {{type: '{module}'}});
+                            port.onerror = function(e) {{
+                                console.error('Worker error:', e.message, e.filename, e.lineno);
+                                document.getElementById('output').textContent += '\nWorker error: ' + e.message;
+                            }};
+                            "#
+                        )
                     }
                     TestMode::SharedWorker { .. } => {
                         format!(
                             r#"
                             const worker = new SharedWorker("worker.js?random=" + crypto.randomUUID(), {{type: "{module}"}});
+                            worker.onerror = function(e) {{
+                                console.error('Worker error:', e.message, e.filename, e.lineno);
+                                document.getElementById('output').textContent += '\nWorker error: ' + e.message;
+                            }};
                             const port = worker.port;
                             port.start();
                             "#
@@ -230,7 +290,13 @@ pub(crate) fn spawn(
                         format!(
                             r#"
                             const url = "service.js?random=" + crypto.randomUUID();
-                            await navigator.serviceWorker.register(url, {{type: "{module}"}});
+                            const registration = await navigator.serviceWorker.register(url, {{type: "{module}"}});
+                            if (registration.installing) {{
+                                registration.installing.onerror = function(e) {{
+                                    console.error('ServiceWorker error:', e.message);
+                                    document.getElementById('output').textContent += '\nServiceWorker error: ' + e.message;
+                                }};
+                            }}
                             await new Promise((resolve) => {{
                                 navigator.serviceWorker.addEventListener('controllerchange', () => {{
                                     if (navigator.serviceWorker.controller.scriptURL != location.href + url) {{
@@ -263,7 +329,7 @@ pub(crate) fn spawn(
             async function main(test) {{
                 const wasm = await init('./{module}_bg.wasm');
 
-                const cx = new Context();
+                const cx = new Context({is_bench});
                 window.on_console_debug = __wbgtest_console_debug;
                 window.on_console_log = __wbgtest_console_log;
                 window.on_console_info = __wbgtest_console_info;
@@ -272,8 +338,16 @@ pub(crate) fn spawn(
 
                 {args}
 
+                if ({is_bench}) {{
+                    {import_bench}
+                }}
+
                 await cx.run(test.map(s => wasm[s]));
                 {cov_dump}
+
+                if ({is_bench}) {{
+                    {dump_bench}
+                }}
             }}
 
             const tests = [];
@@ -322,8 +396,26 @@ pub(crate) fn spawn(
 
             return response;
         } else if request.url() == "/__wasm_bindgen/coverage" {
-            return if let Err(e) = handle_coverage_dump(&coverage, request) {
+            let module_signature = request
+                .header("Module-Signature")
+                .expect("sent coverage data without module signature")
+                .parse()
+                .expect("sent invalid module signature");
+
+            return if let Err(e) = handle_coverage_dump(module_signature, request) {
                 let s: &str = &format!("Failed to dump coverage: {e}");
+                log::error!("{s}");
+                let mut ret = Response::text(s);
+                ret.status_code = 500;
+                ret
+            } else {
+                Response::empty_204()
+            };
+        } else if request.url() == "/__wasm_bindgen/bench/fetch" {
+            return handle_benchmark_fetch(&benchmark);
+        } else if request.url() == "/__wasm_bindgen/bench/dump" {
+            return if let Err(e) = handle_benchmark_dump(&benchmark, request) {
+                let s: &str = &format!("Failed to save benchmark: {e}");
                 log::error!("{s}");
                 let mut ret = Response::text(s);
                 ret.status_code = 500;
@@ -348,8 +440,8 @@ pub(crate) fn spawn(
         }
         response
     })
-    .map_err(|e| anyhow!("{e}"))?;
-    return Ok(srv);
+    .map_err(|e| anyhow!("{}", e))?;
+    Ok(srv)
 }
 
 pub(crate) fn spawn_emscripten(
@@ -399,7 +491,7 @@ fn try_asset(request: &Request, dir: &Path) -> Response {
     // write in the code that *don't* have file extensions (aka we say `from
     // 'foo'` instead of `from 'foo.js'`. Fixup those paths here to see if a
     // `js` file exists.
-    if let Some(part) = request.url().split('/').last() {
+    if let Some(part) = request.url().split('/').next_back() {
         if !part.contains('.') {
             let new_request = Request::fake_http(
                 request.method(),
@@ -419,9 +511,34 @@ fn try_asset(request: &Request, dir: &Path) -> Response {
     response
 }
 
-fn handle_coverage_dump(profraw_path: &Path, request: &Request) -> anyhow::Result<()> {
+fn handle_benchmark_fetch(path: &Path) -> Response {
+    if let Ok(data) = std::fs::read(path) {
+        Response::from_data("application/octet-stream", data)
+    } else {
+        Response::empty_400()
+    }
+}
+
+fn handle_benchmark_dump(path: &Path, request: &Request) -> anyhow::Result<()> {
+    let mut data = Vec::new();
+    if let Some(mut body) = request.data() {
+        body.read_to_end(&mut data)?;
+    }
+    std::fs::write(path, data)?;
+    Ok(())
+}
+
+fn handle_coverage_dump(module_signature: u64, request: &Request) -> anyhow::Result<()> {
     // This is run after all tests are done and dumps the data received in the request
     // into a single profraw file
+    let profraw_path = wasm_bindgen_test_shared::coverage_path(
+        env::var("LLVM_PROFILE_FILE").ok().as_deref(),
+        process::id(),
+        env::temp_dir()
+            .to_str()
+            .context("failed to parse path to temporary directory")?,
+        module_signature,
+    );
     let mut profraw = std::fs::File::create(profraw_path)?;
     let mut data = Vec::new();
     if let Some(mut r_data) = request.data() {

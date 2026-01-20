@@ -1,27 +1,16 @@
 import source wasmModule from "./reference_test_bg.wasm";
 
 let wasm;
-import { default as default1 } from 'tests/wasm/import_class.js';
+import { default as _default } from 'tests/wasm/import_class.js';
 import * as import0 from 'tests/wasm/imports.js'
 import * as import1 from 'foo-raw'
 import * as import2 from './snippets/import_reftest-a82831e16a4c30f1/inline0.js'
 import * as import3 from 'pure-extern'
 
-let cachedUint8ArrayMemory0 = null;
-
-function getUint8ArrayMemory0() {
-    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
-        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachedUint8ArrayMemory0;
-}
-
-let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
-
-function decodeText(ptr, len) {
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_externrefs.set(idx, obj);
+    return idx;
 }
 
 function getStringFromWasm0(ptr, len) {
@@ -29,10 +18,12 @@ function getStringFromWasm0(ptr, len) {
     return decodeText(ptr, len);
 }
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_externrefs.set(idx, obj);
-    return idx;
+let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
 }
 
 function handleError(f, args) {
@@ -50,6 +41,12 @@ function takeFromExternrefTable0(idx) {
     return value;
 }
 
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+function decodeText(ptr, len) {
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
 export function exported() {
     const ret = wasm.exported();
     if (ret[1]) {
@@ -59,7 +56,7 @@ export function exported() {
 
 const imports = {
     __wbindgen_placeholder__: {
-        __wbg___wbindgen_throw_b855445ff6a94295: function(arg0, arg1) {
+        __wbg___wbindgen_throw_dd24417ed36fc46e: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_catch_me_1d18acaa34acb005: function() { return handleError(function () {
@@ -73,7 +70,7 @@ const imports = {
             b.my_function();
         },
         __wbg_new_c30895ccee9479d4: function(arg0) {
-            const ret = new default1(arg0);
+            const ret = new _default(arg0);
             return ret;
         },
         __wbg_no_catch_757175fbf9e08b9e: function() {
@@ -97,7 +94,6 @@ const imports = {
             table.set(offset + 1, null);
             table.set(offset + 2, true);
             table.set(offset + 3, false);
-            ;
         },
     },
     'tests/wasm/imports.js': import0,  'foo-raw': import1,  './snippets/import_reftest-a82831e16a4c30f1/inline0.js': import2,  'pure-extern': import3,
@@ -107,4 +103,3 @@ const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
 wasm = wasmInstance.exports;
 
 wasm.__wbindgen_start();
-

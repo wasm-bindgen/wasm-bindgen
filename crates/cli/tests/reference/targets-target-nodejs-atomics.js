@@ -2,8 +2,12 @@
 let imports = {};
 imports['__wbindgen_placeholder__'] = module.exports;
 
-let cachedUint8ArrayMemory0 = null;
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
 
+let cachedUint8ArrayMemory0 = null;
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.buffer !== wasm.memory.buffer) {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
@@ -12,28 +16,24 @@ function getUint8ArrayMemory0() {
 }
 
 let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : undefined);
-
 if (cachedTextDecoder) cachedTextDecoder.decode();
 
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
-}
 /**
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
-exports.add_that_might_fail = function(a, b) {
+function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
-};
+}
+exports.add_that_might_fail = add_that_might_fail;
 
-exports.__wbg___wbindgen_throw_b855445ff6a94295 = function(arg0, arg1) {
+exports.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
@@ -50,7 +50,6 @@ exports.__wbindgen_init_externref_table = function() {
     table.set(offset + 1, null);
     table.set(offset + 2, true);
     table.set(offset + 3, false);
-    ;
 };
 
 exports.memory = new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
@@ -61,4 +60,3 @@ const wasmModule = new WebAssembly.Module(wasmBytes);
 const wasm = exports.__wasm = new WebAssembly.Instance(wasmModule, imports).exports;
 
 wasm.__wbindgen_start();
-

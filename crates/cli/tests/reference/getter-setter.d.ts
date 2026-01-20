@@ -1,14 +1,10 @@
 /* tslint:disable */
 /* eslint-disable */
+
 export class Foo {
   private constructor();
   free(): void;
   [Symbol.dispose](): void;
-  x: number;
-  get y(): number | undefined;
-  set y(value: number | null | undefined);
-  get z(): number | undefined;
-  set z(value: number | null | undefined);
   readonly lone_getter: number | undefined;
   set lone_setter(value: number | null | undefined);
   /**
@@ -27,4 +23,9 @@ export class Foo {
    */
   static get x(): boolean | undefined;
   static set x(value: boolean | null | undefined);
+  get z(): number | undefined;
+  set z(value: number | null | undefined);
+  x: number;
+  get y(): number | undefined;
+  set y(value: number | null | undefined);
 }

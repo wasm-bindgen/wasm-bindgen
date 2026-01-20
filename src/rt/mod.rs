@@ -715,7 +715,7 @@ impl<E: core::fmt::Debug> Main for &mut MainWrapper<Result<(), E>> {
     #[inline]
     fn __wasm_bindgen_main(&mut self) {
         if let Err(e) = self.0.take().unwrap() {
-            crate::throw_str(&alloc::format!("{:?}", e));
+            crate::throw_str(&alloc::format!("{e:?}"));
         }
     }
 }

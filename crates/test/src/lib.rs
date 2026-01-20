@@ -3,11 +3,13 @@
 //! More documentation can be found in the README for this crate!
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(wasm_bindgen_unstable_test_coverage, feature(coverage_attribute))]
+#![cfg_attr(target_feature = "atomics", feature(thread_local))]
 #![deny(missing_docs)]
 
 extern crate alloc;
 
-pub use wasm_bindgen_test_macro::wasm_bindgen_test;
+pub use wasm_bindgen_test_macro::{wasm_bindgen_bench, wasm_bindgen_test};
 
 // Custom allocator that only returns pointers in the 2GB-4GB range
 // To ensure we actually support more than 2GB of memory
@@ -124,4 +126,13 @@ pub mod __rt;
 // import minicov on other archs.
 // That way you can use normal cargo test without minicov
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 mod coverage;
+
+// <https://github.com/bheisler/criterion.rs>
+//
+// A modified `criterion.rs`, retaining only the basic benchmark capabilities.
+pub use __rt::criterion::Criterion;
+
+// web_time Instant
+pub use __rt::web_time::Instant;

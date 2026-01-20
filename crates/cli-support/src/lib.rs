@@ -54,7 +54,7 @@ struct Generated {
     js: String,
     ts: String,
     start: Option<String>,
-    snippets: HashMap<String, Vec<String>>,
+    snippets: BTreeMap<String, Vec<String>>,
     local_modules: HashMap<String, String>,
     npm_dependencies: HashMap<String, (PathBuf, String)>,
     typescript: bool,
@@ -67,8 +67,8 @@ enum OutputMode {
     NoModules { global: String },
     Node { module: bool },
     Deno,
-    Emscripten,
     Module,
+    Emscripten,
 }
 
 enum Input {
@@ -549,15 +549,33 @@ fn reset_indentation(s: &str) -> String {
     dst
 }
 
+/// Since Rust will soon adopt v0 mangling as the default,
+/// and the `rustc_demangle` crate doesn't output closure disambiguators,
+/// duplicate symbols can appear. We handle this case manually.
+///
+/// issue: <https://github.com/wasm-bindgen/wasm-bindgen/issues/4820>
 fn demangle(module: &mut Module) {
+    let (lower, upper) = module.funcs.iter().size_hint();
+    let mut counter: HashMap<String, i32> = HashMap::with_capacity(upper.unwrap_or(lower));
+
     for func in module.funcs.iter_mut() {
-        let name = match &func.name {
-            Some(name) => name,
-            None => continue,
+        let Some(name) = &func.name else {
+            continue;
         };
-        if let Ok(sym) = rustc_demangle::try_demangle(name) {
-            func.name = Some(sym.to_string());
-        }
+
+        let Ok(sym) = rustc_demangle::try_demangle(name) else {
+            continue;
+        };
+
+        let count = counter.entry(sym.to_string()).or_insert(0);
+
+        func.name = Some(if *count > 0 {
+            format!("{sym}[{count}]")
+        } else {
+            sym.to_string()
+        });
+
+        *count += 1;
     }
 }
 
@@ -578,6 +596,10 @@ impl OutputMode {
 
     fn no_modules(&self) -> bool {
         matches!(self, OutputMode::NoModules { .. })
+    }
+
+    fn emscripten(&self) -> bool {
+        matches!(self, OutputMode::Emscripten { .. })
     }
 
     fn esm_integration(&self) -> bool {
@@ -623,7 +645,7 @@ impl Output {
         self.generated.start.as_ref()
     }
 
-    pub fn snippets(&self) -> &HashMap<String, Vec<String>> {
+    pub fn snippets(&self) -> &BTreeMap<String, Vec<String>> {
         &self.generated.snippets
     }
 

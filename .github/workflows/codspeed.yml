@@ -1,0 +1,39 @@
+name: CodSpeed Benchmarks
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  # `workflow_dispatch` allows CodSpeed to trigger backtest
+  # performance analysis in order to generate initial data.
+  workflow_dispatch:
+
+env:
+  WASM_BINDGEN_BENCH_RESULT: /tmp/wbg_benchmark.json
+  CODSPEED_PERF_ENABLED: false
+
+permissions:
+  contents: read # required for actions/checkout
+  id-token: write # required for OIDC authentication with CodSpeed
+
+jobs:
+  benchmarks:
+    name: Run benchmarks
+    runs-on: codspeed-macro
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@just
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '25'
+      - run: just bench
+
+      - name: Upload benchmark results
+        uses: CodSpeedHQ/action@v4
+        with:
+          mode: walltime
+          run: cargo run -p wcodspeed $WASM_BINDGEN_BENCH_RESULT
