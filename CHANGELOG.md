@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
+  [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
+
 ### Changed
 
 ### Fixed
