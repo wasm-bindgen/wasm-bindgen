@@ -829,8 +829,8 @@ fn instruction(
             // Call the function through an export of the underlying module.
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
-            const CHECK_ABORTED: &str = "if (__wbg_aborted === true) { __wbg_reset_state(); }";
-            const CATCH_EXCEPTION: &str = "catch(e) { __wbg_aborted = true; throw e; }";
+            const CHECK_ABORTED: &str = "if (__wbg_aborted === true) {\n  __wbg_reset_state();\n}";
+            const CATCH_EXCEPTION: &str = "catch(e) {\n  __wbg_aborted = true;\n  throw e;\n}";
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
