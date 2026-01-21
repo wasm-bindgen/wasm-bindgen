@@ -1668,7 +1668,8 @@ where
 
 /// Returns a handle to this Wasm instance's `WebAssembly.Module`.
 /// This is only available when the final Wasm app is built with
-/// `--target no-modules` or `--target web`.
+/// `--target no-modules`, `--target web`, `--target deno` or `--target nodejs`.
+/// It is unavailable for `--target bundler`.
 pub fn module() -> JsValue {
     __wbindgen_module()
 }
