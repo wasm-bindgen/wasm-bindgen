@@ -159,12 +159,17 @@ impl<'a, 'b> Builder<'a, 'b> {
         if let Some(consumes_self) = self.method {
             let _ = params.next();
             if js.cx.config.generate_reset_state {
+                let abort_check = if js.cx.config.abort_reinit {
+                    "__wbg_aborted === true ||"
+                } else {
+                    ""
+                };
                 js.prelude(
-                    "
-                    if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+                    &format!("
+                    if ({abort_check} this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {{
                         throw new Error('Invalid stale object from previous Wasm instance');
-                    }
-                    ",
+                    }}
+                    "),
                 );
             }
             if js.cx.config.debug {
