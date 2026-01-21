@@ -94,7 +94,7 @@ struct Args {
     )]
     generate_reset_state: bool,
     #[arg(
-        long = "experimental-abort-reinit",
+        long = "abort-reinit",
         help = "Re-initialized the WebAssembly module after a panic (only on panic=abort). Also enables --experimental-reset-state-function"
     )]
     abort_reinit: bool,
