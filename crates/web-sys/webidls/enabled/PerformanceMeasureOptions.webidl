@@ -4,10 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/user-timing/#performancemeasure
+ * https://www.w3.org/TR/user-timing/#extensions-performance-interface
  */
 
 [Exposed=(Window,Worker)]
-interface PerformanceMeasure : PerformanceEntry {
-  readonly attribute any detail;
+dictionary PerformanceMeasureOptions {
+    any detail;
+    (DOMString or DOMHighResTimeStamp) start;
+    DOMHighResTimeStamp duration;
+    (DOMString or DOMHighResTimeStamp) end;
 };

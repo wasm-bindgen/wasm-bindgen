@@ -8,6 +8,7 @@
  */
 
 [Exposed=(Window,Worker)]
-interface PerformanceMark : PerformanceEntry
-{
+interface PerformanceMark : PerformanceEntry {
+  constructor(DOMString markName, optional PerformanceMarkOptions markOptions = {});
+  readonly attribute any detail;
 };
