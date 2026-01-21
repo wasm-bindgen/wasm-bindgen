@@ -364,7 +364,7 @@ impl Bindgen {
                 OutputMode::Module | OutputMode::Web | OutputMode::Node { module: false }
             )
         {
-            bail!("--experimental-abort-reinit is only supported for --target module, --target web, or --target nodejs")
+            bail!("--abort-reinit is only supported for --target module, --target web, or --target nodejs")
         }
 
         // Check that reset_state is only used with --target module, web, or node
