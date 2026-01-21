@@ -58,7 +58,7 @@ once_cell = "1"
 wasm-bindgen-test = { path = 'crates/test' }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-js-sys = { path = 'crates/js-sys' }
+js-sys = { path = 'crates/js-sys', features = ["unsafe-eval"] }
 paste = "1"
 serde_derive = "1.0"
 wasm-bindgen-futures = { path = 'crates/futures' }

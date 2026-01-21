@@ -14,7 +14,10 @@
   [#4893](https://github.com/wasm-bindgen/wasm-bindgen/pull/4893)
 
 * `global` does not use the unsafe-eval `new Function` trick anymore allowing to have CSP strict compliant packages with `wasm-bindgen`.
-  #[4910](https://github.com/wasm-bindgen/wasm-bindgen/pull/4910)
+  [#4910](https://github.com/wasm-bindgen/wasm-bindgen/pull/4910)
+
+* `eval` and `Function` constructors are now gated behind the `unsafe-eval` feature.
+  [#4914](https://github.com/wasm-bindgen/wasm-bindgen/pull/4914)
 
 ### Fixed
 

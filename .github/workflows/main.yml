@@ -261,9 +261,9 @@ jobs:
             env:
               RUSTFLAGS: --cfg=web_sys_unstable_apis
           - name: "js-sys"
-            run: cargo test -p js-sys --target wasm32-unknown-unknown
+            run: cargo test -p js-sys --features=unsafe-eval --target wasm32-unknown-unknown
           - name: "js-sys (unstable)"
-            run: cargo test -p js-sys --target wasm32-unknown-unknown
+            run: cargo test -p js-sys --features=unsafe-eval --target wasm32-unknown-unknown
             env:
               RUSTFLAGS: --cfg=js_sys_unstable_apis
           - name: "wasm-bindgen-webidl"
