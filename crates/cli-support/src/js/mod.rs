@@ -2653,8 +2653,7 @@ impl<'a> Context<'a> {
 
         let mut reset_statements = Vec::new();
 
-        reset_statements.push("__wbg_instance_id++;".to_string());
-        reset_statements.push("__wbg_aborted = false;".to_string());
+        reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
