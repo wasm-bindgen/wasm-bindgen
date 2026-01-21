@@ -44,7 +44,6 @@ fn project_panic_abort(name: &str) -> Project {
 #[test]
 fn abort_reinit_basic() {
     let mut project = project_panic_abort("abort_reinit_basic");
-
     project.file(
         "src/lib.rs",
         "
@@ -414,15 +413,15 @@ fn reset_state_manual() {
 ///
 /// This test requires nightly Rust with -Zbuild-std for panic=unwind on wasm32.
 #[test]
-#[ignore = "requires nightly Rust with -Zbuild-std"]
 fn unwind_panic_no_reinit() {
     let name = "unwind_panic_no_reinit";
     let mut project = Project::new(name);
 
-    project.file(
-        "Cargo.toml",
-        &format!(
-            "
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
             [package]
             name = \"{name}\"
             version = \"1.0.0\"
@@ -439,35 +438,35 @@ fn unwind_panic_no_reinit() {
             [profile.dev]
             panic = \"unwind\"
             ",
-            root = REPO_ROOT.display()
-        ),
-    );
+                root = REPO_ROOT.display()
+            ),
+        )
+        .file(
+            "src/lib.rs",
+            "
+            use wasm_bindgen::prelude::*;
+            use std::sync::atomic::{AtomicU32, Ordering};
 
-    project.file(
-        "src/lib.rs",
-        "
-        use wasm_bindgen::prelude::*;
-        use std::sync::atomic::{AtomicU32, Ordering};
+            static COUNTER: AtomicU32 = AtomicU32::new(0);
 
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
+            #[wasm_bindgen]
+            pub fn increment_and_get() -> u32 {
+                COUNTER.fetch_add(1, Ordering::SeqCst)
+            }
 
-        #[wasm_bindgen]
-        pub fn increment_and_get() -> u32 {
-            COUNTER.fetch_add(1, Ordering::SeqCst)
-        }
-
-        #[wasm_bindgen]
-        pub fn trigger_panic() {
-            panic!();
-        }
-        ",
-    );
+            #[wasm_bindgen]
+            pub fn trigger_panic() {
+                panic!();
+            }
+            ",
+        );
 
     // Build with nightly and -Zbuild-std for panic=unwind support
     project
         .cargo_cmd
+        .env("RUSTFLAGS", "-Cpanic=unwind")
         .env("RUSTUP_TOOLCHAIN", "nightly")
-        .arg("-Zbuild-std=std,panic_abort");
+        .arg("-Zbuild-std=std,panic_unwind");
 
     let out_dir = project
         .wasm_bindgen("--target nodejs --experimental-abort-reinit")
@@ -514,15 +513,15 @@ fn unwind_panic_no_reinit() {
 
 /// Test: With panic=unwind, non-PanicError exceptions DO trigger re-initialization.
 #[test]
-#[ignore = "requires nightly Rust with -Zbuild-std"]
 fn unwind_js_exception_reinit() {
     let name = "unwind_js_exception_reinit";
     let mut project = Project::new(name);
 
-    project.file(
-        "Cargo.toml",
-        &format!(
-            "
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
             [package]
             name = \"{name}\"
             version = \"1.0.0\"
@@ -539,40 +538,40 @@ fn unwind_js_exception_reinit() {
             [profile.dev]
             panic = \"unwind\"
             ",
-            root = REPO_ROOT.display()
-        ),
-    );
+                root = REPO_ROOT.display()
+            ),
+        )
+        .file(
+            "src/lib.rs",
+            "
+            use wasm_bindgen::prelude::*;
+            use std::sync::atomic::{AtomicU32, Ordering};
 
-    project.file(
-        "src/lib.rs",
-        "
-        use wasm_bindgen::prelude::*;
-        use std::sync::atomic::{AtomicU32, Ordering};
+            static COUNTER: AtomicU32 = AtomicU32::new(0);
 
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
+            #[wasm_bindgen]
+            pub fn increment_and_get() -> u32 {
+                COUNTER.fetch_add(1, Ordering::SeqCst)
+            }
 
-        #[wasm_bindgen]
-        pub fn increment_and_get() -> u32 {
-            COUNTER.fetch_add(1, Ordering::SeqCst)
-        }
+            #[wasm_bindgen]
+            extern \"C\" {
+                #[wasm_bindgen(js_name = throwError)]
+                fn throw_error();
+            }
 
-        #[wasm_bindgen]
-        extern \"C\" {
-            #[wasm_bindgen(js_name = throwError)]
-            fn throw_error();
-        }
-
-        #[wasm_bindgen]
-        pub fn call_throwing_js() {
-            throw_error();
-        }
-        ",
-    );
+            #[wasm_bindgen]
+            pub fn call_throwing_js() {
+                throw_error();
+            }
+            ",
+        );
 
     project
         .cargo_cmd
+        .env("RUSTFLAGS", "-Cpanic=unwind")
         .env("RUSTUP_TOOLCHAIN", "nightly")
-        .arg("-Zbuild-std=std,panic_abort");
+        .arg("-Zbuild-std=std,panic_unwind");
 
     let out_dir = project
         .wasm_bindgen("--target nodejs --experimental-abort-reinit")
