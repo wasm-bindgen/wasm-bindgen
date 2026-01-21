@@ -85,10 +85,6 @@ export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
 export function __wbg__wbg_cb_unref_d9b87ff7982e3b21(arg0) {
     arg0._wbg_cb_unref();
 }
-export function __wbg_call_389efe28435a9388() { return handleError(function (arg0, arg1) {
-    const ret = arg0.call(arg1);
-    return ret;
-}, arguments); }
 export function __wbg_call_4708e0c13bdc8e95() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
@@ -114,10 +110,6 @@ export function __wbg_new_b5d9e2fb389fef91(arg0, arg1) {
     } finally {
         state0.a = state0.b = 0;
     }
-}
-export function __wbg_new_no_args_1c7c842f08d00ebb(arg0, arg1) {
-    const ret = new Function(getStringFromWasm0(arg0, arg1));
-    return ret;
 }
 export function __wbg_queueMicrotask_0aa0a927f78f5d98(arg0) {
     const ret = arg0.queueMicrotask;

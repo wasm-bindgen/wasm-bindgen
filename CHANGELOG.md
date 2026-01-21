@@ -10,6 +10,9 @@
 
 ### Changed
 
+* `global` does not use the unsafe-eval `new Function` trick anymore allowing to have CSP strict compliant packages with `wasm-bindgen`.
+  #[4910](https://github.com/wasm-bindgen/wasm-bindgen/pull/4910)
+
 ### Fixed
 
 ### Removed
