@@ -24,7 +24,7 @@ is rejected with the `PanicError`.
 Build your project with the required flags:
 
 ```bash
-cargo +nightly build --target wasm32-unknown-unknown -Zbuild-std
+RUSTFLAGS="-Cpanic=unwind" cargo +nightly build --target wasm32-unknown-unknown -Zbuild-std=std,panic_unwind
 ```
 
 Or set these in `.cargo/config.toml`:
@@ -35,6 +35,7 @@ build-std = ["std", "panic_unwind"]
 
 [build]
 target = "wasm32-unknown-unknown"
+rustflags = ["-C", "panic=unwind"]
 
 [profile.release]
 panic = "unwind"
@@ -104,6 +105,46 @@ try {
     console.log(e.message); // "URL cannot be empty"
 }
 ```
+
+## Closures
+
+Rust closures passed to JavaScript with `Closure::new`, `Closure::wrap`, and
+`Closure::once` also catch panics when built with `panic=unwind`. When a panic
+occurs inside a closure invoked from JavaScript, the panic is caught and thrown
+as a `PanicError` exception.
+
+Like exported functions, catching panics in closures requires the closure to
+satisfy the `UnwindSafe` trait.
+
+```rust
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    fn setCallback(f: &Closure<dyn FnMut()>);
+}
+
+let closure = Closure::new(|| {
+    panic!("closure panicked!");
+});
+setCallback(&closure);
+```
+
+```javascript
+try {
+    triggerCallback();
+} catch (e) {
+    console.log(e.name);    // "PanicError"
+    console.log(e.message); // "closure panicked!"
+}
+```
+
+For closures that should not catch panics (and abort the program instead), use
+the `*_aborting` variants: `new_aborting`, `wrap_aborting`, `once_aborting`, and
+`once_into_js_aborting`. These do not require `UnwindSafe`.
+
+See [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md) for
+more details on closure panic handling and the `UnwindSafe` requirement.
 
 ## The PanicError Class
 

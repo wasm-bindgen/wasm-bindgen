@@ -116,3 +116,85 @@ pub fn hello() -> Interval {
     Interval::new(1_000, || log("hello"))
 }
 ```
+
+### Panic Handling in Closures
+
+When built with `panic=unwind`, the default `Closure` constructors (`new`,
+`wrap`, and `once`) catch panics that occur when the closure is invoked from
+JavaScript. Panics are converted to JavaScript `PanicError` exceptions, allowing
+JavaScript code to catch and handle them.
+
+These constructors require the closure to satisfy Rust's `UnwindSafe` trait.
+
+For more information on enabling panic catching, see [Catching
+Panics](./catch-unwind.md).
+
+### UnwindSafe Requirement
+
+The default constructors (`new`, `wrap`, `once`) require that closures be
+`UnwindSafe`. This is a marker trait that indicates a type is safe to use across
+panic boundaries.
+
+Common "not unwind safe" compiler errors are caused by capturing types with
+interior mutability:
+
+- `Rc<Cell<_>>`, `Rc<RefCell<_>>`
+- Other interior mutability types
+
+The compiler error will indicate which captured type is problematic.
+
+**Fix 1: Use abort variants**
+
+If you don't need panic catching, use the `*_aborting` variants (`new_aborting`,
+`wrap_aborting`, `once_aborting`, `once_into_js_aborting`) which do not require
+`UnwindSafe`:
+
+```rust
+use std::cell::RefCell;
+use std::rc::Rc;
+use wasm_bindgen::prelude::*;
+
+let data = Rc::new(RefCell::new(0));
+
+// No UnwindSafe requirement — aborts on panic instead of catching
+let closure = Closure::new_aborting(move || {
+    *data.borrow_mut() += 1;
+});
+```
+
+**Fix 2: Assert unwind safety**
+
+If you need panic catching and are confident your closure is safe to use across
+panic boundaries, you can use `AssertUnwindSafe`:
+
+```rust
+use std::panic::AssertUnwindSafe;
+use wasm_bindgen::prelude::*;
+
+let closure = Closure::new(AssertUnwindSafe(move || {
+    // you're asserting this is safe across panics
+}));
+```
+
+### Type Inference with Box
+
+`Closure::wrap` checks `UnwindSafe` on the concrete closure type before it is
+erased to a trait object. Casting to a trait object too early defeats this
+check:
+
+```rust
+// ❌ Wrong — cast erases concrete type, UnwindSafe can't be checked
+Closure::wrap(Box::new(|| {}) as Box<dyn FnMut()>)
+```
+
+Instead, use one of these patterns:
+
+```rust
+// ✅ Correct — use turbofish, let concrete type flow through
+Closure::<dyn FnMut()>::wrap(Box::new(|| {}))
+```
+
+```rust
+// ✅ Correct — use type annotation on binding
+let closure: Closure<dyn FnMut()> = Closure::wrap(Box::new(|| {}));
+```

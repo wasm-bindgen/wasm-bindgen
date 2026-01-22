@@ -6351,28 +6351,8 @@ pub fn global() -> Object {
             }
         }
 
-        // According to StackOverflow you can access the global object via:
-        //
-        //      const global = Function('return this')();
-        //
-        // I think that's because the manufactured function isn't in "strict" mode.
-        // It also turns out that non-strict functions will ignore `undefined`
-        // values for `this` when using the `apply` function.
-        //
-        // As a result we use the equivalent of this snippet to get a handle to the
-        // global object in a sort of roundabout way that should hopefully work in
-        // all contexts like ESM, node, browsers, etc.
-        let this = Function::new_no_args("return this")
-            .call0(&JsValue::undefined())
-            .ok();
-
-        // Note that we avoid `unwrap()` on `call0` to avoid code size bloat, we
-        // just handle the `Err` case as returning a different object.
-        debug_assert!(this.is_some());
-        match this {
-            Some(this) => this.unchecked_into(),
-            None => JsValue::undefined().unchecked_into(),
-        }
+        // Global object not found
+        JsValue::undefined().unchecked_into()
     }
 }
 

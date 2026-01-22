@@ -11,5 +11,10 @@
   },
   "devDependencies": {
     "@types/node": "^24.3.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "memfs": "4.17.0"
+    }
   }
 }

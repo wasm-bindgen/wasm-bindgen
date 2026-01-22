@@ -6,15 +6,16 @@
 
 #![allow(clippy::fn_to_numeric_cast)]
 
-use alloc::boxed::Box;
-use alloc::string::String;
-use core::fmt;
-use core::mem::{self, ManuallyDrop};
-
 use crate::convert::*;
 use crate::describe::*;
 use crate::JsValue;
+use crate::__rt::marker::MaybeUnwindSafe;
+use alloc::boxed::Box;
+use alloc::string::String;
+use core::fmt;
 use core::marker::PhantomData;
+use core::mem;
+use core::panic::AssertUnwindSafe;
 
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
 extern "C" {
@@ -279,14 +280,83 @@ where
     ///   etc.)
     pub fn new<F>(t: F) -> Closure<T>
     where
+        F: MaybeUnwindSafe + IntoWasmClosure<T> + 'static,
+    {
+        Self::_wrap(Box::new(t).unsize(), true)
+    }
+
+    /// Creates a new instance of `Closure` from the provided Rust function.
+    ///
+    /// Unlike `new`, this version does NOT catch panics and does NOT require `UnwindSafe`.
+    /// If the closure panics, the process will abort.
+    ///
+    /// Use this when:
+    /// - Your closure captures types that aren't `UnwindSafe` (like `Rc<Cell<T>>`)
+    /// - You don't need panic catching across the JS boundary
+    /// - You prefer abort-on-panic behavior
+    ///
+    /// Note that the closure provided here, `F`, has a few requirements
+    /// associated with it:
+    ///
+    /// * It must implement `Fn` or `FnMut` (for `FnOnce` functions see
+    ///   `Closure::once` and `Closure::once_into_js`).
+    ///
+    /// * It must be `'static`, aka no stack references (use the `move`
+    ///   keyword).
+    ///
+    /// * It can have at most 7 arguments.
+    ///
+    /// * Its arguments and return values are all types that can be shared with
+    ///   JS (i.e. have `#[wasm_bindgen]` annotations or are simple numbers,
+    ///   etc.)
+    pub fn new_aborting<F>(t: F) -> Closure<T>
+    where
         F: IntoWasmClosure<T> + 'static,
     {
-        Closure::wrap(Box::new(t).unsize())
+        Self::_wrap(Box::new(t).unsize(), false)
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
     /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
-    pub fn wrap(data: Box<T>) -> Closure<T> {
+    ///
+    /// This version catches panics when unwinding is available.
+    pub fn wrap<F>(data: Box<F>) -> Closure<T>
+    where
+        F: MaybeUnwindSafe + IntoWasmClosure<T> + ?Sized,
+    {
+        Self::_wrap(data.unsize(), true)
+    }
+
+    /// A more direct version of `Closure::new` which creates a `Closure` from
+    /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
+    ///
+    /// Unlike `wrap`, this version does NOT catch panics and does NOT require `UnwindSafe`.
+    /// If the closure panics, the process will abort.
+    ///
+    /// Use this when:
+    /// - Your closure captures types that aren't `UnwindSafe` (like `Rc<Cell<T>>`)
+    /// - You don't need panic catching across the JS boundary
+    /// - You prefer abort-on-panic behavior
+    pub fn wrap_aborting<F>(data: Box<F>) -> Closure<T>
+    where
+        F: IntoWasmClosure<T> + ?Sized,
+    {
+        Self::_wrap(data.unsize(), false)
+    }
+
+    #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+    fn _wrap(data: Box<T>, unwind_safe: bool) -> Closure<T> {
+        Self {
+            js: crate::__rt::wbg_cast(OwnedClosureUnwind {
+                closure: OwnedClosure(data),
+                unwind_safe,
+            }),
+            _marker: PhantomData,
+        }
+    }
+
+    #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
+    fn _wrap(data: Box<T>, _unwind_safe: bool) -> Closure<T> {
         Self {
             js: crate::__rt::wbg_cast(OwnedClosure(data)),
             _marker: PhantomData,
@@ -353,8 +423,33 @@ where
     pub fn once<F, A, R>(fn_once: F) -> Self
     where
         F: WasmClosureFnOnce<T, A, R>,
+        F: MaybeUnwindSafe,
     {
-        Closure::wrap(fn_once.into_fn_mut())
+        Closure::_wrap(fn_once.into_fn_mut(), true)
+    }
+
+    /// Create a `Closure` from a function that can only be called once.
+    ///
+    /// Unlike `once`, this version does NOT catch panics and does NOT require `UnwindSafe`.
+    /// If the closure panics, the process will abort.
+    ///
+    /// Use this when:
+    /// - Your closure captures types that aren't `UnwindSafe` (like `Rc<Cell<T>>`)
+    /// - You don't need panic catching across the JS boundary
+    /// - You prefer abort-on-panic behavior
+    ///
+    /// Since we have no way of enforcing that JS cannot attempt to call this
+    /// `FnOnce(A...) -> R` more than once, this produces a `Closure<dyn FnMut(A...)
+    /// -> R>` that will dynamically throw a JavaScript error if called more
+    /// than once.
+    ///
+    /// Note: the `A` and `R` type parameters are here just for backward compat
+    /// and will be removed in the future.
+    pub fn once_aborting<F, A, R>(fn_once: F) -> Self
+    where
+        F: WasmClosureFnOnceAbort<T, A, R>,
+    {
+        Closure::_wrap(fn_once.into_fn_mut(), false)
     }
 
     /// Convert a `FnOnce(A...) -> R` into a JavaScript `Function` object.
@@ -386,6 +481,29 @@ where
     {
         fn_once.into_js_function()
     }
+
+    /// Convert a `FnOnce(A...) -> R` into a JavaScript `Function` object.
+    ///
+    /// Unlike `once_into_js`, this version does NOT catch panics and does NOT require `UnwindSafe`.
+    /// If the closure panics, the process will abort.
+    ///
+    /// If the JavaScript function is invoked more than once, it will throw an
+    /// exception.
+    ///
+    /// Unlike `Closure::once_aborting`, this does *not* return a `Closure` that can be
+    /// dropped before the function is invoked to deallocate the closure. The
+    /// only way the `FnOnce` is deallocated is by calling the JavaScript
+    /// function. If the JavaScript function is never called then the `FnOnce`
+    /// and everything it closes over will leak.
+    ///
+    /// Note: the `A` and `R` type parameters are here just for backward compat
+    /// and will be removed in the future.
+    pub fn once_into_js_aborting<F, A, R>(fn_once: F) -> JsValue
+    where
+        F: WasmClosureFnOnceAbort<T, A, R>,
+    {
+        fn_once.into_js_function()
+    }
 }
 
 /// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
@@ -397,26 +515,40 @@ pub trait WasmClosureFnOnce<FnMut: ?Sized, A, R>: 'static {
     fn into_js_function(self) -> JsValue;
 }
 
+/// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
+/// will throw if ever called more than once. This variant does not require UnwindSafe.
+#[doc(hidden)]
+pub trait WasmClosureFnOnceAbort<FnMut: ?Sized, A, R>: 'static {
+    fn into_fn_mut(self) -> Box<FnMut>;
+
+    fn into_js_function(self) -> JsValue;
+}
+
 impl<T: ?Sized> AsRef<JsValue> for Closure<T> {
     fn as_ref(&self) -> &JsValue {
         &self.js
     }
 }
 
-/// Internal representation of the actual owned closure which we send to the JS
-/// in the constructor to convert it into a JavaScript value.
+/// Internal representation of an owned closure that we send to JS.
+/// This is used when panic=abort or when panic=unwind but without the unwind_safe flag.
 #[repr(transparent)]
 struct OwnedClosure<T: ?Sized>(Box<T>);
 
-unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
-    // This can be called by the JS glue in erroneous situations
-    // such as when the closure has already been destroyed. If
-    // that's the case let's not make things worse by
-    // segfaulting and/or asserting, so just ignore null
-    // pointers.
+/// Internal representation of an owned closure with unwind safety flag. Used
+/// when panic=unwind to pass both the closure and the unwind_safe flag to JS.
+#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+struct OwnedClosureUnwind<T: ?Sized> {
+    closure: OwnedClosure<T>,
+    unwind_safe: bool,
+}
+
+unsafe extern "C" fn destroy<T: ?Sized>(a: usize, mut b: usize) {
     if a == 0 {
         return;
     }
+    // Mask out unwind_safe flag
+    b &= !0x80000000;
     drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
 }
 
@@ -440,10 +572,47 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
+        use core::mem::ManuallyDrop;
         let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self)) };
         WasmSlice {
             ptr: a as u32,
             len: b as u32,
+        }
+    }
+}
+
+#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+impl<T> WasmDescribe for OwnedClosureUnwind<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        // Delegate to the inner closure's descriptor - type info is the same
+        OwnedClosure::<T>::describe();
+    }
+}
+
+#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+impl<T> IntoWasmAbi for OwnedClosureUnwind<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+
+    fn into_abi(self) -> WasmSlice {
+        use core::mem::ManuallyDrop;
+        let (a, b): (usize, usize) =
+            unsafe { mem::transmute_copy(&ManuallyDrop::new(self.closure)) };
+        // Pack unwind_safe into most significant bit (bit 31) of vtable
+        let b_with_flag = if self.unwind_safe {
+            (b as u32) | 0x80000000
+        } else {
+            b as u32
+        };
+        WasmSlice {
+            ptr: a as u32,
+            len: b_with_flag,
         }
     }
 }
@@ -518,6 +687,10 @@ pub unsafe trait WasmClosure: WasmDescribe {
     const IS_MUT: bool;
 }
 
+unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
+    const IS_MUT: bool = T::IS_MUT;
+}
+
 /// An internal trait for the `Closure` type.
 ///
 /// This trait is not stable and it's not recommended to use this in bounds or
@@ -525,4 +698,10 @@ pub unsafe trait WasmClosure: WasmDescribe {
 #[doc(hidden)]
 pub trait IntoWasmClosure<T: ?Sized> {
     fn unsize(self: Box<Self>) -> Box<T>;
+}
+
+impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
+    fn unsize(self: Box<Self>) -> Box<T> {
+        self
+    }
 }

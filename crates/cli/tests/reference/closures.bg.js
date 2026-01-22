@@ -21,10 +21,6 @@ export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
 export function __wbg__wbg_cb_unref_d9b87ff7982e3b21(arg0) {
     arg0._wbg_cb_unref();
 }
-export function __wbg_call_389efe28435a9388() { return handleError(function (arg0, arg1) {
-    const ret = arg0.call(arg1);
-    return ret;
-}, arguments); }
 export function __wbg_forEach_a2bfcdf179e573de(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
@@ -54,10 +50,6 @@ export function __wbg_instanceof_Window_ed49b2db8df90359(arg0) {
 }
 export function __wbg_log_6b5ca2e6124b2808(arg0) {
     console.log(arg0);
-}
-export function __wbg_new_no_args_1c7c842f08d00ebb(arg0, arg1) {
-    const ret = new Function(getStringFromWasm0(arg0, arg1));
-    return ret;
 }
 export function __wbg_setTimeout_681abd84926a4da3() { return handleError(function (arg0, arg1) {
     const ret = arg0.setTimeout(arg1);
