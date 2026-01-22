@@ -2513,17 +2513,27 @@ impl<'a> Context<'a> {
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
+            let abort_check = if self.config.abort_reinit {
+                "if (__wbg_aborted === true) {
+                    __wbg_reset_state();
+                }\n"
+            } else {
+                ""
+            };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
-                    "
-                    if (state.instance !== __wbg_instance_id) {
+                    format!("{abort_check}
+                    if (state.instance !== __wbg_instance_id) {{
                         throw new Error('Cannot invoke closure from previous WASM instance');
-                    }
-                    ",
+                    }}
+                    "),
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
+                    "".into(),
+                )
             };
             format!(
                 "
@@ -2568,17 +2578,27 @@ impl<'a> Context<'a> {
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
+            let abort_check = if self.config.abort_reinit {
+                "if (__wbg_aborted === true) {
+                    __wbg_reset_state();
+                }\n"
+            } else {
+                ""
+            };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
-                    "
-                    if (state.instance !== __wbg_instance_id) {
+                    format!("{abort_check}
+                    if (state.instance !== __wbg_instance_id) {{
                         throw new Error('Cannot invoke closure from previous WASM instance');
-                    }
-                    ",
+                    }}
+                    "),
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
+                    "".into(),
+                )
             };
             format!(
                 "

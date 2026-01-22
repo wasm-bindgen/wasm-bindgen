@@ -160,13 +160,13 @@ impl<'a, 'b> Builder<'a, 'b> {
             let _ = params.next();
             if js.cx.config.generate_reset_state {
                 let abort_check = if js.cx.config.abort_reinit {
-                    "__wbg_aborted === true ||"
+                    "__wbg_aborted === true || "
                 } else {
                     ""
                 };
                 js.prelude(
                     &format!("
-                    if ({abort_check} this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {{
+                    if ({abort_check}this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {{
                         throw new Error('Invalid stale object from previous Wasm instance');
                     }}
                     "),
@@ -706,6 +706,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     fn assert_not_moved(&mut self, arg: &str) {
         if self.cx.config.generate_reset_state {
             // Under reset state, we need comprehensive validation
+            if self.cx.config.abort_reinit {
+                self.prelude(
+                    "\
+                    if (__wbg_aborted === true) {
+                        __wbg_reset_state()
+                    }",
+                );
+            }
             self.prelude(&format!(
                 "\
                 if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
@@ -800,6 +808,10 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
+            let should_check_aborted = matches!(
+                instr,
+                Instruction::CallExport(_) | Instruction::DeferFree { .. }
+            );
             let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
 
@@ -848,7 +860,7 @@ fn instruction(
             } else {
                 "catch(e) {
                   __wbg_aborted = true;
-                    throw e;
+                  throw e;
                 }"
             };
 
@@ -857,7 +869,7 @@ fn instruction(
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    if js.cx.config.abort_reinit {
+                    if js.cx.config.abort_reinit && should_check_aborted {
                         js.finally(&format!(
                             "
                             {CHECK_ABORTED}
@@ -872,7 +884,7 @@ fn instruction(
                 }
                 (true, _) => panic!("deferred calls must have no results"),
                 (false, 0) => {
-                    if js.cx.config.abort_reinit {
+                    if js.cx.config.abort_reinit && should_check_aborted {
                         js.prelude(&format!(
                             "
                             {CHECK_ABORTED}
@@ -886,7 +898,7 @@ fn instruction(
                     }
                 }
                 (false, n) => {
-                    if js.cx.config.abort_reinit {
+                    if js.cx.config.abort_reinit && should_check_aborted {
                         js.prelude(&format!(
                             "let ret;
                             {CHECK_ABORTED}
