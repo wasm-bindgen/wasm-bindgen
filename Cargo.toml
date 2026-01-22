@@ -91,7 +91,9 @@ members = [
   "crates/js-sys",
   "crates/test",
   "crates/test/sample",
+  "crates/toolchain",
   "crates/typescript-tests",
+  "crates/wbg",
   "crates/web-sys",
   "crates/webidl",
   "crates/webidl-tests",
@@ -128,8 +130,6 @@ members = [
   "examples/without-a-bundler-no-modules",
   "examples/synchronous-instantiation",
   "tests/no-std",
-  "crates/cargo-wasm-bindgen",
-  "crates/wasm-bindgen-build",
 ]
 resolver = "2"
 

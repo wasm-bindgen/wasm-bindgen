@@ -1,4 +1,4 @@
-use crate::{BuildProfile, Target};
+use crate::wasm_bindgen_build::{BuildProfile, Target};
 use anyhow::{anyhow, bail, Context, Result};
 use cargo_metadata::{CrateType, Metadata, TargetKind};
 use serde::{Deserialize, Serialize};

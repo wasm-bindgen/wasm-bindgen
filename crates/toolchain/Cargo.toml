@@ -1,0 +1,87 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+categories = ["wasm"]
+description = """
+Command line interface of the `#[wasm_bindgen]` attribute and project. For more
+information see https://github.com/wasm-bindgen/wasm-bindgen.
+"""
+documentation = "https://wasm-bindgen.github.io/wasm-bindgen/"
+edition = "2021"
+homepage = "https://wasm-bindgen.github.io/wasm-bindgen/"
+include = ["/LICENSE-*", "/src"]
+license = "MIT OR Apache-2.0"
+name = "wasm-bindgen-toolchain"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/toolchain"
+rust-version = "1.82"
+version = "0.2.106"
+
+# TODO
+# [package.metadata.binstall]
+# bin-dir = "wasm-bindgen-{ version }-{ target }/{ bin }{ binary-ext }"
+# pkg-url = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/{ version }/wasm-bindgen-{ version }-{ target }{ archive-suffix }"
+
+[[bin]]
+name = "wasm-bindgen-compile"
+path = "src/bin/wasm-bindgen-compile.rs"
+
+[[bin]]
+name = "wasm-bindgen-test-runner"
+path = "src/bin/wasm-bindgen-test-runner.rs"
+
+[[bin]]
+name = "wasm-bindgen-wasm2es6js"
+path = "src/bin/wasm-bindgen-wasm2es6js.rs"
+
+[[bin]]
+name = "wasm-bindgen-build"
+path = "src/bin/wasm-bindgen-build.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4", features = ["derive"] }
+env_logger = "0.11.5"
+log = "0.4"
+native-tls = { version = "0.2", default-features = false, optional = true }
+rouille = { version = "3.0.0", default-features = false }
+serde = { version = "1.0", features = ['derive'] }
+serde_derive = "1.0"
+serde_json = "1.0"
+shlex = "1"
+tempfile = "3.0"
+ureq = { version = "3", default-features = false, features = ["brotli", "gzip"] }
+walrus = "0.24.2"
+wasm-bindgen-cli = { path = "../cli", version = "=0.2.106" }
+wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.106" }
+wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.106" }
+
+# TODO clean these up
+serde_ignored = "0.1.14"
+binary-install = "0.4.1"
+path-clean = "1.0.1"
+which = "8.0.0"
+toml = "0.9.8"
+strsim = "0.11.1"
+cargo_metadata = "0.23.1"
+
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+pretty_assertions = "1.4"
+regex = "1.11.2"
+rstest = "0.26"
+wasmparser = "0.240"
+wasmprinter = "0.240"
+
+[features]
+default = ["rustls-tls"]
+
+native-tls = ["ureq/native-tls"]
+rustls-tls = ["ureq/rustls"]
+
+# Legacy support
+openssl = ["dep:native-tls"]
+vendored-openssl = ["openssl", "native-tls/vendored"]
+
+[lints]
+workspace = true

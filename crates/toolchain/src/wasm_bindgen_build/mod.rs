@@ -9,7 +9,7 @@ use log::info;
 use manifest::CrateData;
 use path_clean::PathClean;
 use serde::Deserialize;
-use std::env;
+use std::ffi::OsString;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -230,10 +230,13 @@ pub struct PreParseOptions {
     pub out_name: Option<String>,
 }
 
-fn main() -> Result<()> {
-    env_logger::init();
-
-    let args_pre = PreParseCommand::parse();
+pub fn run_cli_with_args<I, T>(args: I) -> anyhow::Result<()>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    let args = args.into_iter().collect::<Vec<_>>();
+    let args_pre = PreParseCommand::parse_from(args.clone());
     let opts_pre = args_pre.opts;
     let crate_path = opts_pre.path.unwrap_or_else(|| PathBuf::from("."));
     let crate_path = fs::canonicalize(&crate_path).with_context(|| {
@@ -245,11 +248,14 @@ fn main() -> Result<()> {
     let crate_data = CrateData::new(&crate_path, opts_pre.out_name.clone())?;
 
     let args = {
-        let mut final_args = Vec::new();
-        let config_args = args_from_toml(&crate_data);
-        let mut user_args = env::args();
+        let mut final_args = Vec::<OsString>::new();
+        let config_args = args_from_toml(&crate_data)
+            .into_iter()
+            .map(|x| Into::<OsString>::into(x))
+            .collect::<Vec<_>>();
+        let mut user_args = args.clone().into_iter().map(|x| x.into());
         if let Some(arg0) = user_args.next() {
-            final_args.push(arg0);
+            final_args.push(arg0.into());
         }
         final_args.extend(config_args);
         final_args.extend(user_args);
@@ -481,8 +487,7 @@ fn run_wasm_bindgen(
     crate_data: &CrateData,
 ) -> Result<()> {
     let mut args = vec![
-        "wasm-bindgen".to_string(),
-        "cli".to_string(),
+        "compile".to_string(),
         wasm_path.to_str().unwrap().to_string(),
         "--out-dir".to_string(),
         out_dir.to_str().unwrap().to_string(),
@@ -528,7 +533,8 @@ fn run_wasm_bindgen(
     }
 
     info!("Running: cargo {}", args.join(" "));
-    let status = Command::new("cargo")
+    // TODO maybe check existence of wbg or have wbg pass an env var so we know who it's being run.
+    let status = Command::new("wbg")
         .args(&args)
         .status()
         .context("Failed to run cargo wasm-bindgen cli")?;
