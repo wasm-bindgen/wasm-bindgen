@@ -140,8 +140,8 @@ try {
 ```
 
 For closures that should not catch panics (and abort the program instead), use
-the `*_aborting` variants: `new_aborting`, `wrap_aborting`, and `once_aborting`. These do
-not require `UnwindSafe`.
+the `*_aborting` variants: `new_aborting`, `wrap_aborting`, `once_aborting`, and
+`once_into_js_aborting`. These do not require `UnwindSafe`.
 
 See [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md) for
 more details on closure panic handling and the `UnwindSafe` requirement.

@@ -145,8 +145,9 @@ The compiler error will indicate which captured type is problematic.
 
 **Fix 1: Use abort variants**
 
-If you don't need panic catching, use the `*_aborting` variants which do not
-require `UnwindSafe`:
+If you don't need panic catching, use the `*_aborting` variants (`new_aborting`,
+`wrap_aborting`, `once_aborting`, `once_into_js_aborting`) which do not require
+`UnwindSafe`:
 
 ```rust
 use std::cell::RefCell;
