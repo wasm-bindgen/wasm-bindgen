@@ -54,8 +54,8 @@ pub mod strings;
 
 #[wasm_bindgen_test]
 fn closures_work() {
-    let x = Closure::wrap(Box::new(|| {}) as Box<dyn FnMut()>);
+    let x: Closure<dyn FnMut()> = Closure::wrap(Box::new(|| {}));
     drop(x);
-    let x = Closure::wrap(Box::new(|| {}) as Box<dyn FnMut()>);
+    let x: Closure<dyn FnMut()> = Closure::wrap(Box::new(|| {}));
     x.forget();
 }
