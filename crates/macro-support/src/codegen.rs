@@ -1510,6 +1510,8 @@ impl TryToTokens for ast::ImportFunction {
             #vis #maybe_async #maybe_unsafe fn #rust_name(#me #(#arguments),*) #ret {
                 #extern_fn
 
+                #wasm_bindgen::__rt::check_abort_flag();
+
                 unsafe {
                     let #ret_ident = {
                         #(#arg_conversions)*

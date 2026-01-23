@@ -23,7 +23,7 @@ impl InstructionBuilder<'_, '_> {
         }
         // This is a wrapper around `_incoming` to have a number of sanity checks
         // that we don't forget things. We should always produce at least one
-        // Wasm arge and exactly one webidl arg. Additionally the number of
+        // Wasm arg and exactly one webidl arg. Additionally the number of
         // bindings should always match the number of webidl types for now.
         let input_before = self.input.len();
         let output_before = self.output.len();
