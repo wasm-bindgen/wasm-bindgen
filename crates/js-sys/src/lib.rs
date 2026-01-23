@@ -256,6 +256,7 @@ extern "C" {
     /// The `eval()` function evaluates JavaScript code represented as a string.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(catch)]
     pub fn eval(js_source_text: &str) -> Result<JsValue, JsValue>;
 
@@ -1949,6 +1950,7 @@ extern "C" {
     /// habits and allowing for more efficient code minification.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
     pub fn new_with_args(args: &str, body: &str) -> Function;
 
@@ -1960,6 +1962,7 @@ extern "C" {
     /// habits and allowing for more efficient code minification.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
     pub fn new_no_args(body: &str) -> Function;
 
@@ -2281,6 +2284,7 @@ impl Function {
     }
 }
 
+#[cfg(feature = "unsafe-eval")]
 impl Default for Function {
     fn default() -> Self {
         Self::new_no_args("")
