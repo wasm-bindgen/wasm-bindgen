@@ -1518,9 +1518,9 @@ impl<'a> Context<'a> {
 
         // ... then the returned value being translated back
 
-        let inner_ret_output = if signature.inner_ret.is_some() {
+        let inner_ret_output = if let Some(sig_inner_ret) = &signature.inner_ret {
             let mut inner_ret = args.cx.instruction_builder(true);
-            inner_ret.outgoing(&signature.inner_ret.unwrap())?;
+            inner_ret.outgoing(sig_inner_ret)?;
             inner_ret.output
         } else {
             vec![]
