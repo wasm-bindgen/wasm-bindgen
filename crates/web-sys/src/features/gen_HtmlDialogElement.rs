@@ -68,4 +68,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
     pub fn show_modal(this: &HtmlDialogElement) -> Result<(), JsValue>;
+    # [wasm_bindgen (structural , method , getter , js_class = "HTMLDialogElement" , js_name = oncancel)]
+    #[doc = "Getter for the `oncancel` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/cancel_event)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
+    pub fn oncancel(this: &Document) -> Option<::js_sys::Function>;
+    # [wasm_bindgen (structural , method , setter , js_class = "Document" , js_name = oncancel)]
+    #[doc = "Setter for the `oncancel` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/cancel_event)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
+    pub fn set_oncancel(this: &Document, value: Option<&::js_sys::Function>);
 }
