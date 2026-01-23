@@ -31,9 +31,6 @@ pub use wasm_bindgen_macro::BindgenedStruct;
 /// should start. This flag is checked at the FFI boundary.
 pub static ABORT_FLAG: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 
-#[cfg(not(all(target_arch = "wasm32", feature = "std", panic = "unwind")))]
-static ABORT_FLAG_ADDRESS: &core::sync::atomic::AtomicU32 = &ABORT_FLAG;
-
 /// Check if the abort flag is set and panic if so.
 /// This is called before every JS import to ensure we don't continue
 /// execution after a critical error has been signaled.

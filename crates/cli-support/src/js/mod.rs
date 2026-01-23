@@ -2722,9 +2722,18 @@ impl<'a> Context<'a> {
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
-        self.global("let __wbg_aborted = false;");
 
         let mut reset_statements = Vec::new();
+
+        if self.config.abort_reinit {
+            let store = self
+                .aux
+                .set_abort_flag
+                .ok_or_else(|| anyhow!("failed to find `__wbindgen_set_abort_flag` intrinsic"))?;
+            self.export_name_of(store);
+            self.global("let __wbg_aborted = false;");
+            reset_statements.push("wasm.__wbindgen_set_abort_flag(1);".to_string());
+        }
 
         reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
 
