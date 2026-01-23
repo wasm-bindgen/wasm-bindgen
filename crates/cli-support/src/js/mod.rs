@@ -13,7 +13,7 @@ use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HasHashSet};
 use std::fmt::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -2513,12 +2513,35 @@ impl<'a> Context<'a> {
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let abort_check = if self.config.abort_reinit {
-                "if (__wbg_aborted === true) {
+            let (abort_check, catch_abort, safe_destructor) = if self.config.abort_reinit {
+                (
+                    "if (__wbg_aborted === true) {
                     __wbg_reset_state();
-                }\n"
+                    }\n",
+                    "catch (e) {
+                        __wbg_aborted = true;
+                        throw e;
+                    } ",
+                    "\
+                    try {
+                        state.dtor(state.a, state.b);
+                        state.a = 0;
+                        CLOSURE_DTORS.unregister(state);
+                    } catch (e) {
+                        __wbg_aborted = true;
+                    }
+                    ",
+                )
             } else {
-                ""
+                (
+                    "",
+                    "",
+                    "\
+                    state.dtor(state.a, state.b);
+                    state.a = 0;
+                    CLOSURE_DTORS.unregister(state);
+                    ",
+                )
             };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
@@ -2549,16 +2572,14 @@ impl<'a> Context<'a> {
                         state.a = 0;
                         try {{
                             return f(a, state.b, ...args);
-                        }} finally {{
+                        }} {catch_abort} finally {{
                             state.a = a;
                             real._wbg_cb_unref();
                         }}
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
+                            {safe_destructor}
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2578,12 +2599,35 @@ impl<'a> Context<'a> {
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let abort_check = if self.config.abort_reinit {
-                "if (__wbg_aborted === true) {
+            let (abort_check, catch_abort, safe_destructor) = if self.config.abort_reinit {
+                (
+                    "if (__wbg_aborted === true) {
                     __wbg_reset_state();
-                }\n"
+                    }\n",
+                    "catch (e) {
+                        __wbg_aborted = true;
+                        throw e;
+                    } ",
+                    "\
+                    try {
+                        state.dtor(state.a, state.b);
+                        state.a = 0;
+                        CLOSURE_DTORS.unregister(state);
+                    } catch (e) {
+                        __wbg_aborted = true;
+                    }
+                    ",
+                )
             } else {
-                ""
+                (
+                    "",
+                    "",
+                    "\
+                    state.dtor(state.a, state.b);
+                    state.a = 0;
+                    CLOSURE_DTORS.unregister(state);
+                    ",
+                )
             };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
@@ -2612,15 +2656,13 @@ impl<'a> Context<'a> {
                         state.cnt++;
                         try {{
                             return f(state.a, state.b, ...args);
-                        }} finally {{
+                        }} {catch_abort} finally {{
                             real._wbg_cb_unref();
                         }}
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
+                            {safe_destructor}
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2640,13 +2682,24 @@ impl<'a> Context<'a> {
                     ? {{ register: () => {{}}, unregister: () => {{}} }}
                     : new FinalizationRegistry({});
                 ",
-                if self.config.generate_reset_state {
-                    "
-                    state => {{
-                        if (state.instance === __wbg_instance_id) {{
+                if self.config.abort_reinit {
+                    "\
+                    state => {
+                        try {
+                            if (aborted === false && state.instance === __wbg_instance_id) {
+                                state.dtor(state.a, state.b);
+                            }
+                        } catch (e) {
+                            __wbg_aborted = true
+                        }
+                    }"
+                } else if self.config.generate_reset_state {
+                    "\
+                    state => {
+                        if (state.instance === __wbg_instance_id) {
                             state.dtor(state.a, state.b);
-                        }}
-                    }}
+                        }
+                    }
                     "
                 } else {
                     "state => state.dtor(state.a, state.b)"
