@@ -13,7 +13,7 @@ use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
-use std::collections::{BTreeMap, BTreeSet, HasHashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
