@@ -1,4 +1,4 @@
-//! Tests for the `--experimental-abort-reinit` and `--experimental-reset-state-function` CLI flags.
+//! Tests for the `--abort-reinit` and `--experimental-reset-state-function` CLI flags.
 //!
 //! These tests verify the runtime behavior of the panic re-initialization feature:
 //! - When a Wasm panic occurs, the module enters an "aborted" state
@@ -65,7 +65,7 @@ fn abort_reinit_basic() {
     );
 
     let out_dir = project
-        .wasm_bindgen("--target nodejs --experimental-abort-reinit")
+        .wasm_bindgen("--target nodejs --abort-reinit")
         .unwrap();
 
     // Write JS test file
@@ -134,7 +134,7 @@ fn abort_reinit_state_reset() {
     );
 
     let out_dir = project
-        .wasm_bindgen("--target nodejs --experimental-abort-reinit")
+        .wasm_bindgen("--target nodejs --abort-reinit")
         .unwrap();
 
     fs::write(
@@ -212,7 +212,7 @@ fn abort_reinit_stale_object() {
     );
 
     let out_dir = project
-        .wasm_bindgen("--target nodejs --experimental-abort-reinit")
+        .wasm_bindgen("--target nodejs --abort-reinit")
         .unwrap();
 
     fs::write(
@@ -301,7 +301,7 @@ fn abort_reinit_stale_closure() {
     project.dep("js-sys = { path = '{root}/crates/js-sys' }");
 
     let out_dir = project
-        .wasm_bindgen("--target nodejs --experimental-abort-reinit")
+        .wasm_bindgen("--target nodejs --abort-reinit")
         .unwrap();
 
     fs::write(
@@ -469,7 +469,7 @@ fn unwind_panic_no_reinit() {
         .arg("-Zbuild-std=std,panic_unwind");
 
     let out_dir = project
-        .wasm_bindgen("--target nodejs --experimental-abort-reinit")
+        .wasm_bindgen("--target nodejs --abort-reinit")
         .unwrap();
 
     fs::write(
@@ -574,7 +574,7 @@ fn unwind_js_exception_reinit() {
         .arg("-Zbuild-std=std,panic_unwind");
 
     let out_dir = project
-        .wasm_bindgen("--target nodejs --experimental-abort-reinit")
+        .wasm_bindgen("--target nodejs --abort-reinit")
         .unwrap();
 
     // Provide the JS function that throws
