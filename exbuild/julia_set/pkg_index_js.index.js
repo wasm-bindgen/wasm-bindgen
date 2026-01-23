@@ -1,0 +1,42 @@
+"use strict";
+/*
+ * ATTENTION: The "eval" devtool has been used (maybe by default in mode: "development").
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+(self["webpackChunk"] = self["webpackChunk"] || []).push([["pkg_index_js"],{
+
+/***/ "./pkg/index.js"
+/*!**********************!*\
+  !*** ./pkg/index.js ***!
+  \**********************/
+(__webpack_module__, __webpack_exports__, __webpack_require__) {
+
+eval("{__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {\n__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   __wasm: () => (/* reexport module object */ _index_bg_wasm__WEBPACK_IMPORTED_MODULE_0__),\n/* harmony export */   draw: () => (/* reexport safe */ _index_bg_js__WEBPACK_IMPORTED_MODULE_1__.draw)\n/* harmony export */ });\n/* harmony import */ var _index_bg_wasm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./index_bg.wasm */ \"./pkg/index_bg.wasm\");\n/* harmony import */ var _index_bg_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./index_bg.js */ \"./pkg/index_bg.js\");\nvar __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_index_bg_wasm__WEBPACK_IMPORTED_MODULE_0__]);\nvar __webpack_async_dependencies_result__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);\n_index_bg_wasm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_async_dependencies_result__[0];\n/* @ts-self-types=\"./index.d.ts\" */\n\n\n\n(0,_index_bg_js__WEBPACK_IMPORTED_MODULE_1__.__wbg_set_wasm)(_index_bg_wasm__WEBPACK_IMPORTED_MODULE_0__);\n_index_bg_wasm__WEBPACK_IMPORTED_MODULE_0__.__wbindgen_start();\n\n\n\n__webpack_async_result__();\n} catch(e) { __webpack_async_result__(e); } });\n\n//# sourceURL=webpack:///./pkg/index.js?\n}");
+
+/***/ },
+
+/***/ "./pkg/index_bg.js"
+/*!*************************!*\
+  !*** ./pkg/index_bg.js ***!
+  \*************************/
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   __wbg___wbindgen_throw_be289d5034ed271b: () => (/* binding */ __wbg___wbindgen_throw_be289d5034ed271b),\n/* harmony export */   __wbg_new_with_u8_clamped_array_and_sh_0c0b789ceb2eab31: () => (/* binding */ __wbg_new_with_u8_clamped_array_and_sh_0c0b789ceb2eab31),\n/* harmony export */   __wbg_putImageData_78318465ad96c2c3: () => (/* binding */ __wbg_putImageData_78318465ad96c2c3),\n/* harmony export */   __wbg_set_wasm: () => (/* binding */ __wbg_set_wasm),\n/* harmony export */   __wbindgen_init_externref_table: () => (/* binding */ __wbindgen_init_externref_table),\n/* harmony export */   draw: () => (/* binding */ draw)\n/* harmony export */ });\n//#region exports\n\n/**\n * @param {CanvasRenderingContext2D} ctx\n * @param {number} width\n * @param {number} height\n * @param {number} real\n * @param {number} imaginary\n */\nfunction draw(ctx, width, height, real, imaginary) {\n    _assertNum(width);\n    _assertNum(height);\n    const ret = wasm.draw(ctx, width, height, real, imaginary);\n    if (ret[1]) {\n        throw takeFromExternrefTable0(ret[0]);\n    }\n}\n\n//#endregion\n\n//#region wasm imports\nfunction __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {\n    throw new Error(getStringFromWasm0(arg0, arg1));\n}\nfunction __wbg_new_with_u8_clamped_array_and_sh_0c0b789ceb2eab31() { return handleError(function (arg0, arg1, arg2, arg3) {\n    const ret = new ImageData(getClampedArrayU8FromWasm0(arg0, arg1), arg2 >>> 0, arg3 >>> 0);\n    return ret;\n}, arguments); }\nfunction __wbg_putImageData_78318465ad96c2c3() { return handleError(function (arg0, arg1, arg2, arg3) {\n    arg0.putImageData(arg1, arg2, arg3);\n}, arguments); }\nfunction __wbindgen_init_externref_table() {\n    const table = wasm.__wbindgen_externrefs;\n    const offset = table.grow(4);\n    table.set(0, undefined);\n    table.set(offset + 0, undefined);\n    table.set(offset + 1, null);\n    table.set(offset + 2, true);\n    table.set(offset + 3, false);\n}\n\n//#endregion\n\n//#region intrinsics\nfunction addToExternrefTable0(obj) {\n    const idx = wasm.__externref_table_alloc();\n    wasm.__wbindgen_externrefs.set(idx, obj);\n    return idx;\n}\n\nfunction _assertNum(n) {\n    if (typeof(n) !== 'number') throw new Error(`expected a number argument, found ${typeof(n)}`);\n}\n\nfunction getClampedArrayU8FromWasm0(ptr, len) {\n    ptr = ptr >>> 0;\n    return getUint8ClampedArrayMemory0().subarray(ptr / 1, ptr / 1 + len);\n}\n\nfunction getStringFromWasm0(ptr, len) {\n    ptr = ptr >>> 0;\n    return decodeText(ptr, len);\n}\n\nlet cachedUint8ArrayMemory0 = null;\nfunction getUint8ArrayMemory0() {\n    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {\n        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);\n    }\n    return cachedUint8ArrayMemory0;\n}\n\nlet cachedUint8ClampedArrayMemory0 = null;\nfunction getUint8ClampedArrayMemory0() {\n    if (cachedUint8ClampedArrayMemory0 === null || cachedUint8ClampedArrayMemory0.byteLength === 0) {\n        cachedUint8ClampedArrayMemory0 = new Uint8ClampedArray(wasm.memory.buffer);\n    }\n    return cachedUint8ClampedArrayMemory0;\n}\n\nfunction handleError(f, args) {\n    try {\n        return f.apply(this, args);\n    } catch (e) {\n        const idx = addToExternrefTable0(e);\n        wasm.__wbindgen_exn_store(idx);\n    }\n}\n\nfunction logError(f, args) {\n    try {\n        return f.apply(this, args);\n    } catch (e) {\n        let error = (function () {\n            try {\n                return e instanceof Error ? `${e.message}\\n\\nStack:\\n${e.stack}` : e.toString();\n            } catch(_) {\n                return \"<failed to stringify thrown value>\";\n            }\n        }());\n        console.error(\"wasm-bindgen: imported JS function that was not marked as `catch` threw an error:\", error);\n        throw e;\n    }\n}\n\nfunction takeFromExternrefTable0(idx) {\n    const value = wasm.__wbindgen_externrefs.get(idx);\n    wasm.__externref_table_dealloc(idx);\n    return value;\n}\n\nlet cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });\ncachedTextDecoder.decode();\nconst MAX_SAFARI_DECODE_BYTES = 2146435072;\nlet numBytesDecoded = 0;\nfunction decodeText(ptr, len) {\n    numBytesDecoded += len;\n    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {\n        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });\n        cachedTextDecoder.decode();\n        numBytesDecoded = len;\n    }\n    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));\n}\n\n\n//#endregion\n\n//#region wasm loading\n\nlet wasm;\nfunction __wbg_set_wasm(val) {\n    wasm = val;\n}\n\n//#endregion\n\n\n//# sourceURL=webpack:///./pkg/index_bg.js?\n}");
+
+/***/ },
+
+/***/ "./pkg/index_bg.wasm"
+/*!***************************!*\
+  !*** ./pkg/index_bg.wasm ***!
+  \***************************/
+(module, exports, __webpack_require__) {
+
+eval("{/* harmony import */ var WEBPACK_IMPORTED_MODULE_0 = __webpack_require__(/*! ./index_bg.js */ \"./pkg/index_bg.js\");\nmodule.exports = __webpack_require__.v(exports, module.id, \"c77bcfedc1184a1e9075\", {\n\t\"./index_bg.js\": {\n\t\t\"__wbg_new_with_u8_clamped_array_and_sh_0c0b789ceb2eab31\": WEBPACK_IMPORTED_MODULE_0.__wbg_new_with_u8_clamped_array_and_sh_0c0b789ceb2eab31,\n\t\t\"__wbg_putImageData_78318465ad96c2c3\": WEBPACK_IMPORTED_MODULE_0.__wbg_putImageData_78318465ad96c2c3,\n\t\t\"__wbg___wbindgen_throw_be289d5034ed271b\": WEBPACK_IMPORTED_MODULE_0.__wbg___wbindgen_throw_be289d5034ed271b,\n\t\t\"__wbindgen_init_externref_table\": WEBPACK_IMPORTED_MODULE_0.__wbindgen_init_externref_table\n\t}\n});\n\n//# sourceURL=webpack:///./pkg/index_bg.wasm?\n}");
+
+/***/ }
+
+}]);
