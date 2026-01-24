@@ -483,6 +483,15 @@ impl<'a> Context<'a> {
             ts.push_str(&init_ts);
         }
 
+        // Generate TypeScript definitions for Node.js with threads enabled
+        if self.config.typescript
+            && matches!(self.config.mode, OutputMode::Node { .. })
+            && self.threads_enabled
+        {
+            let node_atomics_ts = self.ts_for_node_atomics()?;
+            ts.push_str(&node_atomics_ts);
+        }
+
         Ok((self.globals.to_owned(), ts, start))
     }
 
@@ -710,6 +719,55 @@ impl<'a> Context<'a> {
         ))
     }
 
+    /// Generate TypeScript definitions for Node.js targets with threads/atomics enabled.
+    fn ts_for_node_atomics(&self) -> Result<String, Error> {
+        let output = crate::wasm2es6js::interface(self.module)?;
+
+        Ok(format!(
+            r#"
+export type SyncInitInput = BufferSource | WebAssembly.Module;
+
+export interface InitOutput {{
+{output}}}
+
+export interface InitSyncOptions {{
+    module?: SyncInitInput;
+    memory?: WebAssembly.Memory;
+    thread_stack_size?: number;
+}}
+
+/**
+ * Initialize the WebAssembly module synchronously.
+ *
+ * For the main thread, this is called automatically on import.
+ * Worker threads should call this explicitly with shared module and memory:
+ *
+ * ```js
+ * initSync({{ module: __wbg_wasm_module, memory: __wbg_memory }});
+ * ```
+ *
+ * @param opts - Initialization options
+ * @returns The exports object
+ */
+export function initSync(opts?: InitSyncOptions): InitOutput;
+
+/**
+ * Get the imports object for WebAssembly instantiation.
+ *
+ * @param memory - Optional shared memory to use instead of creating new
+ * @returns The imports object for WebAssembly.Instance
+ */
+export function __wbg_get_imports(memory?: WebAssembly.Memory): WebAssembly.Imports;
+
+/** The compiled WebAssembly module. Can be shared with workers. */
+export const __wbg_wasm_module: WebAssembly.Module;
+
+/** The shared WebAssembly memory. */
+export const __wbg_memory: WebAssembly.Memory;
+"#
+        ))
+    }
+
     fn generate_module_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
         format!(
             r#"import source wasmModule from "./{module_name}_bg.wasm";
@@ -911,7 +969,7 @@ impl<'a> Context<'a> {
             init_stack_size_check = if self.threads_enabled {
                 format!(
                     "if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {} !== 0)) {{
-                        throw 'invalid stack size';
+                        throw new Error('invalid stack size');
                     }}\n",
                     threads_xform::PAGE_SIZE,
                 )
@@ -952,19 +1010,77 @@ impl<'a> Context<'a> {
         module_name: &str,
         needs_manual_start: bool,
     ) -> String {
-        format!(
-            r#"import {{ readFileSync }} from 'node:fs';
+        if self.threads_enabled {
+            // For threads: generate initSync that accepts custom memory
+            let start_call = if needs_manual_start {
+                format!(
+                    r#"
+    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {page_size} !== 0)) {{ throw new Error('invalid stack size'); }}
+    wasm.__wbindgen_start(thread_stack_size);"#,
+                    page_size = crate::transforms::threads::PAGE_SIZE,
+                )
+            } else {
+                String::new()
+            };
+
+            format!(
+                r#"import {{ readFileSync }} from 'node:fs';
+import {{ isMainThread }} from 'node:worker_threads';
+
+let wasm;
+let wasmModule;
+let memory;
+let __initialized = false;
+
+export function initSync(opts = {{}}) {{
+    if (__initialized) return wasm;
+
+    let {{ module, memory: mem, thread_stack_size }} = opts;
+
+    if (module === undefined) {{
+        const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
+        module = readFileSync(wasmUrl);
+    }}
+
+    if (!(module instanceof WebAssembly.Module)) {{
+        wasmModule = new WebAssembly.Module(module);
+    }} else {{
+        wasmModule = module;
+    }}
+
+    const wasmImports = __wbg_get_imports(mem);
+    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = instance.exports;
+    memory = wasmImports['./{module_name}_bg.js'].memory;
+{start_call}
+    __initialized = true;
+    return wasm;
+}}
+
+// Auto-initialize for backwards compatibility (only on main thread)
+// Worker threads should call initSync({{ module, memory }}) explicitly
+if (isMainThread) {{
+    initSync();
+}}
+
+export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memory, __wbg_get_imports }};
+"#
+            )
+        } else {
+            format!(
+                r#"import {{ readFileSync }} from 'node:fs';
             const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmBytes = readFileSync(wasmUrl);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
             {start}"#,
-            start = if needs_manual_start {
-                "wasm.__wbindgen_start();\n"
-            } else {
-                ""
-            },
-        )
+                start = if needs_manual_start {
+                    "wasm.__wbindgen_start();\n"
+                } else {
+                    ""
+                },
+            )
+        }
     }
 
     fn generate_node_cjs_wasm_loading(
@@ -972,18 +1088,80 @@ impl<'a> Context<'a> {
         module_name: &str,
         needs_manual_start: bool,
     ) -> String {
-        format!(
-            r#"const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
+        if self.threads_enabled {
+            // For threads: generate initSync that accepts custom memory
+            let start_call = if needs_manual_start {
+                format!(
+                    r#"
+    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {page_size} !== 0)) {{ throw new Error('invalid stack size'); }}
+    wasm.__wbindgen_start(thread_stack_size);"#,
+                    page_size = crate::transforms::threads::PAGE_SIZE,
+                )
+            } else {
+                String::new()
+            };
+
+            format!(
+                r#"let wasm;
+let wasmModule;
+let memory;
+let __initialized = false;
+
+// Export __wbg_get_imports for workers to use
+exports.__wbg_get_imports = __wbg_get_imports;
+
+exports.initSync = function(opts) {{
+    if (opts === undefined) opts = {{}};
+    if (__initialized) return wasm;
+
+    let module = opts.module;
+    let mem = opts.memory;
+    let thread_stack_size = opts.thread_stack_size;
+
+    if (module === undefined) {{
+        const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
+        module = require('fs').readFileSync(wasmPath);
+    }}
+
+    if (!(module instanceof WebAssembly.Module)) {{
+        wasmModule = new WebAssembly.Module(module);
+    }} else {{
+        wasmModule = module;
+    }}
+
+    const wasmImports = __wbg_get_imports(mem);
+    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = instance.exports;
+    memory = wasmImports['./{module_name}_bg.js'].memory;
+    exports.__wasm = wasm;
+    exports.__wbg_wasm_module = wasmModule;
+    exports.__wbg_memory = memory;
+{start_call}
+    __initialized = true;
+    return wasm;
+}};
+
+// Auto-initialize for backwards compatibility (only on main thread)
+// Worker threads should call initSync({{ module, memory }}) explicitly
+if (require('worker_threads').isMainThread) {{
+    exports.initSync();
+}}
+"#
+            )
+        } else {
+            format!(
+                r#"const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
             const wasmBytes = require('fs').readFileSync(wasmPath);
             const wasmModule = new WebAssembly.Module(wasmBytes);
             let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
             {start}"#,
-            start = if needs_manual_start {
-                "wasm.__wbindgen_start();\n"
-            } else {
-                ""
-            },
-        )
+                start = if needs_manual_start {
+                    "wasm.__wbindgen_start();\n"
+                } else {
+                    ""
+                },
+            )
+        }
     }
 
     fn generate_wasm_loading(
