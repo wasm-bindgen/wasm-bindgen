@@ -1,9 +1,3 @@
-error: it is currently not sound to use lifetimes in function signatures
- --> ui-tests/invalid-imports.rs:7:16
-  |
-7 |     fn f() -> &'static u32;
-  |                ^^^^^^^
-
 error: imported methods must have at least one argument
   --> ui-tests/invalid-imports.rs:10:5
    |
@@ -21,12 +15,6 @@ error: first argument of method must be a path
    |
 14 |     fn f3(x: &&u32);
    |               ^^^^
-
-error: paths with type parameters are not supported yet
-  --> ui-tests/invalid-imports.rs:20:15
-   |
-20 |     fn f4(x: &Bar<T>);
-   |               ^^^^^^
 
 error: first argument of method must be a path
   --> ui-tests/invalid-imports.rs:22:15
@@ -64,7 +52,7 @@ error: must be Result<...>
 36 |     fn f() -> Result;
    |               ^^^^^^
 
-error: it is currently not sound to use lifetimes in function signatures
+error: must be a type parameter
   --> ui-tests/invalid-imports.rs:38:22
    |
 38 |     fn f() -> Result<'a>;

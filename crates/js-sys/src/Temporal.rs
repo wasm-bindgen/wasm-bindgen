@@ -68,7 +68,6 @@ extern "C" {
     /// The locales and options arguments are the same as in the constructor to Intl.DateTimeFormat.
     #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string(this: &Instant, locales: &JsValue, options: &JsValue) -> JsString;
-
 }
 
 #[wasm_bindgen]
@@ -494,7 +493,6 @@ extern "C" {
     /// The locales and options arguments are the same as in the constructor to Intl.DurationFormat.
     #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string(this: &Duration, locales: &JsValue, options: &JsValue) -> JsString;
-
 }
 
 #[wasm_bindgen]
@@ -567,7 +565,6 @@ extern "C" {
     /// developers will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainTime) -> JsValue;
-
 }
 
 #[wasm_bindgen]
@@ -748,7 +745,6 @@ extern "C" {
     /// code will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainYearMonth) -> JsValue;
-
 }
 
 #[wasm_bindgen]
@@ -818,7 +814,6 @@ extern "C" {
     /// code will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainMonthDay) -> JsValue;
-
 }
 
 #[wasm_bindgen]
@@ -1027,7 +1022,6 @@ extern "C" {
     /// code will not need to use it.
     #[wasm_bindgen(method, js_name = getISOFields)]
     pub fn get_iso_fields(this: &PlainDate) -> JsValue;
-
 }
 
 pub mod Now {

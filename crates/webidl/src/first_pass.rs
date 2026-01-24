@@ -23,8 +23,10 @@ use weedle::CallbackInterfaceDefinition;
 use weedle::{DictionaryDefinition, PartialDictionaryDefinition};
 
 use super::Result;
+use crate::generator::{InterfaceMethod, InterfaceMethodKind};
 use crate::{
-    util::{self, camel_case_ident},
+    util::{self, camel_case_ident, rust_ident, TypePosition},
+    wbg_type::{ToWbgType, WbgType},
     ApiStability,
 };
 
@@ -61,6 +63,7 @@ lazy_static! {
 /// Collection of constructs that may use partial.
 #[derive(Default)]
 pub(crate) struct FirstPassRecord<'src> {
+    pub(crate) options: crate::Options,
     pub(crate) interfaces: BTreeMap<&'src str, InterfaceData<'src>>,
     pub(crate) enums: BTreeMap<&'src str, EnumData<'src>>,
     /// The mixins, mapping their name to the webidl ast node for the mixin.
@@ -69,10 +72,68 @@ pub(crate) struct FirstPassRecord<'src> {
     pub(crate) namespaces: BTreeMap<&'src str, NamespaceData<'src>>,
     pub(crate) includes: BTreeMap<&'src str, BTreeSet<&'src str>>,
     pub(crate) dictionaries: BTreeMap<&'src str, DictionaryData<'src>>,
-    pub(crate) callbacks: BTreeSet<&'src str>,
+    pub(crate) callbacks: BTreeMap<&'src str, CallbackData<'src>>,
     pub(crate) iterators: BTreeSet<&'src str>,
     pub(crate) async_iterators: BTreeSet<&'src str>,
     pub(crate) callback_interfaces: BTreeMap<&'src str, CallbackInterfaceData<'src>>,
+}
+
+impl<'src> FirstPassRecord<'src> {
+    /// Helper function to add a custom method to an interface with a properly typed return value.
+    /// Used for iterable/maplike/setlike methods in non-compat mode.
+    fn add_custom_method(
+        &mut self,
+        interface_name: &'src str,
+        method_name: &'src str,
+        ret_ty: syn::Type,
+        stability: ApiStability,
+    ) {
+        let interface_data = self.interfaces.get_mut(interface_name).unwrap();
+        interface_data.custom_methods.insert(
+            method_name,
+            InterfaceMethod {
+                name: rust_ident(method_name),
+                js_name: method_name.to_string(),
+                deprecated: None,
+                arguments: vec![],
+                variadic_type: None,
+                ret_ty: Some(ret_ty),
+                kind: InterfaceMethodKind::Regular,
+                is_static: false,
+                structural: true,
+                catch: false,
+                variadic: false,
+                unstable: stability.is_unstable(),
+            },
+        );
+    }
+
+    /// Helper function to add an iterator method in compat mode.
+    /// Used for iterable/maplike/setlike entries/keys/values methods.
+    fn add_iterator_method(
+        &mut self,
+        interface_name: &'src str,
+        method_name: &'src str,
+        iterator_type: &'src str,
+        stability: ApiStability,
+    ) {
+        first_pass_operation(
+            self,
+            FirstPassOperationType::Interface,
+            interface_name,
+            &[OperationId::Operation(Some(method_name))],
+            &[],
+            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
+                MayBeNull {
+                    type_: Identifier(iterator_type),
+                    q_mark: None,
+                },
+            )))),
+            &NEW_OBJECT_ATTR,
+            false,
+            stability,
+        );
+    }
 }
 
 pub(crate) struct AttributeInterfaceData<'src> {
@@ -104,6 +165,7 @@ pub(crate) struct InterfaceData<'src> {
     pub(crate) superclass: Option<&'src str>,
     pub(crate) definition_attributes: Option<&'src ExtendedAttributeList<'src>>,
     pub(crate) stability: ApiStability,
+    pub(crate) custom_methods: BTreeMap<&'src str, InterfaceMethod<'src>>,
 }
 
 pub(crate) struct AttributeMixinData<'src> {
@@ -151,6 +213,11 @@ pub(crate) struct EnumData<'src> {
 pub(crate) struct CallbackInterfaceData<'src> {
     pub(crate) definition: &'src CallbackInterfaceDefinition<'src>,
     pub(crate) single_function: bool,
+}
+
+pub(crate) struct CallbackData<'src> {
+    pub(crate) params: Vec<crate::wbg_type::WbgType<'src>>,
+    pub(crate) return_type: Option<crate::wbg_type::WbgType<'src>>,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
@@ -727,7 +794,6 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         );
 
         // callback MapLikeForEachCallback = undefined (V value, K key);
-        // TODO: the signature of the callback is erased, could we keep it?
         let foreach_callback_arg = Arg {
             attributes: &None,
             name: "callback",
@@ -739,7 +805,17 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             variadic: false,
         };
 
-        record.callbacks.insert("MapLikeForEachCallback");
+        // Create CallbackData with proper signature
+        let callback_data = CallbackData {
+            params: vec![
+                value_ty.type_.to_wbg_type(record),
+                key_ty.type_.to_wbg_type(record),
+            ],
+            return_type: None, // undefined return
+        };
+        record
+            .callbacks
+            .insert("MapLikeForEachCallback", callback_data);
 
         // [Throws] undefined forEach(MapLikeForEachCallback cb);
         first_pass_operation(
@@ -754,65 +830,52 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             stability,
         );
 
-        // TODO: iterators could have stronger types by generating specialised interfaces for each
-        //       maplike/setlike. Right now, `value` is always `any`.
+        // In compat mode, generate synthetic MapLikeIterator interface
+        // In non-compat mode, add custom functions that return properly typed iterators
+        if record.options.generics_compat {
+            // Compat mode: register single MapLikeIterator and use first_pass_operation
+            record.iterators.insert("MapLikeIterator");
 
-        // declare the iterator interface
-        record.iterators.insert("MapLikeIterator");
+            record.add_iterator_method(self_name, "entries", "MapLikeIterator", stability);
+            record.add_iterator_method(self_name, "keys", "MapLikeIterator", stability);
+            record.add_iterator_method(self_name, "values", "MapLikeIterator", stability);
+        } else {
+            // Non-compat mode: add custom functions with properly typed returns
+            record.iterators.insert("Iterator");
 
-        // [NewObject] MapLikeIterator entries();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            self_name,
-            &[OperationId::Operation(Some("entries"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("MapLikeIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            stability,
-        );
+            let key_wbg = key_ty.type_.to_wbg_type(record);
+            let value_wbg = value_ty.type_.to_wbg_type(record);
 
-        // [NewObject] MapLikeIterator keys();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            self_name,
-            &[OperationId::Operation(Some("keys"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("MapLikeIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            stability,
-        );
+            let entries_result = WbgType::Iterator(Box::new(WbgType::ArrayTuple(
+                Box::new(key_wbg.clone()),
+                Box::new(value_wbg.clone()),
+            )))
+            .to_syn_type(TypePosition::Return, false, false);
 
-        // [NewObject] MapLikeIterator values();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            self_name,
-            &[OperationId::Operation(Some("values"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("MapLikeIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            stability,
-        );
+            let entries_ty = match entries_result {
+                Ok(Some(ty)) => ty,
+                Ok(None) => panic!(
+                    "entries_ty conversion returned None for key={key_wbg:?}, value={value_wbg:?}"
+                ),
+                Err(e) => panic!(
+                    "entries_ty conversion failed for key={key_wbg:?}, value={value_wbg:?}: {e:?}"
+                ),
+            };
+
+            let keys_ty = WbgType::Iterator(Box::new(key_wbg))
+                .to_syn_type(TypePosition::Return, false, false)
+                .unwrap()
+                .unwrap();
+
+            let values_ty = WbgType::Iterator(Box::new(value_wbg))
+                .to_syn_type(TypePosition::Return, false, false)
+                .unwrap()
+                .unwrap();
+
+            record.add_custom_method(self_name, "entries", entries_ty, stability);
+            record.add_custom_method(self_name, "keys", keys_ty, stability);
+            record.add_custom_method(self_name, "values", values_ty, stability);
+        }
 
         // add writeable interface if *not* readonly
         if self.readonly.is_none() {
@@ -936,7 +999,6 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         );
 
         // callback SetlikeForEachCallback = undefined (V value);
-        // TODO: the signature of the callback is erased, could we keep it?
         let foreach_callback_arg = Arg {
             attributes: &None,
             name: "callback",
@@ -948,7 +1010,14 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             variadic: false,
         };
 
-        record.callbacks.insert("SetlikeForEachCallback");
+        // Create CallbackData with proper signature
+        let callback_data = CallbackData {
+            params: vec![value_ty.type_.to_wbg_type(record)],
+            return_type: None, // undefined return
+        };
+        record
+            .callbacks
+            .insert("SetlikeForEachCallback", callback_data);
 
         // [Throws] undefined forEach(SetlikeForEachCallback cb);
         first_pass_operation(
@@ -963,65 +1032,43 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             ctx.1,
         );
 
-        // TODO: iterators could have stronger types by generating specialised interfaces for each
-        //       maplike/setlike. Right now, `value` is always `any`.
+        // In compat mode, generate synthetic SetlikeIterator interface
+        // In non-compat mode, add custom functions that return properly typed iterators
+        if record.options.generics_compat {
+            // Compat mode: register single SetlikeIterator and use first_pass_operation
+            record.iterators.insert("SetlikeIterator");
 
-        // declare the iterator interface
-        record.iterators.insert("SetlikeIterator");
+            record.add_iterator_method(ctx.0, "entries", "SetlikeIterator", ctx.1);
+            record.add_iterator_method(ctx.0, "keys", "SetlikeIterator", ctx.1);
+            record.add_iterator_method(ctx.0, "values", "SetlikeIterator", ctx.1);
+        } else {
+            // Non-compat mode: add custom functions with properly typed returns
+            record.iterators.insert("Iterator");
 
-        // [NewObject] SetlikeIterator entries();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("entries"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("SetlikeIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+            let value_wbg = value_ty.type_.to_wbg_type(record);
 
-        // [NewObject] SetlikeIterator keys();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("keys"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("SetlikeIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+            let entries_ty = WbgType::Iterator(Box::new(WbgType::ArrayTuple(
+                Box::new(value_wbg.clone()),
+                Box::new(value_wbg.clone()),
+            )))
+            .to_syn_type(TypePosition::Return, false, false)
+            .unwrap()
+            .unwrap();
 
-        // [NewObject] SetlikeIterator values();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("values"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("SetlikeIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+            let keys_ty = WbgType::Iterator(Box::new(value_wbg.clone()))
+                .to_syn_type(TypePosition::Return, false, false)
+                .unwrap()
+                .unwrap();
+
+            let values_ty = WbgType::Iterator(Box::new(value_wbg))
+                .to_syn_type(TypePosition::Return, false, false)
+                .unwrap()
+                .unwrap();
+
+            record.add_custom_method(ctx.0, "entries", entries_ty, ctx.1);
+            record.add_custom_method(ctx.0, "keys", keys_ty, ctx.1);
+            record.add_custom_method(ctx.0, "values", values_ty, ctx.1);
+        }
 
         // add writeable interface if *not* readonly
         if self.readonly.is_none() {
@@ -1086,91 +1133,178 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         record: &mut FirstPassRecord<'src>,
         ctx: (&'src str, ApiStability),
     ) -> Result<()> {
-        record.iterators.insert("Iterator");
+        use weedle::interface::IterableInterfaceMember;
 
-        // [NewObject] Iterator entries();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("entries"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("Iterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+        let self_name = ctx.0;
+        let stability = ctx.1;
 
-        // [NewObject] Iterator keys();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("keys"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("Iterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+        match self {
+            IterableInterfaceMember::Single(single) => {
+                // iterable<V>; - value iterator for indexed properties
+                let value_ty = &single.generics.body;
 
-        // [NewObject] Iterator values();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("values"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("Iterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+                if record.options.generics_compat {
+                    // Compat mode: use untyped Iterator
+                    record.iterators.insert("Iterator");
 
-        let undefined_ret = || ReturnType::Undefined(term!(undefined));
+                    record.add_iterator_method(self_name, "entries", "Iterator", stability);
+                    record.add_iterator_method(self_name, "keys", "Iterator", stability);
+                    record.add_iterator_method(self_name, "values", "Iterator", stability);
+                } else {
+                    // Non-compat mode: add custom methods with typed returns
+                    record.iterators.insert("Iterator");
 
-        // callback SetlikeForEachCallback = undefined (V value);
-        // TODO: the signature of the callback is erased, could we keep it?
-        let foreach_callback_arg = Arg {
-            attributes: &None,
-            name: "callback",
-            ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
-                type_: Identifier("IterableForEachCallback"),
-                q_mark: None,
-            }))),
-            optional: false,
-            variadic: false,
-        };
+                    let value_wbg = value_ty.type_.to_wbg_type(record);
 
-        record.callbacks.insert("IterableForEachCallback");
+                    // For single-typed iterable (value iterator):
+                    // - entries() returns Iterator<V>
+                    // - keys() returns Iterator<u32> (index)
+                    // - values() returns Iterator<V>
 
-        // [Throws] undefined forEach(SetlikeForEachCallback cb);
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("forEach"))],
-            [foreach_callback_arg],
-            &undefined_ret(),
-            &THROWS_ATTR,
-            false,
-            ctx.1,
-        );
+                    let entries_ty = WbgType::Iterator(Box::new(value_wbg.clone()))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    let keys_ty = WbgType::Iterator(Box::new(WbgType::UnsignedLong))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    let values_ty = WbgType::Iterator(Box::new(value_wbg))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    record.add_custom_method(self_name, "entries", entries_ty, stability);
+                    record.add_custom_method(self_name, "keys", keys_ty, stability);
+                    record.add_custom_method(self_name, "values", values_ty, stability);
+                }
+
+                // forEach callback - single-value iterable: (value, index)
+                use crate::wbg_type::WbgType;
+
+                let callback_data = CallbackData {
+                    params: vec![
+                        value_ty.to_wbg_type(record),
+                        WbgType::UnsignedLong, // index is unsigned long
+                    ],
+                    return_type: None, // undefined return
+                };
+                record
+                    .callbacks
+                    .insert("IterableForEachCallback", callback_data);
+
+                let foreach_callback_arg = Arg {
+                    attributes: &None,
+                    name: "callback",
+                    ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
+                        type_: Identifier("IterableForEachCallback"),
+                        q_mark: None,
+                    }))),
+                    optional: false,
+                    variadic: false,
+                };
+
+                let undefined_ret = || ReturnType::Undefined(term!(undefined));
+
+                first_pass_operation(
+                    record,
+                    FirstPassOperationType::Interface,
+                    self_name,
+                    &[OperationId::Operation(Some("forEach"))],
+                    [foreach_callback_arg],
+                    &undefined_ret(),
+                    &THROWS_ATTR,
+                    false,
+                    stability,
+                );
+            }
+            IterableInterfaceMember::Double(double) => {
+                // iterable<K, V>; - pair iterator
+                let key_ty = &double.generics.body.0;
+                let value_ty = &double.generics.body.2;
+
+                if record.options.generics_compat {
+                    // Compat mode: use untyped Iterator
+                    record.iterators.insert("Iterator");
+
+                    record.add_iterator_method(self_name, "entries", "Iterator", stability);
+                    record.add_iterator_method(self_name, "keys", "Iterator", stability);
+                    record.add_iterator_method(self_name, "values", "Iterator", stability);
+                } else {
+                    // Non-compat mode: add custom methods with typed returns
+                    record.iterators.insert("Iterator");
+
+                    let key_wbg = key_ty.type_.to_wbg_type(record);
+                    let value_wbg = value_ty.type_.to_wbg_type(record);
+
+                    // For double-typed iterable (pair iterator):
+                    // - entries() returns Iterator<ArrayTuple<K, V>>
+                    // - keys() returns Iterator<K>
+                    // - values() returns Iterator<V>
+
+                    let entries_ty = WbgType::Iterator(Box::new(WbgType::ArrayTuple(
+                        Box::new(key_wbg.clone()),
+                        Box::new(value_wbg.clone()),
+                    )))
+                    .to_syn_type(TypePosition::Return, false, false)
+                    .unwrap()
+                    .unwrap();
+
+                    let keys_ty = WbgType::Iterator(Box::new(key_wbg))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    let values_ty = WbgType::Iterator(Box::new(value_wbg))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    record.add_custom_method(self_name, "entries", entries_ty, stability);
+                    record.add_custom_method(self_name, "keys", keys_ty, stability);
+                    record.add_custom_method(self_name, "values", values_ty, stability);
+                }
+
+                // forEach callback - double iterable: (value, key)
+                use crate::wbg_type::WbgType;
+
+                let callback_data = CallbackData {
+                    params: vec![value_ty.to_wbg_type(record), key_ty.to_wbg_type(record)],
+                    return_type: None, // undefined return
+                };
+                record
+                    .callbacks
+                    .insert("IterableForEachCallback", callback_data);
+
+                let foreach_callback_arg = Arg {
+                    attributes: &None,
+                    name: "callback",
+                    ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
+                        type_: Identifier("IterableForEachCallback"),
+                        q_mark: None,
+                    }))),
+                    optional: false,
+                    variadic: false,
+                };
+
+                let undefined_ret = || ReturnType::Undefined(term!(undefined));
+
+                first_pass_operation(
+                    record,
+                    FirstPassOperationType::Interface,
+                    self_name,
+                    &[OperationId::Operation(Some("forEach"))],
+                    [foreach_callback_arg],
+                    &undefined_ret(),
+                    &THROWS_ATTR,
+                    false,
+                    stability,
+                );
+            }
+        }
+
         Ok(())
     }
 }
@@ -1183,59 +1317,102 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         record: &mut FirstPassRecord<'src>,
         ctx: (&'src str, ApiStability),
     ) -> Result<()> {
-        record.async_iterators.insert("AsyncIterator");
+        use weedle::interface::AsyncIterableInterfaceMember;
 
-        // [NewObject] MapLikeIterator entries();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("entries"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("AsyncIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
-        // [NewObject] MapLikeIterator keys();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("keys"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("AsyncIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
-        // [NewObject] MapLikeIterator values();
-        first_pass_operation(
-            record,
-            FirstPassOperationType::Interface,
-            ctx.0,
-            &[OperationId::Operation(Some("values"))],
-            &[],
-            &ReturnType::Type(Type::Single(SingleType::NonAny(NonAnyType::Identifier(
-                MayBeNull {
-                    type_: Identifier("AsyncIterator"),
-                    q_mark: None,
-                },
-            )))),
-            &NEW_OBJECT_ATTR,
-            false,
-            ctx.1,
-        );
+        let self_name = ctx.0;
+        let stability = ctx.1;
+
+        match self {
+            AsyncIterableInterfaceMember::Single(single) => {
+                // async iterable<V>; - async value iterator
+                let value_ty = &single.generics.body;
+
+                if record.options.generics_compat {
+                    // Compat mode: use untyped AsyncIterator
+                    record.async_iterators.insert("AsyncIterator");
+
+                    record.add_iterator_method(self_name, "entries", "AsyncIterator", stability);
+                    record.add_iterator_method(self_name, "keys", "AsyncIterator", stability);
+                    record.add_iterator_method(self_name, "values", "AsyncIterator", stability);
+                } else {
+                    // Non-compat mode: add custom methods with typed returns
+                    record.async_iterators.insert("AsyncIterator");
+
+                    let value_wbg = value_ty.type_.to_wbg_type(record);
+
+                    // For single-typed async iterable:
+                    // - entries() returns AsyncIterator<V>
+                    // - keys() returns AsyncIterator<u32> (index)
+                    // - values() returns AsyncIterator<V>
+
+                    let entries_ty = WbgType::AsyncIterator(Box::new(value_wbg.clone()))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    let keys_ty = WbgType::AsyncIterator(Box::new(WbgType::UnsignedLong))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    let values_ty = WbgType::AsyncIterator(Box::new(value_wbg))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    record.add_custom_method(self_name, "entries", entries_ty, stability);
+                    record.add_custom_method(self_name, "keys", keys_ty, stability);
+                    record.add_custom_method(self_name, "values", values_ty, stability);
+                }
+            }
+            AsyncIterableInterfaceMember::Double(double) => {
+                // async iterable<K, V>; - async pair iterator
+                let key_ty = &double.generics.body.0;
+                let value_ty = &double.generics.body.2;
+
+                if record.options.generics_compat {
+                    // Compat mode: use untyped AsyncIterator
+                    record.async_iterators.insert("AsyncIterator");
+
+                    record.add_iterator_method(self_name, "entries", "AsyncIterator", stability);
+                    record.add_iterator_method(self_name, "keys", "AsyncIterator", stability);
+                    record.add_iterator_method(self_name, "values", "AsyncIterator", stability);
+                } else {
+                    // Non-compat mode: add custom methods with typed returns
+                    record.async_iterators.insert("AsyncIterator");
+
+                    let key_wbg = key_ty.type_.to_wbg_type(record);
+                    let value_wbg = value_ty.type_.to_wbg_type(record);
+
+                    // For double-typed async iterable:
+                    // - entries() returns AsyncIterator<ArrayTuple<K, V>>
+                    // - keys() returns AsyncIterator<K>
+                    // - values() returns AsyncIterator<V>
+
+                    let entries_ty = WbgType::AsyncIterator(Box::new(WbgType::ArrayTuple(
+                        Box::new(key_wbg.clone()),
+                        Box::new(value_wbg.clone()),
+                    )))
+                    .to_syn_type(TypePosition::Return, false, false)
+                    .unwrap()
+                    .unwrap();
+
+                    let keys_ty = WbgType::AsyncIterator(Box::new(key_wbg))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    let values_ty = WbgType::AsyncIterator(Box::new(value_wbg))
+                        .to_syn_type(TypePosition::Return, false, false)
+                        .unwrap()
+                        .unwrap();
+
+                    record.add_custom_method(self_name, "entries", entries_ty, stability);
+                    record.add_custom_method(self_name, "keys", keys_ty, stability);
+                    record.add_custom_method(self_name, "values", values_ty, stability);
+                }
+            }
+        }
 
         Ok(())
     }
@@ -1504,7 +1681,32 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
 
 impl<'src> FirstPass<'src, ()> for weedle::CallbackDefinition<'src> {
     fn first_pass(&'src self, record: &mut FirstPassRecord<'src>, _: ()) -> Result<()> {
-        record.callbacks.insert(self.identifier.0);
+        use weedle::argument::Argument;
+        use weedle::types::ReturnType;
+
+        // Extract parameter information and convert to WbgType
+        let params: Vec<_> = self
+            .arguments
+            .body
+            .list
+            .iter()
+            .map(|arg| match arg {
+                Argument::Single(single) => single.type_.type_.to_wbg_type(record),
+                Argument::Variadic(variadic) => variadic.type_.to_wbg_type(record),
+            })
+            .collect();
+
+        let return_type = match &self.return_type {
+            ReturnType::Undefined(_) => None,
+            ReturnType::Type(ty) => Some(ty.to_wbg_type(record)),
+        };
+
+        let data = CallbackData {
+            params,
+            return_type,
+        };
+
+        record.callbacks.insert(self.identifier.0, data);
         Ok(())
     }
 }

@@ -1,5 +1,6 @@
 use js_sys::*;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsError;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
@@ -7,7 +8,7 @@ fn parse_array() {
     let js_array = JSON::parse("[1, 2, 3]").unwrap();
     assert!(Array::is_array(&js_array));
 
-    let array = Array::from(&js_array);
+    let array = Array::from_iterable(&js_array).unwrap();
     assert_eq!(array.length(), 3);
     assert_eq!(array.pop(), 3);
     assert_eq!(array.pop(), 2);
@@ -31,7 +32,7 @@ fn parse_object() {
 
     let z = values.pop();
     assert!(Array::is_array(&z));
-    let z_array = Array::from(&z);
+    let z_array = Array::from_iterable(&z).unwrap();
     assert_eq!(z_array.length(), 2);
 
     let y = values.pop();
@@ -194,4 +195,46 @@ fn stringify_with_replacer_and_space_error() {
     let err: &Error = err_obj.dyn_ref().unwrap();
     let err_msg: String = From::from(err.message());
     assert!(err_msg.contains("rust really rocks"));
+}
+
+#[wasm_bindgen_test]
+fn stringify_with_replacer_func_typed() {
+    let obj = Object::new();
+    Reflect::set(obj.as_ref(), &JsValue::from("a"), &JsValue::from(1)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("b"), &JsValue::from(2)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("c"), &JsValue::from(3)).unwrap();
+
+    // Replacer function that doubles numbers
+    let output: String = JSON::stringify_with_replacer_func(
+        &JsValue::from(obj),
+        &mut |_key: JsString, value: JsValue| -> Result<Option<JsValue>, JsError> {
+            if let Some(n) = value.as_f64() {
+                Ok(Some(JsValue::from(n * 2.0)))
+            } else {
+                Ok(Some(value))
+            }
+        },
+        None,
+    )
+    .unwrap()
+    .into();
+    assert_eq!(output, "{\"a\":2,\"b\":4,\"c\":6}");
+}
+
+#[wasm_bindgen_test]
+fn stringify_with_replacer_list_typed() {
+    let obj = Object::new();
+    Reflect::set(obj.as_ref(), &JsValue::from("a"), &JsValue::from(1)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("b"), &JsValue::from(2)).unwrap();
+    Reflect::set(obj.as_ref(), &JsValue::from("c"), &JsValue::from(3)).unwrap();
+
+    // Only include "a" and "c" in output
+    let output: String = JSON::stringify_with_replacer_list(
+        &JsValue::from(obj),
+        vec!["a".to_string(), "c".to_string()],
+        None,
+    )
+    .unwrap()
+    .into();
+    assert_eq!(output, "{\"a\":1,\"c\":3}");
 }

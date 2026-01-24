@@ -1,0 +1,35 @@
+error[E0277]: Unable to call function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function
+  --> ui-tests/generic-return-non-erasable.rs:16:30
+   |
+16 |     let _: u32 = get_value::<u32>();
+   |                              ^^^ passed concrete generic type does not match the expected generic repr type
+   |
+   = help: the trait `ErasableGenericOwn<wasm_bindgen::JsValue>` is not implemented for `u32`
+   = note: Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.
+note: required by a bound in `get_value`
+  --> ui-tests/generic-return-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `get_value`
+...
+7  |     pub fn get_value<T>() -> T;
+   |            --------- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: Unable to call function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function
+  --> ui-tests/generic-return-non-erasable.rs:20:41
+   |
+20 |     let _: Option<u32> = get_optional::<u32>();
+   |                                         ^^^ passed concrete generic type does not match the expected generic repr type
+   |
+   = help: the trait `ErasableGenericOwn<Option<wasm_bindgen::JsValue>>` is not implemented for `Option<u32>`
+   = note: Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.
+note: required by a bound in `get_optional`
+  --> ui-tests/generic-return-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `get_optional`
+...
+11 |     pub fn get_optional<T>() -> Option<T>;
+   |            ------------ required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

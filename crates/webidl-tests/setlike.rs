@@ -30,12 +30,24 @@ macro_rules! read_test_suite {
 
             let mut entries_vec = vec![];
 
-            for entry in setlike.entries().into_iter() {
-                let entry = entry.unwrap();
-                let pair = entry.dyn_into::<js_sys::Array>().unwrap();
-                let value = pair.get(1).as_string().unwrap();
+            #[cfg(feature = "idl-generics-compat")]
+            {
+                for entry in setlike.entries().into_iter() {
+                    let entry = entry.unwrap();
+                    let pair = entry.dyn_into::<js_sys::Array>().unwrap();
+                    let value = pair.get(1).as_string().unwrap();
 
-                entries_vec.push(value);
+                    entries_vec.push(value);
+                }
+            }
+
+            #[cfg(not(feature = "idl-generics-compat"))]
+            {
+                for entry in setlike.entries().into_iter() {
+                    let value = entry.unwrap().first();
+
+                    entries_vec.push(value);
+                }
             }
 
             assert_eq!(
@@ -45,9 +57,20 @@ macro_rules! read_test_suite {
 
             let mut keys_vec = vec![];
 
-            for key in setlike.keys().into_iter() {
-                let key = key.unwrap();
-                keys_vec.push(key.as_string().unwrap());
+            #[cfg(feature = "idl-generics-compat")]
+            {
+                for key in setlike.keys().into_iter() {
+                    let key = key.unwrap();
+                    keys_vec.push(key.as_string().unwrap());
+                }
+            }
+
+            #[cfg(not(feature = "idl-generics-compat"))]
+            {
+                for key in setlike.keys().into_iter() {
+                    let key = key.unwrap();
+                    keys_vec.push(key);
+                }
             }
 
             assert_eq!(
@@ -57,9 +80,20 @@ macro_rules! read_test_suite {
 
             let mut values_vec = vec![];
 
-            for value in setlike.values().into_iter() {
-                let value = value.unwrap();
-                values_vec.push(value.as_string().unwrap());
+            #[cfg(feature = "idl-generics-compat")]
+            {
+                for value in setlike.values().into_iter() {
+                    let value = value.unwrap();
+                    values_vec.push(value.as_string().unwrap());
+                }
+            }
+
+            #[cfg(not(feature = "idl-generics-compat"))]
+            {
+                for value in setlike.values().into_iter() {
+                    let value = value.unwrap();
+                    values_vec.push(value);
+                }
             }
 
             assert_eq!(

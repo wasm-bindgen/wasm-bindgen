@@ -8,6 +8,7 @@ mod error;
 mod ast;
 mod codegen;
 mod encode;
+mod generics;
 mod hash;
 mod parser;
 

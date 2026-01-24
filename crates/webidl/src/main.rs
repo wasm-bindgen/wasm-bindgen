@@ -28,7 +28,10 @@ fn main() -> Result<()> {
     let generated_features = wasm_bindgen_webidl::generate(
         &opt.input_dir,
         &opt.output_dir,
-        wasm_bindgen_webidl::Options { features },
+        wasm_bindgen_webidl::Options {
+            features,
+            generics_compat: true,
+        },
     )?;
 
     if let Some(cargo_toml_path) = opt.cargo_toml_path {

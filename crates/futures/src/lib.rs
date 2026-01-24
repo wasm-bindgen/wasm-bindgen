@@ -49,10 +49,12 @@ use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use futures_util::FutureExt;
-use js_sys::Promise;
+use js_sys::{AnyFunction, Promise, TypedFunction};
+use wasm_bindgen::__rt::marker::ErasableGeneric;
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::convert::{FromWasmAbi, Upcast};
+use wasm_bindgen::{prelude::*, AsUpcast, JsError};
 
 mod queue;
 #[cfg_attr(docsrs, doc(cfg(feature = "futures-core-03-stream")))]
@@ -97,10 +99,13 @@ where
     task::Task::spawn(future);
 }
 
-struct Inner {
-    result: Option<Result<JsValue, JsValue>>,
+struct Inner<T = JsValue> {
+    result: Option<Result<T, JsValue>>,
     task: Option<Waker>,
-    callbacks: Option<(Closure<dyn FnMut(JsValue)>, Closure<dyn FnMut(JsValue)>)>,
+    callbacks: Option<(
+        Closure<dyn FnMut(T) -> Result<(), JsError>>,
+        Closure<dyn FnMut(JsValue) -> Result<(), JsError>>,
+    )>,
 }
 
 /// A Rust `Future` backed by a JavaScript `Promise`.
@@ -111,20 +116,28 @@ struct Inner {
 /// with the JavaScript `Promise`.
 ///
 /// Currently this type is constructed with `JsFuture::from`.
-pub struct JsFuture {
-    inner: Rc<RefCell<Inner>>,
+pub struct JsFuture<T = JsValue> {
+    inner: Rc<RefCell<Inner<T>>>,
 }
 
 impl core::panic::UnwindSafe for JsFuture {}
 
-impl fmt::Debug for JsFuture {
+unsafe impl<T> ErasableGeneric for JsFuture<T> {
+    type Repr = JsFuture<JsValue>;
+}
+
+// Upcast for JsFuture is covariant in T (the success type)
+// JsFuture<T> can upcast to JsFuture<Target> if T: Upcast<Target>
+impl<T, Target> Upcast<JsFuture<Target>> for JsFuture<T> where T: Upcast<Target> {}
+
+impl<T> fmt::Debug for JsFuture<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
     }
 }
 
-impl From<Promise> for JsFuture {
-    fn from(js: Promise) -> JsFuture {
+impl<T: 'static + FromWasmAbi> From<Promise<T>> for JsFuture<T> {
+    fn from(js: Promise<T>) -> JsFuture<T> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
         // assuming that JS engines will unconditionally invoke precisely one of
@@ -140,17 +153,20 @@ impl From<Promise> for JsFuture {
         // have to be self-contained. Through the `Closure::once` and some
         // `Rc`-trickery we can arrange for both instances of `Closure`, and the
         // `Rc`, to all be destroyed once the first one is called.
-        let state = Rc::new(RefCell::new(Inner {
+        let state = Rc::new(RefCell::new(Inner::<T> {
             result: None,
             task: None,
             callbacks: None,
         }));
 
-        fn finish(state: &RefCell<Inner>, val: Result<JsValue, JsValue>) {
+        fn finish<T>(state: &RefCell<Inner<T>>, val: Result<T, JsValue>) {
             let task = {
                 let mut state = state.borrow_mut();
-                debug_assert!(state.callbacks.is_some());
-                debug_assert!(state.result.is_none());
+                assert!(
+                    state.callbacks.is_some(),
+                    "finish: callbacks should be Some"
+                );
+                assert!(state.result.is_none(), "finish: result should be None");
 
                 // First up drop our closures as they'll never be invoked again and
                 // this is our chance to clean up their state.
@@ -170,15 +186,21 @@ impl From<Promise> for JsFuture {
 
         let resolve = {
             let state = AssertUnwindSafe(state.clone());
-            Closure::once(move |val| finish(&state, Ok(val)))
+            Closure::once(move |val: T| {
+                finish(&*state, Ok(val));
+                Ok(())
+            })
         };
 
         let reject = {
             let state = AssertUnwindSafe(state.clone());
-            Closure::once(move |val| finish(&state, Err(val)))
+            Closure::once(move |val| {
+                finish(&*state, Err(val));
+                Ok(())
+            })
         };
 
-        let _ = js.then2(&resolve, &reject);
+        let _ = js.then_with_reject(&resolve, &reject);
 
         state.borrow_mut().callbacks = Some((resolve, reject));
 
@@ -186,8 +208,8 @@ impl From<Promise> for JsFuture {
     }
 }
 
-impl Future for JsFuture {
-    type Output = Result<JsValue, JsValue>;
+impl<T> Future for JsFuture<T> {
+    type Output = Result<T, JsValue>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         let mut inner = self.inner.borrow_mut();
@@ -227,7 +249,7 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new(&mut |resolve, reject| {
+    Promise::new(&mut move |resolve: AnyFunction, reject: AnyFunction| {
         let future = future.take().unwrap_throw();
 
         spawn_local(async move {
@@ -283,4 +305,49 @@ where
             }
         });
     })
+}
+
+// Note: Once we bump MSRV, we can type future_to_promise with backwards compatible inference.
+/// Converts a Rust `Future` into a corresponding typed JavaScript `Promise<T>`.
+///
+/// This function will take any future in Rust and schedule it to be executed,
+/// returning a JavaScript `Promise` which can then be passed to JavaScript.
+///
+/// The `future` must be `'static` because it will be scheduled to run in the
+/// background and cannot contain any stack references.
+///
+/// The returned `Promise` will be resolved or rejected when the future completes,
+/// depending on whether it finishes with `Ok` or `Err`.
+///
+/// # Panics
+///
+/// Note that in Wasm panics are currently translated to aborts, but "abort" in
+/// this case means that a JavaScript exception is thrown. The Wasm module is
+/// still usable (likely erroneously) after Rust panics.
+///
+/// If the `future` provided panics then the returned `Promise` **will not
+/// resolve**. Instead it will be a leaked promise. This is an unfortunate
+/// limitation of Wasm currently that's hoped to be fixed one day!
+pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
+where
+    F: Future<Output = Result<T, JsValue>> + 'static,
+    T: FromWasmAbi + ErasableGeneric<Repr = JsValue> + AsUpcast<T, JsValue> + 'static,
+{
+    let mut future = Some(future);
+
+    Promise::new_typed(
+        &mut move |resolve: TypedFunction<JsValue, T>, reject: AnyFunction| {
+            let future = future.take().unwrap_throw();
+            spawn_local(async move {
+                match future.await {
+                    Ok(val) => {
+                        resolve.call(&JsValue::undefined(), &val).unwrap_throw();
+                    }
+                    Err(val) => {
+                        reject.call1(&JsValue::undefined(), &val).unwrap_throw();
+                    }
+                }
+            });
+        },
+    )
 }

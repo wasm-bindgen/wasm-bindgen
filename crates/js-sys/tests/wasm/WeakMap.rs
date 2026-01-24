@@ -58,3 +58,41 @@ fn weakmap_inheritance() {
     assert!(map.is_instance_of::<Object>());
     let _: &Object = map.as_ref();
 }
+
+#[wasm_bindgen_test]
+fn new_typed() {
+    let map: WeakMap<Object, Object> = WeakMap::new_typed();
+    assert!(JsValue::from(map).is_object());
+}
+
+#[wasm_bindgen_test]
+fn typed_get_set() {
+    let map: WeakMap<Object, Object> = WeakMap::new_typed();
+    let key = some_key();
+    let value = Object::new();
+    Reflect::set(&value, &"data".into(), &42.into()).unwrap();
+    map.set(&key, &value);
+    let retrieved = map.get(&key);
+    let data = Reflect::get(&retrieved, &"data".into()).unwrap();
+    assert_eq!(data, 42);
+}
+
+#[wasm_bindgen_test]
+fn typed_has() {
+    let map: WeakMap<Object, Object> = WeakMap::new_typed();
+    let key = some_key();
+    assert!(!map.has(&key));
+    map.set(&key, &Object::new());
+    assert!(map.has(&key));
+}
+
+#[wasm_bindgen_test]
+fn typed_delete() {
+    let map: WeakMap<Object, Object> = WeakMap::new_typed();
+    let key = some_key();
+    map.set(&key, &Object::new());
+    assert!(map.has(&key));
+    assert!(map.delete(&key));
+    assert!(!map.has(&key));
+    assert!(!map.delete(&key));
+}

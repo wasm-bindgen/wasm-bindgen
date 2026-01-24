@@ -20,8 +20,12 @@ fn take_and_return_a_bunch_of_slices() {
         f.u8_clamped_with_u8_clamped_slice(Clamped(&mut [1, 2])).0,
         [3, 4, 5]
     );
+    // Arrays now have generic types, but u8 doesn't implement ErasableGeneric
+    // so we need to work with them as JsValue arrays
+    use wasm_bindgen::JsCast;
     assert_eq!(
         f.octet_array()
+            .unchecked_ref::<js_sys::Array>()
             .iter()
             .map(|v| v.as_f64().unwrap())
             .collect::<Vec<_>>(),
@@ -29,6 +33,7 @@ fn take_and_return_a_bunch_of_slices() {
     );
     assert_eq!(
         f.octet_sequence()
+            .unchecked_ref::<js_sys::Array>()
             .iter()
             .map(|v| v.as_f64().unwrap())
             .collect::<Vec<_>>(),

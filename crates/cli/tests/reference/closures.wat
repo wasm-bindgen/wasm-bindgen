@@ -13,7 +13,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_is_undefined_9e4d92534c42d778" (func (;0;) (type 8)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_be289d5034ed271b" (func (;1;) (type 4)))
   (import "./reference_test_bg.js" "__wbg__wbg_cb_unref_d9b87ff7982e3b21" (func (;2;) (type 7)))
-  (import "./reference_test_bg.js" "__wbg_forEach_a2bfcdf179e573de" (func (;3;) (type 9)))
+  (import "./reference_test_bg.js" "__wbg_forEach_5f44b1b51cbbfa39" (func (;3;) (type 9)))
   (import "./reference_test_bg.js" "__wbg_instanceof_Window_ed49b2db8df90359" (func (;4;) (type 8)))
   (import "./reference_test_bg.js" "__wbg_log_6b5ca2e6124b2808" (func (;5;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_setTimeout_681abd84926a4da3" (func (;6;) (type 10)))

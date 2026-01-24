@@ -1,0 +1,76 @@
+error[E0277]: the trait bound `&mut wasm_bindgen::JsValue: IntoWasmAbi` is not satisfied
+ --> ui-tests/generic-import-non-erasable.rs:3:1
+  |
+3 | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `&mut wasm_bindgen::JsValue`
+  |
+  = help: the following other types implement trait `IntoWasmAbi`:
+            &wasm_bindgen::JsValue
+            wasm_bindgen::JsValue
+  = note: `IntoWasmAbi` is implemented for `&wasm_bindgen::JsValue`, but not for `&mut wasm_bindgen::JsValue`
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `&mut wasm_bindgen::JsValue: IntoWasmAbi` is not satisfied
+  --> ui-tests/generic-import-non-erasable.rs:15:19
+   |
+15 |     pub fn baz<T>(a: &mut T) -> bool;
+   |                   ^ the trait `IntoWasmAbi` is not implemented for `&mut wasm_bindgen::JsValue`
+   |
+   = help: the following other types implement trait `IntoWasmAbi`:
+             &wasm_bindgen::JsValue
+             wasm_bindgen::JsValue
+   = note: `IntoWasmAbi` is implemented for `&wasm_bindgen::JsValue`, but not for `&mut wasm_bindgen::JsValue`
+
+error[E0277]: Unable to call function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function
+  --> ui-tests/generic-import-non-erasable.rs:20:11
+   |
+20 |     foo::<u32>(42);
+   |           ^^^ passed concrete generic type does not match the expected generic repr type
+   |
+   = help: the trait `ErasableGenericOwn<wasm_bindgen::JsValue>` is not implemented for `u32`
+   = note: Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.
+note: required by a bound in `foo`
+  --> ui-tests/generic-import-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `foo`
+...
+7  |     pub fn foo<T>(a: T) -> bool;
+   |            --- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function
+  --> ui-tests/generic-import-non-erasable.rs:24:11
+   |
+24 |     bar::<u32>(&42);
+   |           ^^^ concrete generic type does not match the expected generic repr type
+   |
+   = help: the trait `ErasableGenericBorrow<wasm_bindgen::JsValue>` is not implemented for `u32`
+   = note: Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.
+note: required by a bound in `bar`
+  --> ui-tests/generic-import-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `bar`
+...
+11 |     pub fn bar<T>(a: &T) -> bool;
+   |            --- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: Unable to call this function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function
+  --> ui-tests/generic-import-non-erasable.rs:29:11
+   |
+29 |     baz::<u32>(&mut x);
+   |           ^^^ concrete generic type does not match the expected generic repr type
+   |
+   = help: the trait `ErasableGenericBorrowMut<wasm_bindgen::JsValue>` is not implemented for `u32`
+   = note: Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.
+note: required by a bound in `baz`
+  --> ui-tests/generic-import-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `baz`
+...
+15 |     pub fn baz<T>(a: &mut T) -> bool;
+   |            --- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
