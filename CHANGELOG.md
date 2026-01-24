@@ -5,6 +5,8 @@
 
 ### Added
 
+* Add Node.js `worker_threads` support for atomics builds. When targeting Node.js with atomics enabled, wasm-bindgen now generates `initSync({ module, memory, thread_stack_size })` and `__wbg_get_imports(memory)` functions that allow worker threads to initialize with a shared WebAssembly.Memory and pre-compiled module. Auto-initialization occurs only on the main thread for backwards compatibility.
+
 * Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
   [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
 

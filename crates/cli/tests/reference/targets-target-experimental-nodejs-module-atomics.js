@@ -58,8 +58,44 @@ function decodeText(ptr, len) {
 }
 
 import { readFileSync } from 'node:fs';
-const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
-const wasmBytes = readFileSync(wasmUrl);
-const wasmModule = new WebAssembly.Module(wasmBytes);
-let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
-wasm.__wbindgen_start();
+import { isMainThread } from 'node:worker_threads';
+
+let wasm;
+let wasmModule;
+let memory;
+let __initialized = false;
+
+export function initSync(opts = {}) {
+    if (__initialized) return wasm;
+
+    let { module, memory: mem, thread_stack_size } = opts;
+
+    if (module === undefined) {
+        const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
+        module = readFileSync(wasmUrl);
+    }
+
+    if (!(module instanceof WebAssembly.Module)) {
+        wasmModule = new WebAssembly.Module(module);
+    } else {
+        wasmModule = module;
+    }
+
+    const wasmImports = __wbg_get_imports(mem);
+    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = instance.exports;
+    memory = wasmImports['./reference_test_bg.js'].memory;
+
+    if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) { throw new Error('invalid stack size'); }
+    wasm.__wbindgen_start(thread_stack_size);
+    __initialized = true;
+    return wasm;
+}
+
+// Auto-initialize for backwards compatibility (only on main thread)
+// Worker threads should call initSync({ module, memory }) explicitly
+if (isMainThread) {
+    initSync();
+}
+
+export { wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memory, __wbg_get_imports };

@@ -101,6 +101,7 @@ members = [
   "examples/closures",
   "examples/console_log",
   "examples/nodejs_and_deno",
+  "examples/nodejs-threads",
   "examples/dom",
   "examples/duck-typed-interfaces",
   "examples/explicit-resource-management",
