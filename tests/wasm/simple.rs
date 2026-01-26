@@ -246,7 +246,7 @@ fn optional_slices() {
     optional_string_some(Some("abcd".to_string()));
 
     assert_eq!(return_string_none(), None);
-    assert_eq!(return_string_some(), Some("foo".to_string()));
+    assert_eq!(return_string_some(), Some("bar".to_string()));
     test_rust_optional();
 }
 
