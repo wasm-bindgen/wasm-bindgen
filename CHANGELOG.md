@@ -104,6 +104,9 @@
 * New MSRV policy, and bump of the MSRV fo 1.71.
   [#4801](https://github.com/wasm-bindgen/wasm-bindgen/pull4801)
 
+* Added `CSS Custom Highlight` API to `web-sys`.
+  [#4792](https://github.com/wasm-bindgen/wasm-bindgen/pull/4792)
+
 * Added typed `this` support in the first argument in free function exports via
   a new `#[wasm_bindgen(this)]` attribute.
   [#4757](https://github.com/wasm-bindgen/wasm-bindgen/pull/4757)
