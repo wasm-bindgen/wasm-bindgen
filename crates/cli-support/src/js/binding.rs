@@ -10,6 +10,7 @@ use crate::wit::InstructionData;
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, Instruction,
 };
+use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::collections::HashSet;
 use std::fmt::Write;
@@ -985,10 +986,20 @@ fn instruction(
             // Note that we always assume the return pointer is argument 0,
             // which is currently the case for LLVM.
             let val = js.pop();
-            let expr = format!(
+            let mut expr = format!(
                 "{mem}().{method}({} + {size} * {offset}, {val}, true);",
                 js.arg(0),
             );
+            if matches!(js.cx.config.mode, OutputMode::Emscripten) {
+                expr = format!(
+                    "HEAP_DATA_VIEW.{}({} + {} * {}, {}, true);",
+                    method,
+                    js.arg(0),
+                    size,
+                    offset,
+                    val,
+                );
+            }
             js.prelude(&expr);
         }
 
@@ -1008,7 +1019,13 @@ fn instruction(
             // If we're loading from the return pointer then we must have pushed
             // it earlier, and we always push the same value, so load that value
             // here
-            let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
+            let mut expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
+            if matches!(js.cx.config.mode, OutputMode::Emscripten) {
+                expr = format!(
+                    "HEAP_DATA_VIEW.{}(retptr + {} * {}, true)",
+                    method, size, scaled_offset
+                );
+            }
             js.prelude(&format!("var r{offset} = {expr};"));
             js.push(format!("r{offset}"));
         }
@@ -1406,6 +1423,14 @@ fn instruction(
             let b = js.pop();
             let a = js.pop();
             let wrapper = js.cx.export_adapter_name(*adapter);
+
+            if matches!(js.cx.config.mode, OutputMode::Emscripten) {
+                // We format it with the '$' prefix and quotes, just like intrinsic() does.
+                // This ensures it gets added to the global 'extraLibraryFuncs' list,
+                // making it available to the linker.
+                let dep_entry = format!("'${}'", wrapper);
+                js.cx.adapter_deps.insert(dep_entry);
+            }
 
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership

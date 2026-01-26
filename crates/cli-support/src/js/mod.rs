@@ -11,6 +11,7 @@ use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
 use crate::{Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
+use regex::Regex;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -38,9 +39,11 @@ macro_rules! region {
 pub struct Context<'a> {
     globals: String,
     intrinsics: Option<BTreeMap<Cow<'static, str>, Cow<'static, str>>>,
+    emscripten_library: String,
     imports_post: String,
     export_name_list: Vec<String>,
     typescript: String,
+    typescript_emscripten_classes: String,
     config: &'a Bindgen,
     pub module: &'a mut Module,
     aux: &'a WasmBindgenAux,
@@ -96,6 +99,13 @@ pub struct Context<'a> {
 
     /// If threading is enabled.
     threads_enabled: bool,
+
+    /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
+    /// Must be cleared at the start of `generate_adapter`.
+    adapter_deps: HashSet<String>,
+
+    /// Tracks global emscripten dependencies as opposed to adapter-level dependencies.
+    emscripten_global_deps: HashSet<String>,
 }
 
 /// Definition of a module export
@@ -192,6 +202,7 @@ impl<'a> Context<'a> {
             imports_post: String::new(),
             export_name_list: Vec::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
+            typescript_emscripten_classes: String::new(),
             imported_names: Default::default(),
             js_imports: Default::default(),
             defined_identifiers: Default::default(),
@@ -209,6 +220,9 @@ impl<'a> Context<'a> {
             memories: Default::default(),
             table_indices: Default::default(),
             stack_pointer_shim_injected: false,
+            emscripten_library: String::new(),
+            adapter_deps: HashSet::new(),
+            emscripten_global_deps: HashSet::new(),
         })
     }
 
@@ -216,6 +230,40 @@ impl<'a> Context<'a> {
         self.intrinsics.as_ref().unwrap().contains_key(name)
     }
 
+    fn intrinsic(
+        &mut self,
+        name: Cow<'static, str>,
+        js_name: Option<&str>,
+        val: Cow<'static, str>,
+    ) {
+        if self.intrinsics.as_ref().unwrap().contains_key(&name) {
+            return;
+        }
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            let actual_js_name: &str = js_name.unwrap_or(&name);
+            self.adapter_deps.insert(format!("\'${actual_js_name}\'"));
+
+            let mut content = val.replace("wasm.", "wasmExports.");
+
+            // Function signature replacement for Emscripten
+            // Replace all occurrences of "function name" -> "$name: function".
+            let old_decl = format!("function {actual_js_name}");
+            let new_decl = format!("${actual_js_name}: function");
+
+            content = content.replace(&old_decl, &new_decl);
+
+            self.emscripten_library(&content);
+
+            // Register empty string so standard generation skips this key
+            self.intrinsics
+                .as_mut()
+                .unwrap()
+                .insert(name.into(), "".into());
+        } else {
+            self.intrinsics.as_mut().unwrap().insert(name.into(), val);
+        }
+    }
     /// Writes an ExportDefinition to global and typescript buffers.
     /// Handles realising for invalid identifier export names.
     /// define_only used when only locally declared but not explicitly exported.
@@ -254,7 +302,7 @@ impl<'a> Context<'a> {
                     self.typescript.push_str(c);
                 }
                 // in nomodules, we output into a namespace, which is already ambient
-                if !self.config.mode.no_modules() {
+                if !self.config.mode.no_modules() && !self.config.mode.emscripten() {
                     self.typescript.push_str("declare ");
                 }
                 self.typescript.push_str(ts_decl);
@@ -290,7 +338,28 @@ impl<'a> Context<'a> {
                             .push_str(&format!("export {{ {id} as '{export_name}' }}\n"));
                     }
                 }
-            };
+                OutputMode::Emscripten => {
+                    let decl_modified = decl.replace("wasm", "wasmExports");
+
+                    if let Some(c) = comments {
+                        self.globals.push_str(c);
+                    }
+
+                    if decl_modified.trim_start().starts_with("const") {
+                        self.globals.push_str("export ");
+                        self.globals.push_str(&decl_modified);
+                    } else {
+                        self.globals.push_str(&decl_modified);
+
+                        if export_name == id {
+                            self.global(&format!("Module.{} = {};\n", export_name, id));
+                        } else {
+                            self.global(&format!("export {{ {} as {} }};\n", id, export_name));
+                        }
+                    }
+                }
+            }
+
             if self.config.typescript && !ts_decl.is_empty() {
                 if export_name == "default" {
                     self.typescript.push_str(&format!("export default {id};\n"));
@@ -317,6 +386,7 @@ impl<'a> Context<'a> {
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
         self.write_classes()?;
+        let classes_out = std::mem::take(&mut self.globals);
 
         // Process reexports
         for (export_name, js_import) in self.aux.reexports.clone() {
@@ -352,12 +422,24 @@ impl<'a> Context<'a> {
                 self.globals.push_str(&imports);
             });
         }
+        let imports_out = std::mem::take(&mut self.globals);
 
         if !self.exports.is_empty() {
             // Write out all exports
             region!(self, "exports", {
                 self.write_exports()?;
             });
+        }
+        let exports_out = std::mem::take(&mut self.globals);
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // EMSCRIPTEN-only: classes and exports are written inside of $initBindgen,
+            // via generate_wasm_loading.
+            self.globals.push_str(&imports_out);
+        } else {
+            self.globals.push_str(&classes_out);
+            self.globals.push_str(&imports_out);
+            self.globals.push_str(&exports_out);
         }
 
         if let Some(mem) = self.module.memories.iter().next() {
@@ -422,8 +504,14 @@ impl<'a> Context<'a> {
         // previously present).
         let needs_manual_start = unstart_start_function(self.module);
         region!(self, "wasm loading", {
+            let wrapped_content = if matches!(self.config.mode, OutputMode::Emscripten) {
+                format!("{}\n{}", classes_out, exports_out)
+            } else {
+                String::new()
+            };
+
             let wasm_loading =
-                self.generate_wasm_loading(module_name, needs_manual_start, has_memory);
+                self.generate_wasm_loading(module_name, needs_manual_start, has_memory, &wrapped_content);
             self.globals.push_str(&wasm_loading);
         });
 
@@ -467,6 +555,16 @@ impl<'a> Context<'a> {
             ts = String::from("declare namespace wasm_bindgen {\n");
             ts.push_str(&self.typescript);
             ts.push_str("\n}");
+        } else if matches!(self.config.mode, OutputMode::Emscripten) {
+            ts = self.typescript_emscripten_classes.clone();
+
+            ts.push_str("interface BindgenModule {\n");
+            for line in self.typescript.lines() {
+                ts.push_str("  ");
+                ts.push_str(line);
+                ts.push('\n');
+            }
+            ts.push_str("}\n\n");
         } else {
             ts.push_str(&self.typescript);
         }
@@ -561,9 +659,58 @@ impl<'a> Context<'a> {
         imports
     }
 
+    fn generate_emscripten_imports(&mut self) -> String {
+        let mut imports = String::from("var LibraryWbg = {\n");
+
+        // Inject Intrinsics
+        if !self.emscripten_library.is_empty() {
+            imports.push_str(&self.emscripten_library);
+            imports.push_str(",\n");
+        }
+
+        // Inject Global Dependencies
+        for global_dep in self.emscripten_global_deps.iter() {
+            if global_dep == "'$WASM_VECTOR_LEN'" {
+                imports.push_str("$WASM_VECTOR_LEN: '0',\n");
+            } else if global_dep == "'$textEncoder'" {
+                imports.push_str("$textEncoder: \"new TextEncoder()\",\n");
+            } else if global_dep == "'$textDecoder'" {
+                imports.push_str("$textDecoder: \"new TextDecoder()\",\n");
+            } else if global_dep == "'$heap'" {
+                imports.push_str(&format!(
+                    "$heap: \"new Array({}).fill(undefined)\",\n\"heap.push({})\",\n",
+                    INITIAL_HEAP_OFFSET,
+                    INITIAL_HEAP_VALUES.join(", ")
+                ));
+            } else if global_dep == "'$stack_pointer'" {
+                imports.push_str(&format!("$stack_pointer : \"{}\",\n", INITIAL_HEAP_OFFSET));
+            }
+        }
+
+        // Inject Imports
+        for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
+            let import = self.module.imports.get_mut(*id);
+            import.module = "env".to_string();
+            imports.push_str(&import.name);
+            
+            let trimmed_js = js.trim();
+            // Handle specific cases
+            if import.name == "__wbindgen_init_externref_table" {
+                let body = trimmed_js.strip_prefix("function()").unwrap_or(trimmed_js);
+                imports.push_str(&format!(": () => {},\n", body.replace("wasm.", "wasmExports.")));
+            } else {
+                imports.push_str(&format!(": {},\n", trimmed_js.replace("wasm.", "wasmExports.")));
+            }
+        }
+
+        imports.push_str("};\n");
+        imports
+    }
+
     fn generate_imports(&mut self, module_name: &str, has_memory: bool) -> String {
         match self.config.mode {
             OutputMode::Bundler { .. } => self.generate_bundler_imports(module_name),
+            OutputMode::Emscripten => self.generate_emscripten_imports(),
             _ => self.generate_esm_cjs_imports(module_name, has_memory),
         }
     }
@@ -609,7 +756,8 @@ impl<'a> Context<'a> {
             | OutputMode::Node { module: true }
             | OutputMode::Web
             | OutputMode::Module
-            | OutputMode::Deno => {
+            | OutputMode::Deno
+            | OutputMode::Emscripten => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
                     imports.push_str("import { ");
                     for (i, (item, rename)) in items.iter().enumerate() {
@@ -642,6 +790,9 @@ impl<'a> Context<'a> {
         has_memory: bool,
         has_module_or_path_optional: bool,
     ) -> Result<String, Error> {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return Ok("".to_string());
+        }
         let output = crate::wasm2es6js::interface(self.module)?;
 
         let (memory_doc, memory_param) = if has_memory {
@@ -986,11 +1137,42 @@ impl<'a> Context<'a> {
         )
     }
 
+    fn generate_emscripten_wasm_loading(&self, needs_manual_start: bool, classes_and_exports: &str) -> String {
+        let set_to_list = |set: &HashSet<String>| -> Vec<String> { set.iter().cloned().collect() };
+        let deps: Vec<String> = set_to_list(&self.emscripten_global_deps);
+        
+        // We need to inject the start function logic here
+        let start_logic = if needs_manual_start {
+            "wasmExports.__wbindgen_start();"
+        } else {
+            ""
+        };
+
+        // Note: 'globals' are handled in the main finalize loop, but we need to ensure 
+        // the $initBindgen function can access them if they were emitted as "wasmExports".
+        // The formatting here matches your previous `finalize_js` structure.
+        format!(
+            r#"
+            LibraryWbg.$initBindgen__deps = ['$addOnInit'];
+            LibraryWbg.$initBindgen__postset = 'addOnInit(initBindgen);';
+            LibraryWbg.$initBindgen = () => {{
+                {start_logic}
+                {classes_and_exports}
+            }};
+            
+            extraLibraryFuncs.push('$initBindgen', '$addOnInit', {deps});
+            addToLibrary(LibraryWbg);
+            "#,
+            deps = deps.join(", ")
+        )
+    }
+
     fn generate_wasm_loading(
         &self,
         module_name: &str,
         needs_manual_start: bool,
         has_memory: bool,
+        classes_and_exports: &str
     ) -> String {
         match self.config.mode {
             OutputMode::Module => {
@@ -1021,6 +1203,7 @@ impl<'a> Context<'a> {
 
                 loading
             }
+            OutputMode::Emscripten => self.generate_emscripten_wasm_loading(needs_manual_start, classes_and_exports),
             OutputMode::NoModules { .. } => {
                 let default_module_path = if self.config.omit_default_module_path {
                     ""
@@ -1217,10 +1400,28 @@ impl<'a> Context<'a> {
         dst.push_str("}\n");
         ts_dst.push_str("}\n");
 
-        // For hidden classes, add export type statement
-        if class.private {
-            ts_dst.push_str(&format!("export type {{ {name} }};\n"));
-        }
+        let ts_definition = if class.generate_typescript {
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                self.typescript_emscripten_classes.push_str(&class.comments);
+                self.typescript_emscripten_classes.push_str("export ");
+                self.typescript_emscripten_classes.push_str(&ts_dst);
+                self.typescript_emscripten_classes.push('\n');
+
+                self.typescript
+                    .push_str(&format!("{}: typeof {};\n", name, name));
+
+                String::new()
+            } else {
+                let mut ts = ts_dst;
+                // For hidden classes, add export type statement
+                if class.private {
+                    ts.push_str(&format!("export type {{ {name} }};\n"));
+                }
+                ts
+            }
+        } else {
+            String::new()
+        };
 
         dst.push_str(&format!(
             "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
@@ -1240,11 +1441,7 @@ impl<'a> Context<'a> {
                 identifier: class.identifier,
                 comments: Some(class.comments),
                 definition: dst,
-                ts_definition: if class.generate_typescript {
-                    ts_dst
-                } else {
-                    String::new()
-                },
+                ts_definition: ts_definition,
                 ts_comments,
                 private: class.private,
             }),
@@ -1476,7 +1673,9 @@ impl<'a> Context<'a> {
         // the linked list of heap slots that are free.
         self.expose_global_heap();
         self.expose_global_heap_next();
-        intrinsic(&mut self.intrinsics, "drop_ref".into(), || {
+        self.intrinsic(
+            "drop_ref".into(),
+            "dropObject".into(),
             format!(
                 "
                 function dropObject(idx) {{
@@ -1487,13 +1686,19 @@ impl<'a> Context<'a> {
                 ",
                 INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len(),
             )
-            .into()
-        });
+            .into(),
+        );
     }
 
     fn expose_global_heap(&mut self) {
         assert!(!self.config.externref);
-        intrinsic(&mut self.intrinsics, "heap".into(), || {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps.insert("'$heap'".to_string());
+            return;
+        }
+        self.intrinsic(
+            "heap".into(),
+            None,
             format!(
                 "
                 let heap = new Array({INITIAL_HEAP_OFFSET}).fill(undefined);
@@ -1501,54 +1706,60 @@ impl<'a> Context<'a> {
                 ",
                 INITIAL_HEAP_VALUES.join(", ")
             )
-            .into()
-        });
+            .into(),
+        );
     }
 
     fn expose_global_heap_next(&mut self) {
         self.expose_global_heap();
-        intrinsic(&mut self.intrinsics, "heap_next".into(), || {
-            "\nlet heap_next = heap.length;\n".into()
-        });
+        self.intrinsic(
+            "heap_next".into(),
+            None,
+            "\nlet heap_next = heap.length;\n".into(),
+        );
     }
 
     fn expose_get_object(&mut self) {
         // Accessing a heap object is just a simple index operation due to how
         // the stack/heap are laid out.
         self.expose_global_heap();
-        intrinsic(&mut self.intrinsics, "get_object".into(), || {
-            "\nfunction getObject(idx) { return heap[idx]; }\n".into()
-        });
+        self.intrinsic(
+            "get_object".into(),
+            "getObject".into(),
+            "\nfunction getObject(idx) { return heap[idx]; }\n".into(),
+        );
     }
 
     fn expose_not_defined(&mut self) {
-        intrinsic(&mut self.intrinsics, "not_defined".into(), || {
+        self.intrinsic("not_defined".into(), "notDefined".into(),
             "\nfunction notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }\n".into()
-        });
+        );
     }
 
     fn expose_assert_num(&mut self) {
-        intrinsic(&mut self.intrinsics, "assert_num".into(), || {
+        self.intrinsic("assert_num".into(), "_assertNum".into(),
             "
             function _assertNum(n) {
                 if (typeof(n) !== 'number') throw new Error(`expected a number argument, found ${typeof(n)}`);
             }
             ".into()
-        });
+        );
     }
 
     fn expose_assert_bigint(&mut self) {
-        intrinsic(&mut self.intrinsics, "assert_bigint".into(), || {
+        self.intrinsic("assert_bigint".into(), "_assertBigInt".into(),
             "
             function _assertBigInt(n) {
                 if (typeof(n) !== 'bigint') throw new Error(`expected a bigint argument, found ${typeof(n)}`);
             }
             ".into()
-        });
+        );
     }
 
     fn expose_assert_bool(&mut self) {
-        intrinsic(&mut self.intrinsics, "assert_bool".into(), || {
+        self.intrinsic(
+            "assert_bool".into(),
+            "_assertBoolean".into(),
             "
             function _assertBoolean(n) {
                 if (typeof(n) !== 'boolean') {
@@ -1556,92 +1767,133 @@ impl<'a> Context<'a> {
                 }
             }
             "
-            .into()
-        });
+            .into(),
+        );
     }
 
     fn expose_wasm_vector_len(&mut self) {
-        intrinsic(&mut self.intrinsics, "wasm_vector_len".into(), || {
-            "\nlet WASM_VECTOR_LEN = 0;\n".into()
-        });
+        self.adapter_deps.insert("'$WASM_VECTOR_LEN'".to_string());
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps
+                .insert("'$WASM_VECTOR_LEN'".to_string());
+            self.intrinsic(
+                "wasm_vector_len".into(),
+                "WASM_VECTOR_LEN".into(),
+                "".into(),
+            );
+        } else {
+            self.intrinsic(
+                "wasm_vector_len".into(),
+                None,
+                "\nlet WASM_VECTOR_LEN = 0;\n".into(),
+            );
+        }
     }
 
     fn expose_pass_string_to_wasm(&mut self, memory: MemoryId) -> MemView {
         self.expose_wasm_vector_len();
+
         let mem = self.expose_uint8_memory(memory);
         let ret = MemView {
             name: "passStringToWasm".into(),
             num: mem.num,
         };
+
+        // Ensure the encoder and its polyfills are registered
         self.expose_text_encoder(memory);
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
-            let debug = if self.config.debug {
-                "if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);\n"
-            } else {
-                ""
-            };
 
-            // A fast path that directly writes char codes into Wasm memory as long
-            // as it finds only ASCII characters.
-            //
-            // This is much faster for common ASCII strings because it can avoid
-            // calling out into C++ TextEncoder code.
-            //
-            // This might be not very intuitive, but such calls are usually more
-            // expensive in mainstream engines than staying in the JS, and
-            // charCodeAt on ASCII strings is usually optimised to raw bytes.
-            let encode_as_ascii = format!(
-                "\
-                    if (realloc === undefined) {{
-                        const buf = cachedTextEncoder.encode(arg);
-                        const ptr = malloc(buf.length, 1) >>> 0;
-                        {mem}().subarray(ptr, ptr + buf.length).set(buf);
-                        WASM_VECTOR_LEN = buf.length;
-                        return ptr;
-                    }}
+        self.intrinsic(
+        ret.to_string().into(),
+        None,
 
-                    let len = arg.length;
-                    let ptr = malloc(len, 1) >>> 0;
+        {
+        let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
 
-                    const mem = {mem}();
+        // Emscripten uses the global 'textEncoder' and a global heap HEAPU8.
+        let text_encoder_var = if is_emscripten { "textEncoder" } else { "cachedTextEncoder" };
+        let mem_formatted = if is_emscripten { format!("{}", mem.name) } else { format!("{mem}()") };
 
-                    let offset = 0;
+        let debug = if self.config.debug {
+            "if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);\n"
+        } else {
+            ""
+        };
+        let debug_end = if self.config.debug {
+            "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
+        } else {
+            ""
+        };
 
-                    for (; offset < len; offset++) {{
-                        const code = arg.charCodeAt(offset);
-                        if (code > 0x7F) break;
-                        mem[ptr + offset] = code;
-                    }}
-                ",
-            );
+        let encode_as_ascii = format!(
+            r#"
+            if (realloc === undefined) {{
+                const buf = {text_encoder_var}.encode(arg);
+                const ptr = malloc(buf.length, 1) >>> 0;
+                {mem_formatted}.subarray(ptr, ptr + buf.length).set(buf);
+                WASM_VECTOR_LEN = buf.length;
+                return ptr;
+            }}
 
+            let len = arg.length;
+            let ptr = malloc(len, 1) >>> 0;
+            const mem = {mem_formatted};
+            let offset = 0;
+
+            for (; offset < len; offset++) {{
+                const code = arg.charCodeAt(offset);
+                if (code > 0x7F) break;
+                mem[ptr + offset] = code;
+            }}
+            "#
+        );
+
+        if is_emscripten {
+            // Emscripten: Emit as Object Property + Dependency List
             format!(
-                "
-                function {ret}(arg, malloc, realloc) {{
-                    {debug}{encode_as_ascii}if (offset !== len) {{
+                "${ret}: function(arg, malloc, realloc) {{
+                    {debug}
+                    {encode_as_ascii}
+                    if (offset !== len) {{
                         if (offset !== 0) {{
                             arg = arg.slice(offset);
                         }}
                         ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
-                        const view = {mem}().subarray(ptr + offset, ptr + len);
-                        const ret = cachedTextEncoder.encodeInto(arg, view);
+                        const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
+                        const ret = {text_encoder_var}.encodeInto(arg, view);
                         {debug_end}
                         offset += ret.written;
                         ptr = realloc(ptr, len, offset, 1) >>> 0;
                     }}
-
                     WASM_VECTOR_LEN = offset;
                     return ptr;
-                }}
-                ",
-                debug_end = if self.config.debug {
-                    "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
-                } else {
-                    ""
-                },
-            )
-            .into()
-        });
+                }},
+                ${ret}__deps: ['$textEncoder', '$WASM_VECTOR_LEN']\n",
+            ).into()
+        } else {
+            format!(
+                "function {ret}(arg, malloc, realloc) {{
+                    {debug}
+                    {encode_as_ascii}
+                    if (offset !== len) {{
+                        if (offset !== 0) {{
+                            arg = arg.slice(offset);
+                        }}
+                        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+                        const view = {mem_formatted}.subarray(ptr + offset, ptr + len);
+                        const ret = {text_encoder_var}.encodeInto(arg, view);
+                        {debug_end}
+                        offset += ret.written;
+                        ptr = realloc(ptr, len, offset, 1) >>> 0;
+                    }}
+                    WASM_VECTOR_LEN = offset;
+                    return ptr;
+                }}",
+            ).into()
+        }
+        },
+    );
+
         ret
     }
 
@@ -1687,38 +1939,62 @@ impl<'a> Context<'a> {
                 // TODO: using `addToExternrefTable` goes back and forth between wasm
                 // and JS a lot, we should have a bulk operation for this.
                 let add = self.expose_add_to_externref_table(table, alloc);
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+
+                if self.config.mode.emscripten() {
+                    self.adapter_deps.insert("'${add}'".to_string());
+                }
+
+                self.intrinsic(ret.to_string().into(), None, {
+                    let loop_body = if self.config.mode.emscripten() {
+                        format!("HEAP32[ptr + 4 * i >> 2] = {add}(array[i]);")
+                    } else {
+                        format!(
+                            "const add = {add}(array[i]); {mem}().setUint32(ptr + 4 * i, add, true);"
+                        )
+                    };
                     format!(
                         "
                         function {ret}(array, malloc) {{
                             const ptr = malloc(array.length * 4, 4) >>> 0;
                             for (let i = 0; i < array.length; i++) {{
-                                const add = {add}(array[i]);
-                                {mem}().setUint32(ptr + 4 * i, add, true);
+                                {loop_body}
                             }}
                             WASM_VECTOR_LEN = array.length;
                             return ptr;
                         }}
-                    ",
+                    "
                     )
                     .into()
                 });
             }
             _ => {
                 self.expose_add_heap_object();
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                self.intrinsic(ret.to_string().into(), None, {
+                    let (setup, loop_body) = if matches!(self.config.mode, OutputMode::Emscripten) {
+                        (
+                            "".to_string(),
+                            "HEAP32[ptr + 4 * i >> 2] = addHeapObject(array[i]);".to_string(),
+                        )
+                    } else {
+                        (
+                            format!("const mem = {mem}();"),
+                            "mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);"
+                                .to_string(),
+                        )
+                    };
+
                     format!(
                         "
                         function {ret}(array, malloc) {{
                             const ptr = malloc(array.length * 4, 4) >>> 0;
-                            const mem = {mem}();
+                            {setup}
                             for (let i = 0; i < array.length; i++) {{
-                                mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);
+                                {loop_body}
                             }}
                             WASM_VECTOR_LEN = array.length;
                             return ptr;
                         }}
-                    ",
+                    "
                     )
                     .into()
                 });
@@ -1733,7 +2009,7 @@ impl<'a> Context<'a> {
             num: view.num,
         };
         self.expose_wasm_vector_len();
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+        self.intrinsic(ret.to_string().into(), None, {
             format!(
                 "
                 function {ret}(arg, malloc) {{
@@ -1750,11 +2026,23 @@ impl<'a> Context<'a> {
     }
 
     fn expose_text_encoder(&mut self, memory: MemoryId) {
-        intrinsic(&mut self.intrinsics, "text_encoder".into(), || {
-            let mut dst =
-                Self::write_text_processor(self.module, memory, "const", "TextEncoder", "()", None);
+        self.emscripten_global_deps
+            .insert("'$textEncoder'".to_string());
+        self.intrinsic("text_encoder".into(), "textEncoder".into(), {
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                "".into()
+            } else {
+                let mut dst = Self::write_text_processor(
+                    self.module,
+                    memory,
+                    "const",
+                    "TextEncoder",
+                    "()",
+                    None,
+                    self.config.mode.clone(),
+                );
 
-            let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
+                let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
                 const buf = cachedTextEncoder.encode(arg);
                 view.set(buf);
                 return {
@@ -1763,58 +2051,70 @@ impl<'a> Context<'a> {
                 };
             };";
 
-            // `encodeInto` doesn't currently work in any browsers when the memory passed
-            // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
-            // a `SharedArrayBuffer` is in use.
-            let shared = self.module.memories.get(memory).shared;
+                // `encodeInto` doesn't currently work in any browsers when the memory passed
+                // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
+                // a `SharedArrayBuffer` is in use.
+                let shared = self.module.memories.get(memory).shared;
 
-            match self.config.encode_into {
-                EncodeInto::Always if !shared => {}
-                EncodeInto::Test if !shared => {
-                    dst.push_str(&format!(
-                        "
+                match self.config.encode_into {
+                    EncodeInto::Always if !shared => {}
+                    EncodeInto::Test if !shared => {
+                        dst.push_str(&format!(
+                            "
                         if (!('encodeInto' in cachedTextEncoder)) {{
                             {polyfill_encode_into}
                         }}
                         "
-                    ));
-                }
-                _ => {
-                    // Support audio worklets when able to spawn them.
-                    if shared {
-                        dst.push_str(&format!(
-                            "
+                        ));
+                    }
+                    _ => {
+                        // Support audio worklets when able to spawn them.
+                        if shared {
+                            dst.push_str(&format!(
+                                "
                             if (cachedTextEncoder) {{
                                 {polyfill_encode_into}
                             }}
                             "
-                        ));
-                    } else {
-                        dst.push_str(polyfill_encode_into);
+                            ));
+                        } else {
+                            dst.push_str(polyfill_encode_into);
+                        }
                     }
                 }
-            }
 
-            dst.into()
+                dst.into()
+            }
         });
     }
 
     fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) {
-        intrinsic(&mut self.intrinsics, "text_decoder".into(), || {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.adapter_deps.insert("'$textDecoder'".to_string());
+            self.emscripten_global_deps
+                .insert("'$textDecoder'".to_string());
+        }
+
+        self.intrinsic("text_decoder".into(), "decodeText".into(), {
             // This is needed to workaround a bug in Safari
             // See: https://github.com/wasm-bindgen/wasm-bindgen/issues/1825
             let init = Some("cachedTextDecoder.decode();");
 
             // `ignoreBOM` is needed so that the BOM will be preserved when sending a string from Rust to JS
             // `fatal` is needed to catch any weird encoding bugs when sending a string from Rust to JS
-            let mut dst = Self::write_text_processor(
-                self.module,
-                memory,
-                "let",
-                "TextDecoder",
-                "('utf-8', { ignoreBOM: true, fatal: true })",
-                init,
-            );
+            let mut dst = if matches!(self.config.mode, OutputMode::Emscripten) {
+                String::new()
+            } else {
+                Self::write_text_processor(
+                    self.module,
+                    memory,
+                    "let",
+                    "TextDecoder",
+                    "('utf-8', { ignoreBOM: true, fatal: true })",
+                    init,
+                    self.config.mode.clone(),
+                )
+            };
 
             // Typically we try to give a raw view of memory out to `TextDecoder` to
             // avoid copying too much data. If, however, a `SharedArrayBuffer` is
@@ -1824,10 +2124,14 @@ impl<'a> Context<'a> {
             // creates just a view. That way in shared mode we copy more data but in
             // non-shared mode there's no need to copy the data except for the
             // string itself.
-            let is_shared = self.module.memories.get(memory).shared;
-            let method = if is_shared { "slice" } else { "subarray" };
-            let text_decoder_decode =
-                format!("cachedTextDecoder.decode({mem}().{method}(ptr, ptr + len))");
+            let text_decoder_decode = if matches!(self.config.mode, OutputMode::Emscripten) {
+                // Emscripten uses HEAPU8 and global textDecoder
+                "textDecoder.decode(HEAPU8.subarray(ptr, ptr + len))".to_string()
+            } else {
+                let is_shared = self.module.memories.get(memory).shared;
+                let method = if is_shared { "slice" } else { "subarray" };
+                format!("cachedTextDecoder.decode({mem}().{method}(ptr, ptr + len))")
+            };
 
             match &self.config.mode {
                 OutputMode::Bundler { .. } | OutputMode::Web => {
@@ -1845,23 +2149,23 @@ impl<'a> Context<'a> {
                     // See https://github.com/rustwasm/wasm-bindgen/issues/4471
                     const MAX_SAFARI_DECODE_BYTES: u32 = 0x80000000 - 0x100000;
                     dst.push_str(&format!(
-                    "
-                    const MAX_SAFARI_DECODE_BYTES = {MAX_SAFARI_DECODE_BYTES};
-                    let numBytesDecoded = 0;
-                    function decodeText(ptr, len) {{
-                        numBytesDecoded += len;
-                        if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {{
-                            cachedTextDecoder = new TextDecoder('utf-8', {{ ignoreBOM: true, fatal: true }});
-                            cachedTextDecoder.decode();
-                            numBytesDecoded = len;
+                        "
+                        const MAX_SAFARI_DECODE_BYTES = {MAX_SAFARI_DECODE_BYTES};
+                        let numBytesDecoded = 0;
+                        function decodeText(ptr, len) {{
+                            numBytesDecoded += len;
+                            if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {{
+                                cachedTextDecoder = new TextDecoder('utf-8', {{ ignoreBOM: true, fatal: true }});
+                                cachedTextDecoder.decode();
+                                numBytesDecoded = len;
+                            }}
+                            return {text_decoder_decode};
                         }}
-                        return {text_decoder_decode};
-                    }}
-                    ",
-                ));
+                        ",
+                    ));
                 }
                 _ => {
-                    // For any non-browser target, we can just use the TextDecoder without any workarounds.
+                    // For any non-browser target (including Emscripten), we can just use the TextDecoder without any workarounds.
                     // For browser-targets, see the workaround for Safari above.
                     dst.push_str(&format!(
                         "
@@ -1884,8 +2188,12 @@ impl<'a> Context<'a> {
         s: &str,
         args: &str,
         init: Option<&str>,
+        config_mode: OutputMode,
     ) -> String {
-        let mut dst = String::new();
+        let mut dst: String = String::new();
+        if matches!(config_mode, OutputMode::Emscripten) {
+            return dst;
+        }
         // Audio worklets don't support `TextDe/Encoder`. When using audio worklets directly,
         // users will have to make sure themselves not to use any corresponding APIs. But
         // when spawning audio worklets, its fine to have `TextDe/Encoder` in a "normal worker"
@@ -1915,7 +2223,7 @@ impl<'a> Context<'a> {
             name: "getStringFromWasm".into(),
             num: mem.num,
         };
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+        self.intrinsic(ret.to_string().into(), None, {
             format!(
                 "
                 function {ret}(ptr, len) {{
@@ -1953,7 +2261,7 @@ impl<'a> Context<'a> {
         //
         // If `ptr` and `len` are both `0` then that means it's `None`, in that case we rely upon
         // the fact that `getObject(0)` is guaranteed to be `undefined`.
-        intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+        self.intrinsic(ret.to_string().into(), None, {
             format!(
                 "
                 function {ret}(ptr, len) {{
@@ -1980,7 +2288,7 @@ impl<'a> Context<'a> {
             (Some(table), Some(drop)) => {
                 let table = self.export_name_of(table);
                 let drop = self.export_name_of(drop);
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                self.intrinsic(ret.to_string().into(), None, {
                     format!(
                         "
                         function {ret}(ptr, len) {{
@@ -2000,7 +2308,7 @@ impl<'a> Context<'a> {
             }
             _ => {
                 self.expose_take_object();
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                self.intrinsic(ret.to_string().into(), None, {
                     format!(
                         "
                         function {ret}(ptr, len) {{
@@ -2032,7 +2340,7 @@ impl<'a> Context<'a> {
         match self.aux.externref_table {
             Some(table) => {
                 let table = self.export_name_of(table);
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                self.intrinsic(ret.to_string().into(), None, {
                     format!(
                         "
                         function {ret}(ptr, len) {{
@@ -2051,7 +2359,7 @@ impl<'a> Context<'a> {
             }
             _ => {
                 self.expose_get_object();
-                intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                self.intrinsic(ret.to_string().into(), None, {
                     format!(
                         "
                         function {ret}(ptr, len) {{
@@ -2132,12 +2440,17 @@ impl<'a> Context<'a> {
             name: name.into(),
             num: view.num,
         };
-        intrinsic(&mut self.intrinsics, name.into(), || {
+        let heap_view = if self.config.mode.emscripten() {
+            format!("{}", view.name)
+        } else {
+            format!("{view}()")
+        };
+        self.intrinsic(name.into(), Some(&ret.to_string()), {
             format!(
                 "
                 function {ret}(ptr, len) {{
                     ptr = ptr >>> 0;
-                    return {view}().subarray(ptr / {size}, ptr / {size} + len);
+                    return {heap_view}.subarray(ptr / {size}, ptr / {size} + len);
                 }}
                 ",
             )
@@ -2195,9 +2508,33 @@ impl<'a> Context<'a> {
     }
 
     fn memview(&mut self, kind: &'static str, memory: walrus::MemoryId) -> MemView {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Emscripten provides its own version of getMemory
+            // so don't write out the memory function.
+            // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
+            // for more details.
+            let emscripten_heap: &'static str = match kind {
+                "Int8Array" => "HEAP8",
+                "Uint8Array" | "Uint8ClampedArray" => "HEAPU8",
+                "Int16Array" => "HEAP16",
+                "Uint16Array" => "HEAPU16",
+                "Int32Array" => "HEAP32",
+                "Uint32Array" => "HEAPU32",
+                "Float32Array" => "HEAPF32",
+                "Float64Array" => "HEAPF64",
+                "DataView" => "HEAP_DATA_VIEW",
+                _ => "HEAPU8",
+            };
+            // Emscripten provides its own version of getMemory
+            // so don't write out the memory function.
+            // See https://emscripten.org/docs/api_reference/preamble.js.html#type-accessors-for-the-memory-model
+            // for more details.
+            let view = self.memview_memory(emscripten_heap, memory);
+            return view;
+        }
         let view = self.memview_memory(kind, memory);
         let mem = self.export_name_of(memory);
-        intrinsic(&mut self.intrinsics, view.name.to_string().into(), || {
+        self.intrinsic(view.name.to_string().into(), None, {
             let cache = format!("cached{kind}Memory{}", view.num);
             let resized_check = if self.module.memories.get(memory).shared {
                 // When it's backed by a `SharedArrayBuffer`, growing the Wasm module's memory
@@ -2237,9 +2574,16 @@ impl<'a> Context<'a> {
             .entry(memory)
             .or_insert((next, Default::default()));
         kinds.insert(kind);
-        MemView {
-            name: format!("get{kind}Memory").into(),
-            num,
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            MemView {
+                name: format!("{kind}").into(),
+                num,
+            }
+        } else {
+            MemView {
+                name: format!("get{kind}Memory").into(),
+                num,
+            }
         }
     }
 
@@ -2253,7 +2597,7 @@ impl<'a> Context<'a> {
     }
 
     fn expose_assert_class(&mut self) {
-        intrinsic(&mut self.intrinsics, "assert_class".into(), || {
+        self.intrinsic("assert_class".into(), "_assertClass".into(), {
             "
             function _assertClass(instance, klass) {
                 if (!(instance instanceof klass)) {
@@ -2266,7 +2610,12 @@ impl<'a> Context<'a> {
     }
 
     fn expose_global_stack_pointer(&mut self) {
-        intrinsic(&mut self.intrinsics, "stack_pointer".into(), || {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps
+                .insert("'$stack_pointer'".to_string());
+            return;
+        }
+        self.intrinsic("stack_pointer".into(), None, {
             format!("\nlet stack_pointer = {INITIAL_HEAP_OFFSET};\n").into()
         });
     }
@@ -2279,7 +2628,7 @@ impl<'a> Context<'a> {
         // after executing this. Once we've reserved stack space we write the
         // value. Eventually underflow will throw an exception, but JS sort of
         // just handles it today...
-        intrinsic(&mut self.intrinsics, "borrowed_objects".into(), || {
+        self.intrinsic("borrowed_objects".into(), "addBorrowedObject".into(), {
             "
             function addBorrowedObject(obj) {
                 if (stack_pointer == 1) throw new Error('out of js stack');
@@ -2294,7 +2643,7 @@ impl<'a> Context<'a> {
     fn expose_take_object(&mut self) {
         self.expose_get_object();
         self.expose_drop_ref();
-        intrinsic(&mut self.intrinsics, "take_object".into(), || {
+        self.intrinsic("take_object".into(), "takeObject".into(), {
             "
             function takeObject(idx) {
                 const ret = getObject(idx);
@@ -2314,7 +2663,7 @@ impl<'a> Context<'a> {
         // (starting at `heap_next`). Once that linked list is exhausted we'll
         // be pointing beyond the end of the array, at which point we'll reserve
         // one more slot and use that.
-        intrinsic(&mut self.intrinsics, "add_heap_object".into(), || {
+        self.intrinsic("add_heap_object".into(), "addHeapObject".into(), {
             format!(
                 "
                 function addHeapObject(obj) {{
@@ -2337,15 +2686,17 @@ impl<'a> Context<'a> {
     }
 
     fn expose_handle_error(&mut self) -> Result<(), Error> {
-        let store = self
+        let store_intrinsic = self
             .aux
             .exn_store
             .ok_or_else(|| anyhow!("failed to find `__wbindgen_exn_store` intrinsic"))?;
-        let store = self.export_name_of(store);
+        let store = self.export_name_of(store_intrinsic);
+
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 let add = self.expose_add_to_externref_table(table, alloc);
-                intrinsic(&mut self.intrinsics, "handle_error".into(), || {
+
+                self.intrinsic("handle_error".into(), "handleError".into(), {
                     format!(
                         "
                         function handleError(f, args) {{
@@ -2356,14 +2707,17 @@ impl<'a> Context<'a> {
                                 wasm.{store}(idx);
                             }}
                         }}
-                        ",
+                        "
                     )
                     .into()
                 });
             }
             _ => {
                 self.expose_add_heap_object();
-                intrinsic(&mut self.intrinsics, "handle_error".into(), || {
+                if self.config.mode.emscripten() {
+                    self.adapter_deps.insert("'$addHeapObject'".to_string());
+                }
+                self.intrinsic("handle_error".into(), "handleError".into(), {
                     format!(
                         "
                         function handleError(f, args) {{
@@ -2373,7 +2727,7 @@ impl<'a> Context<'a> {
                                 wasm.{store}(addHeapObject(e));
                             }}
                         }}
-                        ",
+                        "
                     )
                     .into()
                 });
@@ -2383,7 +2737,7 @@ impl<'a> Context<'a> {
     }
 
     fn expose_log_error(&mut self) {
-        intrinsic(&mut self.intrinsics, "log_error".into(), || {
+        self.intrinsic("log_error".into(), "logError".into(), {
             "
             function logError(f, args) {
                 try {
@@ -2454,10 +2808,10 @@ impl<'a> Context<'a> {
         // As a result we have a small helper here which will walk the prototype
         // chain looking for a descriptor. For some more information on this see
         // #109
-        intrinsic(
-            &mut self.intrinsics,
+        self.intrinsic(
             "get_inherited_descriptor".into(),
-            || {
+            "GetOwnOrInheritedPropertyDescriptor".into(),
+            {
                 "
                 function GetOwnOrInheritedPropertyDescriptor(obj, id) {
                     while (obj) {
@@ -2474,7 +2828,7 @@ impl<'a> Context<'a> {
     }
 
     fn expose_is_like_none(&mut self) {
-        intrinsic(&mut self.intrinsics, "is_like_none".into(), || {
+        self.intrinsic("is_like_none".into(), "isLikeNone".into(), {
             "
             function isLikeNone(x) {
                 return x === undefined || x === null;
@@ -2485,7 +2839,7 @@ impl<'a> Context<'a> {
     }
 
     fn expose_assert_non_null(&mut self) {
-        intrinsic(&mut self.intrinsics, "assert_non_null".into(), || {
+        self.intrinsic("assert_non_null".into(), "_assertNonNull".into(), {
             "
             function _assertNonNull(n) {
                 if (typeof(n) !== 'number' || n === 0) throw new Error(`expected a number argument that is not 0, found ${n}`);
@@ -2495,7 +2849,7 @@ impl<'a> Context<'a> {
     }
 
     fn expose_assert_char(&mut self) {
-        intrinsic(&mut self.intrinsics, "assert_char".into(), || {
+        self.intrinsic("assert_char".into(), "_assertChar".into(), {
             "
             function _assertChar(c) {
                 if (typeof(c) === 'number' && (c >= 0x110000 || (c >= 0xD800 && c < 0xE000))) throw new Error(`expected a valid Unicode scalar value, found ${c}`);
@@ -2507,12 +2861,16 @@ impl<'a> Context<'a> {
     fn expose_make_mut_closure(&mut self) {
         self.expose_closure_finalization();
 
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps
+                .insert("'$CLOSURE_DTORS'".to_string());
+        }
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
-        intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
+        self.intrinsic("make_mut_closure".into(), "makeMutClosure".into(), {
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2525,49 +2883,87 @@ impl<'a> Context<'a> {
             } else {
                 ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
-            format!(
-                "
-                function makeMutClosure(arg0, arg1, dtor, f) {{
-                    {state_init}
-                    const real = (...args) => {{
-                        {instance_check}
-                        // First up with a closure we increment the internal reference
-                        // count. This ensures that the Rust closure environment won't
-                        // be deallocated while we're invoking it.
-                        state.cnt++;
-                        const a = state.a;
-                        state.a = 0;
-                        try {{
-                            return f(a, state.b, ...args);
-                        }} finally {{
-                            state.a = a;
-                            real._wbg_cb_unref();
-                        }}
-                    }};
-                    real._wbg_cb_unref = () => {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                format!(
+                    "
+                    $makeMutClosure: function(arg0, arg1, dtor, f) {{
+                        {state_init}
+                        const real = (...args) => {{
+                            {instance_check}
+                            // First up with a closure we increment the internal reference
+                            // count. This ensures that the Rust closure environment won't
+                            // be deallocated while we're invoking it.
+                            state.cnt++;
+                            const a = state.a;
                             state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
-                        }}
-                    }};
-                    CLOSURE_DTORS.register(real, state, state);
-                    return real;
-                }}
-                "
-            )
-            .into()
+                            try {{
+                                return f(a, state.b, ...args);
+                            }} finally {{
+                                state.a = a;
+                                real._wbg_cb_unref();
+                            }}
+                        }};
+                        real._wbg_cb_unref = () => {{
+                            if (--state.cnt === 0) {{
+                                state.dtor(state.a, state.b);
+                                state.a = 0;
+                                CLOSURE_DTORS.unregister(state);
+                            }}
+                        }};
+                        CLOSURE_DTORS.register(real, state, state);
+                        return real;
+                    }},
+                    $makeMutClosure__deps: ['$CLOSURE_DTORS'],\n
+                    ",
+                ).into()
+            } else {
+                format!(
+                    "
+                    function makeMutClosure(arg0, arg1, dtor, f) {{
+                        {state_init}
+                        const real = (...args) => {{
+                            // First up with a closure we increment the internal reference
+                            // count. This ensures that the Rust closure environment won't
+                            // be deallocated while we're invoking it.
+                            state.cnt++;
+                            const a = state.a;
+                            state.a = 0;
+                            try {{
+                                return f(a, state.b, ...args);
+                            }} finally {{
+                                state.a = a;
+                                real._wbg_cb_unref();
+                            }}
+                        }};
+                        real._wbg_cb_unref = () => {{
+                            if (--state.cnt === 0) {{
+                                state.dtor(state.a, state.b);
+                                state.a = 0;
+                                CLOSURE_DTORS.unregister(state);
+                            }}
+                        }};
+                        CLOSURE_DTORS.register(real, state, state);
+                        return real;
+                    }}
+                    "
+                )
+                .into()
+            }
         });
     }
 
     fn expose_make_closure(&mut self) {
         self.expose_closure_finalization();
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps
+                .insert("'$CLOSURE_DTORS'".to_string());
+        }
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
-        intrinsic(&mut self.intrinsics, "make_closure".into(), || {
+        self.intrinsic("make_closure".into(), "makeMutClosure".into(), {
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2580,70 +2976,127 @@ impl<'a> Context<'a> {
             } else {
                 ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
-            format!(
-                "
-                function makeClosure(arg0, arg1, dtor, f) {{
-                    {state_init}
-                    const real = (...args) => {{
-                        {instance_check}
-                        // First up with a closure we increment the internal reference
-                        // count. This ensures that the Rust closure environment won't
-                        // be deallocated while we're invoking it.
-                        state.cnt++;
-                        try {{
-                            return f(state.a, state.b, ...args);
-                        }} finally {{
-                            real._wbg_cb_unref();
-                        }}
-                    }};
-                    real._wbg_cb_unref = () => {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
-                        }}
-                    }};
-                    CLOSURE_DTORS.register(real, state, state);
-                    return real;
-                }}
-                "
-            )
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                format!(
+                    "
+                    $makeMutClosure: function(arg0, arg1, dtor, f) {{
+                        {state_init}
+                        const real = (...args) => {{
+                            {instance_check}
+                            // First up with a closure we increment the internal reference
+                            // count. This ensures that the Rust closure environment won't
+                            // be deallocated while we're invoking it.
+                            state.cnt++;
+                            try {{
+                                return f(state.a, state.b, ...args);
+                            }} finally {{
+                                real._wbg_cb_unref();
+                            }}
+                        }};
+                        real._wbg_cb_unref = () => {{
+                            if (--state.cnt === 0) {{
+                                state.dtor(state.a, state.b);
+                                state.a = 0;
+                                CLOSURE_DTORS.unregister(state);
+                            }}
+                        }};
+                        CLOSURE_DTORS.register(real, state, state);
+                        return real;
+                    }},
+                    $makeMutClosure__deps: ['$CLOSURE_DTORS'],\n
+                    ",
+                ).into()
+            } else {
+                format!(
+                    "
+                    function makeClosure(arg0, arg1, dtor, f) {{
+                        {state_init}
+                        const real = (...args) => {{
+                            {instance_check}
+                            // First up with a closure we increment the internal reference
+                            // count. This ensures that the Rust closure environment won't
+                            // be deallocated while we're invoking it.
+                            state.cnt++;
+                            try {{
+                                return f(state.a, state.b, ...args);
+                            }} finally {{
+                                real._wbg_cb_unref();
+                            }}
+                        }};
+                        real._wbg_cb_unref = () => {{
+                            if (--state.cnt === 0) {{
+                                state.dtor(state.a, state.b);
+                                state.a = 0;
+                                CLOSURE_DTORS.unregister(state);
+                            }}
+                        }};
+                        CLOSURE_DTORS.register(real, state, state);
+                        return real;
+                    }}
+                    "
+                )
             .into()
+            }
         });
     }
 
     fn expose_closure_finalization(&mut self) {
-        intrinsic(&mut self.intrinsics, "closure_finalization".into(), || {
-            format!(
-                "
-                const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
-                    ? {{ register: () => {{}}, unregister: () => {{}} }}
-                    : new FinalizationRegistry({});
-                ",
-                if self.config.generate_reset_state {
+        self.intrinsic("closure_finalization".into(), "CLOSURE_DTORS".into(), {
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                format!(
                     "
-                    state => {{
-                        if (state.instance === __wbg_instance_id) {{
-                            state.dtor(state.a, state.b);
+                    $CLOSURE_DTORS: `(typeof FinalizationRegistry === 'undefined')
+                        ? {{ register: () => {{}}, unregister: () => {{}} }}
+                    : new FinalizationRegistry(state => {{
+                        wasmExports['__indirect_function_table'].get(state.dtor)(state.a, state.b)
+                    }})`,\n
+                    ",
+                )
+                .into()
+            } else {
+                format!(
+                    "
+                    const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
+                        ? {{ register: () => {{}}, unregister: () => {{}} }}
+                        : new FinalizationRegistry({});
+                    ",
+                    if self.config.generate_reset_state {
+                        "
+                        state => {{
+                            if (state.instance === __wbg_instance_id) {{
+                                state.dtor(state.a, state.b);
+                            }}
                         }}
-                    }}
-                    "
-                } else {
-                    "state => state.dtor(state.a, state.b)"
-                }
-            )
-            .into()
-        });
+                        "
+                    } else {
+                        "state => state.dtor(state.a, state.b)"
+                    }
+                )
+                .into()
+            }
+        })
     }
 
     fn expose_panic_error(&mut self) {
-        intrinsic(&mut self.intrinsics, "panic_error".into(), || {
-            "class PanicError extends Error {}
-            Object.defineProperty(PanicError.prototype, 'name', {
-                value: PanicError.name,
-            });
-            "
-            .into()
+        self.intrinsic("panic_error".into(), None, {
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                // Emscripten specific: Emit as a helper function on the library object
+                "$panic_error: function(message) {
+                    class PanicError extends Error {}
+                    Object.defineProperty(PanicError.prototype, 'name', {
+                        value: PanicError.name,
+                    });
+                    return new PanicError(message);
+                },
+                ".into()
+            } else {
+                "class PanicError extends Error {}
+                Object.defineProperty(PanicError.prototype, 'name', {
+                    value: PanicError.name,
+                });
+                "
+                .into()
+            }
         });
     }
 
@@ -2748,6 +3201,27 @@ impl<'a> Context<'a> {
         }
         self.globals.push_str(s);
         self.globals.push('\n');
+    }
+
+    fn emscripten_library(&mut self, s: &str) {
+        let s = s.trim();
+        if s.is_empty() {
+            return;
+        }
+
+        // Check if we need to append a comma separator
+        let needs_comma = !self.emscripten_library.trim_end().is_empty()
+            && !self.emscripten_library.trim_end().ends_with(',');
+
+        if needs_comma {
+            if self.emscripten_library.ends_with('\n') {
+                self.emscripten_library.pop();
+            }
+            self.emscripten_library.push_str(",\n\n");
+        }
+
+        self.emscripten_library.push_str(s);
+        self.emscripten_library.push_str("\n");
     }
 
     fn require_class_wrap(&mut self, name: &str) -> String {
@@ -2890,7 +3364,7 @@ impl<'a> Context<'a> {
         let view = self.memview_table("getFromExternrefTable", table);
         assert!(self.config.externref);
         let table = self.export_name_of(table);
-        intrinsic(&mut self.intrinsics, view.to_string().into(), || {
+        self.intrinsic(view.to_string().into(), None, {
             format!("\nfunction {view}(idx) {{ return wasm.{table}.get(idx); }}\n").into()
         });
         view
@@ -2901,7 +3375,7 @@ impl<'a> Context<'a> {
         assert!(self.config.externref);
         let drop = self.export_name_of(drop);
         let table = self.export_name_of(table);
-        intrinsic(&mut self.intrinsics, view.to_string().into(), || {
+        self.intrinsic(view.to_string().into(), None, {
             format!(
                 "
                 function {view}(idx) {{
@@ -2922,14 +3396,15 @@ impl<'a> Context<'a> {
         assert!(self.config.externref);
         let alloc = self.export_name_of(alloc);
         let table = self.export_name_of(table);
-        intrinsic(&mut self.intrinsics, view.to_string().into(), || {
+
+        self.intrinsic(view.to_string().into(), None, {
             format!(
                 "
-                    function {view}(obj) {{
-                        const idx = wasm.{alloc}();
-                        wasm.{table}.set(idx, obj);
-                        return idx;
-                    }}
+                function {view}(obj) {{
+                    const idx = wasm.{alloc}();
+                    wasm.{table}.set(idx, obj);
+                    return idx;
+                }}
                 ",
             )
             .into()
@@ -3040,6 +3515,7 @@ impl<'a> Context<'a> {
         instrs: &[InstructionData],
         kind: ContextAdapterKind,
     ) -> Result<(), Error> {
+        self.adapter_deps.clear();
         let catch = self.aux.imports_with_catch.contains(&id);
         if let ContextAdapterKind::Import(core) = kind {
             if !catch && self.attempt_direct_import(core, instrs)? {
@@ -3095,7 +3571,6 @@ impl<'a> Context<'a> {
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
-
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -3149,15 +3624,25 @@ impl<'a> Context<'a> {
                     AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) => {
                         let identifier = self.generate_identifier(name);
 
-                        let mut typescript = String::new();
-                        let ts_comments = if let Some(ts_sig) = ts_sig {
-                            typescript.push_str("function ");
-                            typescript.push_str(&identifier);
-                            typescript.push_str(ts_sig);
-                            typescript.push_str(";\n");
-                            Some(ts_docs)
+                        let (ts_definition, ts_comments) = if let Some(ts_sig) = ts_sig {
+                            if matches!(self.config.mode, OutputMode::Emscripten) {
+                                // Emscripten: Write "name(args): ret;" directly to buffer
+                                self.typescript.push_str(&ts_docs);
+                                self.typescript.push_str(&identifier); // No "function" prefix
+                                self.typescript.push_str(ts_sig);
+                                self.typescript.push_str(";\n");
+
+                                (String::new(), None)
+                            } else {
+                                let mut typescript = String::new();
+                                typescript.push_str("function ");
+                                typescript.push_str(&identifier);
+                                typescript.push_str(ts_sig);
+                                typescript.push_str(";\n");
+                                (typescript, Some(ts_docs))
+                            }
                         } else {
-                            None
+                            (String::new(), None)
                         };
 
                         let definition = format!("function {identifier}{code}\n");
@@ -3169,7 +3654,7 @@ impl<'a> Context<'a> {
                                 identifier,
                                 comments: Some(js_docs),
                                 definition,
-                                ts_definition: typescript,
+                                ts_definition: ts_definition,
                                 ts_comments,
                                 private: false,
                             }),
@@ -3245,7 +3730,7 @@ impl<'a> Context<'a> {
                 }
             }
             ContextAdapterKind::Import(core) => {
-                let code = if catch {
+                let mut code = if catch {
                     format!("function() {{ return handleError(function {code}, arguments); }}")
                 } else if log_error {
                     format!("function() {{ return logError(function {code}, arguments); }}")
@@ -3253,16 +3738,42 @@ impl<'a> Context<'a> {
                     format!("function{code}")
                 };
 
+                if matches!(self.config.mode, OutputMode::Emscripten)
+                    && !self.adapter_deps.is_empty()
+                {
+                    let mut import_deps_vec = self
+                        .adapter_deps
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect::<Vec<&str>>();
+                    // sort to generate deterministic output.
+                    import_deps_vec.sort();
+                    let deps: String = format!(
+                        "{}__deps:  [{}]\n",
+                        self.module.imports.get(core).name,
+                        import_deps_vec.join(",")
+                    );
+                    code = format!("{},\n{}\n", code, deps);
+                }
+
                 self.wasm_import_definitions.insert(core, code);
             }
             ContextAdapterKind::Adapter => {
                 assert!(!catch);
                 assert!(!log_error);
 
-                self.globals.push_str("function ");
-                self.globals.push_str(&self.export_adapter_name(id));
-                self.globals.push_str(&code);
-                self.globals.push_str("\n\n");
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    self.emscripten_library(&format!(
+                        "${}: function{}",
+                        self.export_adapter_name(id),
+                        code.replace("wasm.", "wasmExports.")
+                    ));
+                } else {
+                    self.globals.push_str("function ");
+                    self.globals.push_str(&self.export_adapter_name(id));
+                    self.globals.push_str(&code);
+                    self.globals.push_str("\n\n");
+                }
             }
         }
         Ok(())
@@ -3497,6 +4008,18 @@ impl<'a> Context<'a> {
                 }
             })
         };
+
+        // Emscripten needs the function name extracted from the full function call here
+        // to construct dependency lists for each import.
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            let re = Regex::new(r"([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(").unwrap();
+            for arg in args {
+                if let Some(result) = re.captures(arg) {
+                    self.adapter_deps.insert(format!("'${}'", &result[1]));
+                }
+            }
+        }
+
         match import {
             AuxImport::Value(val) => match kind {
                 AdapterJsImportKind::Constructor => {
@@ -3722,7 +4245,8 @@ impl<'a> Context<'a> {
                         | OutputMode::Bundler { .. }
                         | OutputMode::Module
                         | OutputMode::Deno
-                        | OutputMode::Node { module: true } => "import.meta.url",
+                        | OutputMode::Node { module: true }
+                        | OutputMode::Emscripten => "import.meta.url",
                         OutputMode::Node { module: false } => {
                             "require('url').pathToFileURL(__filename)"
                         }
@@ -4047,7 +4571,10 @@ impl<'a> Context<'a> {
                     );
                 }
                 drop(memories);
-                format!("wasm.{}", self.export_name_of(memory))
+                match self.config.mode {
+                    OutputMode::Emscripten { .. } => "HEAPU8".to_string(),
+                    _ => format!("wasm.{}", self.export_name_of(memory)),
+                }
             }
 
             Intrinsic::FunctionTable => {
@@ -4059,6 +4586,7 @@ impl<'a> Context<'a> {
             Intrinsic::DebugString => {
                 assert_eq!(args.len(), 1);
                 self.expose_debug_string();
+                self.adapter_deps.insert("'$debugString'".to_string());
                 format!("debugString({})", args[0])
             }
 
@@ -4095,7 +4623,15 @@ impl<'a> Context<'a> {
                     .aux
                     .externref_table
                     .ok_or_else(|| anyhow!("must enable externref to use externref intrinsic"))?;
+                let mut base = "\n".to_string();
                 let name = self.export_name_of(table);
+
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    base.push_str(&format!("const table = wasmExports['{name}'];\n"));
+                } else {
+                    base.push_str(&format!("const table = wasm.{name};\n"));
+                }
+
                 // Grow the table to insert our initial values, and then also
                 // set the 0th slot to `undefined` since that's what we've
                 // historically used for our ABI which is that the index of 0
@@ -4308,7 +4844,7 @@ impl<'a> Context<'a> {
     }
 
     fn expose_debug_string(&mut self) {
-        intrinsic(&mut self.intrinsics, "debug_string".into(), || {
+        self.intrinsic("debug_string".into(), "debugString".into(), {
             "
             function debugString(val) {
                 // primitive types
@@ -4827,19 +5363,6 @@ impl ExportedClass {
             field.getter = Some(accessor);
         }
     }
-}
-
-type Intrinsics = BTreeMap<Cow<'static, str>, Cow<'static, str>>;
-
-fn intrinsic(
-    intrinsics: &mut Option<Intrinsics>,
-    name: Cow<'static, str>,
-    f: impl FnOnce() -> Cow<'static, str>,
-) {
-    if intrinsics.as_ref().unwrap().contains_key(&name) {
-        return;
-    }
-    intrinsics.as_mut().unwrap().insert(name, f());
 }
 
 struct MemView {
