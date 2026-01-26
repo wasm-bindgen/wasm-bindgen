@@ -206,17 +206,18 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let tmpdir = tempfile::tempdir()?;
 
     // Support a WASM_BINDGEN_KEEP_TEST_BUILD=1 env var for debugging test files
     let tmpdir_path = if env::var("WASM_BINDGEN_KEEP_TEST_BUILD").is_ok() {
-        let path = tmpdir.keep();
+        let path = Path::new("saved_test").to_path_buf();
         println!(
             "Retaining temporary build output folder: {}",
             path.to_string_lossy()
         );
+        fs::create_dir_all(path.clone())?;
         path
     } else {
+        let tmpdir = tempfile::tempdir()?;
         tmpdir.path().to_path_buf()
     };
 
