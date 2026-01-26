@@ -1690,7 +1690,12 @@ fn adapter2ts(
         AdapterType::String => dst.push_str("string"),
         AdapterType::Externref => dst.push_str("any"),
         AdapterType::Bool => dst.push_str("boolean"),
-        AdapterType::Vector(kind) => dst.push_str(&kind.js_ty()),
+        AdapterType::Vector(kind) => {
+            dst.push_str(&kind.js_ty());
+            if let TypePosition::Argument = position {
+                dst.push_str(" | number[]");
+            }
+        }
         AdapterType::Option(ty) => {
             adapter2ts(ty, position, dst, refs);
             dst.push_str(match position {
