@@ -510,8 +510,12 @@ impl<'a> Context<'a> {
                 String::new()
             };
 
-            let wasm_loading =
-                self.generate_wasm_loading(module_name, needs_manual_start, has_memory, &wrapped_content);
+            let wasm_loading = self.generate_wasm_loading(
+                module_name,
+                needs_manual_start,
+                has_memory,
+                &wrapped_content,
+            );
             self.globals.push_str(&wasm_loading);
         });
 
@@ -692,14 +696,19 @@ impl<'a> Context<'a> {
             let import = self.module.imports.get_mut(*id);
             import.module = "env".to_string();
             imports.push_str(&import.name);
-            
             let trimmed_js = js.trim();
             // Handle specific cases
             if import.name == "__wbindgen_init_externref_table" {
                 let body = trimmed_js.strip_prefix("function()").unwrap_or(trimmed_js);
-                imports.push_str(&format!(": () => {},\n", body.replace("wasm.", "wasmExports.")));
+                imports.push_str(&format!(
+                    ": () => {},\n",
+                    body.replace("wasm.", "wasmExports.")
+                ));
             } else {
-                imports.push_str(&format!(": {},\n", trimmed_js.replace("wasm.", "wasmExports.")));
+                imports.push_str(&format!(
+                    ": {},\n",
+                    trimmed_js.replace("wasm.", "wasmExports.")
+                ));
             }
         }
 
@@ -1137,10 +1146,14 @@ impl<'a> Context<'a> {
         )
     }
 
-    fn generate_emscripten_wasm_loading(&self, needs_manual_start: bool, classes_and_exports: &str) -> String {
+    fn generate_emscripten_wasm_loading(
+        &self,
+        needs_manual_start: bool,
+        classes_and_exports: &str,
+    ) -> String {
         let set_to_list = |set: &HashSet<String>| -> Vec<String> { set.iter().cloned().collect() };
         let deps: Vec<String> = set_to_list(&self.emscripten_global_deps);
-        
+
         // We need to inject the start function logic here
         let start_logic = if needs_manual_start {
             "wasmExports.__wbindgen_start();"
@@ -1148,7 +1161,7 @@ impl<'a> Context<'a> {
             ""
         };
 
-        // Note: 'globals' are handled in the main finalize loop, but we need to ensure 
+        // Note: 'globals' are handled in the main finalize loop, but we need to ensure
         // the $initBindgen function can access them if they were emitted as "wasmExports".
         // The formatting here matches your previous `finalize_js` structure.
         format!(
@@ -1172,7 +1185,7 @@ impl<'a> Context<'a> {
         module_name: &str,
         needs_manual_start: bool,
         has_memory: bool,
-        classes_and_exports: &str
+        classes_and_exports: &str,
     ) -> String {
         match self.config.mode {
             OutputMode::Module => {
@@ -1203,7 +1216,9 @@ impl<'a> Context<'a> {
 
                 loading
             }
-            OutputMode::Emscripten => self.generate_emscripten_wasm_loading(needs_manual_start, classes_and_exports),
+            OutputMode::Emscripten => {
+                self.generate_emscripten_wasm_loading(needs_manual_start, classes_and_exports)
+            }
             OutputMode::NoModules { .. } => {
                 let default_module_path = if self.config.omit_default_module_path {
                     ""
@@ -3088,7 +3103,8 @@ impl<'a> Context<'a> {
                     });
                     return new PanicError(message);
                 },
-                ".into()
+                "
+                .into()
             } else {
                 "class PanicError extends Error {}
                 Object.defineProperty(PanicError.prototype, 'name', {

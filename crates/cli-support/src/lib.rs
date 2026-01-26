@@ -611,11 +611,10 @@ impl OutputMode {
     fn bundler(&self) -> bool {
         matches!(self, OutputMode::Bundler { .. })
     }
-    
+
     fn emscripten(&self) -> bool {
         matches!(self, OutputMode::Emscripten { .. })
     }
-
 }
 
 /// Remove a number of internal exports that are synthesized by Rust's linker,
