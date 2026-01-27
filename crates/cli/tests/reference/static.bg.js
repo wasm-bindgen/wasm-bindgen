@@ -1,13 +1,42 @@
-let wasm;
-export function __wbg_set_wasm(val) {
-    wasm = val;
+export function exported() {
+    wasm.exported();
 }
-
-
-function isLikeNone(x) {
-    return x == null;
+export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
 }
-
+export function __wbg_static_accessor_NAMESPACE_OPTIONAL_2e93032090b95d76() {
+    const ret = typeof test === 'undefined' ? null : test?.NAMESPACE_OPTIONAL;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_NAMESPACE_PLAIN_996cfe92d41df43c() {
+    const ret = test.NAMESPACE_PLAIN;
+    return ret;
+}
+export function __wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_c736ff66b2fdaa43() {
+    const ret = typeof test1 === 'undefined' ? null : test1?.test2?.NESTED_NAMESPACE_OPTIONAL;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_e9affde7bc139ebd() {
+    const ret = test1.test2.NESTED_NAMESPACE_PLAIN;
+    return ret;
+}
+export function __wbg_static_accessor_OPTIONAL_8c4485fd717985fd() {
+    const ret = typeof OPTIONAL === 'undefined' ? null : OPTIONAL;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_PLAIN_c0ea7240f2fd9157() {
+    const ret = PLAIN;
+    return ret;
+}
+export function __wbindgen_init_externref_table() {
+    const table = wasm.__wbindgen_externrefs;
+    const offset = table.grow(4);
+    table.set(0, undefined);
+    table.set(offset + 0, undefined);
+    table.set(offset + 1, null);
+    table.set(offset + 2, true);
+    table.set(offset + 3, false);
+}
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -45,50 +74,8 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-export function exported() {
-    wasm.exported();
+
+let wasm;
+export function __wbg_set_wasm(val) {
+    wasm = val;
 }
-
-export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-};
-
-export function __wbg_static_accessor_NAMESPACE_OPTIONAL_2e93032090b95d76() {
-    const ret = typeof test === 'undefined' ? null : test?.NAMESPACE_OPTIONAL;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_static_accessor_NAMESPACE_PLAIN_996cfe92d41df43c() {
-    const ret = test.NAMESPACE_PLAIN;
-    return ret;
-};
-
-export function __wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_c736ff66b2fdaa43() {
-    const ret = typeof test1 === 'undefined' ? null : test1?.test2?.NESTED_NAMESPACE_OPTIONAL;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_e9affde7bc139ebd() {
-    const ret = test1.test2.NESTED_NAMESPACE_PLAIN;
-    return ret;
-};
-
-export function __wbg_static_accessor_OPTIONAL_8c4485fd717985fd() {
-    const ret = typeof OPTIONAL === 'undefined' ? null : OPTIONAL;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_static_accessor_PLAIN_c0ea7240f2fd9157() {
-    const ret = PLAIN;
-    return ret;
-};
-
-export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_externrefs;
-    const offset = table.grow(4);
-    table.set(0, undefined);
-    table.set(offset + 0, undefined);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
-};

@@ -12,6 +12,7 @@ on:
 env:
   WASM_BINDGEN_BENCH_RESULT: /tmp/wbg_benchmark.json
   CODSPEED_PERF_ENABLED: false
+  WASM_BINDGEN_TEST_TIMEOUT: 500
 
 permissions:
   contents: read # required for actions/checkout
@@ -27,9 +28,23 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@just
+
       - uses: actions/setup-node@v6
         with:
           node-version: '25'
+
+      - name: Install Firefox and geckodriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y firefox
+          # Download geckodriver for ARM64
+          GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep tag_name | cut -d '"' -f 4)
+          curl -sL "https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux-aarch64.tar.gz" | sudo tar -xz -C /usr/local/bin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cargo-codspeed-${{ hashFiles('**/Cargo.toml') }}
+
       - run: just bench
 
       - name: Upload benchmark results

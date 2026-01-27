@@ -140,10 +140,8 @@ pub(crate) fn spawn(
             r#"
             const nocapture = {nocapture};
             const wrap = method => {{
-                const og = self.console[method];
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
-                    og.apply(this, args);
                     if (nocapture) {{
                         self.__wbg_test_output_writeln(...args);
                     }}
@@ -237,11 +235,15 @@ pub(crate) fn spawn(
                         method == "warn" || method == "info" ||
                         method == "debug"
                     ) {{
-                        console[method].apply(undefined, args[0]);
+                        // In non-headless mode, forward worker console output to the main
+                        // page's console so it appears in DevTools.
+                        if (!{headless}) {{
+                            console[method].apply(console, args[0]);
+                        }}
                     }} else if (method == "output_append") {{
                         const el = document.getElementById("output");
                         if (!el.dataset.appended) {{
-                            el.textContent += "\n";
+                            el.textContent = "";
                             el.dataset.appended = "1";
                         }}
                         el.textContent += args[0];

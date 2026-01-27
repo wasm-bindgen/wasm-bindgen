@@ -1,7 +1,9 @@
 // FLAGS: --target=bundler
 // FLAGS: --target=web
+// FLAGS: --target=web --experimental-reset-state-function
 // FLAGS: --target=no-modules
 // FLAGS: --target=nodejs
+// FLAGS: --target=nodejs --experimental-reset-state-function
 // FLAGS: --target=deno
 // FLAGS: --target=module
 // FLAGS: --target=module --experimental-reset-state-function

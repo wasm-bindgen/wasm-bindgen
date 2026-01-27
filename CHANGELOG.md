@@ -5,6 +5,42 @@
 
 ### Added
 
+* Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
+  [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
+
+### Changed
+
+* `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.
+  [#4893](https://github.com/wasm-bindgen/wasm-bindgen/pull/4893)
+
+* `global` does not use the unsafe-eval `new Function` trick anymore allowing to have CSP strict compliant packages with `wasm-bindgen`.
+  [#4910](https://github.com/wasm-bindgen/wasm-bindgen/pull/4910)
+
+* `eval` and `Function` constructors are now gated behind the `unsafe-eval` feature.
+  [#4914](https://github.com/wasm-bindgen/wasm-bindgen/pull/4914)
+
+### Fixed
+
+### Removed
+
+## [0.2.108](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.107...0.2.108)
+
+### Fixed
+
+* Fixed regression where `panic=unwind` builds for non-Wasm targets would trigger `UnwindSafe` assertions.
+  [#4903](https://github.com/wasm-bindgen/wasm-bindgen/pull/4903)
+
+## [0.2.107](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.106...0.2.107)
+
+### Added
+
+* Support catching panics, and raising JS Exceptions for them, when building
+  with panic=unwind on nightly, with the `std` feature.
+  [#4790](https://github.com/wasm-bindgen/wasm-bindgen/pull/4790)
+
+* Added support for passing `&[JsValue]` slices from Rust to JavaScript functions.
+  [#4872](https://github.com/wasm-bindgen/wasm-bindgen/pull/4872)
+
 * Added `private` attribute on exported types to allow generating
   exports and structs as implicit internal exported types for function
   arguments and returns, without exporting them on the public interface.
@@ -18,13 +54,39 @@
 
 ### Changed
 
+* Changed WASM import namespace from `wbg` to `./{name}_bg.js` for `web` and `no-modules` targets,
+  aligning with `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
+  [#4850](https://github.com/rustwasm/wasm-bindgen/pull/4850)
+
 * Replace `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_OUT` and `WASM_BINDGEN_UNSTABLE_TEST_PROFRAW_PREFIX` with parsing `LLVM_PROFILE_FILE` analogous to Rust test coverage.
   [#4367](https://github.com/wasm-bindgen/wasm-bindgen/pull/4367)
 
-### Fixed
+* Typescript custom sections sorted alphabetically across codegen-units.
+  [#4738](https://github.com/wasm-bindgen/wasm-bindgen/pull/4738)
+
+* Optimized demangling performance by removing redundant string formatting
+  [#4867](https://github.com/wasm-bindgen/wasm-bindgen/pull/4867)
+
+* Changed WASM import namespace from `__wbindgen_placeholder__` to `./{name}_bg.js` for `node` targets, aligning with `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
+  [#4869](https://github.com/rustwasm/wasm-bindgen/pull/4869)
+
+* Changed WASM import namespace from `__wbindgen_placeholder__` to `./{name}_bg.js` for `deno` and `module` targets, aligning with `node`, `bundler` and `experimental-nodejs-module` to enable cross-target WASM sharing.
+  [#4871](https://github.com/rustwasm/wasm-bindgen/pull/4871)
+
+* Consolidate JavaScript glue generation
+  Move target-specific JS emission into a single finalize phase, reducing
+  branching and making the generated output more consistent across targets.
+  - Centralize JS output assembly in a single finalize phase (exports/imports/wasm loading).
+  - Make `--target experimental-nodejs-module` emit one JS entrypoint (no separate `_bg.js`).
+  - Ensure Node (CJS/ESM) and bundler entrypoints only expose public exports (no internal import shims).
+  - Add `/* @ts-self-types="./<name>.d.ts" */` to JS entrypoints for JSR/Deno resolution.
+  - Refresh reference test fixtures.
+  [#4879](https://github.com/wasm-bindgen/wasm-bindgen/pull/4879)
 
 * Forward worker errors to test output in the test runner.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+  [#4855](https://github.com/wasm-bindgen/wasm-bindgen/pull/4855)
+
+### Fixed
 
 * Fix: Include doc comments in TypeScript definitions for classes
   [#4858](https://github.com/wasm-bindgen/wasm-bindgen/pull/4858)
@@ -32,7 +94,8 @@
 * Interpreter: support try_table blocks
   [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4862)
 
-### Removed
+* Interpreter: Stop interpretting descriptor after `__wbindgen_describe_cast`
+  [#4862](https://github.com/wasm-bindgen/wasm-bindgen/pull/4898)
 
 ## [0.2.106](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.105...0.2.106)
 

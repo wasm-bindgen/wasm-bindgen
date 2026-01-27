@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Error};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{hash_map::Entry, BTreeMap, HashMap, HashSet};
 use std::env;
 use std::fs;
 use std::mem;
@@ -357,8 +357,13 @@ impl Bindgen {
         }
 
         // Check that reset_state is only used with --target module
-        if self.generate_reset_state && !matches!(self.mode, OutputMode::Module) {
-            bail!("--experimental-reset-state-function is only supported for --target module")
+        if self.generate_reset_state
+            && !matches!(
+                self.mode,
+                OutputMode::Module | OutputMode::Web | OutputMode::Node { module: false }
+            )
+        {
+            bail!("--experimental-reset-state-function is only supported for --target module, --target web, or --target nodejs")
         }
 
         let thread_count = transforms::threads::run(&mut module)
@@ -511,13 +516,15 @@ fn reset_indentation(s: &str) -> String {
         line.starts_with("*")
     }
 
-    for line in s.lines() {
+    static TAB: &str = "    ";
+
+    for line in s.trim().lines() {
         let line = line.trim();
 
         // handle doc comments separately
         if is_doc_comment(line) {
             for _ in 0..indent {
-                dst.push_str("    ");
+                dst.push_str(TAB);
             }
             dst.push(' ');
             dst.push_str(line);
@@ -536,7 +543,7 @@ fn reset_indentation(s: &str) -> String {
         };
         if !line.is_empty() {
             for _ in 0..indent + extra {
-                dst.push_str("    ");
+                dst.push_str(TAB);
             }
             dst.push_str(line);
         }
@@ -567,15 +574,17 @@ fn demangle(module: &mut Module) {
             continue;
         };
 
-        let count = counter.entry(sym.to_string()).or_insert(0);
-
-        func.name = Some(if *count > 0 {
-            format!("{sym}[{count}]")
-        } else {
-            sym.to_string()
-        });
-
-        *count += 1;
+        let demangled = sym.to_string();
+        match counter.entry(demangled) {
+            Entry::Occupied(mut entry) => {
+                func.name = Some(format!("{}[{}]", entry.key(), entry.get()));
+                *entry.get_mut() += 1;
+            }
+            Entry::Vacant(entry) => {
+                func.name = Some(entry.key().clone());
+                entry.insert(1);
+            }
+        }
     }
 }
 
@@ -587,6 +596,7 @@ impl OutputMode {
                 | OutputMode::Web
                 | OutputMode::Node { module: true }
                 | OutputMode::Deno
+                | OutputMode::Module
         )
     }
 
@@ -598,15 +608,12 @@ impl OutputMode {
         matches!(self, OutputMode::NoModules { .. })
     }
 
-    fn emscripten(&self) -> bool {
-        matches!(self, OutputMode::Emscripten { .. })
+    fn bundler(&self) -> bool {
+        matches!(self, OutputMode::Bundler { .. })
     }
 
-    fn esm_integration(&self) -> bool {
-        matches!(
-            self,
-            OutputMode::Bundler { .. } | OutputMode::Node { module: true }
-        )
+    fn emscripten(&self) -> bool {
+        matches!(self, OutputMode::Emscripten { .. })
     }
 }
 
@@ -673,6 +680,7 @@ impl Output {
         let wasm_name = format!("{}_bg", self.stem);
         let wasm_path = out_dir.join(&wasm_name).with_extension("wasm");
         fs::create_dir_all(out_dir)?;
+
         let wasm_bytes = self.module.emit_wasm();
         fs::write(&wasm_path, wasm_bytes)
             .with_context(|| format!("failed to write `{}`", wasm_path.display()))?;
@@ -732,64 +740,28 @@ impl Output {
         }
 
         let js_path = out_dir.join(&self.stem).with_extension(extension);
-
-        if matches!(&gen.mode, OutputMode::Module) {
-            let wasm_name = format!("{}_bg", self.stem);
-            let start = gen.start.as_deref().unwrap_or("");
-
-            write(
-                &js_path,
-                format!(
-                    "\
-import source wasmModule from \"./{wasm_name}.wasm\";
-
-{start}{}",
-                    reset_indentation(&gen.js)
-                ),
-            )?;
-        } else if gen.mode.esm_integration() {
-            let js_name = format!("{}_bg.{extension}", self.stem);
-
-            let start = gen.start.as_deref().unwrap_or("");
-
-            if matches!(gen.mode, OutputMode::Node { .. }) {
-                write(
-                    &js_path,
-                    format!(
-                        "\
-{start}
-export * from \"./{js_name}\";",
-                    ),
-                )?;
-            } else {
-                write(
-                    &js_path,
-                    format!(
-                        "\
-import * as wasm from \"./{wasm_name}.wasm\";
-export * from \"./{js_name}\";
-{start}"
-                    ),
-                )?;
-            }
-            write(out_dir.join(&js_name), reset_indentation(&gen.js))?;
-        } else if matches!(self.generated.mode, OutputMode::Emscripten) {
+        if matches!(self.generated.mode, OutputMode::Emscripten) {
             let emscripten_js_path = out_dir.join("library_bindgen.js");
             write(&emscripten_js_path, reset_indentation(&gen.js))?;
         } else {
             write(&js_path, reset_indentation(&gen.js))?;
         }
 
+        if let Some(start) = &gen.start {
+            let js_path = out_dir.join(wasm_name).with_extension(extension);
+            write(&js_path, reset_indentation(start))?;
+        }
+
         if gen.typescript {
             let ts_path = js_path.with_extension("d.ts");
-            fs::write(&ts_path, &gen.ts)
+            fs::write(&ts_path, reset_indentation(&gen.ts))
                 .with_context(|| format!("failed to write `{}`", ts_path.display()))?;
         }
 
         if gen.typescript {
             let ts_path = wasm_path.with_extension("wasm.d.ts");
             let ts = wasm2es6js::typescript(&self.module)?;
-            fs::write(&ts_path, ts)
+            fs::write(&ts_path, reset_indentation(&ts))
                 .with_context(|| format!("failed to write `{}`", ts_path.display()))?;
         }
 

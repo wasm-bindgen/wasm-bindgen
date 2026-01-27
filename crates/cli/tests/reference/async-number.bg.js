@@ -1,6 +1,136 @@
-let wasm;
-export function __wbg_set_wasm(val) {
-    wasm = val;
+/**
+ * @returns {Promise<number>}
+ */
+export function foo() {
+    const ret = wasm.foo();
+    return ret;
+}
+export function __wbg___wbindgen_debug_string_0bc8482c6e3508ae(arg0, arg1) {
+    const ret = debugString(arg1);
+    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+    getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+}
+export function __wbg___wbindgen_is_function_0095a73b8b156f76(arg0) {
+    const ret = typeof(arg0) === 'function';
+    return ret;
+}
+export function __wbg___wbindgen_is_undefined_9e4d92534c42d778(arg0) {
+    const ret = arg0 === undefined;
+    return ret;
+}
+export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg__wbg_cb_unref_d9b87ff7982e3b21(arg0) {
+    arg0._wbg_cb_unref();
+}
+export function __wbg_call_4708e0c13bdc8e95() { return handleError(function (arg0, arg1, arg2) {
+    const ret = arg0.call(arg1, arg2);
+    return ret;
+}, arguments); }
+export function __wbg_createTask_deeb88a68fc97c9d() { return handleError(function (arg0, arg1) {
+    const ret = console.createTask(getStringFromWasm0(arg0, arg1));
+    return ret;
+}, arguments); }
+export function __wbg_new_b5d9e2fb389fef91(arg0, arg1) {
+    try {
+        var state0 = {a: arg0, b: arg1};
+        var cb0 = (arg0, arg1) => {
+            const a = state0.a;
+            state0.a = 0;
+            try {
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1);
+            } finally {
+                state0.a = a;
+            }
+        };
+        const ret = new Promise(cb0);
+        return ret;
+    } finally {
+        state0.a = state0.b = 0;
+    }
+}
+export function __wbg_queueMicrotask_0aa0a927f78f5d98(arg0) {
+    const ret = arg0.queueMicrotask;
+    return ret;
+}
+export function __wbg_queueMicrotask_5bb536982f78a56f(arg0) {
+    queueMicrotask(arg0);
+}
+export function __wbg_resolve_002c4b7d9d8f6b64(arg0) {
+    const ret = Promise.resolve(arg0);
+    return ret;
+}
+export function __wbg_run_bcde7ea43ea6ed7c(arg0, arg1, arg2) {
+    try {
+        var state0 = {a: arg1, b: arg2};
+        var cb0 = () => {
+            const a = state0.a;
+            state0.a = 0;
+            try {
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
+            } finally {
+                state0.a = a;
+            }
+        };
+        const ret = arg0.run(cb0);
+        return ret;
+    } finally {
+        state0.a = state0.b = 0;
+    }
+}
+export function __wbg_static_accessor_GLOBAL_12837167ad935116() {
+    const ret = typeof global === 'undefined' ? null : global;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_GLOBAL_THIS_e628e89ab3b1c95f() {
+    const ret = typeof globalThis === 'undefined' ? null : globalThis;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_SELF_a621d3dfbb60d0ce() {
+    const ret = typeof self === 'undefined' ? null : self;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_WINDOW_f8727f0cf888e0bd() {
+    const ret = typeof window === 'undefined' ? null : window;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_then_b9e7b3b5f1a9e1b5(arg0, arg1) {
+    const ret = arg0.then(arg1);
+    return ret;
+}
+export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 6, function: Function { arguments: [Externref], shim_idx: 7, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000004, wasm_bindgen__convert__closures_____invoke__h0000000000000005);
+    return ret;
+}
+export function __wbindgen_cast_0000000000000001(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
+    const ret = arg0;
+    return ret;
+}
+export function __wbindgen_init_externref_table() {
+    const table = wasm.__wbindgen_externrefs;
+    const offset = table.grow(4);
+    table.set(0, undefined);
+    table.set(offset + 0, undefined);
+    table.set(offset + 1, null);
+    table.set(offset + 2, true);
+    table.set(offset + 3, false);
+}
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
+    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
+    return ret !== 0;
+}
+
+function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1, arg2);
+}
+
+function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3);
 }
 
 function addToExternrefTable0(obj) {
@@ -201,173 +331,13 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2);
+
+let wasm;
+export function __wbg_set_wasm(val) {
+    wasm = val;
 }
-
-function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
-    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
-    return ret !== 0;
-}
-
-function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2, arg3);
-}
-
-/**
- * @returns {Promise<number>}
- */
-export function foo() {
-    const ret = wasm.foo();
-    return ret;
-}
-
-export function __wbg___wbindgen_debug_string_adfb662ae34724b6(arg0, arg1) {
-    const ret = debugString(arg1);
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
-};
-
-export function __wbg___wbindgen_is_function_8d400b8b1af978cd(arg0) {
-    const ret = typeof(arg0) === 'function';
-    return ret;
-};
-
-export function __wbg___wbindgen_is_undefined_f6b95eab589e0269(arg0) {
-    const ret = arg0 === undefined;
-    return ret;
-};
-
-export function __wbg___wbindgen_throw_dd24417ed36fc46e(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-};
-
-export function __wbg__wbg_cb_unref_87dfb5aaa0cbcea7(arg0) {
-    arg0._wbg_cb_unref();
-};
-
-export function __wbg_call_3020136f7a2d6e44() { return handleError(function (arg0, arg1, arg2) {
-    const ret = arg0.call(arg1, arg2);
-    return ret;
-}, arguments) };
-
-export function __wbg_call_abb4ff46ce38be40() { return handleError(function (arg0, arg1) {
-    const ret = arg0.call(arg1);
-    return ret;
-}, arguments) };
-
-export function __wbg_createTask_432d6d38dc688bee() { return handleError(function (arg0, arg1) {
-    const ret = console.createTask(getStringFromWasm0(arg0, arg1));
-    return ret;
-}, arguments) };
-
-export function __wbg_new_ff12d2b041fb48f1(arg0, arg1) {
-    try {
-        var state0 = {a: arg0, b: arg1};
-        var cb0 = (arg0, arg1) => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, arg0, arg1);
-            } finally {
-                state0.a = a;
-            }
-        };
-        const ret = new Promise(cb0);
-        return ret;
-    } finally {
-        state0.a = state0.b = 0;
-    }
-};
-
-export function __wbg_new_no_args_cb138f77cf6151ee(arg0, arg1) {
-    const ret = new Function(getStringFromWasm0(arg0, arg1));
-    return ret;
-};
-
-export function __wbg_queueMicrotask_9b549dfce8865860(arg0) {
-    const ret = arg0.queueMicrotask;
-    return ret;
-};
-
-export function __wbg_queueMicrotask_fca69f5bfad613a5(arg0) {
-    queueMicrotask(arg0);
-};
-
-export function __wbg_resolve_fd5bfbaa4ce36e1e(arg0) {
-    const ret = Promise.resolve(arg0);
-    return ret;
-};
-
-export function __wbg_run_51bf644e39739ca6(arg0, arg1, arg2) {
-    try {
-        var state0 = {a: arg1, b: arg2};
-        var cb0 = () => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
-            } finally {
-                state0.a = a;
-            }
-        };
-        const ret = arg0.run(cb0);
-        return ret;
-    } finally {
-        state0.a = state0.b = 0;
-    }
-};
-
-export function __wbg_static_accessor_GLOBAL_769e6b65d6557335() {
-    const ret = typeof global === 'undefined' ? null : global;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_static_accessor_GLOBAL_THIS_60cf02db4de8e1c1() {
-    const ret = typeof globalThis === 'undefined' ? null : globalThis;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_static_accessor_SELF_08f5a74c69739274() {
-    const ret = typeof self === 'undefined' ? null : self;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_static_accessor_WINDOW_a8924b26aa92d024() {
-    const ret = typeof window === 'undefined' ? null : window;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-};
-
-export function __wbg_then_4f95312d68691235(arg0, arg1) {
-    const ret = arg0.then(arg1);
-    return ret;
-};
-
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 6, function: Function { arguments: [Externref], shim_idx: 7, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000005, wasm_bindgen__convert__closures_____invoke__h0000000000000002);
-    return ret;
-};
-
-export function __wbindgen_cast_0000000000000001(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
-    return ret;
-};
-
-export function __wbindgen_init_externref_table() {
-    const table = wasm.__wbindgen_externrefs;
-    const offset = table.grow(4);
-    table.set(0, undefined);
-    table.set(offset + 0, undefined);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
-};

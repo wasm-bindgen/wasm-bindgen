@@ -256,6 +256,7 @@ extern "C" {
     /// The `eval()` function evaluates JavaScript code represented as a string.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(catch)]
     pub fn eval(js_source_text: &str) -> Result<JsValue, JsValue>;
 
@@ -1949,6 +1950,7 @@ extern "C" {
     /// habits and allowing for more efficient code minification.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
     pub fn new_with_args(args: &str, body: &str) -> Function;
 
@@ -1960,6 +1962,7 @@ extern "C" {
     /// habits and allowing for more efficient code minification.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
+    #[cfg(feature = "unsafe-eval")]
     #[wasm_bindgen(constructor)]
     pub fn new_no_args(body: &str) -> Function;
 
@@ -2281,6 +2284,7 @@ impl Function {
     }
 }
 
+#[cfg(feature = "unsafe-eval")]
 impl Default for Function {
     fn default() -> Self {
         Self::new_no_args("")
@@ -6351,28 +6355,8 @@ pub fn global() -> Object {
             }
         }
 
-        // According to StackOverflow you can access the global object via:
-        //
-        //      const global = Function('return this')();
-        //
-        // I think that's because the manufactured function isn't in "strict" mode.
-        // It also turns out that non-strict functions will ignore `undefined`
-        // values for `this` when using the `apply` function.
-        //
-        // As a result we use the equivalent of this snippet to get a handle to the
-        // global object in a sort of roundabout way that should hopefully work in
-        // all contexts like ESM, node, browsers, etc.
-        let this = Function::new_no_args("return this")
-            .call0(&JsValue::undefined())
-            .ok();
-
-        // Note that we avoid `unwrap()` on `call0` to avoid code size bloat, we
-        // just handle the `Err` case as returning a different object.
-        debug_assert!(this.is_some());
-        match this {
-            Some(this) => this.unchecked_into(),
-            None => JsValue::undefined().unchecked_into(),
-        }
+        // Global object not found
+        JsValue::undefined().unchecked_into()
     }
 }
 

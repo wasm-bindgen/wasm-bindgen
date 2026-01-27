@@ -1,11 +1,46 @@
-let wasm_bindgen;
-(function() {
-    const __exports = {};
+let wasm_bindgen = (function(exports) {
     let script_src;
     if (typeof document !== 'undefined' && document.currentScript !== null) {
         script_src = new URL(document.currentScript.src, location.href).toString();
     }
-    let wasm = undefined;
+
+    /**
+     * @param {number} a
+     * @param {number} b
+     * @returns {number}
+     */
+    function add_that_might_fail(a, b) {
+        const ret = wasm.add_that_might_fail(a, b);
+        return ret >>> 0;
+    }
+    exports.add_that_might_fail = add_that_might_fail;
+
+    function __wbg_get_imports(memory) {
+        const import0 = {
+            __proto__: null,
+            __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
+                throw new Error(getStringFromWasm0(arg0, arg1));
+            },
+            __wbg_random_e2b253f0e987bd7c: function() {
+                const ret = Math.random();
+                return ret;
+            },
+            __wbindgen_init_externref_table: function() {
+                const table = wasm.__wbindgen_externrefs;
+                const offset = table.grow(4);
+                table.set(0, undefined);
+                table.set(offset + 0, undefined);
+                table.set(offset + 1, null);
+                table.set(offset + 2, true);
+                table.set(offset + 3, false);
+            },
+            memory: memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true}),
+        };
+        return {
+            __proto__: null,
+            "./reference_test_bg.js": import0,
+        };
+    }
 
     function getStringFromWasm0(ptr, len) {
         ptr = ptr >>> 0;
@@ -27,18 +62,17 @@ let wasm_bindgen;
         return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
     }
 
-    /**
-     * @param {number} a
-     * @param {number} b
-     * @returns {number}
-     */
-    function add_that_might_fail(a, b) {
-        const ret = wasm.add_that_might_fail(a, b);
-        return ret >>> 0;
+    let wasmModule, wasm;
+    function __wbg_finalize_init(instance, module, thread_stack_size) {
+        wasm = instance.exports;
+        wasmModule = module;
+        cachedUint8ArrayMemory0 = null;
+        if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) {
+            throw 'invalid stack size';
+        }
+        wasm.__wbindgen_start(thread_stack_size);
+        return wasm;
     }
-    __exports.add_that_might_fail = add_that_might_fail;
-
-    const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
     async function __wbg_load(module, imports) {
         if (typeof Response === 'function' && module instanceof Response) {
@@ -46,14 +80,12 @@ let wasm_bindgen;
                 try {
                     return await WebAssembly.instantiateStreaming(module, imports);
                 } catch (e) {
-                    const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+                    const validResponse = module.ok && expectedResponseType(module.type);
 
                     if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
                         console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
 
-                    } else {
-                        throw e;
-                    }
+                    } else { throw e; }
                 }
             }
 
@@ -68,47 +100,20 @@ let wasm_bindgen;
                 return instance;
             }
         }
-    }
 
-    function __wbg_get_imports(memory) {
-        const imports = {};
-        imports.wbg = {};
-        imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
-        };
-        imports.wbg.__wbg_random_e2b253f0e987bd7c = function() {
-            const ret = Math.random();
-            return ret;
-        };
-        imports.wbg.__wbindgen_init_externref_table = function() {
-            const table = wasm.__wbindgen_externrefs;
-            const offset = table.grow(4);
-            table.set(0, undefined);
-            table.set(offset + 0, undefined);
-            table.set(offset + 1, null);
-            table.set(offset + 2, true);
-            table.set(offset + 3, false);
-        };
-        imports.wbg.memory = memory || new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
-
-        return imports;
-    }
-
-    function __wbg_finalize_init(instance, module, thread_stack_size) {
-        wasm = instance.exports;
-        __wbg_init.__wbindgen_wasm_module = module;
-        cachedUint8ArrayMemory0 = null;
-
-        if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) { throw 'invalid stack size' }
-        wasm.__wbindgen_start(thread_stack_size);
-        return wasm;
+        function expectedResponseType(type) {
+            switch (type) {
+                case 'basic': case 'cors': case 'default': return true;
+            }
+            return false;
+        }
     }
 
     function initSync(module, memory) {
         if (wasm !== undefined) return wasm;
 
         let thread_stack_size
-        if (typeof module !== 'undefined') {
+        if (module !== undefined) {
             if (Object.getPrototypeOf(module) === Object.prototype) {
                 ({module, memory, thread_stack_size} = module)
             } else {
@@ -128,7 +133,7 @@ let wasm_bindgen;
         if (wasm !== undefined) return wasm;
 
         let thread_stack_size
-        if (typeof module_or_path !== 'undefined') {
+        if (module_or_path !== undefined) {
             if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
                 ({module_or_path, memory, thread_stack_size} = module_or_path)
             } else {
@@ -136,8 +141,8 @@ let wasm_bindgen;
             }
         }
 
-        if (typeof module_or_path === 'undefined' && typeof script_src !== 'undefined') {
-            module_or_path = script_src.replace(/\.js$/, '_bg.wasm');
+        if (module_or_path === undefined && script_src !== undefined) {
+            module_or_path = script_src.replace(/\.js$/, "_bg.wasm");
         }
         const imports = __wbg_get_imports(memory);
 
@@ -150,5 +155,5 @@ let wasm_bindgen;
         return __wbg_finalize_init(instance, module, thread_stack_size);
     }
 
-    wasm_bindgen = Object.assign(__wbg_init, { initSync }, __exports);
-})();
+    return Object.assign(__wbg_init, { initSync }, exports);
+})({ __proto__: null });

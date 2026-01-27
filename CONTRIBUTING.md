@@ -34,7 +34,8 @@ The release process for Wasm Bindgen typically consists of the following steps:
 
 * `./publish bump`
 * Regenerate the reference tests (`just test-cli-overwrite`).
-* Check if the schema version must be bumped (did the schema hash in the shared crate change since the last release, without bumping the schema version?).
+* Check if the schema version must be bumped in crates/shared/src/lib.rs, by verifying the history of crates/shared/src/schema_hash_approval.rs.
+* Verify the schema tests pass via `cargo test -p wasm-bindgen-shared`.
 * Bump the changelog.
 * Commit and publish as a PR.
 * Merge and wait for status checks to succeed.

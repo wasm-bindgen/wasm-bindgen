@@ -1,6 +1,4 @@
-import source wasmModule from "./reference_test_bg.wasm";
-
-let wasm;
+/* @ts-self-types="./reference_test.d.ts" */
 
 /**
  * @param {number} a
@@ -12,15 +10,20 @@ export function add_that_might_fail(a, b) {
     return ret >>> 0;
 }
 
-const imports = {
-    __wbindgen_placeholder__: {
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
         __wbg_random_9526caf33df4270d: function() {
             const ret = Math.random();
             return ret;
         },
-    },
+    };
+    return {
+        __proto__: null,
+        "./reference_test_bg.js": import0,
+    };
+}
 
-};
-
-const wasmInstance = new WebAssembly.Instance(wasmModule, imports);
-wasm = wasmInstance.exports;
+import source wasmModule from "./reference_test_bg.wasm";
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasm = wasmInstance.exports;

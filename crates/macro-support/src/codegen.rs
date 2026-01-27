@@ -773,6 +773,12 @@ impl TryToTokens for ast::Export {
                     }).into()
                 }
             }
+        } else {
+            call = quote! {
+                #wasm_bindgen::__rt::maybe_catch_unwind(|| {
+                    #call
+                })
+            };
         }
 
         let projection = quote! { <#ret_ty as #wasm_bindgen::convert::ReturnWasmAbi> };
