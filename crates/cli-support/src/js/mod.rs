@@ -2514,7 +2514,7 @@ impl<'a> Context<'a> {
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
             let abort_check = if self.config.abort_reinit {
-                "if (__wbg_aborted === true) {
+                "if (__wbg_aborted) {
                     __wbg_reset_state();
                 }\n"
             } else {
@@ -2601,7 +2601,7 @@ impl<'a> Context<'a> {
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
             let abort_check = if self.config.abort_reinit {
-                "if (__wbg_aborted === true) {
+                "if (__wbg_aborted) {
                     __wbg_reset_state();
                 }\n"
             } else {

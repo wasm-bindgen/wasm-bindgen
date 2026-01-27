@@ -18,7 +18,7 @@ exports.__wbg_reset_state = __wbg_reset_state;
  */
 function add_that_might_fail(a, b) {
     let ret;
-    if (__wbg_aborted === true) {
+    if (__wbg_aborted) {
         __wbg_reset_state();
     }
     try {

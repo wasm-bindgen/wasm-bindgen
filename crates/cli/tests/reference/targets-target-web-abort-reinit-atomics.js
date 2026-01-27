@@ -19,7 +19,7 @@ export function __wbg_reset_state () {
  */
 export function add_that_might_fail(a, b) {
     let ret;
-    if (__wbg_aborted === true) {
+    if (__wbg_aborted) {
         __wbg_reset_state();
     }
     try {

@@ -160,7 +160,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             let _ = params.next();
             if js.cx.config.generate_reset_state {
                 let abort_check = if js.cx.config.abort_reinit {
-                    "__wbg_aborted === true || "
+                    "__wbg_aborted || "
                 } else {
                     ""
                 };
@@ -709,7 +709,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             if self.cx.config.abort_reinit {
                 self.prelude(
                     "\
-                    if (__wbg_aborted === true) {
+                    if (__wbg_aborted) {
                         __wbg_reset_state()
                     }",
                 );
@@ -865,7 +865,7 @@ fn instruction(
                 };
                 format!(
                     "\
-                    if (__wbg_aborted === true) {{
+                    if (__wbg_aborted) {{
                         __wbg_reset_state();
                     }}
                     try {{
