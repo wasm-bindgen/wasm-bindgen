@@ -95,7 +95,7 @@ struct Args {
     generate_reset_state: bool,
     #[arg(
         long = "abort-reinit",
-        help = "Re-initialized the WebAssembly module after a panic (only on panic=abort). Also enables --experimental-reset-state-function"
+        help = "Re-initializes the WebAssembly instance after an unrecoverable error such as an abort."
     )]
     abort_reinit: bool,
     // The options below are deprecated. They're still parsed for backwards compatibility,
