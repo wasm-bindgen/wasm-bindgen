@@ -846,22 +846,33 @@ fn instruction(
             // Call the function through an export of the underlying module.
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
-            const CHECK_ABORTED: &str = "if (__wbg_aborted === true) {
-              __wbg_reset_state();
-            }";
-            // If the module is compiled with panic=unwind, panics are not critical errors
-            let catch_exception = if js.cx.has_intrinsic("panic_error") {
-                "catch(e) {
-                    if (!(e instanceof PanicError)) {
-                        __wbg_aborted = true;
-                    }
-                    throw e;
-                }"
-            } else {
-                "catch(e) {
-                  __wbg_aborted = true;
-                  throw e;
-                }"
+            let wrap_try_catch = |call| {
+                // If the module is compiled with panic=unwind, panics are not critical errors
+                let catch_exception = if js.cx.has_intrinsic("panic_error") {
+                    "\
+                    catch(e) {
+                        if (!(e instanceof PanicError)) {
+                            __wbg_aborted = true;
+                        }
+                        throw e;
+                    }"
+                } else {
+                    "\
+                    catch(e) {
+                      __wbg_aborted = true;
+                      throw e;
+                    }"
+                };
+                format!(
+                    "\
+                    if (__wbg_aborted === true) {{
+                        __wbg_reset_state();
+                    }}
+                    try {{
+                        {call};
+                    }} {catch_exception} 
+                    "
+                )
             };
 
             // And then figure out how to actually handle where the call
@@ -870,14 +881,7 @@ fn instruction(
             match (invoc.defer(), results) {
                 (true, 0) => {
                     if js.cx.config.abort_reinit && should_check_aborted {
-                        js.finally(&format!(
-                            "
-                            {CHECK_ABORTED}
-                            try {{
-                                {call}
-                            }} {catch_exception}
-                            "
-                        ));
+                        js.finally(&wrap_try_catch(call));
                     } else {
                         js.finally(&format!("{call};"));
                     }
@@ -885,26 +889,19 @@ fn instruction(
                 (true, _) => panic!("deferred calls must have no results"),
                 (false, 0) => {
                     if js.cx.config.abort_reinit && should_check_aborted {
-                        js.prelude(&format!(
-                            "
-                            {CHECK_ABORTED}
-                            try {{
-                                {call}
-                            }} {catch_exception}
-                            "
-                        ));
+                        js.prelude(&wrap_try_catch(call));
                     } else {
                         js.prelude(&format!("{call};"));
                     }
                 }
                 (false, n) => {
                     if js.cx.config.abort_reinit && should_check_aborted {
+                        let call = format!("ret = {call}");
                         js.prelude(&format!(
-                            "let ret;
-                            {CHECK_ABORTED}
-                            try {{
-                                ret = {call};
-                            }} {catch_exception}"
+                            "\
+                            let ret;
+                            {}",
+                            &wrap_try_catch(call)
                         ));
                     } else {
                         js.prelude(&format!("const ret = {call};"));
