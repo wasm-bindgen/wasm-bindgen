@@ -2686,7 +2686,7 @@ impl<'a> Context<'a> {
                     "\
                     state => {
                         try {
-                            if (aborted === false && state.instance === __wbg_instance_id) {
+                            if (__wbg_aborted === false && state.instance === __wbg_instance_id) {
                                 state.dtor(state.a, state.b);
                             }
                         } catch (e) {
@@ -2735,7 +2735,11 @@ impl<'a> Context<'a> {
             reset_statements.push("wasm.__wbindgen_set_abort_flag(1);".to_string());
         }
 
-        reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
+        if self.config.abort_reinit {
+            reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
+        } else {
+            reset_statements.push("__wbg_instance_id++;".to_string());
+        }
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
