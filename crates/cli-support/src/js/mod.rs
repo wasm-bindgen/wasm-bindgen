@@ -2529,8 +2529,7 @@ impl<'a> Context<'a> {
                         CLOSURE_DTORS.unregister(state);
                     } catch (e) {
                         __wbg_aborted = true;
-                    }
-                    ",
+                    } ",
                 )
             } else {
                 (
@@ -2572,7 +2571,7 @@ impl<'a> Context<'a> {
                         state.a = 0;
                         try {{
                             return f(a, state.b, ...args);
-                        }} {catch_abort} finally {{
+                        }} {catch_abort}finally {{
                             state.a = a;
                             real._wbg_cb_unref();
                         }}

@@ -1,15 +1,15 @@
 // FLAGS: --target=bundler
 // FLAGS: --target=web
 // FLAGS: --target=web --experimental-reset-state-function
-// FLAGS: --target=web --experimental-abort-reinit
+// FLAGS: --target=web --abort-reinit
 // FLAGS: --target=no-modules
 // FLAGS: --target=nodejs
 // FLAGS: --target=nodejs --experimental-reset-state-function
-// FLAGS: --target=nodejs --experimental-abort-reinit
+// FLAGS: --target=nodejs --abort-reinit
 // FLAGS: --target=deno
 // FLAGS: --target=module
 // FLAGS: --target=module --experimental-reset-state-function
-// FLAGS: --target=module --experimental-abort-reinit
+// FLAGS: --target=module --abort-reinit
 // FLAGS: --target=experimental-nodejs-module
 
 use wasm_bindgen::prelude::*;

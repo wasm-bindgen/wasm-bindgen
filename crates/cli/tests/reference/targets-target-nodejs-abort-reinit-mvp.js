@@ -1,7 +1,9 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
 function __wbg_reset_state () {
+    wasm.__wbindgen_set_abort_flag(1);
     __wbg_instance_id++;
+    __wbg_aborted = false;
 
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
@@ -15,7 +17,16 @@ exports.__wbg_reset_state = __wbg_reset_state;
  * @returns {number}
  */
 function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
+    let ret;
+    if (__wbg_aborted === true) {
+        __wbg_reset_state();
+    }
+    try {
+        ret = wasm.add_that_might_fail(a, b);
+    } catch(e) {
+        __wbg_aborted = true;
+        throw e;
+    }
     return ret >>> 0;
 }
 exports.add_that_might_fail = add_that_might_fail;
@@ -23,18 +34,9 @@ exports.add_that_might_fail = add_that_might_fail;
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg_random_ae0b2256206ad108: function() {
+        __wbg_random_9526caf33df4270d: function() {
             const ret = Math.random();
             return ret;
-        },
-        __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_externrefs;
-            const offset = table.grow(4);
-            table.set(0, undefined);
-            table.set(offset + 0, undefined);
-            table.set(offset + 1, null);
-            table.set(offset + 2, true);
-            table.set(offset + 3, false);
         },
     };
     return {
@@ -45,8 +47,10 @@ function __wbg_get_imports() {
 
 let __wbg_instance_id = 0;
 
+
+let __wbg_aborted = false;
+
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
 let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
-wasm.__wbindgen_start();

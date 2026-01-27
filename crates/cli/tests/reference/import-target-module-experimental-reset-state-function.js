@@ -3,7 +3,6 @@ import { default as _default } from 'tests/wasm/import_class.js';
 
 export function __wbg_reset_state () {
     __wbg_instance_id++;
-    __wbg_aborted = false;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
 
@@ -77,9 +76,6 @@ function __wbg_get_imports() {
 }
 
 let __wbg_instance_id = 0;
-
-
-let __wbg_aborted = false;
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
