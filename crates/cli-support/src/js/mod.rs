@@ -2513,34 +2513,36 @@ impl<'a> Context<'a> {
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let (abort_check, catch_abort, safe_destructor) = if self.config.abort_reinit {
-                (
-                    "if (__wbg_aborted === true) {
+            let abort_check = if self.config.abort_reinit {
+                "if (__wbg_aborted === true) {
                     __wbg_reset_state();
-                    }\n",
-                    "catch (e) {
-                        __wbg_aborted = true;
-                        throw e;
-                    } ",
-                    "\
-                    try {
-                        state.dtor(state.a, state.b);
-                        state.a = 0;
-                        CLOSURE_DTORS.unregister(state);
-                    } catch (e) {
-                        __wbg_aborted = true;
-                    } ",
-                )
+                }\n"
             } else {
-                (
-                    "",
-                    "",
-                    "\
+                ""
+            };
+            let catch_abort = if self.config.abort_reinit {
+                "catch (e) {
+                    __wbg_aborted = true;
+                    throw e;
+                } "
+            } else {
+                ""
+            };
+            let safe_destructor = if self.config.abort_reinit {
+                "\
+                try {
                     state.dtor(state.a, state.b);
                     state.a = 0;
-                    CLOSURE_DTORS.unregister(state);\
-                    ",
-                )
+                    CLOSURE_DTORS.unregister(state);
+                } catch (e) {
+                    __wbg_aborted = true;
+                } "
+            } else {
+                "\
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                "
             };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
@@ -2598,35 +2600,36 @@ impl<'a> Context<'a> {
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let (abort_check, catch_abort, safe_destructor) = if self.config.abort_reinit {
-                (
-                    "if (__wbg_aborted === true) {
+            let abort_check = if self.config.abort_reinit {
+                "if (__wbg_aborted === true) {
                     __wbg_reset_state();
-                    }\n",
-                    "catch (e) {
-                        __wbg_aborted = true;
-                        throw e;
-                    } ",
-                    "\
-                    try {
-                        state.dtor(state.a, state.b);
-                        state.a = 0;
-                        CLOSURE_DTORS.unregister(state);
-                    } catch (e) {
-                        __wbg_aborted = true;
-                    }
-                    ",
-                )
+                }\n"
             } else {
-                (
-                    "",
-                    "",
-                    "\
+                ""
+            };
+            let catch_abort = if self.config.abort_reinit {
+                "catch (e) {
+                    __wbg_aborted = true;
+                    throw e;
+                } "
+            } else {
+                ""
+            };
+            let safe_destructor = if self.config.abort_reinit {
+                "\
+                try {
                     state.dtor(state.a, state.b);
                     state.a = 0;
                     CLOSURE_DTORS.unregister(state);
-                    ",
-                )
+                } catch (e) {
+                    __wbg_aborted = true;
+                } "
+            } else {
+                "\
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                "
             };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
