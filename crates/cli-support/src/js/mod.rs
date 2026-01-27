@@ -2538,7 +2538,7 @@ impl<'a> Context<'a> {
                     "\
                     state.dtor(state.a, state.b);
                     state.a = 0;
-                    CLOSURE_DTORS.unregister(state);
+                    CLOSURE_DTORS.unregister(state);\
                     ",
                 )
             };
