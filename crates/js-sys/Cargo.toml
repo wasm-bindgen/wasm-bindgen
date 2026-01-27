@@ -21,8 +21,12 @@ doctest = false
 test = false
 
 [features]
-default = ["std"]
+# TODO: remove unsafe-eval for 1.0 release
+default = ["std", "unsafe-eval"]
 std = ["wasm-bindgen/std"]
+# It has been agreed to gate functionnality requiring CSP unsafe-eval behind this feature
+# See https://github.com/wasm-bindgen/wasm-bindgen/issues/1647#issuecomment-3775469177
+unsafe-eval = []
 
 [dependencies]
 once_cell = { version = "1.12", default-features = false }

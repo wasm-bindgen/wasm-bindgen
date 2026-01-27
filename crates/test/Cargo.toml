@@ -35,6 +35,12 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 [target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
 minicov = "0.3.8"
 
+[dev-dependencies]
+web-sys = { path = '../web-sys', features = ['console', 'Window', 'Performance'] }
+
+[[bench]]
+name = "headless_output"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
 
