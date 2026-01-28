@@ -123,6 +123,10 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
     steps:
     - uses: actions/checkout@v6
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: rust-src
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
