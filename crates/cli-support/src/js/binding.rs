@@ -158,7 +158,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js = JsBuilder::new(self.cx, debug_name);
         if let Some(consumes_self) = self.method {
             let _ = params.next();
-            if js.cx.config.generate_reset_state {
+            if js.cx.config.generate_reset_state || js.cx.config.abort_reinit {
                 let abort_check = if js.cx.config.abort_reinit {
                     "__wbg_aborted || "
                 } else {
@@ -704,7 +704,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
-        if self.cx.config.generate_reset_state {
+        if self.cx.config.generate_reset_state || self.cx.config.abort_reinit {
             // Under reset state, we need comprehensive validation
             if self.cx.config.abort_reinit {
                 self.prelude(

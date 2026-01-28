@@ -1,6 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
-export function __wbg_reset_state () {
+function __wbg_reset_state () {
     wasm.__wbindgen_set_abort_flag(1);
     __wbg_instance_id++;
     __wbg_aborted = false;

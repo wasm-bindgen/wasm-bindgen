@@ -301,7 +301,6 @@ impl Bindgen {
 
     pub fn abort_reinit(&mut self, abort_reinit: bool) -> &mut Bindgen {
         self.abort_reinit = abort_reinit;
-        self.generate_reset_state |= abort_reinit;
         self
     }
 
@@ -356,8 +355,6 @@ impl Bindgen {
             bail!("exported symbol \"default\" not allowed for --target web")
         }
 
-        // The `abort_reinit` flag implicitly enables `generate_reset_state`.
-        // This check provides a more helpful error message for this case
         if self.abort_reinit
             && !matches!(
                 self.mode,

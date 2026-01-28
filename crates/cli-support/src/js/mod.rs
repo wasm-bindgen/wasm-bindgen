@@ -2544,7 +2544,9 @@ impl<'a> Context<'a> {
                 CLOSURE_DTORS.unregister(state);\
                 "
             };
-            let (state_init, instance_check) = if self.config.generate_reset_state {
+            let (state_init, instance_check) = if self.config.generate_reset_state
+                || self.config.abort_reinit
+            {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
                     format!("{abort_check}
@@ -2631,7 +2633,9 @@ impl<'a> Context<'a> {
                 CLOSURE_DTORS.unregister(state);\
                 "
             };
-            let (state_init, instance_check) = if self.config.generate_reset_state {
+            let (state_init, instance_check) = if self.config.generate_reset_state
+                || self.config.abort_reinit
+            {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
                     format!("{abort_check}
@@ -2735,9 +2739,6 @@ impl<'a> Context<'a> {
             self.export_name_of(store);
             self.global("let __wbg_aborted = false;");
             reset_statements.push("wasm.__wbindgen_set_abort_flag(1);".to_string());
-        }
-
-        if self.config.abort_reinit {
             reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
         } else {
             reset_statements.push("__wbg_instance_id++;".to_string());
@@ -2820,7 +2821,7 @@ impl<'a> Context<'a> {
                 definition,
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
-                private: false,
+                private: !self.config.generate_reset_state,
             }),
         )?;
         Ok(())
@@ -3070,7 +3071,7 @@ impl<'a> Context<'a> {
         self.export_destructor();
 
         // Generate reset state function last, to ensure it knows about all other state.
-        if self.config.generate_reset_state {
+        if self.config.generate_reset_state || self.config.abort_reinit {
             self.generate_reset_state()?;
         }
 

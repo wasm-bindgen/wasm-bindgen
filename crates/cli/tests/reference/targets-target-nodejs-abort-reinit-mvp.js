@@ -9,7 +9,6 @@ function __wbg_reset_state () {
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
-exports.__wbg_reset_state = __wbg_reset_state;
 
 /**
  * @param {number} a
