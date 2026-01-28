@@ -808,10 +808,11 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
-            let should_check_aborted = matches!(
-                instr,
-                Instruction::CallExport(_) | Instruction::DeferFree { .. }
-            );
+            let should_check_aborted = js.cx.config.abort_reinit
+                && matches!(
+                    instr,
+                    Instruction::CallExport(_) | Instruction::DeferFree { .. }
+                );
             let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
 
@@ -880,7 +881,7 @@ fn instruction(
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    if js.cx.config.abort_reinit && should_check_aborted {
+                    if should_check_aborted {
                         js.finally(&wrap_try_catch(call));
                     } else {
                         js.finally(&format!("{call};"));
@@ -888,14 +889,14 @@ fn instruction(
                 }
                 (true, _) => panic!("deferred calls must have no results"),
                 (false, 0) => {
-                    if js.cx.config.abort_reinit && should_check_aborted {
+                    if should_check_aborted {
                         js.prelude(&wrap_try_catch(call));
                     } else {
                         js.prelude(&format!("{call};"));
                     }
                 }
                 (false, n) => {
-                    if js.cx.config.abort_reinit && should_check_aborted {
+                    if should_check_aborted {
                         let call = format!("ret = {call}");
                         js.prelude(&format!(
                             "\
