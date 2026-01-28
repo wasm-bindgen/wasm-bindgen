@@ -158,7 +158,7 @@ fn strings() {
     assert_eq!(take_and_ret_string2("b"), "bb");
 }
 
-#[cfg(panic = "unwind")]
+#[cfg(feature = "panicking-tests")]
 #[wasm_bindgen_test]
 fn exceptions() {
     test_exception_propagates();
@@ -205,7 +205,7 @@ fn rust_keyword2() {
     assert_eq!(FOO.with(JsValue::as_f64), Some(3.0));
 }
 
-#[cfg(panic = "unwind")]
+#[cfg(feature = "panicking-tests")]
 #[wasm_bindgen_test]
 fn custom_type() {
     take_custom_type(CustomType(()));

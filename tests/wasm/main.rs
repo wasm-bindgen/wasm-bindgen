@@ -56,7 +56,7 @@ pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
-#[cfg(panic = "unwind")]
+#[cfg(feature = "panicking-tests")]
 pub mod should_panic;
 pub mod simple;
 pub mod slice;

@@ -35,6 +35,8 @@ strict-macro = ["wasm-bindgen-macro/strict-macro"]
 # INTERNAL ONLY: Enables gg-alloc as system allocator when using wasm-bindgen-test to check that large pointers
 # are handled correctly
 gg-alloc = ["wasm-bindgen-test/gg-alloc"]
+# INTERNAL ONLY: Enables intentionally panicking tests
+panicking-tests = []
 
 # Deprecated crate features
 msrv = []

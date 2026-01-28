@@ -109,10 +109,10 @@ impl ClassesStrings2 {
     }
 }
 
-#[cfg(panic = "unwind")]
+#[cfg(feature = "panicking-tests")]
 #[wasm_bindgen_test]
 fn exceptions() {
-    js_exceptions(cfg!(all(target_feature = "exception-handling")));
+    js_exceptions(cfg!(target_feature = "exception-handling",));
 }
 
 #[wasm_bindgen]
@@ -359,7 +359,7 @@ impl Readonly {
     }
 }
 
-#[cfg(panic = "unwind")]
+#[cfg(feature = "panicking-tests")]
 #[wasm_bindgen_test]
 fn double_consume() {
     js_double_consume();
