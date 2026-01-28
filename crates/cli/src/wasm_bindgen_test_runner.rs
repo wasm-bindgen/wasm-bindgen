@@ -347,7 +347,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         b.keep_lld_exports(true);
     }
     if std::env::var("WASM_BINDGEN_ABORT_REINIT").is_ok() {
-        b.reset_state_function(true).abort_reinit(true);
+        b.abort_reinit(true);
     }
 
     // The path of benchmark baseline.

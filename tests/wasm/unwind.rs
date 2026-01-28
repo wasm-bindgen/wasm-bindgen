@@ -2,6 +2,7 @@ use js_sys::{global, Array, Object, Promise, Reflect};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
+use wasm_bindgen_test::console_log;
 use wasm_bindgen_test::wasm_bindgen_test;
 
 // Array
@@ -58,7 +59,9 @@ async fn try_promise_all() {
             .unwrap();
     });
     set_timeout(&closure2);
+    console_log!("awaiting future");
     let result = future.await;
+    console_log!("future awaited");
     assert!(result.is_err());
     let err = result.err().unwrap();
     let msg = Reflect::get(&err, &"message".into()).unwrap();

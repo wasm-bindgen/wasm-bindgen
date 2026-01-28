@@ -2504,8 +2504,18 @@ impl<'a> Context<'a> {
         });
     }
 
+    fn get_set_aborted(&self, err_name: &str) -> String {
+        if self.has_intrinsic("PanicError") || true {
+            format!("if (!({err_name} instanceof PanicError) && !({err_name} instanceof WebAssembly.Exception))\n  __wbg_aborted = true;\n")
+        } else {
+            "__wbg_aborted = true;\n".into()
+        }
+    }
+
     fn expose_make_mut_closure(&mut self) {
         self.expose_closure_finalization();
+
+        let set_aborted = self.get_set_aborted("e");
 
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
@@ -2521,12 +2531,14 @@ impl<'a> Context<'a> {
                 ""
             };
             let catch_abort = if self.config.abort_reinit {
-                "catch (e) {
-                    __wbg_aborted = true;
+                format!(
+                    "catch (e) {{
+                    {set_aborted}
                     throw e;
-                } "
+                }} ",
+                )
             } else {
-                ""
+                "".to_string()
             };
             let safe_destructor = if self.config.abort_reinit {
                 "\
@@ -2536,6 +2548,7 @@ impl<'a> Context<'a> {
                     CLOSURE_DTORS.unregister(state);
                 } catch (e) {
                     __wbg_aborted = true;
+                    throw e;
                 } "
             } else {
                 "\
@@ -2596,6 +2609,7 @@ impl<'a> Context<'a> {
 
     fn expose_make_closure(&mut self) {
         self.expose_closure_finalization();
+        let set_aborted = self.get_set_aborted("e");
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
         // executing the destructor, however, we clear out the
@@ -2610,12 +2624,14 @@ impl<'a> Context<'a> {
                 ""
             };
             let catch_abort = if self.config.abort_reinit {
-                "catch (e) {
-                    __wbg_aborted = true;
+                format!(
+                    "catch (e) {{
+                    {set_aborted}
                     throw e;
-                } "
+                }} "
+                )
             } else {
-                ""
+                "".to_string()
             };
             let safe_destructor = if self.config.abort_reinit {
                 "\
@@ -2625,6 +2641,7 @@ impl<'a> Context<'a> {
                     CLOSURE_DTORS.unregister(state);
                 } catch (e) {
                     __wbg_aborted = true;
+                    throw e;
                 } "
             } else {
                 "\
@@ -2697,6 +2714,7 @@ impl<'a> Context<'a> {
                             }
                         } catch (e) {
                             __wbg_aborted = true
+                            throw e;
                         }
                     }"
                 } else if self.config.generate_reset_state {
