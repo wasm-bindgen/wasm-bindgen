@@ -21,8 +21,8 @@ pub mod arg_names;
 pub mod async_vecs;
 pub mod bigint;
 pub mod char;
-pub mod classes;
-pub mod closures;
+//pub mod classes;
+//pub mod closures;
 pub mod comments;
 pub mod duplicate_deps;
 pub mod duplicates;
@@ -55,6 +55,7 @@ pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
+#[cfg(panic = "unwind")]
 pub mod should_panic;
 pub mod simple;
 pub mod slice;

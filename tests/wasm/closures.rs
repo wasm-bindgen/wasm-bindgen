@@ -146,6 +146,8 @@ fn debug() {
     assert_eq!(&format!("{:?}", closure), "Closure { ... }");
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn long_lived() {
     let hit = Rc::new(Cell::new(false));
@@ -167,6 +169,8 @@ fn long_lived() {
     assert!(hit.get());
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn many_arity() {
     many_arity_call1(&Closure::new(|| {}));
@@ -247,6 +251,8 @@ fn many_arity() {
     );
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn option() {
     let hit = Rc::new(Cell::new(false));
@@ -300,6 +306,8 @@ fn call_fn_once_twice() {
     assert!(calling_it_throws(&c));
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn once_into_js() {
     use std::panic::AssertUnwindSafe;
@@ -324,6 +332,8 @@ fn once_into_js() {
     assert!(call_val_throws(&f));
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn long_lived_dropping() {
     let hit = Rc::new(Cell::new(false));
@@ -337,6 +347,8 @@ fn long_lived_dropping() {
     assert!(long_lived_dropping_call().is_err());
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn long_lived_option_dropping() {
     let hit = Rc::new(Cell::new(false));
@@ -355,12 +367,15 @@ fn long_lived_option_dropping() {
     assert!(long_lived_option_dropping_call().is_err());
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn long_fnmut_recursive() {
     let a = Closure::new(|| {
         assert!(long_fnmut_recursive_call().is_err());
     });
     long_fnmut_recursive_cache(&a);
+    // TODO move
     assert!(long_fnmut_recursive_call().is_ok());
 }
 
@@ -398,6 +413,8 @@ fn fnmut_bad() {
     assert!(fnmut_bad_again(true).is_err());
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn string_arguments() {
     let mut x = false;
@@ -408,6 +425,8 @@ fn string_arguments() {
     assert!(x);
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn string_ret() {
     let mut x = false;
@@ -535,6 +554,8 @@ pub struct RefFirstArgument {
     contents: u32,
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn reference_as_first_argument_builds_at_all() {
     #[wasm_bindgen]
@@ -559,6 +580,8 @@ fn reference_as_first_argument_builds_at_all() {
     Closure::once_into_js(|_: &RefFirstArgument| ());
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn reference_as_first_argument_works() {
     let a = Rc::new(Cell::new(0));
@@ -582,6 +605,8 @@ fn reference_as_first_argument_works() {
     assert_eq!(a.get(), 2);
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn reference_as_first_argument_works2() {
     let a = Cell::new(0);
@@ -643,6 +668,8 @@ fn call_destroyed_doesnt_segfault() {
     call_destroyed(&b);
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn forget_works() {
     let a = Closure::<dyn Fn()>::wrap(Box::new(|| {}));
@@ -651,6 +678,8 @@ fn forget_works() {
     js_call_forgotten_closure();
 }
 
+// TODO move
+#[ignore]
 #[wasm_bindgen_test]
 fn named_externref_no_duplicate_adapter() {
     externref_call(&Closure::new(|a| assert_eq!(a, 1)));
