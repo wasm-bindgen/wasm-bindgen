@@ -114,9 +114,9 @@ jobs:
           - name: "abort-reinit"
             run: WASM_BINDGEN_ABORT_REINIT=1 cargo test --target wasm32-unknown-unknown
           - name: "panic=unwind"
-            run: cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
+            run: RUSTFLAGS="-Cpanic=unwind" RUSTDOCFLAGS="-Cpanic=unwind" cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
           - name: "panic=unwind + abort-reinit"
-            run: WASM_BINDGEN_ABORT_REINIT=1 cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
+            run: RUSTFLAGS="-Cpanic=unwind" RUSTDOCFLAGS="-Cpanic=unwind" WASM_BINDGEN_ABORT_REINIT=1 cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:
