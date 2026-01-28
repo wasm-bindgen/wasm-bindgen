@@ -395,7 +395,6 @@ impl Context {
                 .formatter
                 .writeln(&format!("running {} {}", tests.len(), noun));
         }
-
         // Execute all our test functions through their Wasm shims (unclear how
         // to pass native function pointers around here). Each test will
         // execute one of the `execute_*` tests below which will push a
@@ -610,6 +609,14 @@ impl Future for ExecuteTests {
                 Some(test) => test,
                 None => break,
             };
+            // TODO: Find a better way to do this
+            // It is at this point that tests compiled with panic=abort and
+            // --abort-reinit will fail, if the underlying test panics. The last
+            // future to be checked will be the failing test. This is not always
+            // the last test shown to run in the actual test log. Running `cargo
+            // test -- --nocapture` will show these logs, otherwise they will
+            // be hidden by cargo.
+            console_log!("Scheduling test: {}", test.name);
             let result = match test.future.as_mut().poll(cx) {
                 Poll::Ready(result) => result,
                 Poll::Pending => {
