@@ -2504,8 +2504,18 @@ impl<'a> Context<'a> {
         });
     }
 
+    fn get_set_aborted(&self, err_name: &str) -> String {
+        if self.has_intrinsic("PanicError") || true {
+            format!("if (!({err_name} instanceof PanicError))\n  __wbg_aborted = true;\n")
+        } else {
+            "__wbg_aborted = true;\n".into()
+        }
+    }
+
     fn expose_make_mut_closure(&mut self) {
         self.expose_closure_finalization();
+
+        let set_aborted = self.get_set_aborted("e");
 
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
@@ -2513,17 +2523,56 @@ impl<'a> Context<'a> {
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let (state_init, instance_check) = if self.config.generate_reset_state {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
-                    "
-                    if (state.instance !== __wbg_instance_id) {
-                        throw new Error('Cannot invoke closure from previous WASM instance');
-                    }
-                    ",
+            let abort_check = if self.config.abort_reinit {
+                "if (__wbg_aborted) {
+                    __wbg_reset_state();
+                }\n"
+            } else {
+                ""
+            };
+            let catch_abort = if self.config.abort_reinit {
+                format!(
+                    "catch (e) {{
+                    {set_aborted}
+                    throw e;
+                }} ",
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                "".to_string()
+            };
+            let safe_destructor = if self.config.abort_reinit {
+                "\
+                try {
+                    state.dtor(state.a, state.b);
+                    state.a = 0;
+                    CLOSURE_DTORS.unregister(state);
+                } catch (e) {
+                    __wbg_aborted = true;
+                    throw e;
+                } "
+            } else {
+                "\
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                "
+            };
+            let (state_init, instance_check) = if self.config.generate_reset_state
+                || self.config.abort_reinit
+            {
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                    format!("{abort_check}
+                    if (state.instance !== __wbg_instance_id) {{
+                        throw new Error('Cannot invoke closure from previous WASM instance');
+                    }}
+                    "),
+                )
+            } else {
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
+                    "".into(),
+                )
             };
             format!(
                 "
@@ -2539,16 +2588,14 @@ impl<'a> Context<'a> {
                         state.a = 0;
                         try {{
                             return f(a, state.b, ...args);
-                        }} finally {{
+                        }} {catch_abort}finally {{
                             state.a = a;
                             real._wbg_cb_unref();
                         }}
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
+                            {safe_destructor}
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2562,23 +2609,63 @@ impl<'a> Context<'a> {
 
     fn expose_make_closure(&mut self) {
         self.expose_closure_finalization();
+        let set_aborted = self.get_set_aborted("e");
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let (state_init, instance_check) = if self.config.generate_reset_state {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
-                    "
-                    if (state.instance !== __wbg_instance_id) {
-                        throw new Error('Cannot invoke closure from previous WASM instance');
-                    }
-                    ",
+            let abort_check = if self.config.abort_reinit {
+                "if (__wbg_aborted) {
+                    __wbg_reset_state();
+                }\n"
+            } else {
+                ""
+            };
+            let catch_abort = if self.config.abort_reinit {
+                format!(
+                    "catch (e) {{
+                    {set_aborted}
+                    throw e;
+                }} "
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                "".to_string()
+            };
+            let safe_destructor = if self.config.abort_reinit {
+                "\
+                try {
+                    state.dtor(state.a, state.b);
+                    state.a = 0;
+                    CLOSURE_DTORS.unregister(state);
+                } catch (e) {
+                    __wbg_aborted = true;
+                    throw e;
+                } "
+            } else {
+                "\
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                "
+            };
+            let (state_init, instance_check) = if self.config.generate_reset_state
+                || self.config.abort_reinit
+            {
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                    format!("{abort_check}
+                    if (state.instance !== __wbg_instance_id) {{
+                        throw new Error('Cannot invoke closure from previous WASM instance');
+                    }}
+                    "),
+                )
+            } else {
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
+                    "".into(),
+                )
             };
             format!(
                 "
@@ -2592,15 +2679,13 @@ impl<'a> Context<'a> {
                         state.cnt++;
                         try {{
                             return f(state.a, state.b, ...args);
-                        }} finally {{
+                        }} {catch_abort} finally {{
                             real._wbg_cb_unref();
                         }}
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
+                            {safe_destructor}
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2620,13 +2705,25 @@ impl<'a> Context<'a> {
                     ? {{ register: () => {{}}, unregister: () => {{}} }}
                     : new FinalizationRegistry({});
                 ",
-                if self.config.generate_reset_state {
-                    "
-                    state => {{
-                        if (state.instance === __wbg_instance_id) {{
+                if self.config.abort_reinit {
+                    "\
+                    state => {
+                        try {
+                            if (__wbg_aborted === false && state.instance === __wbg_instance_id) {
+                                state.dtor(state.a, state.b);
+                            }
+                        } catch (e) {
+                            __wbg_aborted = true
+                            throw e;
+                        }
+                    }"
+                } else if self.config.generate_reset_state {
+                    "\
+                    state => {
+                        if (state.instance === __wbg_instance_id) {
                             state.dtor(state.a, state.b);
-                        }}
-                    }}
+                        }
+                    }
                     "
                 } else {
                     "state => state.dtor(state.a, state.b)"
@@ -2652,7 +2749,18 @@ impl<'a> Context<'a> {
 
         let mut reset_statements = Vec::new();
 
-        reset_statements.push("__wbg_instance_id++;".to_string());
+        if self.config.abort_reinit {
+            let store = self
+                .aux
+                .set_abort_flag
+                .ok_or_else(|| anyhow!("failed to find `__wbindgen_set_abort_flag` intrinsic"))?;
+            self.export_name_of(store);
+            self.global("let __wbg_aborted = false;");
+            reset_statements.push("wasm.__wbindgen_set_abort_flag(1);".to_string());
+            reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
+        } else {
+            reset_statements.push("__wbg_instance_id++;".to_string());
+        }
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
@@ -2731,10 +2839,9 @@ impl<'a> Context<'a> {
                 definition,
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
-                private: false,
+                private: !self.config.generate_reset_state,
             }),
         )?;
-
         Ok(())
     }
 
@@ -2982,7 +3089,7 @@ impl<'a> Context<'a> {
         self.export_destructor();
 
         // Generate reset state function last, to ensure it knows about all other state.
-        if self.config.generate_reset_state {
+        if self.config.generate_reset_state || self.config.abort_reinit {
             self.generate_reset_state()?;
         }
 

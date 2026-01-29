@@ -34,7 +34,7 @@ fn test_valid() {
     pass_struct_vec();
 }
 
-#[cfg(not(target_feature = "exception-handling"))]
+#[cfg(feature = "panicking-tests")]
 #[wasm_bindgen_test]
 fn test_invalid() {
     pass_invalid_struct_vec();

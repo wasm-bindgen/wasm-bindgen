@@ -25,6 +25,25 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
+/// This flag is set by the runtime to indicate a critical error has happened
+/// *somewhere*. If this flag is nonzero and we are not already panicking, we
+/// should start. This flag is checked at the FFI boundary.
+pub static ABORT_FLAG: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+
+/// Check if the abort flag is set and panic if so.
+/// This is called before every JS import to ensure we don't continue
+/// execution after a critical error has been signaled.
+#[inline]
+pub fn check_abort_flag() {
+    if ABORT_FLAG.load(core::sync::atomic::Ordering::Relaxed) != 0 {
+        // Once core::intrinsics:abort() is stabilized, use that here instead
+        #[cfg(target_arch = "wasm32")]
+        core::arch::wasm32::unreachable();
+        #[cfg(not(target_arch = "wasm32"))]
+        panic!("Abort flag set");
+    }
+}
+
 // Cast between arbitrary types supported by wasm-bindgen by going via JS.
 //
 // The implementation generates a no-op JS adapter that simply takes an argument
@@ -613,6 +632,13 @@ pub unsafe extern "C" fn __wbindgen_free(ptr: *mut u8, size: usize, align: usize
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 pub fn link_mem_intrinsics() {
     crate::link::link_intrinsics();
+}
+
+/// Exported function for JS to set the abort flag.
+/// When set to a non-zero value, any subsequent JS import call will panic.
+#[no_mangle]
+pub extern "C" fn __wbindgen_set_abort_flag(value: u32) {
+    ABORT_FLAG.store(value, core::sync::atomic::Ordering::Relaxed);
 }
 
 #[cfg_attr(target_feature = "atomics", thread_local)]

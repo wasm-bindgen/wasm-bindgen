@@ -21,6 +21,7 @@ pub mod arg_names;
 pub mod async_vecs;
 pub mod bigint;
 pub mod char;
+// TODO weirdness
 pub mod classes;
 pub mod closures;
 pub mod comments;
@@ -55,6 +56,7 @@ pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
+#[cfg(feature = "panicking-tests")]
 pub mod should_panic;
 pub mod simple;
 pub mod slice;

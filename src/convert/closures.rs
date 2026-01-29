@@ -57,6 +57,10 @@ macro_rules! closures {
             fn into_abi(self) -> WasmSlice {
                 unsafe {
                     let (a, b): (usize, usize) = mem::transmute(self);
+                    // TODO: Support panic unwind
+                    // if unwind_safe {
+                    //     b |= 0x80000000;
+                    // }
                     WasmSlice { ptr: a as u32, len: b as u32 }
                 }
             }
