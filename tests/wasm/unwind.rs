@@ -2,7 +2,6 @@ use js_sys::{global, Array, Object, Promise, Reflect};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
-use wasm_bindgen_test::console_log;
 use wasm_bindgen_test::wasm_bindgen_test;
 
 // Array
@@ -20,10 +19,18 @@ extern "C" {
 
     // Predicate throw or panic will panic, but be caught as Result::Err
     // Unless a WebAssembly.RuntimeError, in which case, abort propagates
+
+    // TODO: support &mut dyn FnMut as unwind safe (defaults as abort for now)
+    // this would involve macro rewriting it into:
+    // #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
+    // pub fn try_every_result<T: __rt::marker::MaybeUnwindSafe + nMut(JsValue, u32, Array) -> Result<bool, JsValue>>(
+    //     this: &ArrayUnwind,
+    //     predicate: &mut T,
+    // ) -> Result<bool, JsValue>;
     #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
     pub fn try_every_result(
         this: &ArrayUnwind,
-        predicate: &mut dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>,
+        predicate: &Closure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
     ) -> Result<bool, JsValue>;
 }
 
@@ -59,9 +66,7 @@ async fn try_promise_all() {
             .unwrap();
     });
     set_timeout(&closure2);
-    console_log!("awaiting future");
     let result = future.await;
-    console_log!("future awaited");
     assert!(result.is_err());
     let err = result.err().unwrap();
     let msg = Reflect::get(&err, &"message".into()).unwrap();
@@ -74,7 +79,7 @@ fn try_every() {
     Reflect::set(&global(), &"dropped".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food".into(), &JsValue::FALSE).unwrap();
     assert!(even
-        .try_every_result(&mut |_, _, _| {
+        .try_every_result(&Closure::new(|_, _, _| {
             struct Foo {}
             impl Drop for Foo {
                 fn drop(&mut self) {
@@ -92,7 +97,7 @@ fn try_every() {
             }
             foo.foo();
             Ok(true)
-        })
+        }))
         .is_err());
     assert!(!Reflect::get(&global(), &"food".into())
         .unwrap()
