@@ -2506,7 +2506,7 @@ impl<'a> Context<'a> {
 
     fn get_set_aborted(&self, err_name: &str) -> String {
         if self.has_intrinsic("PanicError") || true {
-            format!("if (!({err_name} instanceof PanicError) && !({err_name} instanceof WebAssembly.Exception))\n  __wbg_aborted = true;\n")
+            format!("if (!({err_name} instanceof PanicError))\n  __wbg_aborted = true;\n")
         } else {
             "__wbg_aborted = true;\n".into()
         }
