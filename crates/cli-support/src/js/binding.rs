@@ -852,7 +852,7 @@ fn instruction(
                 let catch_exception = if js.cx.has_intrinsic("panic_error") {
                     "\
                     catch(e) {
-                        if (!(e instanceof PanicError) && !(e instanceof WebAssembly.Exception)) {
+                        if (!(e instanceof PanicError)) {
                             __wbg_aborted = true;
                         }
                         throw e;
