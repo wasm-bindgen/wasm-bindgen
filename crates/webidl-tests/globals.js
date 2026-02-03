@@ -280,6 +280,10 @@ global.math_test = {
   add_one(val) {
     return val + 1;
   },
+
+  get PI() {
+    return Math.PI;
+  },
 };
 
 global.GetNoInterfaceObject = class {

@@ -8,6 +8,10 @@
 * Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
   [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
 
+* Added support for WebIDL namespace attributes in `wasm-bindgen-webidl`. This enables
+  APIs like the CSS Custom Highlight API which adds the `highlights` attribute to the `CSS` namespace.
+  [#4865](https://github.com/wasm-bindgen/wasm-bindgen/issues/4865)
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.

@@ -123,11 +123,17 @@ pub(crate) struct MixinData<'src> {
     pub(crate) stability: ApiStability,
 }
 
+pub(crate) struct AttributeNamespaceData<'src> {
+    pub(crate) definition: &'src weedle::namespace::AttributeNamespaceMember<'src>,
+    pub(crate) stability: ApiStability,
+}
+
 /// We need to collect namespace data during the first pass, to be used later.
 #[derive(Default)]
 pub(crate) struct NamespaceData<'src> {
     pub(crate) operations: BTreeMap<OperationId<'src>, OperationData<'src>>,
     pub(crate) consts: Vec<ConstNamespaceData<'src>>,
+    pub(crate) attributes: Vec<AttributeNamespaceData<'src>>,
     pub(crate) stability: ApiStability,
 }
 
@@ -1474,8 +1480,33 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)> for weedle::namespace::Nam
                 Ok(())
             }
             weedle::namespace::NamespaceMember::Operation(op) => op.first_pass(record, ctx),
-            _ => Ok(()),
+            weedle::namespace::NamespaceMember::Attribute(attr) => attr.first_pass(record, ctx),
         }
+    }
+}
+
+impl<'src> FirstPass<'src, (&'src str, ApiStability)>
+    for weedle::namespace::AttributeNamespaceMember<'src>
+{
+    fn first_pass(
+        &'src self,
+        record: &mut FirstPassRecord<'src>,
+        ctx: (&'src str, ApiStability),
+    ) -> Result<()> {
+        if util::is_chrome_only(&self.attributes) {
+            return Ok(());
+        }
+
+        record
+            .namespaces
+            .get_mut(ctx.0)
+            .unwrap()
+            .attributes
+            .push(AttributeNamespaceData {
+                definition: self,
+                stability: ctx.1,
+            });
+        Ok(())
     }
 }
 

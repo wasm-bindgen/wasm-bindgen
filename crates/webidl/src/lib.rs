@@ -20,7 +20,7 @@ use crate::first_pass::{CallbackInterfaceData, OperationData};
 use crate::first_pass::{FirstPass, FirstPassRecord, InterfaceData, OperationId};
 use crate::generator::{
     Const, Dictionary, DictionaryField, Enum, EnumVariant, Function, Interface, InterfaceAttribute,
-    InterfaceAttributeKind, InterfaceMethod, Namespace,
+    InterfaceAttributeKind, InterfaceMethod, Namespace, NamespaceAttribute, NamespaceAttributeKind,
 };
 use crate::idl_type::ToIdlType;
 use crate::traverse::TraverseType;
@@ -486,21 +486,27 @@ impl<'src> FirstPassRecord<'src> {
         let unstable = ns.stability.is_unstable();
 
         let mut consts = vec![];
+        let mut attributes = vec![];
         let mut functions = vec![];
 
         for member in ns.consts.iter() {
             self.append_ns_const(&mut consts, member.clone(), unstable);
         }
 
+        for member in ns.attributes.iter() {
+            self.append_ns_attribute(&mut attributes, member, unstable);
+        }
+
         for (id, data) in ns.operations.iter() {
             self.append_ns_operation(&mut functions, &js_name, id, data);
         }
 
-        if !consts.is_empty() || !functions.is_empty() {
+        if !consts.is_empty() || !attributes.is_empty() || !functions.is_empty() {
             Namespace {
                 name,
                 js_name,
                 consts,
+                attributes,
                 functions,
                 unstable,
             }
@@ -563,6 +569,37 @@ impl<'src> FirstPassRecord<'src> {
                 catch: x.catch,
                 variadic: x.variadic,
                 unstable: false,
+            });
+        }
+    }
+
+    fn append_ns_attribute(
+        &self,
+        attributes: &mut Vec<NamespaceAttribute>,
+        member: &first_pass::AttributeNamespaceData<'src>,
+        unstable: bool,
+    ) {
+        let definition = member.definition;
+        let catch = throws(&definition.attributes);
+        let unstable = unstable || member.stability.is_unstable();
+
+        let ty = definition
+            .type_
+            .to_idl_type(self)
+            .to_syn_type(TypePosition::Return, false)
+            .unwrap_or(None);
+
+        let js_name = definition.identifier.0.to_string();
+
+        // Generate getter - namespace attributes are always readonly per the WebIDL spec
+        if let Some(ty) = ty {
+            attributes.push(NamespaceAttribute {
+                js_name: js_name.clone(),
+                rust_name: snake_case_ident(&js_name),
+                ty,
+                catch: catch || getter_throws("", &js_name, &definition.attributes),
+                kind: NamespaceAttributeKind::Getter,
+                unstable,
             });
         }
     }
@@ -1039,5 +1076,87 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
                 Err(e.context("compiling WebIDL into wasm-bindgen bindings"))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_namespace_attribute() {
+        let webidl = r#"
+            interface Highlight {
+            };
+            
+            interface HighlightRegistry {
+            };
+            
+            namespace CSS {
+                readonly attribute HighlightRegistry highlights;
+            };
+        "#;
+
+        let options = Options { features: false };
+        let result = compile(webidl, "", options).unwrap();
+
+        // Check that the css namespace was generated
+        assert!(
+            result.contains_key("css"),
+            "Expected 'css' namespace to be generated"
+        );
+
+        // Check that the generated code contains the highlights getter
+        let css_code = &result["css"].code;
+        assert!(
+            css_code.contains("highlights"),
+            "Expected 'highlights' getter in generated code"
+        );
+        assert!(
+            css_code.contains("getter"),
+            "Expected getter attribute in generated code"
+        );
+        assert!(
+            css_code.contains("static_method_of"),
+            "Expected static_method_of in generated code"
+        );
+        // Check that a namespace type binding is created
+        assert!(
+            css_code.contains("JsNamespaceCss"),
+            "Expected JsNamespaceCss type binding in generated code"
+        );
+    }
+
+    #[test]
+    fn test_namespace_attribute_with_throws() {
+        let webidl = r#"
+            interface SomeType {
+            };
+            
+            namespace MyNamespace {
+                [Throws]
+                readonly attribute SomeType myAttribute;
+            };
+        "#;
+
+        let options = Options { features: false };
+        let result = compile(webidl, "", options).unwrap();
+
+        // Check that the namespace was generated
+        assert!(
+            result.contains_key("my_namespace"),
+            "Expected 'my_namespace' namespace to be generated"
+        );
+
+        // Check that the generated code contains the catch attribute for throws
+        let ns_code = &result["my_namespace"].code;
+        assert!(
+            ns_code.contains("my_attribute"),
+            "Expected 'my_attribute' getter in generated code"
+        );
+        assert!(
+            ns_code.contains("catch"),
+            "Expected catch attribute in generated code for [Throws]"
+        );
     }
 }
