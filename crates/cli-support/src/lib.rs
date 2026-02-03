@@ -369,12 +369,30 @@ impl Bindgen {
         if !self.keep_lld_exports {
             unexported_unused_lld_things(&mut module);
         }
+        // Quick fix for https://github.com/wasm-bindgen/wasm-bindgen/pull/4931
+        // which is likely a compiler bug
+        {
+            let exn_import = module.imports.iter().find_map(|impt| match impt.kind {
+                walrus::ImportKind::Tag(id)
+                    if impt.module == "env" && impt.name == "__cpp_exception" =>
+                {
+                    Some((impt, id))
+                }
+                _ => None,
+            });
+            if let Some((import, id)) = exn_import {
+                let original_import_id = import.id();
+                let tag = module.tags.get_mut(id);
+                tag.kind = walrus::TagKind::Local;
+                module.imports.delete(original_import_id);
+                module.exports.add("__cpp_exception", tag.id);
+            }
 
-        // We're making quite a few changes, list ourselves as a producer.
-        module
-            .producers
-            .add_processed_by("wasm-bindgen", &wasm_bindgen_shared::version());
-
+            // We're making quite a few changes, list ourselves as a producer.
+            module
+                .producers
+                .add_processed_by("wasm-bindgen", &wasm_bindgen_shared::version());
+        }
         // Parse and remove our custom section before executing descriptors.
         // That includes checking that the binary has the same schema version
         // as this version of the CLI, which is why we do it first - to make

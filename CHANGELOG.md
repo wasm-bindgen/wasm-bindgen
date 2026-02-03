@@ -5,12 +5,17 @@
 
 ### Added
 
+* Add Node.js `worker_threads` support for atomics builds. When targeting Node.js with atomics enabled, wasm-bindgen now generates `initSync({ module, memory, thread_stack_size })` and `__wbg_get_imports(memory)` functions that allow worker threads to initialize with a shared WebAssembly.Memory and pre-compiled module. Auto-initialization occurs only on the main thread for backwards compatibility.
+
 * Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
   [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
 
 * Added support for WebIDL namespace attributes in `wasm-bindgen-webidl`. This enables
   APIs like the CSS Custom Highlight API which adds the `highlights` attribute to the `CSS` namespace.
-  [#4865](https://github.com/wasm-bindgen/wasm-bindgen/issues/4865)
+  [#4930](https://github.com/wasm-bindgen/wasm-bindgen/issues/4930)
+
+* Added a panic message when a getter as more than one argument. 
+  [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
 
 ### Changed
 
