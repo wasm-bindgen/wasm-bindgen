@@ -17,6 +17,9 @@
   unstable APIs are enabled, per the CSSOM View spec draft.
   [#4935](https://github.com/wasm-bindgen/wasm-bindgen/pull/4935)
 
+* Added a panic message when a getter as more than one argument. 
+  [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.

@@ -3805,7 +3805,12 @@ if (require('worker_threads').isMainThread) {{
             AuxImport::StructuralGetter(field) => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
-                assert_eq!(args.len(), 1);
+                assert_eq!(
+                    args.len(),
+                    1,
+                    "The getter '{field}' as more than one args ({n})",
+                    n = args.len()
+                );
                 Ok(format!("{}{}", args[0], property_accessor(field)))
             }
 

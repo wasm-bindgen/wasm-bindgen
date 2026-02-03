@@ -35,7 +35,7 @@ test-wasm-bindgen *ARGS="":
     NODE_ARGS="--stack-trace-limit=100" RUST_BACKTRACE=1 WASM_BINDGEN_TEST_ONLY_NODE=1 WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo test --target wasm32-unknown-unknown {{ARGS}}
 
 test-wasm-bindgen-unwind *ARGS="":
-    RUSTFLAGS="-Cpanic=unwind" NODE_ARGS="--stack-trace-limit=100" RUST_BACKTRACE=1 WASM_BINDGEN_TEST_ONLY_NODE=1 WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo +nightly test --features std -Zbuild-std --target wasm32-unknown-unknown {{ARGS}}
+    RUSTFLAGS="-Cpanic=unwind" RUSTDOCFLAGS="-Cpanic=unwind" NODE_ARGS="--stack-trace-limit=100" RUST_BACKTRACE=1 WASM_BINDGEN_TEST_ONLY_NODE=1 WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo +nightly test --features std -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown {{ARGS}}
 
 test-wasm-bindgen-futures *ARGS="":
     NODE_ARGS="--stack-trace-limit=100" RUST_BACKTRACE=1 cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures {{ARGS}}
