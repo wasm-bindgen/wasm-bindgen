@@ -15,7 +15,7 @@
   coordinate attributes (`clientX`, `clientY`, `screenX`, `screenY`, `offsetX`,
   `offsetY`, `pageX`, `pageY`) which now return `f64` instead of `i32` when
   unstable APIs are enabled, per the CSSOM View spec draft.
-  [#4933](https://github.com/wasm-bindgen/wasm-bindgen/pull/4933)
+  [#4935](https://github.com/wasm-bindgen/wasm-bindgen/pull/4935)
 
 ### Changed
 
