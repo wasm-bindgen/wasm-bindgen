@@ -8,6 +8,11 @@
 * Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
   [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
 
+* Added non-standard `mode` option for `FileSystemFileHandle.createSyncAccessHandle()`.
+  Also improved WebIDL generator to track stability at the signature level, allowing
+  stable methods to have unstable overloads.
+  [#4907](https://github.com/wasm-bindgen/wasm-bindgen/issues/4907)
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.

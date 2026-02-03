@@ -181,6 +181,7 @@ pub(crate) struct Signature<'src> {
     pub(crate) args: Vec<Arg<'src>>,
     pub(crate) ret: weedle::types::ReturnType<'src>,
     pub(crate) attrs: &'src Option<ExtendedAttributeList<'src>>,
+    pub(crate) stability: ApiStability,
 }
 
 #[derive(Clone, Debug)]
@@ -402,11 +403,15 @@ fn first_pass_operation<'src, A: Into<Arg<'src>> + 'src>(
     for id in ids {
         let op = operations.entry(*id).or_default();
         op.is_static = is_static;
+        // Note: We still set operation-level stability for backwards compatibility,
+        // but per-signature stability takes precedence when determining if a
+        // generated method should be marked unstable.
         op.stability = stability;
         op.signatures.push(Signature {
             args: args.clone(),
             ret: ret.clone(),
             attrs,
+            stability,
         });
     }
 }
