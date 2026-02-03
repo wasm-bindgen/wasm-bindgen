@@ -162,3 +162,18 @@ exports.js_store_forgotten_closure = f => {
 exports.js_call_forgotten_closure = () => {
   FORGOTTEN_CLOSURE();
 };
+
+// Test for Closure::with - closure works during callback, throws after
+let CLOSURE_WITH_CACHE = null;
+
+exports.closure_with_call = f => {
+  f();
+};
+
+exports.closure_with_cache = f => {
+  CLOSURE_WITH_CACHE = f;
+};
+
+exports.closure_with_call_cached = () => {
+  CLOSURE_WITH_CACHE();
+};

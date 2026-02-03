@@ -1443,6 +1443,12 @@ impl TryToTokens for ast::ImportFunction {
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
             };
+        } else {
+            exceptional_ret = quote! {
+                if let Err(err) = #wasm_bindgen::__rt::take_last_exception() {
+                    #wasm_bindgen::__rt::js_panic(err);
+                }
+            };
         }
 
         let rust_name = &self.rust_name;
@@ -1878,7 +1884,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
                 #(#attrs)*
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C-unwind" fn #name() {
+                pub extern "C" fn #name() {
                     use #wasm_bindgen::describe::*;
                     // See definition of `link_mem_intrinsics` for what this is doing
                     #wasm_bindgen::__rt::link_mem_intrinsics();
@@ -1902,7 +1908,7 @@ fn extern_fn(
         #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
         #(#attrs)*
         #[link(wasm_import_module = "__wbindgen_placeholder__")]
-        extern "C" {
+        extern "C-unwind" {
             fn #import_name(#(#abi_arguments),*) -> #abi_ret;
         }
 

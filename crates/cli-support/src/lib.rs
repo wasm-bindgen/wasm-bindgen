@@ -348,7 +348,7 @@ impl Bindgen {
             bail!("exported symbol \"default\" not allowed for --target web")
         }
 
-        // Check that reset_state is only used with --target module
+        // Check that reset_state is only used with --target module, web, or node
         if self.generate_reset_state
             && !matches!(
                 self.mode,

@@ -174,9 +174,15 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
 
-            Descriptor::Closure(d) => {
-                self.outgoing_function(d.mutable, &d.function, Some(d.dtor_idx))?
-            }
+            Descriptor::Closure(d) => self.outgoing_function(
+                d.mutable,
+                &d.function,
+                if d.dtor_idx == 0 {
+                    None
+                } else {
+                    Some(d.dtor_idx)
+                },
+            )?,
         }
         Ok(())
     }

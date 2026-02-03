@@ -251,3 +251,18 @@ pub fn version() -> String {
     }
     v
 }
+
+pub fn escape_string(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' => result.push_str("\\\\"),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\'' => result.push_str("\\'"),
+            '"' => result.push_str("\\\""),
+            _ => result.push(c),
+        }
+    }
+    result
+}

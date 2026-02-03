@@ -271,7 +271,6 @@ where
     ///   `Closure::once` and `Closure::once_into_js`).
     ///
     /// * It must be `'static`, aka no stack references (use the `move`
-    ///   keyword).
     ///
     /// * It can have at most 7 arguments.
     ///
@@ -280,7 +279,7 @@ where
     ///   etc.)
     pub fn new<F>(t: F) -> Closure<T>
     where
-        F: MaybeUnwindSafe + IntoWasmClosure<T> + 'static,
+        F: IntoWasmClosure<T> + 'static,
     {
         Self::_wrap(Box::new(t).unsize(), true)
     }
@@ -327,6 +326,73 @@ where
         Self::_wrap(data.unsize(), true)
     }
 
+    /// Creates a `Closure` from borrowed data. Used internally by `with` and `with_aborting`.
+    ///
+    /// The closure stores a raw pointer to the borrowed data and is only valid
+    /// for as long as that data lives. When dropped, the closure is invalidated
+    /// on the JS side by setting `state.a = state.b = 0`.
+    fn from_borrowed<F>(t: &mut F, unwind_safe: bool) -> Closure<T>
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let t: &mut T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        Closure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: WasmSlice { ptr, len },
+                unwind_safe,
+                _marker: PhantomData::<T>,
+            }),
+            _marker: PhantomData::<Box<T>>,
+        }
+    }
+
+    /// Executes a callback with a borrowed closure, guaranteeing the closure
+    /// is dropped before the borrowed data's lifetime ends.
+    ///
+    /// Unlike `Closure::new`, this does not require the closure to be `'static`.
+    /// The closure is only valid for the duration of the callback.
+    ///
+    /// The callback receives a `&Closure<F::Static>` where the lifetime has been
+    /// erased to `'static`, allowing it to be passed directly to JS extern functions.
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut count = 0;
+    /// Closure::with(&mut || {
+    ///     count += 1;
+    /// }, |closure| {
+    ///     js_function_that_calls_closure(closure);
+    /// });
+    /// assert_eq!(count, 1);
+    /// ```
+    pub fn with<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let closure = Self::from_borrowed(t, true);
+        // SAFETY: T and F::Static have the same memory layout; only the lifetime
+        // in the type differs. The closure is dropped before this function returns,
+        // ensuring the borrowed data outlives the closure.
+        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
+        f(static_ref)
+        // closure is dropped here, before the borrowed data's lifetime ends
+    }
+
+    /// Like `with`, but creates a non-unwinding closure.
+    ///
+    /// Use this when you don't need panic catching across the JS boundary
+    /// or prefer abort-on-panic behavior.
+    pub fn with_aborting<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let closure = Self::from_borrowed(t, false);
+        // SAFETY: Same as `with` - T and F::Static have the same layout.
+        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
+        f(static_ref)
+    }
+
     /// A more direct version of `Closure::new` which creates a `Closure` from
     /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
     ///
@@ -347,10 +413,7 @@ where
     #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
     fn _wrap(data: Box<T>, unwind_safe: bool) -> Closure<T> {
         Self {
-            js: crate::__rt::wbg_cast(OwnedClosureUnwind {
-                closure: OwnedClosure(data),
-                unwind_safe,
-            }),
+            js: crate::__rt::wbg_cast(OwnedClosureUnwind { data, unwind_safe }),
             _marker: PhantomData,
         }
     }
@@ -539,8 +602,14 @@ struct OwnedClosure<T: ?Sized>(Box<T>);
 /// when panic=unwind to pass both the closure and the unwind_safe flag to JS.
 #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
 struct OwnedClosureUnwind<T: ?Sized> {
-    closure: OwnedClosure<T>,
+    data: Box<T>,
     unwind_safe: bool,
+}
+
+struct BorrowedClosure<T: ?Sized> {
+    data: WasmSlice,
+    unwind_safe: bool,
+    _marker: PhantomData<T>,
 }
 
 unsafe extern "C" fn destroy<T: ?Sized>(a: usize, mut b: usize) {
@@ -565,6 +634,19 @@ where
     }
 }
 
+impl<T> WasmDescribe for BorrowedClosure<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(CLOSURE);
+        inform(0);
+        inform(T::IS_MUT as u32);
+        T::describe();
+    }
+}
+
 impl<T> IntoWasmAbi for OwnedClosure<T>
 where
     T: WasmClosure + ?Sized,
@@ -578,6 +660,20 @@ where
             ptr: a as u32,
             len: b as u32,
         }
+    }
+}
+
+impl<T> IntoWasmAbi for BorrowedClosure<T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+    fn into_abi(self) -> WasmSlice {
+        let WasmSlice { ptr, mut len } = self.data;
+        if self.unwind_safe {
+            len |= 0x80000000;
+        }
+        WasmSlice { ptr, len }
     }
 }
 
@@ -602,8 +698,7 @@ where
 
     fn into_abi(self) -> WasmSlice {
         use core::mem::ManuallyDrop;
-        let (a, b): (usize, usize) =
-            unsafe { mem::transmute_copy(&ManuallyDrop::new(self.closure)) };
+        let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self.data)) };
         // Pack unwind_safe into most significant bit (bit 31) of vtable
         let b_with_flag = if self.unwind_safe {
             (b as u32) | 0x80000000
@@ -672,8 +767,11 @@ where
     T: ?Sized,
 {
     fn drop(&mut self) {
-        // Decrease refcount on the JS side, this will automatically free
-        // the Rust data if we're the last owner.
+        // Call _wbg_cb_unref to invalidate the closure on the JS side.
+        // For owned closures, this decreases the refcount and frees the Rust data
+        // when the count reaches zero.
+        // For borrowed closures, this sets state.a = state.b = 0 to prevent
+        // any further calls to the closure.
         self.js._wbg_cb_unref();
     }
 }
@@ -704,4 +802,17 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
     fn unsize(self: Box<Self>) -> Box<T> {
         self
     }
+}
+
+/// Trait for converting a mutable reference to a closure into a trait object reference.
+///
+/// This trait is not stable and it's not recommended to use this in bounds or
+/// implement yourself.
+#[doc(hidden)]
+pub trait UnsizeClosureRef<T: ?Sized> {
+    /// The `'static` version of `T`. For example, if `T` is `dyn FnMut() + 'a`,
+    /// then `Static` is `dyn FnMut()` (implicitly `'static`).
+    type Static: ?Sized + WasmClosure;
+
+    fn unsize_closure_ref(&mut self) -> &mut T;
 }

@@ -25,6 +25,14 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
+/// Wrapper implementation for JsValue errors, with atomics and std handling
+pub fn js_panic(err: JsValue) {
+    #[cfg(all(feature = "std", not(target_feature = "atomics")))]
+    ::std::panic::panic_any(err);
+    #[cfg(not(all(feature = "std", not(target_feature = "atomics"))))]
+    ::core::panic!("{:?}", err);
+}
+
 // Cast between arbitrary types supported by wasm-bindgen by going via JS.
 //
 // The implementation generates a no-op JS adapter that simply takes an argument
@@ -267,10 +275,18 @@ pub fn assert_not_null<T>(s: *mut T) {
     }
 }
 
+#[cfg(not(panic = "unwind"))]
 #[cold]
 #[inline(never)]
 fn throw_null() -> ! {
     super::throw_str("null pointer passed to rust");
+}
+
+#[cfg(panic = "unwind")]
+#[cold]
+#[inline(never)]
+fn throw_null() {
+    panic!("null pointer passed to rust");
 }
 
 /// A vendored version of `RefCell` from the standard library.
@@ -415,6 +431,15 @@ impl<T: ?Sized> Drop for RefMut<'_, T> {
     }
 }
 
+#[cfg(panic = "unwind")]
+fn borrow_fail() -> ! {
+    panic!(
+        "recursive use of an object detected which would lead to \
+		 unsafe aliasing in rust",
+    )
+}
+
+#[cfg(not(panic = "unwind"))]
 fn borrow_fail() -> ! {
     super::throw_str(
         "recursive use of an object detected which would lead to \
@@ -782,6 +807,12 @@ extern "C" {
 
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 pub fn panic_to_panic_error(val: std::boxed::Box<dyn Any + Send>) -> JsValue {
+    #[cfg(not(target_feature = "atomics"))]
+    {
+        if let Some(s) = val.downcast_ref::<JsValue>() {
+            return __wbindgen_panic_error(&s);
+        }
+    }
     let maybe_panic_msg: Option<&str> = if let Some(s) = val.downcast_ref::<&str>() {
         Some(s)
     } else if let Some(s) = val.downcast_ref::<std::string::String>() {

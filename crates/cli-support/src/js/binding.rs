@@ -139,11 +139,12 @@ impl<'a, 'b> Builder<'a, 'b> {
         ret_ty_override: &Option<String>,
         ret_desc: &Option<String>,
     ) -> Result<JsFunction, Error> {
-        if self
-            .cx
-            .aux
-            .imports_with_assert_no_shim
-            .contains(&adapter.id)
+        if !self.cx.unwind_enabled
+            && self
+                .cx
+                .aux
+                .imports_with_assert_no_shim
+                .contains(&adapter.id)
         {
             bail!("generating a shim for something asserted to have no shim");
         }
@@ -273,7 +274,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             js.pre_try + &js.prelude
         };
 
-        if self.catch {
+        if self.catch || js.cx.unwind_enabled {
             js.cx.expose_handle_error()?;
         }
 
@@ -1426,6 +1427,8 @@ fn instruction(
 
                 js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
             } else {
+                // Borrowed closure - no destructor, but we add _wbg_cb_unref
+                // to invalidate the closure after use
                 let i = js.tmp();
                 js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
                 let args = (0..*nargs)
@@ -1449,15 +1452,14 @@ fn instruction(
                     ));
                 } else {
                     js.prelude(&format!(
-                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                        "var cb{i} = ({args}) => {{ return {wrapper}(state{i}.a, state{i}.b, {args}); }};",
                     ));
                 }
 
-                // Make sure to null out our internal pointers when we return
-                // back to Rust to ensure that any lingering references to the
-                // closure will fail immediately due to null pointers passed in
-                // to Rust.
-                js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+                // Add _wbg_cb_unref to invalidate the borrowed closure
+                js.prelude(&format!(
+                    "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
+                ));
                 js.push(format!("cb{i}"));
             }
         }

@@ -155,6 +155,11 @@ pub struct JsValue {
     _marker: PhantomData<*mut u8>, // not at all threadsafe
 }
 
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl Send for JsValue {}
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl Sync for JsValue {}
+
 impl JsValue {
     /// The `null` JS value constant.
     pub const NULL: JsValue = JsValue::_new(__rt::JSIDX_NULL);
@@ -1248,6 +1253,7 @@ extern "C" {
     fn __wbindgen_memory() -> JsValue;
     fn __wbindgen_module() -> JsValue;
     fn __wbindgen_function_table() -> JsValue;
+    fn __wbindgen_exception_tag() -> JsValue;
 }
 
 // Intrinsics that have to use raw imports because they're matched by other
@@ -1688,6 +1694,20 @@ pub fn memory() -> JsValue {
 /// indirect function table used by Rust
 pub fn function_table() -> JsValue {
     __wbindgen_function_table()
+}
+
+/// Returns a handle to this Wasm instance's `WebAssembly.Tag` used for exception handling.
+///
+/// This is only available when the module is compiled with `-Cpanic=unwind` and uses
+/// the WebAssembly exception handling proposal. The returned tag can be used to catch
+/// or throw exceptions that are compatible with Rust's panic unwinding.
+///
+/// # Panics
+///
+/// This function will panic if called on a module that was not compiled with
+/// exception handling support.
+pub fn exception_tag() -> JsValue {
+    __wbindgen_exception_tag()
 }
 
 /// A wrapper type around slices and vectors for binding the `Uint8ClampedArray`

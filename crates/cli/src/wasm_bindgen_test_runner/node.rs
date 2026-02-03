@@ -33,11 +33,11 @@ global.__wbgtest_og_console_log = console.log;
 // override `console.log` and `console.error` etc... before we import tests to
 // ensure they're bound correctly in wasm. This'll allow us to intercept
 // all these calls and capture the output of tests
-wrap("debug");
-wrap("log");
-wrap("info");
-wrap("warn");
-wrap("error");
+// wrap("debug");
+// wrap("log");
+// wrap("info");
+// wrap("warn");
+// wrap("error");
 
 const cx = new wasm.WasmBindgenTestContext({is_bench});
 handlers.on_console_debug = wasm.__wbgtest_console_debug;

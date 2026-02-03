@@ -1,6 +1,8 @@
 use crate::descriptor::VectorKind;
 use crate::intrinsic::Intrinsic;
-use crate::transforms::{threads as threads_xform, unstart_start_function};
+use crate::transforms::{
+    has_local_exception_tags, threads as threads_xform, unstart_start_function,
+};
 use crate::wit::{
     Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
     AuxValue,
@@ -19,6 +21,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::{fmt, mem};
 use walrus::{FunctionId, ImportId, MemoryId, Module, TableId, ValType};
+use wasm_bindgen_shared::escape_string;
 use wasm_bindgen_shared::identifier::{is_valid_ident, to_valid_ident};
 
 mod binding;
@@ -96,6 +99,9 @@ pub struct Context<'a> {
 
     /// If threading is enabled.
     threads_enabled: bool,
+
+    /// If exception handling / unwinding is enabled.
+    unwind_enabled: bool,
 }
 
 /// Definition of a module export
@@ -202,6 +208,7 @@ impl<'a> Context<'a> {
             exports: Default::default(),
             config,
             threads_enabled: threads_xform::is_enabled(module),
+            unwind_enabled: has_local_exception_tags(module),
             module,
             npm_dependencies: Default::default(),
             wit,
@@ -598,7 +605,15 @@ impl<'a> Context<'a> {
                         if i > 0 {
                             imports.push_str(", ");
                         }
-                        imports.push_str(item);
+                        if is_valid_ident(item) {
+                            imports.push_str(item);
+                        } else {
+                            // Invalid identifiers should already have a valid rename
+                            assert!(rename.is_some());
+                            imports.push('\'');
+                            imports.push_str(&escape_string(item));
+                            imports.push('\'');
+                        }
                         if let Some(other) = rename {
                             imports.push_str(": ");
                             imports.push_str(other)
@@ -2697,6 +2712,11 @@ if (require('worker_threads').isMainThread) {{
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
+            let safe_destructor = "\
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                ";
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2704,10 +2724,13 @@ if (require('worker_threads').isMainThread) {{
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
-                    ",
+                    ".to_string(),
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
+                    "".into(),
+                )
             };
             format!(
                 "
@@ -2728,14 +2751,16 @@ if (require('worker_threads').isMainThread) {{
                             real._wbg_cb_unref();
                         }}
                     }};
-                    real._wbg_cb_unref = () => {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
-                        }}
-                    }};
-                    CLOSURE_DTORS.register(real, state, state);
+                    if (dtor) {{
+                        real._wbg_cb_unref = () => {{
+                            if (--state.cnt === 0) {{
+                                {safe_destructor}
+                            }}
+                        }};
+                        CLOSURE_DTORS.register(real, state, state);
+                    }} else {{
+                        real._wbg_cb_unref = () => {{}};
+                    }}
                     return real;
                 }}
                 "
@@ -2746,12 +2771,18 @@ if (require('worker_threads').isMainThread) {{
 
     fn expose_make_closure(&mut self) {
         self.expose_closure_finalization();
+
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
+            let safe_destructor = "\
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                ";
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2759,10 +2790,13 @@ if (require('worker_threads').isMainThread) {{
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
-                    ",
+                    ".to_string(),
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                (
+                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
+                    "".into(),
+                )
             };
             format!(
                 "
@@ -2780,14 +2814,16 @@ if (require('worker_threads').isMainThread) {{
                             real._wbg_cb_unref();
                         }}
                     }};
-                    real._wbg_cb_unref = () => {{
-                        if (--state.cnt === 0) {{
-                            state.dtor(state.a, state.b);
-                            state.a = 0;
-                            CLOSURE_DTORS.unregister(state);
-                        }}
-                    }};
-                    CLOSURE_DTORS.register(real, state, state);
+                    if (dtor) {{
+                        real._wbg_cb_unref = () => {{
+                            if (--state.cnt === 0) {{
+                                {safe_destructor}
+                            }}
+                        }};
+                        CLOSURE_DTORS.register(real, state, state);
+                    }} else {{
+                        real._wbg_cb_unref = () => {{}};
+                    }}
                     return real;
                 }}
                 "
@@ -2805,12 +2841,12 @@ if (require('worker_threads').isMainThread) {{
                     : new FinalizationRegistry({});
                 ",
                 if self.config.generate_reset_state {
-                    "
-                    state => {{
-                        if (state.instance === __wbg_instance_id) {{
+                    "\
+                    state => {
+                        if (state.instance === __wbg_instance_id) {
                             state.dtor(state.a, state.b);
-                        }}
-                    }}
+                        }
+                    }
                     "
                 } else {
                     "state => state.dtor(state.a, state.b)"
@@ -2835,7 +2871,6 @@ if (require('worker_threads').isMainThread) {{
         self.global("let __wbg_instance_id = 0;");
 
         let mut reset_statements = Vec::new();
-
         reset_statements.push("__wbg_instance_id++;".to_string());
 
         for (num, kinds) in self.memories.values() {
@@ -2915,7 +2950,7 @@ if (require('worker_threads').isMainThread) {{
                 definition,
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
-                private: false,
+                private: !self.config.generate_reset_state,
             }),
         )?;
 

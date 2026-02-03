@@ -101,6 +101,7 @@ use core::pin::Pin;
 use core::task::{self, Poll};
 use js_sys::{Array, Function, Promise};
 pub use wasm_bindgen;
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 
@@ -610,6 +611,8 @@ impl Future for ExecuteTests {
                 Some(test) => test,
                 None => break,
             };
+            // Output test invocation log for debugging failures with --nocapture
+            console_log!("Invoking test: {}", test.name);
             let result = match test.future.as_mut().poll(cx) {
                 Poll::Ready(result) => result,
                 Poll::Pending => {
@@ -795,7 +798,7 @@ struct TestFuture<F> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(catch)]
-    fn __wbg_test_invoke(f: &mut dyn FnMut()) -> Result<(), JsValue>;
+    fn __wbg_test_invoke(f: &Closure<dyn FnMut()>) -> Result<(), JsValue>;
 }
 
 impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
@@ -809,10 +812,11 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
         let mut future_output = None;
         let result = CURRENT_OUTPUT.set(&output, || {
             let mut test = Some(test);
-            __wbg_test_invoke(&mut || {
+            let mut func = || {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
-            })
+            };
+            Closure::with(&mut func, |closure| __wbg_test_invoke(closure))
         });
         match (result, future_output) {
             (_, Some(Poll::Ready(result))) => Poll::Ready(result),
