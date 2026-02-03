@@ -8,6 +8,9 @@
 * Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
   [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
 
+* Added a panic message when a getter as more than one argument. 
+  [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.
