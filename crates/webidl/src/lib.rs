@@ -48,6 +48,29 @@ use weedle::dictionary::DictionaryMember;
 use weedle::interface::InterfaceMember;
 use weedle::Parse;
 
+/// Mark stable attributes that have unstable overrides with the same name.
+///
+/// When an unstable WebIDL defines an attribute with the same name as a stable
+/// attribute but with a different type (e.g., `double` instead of `long`), we
+/// need to generate both versions with appropriate `#[cfg]` guards:
+/// - Stable: `#[cfg(not(web_sys_unstable_apis))]`
+/// - Unstable: `#[cfg(web_sys_unstable_apis)]`
+fn mark_stable_attributes_with_unstable_overrides(attributes: &mut [InterfaceAttribute]) {
+    // Find attribute names that have both stable and unstable versions
+    let unstable_names: HashSet<String> = attributes
+        .iter()
+        .filter(|attr| attr.unstable)
+        .map(|attr| attr.js_name.clone())
+        .collect();
+
+    // Mark stable attributes that have an unstable counterpart
+    for attr in attributes.iter_mut() {
+        if !attr.unstable && unstable_names.contains(&attr.js_name) {
+            attr.has_unstable_override = true;
+        }
+    }
+}
+
 /// Options to configure the conversion process
 #[derive(Debug)]
 pub struct Options {
@@ -687,6 +710,11 @@ impl<'src> FirstPassRecord<'src> {
             }
         }
 
+        // Mark stable attributes that have unstable overrides with the same name.
+        // This allows unstable APIs to provide corrected type signatures (e.g.,
+        // changing `long` to `double` for MouseEvent.clientX).
+        mark_stable_attributes_with_unstable_overrides(&mut attributes);
+
         Interface {
             name,
             js_name,
@@ -747,6 +775,7 @@ impl<'src> FirstPassRecord<'src> {
                 deprecated: deprecated.clone(),
                 kind,
                 unstable,
+                has_unstable_override: false,
             });
         }
 
@@ -778,6 +807,7 @@ impl<'src> FirstPassRecord<'src> {
                         deprecated: Some(None),
                         kind: InterfaceAttributeKind::Setter,
                         unstable,
+                        has_unstable_override: false,
                     });
                 }
             }
@@ -807,6 +837,7 @@ impl<'src> FirstPassRecord<'src> {
                     deprecated: deprecated.clone(),
                     kind: InterfaceAttributeKind::Setter,
                     unstable,
+                    has_unstable_override: false,
                 });
             }
         }

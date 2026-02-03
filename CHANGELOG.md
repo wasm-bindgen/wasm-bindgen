@@ -10,6 +10,13 @@
 * Added the `web` and `node` targets to the `--experimental-reset-state-function` flag.
   [#4909](https://github.com/wasm-bindgen/wasm-bindgen/pull/4909)
 
+* Added support for unstable WebIDL to override stable attribute types, allowing
+  corrected type signatures behind `web_sys_unstable_apis`. Applied to `MouseEvent`
+  coordinate attributes (`clientX`, `clientY`, `screenX`, `screenY`, `offsetX`,
+  `offsetY`, `pageX`, `pageY`) which now return `f64` instead of `i32` when
+  unstable APIs are enabled, per the CSSOM View spec draft.
+  [#4933](https://github.com/wasm-bindgen/wasm-bindgen/pull/4933)
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.
