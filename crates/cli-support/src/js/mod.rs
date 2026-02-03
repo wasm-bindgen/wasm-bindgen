@@ -970,7 +970,7 @@ export const __wbg_memory: WebAssembly.Memory;
                 format!(
                     "if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {} !== 0)) {{
                         throw new Error('invalid stack size');
-                    }}\n",
+                    }}\n\n",
                     threads_xform::PAGE_SIZE,
                 )
             } else {
@@ -1016,6 +1016,7 @@ export const __wbg_memory: WebAssembly.Memory;
                 format!(
                     r#"
     if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {page_size} !== 0)) {{ throw new Error('invalid stack size'); }}
+
     wasm.__wbindgen_start(thread_stack_size);"#,
                     page_size = crate::transforms::threads::PAGE_SIZE,
                 )
@@ -1094,6 +1095,7 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
                 format!(
                     r#"
     if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % {page_size} !== 0)) {{ throw new Error('invalid stack size'); }}
+
     wasm.__wbindgen_start(thread_stack_size);"#,
                     page_size = crate::transforms::threads::PAGE_SIZE,
                 )
