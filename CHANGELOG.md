@@ -13,7 +13,7 @@
 * Added non-standard `mode` option for `FileSystemFileHandle.createSyncAccessHandle()`.
   Also improved WebIDL generator to track stability at the signature level, allowing
   stable methods to have unstable overloads.
-  [#4907](https://github.com/wasm-bindgen/wasm-bindgen/issues/4907)
+  [#4928](https://github.com/wasm-bindgen/wasm-bindgen/issues/4928)
 
 * Added a panic message when a getter as more than one argument. 
   [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
