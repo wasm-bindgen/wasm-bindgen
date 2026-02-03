@@ -1,0 +1,14 @@
+[package]
+edition = "2021"
+name = "nodejs-threads"
+publish = false
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = { path = "../../" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_feature, values("atomics"))'] }
