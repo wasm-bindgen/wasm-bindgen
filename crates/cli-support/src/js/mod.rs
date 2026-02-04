@@ -2934,6 +2934,12 @@ if (require('worker_threads').isMainThread) {{
         self.globals.push('\n');
     }
 
+    /// Gets the JS identifier for a class, which may be aliased if the original
+    /// name conflicts with a JS builtin (e.g., `Array` -> `Array2`).
+    pub fn require_class_identifier(&mut self, name: &str) -> String {
+        self.require_class(name).identifier.clone()
+    }
+
     fn require_class_wrap(&mut self, name: &str) -> String {
         let cls = self.require_class(name);
         cls.wrap_needed = true;
