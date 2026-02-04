@@ -514,3 +514,13 @@ global.TestPromises = class {
     return new Promise(r => r("abc"));
   }
 };
+
+global.SignatureStability = class {
+  process(options) {
+    if (options === undefined) {
+      return "stable";
+    } else {
+      return options.mode || "safe";
+    }
+  }
+};
