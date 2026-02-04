@@ -5,9 +5,15 @@ import { dirname, delimiter, join } from 'node:path';
 import { test as baseTest, ConsoleMessage } from '@playwright/test';
 import { globSync, existsSync } from 'node:fs';
 import { chdir, env } from 'node:process';
-import { exec as exec_ } from 'node:child_process';
+import { exec as exec_, spawn, ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createServer, Server } from 'node:http';
+import { readFile } from 'node:fs/promises';
 const exec = promisify(exec_);
+
+// Examples that need a real HTTP server (e.g., AudioWorklet which runs in a separate thread
+// and bypasses Playwright's route interception)
+const EXAMPLES_NEEDING_SERVER = ['wasm-audio-worklet'];
 
 chdir(__dirname);
 
@@ -78,18 +84,69 @@ if (!PREBUILT_EXAMPLES) {
   });
 }
 
+// Helper to create an HTTP server for examples that need it
+async function createHttpServer(distDir: string, port: number): Promise<Server> {
+  const mimeTypes: Record<string, string> = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.mjs': 'text/javascript',
+    '.wasm': 'application/wasm',
+    '.json': 'application/json',
+    '.css': 'text/css',
+  };
+
+  const server = createServer(async (req, res) => {
+    const url = new URL(req.url || '/', `http://localhost:${port}`);
+    const filePath = join(distDir, url.pathname === '/' ? 'index.html' : url.pathname);
+    
+    try {
+      const content = await readFile(filePath);
+      const ext = filePath.substring(filePath.lastIndexOf('.'));
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+      
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      });
+      res.end(content);
+    } catch {
+      res.writeHead(404);
+      res.end('Not found');
+    }
+  });
+
+  return new Promise((resolve) => {
+    server.listen(port, () => resolve(server));
+  });
+}
+
 for (const file of globSync('*/package.json')) {
   const dir = dirname(file);
 
-  test(dir, async ({ page }) => {
+  test(dir, async ({ page, baseURL }) => {
     if (!PREBUILT_EXAMPLES) {
       await exec('npm run build', { cwd: dir, env });
     }
 
     if (existsSync(`dist/${dir}/index.html`)) {
-      await page.goto(`${dir}/index.html`, {
-        waitUntil: 'networkidle'
-      });
+      // Some examples (like wasm-audio-worklet) need a real HTTP server because
+      // AudioWorklet runs in a separate thread and bypasses Playwright's route interception
+      if (EXAMPLES_NEEDING_SERVER.includes(dir)) {
+        const port = 9876 + Math.floor(Math.random() * 1000);
+        const server = await createHttpServer(join('dist', dir), port);
+        try {
+          await page.goto(`http://localhost:${port}/index.html`, {
+            waitUntil: 'networkidle'
+          });
+        } finally {
+          server.close();
+        }
+      } else {
+        await page.goto(`${dir}/index.html`, {
+          waitUntil: 'networkidle'
+        });
+      }
     } else {
       // If index.html doesn't exist, this is not a browser test (e.g. deno).
       // Run its own test command.

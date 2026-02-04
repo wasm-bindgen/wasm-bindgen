@@ -22,13 +22,10 @@ features = [
   "AudioWorklet",
   "AudioWorkletNode",
   "AudioWorkletNodeOptions",
-  "Blob",
-  "BlobPropertyBag",
   "Document",
   "Event",
   "HtmlInputElement",
   "HtmlLabelElement",
-  "Url",
   "Window",
 ]
 path = "../../crates/web-sys"

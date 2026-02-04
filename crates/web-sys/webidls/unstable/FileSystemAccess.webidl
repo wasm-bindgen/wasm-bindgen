@@ -68,3 +68,20 @@ partial interface Window {
 partial interface DataTransferItem {
     Promise<FileSystemHandle?> getAsFileSystemHandle();
 };
+
+// Non-standard extension for createSyncAccessHandle with options
+// https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/createSyncAccessHandle#mode
+enum FileSystemSyncAccessHandleMode {
+    "read-only",
+    "readwrite",
+    "readwrite-unsafe"
+};
+
+dictionary FileSystemSyncAccessHandleOptions {
+    FileSystemSyncAccessHandleMode mode = "readwrite";
+};
+
+[Exposed=DedicatedWorker, SecureContext]
+partial interface FileSystemFileHandle {
+    Promise<FileSystemSyncAccessHandle> createSyncAccessHandle(FileSystemSyncAccessHandleOptions options);
+};

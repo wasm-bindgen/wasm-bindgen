@@ -515,7 +515,11 @@ impl<'src> FirstPassRecord<'src> {
                     .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
             });
 
-            let unstable = unstable || data.stability.is_unstable() || has_unstable_args;
+            // Use the signature's stability rather than the operation's stability.
+            // This allows stable methods to have unstable overloads (e.g., when a
+            // partial interface in the unstable directory adds a new overload with
+            // unstable argument types to an existing stable method).
+            let unstable = unstable || signature.orig.stability.is_unstable() || has_unstable_args;
 
             if let Some(arguments) = arguments {
                 if let Ok(ret_ty) = ret_ty.to_syn_type(TypePosition::Return, false) {
