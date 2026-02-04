@@ -2840,6 +2840,20 @@ mod gen_FileSystemSyncAccessHandle;
 #[allow(unused_imports)]
 pub use gen_FileSystemSyncAccessHandle::*;
 
+#[cfg(feature = "FileSystemSyncAccessHandleMode")]
+#[allow(non_snake_case)]
+mod gen_FileSystemSyncAccessHandleMode;
+#[cfg(feature = "FileSystemSyncAccessHandleMode")]
+#[allow(unused_imports)]
+pub use gen_FileSystemSyncAccessHandleMode::*;
+
+#[cfg(feature = "FileSystemSyncAccessHandleOptions")]
+#[allow(non_snake_case)]
+mod gen_FileSystemSyncAccessHandleOptions;
+#[cfg(feature = "FileSystemSyncAccessHandleOptions")]
+#[allow(unused_imports)]
+pub use gen_FileSystemSyncAccessHandleOptions::*;
+
 #[cfg(feature = "FileSystemWritableFileStream")]
 #[allow(non_snake_case)]
 mod gen_FileSystemWritableFileStream;
