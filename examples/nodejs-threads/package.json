@@ -1,0 +1,11 @@
+{
+	"scripts": {
+		"prebuild": "cargo +nightly build -p nodejs-threads --target wasm32-unknown-unknown --release -Zbuild-std=std,panic_abort --config \"target.wasm32-unknown-unknown.rustflags='-Ctarget-feature=+atomics,+bulk-memory -Clink-args=--shared-memory -Clink-args=--max-memory=1073741824 -Clink-args=--import-memory -Clink-args=--export=__wasm_init_tls -Clink-args=--export=__tls_size -Clink-args=--export=__tls_align -Clink-args=--export=__tls_base'\"",
+		"build:cjs": "wasm-bindgen --target nodejs --out-dir ../dist/nodejs-threads ../../target/wasm32-unknown-unknown/release/nodejs_threads.wasm",
+		"build:esm": "wasm-bindgen --target experimental-nodejs-module --out-dir ../dist/nodejs-threads-esm ../../target/wasm32-unknown-unknown/release/nodejs_threads.wasm",
+		"build": "npm run build:cjs && npm run build:esm",
+		"test:cjs": "node test.js",
+		"test:esm": "node test-esm.mjs",
+		"test": "npm run test:cjs && npm run test:esm"
+	}
+}
