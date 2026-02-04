@@ -1326,6 +1326,9 @@ fn instruction(
             let val = js.pop();
             match constructor {
                 Some(name) if name == class => {
+                    // Get the JS identifier for the class, which may be aliased
+                    // if the name conflicts with a JS builtin (e.g., `Array` -> `Array2`)
+                    let identifier = js.cx.require_class_identifier(class);
                     let (ptr_assignment, register_data) = if js.cx.config.generate_reset_state {
                         (
                             format!(
@@ -1346,7 +1349,7 @@ fn instruction(
                     js.prelude(&format!(
                         "
                         {ptr_assignment}
-                        {name}Finalization.register(this, {register_data}, this);
+                        {identifier}Finalization.register(this, {register_data}, this);
                         "
                     ));
                     js.push(String::from("this"));
