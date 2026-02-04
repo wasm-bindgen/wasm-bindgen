@@ -1,35 +1,44 @@
-class _default {
+class Array2 {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        _defaultFinalization.unregister(this);
+        Array2Finalization.unregister(this);
         return ptr;
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_default_free(ptr, 0);
+        wasm.__wbg_array_free(ptr, 0);
     }
     /**
      * @returns {number}
      */
-    get_value() {
-        const ret = wasm.default_get_value(this.__wbg_ptr);
-        return ret;
+    get() {
+        const ret = wasm.array_get(this.__wbg_ptr);
+        return ret >>> 0;
     }
-    /**
-     * @param {number} value
-     */
-    constructor(value) {
-        const ret = wasm.default_new(value);
+    constructor() {
+        const ret = wasm.array_new();
         this.__wbg_ptr = ret >>> 0;
-        _defaultFinalization.register(this, this.__wbg_ptr, this);
+        Array2Finalization.register(this, this.__wbg_ptr, this);
         return this;
     }
 }
-if (Symbol.dispose) _default.prototype[Symbol.dispose] = _default.prototype.free;
-export { _default as default }
+if (Symbol.dispose) Array2.prototype[Symbol.dispose] = Array2.prototype.free;
+export { Array2 as Array }
+
+/**
+ * @returns {any}
+ */
+export function use_js_array() {
+    const ret = wasm.use_js_array();
+    return ret;
+}
 export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_new_843f65aabd37d2db() {
+    const ret = new Array();
+    return ret;
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
@@ -40,9 +49,9 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-const _defaultFinalization = (typeof FinalizationRegistry === 'undefined')
+const Array2Finalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_default_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_array_free(ptr >>> 0, 1));
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;

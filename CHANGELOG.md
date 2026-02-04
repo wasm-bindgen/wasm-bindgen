@@ -33,6 +33,10 @@
 
 ### Fixed
 
+* Fixed `ReferenceError` when using Rust struct names that conflict with JS builtins (e.g., `Array`).
+  The constructor now correctly uses the aliased `FinalizationRegistry` identifier.
+  [#4932](https://github.com/wasm-bindgen/wasm-bindgen/pull/4932)
+
 ### Removed
 
 ## [0.2.108](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.107...0.2.108)
