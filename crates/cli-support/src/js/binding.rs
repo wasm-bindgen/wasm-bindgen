@@ -1464,8 +1464,9 @@ fn instruction(
                         js.finally(&format!("state{i}.a = state{i}.b = 0;"));
                     }
                     ClosureDtor::RustImmediate => {
-                        // Borrowed closure passed to Rust async import.
-                        // Add _wbg_cb_unref to invalidate the closure after use.
+                        // Borrowed closure from the Closure::with() body. Add
+                        // _wbg_cb_unref to invalidate the closure at the end of
+                        // the with() block.
                         js.prelude(&format!(
                             "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
                         ));
