@@ -271,6 +271,7 @@ where
     ///   `Closure::once` and `Closure::once_into_js`).
     ///
     /// * It must be `'static`, aka no stack references (use the `move`
+    ///   keyword).
     ///
     /// * It can have at most 7 arguments.
     ///
