@@ -8,7 +8,7 @@ use crate::descriptor::VectorKind;
 use crate::js::Context;
 use crate::wit::InstructionData;
 use crate::wit::{
-    Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, Instruction,
+    Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
 use anyhow::{bail, Error};
 use std::collections::HashSet;
@@ -1405,62 +1405,100 @@ fn instruction(
             adapter,
             nargs,
             mutable,
-            dtor_if_persistent,
+            dtor,
         } => {
             let b = js.pop();
             let a = js.pop();
             let wrapper = js.cx.export_adapter_name(*adapter);
 
-            // TODO: further merge the heap and stack closure handling as
-            // they're almost identical (by nature) except for ownership
-            // integration.
-            if let Some(dtor) = dtor_if_persistent {
-                let make_closure = if *mutable {
-                    js.cx.expose_make_mut_closure();
-                    "makeMutClosure"
-                } else {
-                    js.cx.expose_make_closure();
-                    "makeClosure"
-                };
+            match dtor {
+                ClosureDtor::Dtor(dtor_export) => {
+                    // Persistent/owned closure with destructor
+                    let make_closure = if *mutable {
+                        js.cx.expose_make_mut_closure();
+                        "makeMutClosure"
+                    } else {
+                        js.cx.expose_make_closure();
+                        "makeClosure"
+                    };
 
-                let dtor = &js.cx.module.exports.get(*dtor).name;
+                    let dtor = &js.cx.module.exports.get(*dtor_export).name;
 
-                js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
-            } else {
-                // Borrowed closure - no destructor, but we add _wbg_cb_unref
-                // to invalidate the closure after use
-                let i = js.tmp();
-                js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
-                let args = (0..*nargs)
-                    .map(|i| format!("arg{i}"))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                if *mutable {
-                    // Mutable closures need protection against being called
-                    // recursively, so ensure that we clear out one of the
-                    // internal pointers while it's being invoked.
-                    js.prelude(&format!(
-                        "var cb{i} = ({args}) => {{
-                            const a = state{i}.a;
-                            state{i}.a = 0;
-                            try {{
-                                return {wrapper}(a, state{i}.b, {args});
-                            }} finally {{
-                                state{i}.a = a;
-                            }}
-                        }};",
-                    ));
-                } else {
-                    js.prelude(&format!(
-                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
-                    ));
+                    js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
                 }
+                ClosureDtor::JsImmediate => {
+                    // Borrowed closure called from JS (e.g., forEach callback).
+                    // Pointers are nulled out when the JS call returns.
+                    let i = js.tmp();
+                    js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
+                    let args = (0..*nargs)
+                        .map(|i| format!("arg{i}"))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    if *mutable {
+                        // Mutable closures need protection against being called
+                        // recursively, so ensure that we clear out one of the
+                        // internal pointers while it's being invoked.
+                        js.prelude(&format!(
+                            "var cb{i} = ({args}) => {{
+                                const a = state{i}.a;
+                                state{i}.a = 0;
+                                try {{
+                                    return {wrapper}(a, state{i}.b, {args});
+                                }} finally {{
+                                    state{i}.a = a;
+                                }}
+                            }};",
+                        ));
+                    } else {
+                        js.prelude(&format!(
+                            "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                        ));
+                    }
 
-                // Add _wbg_cb_unref to invalidate the borrowed closure
-                js.prelude(&format!(
-                    "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
-                ));
-                js.push(format!("cb{i}"));
+                    // Make sure to null out our internal pointers when we return
+                    // back to Rust to ensure that any lingering references to the
+                    // closure will fail immediately due to null pointers passed in
+                    // to Rust.
+                    js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+                    js.push(format!("cb{i}"));
+                }
+                ClosureDtor::RustImmediate => {
+                    // Borrowed closure passed to Rust async import. The closure
+                    // has _wbg_cb_unref to invalidate it after use.
+                    let i = js.tmp();
+                    js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
+                    let args = (0..*nargs)
+                        .map(|i| format!("arg{i}"))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    if *mutable {
+                        // Mutable closures need protection against being called
+                        // recursively, so ensure that we clear out one of the
+                        // internal pointers while it's being invoked.
+                        js.prelude(&format!(
+                            "var cb{i} = ({args}) => {{
+                                const a = state{i}.a;
+                                state{i}.a = 0;
+                                try {{
+                                    return {wrapper}(a, state{i}.b, {args});
+                                }} finally {{
+                                    state{i}.a = a;
+                                }}
+                            }};",
+                        ));
+                    } else {
+                        js.prelude(&format!(
+                            "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                        ));
+                    }
+
+                    // Add _wbg_cb_unref to invalidate the borrowed closure
+                    js.prelude(&format!(
+                        "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
+                    ));
+                    js.push(format!("cb{i}"));
+                }
             }
         }
 

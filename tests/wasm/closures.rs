@@ -134,7 +134,6 @@ fn works() {
     assert_eq!(works_thread(&|a| a + 1), 3);
 }
 
-#[cfg(panic = "unwind")]
 #[wasm_bindgen_test]
 fn cannot_reuse() {
     cannot_reuse_call(&|| {});
@@ -383,7 +382,6 @@ fn fnmut() {
 }
 
 #[wasm_bindgen_test]
-#[should_panic]
 fn fnmut_bad() {
     let mut x = true;
     let mut hits = 0;

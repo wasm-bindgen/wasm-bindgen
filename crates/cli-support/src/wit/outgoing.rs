@@ -1,6 +1,6 @@
 use crate::descriptor::{Descriptor, Function};
 use crate::wasm_conventions::get_function_table_entry;
-use crate::wit::{AdapterType, Instruction, InstructionBuilder};
+use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, format_err, Error};
 use walrus::{ExportId, ValType};
@@ -174,15 +174,9 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
 
-            Descriptor::Closure(d) => self.outgoing_function(
-                d.mutable,
-                &d.function,
-                if d.dtor_idx == 0 {
-                    None
-                } else {
-                    Some(d.dtor_idx)
-                },
-            )?,
+            Descriptor::Closure(d) => {
+                self.outgoing_function(d.mutable, &d.function, Some(d.dtor_idx))?
+            }
         }
         Ok(())
     }
@@ -263,7 +257,7 @@ impl InstructionBuilder<'_, '_> {
         &mut self,
         mutable: bool,
         descriptor: &Function,
-        dtor_if_persistent: Option<u32>,
+        dtor_idx: Option<u32>,
     ) -> Result<(), Error> {
         let mut descriptor = descriptor.clone();
         // synthesize the a/b arguments that aren't present in the
@@ -272,7 +266,11 @@ impl InstructionBuilder<'_, '_> {
         descriptor.arguments.insert(0, Descriptor::I32);
         descriptor.arguments.insert(0, Descriptor::I32);
         let shim = self.export_table_element(descriptor.shim_idx);
-        let dtor_if_persistent = dtor_if_persistent.map(|i| self.export_table_element(i));
+        let dtor = match dtor_idx {
+            None => ClosureDtor::JsImmediate,
+            Some(0) => ClosureDtor::RustImmediate,
+            Some(idx) => ClosureDtor::Dtor(self.export_table_element(idx)),
+        };
         let adapter = self.cx.export_adapter(shim, descriptor)?;
         self.instruction(
             &[AdapterType::I32, AdapterType::I32],
@@ -280,7 +278,7 @@ impl InstructionBuilder<'_, '_> {
                 adapter,
                 nargs,
                 mutable,
-                dtor_if_persistent,
+                dtor,
             },
             &[AdapterType::Function],
         );
