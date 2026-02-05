@@ -35,22 +35,19 @@ export function __wbg_createTask_deeb88a68fc97c9d() { return handleError(functio
     return ret;
 }, arguments); }
 export function __wbg_new_b5d9e2fb389fef91(arg0, arg1) {
-    try {
-        var state0 = {a: arg0, b: arg1};
-        var cb0 = (arg0, arg1) => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1);
-            } finally {
-                state0.a = a;
-            }
-        };
-        const ret = new Promise(cb0);
-        return ret;
-    } finally {
-        state0.a = state0.b = 0;
-    }
+    var state0 = {a: arg0, b: arg1};
+    var cb0 = (arg0, arg1) => {
+        const a = state0.a;
+        state0.a = 0;
+        try {
+            return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1);
+        } finally {
+            state0.a = a;
+        }
+    };
+    cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
+    const ret = new Promise(cb0);
+    return ret;
 }
 export function __wbg_queueMicrotask_0aa0a927f78f5d98(arg0) {
     const ret = arg0.queueMicrotask;
@@ -64,22 +61,19 @@ export function __wbg_resolve_002c4b7d9d8f6b64(arg0) {
     return ret;
 }
 export function __wbg_run_bcde7ea43ea6ed7c(arg0, arg1, arg2) {
-    try {
-        var state0 = {a: arg1, b: arg2};
-        var cb0 = () => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
-            } finally {
-                state0.a = a;
-            }
-        };
-        const ret = arg0.run(cb0);
-        return ret;
-    } finally {
-        state0.a = state0.b = 0;
-    }
+    var state0 = {a: arg1, b: arg2};
+    var cb0 = () => {
+        const a = state0.a;
+        state0.a = 0;
+        try {
+            return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
+        } finally {
+            state0.a = a;
+        }
+    };
+    cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
+    const ret = arg0.run(cb0);
+    return ret;
 }
 export function __wbg_static_accessor_GLOBAL_12837167ad935116() {
     const ret = typeof global === 'undefined' ? null : global;
@@ -259,14 +253,18 @@ function makeMutClosure(arg0, arg1, dtor, f) {
             real._wbg_cb_unref();
         }
     };
-    real._wbg_cb_unref = () => {
-        if (--state.cnt === 0) {
-            state.dtor(state.a, state.b);
-            state.a = 0;
-            CLOSURE_DTORS.unregister(state);
-        }
-    };
-    CLOSURE_DTORS.register(real, state, state);
+    if (dtor) {
+        real._wbg_cb_unref = () => {
+            if (--state.cnt === 0) {
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);
+            }
+        };
+        CLOSURE_DTORS.register(real, state, state);
+    } else {
+        real._wbg_cb_unref = () => {};
+    }
     return real;
 }
 

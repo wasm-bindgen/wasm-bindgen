@@ -1452,7 +1452,7 @@ fn instruction(
                     ));
                 } else {
                     js.prelude(&format!(
-                        "var cb{i} = ({args}) => {{ return {wrapper}(state{i}.a, state{i}.b, {args}); }};",
+                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
                     ));
                 }
 

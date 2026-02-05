@@ -391,6 +391,7 @@ fn fnmut() {
 
 #[cfg(panicking_tests)]
 #[wasm_bindgen_test]
+#[should_panic]
 fn fnmut_bad() {
     let mut x = true;
     let mut hits = 0;

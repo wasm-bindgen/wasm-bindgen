@@ -2724,13 +2724,10 @@ if (require('worker_threads').isMainThread) {{
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
-                    ".to_string(),
+                    "
                 )
             } else {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
-                    "".into(),
-                )
+                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
             format!(
                 "
@@ -2790,13 +2787,10 @@ if (require('worker_threads').isMainThread) {{
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
-                    ".to_string(),
+                    "
                 )
             } else {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
-                    "".into(),
-                )
+                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
             format!(
                 "

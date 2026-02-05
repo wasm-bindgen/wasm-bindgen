@@ -226,18 +226,6 @@ impl<'a> Context<'a> {
             Descriptor::Boolean,
             AuxImport::Intrinsic(Intrinsic::ObjectIsUndefined),
         )?;
-        // self.add_aux_import_to_import_map(
-        //     "__wbindgen_rethrow",
-        //     vec![Descriptor::Externref],
-        //     Descriptor::Unit,
-        //     AuxImport::Intrinsic(Intrinsic::Rethrow),
-        // )?;
-        // self.add_aux_import_to_import_map(
-        //     "__wbindgen_panic_error",
-        //     vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
-        //     Descriptor::Externref,
-        //     AuxImport::Intrinsic(Intrinsic::PanicError),
-        // )?;
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }

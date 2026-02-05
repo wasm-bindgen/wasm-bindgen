@@ -816,7 +816,7 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
             };
-            Closure::with(&mut func, |closure| __wbg_test_invoke(closure))
+            Closure::with(&mut func, __wbg_test_invoke)
         });
         match (result, future_output) {
             (_, Some(Poll::Ready(result))) => Poll::Ready(result),

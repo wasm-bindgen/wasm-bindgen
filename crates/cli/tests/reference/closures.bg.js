@@ -22,21 +22,18 @@ export function __wbg__wbg_cb_unref_d9b87ff7982e3b21(arg0) {
     arg0._wbg_cb_unref();
 }
 export function __wbg_forEach_a2bfcdf179e573de(arg0, arg1, arg2) {
-    try {
-        var state0 = {a: arg1, b: arg2};
-        var cb0 = (arg0, arg1, arg2) => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1, arg2);
-            } finally {
-                state0.a = a;
-            }
-        };
-        arg0.forEach(cb0);
-    } finally {
-        state0.a = state0.b = 0;
-    }
+    var state0 = {a: arg1, b: arg2};
+    var cb0 = (arg0, arg1, arg2) => {
+        const a = state0.a;
+        state0.a = 0;
+        try {
+            return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1, arg2);
+        } finally {
+            state0.a = a;
+        }
+    };
+    cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
+    arg0.forEach(cb0);
 }
 export function __wbg_instanceof_Window_ed49b2db8df90359(arg0) {
     let result;
@@ -151,14 +148,18 @@ function makeMutClosure(arg0, arg1, dtor, f) {
             real._wbg_cb_unref();
         }
     };
-    real._wbg_cb_unref = () => {
-        if (--state.cnt === 0) {
-            state.dtor(state.a, state.b);
-            state.a = 0;
-            CLOSURE_DTORS.unregister(state);
-        }
-    };
-    CLOSURE_DTORS.register(real, state, state);
+    if (dtor) {
+        real._wbg_cb_unref = () => {
+            if (--state.cnt === 0) {
+                state.dtor(state.a, state.b);
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);
+            }
+        };
+        CLOSURE_DTORS.register(real, state, state);
+    } else {
+        real._wbg_cb_unref = () => {};
+    }
     return real;
 }
 

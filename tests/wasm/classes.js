@@ -2,38 +2,23 @@ const wasm = require('wasm-bindgen-test.js');
 const assert = require('assert');
 
 exports.js_simple = () => {
-    console.log('1');
-    debugger;
     const r = new wasm.ClassesSimple();
-    console.log('2');
     assert.strictEqual(r.add(0), 0);
-    console.log('3');
     assert.strictEqual(r.add(1), 1);
-    console.log('4');
     assert.strictEqual(r.add(1), 2);
-    console.log('5');
     r.add(2);
-    console.log('6');
     assert.strictEqual(r.consume(), 4);
-    console.log('AAA');
-    debugger;
-    try {
-        r.free();
-    } catch (e) {
-        console.log('ERROR', e);
-    }
-    // assert.throws(() => r.free(), /null pointer passed to rust/);
-    console.log('BBB');
+    assert.throws(() => r.free(), /null pointer passed to rust/);
 
-    // const r2 = wasm.ClassesSimple.with_contents(10);
-    // assert.strictEqual(r2.add(1), 11);
-    // assert.strictEqual(r2.add(2), 13);
-    // assert.strictEqual(r2.add(3), 16);
-    // r2.free();
+    const r2 = wasm.ClassesSimple.with_contents(10);
+    assert.strictEqual(r2.add(1), 11);
+    assert.strictEqual(r2.add(2), 13);
+    assert.strictEqual(r2.add(3), 16);
+    r2.free();
 
-    // const r3 = new wasm.ClassesSimple();
-    // assert.strictEqual(r3.add(42), 42);
-    // r3.free();
+    const r3 = new wasm.ClassesSimple();
+    assert.strictEqual(r3.add(42), 42);
+    r3.free();
 };
 
 exports.js_strings = () => {
