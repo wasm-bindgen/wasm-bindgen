@@ -1411,6 +1411,9 @@ fn instruction(
             let a = js.pop();
             let wrapper = js.cx.export_adapter_name(*adapter);
 
+            // TODO: further merge the heap and stack closure handling as
+            // they're almost identical (by nature) except for ownership
+            // integration.
             if let ClosureDtor::Dtor(dtor_export) = dtor {
                 // Persistent/owned closure with destructor
                 let make_closure = if *mutable {
