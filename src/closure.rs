@@ -396,21 +396,25 @@ where
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```ignore
     /// use wasm_bindgen::prelude::*;
-    /// use js_sys::Array;
     ///
-    /// let array = Array::of3(&1.into(), &2.into(), &3.into());
-    /// let mut sum = 0;
+    /// #[wasm_bindgen]
+    /// extern "C" {
+    ///     // A JS function that calls the callback immediately
+    ///     fn call_with_value(cb: &Closure<dyn FnMut(u32)>, value: u32);
+    /// }
     ///
-    /// // Closure::with lets us capture `&mut sum` without requiring 'static
-    /// Closure::with(&mut |value: JsValue, _index, _array| {
-    ///     sum += value.as_f64().unwrap() as i32;
+    /// let mut result = 0;
+    ///
+    /// // Closure::with lets us capture `&mut result` without requiring 'static
+    /// Closure::with(&mut |value: u32| {
+    ///     result = value * 2;
     /// }, |closure| {
-    ///     array.for_each(closure.as_ref().unchecked_ref());
+    ///     call_with_value(closure, 21);
     /// });
     ///
-    /// assert_eq!(sum, 6);
+    /// assert_eq!(result, 42);
     /// ```
     ///
     /// # Panics

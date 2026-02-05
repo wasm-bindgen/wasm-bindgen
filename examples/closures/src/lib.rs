@@ -99,21 +99,30 @@ fn setup_clock(window: &Window, document: &Document) -> Result<(), JsValue> {
 // - No heap allocation for the closure data
 // - Unwind safe (panics become JS exceptions)
 fn demonstrate_closure_with() {
-    // Example: Using Closure::with to sum array elements
+    #[wasm_bindgen(inline_js = r#"
+        export function callThreeTimes(cb) {
+            cb(1);
+            cb(2);
+            cb(3);
+        }
+    "#)]
+    extern "C" {
+        // This JS function calls the callback immediately, three times
+        fn callThreeTimes(cb: &Closure<dyn FnMut(u32)>);
+    }
+
+    // Example: Using Closure::with to sum values
     // The closure captures &mut sum without requiring 'static
-    let array = Array::of3(&1.into(), &2.into(), &3.into());
-    let mut sum = 0i32;
+    let mut sum = 0u32;
 
     Closure::with(
-        &mut |value: JsValue, _index: u32, _array: Array| {
-            if let Some(n) = value.as_f64() {
-                sum += n as i32;
-            }
+        &mut |value: u32| {
+            sum += value;
         },
         |closure| {
             // Pass the closure to JavaScript - it will be called synchronously
-            // for each element and then invalidated when `with` returns
-            array.for_each(closure.as_ref().unchecked_ref());
+            // and then invalidated when `with` returns
+            callThreeTimes(closure);
         },
     );
 

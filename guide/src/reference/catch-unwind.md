@@ -143,15 +143,17 @@ try {
 
 ```rust
 use wasm_bindgen::prelude::*;
-use js_sys::Array;
 
-let array = Array::of3(&1.into(), &2.into(), &3.into());
+#[wasm_bindgen]
+extern "C" {
+    fn call_callback(cb: &Closure<dyn FnMut()>);
+}
 
-Closure::with(&mut |_value: JsValue, _idx: u32, _arr: Array| {
-    panic!("panic in forEach!");
+Closure::with(&mut || {
+    panic!("panic in callback!");
 }, |closure| {
     // This panic will be caught and thrown as PanicError
-    array.for_each(closure.as_ref().unchecked_ref());
+    call_callback(closure);
 });
 ```
 

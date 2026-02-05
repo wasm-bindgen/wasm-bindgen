@@ -19,23 +19,27 @@ exceptions. See [Catching Panics](./catch-unwind.md) for details.
 
 Use `Closure::with` when JavaScript will call the closure immediately and not
 retain it. This is the recommended approach for synchronous callbacks like
-`Array.forEach`, `Array.map`, and similar APIs.
+array iteration, Promise executors, and similar APIs.
 
 ```rust
 use wasm_bindgen::prelude::*;
-use js_sys::Array;
 
-let array = Array::of3(&1.into(), &2.into(), &3.into());
-let mut sum = 0;
+#[wasm_bindgen]
+extern "C" {
+    // A JS function that calls the callback immediately with a value
+    fn call_with_value(cb: &Closure<dyn FnMut(u32)>, value: u32);
+}
 
-// Closure::with allows capturing &mut sum without 'static
-Closure::with(&mut |value: JsValue, _index, _array| {
-    sum += value.as_f64().unwrap() as i32;
+let mut result = 0;
+
+// Closure::with allows capturing &mut result without 'static
+Closure::with(&mut |value: u32| {
+    result = value * 2;
 }, |closure| {
-    array.for_each(closure.as_ref().unchecked_ref());
+    call_with_value(closure, 21);
 });
 
-assert_eq!(sum, 6);
+assert_eq!(result, 42);
 ```
 
 Benefits of `Closure::with`:
