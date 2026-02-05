@@ -1,6 +1,6 @@
 use js_sys::{global, Array, Object, Promise, Reflect};
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{throw_str, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::wasm_bindgen_test;
 
@@ -21,6 +21,11 @@ extern "C" {
     // Unless a WebAssembly.RuntimeError, in which case, abort propagates
     #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
     pub fn try_every_result(
+        this: &ArrayUnwind,
+        predicate: &mut dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
+    pub fn try_every_result_closure(
         this: &ArrayUnwind,
         predicate: &Closure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
     ) -> Result<bool, JsValue>;
@@ -85,7 +90,7 @@ fn try_every() {
     Reflect::set(&global(), &"dropped".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food".into(), &JsValue::FALSE).unwrap();
     assert!(even
-        .try_every_result(&Closure::new(|_, _, _| {
+        .try_every_result_closure(&Closure::new(|_, _, _| {
             struct Foo {}
             impl Drop for Foo {
                 fn drop(&mut self) {
@@ -153,7 +158,7 @@ fn try_every() {
 
 #[cfg(panic = "unwind")]
 #[wasm_bindgen_test]
-fn drop_throw_str() {
+fn drop_throw_str_aborting() {
     Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food_throw_str".into(), &JsValue::FALSE).unwrap();
     assert!(js_array![0]
@@ -177,6 +182,42 @@ fn drop_throw_str() {
             Ok(true)
         })
         .is_err());
+    assert!(!Reflect::get(&global(), &"food_throw_str".into())
+        .unwrap()
+        .as_bool()
+        .unwrap());
+    assert!(Reflect::get(&global(), &"dropped_throw_str".into())
+        .unwrap()
+        .as_bool()
+        .unwrap());
+}
+
+#[cfg(panic = "unwind")]
+#[wasm_bindgen_test]
+fn drop_throw_str() {
+    Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::FALSE).unwrap();
+    Reflect::set(&global(), &"food_throw_str".into(), &JsValue::FALSE).unwrap();
+    Closure::with(&mut |_, _, _| {
+        struct Foo {}
+        impl Drop for Foo {
+            fn drop(&mut self) {
+                Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::TRUE).unwrap();
+            }
+        }
+        impl Foo {
+            fn foo(&self) {
+                let _ = Reflect::set(&global(), &"food_throw_str".into(), &JsValue::TRUE);
+            }
+        }
+        let foo = Foo {};
+        if std::hint::black_box(true) {
+            throw_str("THROW_STR");
+        }
+        foo.foo();
+        Ok(true)
+    }, |closure| {
+        assert!(js_array![0].try_every_result_closure(&closure).is_err());
+    });
     assert!(!Reflect::get(&global(), &"food_throw_str".into())
         .unwrap()
         .as_bool()
