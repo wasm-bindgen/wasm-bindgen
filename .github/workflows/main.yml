@@ -105,14 +105,14 @@ jobs:
         runs:
           - name: default
             run: |
-              CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" cargo test --target wasm32-unknown-unknown
+              cargo test --target wasm32-unknown-unknown
               cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures
           - name: serde-serialize
-            run: CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" cargo test --target wasm32-unknown-unknown --features serde-serialize
+            run: cargo test --target wasm32-unknown-unknown --features serde-serialize
           - name: enable-interning
-            run: CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" cargo test --target wasm32-unknown-unknown --features enable-interning
+            run: cargo test --target wasm32-unknown-unknown --features enable-interning
           - name: "panic=unwind"
-            run: RUSTFLAGS="-Cpanic=unwind --cfg panicking_tests" RUSTDOCFLAGS="-Cpanic=unwind" cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
+            run: RUSTFLAGS="-Cpanic=unwind" RUSTDOCFLAGS="-Cpanic=unwind" cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:

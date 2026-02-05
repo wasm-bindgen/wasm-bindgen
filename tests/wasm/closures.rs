@@ -147,7 +147,6 @@ fn debug() {
     assert_eq!(&format!("{:?}", closure), "Closure { ... }");
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn long_lived() {
     let hit = Rc::new(Cell::new(false));
@@ -249,7 +248,6 @@ fn many_arity() {
     );
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn option() {
     let hit = Rc::new(Cell::new(false));
@@ -281,7 +279,6 @@ impl Drop for Dropper {
     }
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn call_fn_once_twice() {
     let dropped = Rc::new(Cell::new(false));
@@ -304,7 +301,6 @@ fn call_fn_once_twice() {
     assert!(calling_it_throws(&c));
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn once_into_js() {
     use std::panic::AssertUnwindSafe;
@@ -329,7 +325,6 @@ fn once_into_js() {
     assert!(call_val_throws(&f));
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn long_lived_dropping() {
     let hit = Rc::new(Cell::new(false));
@@ -343,7 +338,6 @@ fn long_lived_dropping() {
     assert!(long_lived_dropping_call().is_err());
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn long_lived_option_dropping() {
     let hit = Rc::new(Cell::new(false));
@@ -362,7 +356,6 @@ fn long_lived_option_dropping() {
     assert!(long_lived_option_dropping_call().is_err());
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn long_fnmut_recursive() {
     let a = Closure::new(|| {
@@ -389,7 +382,6 @@ fn fnmut() {
     assert!(x);
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 #[should_panic]
 fn fnmut_bad() {
@@ -545,7 +537,6 @@ pub struct RefFirstArgument {
     contents: u32,
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn reference_as_first_argument_builds_at_all() {
     #[wasm_bindgen]
@@ -612,7 +603,6 @@ fn reference_as_first_argument_works2() {
     assert_eq!(a.get(), 2);
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn call_destroyed_doesnt_segfault() {
     struct A(i32, i32);

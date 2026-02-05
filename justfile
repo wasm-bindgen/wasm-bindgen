@@ -32,7 +32,6 @@ test-ui-overwrite:
     TRYBUILD=overwrite cargo test -p wasm-bindgen-macro --test ui
 
 test-wasm-bindgen *ARGS="":
-    CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     WASM_BINDGEN_TEST_ONLY_NODE=1 \
@@ -40,7 +39,7 @@ test-wasm-bindgen *ARGS="":
     cargo test --target wasm32-unknown-unknown {{ARGS}}
 
 test-wasm-bindgen-unwind *ARGS="":
-    RUSTFLAGS="-Cpanic=unwind --cfg panicking_tests" \
+    RUSTFLAGS="-Cpanic=unwind" \
     RUSTDOCFLAGS="-Cpanic=unwind" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \

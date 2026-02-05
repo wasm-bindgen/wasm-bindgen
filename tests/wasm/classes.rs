@@ -109,7 +109,6 @@ impl ClassesStrings2 {
     }
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn exceptions() {
     js_exceptions(cfg!(target_feature = "exception-handling",));
@@ -359,7 +358,6 @@ impl Readonly {
     }
 }
 
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn double_consume() {
     js_double_consume();

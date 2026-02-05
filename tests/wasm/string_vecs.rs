@@ -23,7 +23,7 @@ fn test_valid() {
     pass_string_vec();
 }
 
-#[cfg(all(panicking_tests, not(panic = "unwind")))]
+#[cfg(not(panic = "unwind"))]
 #[wasm_bindgen_test]
 fn test_invalid() {
     pass_invalid_string_vec();

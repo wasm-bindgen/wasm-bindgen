@@ -55,7 +55,6 @@ pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
-#[cfg(panicking_tests)]
 pub mod should_panic;
 pub mod simple;
 pub mod slice;
