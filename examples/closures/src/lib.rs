@@ -7,8 +7,13 @@ fn run() -> Result<(), JsValue> {
     let window = web_sys::window().expect("should have a window in this context");
     let document = window.document().expect("window should have a document");
 
-    // One of the first interesting things we can do with closures is simply
-    // access stack data in Rust!
+    // Demonstrate Closure::with for immediate callbacks.
+    // This is the recommended way to pass closures to JS for synchronous use.
+    // The closure can capture local references and is automatically cleaned up.
+    demonstrate_closure_with();
+
+    // Note: js_sys::Array::for_each currently still uses the old `&mut dyn FnMut`
+    // pattern, which will be migrated to Closure in a future release.
     let array = Array::new();
     array.push(&"Hello".into());
     array.push(&1.into());
@@ -83,6 +88,36 @@ fn setup_clock(window: &Window, document: &Document) -> Result<(), JsValue> {
     a.forget();
 
     Ok(())
+}
+
+// Demonstrate Closure::with for immediate/synchronous callbacks.
+//
+// Use Closure::with when JavaScript will call the closure immediately and
+// won't retain it. Benefits:
+// - Can capture non-'static references (like &mut local_var)
+// - Automatic cleanup when the callback returns
+// - No heap allocation for the closure data
+// - Unwind safe (panics become JS exceptions)
+fn demonstrate_closure_with() {
+    // Example: Using Closure::with to sum array elements
+    // The closure captures &mut sum without requiring 'static
+    let array = Array::of3(&1.into(), &2.into(), &3.into());
+    let mut sum = 0i32;
+
+    Closure::with(
+        &mut |value: JsValue, _index: u32, _array: Array| {
+            if let Some(n) = value.as_f64() {
+                sum += n as i32;
+            }
+        },
+        |closure| {
+            // Pass the closure to JavaScript - it will be called synchronously
+            // for each element and then invalidated when `with` returns
+            array.for_each(closure.as_ref().unchecked_ref());
+        },
+    );
+
+    assert_eq!(sum, 6);
 }
 
 // We also want to count the number of times that our green square has been

@@ -250,18 +250,21 @@ function __wbg_get_imports() {
             console.error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_forEach_a2bfcdf179e573de: function(arg0, arg1, arg2) {
-            var state0 = {a: arg1, b: arg2};
-            var cb0 = (arg0, arg1, arg2) => {
-                const a = state0.a;
-                state0.a = 0;
-                try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, arg0, arg1, arg2);
-                } finally {
-                    state0.a = a;
-                }
-            };
-            cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
-            arg0.forEach(cb0);
+            try {
+                var state0 = {a: arg1, b: arg2};
+                var cb0 = (arg0, arg1, arg2) => {
+                    const a = state0.a;
+                    state0.a = 0;
+                    try {
+                        return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, arg0, arg1, arg2);
+                    } finally {
+                        state0.a = a;
+                    }
+                };
+                arg0.forEach(cb0);
+            } finally {
+                state0.a = state0.b = 0;
+            }
         },
         __wbg_getElementById_6fe6fa2cb1c02939: function(arg0, arg1, arg2) {
             const ret = arg0.getElementById(getStringFromWasm0(arg1, arg2));
@@ -286,19 +289,22 @@ function __wbg_get_imports() {
             return ret;
         },
         __wbg_new_b5d9e2fb389fef91: function(arg0, arg1) {
-            var state0 = {a: arg0, b: arg1};
-            var cb0 = (arg0, arg1) => {
-                const a = state0.a;
-                state0.a = 0;
-                try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000005(a, state0.b, arg0, arg1);
-                } finally {
-                    state0.a = a;
-                }
-            };
-            cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
-            const ret = new Promise(cb0);
-            return ret;
+            try {
+                var state0 = {a: arg0, b: arg1};
+                var cb0 = (arg0, arg1) => {
+                    const a = state0.a;
+                    state0.a = 0;
+                    try {
+                        return wasm_bindgen__convert__closures_____invoke__h0000000000000005(a, state0.b, arg0, arg1);
+                    } finally {
+                        state0.a = a;
+                    }
+                };
+                const ret = new Promise(cb0);
+                return ret;
+            } finally {
+                state0.a = state0.b = 0;
+            }
         },
         __wbg_new_f0796def86e99471: function() {
             const ret = new Error();
@@ -324,19 +330,22 @@ function __wbg_get_imports() {
             return ret;
         },
         __wbg_run_bcde7ea43ea6ed7c: function(arg0, arg1, arg2) {
-            var state0 = {a: arg1, b: arg2};
-            var cb0 = () => {
-                const a = state0.a;
-                state0.a = 0;
-                try {
-                    return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, );
-                } finally {
-                    state0.a = a;
-                }
-            };
-            cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
-            const ret = arg0.run(cb0);
-            return ret;
+            try {
+                var state0 = {a: arg1, b: arg2};
+                var cb0 = () => {
+                    const a = state0.a;
+                    state0.a = 0;
+                    try {
+                        return wasm_bindgen__convert__closures_____invoke__h0000000000000006(a, state0.b, );
+                    } finally {
+                        state0.a = a;
+                    }
+                };
+                const ret = arg0.run(cb0);
+                return ret;
+            } finally {
+                state0.a = state0.b = 0;
+            }
         },
         __wbg_self_cfdfc96e68c3e345: function(arg0) {
             const ret = arg0.self;

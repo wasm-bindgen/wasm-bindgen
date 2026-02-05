@@ -108,10 +108,10 @@ try {
 
 ## Closures
 
-Rust closures passed to JavaScript with `Closure::new`, `Closure::wrap`, and
-`Closure::once` also catch panics when built with `panic=unwind`. When a panic
-occurs inside a closure invoked from JavaScript, the panic is caught and thrown
-as a `PanicError` exception.
+All `Closure` variants catch panics when built with `panic=unwind`. This
+includes `Closure::new`, `Closure::wrap`, `Closure::once`, and `Closure::with`.
+When a panic occurs inside a closure invoked from JavaScript, the panic is
+caught and thrown as a `PanicError` exception.
 
 Like exported functions, catching panics in closures requires the closure to
 satisfy the `UnwindSafe` trait.
@@ -139,12 +139,32 @@ try {
 }
 ```
 
+`Closure::with` also catches panics for immediate callbacks:
+
+```rust
+use wasm_bindgen::prelude::*;
+use js_sys::Array;
+
+let array = Array::of3(&1.into(), &2.into(), &3.into());
+
+Closure::with(&mut |_value: JsValue, _idx: u32, _arr: Array| {
+    panic!("panic in forEach!");
+}, |closure| {
+    // This panic will be caught and thrown as PanicError
+    array.for_each(closure.as_ref().unchecked_ref());
+});
+```
+
 For closures that should not catch panics (and abort the program instead), use
-the `*_aborting` variants: `new_aborting`, `wrap_aborting`, `once_aborting`, and
-`once_into_js_aborting`. These do not require `UnwindSafe`.
+the `*_aborting` variants: `new_aborting`, `wrap_aborting`, `once_aborting`,
+`once_into_js_aborting`, and `with_aborting`. These do not require `UnwindSafe`.
+
+> **Note**: The deprecated `&dyn Fn` and `&mut dyn FnMut` patterns are **not**
+> unwind safe. Panics in these closures may corrupt program state. Use `Closure`
+> instead.
 
 See [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md) for
-more details on closure panic handling and the `UnwindSafe` requirement.
+more details on closure APIs and the `UnwindSafe` requirement.
 
 ## The PanicError Class
 

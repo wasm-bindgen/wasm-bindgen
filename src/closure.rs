@@ -1,8 +1,18 @@
-//! Support for long-lived closures in `wasm-bindgen`
+//! Support for closures in `wasm-bindgen`
 //!
-//! This module defines the `Closure` type which is used to pass "owned
-//! closures" from Rust to JS. Some more details can be found on the `Closure`
-//! type itself.
+//! This module defines the [`Closure`] type which is used to pass Rust closures
+//! to JavaScript. `Closure` is unwind safe: panics are caught and converted to
+//! JavaScript exceptions when built with `panic=unwind`.
+//!
+//! # Choosing a `Closure` API
+//!
+//! - [`Closure::with`] — For immediate/synchronous callbacks. Allows non-`'static`
+//!   captures and automatic cleanup.
+//! - [`Closure::new`] — For long-lived closures (event listeners, timers).
+//!   Requires `'static` and explicit lifetime management.
+//! - [`Closure::once`] / [`Closure::once_into_js`] — For one-shot callbacks.
+//!
+//! See the [`Closure`] type documentation for detailed examples.
 
 #![allow(clippy::fn_to_numeric_cast)]
 
@@ -348,25 +358,67 @@ where
         }
     }
 
-    /// Executes a callback with a borrowed closure, guaranteeing the closure
-    /// is dropped before the borrowed data's lifetime ends.
+    /// Executes a callback with a borrowed `Closure`, ideal for immediate use.
     ///
-    /// Unlike `Closure::new`, this does not require the closure to be `'static`.
-    /// The closure is only valid for the duration of the callback.
+    /// Use this when passing a closure to JavaScript that will be called
+    /// immediately (synchronously) and not retained. Unlike [`Closure::new`],
+    /// this does not require the closure to be `'static`, allowing you to
+    /// capture references to local variables.
     ///
-    /// The callback receives a `&Closure<F::Static>` where the lifetime has been
-    /// erased to `'static`, allowing it to be passed directly to JS extern functions.
+    /// # When to use `Closure::with`
+    ///
+    /// `Closure::with` is recommended when possible for immediate callbacks
+    /// because it:
+    ///
+    /// - Allows capturing non-`'static` references
+    /// - Automatically cleans up when the callback returns
+    /// - Avoids heap allocation for the closure data
+    ///
+    /// # Important: Closure lifetime
+    ///
+    /// The closure is **only valid during the callback `f`**. Once `with` returns,
+    /// the closure is invalidated on the JavaScript side. If JavaScript retains a
+    /// reference to the closure and attempts to call it later, it will throw an
+    /// error: "closure invoked recursively or after being dropped".
+    ///
+    /// This makes `Closure::with` ideal for APIs like `Array.forEach`,
+    /// `Array.map`, or any function that calls the callback synchronously and
+    /// does not store it. For event listeners, timers, or any API where
+    /// JavaScript retains the callback, use [`Closure::new`] instead.
+    ///
+    /// # Choosing a `Closure` API
+    ///
+    /// | Use case | Recommended API |
+    /// |----------|----------------|
+    /// | Immediate/synchronous callbacks | `Closure::with` |
+    /// | Event listeners, timers | [`Closure::new`] + store handle |
+    /// | One-shot callbacks (e.g., Promise) | [`Closure::once`] or [`Closure::once_into_js`] |
     ///
     /// # Example
-    /// ```ignore
-    /// let mut count = 0;
-    /// Closure::with(&mut || {
-    ///     count += 1;
+    ///
+    /// ```rust,no_run
+    /// use wasm_bindgen::prelude::*;
+    /// use js_sys::Array;
+    ///
+    /// let array = Array::of3(&1.into(), &2.into(), &3.into());
+    /// let mut sum = 0;
+    ///
+    /// // Closure::with lets us capture `&mut sum` without requiring 'static
+    /// Closure::with(&mut |value: JsValue, _index, _array| {
+    ///     sum += value.as_f64().unwrap() as i32;
     /// }, |closure| {
-    ///     js_function_that_calls_closure(closure);
+    ///     array.for_each(closure.as_ref().unchecked_ref());
     /// });
-    /// assert_eq!(count, 1);
+    ///
+    /// assert_eq!(sum, 6);
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// If the closure panics while being called from JavaScript, the panic is
+    /// caught and re-thrown as a JavaScript `PanicError` exception (when built
+    /// with `panic=unwind`). Use [`with_aborting`](Self::with_aborting) if you
+    /// prefer abort-on-panic behavior.
     pub fn with<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
     where
         F: UnsizeClosureRef<T> + ?Sized,

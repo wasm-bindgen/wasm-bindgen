@@ -197,27 +197,30 @@ fn drop_throw_str_aborting() {
 fn drop_throw_str() {
     Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food_throw_str".into(), &JsValue::FALSE).unwrap();
-    Closure::with(&mut |_, _, _| {
-        struct Foo {}
-        impl Drop for Foo {
-            fn drop(&mut self) {
-                Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::TRUE).unwrap();
+    Closure::with(
+        &mut |_, _, _| {
+            struct Foo {}
+            impl Drop for Foo {
+                fn drop(&mut self) {
+                    Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::TRUE).unwrap();
+                }
             }
-        }
-        impl Foo {
-            fn foo(&self) {
-                let _ = Reflect::set(&global(), &"food_throw_str".into(), &JsValue::TRUE);
+            impl Foo {
+                fn foo(&self) {
+                    let _ = Reflect::set(&global(), &"food_throw_str".into(), &JsValue::TRUE);
+                }
             }
-        }
-        let foo = Foo {};
-        if std::hint::black_box(true) {
-            throw_str("THROW_STR");
-        }
-        foo.foo();
-        Ok(true)
-    }, |closure| {
-        assert!(js_array![0].try_every_result_closure(&closure).is_err());
-    });
+            let foo = Foo {};
+            if std::hint::black_box(true) {
+                throw_str("THROW_STR");
+            }
+            foo.foo();
+            Ok(true)
+        },
+        |closure| {
+            assert!(js_array![0].try_every_result_closure(&closure).is_err());
+        },
+    );
     assert!(!Reflect::get(&global(), &"food_throw_str".into())
         .unwrap()
         .as_bool()

@@ -5,9 +5,27 @@
 [online]: https://wasm-bindgen.github.io/wasm-bindgen/exbuild/closures/
 [code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/closures
 
-One of the features of `#[wasm_bindgen]` is that you can pass closures defined
-in Rust off to JS. This can be a bit tricky at times, though, so the example
-here shows how to interact with some standard web APIs with closures.
+The `Closure` type allows passing Rust closures to JavaScript. This example
+demonstrates different `Closure` APIs for various use cases.
+
+## Choosing a `Closure` API
+
+- **`Closure::with`** — For immediate/synchronous callbacks where JavaScript
+  calls the closure right away and doesn't retain it. Allows capturing
+  non-`'static` references.
+
+- **`Closure::new`** — For long-lived closures like event handlers or timers.
+  The closure must be `'static` and you must manage its lifetime (store it
+  somewhere or call `forget()`).
+
+- **`Closure::once`** / **`Closure::once_into_js`** — For one-shot callbacks
+  that will only be called once.
+
+All `Closure` variants are unwind safe — panics are caught and converted to
+JavaScript exceptions when built with `panic=unwind`.
+
+See [Passing Rust Closures to JS](../reference/passing-rust-closures-to-js.md)
+for detailed documentation.
 
 ## `src/lib.rs`
 
