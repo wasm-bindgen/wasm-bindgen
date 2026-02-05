@@ -243,6 +243,10 @@ pub struct InterfaceAttribute {
     pub catch: bool,
     pub kind: InterfaceAttributeKind,
     pub unstable: bool,
+    /// True if this is a stable attribute that has an unstable override with
+    /// the same name but different type. When true, this attribute is gated
+    /// behind `#[cfg(not(web_sys_unstable_apis))]`.
+    pub has_unstable_override: bool,
 }
 
 impl InterfaceAttribute {
@@ -264,10 +268,24 @@ impl InterfaceAttribute {
             catch,
             kind,
             unstable,
+            has_unstable_override,
         } = self;
 
-        let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
+        // If this is a stable attribute that has an unstable override,
+        // gate it behind `not(web_sys_unstable_apis)` so it's excluded
+        // when the unstable version is enabled.
+        let unstable_attr = if *has_unstable_override {
+            Some(quote! {
+                #[cfg(not(web_sys_unstable_apis))]
+            })
+        } else {
+            maybe_unstable_attr(*unstable)
+        };
+        let unstable_docs = if *has_unstable_override {
+            None
+        } else {
+            maybe_unstable_docs(*unstable)
+        };
 
         let mdn_docs = mdn_doc(parent_js_name, Some(js_name));
 
