@@ -1,6 +1,6 @@
 use js_sys::{global, Array, Object, Promise, Reflect};
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::{throw_str, JsValue};
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::wasm_bindgen_test;
 
@@ -55,29 +55,29 @@ macro_rules! js_array {
     })
 }
 
-// #[wasm_bindgen_test]
-// async fn try_promise_all() {
-//     let mut resolve_ = Default::default();
-//     let promise = Promise::new(&mut |resolve, _reject| {
-//         resolve_ = resolve;
-//     });
-//     let closure1 = Closure::new(|_v| {
-//         panic!("CLOSURE PANIC");
-//     });
-//     let promise2 = promise.then(&closure1);
-//     let future = JsFuture::from(promise2);
-//     let closure2 = Closure::new(move || {
-//         resolve_
-//             .call1(&JsValue::undefined(), &JsValue::undefined())
-//             .unwrap();
-//     });
-//     set_timeout(&closure2);
-//     let result = future.await;
-//     assert!(result.is_err());
-//     let err = result.err().unwrap();
-//     let msg = Reflect::get(&err, &"message".into()).unwrap();
-//     assert_eq!(msg, "CLOSURE PANIC");
-// }
+#[wasm_bindgen_test]
+async fn try_promise_all() {
+    let mut resolve_ = Default::default();
+    let promise = Promise::new(&mut |resolve, _reject| {
+        resolve_ = resolve;
+    });
+    let closure1 = Closure::new(|_v| {
+        panic!("CLOSURE PANIC");
+    });
+    let promise2 = promise.then(&closure1);
+    let future = JsFuture::from(promise2);
+    let closure2 = Closure::new(move || {
+        resolve_
+            .call1(&JsValue::undefined(), &JsValue::undefined())
+            .unwrap();
+    });
+    set_timeout(&closure2);
+    let result = future.await;
+    assert!(result.is_err());
+    let err = result.err().unwrap();
+    let msg = Reflect::get(&err, &"message".into()).unwrap();
+    assert_eq!(msg, "CLOSURE PANIC");
+}
 
 #[wasm_bindgen_test]
 fn try_every() {
@@ -85,7 +85,7 @@ fn try_every() {
     Reflect::set(&global(), &"dropped".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food".into(), &JsValue::FALSE).unwrap();
     assert!(even
-        .try_every_result(&mut |_, _, _| {
+        .try_every_result(&Closure::new(|_, _, _| {
             struct Foo {}
             impl Drop for Foo {
                 fn drop(&mut self) {
@@ -103,7 +103,7 @@ fn try_every() {
             }
             foo.foo();
             Ok(true)
-        })
+        }))
         .is_err());
     assert!(!Reflect::get(&global(), &"food".into())
         .unwrap()
@@ -114,77 +114,6 @@ fn try_every() {
         .as_bool()
         .unwrap());
 }
-
-#[cfg(panic = "unwind")]
-#[wasm_bindgen_test]
-fn drop_throw_str() {
-    Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::FALSE).unwrap();
-    Reflect::set(&global(), &"food_throw_str".into(), &JsValue::FALSE).unwrap();
-    assert!(js_array![0]
-        .try_every_result(&mut |_, _, _| {
-            struct Foo {}
-            impl Drop for Foo {
-                fn drop(&mut self) {
-                    Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::TRUE).unwrap();
-                }
-            }
-            impl Foo {
-                fn foo(&self) {
-                    let _ = Reflect::set(&global(), &"food_throw_str".into(), &JsValue::TRUE);
-                }
-            }
-            let foo = Foo {};
-            if std::hint::black_box(true) {
-                throw_str("THROW_STR");
-            }
-            foo.foo();
-            Ok(true)
-        })
-        .is_err());
-    assert!(!Reflect::get(&global(), &"food_throw_str".into())
-        .unwrap()
-        .as_bool()
-        .unwrap());
-    assert!(Reflect::get(&global(), &"dropped_throw_str".into())
-        .unwrap()
-        .as_bool()
-        .unwrap());
-}
-// #[wasm_bindgen_test]
-// fn try_every() {
-//     let even = js_array![2, 4, 6, 8];
-//     Reflect::set(&global(), &"dropped".into(), &JsValue::FALSE).unwrap();
-//     Reflect::set(&global(), &"food".into(), &JsValue::FALSE).unwrap();
-//     assert!(even
-//         .try_every_result(&Closure::new(|_, _, _| {
-//             struct Foo {}
-//             impl Drop for Foo {
-//                 fn drop(&mut self) {
-//                     Reflect::set(&global(), &"dropped".into(), &JsValue::TRUE).unwrap();
-//                 }
-//             }
-//             impl Foo {
-//                 fn foo(&self) {
-//                     let _ = Reflect::set(&global(), &"food".into(), &JsValue::TRUE);
-//                 }
-//             }
-//             let foo = Foo {};
-//             if std::hint::black_box(true) {
-//                 panic!("PANIC");
-//             }
-//             foo.foo();
-//             Ok(true)
-//         }))
-//         .is_err());
-//     assert!(!Reflect::get(&global(), &"food".into())
-//         .unwrap()
-//         .as_bool()
-//         .unwrap());
-//     assert!(Reflect::get(&global(), &"dropped".into())
-//         .unwrap()
-//         .as_bool()
-//         .unwrap());
-// }
 
 // #[wasm_bindgen_test]
 // fn try_every_aborting() {

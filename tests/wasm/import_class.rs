@@ -174,28 +174,28 @@ fn rename_type() {
     assert_eq!(f.get(), 2);
 }
 
-// #[wasm_bindgen_test]
-// fn switch_methods() {
-//     assert!(!switch_methods_called());
-//     SwitchMethods::a();
-//     assert!(switch_methods_called());
+#[wasm_bindgen_test]
+fn switch_methods() {
+    assert!(!switch_methods_called());
+    SwitchMethods::a();
+    assert!(switch_methods_called());
 
-//     switch_methods_a();
+    switch_methods_a();
 
-//     assert!(!switch_methods_called());
-//     SwitchMethods::a();
-//     assert!(switch_methods_called());
+    assert!(!switch_methods_called());
+    SwitchMethods::a();
+    assert!(switch_methods_called());
 
-//     assert!(!switch_methods_called());
-//     SwitchMethods::new().b();
-//     assert!(switch_methods_called());
+    assert!(!switch_methods_called());
+    SwitchMethods::new().b();
+    assert!(switch_methods_called());
 
-//     switch_methods_b();
+    switch_methods_b();
 
-//     assert!(!switch_methods_called());
-//     SwitchMethods::new().b();
-//     assert!(!switch_methods_called());
-// }
+    assert!(!switch_methods_called());
+    SwitchMethods::new().b();
+    assert!(!switch_methods_called());
+}
 
 #[wasm_bindgen_test]
 fn properties() {
