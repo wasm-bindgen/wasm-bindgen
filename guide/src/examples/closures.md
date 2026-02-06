@@ -10,7 +10,7 @@ demonstrates different `Closure` APIs for various use cases.
 
 ## Choosing a `Closure` API
 
-- **`Closure::with`** — For immediate/synchronous callbacks where JavaScript
+- **`Closure::borrowed`** — For immediate/synchronous callbacks where JavaScript
   calls the closure right away and doesn't retain it. Allows capturing
   non-`'static` references.
 

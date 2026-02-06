@@ -202,15 +202,10 @@ fn many_arity() {
         assert_eq!((a, b), (1, 2));
     }));
     let s = String::new();
-    Closure::with(
-        move |a, b, c| {
-            drop(s);
-            assert_eq!((a, b, c), (1, 2, 3));
-        },
-        |c| {
-            many_arity_call_mut4(c);
-        },
-    );
+    many_arity_call_mut4(&Closure::once(move |a, b, c| {
+        drop(s);
+        assert_eq!((a, b, c), (1, 2, 3));
+    }));
     let s = String::new();
     many_arity_call_mut5(&Closure::once(move |a, b, c, d| {
         drop(s);
@@ -793,70 +788,66 @@ extern "C" {
     fn closure_with_call_cached_throws() -> bool;
 }
 
-/// Test that Closure::with works correctly during the callback body
+/// Test that Closure::borrowed_mut works correctly during the callback body
 #[wasm_bindgen_test]
 fn closure_with_works_during_body() {
     let called = Cell::new(false);
-    Closure::with(
-        &mut || {
+    {
+        let mut func = || {
             called.set(true);
-        },
-        |closure| {
-            closure_with_call(closure);
-        },
-    );
+        };
+        let closure = Closure::borrowed_mut(&mut func);
+        closure_with_call(closure.as_ref());
+    }
     assert!(called.get());
 }
 
-/// Test that Closure::with allows capturing non-'static references
+/// Test that Closure::borrowed_mut allows capturing non-'static references
 #[wasm_bindgen_test]
 fn closure_with_captures_non_static() {
     let mut value = 0u32;
-    Closure::with(
-        &mut || {
+    {
+        let mut func = || {
             value += 1;
-        },
-        |closure| {
-            closure_with_call(closure);
-            closure_with_call(closure);
-            closure_with_call(closure);
-        },
-    );
+        };
+        let closure = Closure::borrowed_mut(&mut func);
+        closure_with_call(closure.as_ref());
+        closure_with_call(closure.as_ref());
+        closure_with_call(closure.as_ref());
+    }
     assert_eq!(value, 3);
 }
 
-/// Test that using a Closure::with closure after the body returns throws an error
+/// Test that using a Closure::borrowed_mut closure after the borrow ends throws an error
 #[wasm_bindgen_test]
 fn closure_with_use_after_free_throws() {
-    // Cache the closure's JS function during the `with` body
-    Closure::with(
-        &mut || {
+    // Cache the closure's JS function during the borrowed scope
+    {
+        let mut func = || {
             // This closure body doesn't matter - we just want to cache the JS function
-        },
-        |closure| {
-            closure_with_cache(closure);
-        },
-    );
+        };
+        let closure = Closure::borrowed_mut(&mut func);
+        closure_with_cache(closure.as_ref());
+    }
 
-    // After `with` returns, the closure has been invalidated.
+    // After the borrow ends, the closure has been invalidated.
     // Calling it should throw an error.
     let result = closure_with_call_cached();
-    let _ = result.expect_err("calling closure after Closure::with should throw");
+    let _ = result.expect_err("calling closure after Closure::borrowed_mut should throw");
 }
 
-/// Test that a Closure::with closure throws when JS retains and calls it after invalidation
+/// Test that a Closure::borrowed_mut closure throws when JS retains and calls it after invalidation
 #[wasm_bindgen_test]
 fn closure_with_cached_throws_after_drop() {
     let mut sum = 0u32;
-    Closure::with(
-        &mut |value: u32| {
+    {
+        let mut func = |value: u32| {
             sum += value;
-        },
-        |closure| {
-            // JS will cache the closure AND call it 3 times during this callback
-            closure_with_call_and_cache(closure);
-        },
-    );
+        };
+        let closure = Closure::borrowed_mut(&mut func);
+        // JS will cache the closure AND call it 3 times during this callback
+        closure_with_call_and_cache(closure.as_ref());
+    }
     // Closure worked during the callback
     assert_eq!(sum, 6); // 1 + 2 + 3
 
@@ -864,6 +855,6 @@ fn closure_with_cached_throws_after_drop() {
     // and should get an exception.
     assert!(
         closure_with_call_cached_throws(),
-        "calling cached Closure::with closure after drop should throw"
+        "calling cached Closure::borrowed_mut closure after drop should throw"
     );
 }

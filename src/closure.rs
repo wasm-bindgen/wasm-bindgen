@@ -265,11 +265,20 @@ pub struct Closure<T: ?Sized> {
 }
 
 pub struct ClosureBorrow<'a, T: ?Sized> {
-    js: JsClosure,
-    _lt: &'a (),
-    // careful: must be Box<T> not just T because unsized PhantomData
-    // seems to have weird interaction with Pin<>
-    _marker: PhantomData<Box<T>>,
+    closure: Closure<T>,
+    _lifetime: &'a (),
+}
+
+impl<'a, T: ?Sized> AsRef<Closure<T>> for ClosureBorrow<'a, T> {
+    fn as_ref(&self) -> &Closure<T> {
+        &self.closure
+    }
+}
+
+impl<'a, T: ?Sized> AsMut<Closure<T>> for ClosureBorrow<'a, T> {
+    fn as_mut(&mut self) -> &mut Closure<T> {
+        &mut self.closure
+    }
 }
 
 fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
@@ -384,6 +393,92 @@ where
                 _marker: PhantomData::<T>,
             }),
             _marker: PhantomData::<Box<T>>,
+        }
+    }
+
+    /// Creates a borrowed `Closure` from an immutable reference to a `Fn` closure.
+    ///
+    /// Use this for closures that don't need mutable state. For `FnMut` closures,
+    /// use [`borrowed_mut`](Self::borrowed_mut) instead.
+    pub fn borrowed<'a, F>(t: &'a F) -> ClosureBorrow<'a, F::Static>
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let t: &T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ClosureBorrow {
+            closure: Closure {
+                js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                    data: WasmSlice { ptr, len },
+                    unwind_safe: true,
+                    _marker: PhantomData::<T>,
+                }),
+                _marker: PhantomData,
+            },
+            _lifetime: &(),
+        }
+    }
+
+    /// Creates a borrowed `Closure` from a mutable reference to a `FnMut` closure.
+    ///
+    /// This is the most common variant for borrowed closures since most closures
+    /// that mutate captured state need `FnMut`.
+    pub fn borrowed_mut<'a, F>(t: &'a mut F) -> ClosureBorrow<'a, F::Static>
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
+    {
+        let t: &mut T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ClosureBorrow {
+            closure: Closure {
+                js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                    data: WasmSlice { ptr, len },
+                    unwind_safe: true,
+                    _marker: PhantomData::<T>,
+                }),
+                _marker: PhantomData,
+            },
+            _lifetime: &(),
+        }
+    }
+
+    /// Like [`borrowed`](Self::borrowed), but creates a non-unwinding closure.
+    pub fn borrowed_aborting<'a, F>(t: &'a F) -> ClosureBorrow<'a, F::Static>
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let t: &T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ClosureBorrow {
+            closure: Closure {
+                js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                    data: WasmSlice { ptr, len },
+                    unwind_safe: false,
+                    _marker: PhantomData::<T>,
+                }),
+                _marker: PhantomData,
+            },
+            _lifetime: &(),
+        }
+    }
+
+    /// Like [`borrowed_mut`](Self::borrowed_mut), but creates a non-unwinding closure.
+    pub fn borrowed_mut_aborting<'a, F>(t: &'a mut F) -> ClosureBorrow<'a, F::Static>
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
+    {
+        let t: &mut T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ClosureBorrow {
+            closure: Closure {
+                js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                    data: WasmSlice { ptr, len },
+                    unwind_safe: false,
+                    _marker: PhantomData::<T>,
+                }),
+                _marker: PhantomData,
+            },
+            _lifetime: &(),
         }
     }
 

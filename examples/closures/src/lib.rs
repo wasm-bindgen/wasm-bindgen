@@ -7,10 +7,10 @@ fn run() -> Result<(), JsValue> {
     let window = web_sys::window().expect("should have a window in this context");
     let document = window.document().expect("window should have a document");
 
-    // Demonstrate Closure::with for immediate callbacks.
+    // Demonstrate Closure::borrowed for immediate callbacks.
     // This is the recommended way to pass closures to JS for synchronous use.
     // The closure can capture local references and is automatically cleaned up.
-    demonstrate_closure_with();
+    demonstrate_closure_borrowed();
 
     // Note: js_sys::Array::for_each currently still uses the old `&mut dyn FnMut`
     // pattern, which will be migrated to Closure in a future release.
@@ -90,15 +90,15 @@ fn setup_clock(window: &Window, document: &Document) -> Result<(), JsValue> {
     Ok(())
 }
 
-// Demonstrate Closure::with for immediate/synchronous callbacks.
+// Demonstrate Closure::borrowed for immediate/synchronous callbacks.
 //
-// Use Closure::with when JavaScript will call the closure immediately and
+// Use Closure::borrowed when JavaScript will call the closure immediately and
 // won't retain it. Benefits:
 // - Can capture non-'static references (like &mut local_var)
-// - Automatic cleanup when the callback returns
+// - Automatic cleanup when the borrow ends
 // - No heap allocation for the closure data
 // - Unwind safe (panics become JS exceptions)
-fn demonstrate_closure_with() {
+fn demonstrate_closure_borrowed() {
     #[wasm_bindgen(inline_js = r#"
         export function callThreeTimes(cb) {
             cb(1);
@@ -111,20 +111,19 @@ fn demonstrate_closure_with() {
         fn callThreeTimes(cb: &Closure<dyn FnMut(u32)>);
     }
 
-    // Example: Using Closure::with to sum values
+    // Example: Using Closure::borrowed_mut to sum values
     // The closure captures &mut sum without requiring 'static
     let mut sum = 0u32;
 
-    Closure::with(
-        &mut |value: u32| {
+    {
+        let mut func = |value: u32| {
             sum += value;
-        },
-        |closure| {
-            // Pass the closure to JavaScript - it will be called synchronously
-            // and then invalidated when `with` returns
-            callThreeTimes(closure);
-        },
-    );
+        };
+        let closure = Closure::borrowed_mut(&mut func);
+        // Pass the closure to JavaScript - it will be called synchronously
+        // and then invalidated when closure is dropped
+        callThreeTimes(closure.as_ref());
+    }
 
     assert_eq!(sum, 6);
 }

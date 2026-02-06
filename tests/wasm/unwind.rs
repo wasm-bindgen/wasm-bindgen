@@ -214,8 +214,8 @@ fn drop_throw_str_aborting() {
 fn drop_throw_str() {
     Reflect::set(&global(), &"dropped_throw_str".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food_throw_str".into(), &JsValue::FALSE).unwrap();
-    Closure::with(
-        &mut |_, _, _| {
+    {
+        let mut func = |_, _, _| {
             struct Foo {}
             impl Drop for Foo {
                 fn drop(&mut self) {
@@ -233,11 +233,10 @@ fn drop_throw_str() {
             }
             foo.foo();
             Ok(true)
-        },
-        |closure| {
-            assert!(js_array![0].try_every_result_closure(&closure).is_err());
-        },
-    );
+        };
+        let closure = Closure::borrowed_mut(&mut func);
+        assert!(js_array![0].try_every_result_closure(closure.as_ref()).is_err());
+    }
     assert!(!Reflect::get(&global(), &"food_throw_str".into())
         .unwrap()
         .as_bool()

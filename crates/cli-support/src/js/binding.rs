@@ -1468,9 +1468,9 @@ fn instruction(
                         js.finally(&format!("state{i}.a = state{i}.b = 0;"));
                     }
                     ClosureDtor::RustImmediate => {
-                        // Borrowed closure from the Closure::with() body. Add
+                        // Borrowed closure from the Closure::borrowed() body. Add
                         // _wbg_cb_unref to invalidate the closure at the end of
-                        // the with() block.
+                        // the borrowed() block.
                         js.prelude(&format!(
                             "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
                         ));

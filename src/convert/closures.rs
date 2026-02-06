@@ -153,11 +153,12 @@ macro_rules! closures {
         {
             fn unsize(self: Box<Self>) -> Box<dyn $Fn $FnArgs -> R> { self }
         }
+
     };);
 
-    // UnsizeClosureRef is only implemented for FnMut, not Fn.
+    // UnsizeClosureRef is only implemented for Fn, not FnMut.
+    // UnsizeClosureRefMut is implemented for FnMut.
     // Since Fn: FnMut, any Fn closure can be used as FnMut, so this covers all cases.
-    // This avoids ambiguity when a closure implements both Fn and FnMut.
     (@impl_unsize_closure_ref $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (
         impl<'a, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> UnsizeClosureRef<dyn Fn $FnArgs -> R + 'a> for T
         where

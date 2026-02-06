@@ -163,7 +163,7 @@ exports.js_call_forgotten_closure = () => {
   FORGOTTEN_CLOSURE();
 };
 
-// Test for Closure::with - closure works during callback, throws after
+// Test for Closure::borrowed - closure works during callback, throws after
 let CLOSURE_WITH_CACHE = null;
 
 exports.closure_with_call = f => {
@@ -178,7 +178,7 @@ exports.closure_with_call_cached = () => {
   CLOSURE_WITH_CACHE();
 };
 
-// Test that calling a Closure::with closure after it's been invalidated throws
+// Test that calling a Closure::borrowed closure after it's been invalidated throws
 let CLOSURE_WITH_ARG_CACHE = null;
 
 exports.closure_with_call_and_cache = f => {

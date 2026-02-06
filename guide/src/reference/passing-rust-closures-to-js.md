@@ -11,13 +11,13 @@ exceptions. See [Catching Panics](./catch-unwind.md) for details.
 
 | Use case | Recommended API |
 |----------|----------------|
-| Immediate/synchronous callbacks (forEach, map, etc.) | `Closure::with` |
+| Immediate/synchronous callbacks (forEach, map, etc.) | `Closure::borrowed` |
 | Event listeners, timers, retained callbacks | `Closure::new` |
 | One-shot callbacks (e.g., Promise handlers) | `Closure::once` or `Closure::once_into_js` |
 
-## Immediate Closures with `Closure::with`
+## Immediate Closures with `Closure::borrowed`
 
-Use `Closure::with` when JavaScript will call the closure immediately and not
+Use `Closure::borrowed` when JavaScript will call the closure immediately and not
 retain it. This is the recommended approach for synchronous callbacks like
 array iteration, Promise executors, and similar APIs.
 
@@ -32,25 +32,27 @@ extern "C" {
 
 let mut result = 0;
 
-// Closure::with allows capturing &mut result without 'static
-Closure::with(&mut |value: u32| {
-    result = value * 2;
-}, |closure| {
-    call_with_value(closure, 21);
-});
+// Closure::borrowed allows capturing &mut result without 'static
+{
+    let mut func = |value: u32| {
+        result = value * 2;
+    };
+    let closure = Closure::borrowed(&mut func);
+    call_with_value(closure.as_ref(), 21);
+}
 
 assert_eq!(result, 42);
 ```
 
-Benefits of `Closure::with`:
+Benefits of `Closure::borrowed`:
 
 - **Non-`'static` captures**: Unlike `Closure::new`, you can capture references
   to local variables
-- **Automatic cleanup**: The closure is invalidated when `with` returns
+- **Automatic cleanup**: The closure is invalidated when the `ClosureBorrow` is dropped
 - **No heap allocation**: The closure data lives on the stack
 
-**Important**: The closure is only valid during the callback. Once `with`
-returns, the JavaScript function is invalidated. If JavaScript retains the
+**Important**: The closure is only valid while the `ClosureBorrow` exists. Once it
+is dropped, the JavaScript function is invalidated. If JavaScript retains the
 closure and calls it later, it will throw: "closure invoked recursively or
 after being dropped".
 
@@ -156,7 +158,7 @@ Panics](./catch-unwind.md).
 
 ### UnwindSafe Requirement
 
-The default constructors (`new`, `wrap`, `once`, `with`) require that closures
+The default constructors (`new`, `wrap`, `once`, `borrowed`) require that closures
 be `UnwindSafe`. This is a marker trait that indicates a type is safe to use
 across panic boundaries.
 
@@ -171,7 +173,7 @@ The compiler error will indicate which captured type is problematic.
 **Fix 1: Use aborting variants**
 
 If you don't need panic catching, use the `*_aborting` variants (`new_aborting`,
-`wrap_aborting`, `once_aborting`, `once_into_js_aborting`, `with_aborting`)
+`wrap_aborting`, `once_aborting`, `once_into_js_aborting`, `borrowed_aborting`)
 which do not require `UnwindSafe`:
 
 ```rust
@@ -229,7 +231,7 @@ let closure: Closure<dyn FnMut()> = Closure::wrap(Box::new(|| {}));
 ## Deprecated: `&dyn Fn` and `&mut dyn FnMut`
 
 > **Warning**: This pattern is deprecated and should not be used in new code.
-> Use `Closure::with` instead for immediate callbacks.
+> Use `Closure::borrowed` instead for immediate callbacks.
 
 The `#[wasm_bindgen]` attribute also supports passing closures as `&dyn Fn` or
 `&mut dyn FnMut` trait object references. However, **this pattern is not unwind
@@ -245,10 +247,10 @@ extern "C" {
 }
 ```
 
-### Migrating to `Closure::with`
+### Migrating to `Closure::borrowed`
 
 Replace `&dyn Fn` / `&mut dyn FnMut` parameters with `&Closure<dyn Fn(...)>` and
-use `Closure::with`:
+use `Closure::borrowed`:
 
 ```rust
 // ❌ OLD: Not unwind safe
@@ -263,9 +265,11 @@ forEach(&mut |value| { /* ... */ });
 extern "C" {
     fn forEach(f: &Closure<dyn FnMut(JsValue)>);
 }
-Closure::with(&mut |value| { /* ... */ }, |closure| {
-    forEach(closure);
-});
+{
+    let mut func = |value| { /* ... */ };
+    let closure = Closure::borrowed(&mut func);
+    forEach(closure.as_ref());
+}
 ```
 
 Note that `js-sys` currently still uses the `&dyn Fn` pattern for its callback
