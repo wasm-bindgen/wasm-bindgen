@@ -13,9 +13,6 @@ export function test_function() {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
 }
-export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-}
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
