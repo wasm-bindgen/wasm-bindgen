@@ -196,7 +196,7 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
             getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
         },
-        __wbg___wbg_test_invoke_680852f7f6f377d1: function() { return handleError(function (arg0) {
+        __wbg___wbg_test_invoke_63ff9638ebf472cc: function() { return handleError(function (arg0) {
             __wbg_test_invoke(arg0);
         }, arguments); },
         __wbg___wbg_test_output_writeln_3002c52094d744d1: function(arg0) {
@@ -617,18 +617,14 @@ function makeMutClosure(arg0, arg1, dtor, f) {
             real._wbg_cb_unref();
         }
     };
-    if (dtor) {
-        real._wbg_cb_unref = () => {
-            if (--state.cnt === 0) {
-                state.dtor(state.a, state.b);
-                state.a = 0;
-                CLOSURE_DTORS.unregister(state);
-            }
-        };
-        CLOSURE_DTORS.register(real, state, state);
-    } else {
-        real._wbg_cb_unref = () => {};
-    }
+    real._wbg_cb_unref = () => {
+        if (--state.cnt === 0) {
+            state.dtor(state.a, state.b);
+            state.a = 0;
+            CLOSURE_DTORS.unregister(state);
+        }
+    };
+    CLOSURE_DTORS.register(real, state, state);
     return real;
 }
 

@@ -267,9 +267,9 @@ impl InstructionBuilder<'_, '_> {
         descriptor.arguments.insert(0, Descriptor::I32);
         let shim = self.export_table_element(descriptor.shim_idx);
         let dtor = match dtor_idx {
-            None => ClosureDtor::JsImmediate, // does this every happen? do we have tests?
-            Some(0) => ClosureDtor::RustImmediate, // ClosureBorrow
-            Some(idx) => ClosureDtor::Dtor(self.export_table_element(idx)),
+            None => ClosureDtor::RefLegacy,
+            Some(0) => ClosureDtor::RefClosure,
+            Some(idx) => ClosureDtor::OwnClosure(self.export_table_element(idx)),
         };
         let adapter = self.cx.export_adapter(shim, descriptor)?;
         self.instruction(

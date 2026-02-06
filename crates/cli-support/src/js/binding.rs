@@ -1414,7 +1414,7 @@ fn instruction(
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership
             // integration.
-            if let ClosureDtor::Dtor(dtor_export) = dtor {
+            if let ClosureDtor::OwnClosure(dtor_export) = dtor {
                 // Persistent/owned closure with destructor
                 let make_closure = if *mutable {
                     js.cx.expose_make_mut_closure();
@@ -1457,8 +1457,8 @@ fn instruction(
                 }
 
                 match dtor {
-                    ClosureDtor::Dtor(_) => unreachable!(),
-                    ClosureDtor::JsImmediate => {
+                    ClosureDtor::OwnClosure(_) => unreachable!(),
+                    ClosureDtor::RefLegacy => {
                         // Wrapper for a raw FnMut or Fn closure used as an
                         // argument to a JS function. Make sure to null out our
                         // internal pointers when we return back to Rust to
@@ -1467,7 +1467,7 @@ fn instruction(
                         // to Rust.
                         js.finally(&format!("state{i}.a = state{i}.b = 0;"));
                     }
-                    ClosureDtor::RustImmediate => {
+                    ClosureDtor::RefClosure => {
                         // Borrowed closure from the Closure::borrowed() body. Add
                         // _wbg_cb_unref to invalidate the closure at the end of
                         // the borrowed() block.

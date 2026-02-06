@@ -259,18 +259,14 @@ function makeMutClosure(arg0, arg1, dtor, f) {
             real._wbg_cb_unref();
         }
     };
-    if (dtor) {
-        real._wbg_cb_unref = () => {
-            if (--state.cnt === 0) {
-                state.dtor(state.a, state.b);
-                state.a = 0;
-                CLOSURE_DTORS.unregister(state);
-            }
-        };
-        CLOSURE_DTORS.register(real, state, state);
-    } else {
-        real._wbg_cb_unref = () => {};
-    }
+    real._wbg_cb_unref = () => {
+        if (--state.cnt === 0) {
+            state.dtor(state.a, state.b);
+            state.a = 0;
+            CLOSURE_DTORS.unregister(state);
+        }
+    };
+    CLOSURE_DTORS.register(real, state, state);
     return real;
 }
 
