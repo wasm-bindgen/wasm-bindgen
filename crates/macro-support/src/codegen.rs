@@ -1443,12 +1443,6 @@ impl TryToTokens for ast::ImportFunction {
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
             };
-        } else {
-            exceptional_ret = quote! {
-                if let Err(err) = #wasm_bindgen::__rt::take_last_exception() {
-                    #wasm_bindgen::__rt::js_panic(err);
-                }
-            };
         }
 
         let rust_name = &self.rust_name;

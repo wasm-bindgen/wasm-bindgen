@@ -274,7 +274,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             js.pre_try + &js.prelude
         };
 
-        if self.catch || js.cx.unwind_enabled {
+        if self.catch {
             js.cx.expose_handle_error()?;
         }
 
