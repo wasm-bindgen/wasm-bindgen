@@ -23,7 +23,9 @@ fn test_valid() {
     pass_string_vec();
 }
 
-#[cfg(not(panic = "unwind"))]
+// This test cannot be passed with abort-reinit enabled, because it
+// unconditionally causes an abort.
+#[cfg(all(panicking_tests, not(panic = "unwind")))]
 #[wasm_bindgen_test]
 fn test_invalid() {
     pass_invalid_string_vec();

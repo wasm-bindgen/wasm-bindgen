@@ -2,13 +2,28 @@ const wasm = require('wasm-bindgen-test.js');
 const assert = require('assert');
 
 exports.js_simple = () => {
+    console.log('1');
+    debugger;
     const r = new wasm.ClassesSimple();
+    console.log('2');
     assert.strictEqual(r.add(0), 0);
+    console.log('3');
     assert.strictEqual(r.add(1), 1);
+    console.log('4');
     assert.strictEqual(r.add(1), 2);
+    console.log('5');
     r.add(2);
+    console.log('6');
     assert.strictEqual(r.consume(), 4);
+    console.log('AAA');
+    debugger;
+    try {
+        r.free();
+    } catch (e) {
+        console.log('ERROR', e);
+    }
     assert.throws(() => r.free(), /null pointer passed to rust/);
+    console.log('BBB');
 
     const r2 = wasm.ClassesSimple.with_contents(10);
     assert.strictEqual(r2.add(1), 11);
@@ -240,9 +255,10 @@ exports.js_test_inspectable_classes = () => {
     assert.strictEqual(not_inspectable.toJSON, undefined);
     assert.strictEqual(not_inspectable.toString(), '[object Object]');
     // Non-inspectable classes in Node.js have no special console.log formatting
+    // When compiling with abort-reinit, an additional __wbg_inst field will be present
     const not_inspectable_output = console_log_to_string(not_inspectable);
     assert.match(not_inspectable_output, new RegExp(
-        `^NotInspectable \\{ __wbg_ptr: ${not_inspectable.__wbg_ptr} \\}$`
+        `^NotInspectable \\{ __wbg_ptr: ${not_inspectable.__wbg_ptr}(, __wbg_inst: 0)? \\}$`
     ));
     inspectable.free();
     not_inspectable.free();

@@ -10,7 +10,9 @@ test:
     just test-macro-support
     just test-ui
     just test-wasm-bindgen
+    just test-wasm-bindgen-abort-reinit
     just test-wasm-bindgen-unwind
+    just test-wasm-bindgen-unwind-reinit
     just test-wasm-bindgen-futures
 
 test-cli *ARGS="":
@@ -32,6 +34,7 @@ test-ui-overwrite:
     TRYBUILD=overwrite cargo test -p wasm-bindgen-macro --test ui
 
 test-wasm-bindgen *ARGS="":
+    CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     WASM_BINDGEN_TEST_ONLY_NODE=1 \
@@ -39,28 +42,49 @@ test-wasm-bindgen *ARGS="":
     cargo test --target wasm32-unknown-unknown {{ARGS}}
 
 test-wasm-bindgen-unwind *ARGS="":
+    CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" \
     RUSTFLAGS="-Cpanic=unwind" \
     RUSTDOCFLAGS="-Cpanic=unwind" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     WASM_BINDGEN_TEST_ONLY_NODE=1 \
     WASM_BINDGEN_SPLIT_LINKED_MODULES=1 \
-    cargo +nightly test \
-        -Zbuild-std=std,panic_unwind \
-        --target wasm32-unknown-unknown \
-        {{ARGS}}
+    cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown {{ARGS}}
 
 test-wasm-bindgen-unwind-eh *ARGS="":
+    CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" \
     RUSTFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh=false" \
     RUSTDOCFLAGS="-Cpanic=unwind" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     WASM_BINDGEN_TEST_ONLY_NODE=1 \
     WASM_BINDGEN_SPLIT_LINKED_MODULES=1 \
-    cargo +nightly test \
-        -Zbuild-std=std,panic_unwind \
-        --target wasm32-unknown-unknown \
-        {{ARGS}}
+    cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown {{ARGS}}
+
+test-wasm-bindgen-reinit *ARGS="":
+    WASM_BINDGEN_ABORT_REINIT=1 \
+    RUST_BACKTRACE=1 \
+    WASM_BINDGEN_TEST_ONLY_NODE=1 \
+    WASM_BINDGEN_SPLIT_LINKED_MODULES=1 \
+    cargo test --target wasm32-unknown-unknown {{ARGS}}
+
+test-wasm-bindgen-unwind-reinit *ARGS="":
+    RUSTFLAGS="-Cpanic=unwind --cfg panicking_tests" \
+    RUSTDOCFLAGS="-Cpanic=unwind" \
+    WASM_BINDGEN_ABORT_REINIT=1 \
+    RUST_BACKTRACE=1 \
+    WASM_BINDGEN_TEST_ONLY_NODE=1 \
+    WASM_BINDGEN_SPLIT_LINKED_MODULES=1 \
+    cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
+
+test-wasm-bindgen-unwind-eh-reinit *ARGS="":
+    RUSTFLAGS="-Cpanic=unwind --cfg panicking_tests" \
+    RUSTDOCFLAGS="-Cpanic=unwind" \
+    WASM_BINDGEN_ABORT_REINIT=1 \
+    RUST_BACKTRACE=1 \
+    WASM_BINDGEN_TEST_ONLY_NODE=1 \
+    WASM_BINDGEN_SPLIT_LINKED_MODULES=1 \
+    cargo +nightly test -Zbuild-std=std,panic_unwind --target wasm32-unknown-unknown
 
 test-wasm-bindgen-futures *ARGS="":
     NODE_ARGS="--stack-trace-limit=100" \

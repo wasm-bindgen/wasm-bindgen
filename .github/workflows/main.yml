@@ -105,12 +105,17 @@ jobs:
         runs:
           - name: default
             run: |
-              cargo test --target wasm32-unknown-unknown
+              CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" cargo test --target wasm32-unknown-unknown
               cargo test --target wasm32-unknown-unknown -p wasm-bindgen-futures
           - name: serde-serialize
-            run: cargo test --target wasm32-unknown-unknown --features serde-serialize
+            run: CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" cargo test --target wasm32-unknown-unknown --features serde-serialize
           - name: enable-interning
-            run: cargo test --target wasm32-unknown-unknown --features enable-interning
+            run: CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="--cfg panicking_tests" cargo test --target wasm32-unknown-unknown --features enable-interning
+          - name: "abort-reinit"
+            run: WASM_BINDGEN_ABORT_REINIT=1 cargo test --target wasm32-unknown-unknown
+          - name: "panic=unwind + abort-reinit"
+            run: RUSTFLAGS="-Cpanic=unwind" RUSTDOCFLAGS="-Cpanic=unwind" WASM_BINDGEN_ABORT_REINIT=1 cargo +nightly test -Zbuild-std --target wasm32-unknown-unknown
+          
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:
@@ -165,6 +170,7 @@ jobs:
         node-version: '22'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
+
   test_wasm_bindgen_unwind_exnref_eh:
     name: "Run wasm-bindgen crate tests with panic=unwind with exnref eh"
     runs-on: ubuntu-latest
