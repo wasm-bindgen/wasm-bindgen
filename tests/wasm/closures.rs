@@ -788,7 +788,7 @@ extern "C" {
     fn closure_with_call_cached_throws() -> bool;
 }
 
-/// Test that Closure::borrowed_mut works correctly during the callback body
+/// Test that ClosureBorrow::new_mut works correctly during the callback body
 #[wasm_bindgen_test]
 fn closure_with_works_during_body() {
     let called = Cell::new(false);
@@ -796,13 +796,13 @@ fn closure_with_works_during_body() {
         let mut func = || {
             called.set(true);
         };
-        let closure = Closure::borrowed_mut(&mut func);
+        let closure = ClosureBorrow::new_mut(&mut func);
         closure_with_call(closure.as_ref());
     }
     assert!(called.get());
 }
 
-/// Test that Closure::borrowed_mut allows capturing non-'static references
+/// Test that ClosureBorrow::new_mut allows capturing non-'static references
 #[wasm_bindgen_test]
 fn closure_with_captures_non_static() {
     let mut value = 0u32;
@@ -810,7 +810,7 @@ fn closure_with_captures_non_static() {
         let mut func = || {
             value += 1;
         };
-        let closure = Closure::borrowed_mut(&mut func);
+        let closure = ClosureBorrow::new_mut(&mut func);
         closure_with_call(closure.as_ref());
         closure_with_call(closure.as_ref());
         closure_with_call(closure.as_ref());
@@ -818,7 +818,7 @@ fn closure_with_captures_non_static() {
     assert_eq!(value, 3);
 }
 
-/// Test that using a Closure::borrowed_mut closure after the borrow ends throws an error
+/// Test that using a ClosureBorrow closure after the borrow ends throws an error
 #[wasm_bindgen_test]
 fn closure_with_use_after_free_throws() {
     // Cache the closure's JS function during the borrowed scope
@@ -826,17 +826,17 @@ fn closure_with_use_after_free_throws() {
         let mut func = || {
             // This closure body doesn't matter - we just want to cache the JS function
         };
-        let closure = Closure::borrowed_mut(&mut func);
+        let closure = ClosureBorrow::new_mut(&mut func);
         closure_with_cache(closure.as_ref());
     }
 
     // After the borrow ends, the closure has been invalidated.
     // Calling it should throw an error.
     let result = closure_with_call_cached();
-    let _ = result.expect_err("calling closure after Closure::borrowed_mut should throw");
+    let _ = result.expect_err("calling closure after ClosureBorrow should throw");
 }
 
-/// Test that a Closure::borrowed_mut closure throws when JS retains and calls it after invalidation
+/// Test that a ClosureBorrow closure throws when JS retains and calls it after invalidation
 #[wasm_bindgen_test]
 fn closure_with_cached_throws_after_drop() {
     let mut sum = 0u32;
@@ -844,7 +844,7 @@ fn closure_with_cached_throws_after_drop() {
         let mut func = |value: u32| {
             sum += value;
         };
-        let closure = Closure::borrowed_mut(&mut func);
+        let closure = ClosureBorrow::new_mut(&mut func);
         // JS will cache the closure AND call it 3 times during this callback
         closure_with_call_and_cache(closure.as_ref());
     }
@@ -855,6 +855,6 @@ fn closure_with_cached_throws_after_drop() {
     // and should get an exception.
     assert!(
         closure_with_call_cached_throws(),
-        "calling cached Closure::borrowed_mut closure after drop should throw"
+        "calling cached ClosureBorrow closure after drop should throw"
     );
 }

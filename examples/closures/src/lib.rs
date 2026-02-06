@@ -7,7 +7,7 @@ fn run() -> Result<(), JsValue> {
     let window = web_sys::window().expect("should have a window in this context");
     let document = window.document().expect("window should have a document");
 
-    // Demonstrate Closure::borrowed for immediate callbacks.
+    // Demonstrate ClosureBorrow for immediate callbacks.
     // This is the recommended way to pass closures to JS for synchronous use.
     // The closure can capture local references and is automatically cleaned up.
     demonstrate_closure_borrowed();
@@ -90,12 +90,13 @@ fn setup_clock(window: &Window, document: &Document) -> Result<(), JsValue> {
     Ok(())
 }
 
-// Demonstrate Closure::borrowed for immediate/synchronous callbacks.
+// Demonstrate ClosureBorrow for immediate/synchronous callbacks.
 //
-// Use Closure::borrowed when JavaScript will call the closure immediately and
-// won't retain it. Benefits:
+// Use ClosureBorrow::new (for Fn) or ClosureBorrow::new_mut (for FnMut) when
+// JavaScript will call the closure immediately and won't retain it. Benefits:
 // - Can capture non-'static references (like &mut local_var)
-// - Automatic cleanup when the borrow ends
+// - Automatic cleanup when ClosureBorrow is dropped
+// - Lifetime safety: ClosureBorrow can't outlive the closure's captured data
 // - No heap allocation for the closure data
 // - Unwind safe (panics become JS exceptions)
 fn demonstrate_closure_borrowed() {
@@ -111,7 +112,7 @@ fn demonstrate_closure_borrowed() {
         fn callThreeTimes(cb: &Closure<dyn FnMut(u32)>);
     }
 
-    // Example: Using Closure::borrowed_mut to sum values
+    // Example: Using ClosureBorrow::new_mut to sum values
     // The closure captures &mut sum without requiring 'static
     let mut sum = 0u32;
 
@@ -119,7 +120,7 @@ fn demonstrate_closure_borrowed() {
         let mut func = |value: u32| {
             sum += value;
         };
-        let closure = Closure::borrowed_mut(&mut func);
+        let closure = ClosureBorrow::new_mut(&mut func);
         // Pass the closure to JavaScript - it will be called synchronously
         // and then invalidated when closure is dropped
         callThreeTimes(closure.as_ref());

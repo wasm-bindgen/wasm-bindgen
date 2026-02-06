@@ -10,9 +10,10 @@ demonstrates different `Closure` APIs for various use cases.
 
 ## Choosing a `Closure` API
 
-- **`Closure::borrowed`** — For immediate/synchronous callbacks where JavaScript
-  calls the closure right away and doesn't retain it. Allows capturing
-  non-`'static` references.
+- **`ClosureBorrow::new`** / **`ClosureBorrow::new_mut`** — For immediate/synchronous
+  callbacks where JavaScript calls the closure right away and doesn't retain it.
+  Returns a `ClosureBorrow` with a lifetime tied to the closure's captured data,
+  ensuring safe automatic cleanup.
 
 - **`Closure::new`** — For long-lived closures like event handlers or timers.
   The closure must be `'static` and you must manage its lifetime (store it
@@ -22,7 +23,10 @@ demonstrates different `Closure` APIs for various use cases.
   that will only be called once.
 
 All `Closure` variants are unwind safe — panics are caught and converted to
-JavaScript exceptions when built with `panic=unwind`.
+JavaScript exceptions when built with `panic=unwind`. This requires the closure
+to implement `UnwindSafe`. If your closure captures non-unwind-safe types (like
+`Rc<RefCell<_>>`), use `AssertUnwindSafe` to wrap the closure, or use the
+`*_aborting` variants which don't require `UnwindSafe`.
 
 See [Passing Rust Closures to JS](../reference/passing-rust-closures-to-js.md)
 for detailed documentation.

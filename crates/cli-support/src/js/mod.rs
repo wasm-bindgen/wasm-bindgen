@@ -2748,16 +2748,12 @@ if (require('worker_threads').isMainThread) {{
                             real._wbg_cb_unref();
                         }}
                     }};
-                    if (dtor) {{
-                        real._wbg_cb_unref = () => {{
-                            if (--state.cnt === 0) {{
-                                {safe_destructor}
-                            }}
-                        }};
-                        CLOSURE_DTORS.register(real, state, state);
-                    }} else {{
-                        real._wbg_cb_unref = () => {{}};
-                    }}
+                    real._wbg_cb_unref = () => {{
+                        if (--state.cnt === 0) {{
+                            {safe_destructor}
+                        }}
+                    }};
+                    CLOSURE_DTORS.register(real, state, state);
                     return real;
                 }}
                 "
@@ -2808,16 +2804,12 @@ if (require('worker_threads').isMainThread) {{
                             real._wbg_cb_unref();
                         }}
                     }};
-                    if (dtor) {{
-                        real._wbg_cb_unref = () => {{
-                            if (--state.cnt === 0) {{
-                                {safe_destructor}
-                            }}
-                        }};
-                        CLOSURE_DTORS.register(real, state, state);
-                    }} else {{
-                        real._wbg_cb_unref = () => {{}};
-                    }}
+                    real._wbg_cb_unref = () => {{
+                        if (--state.cnt === 0) {{
+                            {safe_destructor}
+                        }}
+                    }};
+                    CLOSURE_DTORS.register(real, state, state);
                     return real;
                 }}
                 "

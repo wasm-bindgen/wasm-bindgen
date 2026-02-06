@@ -234,7 +234,7 @@ fn drop_throw_str() {
             foo.foo();
             Ok(true)
         };
-        let closure = Closure::borrowed_mut(&mut func);
+        let closure = ClosureBorrow::new_mut(&mut func);
         assert!(js_array![0]
             .try_every_result_closure(closure.as_ref())
             .is_err());

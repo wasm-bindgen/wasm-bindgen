@@ -798,7 +798,7 @@ struct TestFuture<F> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(catch)]
-    fn __wbg_test_invoke(f: &Closure<dyn FnMut()>) -> Result<(), JsValue>;
+    fn __wbg_test_invoke(f: &ClosureBorrow<dyn FnMut()>) -> Result<(), JsValue>;
 }
 
 impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
@@ -816,7 +816,8 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
             };
-            let x = __wbg_test_invoke(Closure::borrowed_mut(&mut func).as_ref());
+            let closure = ClosureBorrow::new_mut(&mut func);
+            let x = __wbg_test_invoke(&closure);
             x
         });
         match (result, future_output) {
