@@ -67,7 +67,7 @@ extern "C" {
 ///
 /// #[wasm_bindgen]
 /// extern "C" {
-///     fn setInterval(closure: &Closure<dyn FnMut()>, time: u32) -> i32;
+///     fn setInterval(closure: &OwnClosure<dyn FnMut()>, time: u32) -> i32;
 ///     fn clearInterval(id: i32);
 ///
 ///     #[wasm_bindgen(js_namespace = console)]
@@ -77,7 +77,7 @@ extern "C" {
 /// #[wasm_bindgen]
 /// pub struct IntervalHandle {
 ///     interval_id: i32,
-///     _closure: Closure<dyn FnMut()>,
+///     _closure: OwnClosure<dyn FnMut()>,
 /// }
 ///
 /// impl Drop for IntervalHandle {
@@ -120,7 +120,7 @@ extern "C" {
 /// #[wasm_bindgen]
 /// pub struct IntervalHandle {
 ///     interval_id: i32,
-///     _closure: Closure<dyn FnMut()>,
+///     _closure: OwnClosure<dyn FnMut()>,
 /// }
 ///
 /// impl Drop for IntervalHandle {
@@ -163,7 +163,7 @@ extern "C" {
 ///
 /// #[wasm_bindgen]
 /// extern "C" {
-///     fn requestAnimationFrame(closure: &Closure<dyn FnMut()>) -> u32;
+///     fn requestAnimationFrame(closure: &OwnClosure<dyn FnMut()>) -> u32;
 ///     fn cancelAnimationFrame(id: u32);
 ///
 ///     #[wasm_bindgen(js_namespace = console)]
@@ -173,7 +173,7 @@ extern "C" {
 /// #[wasm_bindgen]
 /// pub struct AnimationFrameHandle {
 ///     animation_id: u32,
-///     _closure: Closure<dyn FnMut()>,
+///     _closure: OwnClosure<dyn FnMut()>,
 /// }
 ///
 /// impl Drop for AnimationFrameHandle {
@@ -325,18 +325,18 @@ impl<'a, T: ?Sized> Drop for RefClosure<'a, T> {
 }
 
 impl<T: ?Sized> core::ops::Deref for RefClosure<'_, T> {
-    type Target = Closure<T>;
+    type Target = OwnClosure<T>;
 
-    fn deref(&self) -> &Closure<T> {
+    fn deref(&self) -> &OwnClosure<T> {
         // SAFETY: RefClosure and Closure have the same layout for their
         // JsValue + PhantomData<T> fields. The lifetime is erased but that's
         // safe because we're returning a reference tied to &self.
-        unsafe { &*(&self.js as *const JsValue as *const Closure<T>) }
+        unsafe { &*(&self.js as *const JsValue as *const OwnClosure<T>) }
     }
 }
 
 impl<T: ?Sized> AsRef<OwnClosure<T>> for RefClosure<'_, T> {
-    fn as_ref(&self) -> &Closure<T> {
+    fn as_ref(&self) -> &OwnClosure<T> {
         self
     }
 }
@@ -514,7 +514,7 @@ where
     /// * Its arguments and return values are all types that can be shared with
     ///   JS (i.e. have `#[wasm_bindgen]` annotations or are simple numbers,
     ///   etc.)
-    pub fn new<F>(t: F) -> Closure<T>
+    pub fn new<F>(t: F) -> Self
     where
         F: IntoWasmClosure<T> + 'static,
     {
@@ -545,7 +545,7 @@ where
     /// * Its arguments and return values are all types that can be shared with
     ///   JS (i.e. have `#[wasm_bindgen]` annotations or are simple numbers,
     ///   etc.)
-    pub fn new_aborting<F>(t: F) -> Closure<T>
+    pub fn new_aborting<F>(t: F) -> Self
     where
         F: IntoWasmClosure<T> + 'static,
     {
@@ -556,7 +556,7 @@ where
     /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
     ///
     /// This version catches panics when unwinding is available.
-    pub fn wrap<F>(data: Box<F>) -> Closure<T>
+    pub fn wrap<F>(data: Box<F>) -> Self
     where
         F: MaybeUnwindSafe + IntoWasmClosure<T> + ?Sized,
     {
@@ -573,7 +573,7 @@ where
     /// - Your closure captures types that aren't `UnwindSafe` (like `Rc<Cell<T>>`)
     /// - You don't need panic catching across the JS boundary
     /// - You prefer abort-on-panic behavior
-    pub fn wrap_aborting<F>(data: Box<F>) -> Closure<T>
+    pub fn wrap_aborting<F>(data: Box<F>) -> Self
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
@@ -581,7 +581,7 @@ where
     }
 
     #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-    fn _wrap(data: Box<T>, unwind_safe: bool) -> Closure<T> {
+    fn _wrap(data: Box<T>, unwind_safe: bool) -> Self {
         Self {
             js: crate::__rt::wbg_cast(OwnedClosureUnwind { data, unwind_safe }),
             _marker: PhantomData,
@@ -589,7 +589,7 @@ where
     }
 
     #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
-    fn _wrap(data: Box<T>, _unwind_safe: bool) -> Closure<T> {
+    fn _wrap(data: Box<T>, _unwind_safe: bool) -> Self {
         Self {
             js: crate::__rt::wbg_cast(OwnedClosure(data)),
             _marker: PhantomData,
@@ -626,7 +626,7 @@ where
     /// Create a `Closure` from a function that can only be called once.
     ///
     /// Since we have no way of enforcing that JS cannot attempt to call this
-    /// `FnOne(A...) -> R` more than once, this produces a `Closure<dyn FnMut(A...)
+    /// `FnOne(A...) -> R` more than once, this produces a `OwnClosure<dyn FnMut(A...)
     /// -> R>` that will dynamically throw a JavaScript error if called more
     /// than once.
     ///
@@ -648,7 +648,7 @@ where
     ///
     /// // Create a `Closure` from `f`. Note that the `Closure`'s type parameter
     /// // is `FnMut`, even though `f` is `FnOnce`.
-    /// let closure: Closure<dyn FnMut() -> String> = Closure::once(f);
+    /// let closure: OwnClosure<dyn FnMut() -> String> = Closure::once(f);
     /// ```
     ///
     /// Note: the `A` and `R` type parameters are here just for backward compat
@@ -672,7 +672,7 @@ where
     /// - You prefer abort-on-panic behavior
     ///
     /// Since we have no way of enforcing that JS cannot attempt to call this
-    /// `FnOnce(A...) -> R` more than once, this produces a `Closure<dyn FnMut(A...)
+    /// `FnOnce(A...) -> R` more than once, this produces a `OwnClosure<dyn FnMut(A...)
     /// -> R>` that will dynamically throw a JavaScript error if called more
     /// than once.
     ///
@@ -757,7 +757,7 @@ pub trait WasmClosureFnOnceAbort<FnMut: ?Sized, A, R>: 'static {
     fn into_js_function(self) -> JsValue;
 }
 
-impl<T: ?Sized> AsRef<JsValue> for Closure<T> {
+impl<T: ?Sized> AsRef<JsValue> for OwnClosure<T> {
     fn as_ref(&self) -> &JsValue {
         &self.js
     }
@@ -946,12 +946,12 @@ where
 
 fn _check() {
     fn _assert<T: IntoWasmAbi>() {}
-    _assert::<&Closure<dyn Fn()>>();
-    _assert::<&Closure<dyn Fn(String)>>();
-    _assert::<&Closure<dyn Fn() -> String>>();
-    _assert::<&Closure<dyn FnMut()>>();
-    _assert::<&Closure<dyn FnMut(String)>>();
-    _assert::<&Closure<dyn FnMut() -> String>>();
+    _assert::<&OwnClosure<dyn Fn()>>();
+    _assert::<&OwnClosure<dyn Fn(String)>>();
+    _assert::<&OwnClosure<dyn Fn() -> String>>();
+    _assert::<&OwnClosure<dyn FnMut()>>();
+    _assert::<&OwnClosure<dyn FnMut(String)>>();
+    _assert::<&OwnClosure<dyn FnMut() -> String>>();
 }
 
 impl<T> fmt::Debug for OwnClosure<T>
