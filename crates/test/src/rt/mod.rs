@@ -808,7 +808,7 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
         let output = self.output.clone();
         // Use `new_unchecked` here to project our own pin, and we never
         // move `test` so this should be safe
-        let test = unsafe { Pin::map_unchecked_mut(self, |me| &mut me.test) };
+        let test: Pin<&mut F> = unsafe { Pin::map_unchecked_mut(self, |me| &mut me.test) };
         let mut future_output = None;
         let result = CURRENT_OUTPUT.set(&output, || {
             let mut test = Some(test);
@@ -816,8 +816,8 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
             };
-           let x = __wbg_test_invoke(Closure::borrowed_mut(&mut func).as_ref());
-           x
+            let x = __wbg_test_invoke(Closure::borrowed_mut(&mut func).as_ref());
+            x
         });
         match (result, future_output) {
             (_, Some(Poll::Ready(result))) => Poll::Ready(result),

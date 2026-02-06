@@ -235,7 +235,9 @@ fn drop_throw_str() {
             Ok(true)
         };
         let closure = Closure::borrowed_mut(&mut func);
-        assert!(js_array![0].try_every_result_closure(closure.as_ref()).is_err());
+        assert!(js_array![0]
+            .try_every_result_closure(closure.as_ref())
+            .is_err());
     }
     assert!(!Reflect::get(&global(), &"food_throw_str".into())
         .unwrap()

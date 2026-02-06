@@ -268,7 +268,6 @@ fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
     let _ = &mut *pin;
 }
 
-
 pub struct ClosureBorrow<'a, T: ?Sized> {
     closure: Closure<T>,
     _lifetime: &'a (),
