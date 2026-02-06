@@ -1878,7 +1878,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
                 #(#attrs)*
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #name() {
+                pub extern "C-unwind" fn #name() {
                     use #wasm_bindgen::describe::*;
                     // See definition of `link_mem_intrinsics` for what this is doing
                     #wasm_bindgen::__rt::link_mem_intrinsics();
@@ -1902,7 +1902,7 @@ fn extern_fn(
         #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
         #(#attrs)*
         #[link(wasm_import_module = "__wbindgen_placeholder__")]
-        extern "C-unwind" {
+        extern "C" {
             fn #import_name(#(#abi_arguments),*) -> #abi_ret;
         }
 
