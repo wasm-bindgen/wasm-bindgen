@@ -177,3 +177,23 @@ exports.closure_with_cache = f => {
 exports.closure_with_call_cached = () => {
   CLOSURE_WITH_CACHE();
 };
+
+// Test that calling a Closure::with closure after it's been invalidated throws
+let CLOSURE_WITH_ARG_CACHE = null;
+
+exports.closure_with_call_and_cache = f => {
+  CLOSURE_WITH_ARG_CACHE = f;
+  f(1);
+  f(2);
+  f(3);
+};
+
+exports.closure_with_call_cached_throws = () => {
+  try {
+    CLOSURE_WITH_ARG_CACHE(42);
+    return false; // Should not reach here
+  } catch (e) {
+    // Expected: closure invoked after being dropped
+    return true;
+  }
+};

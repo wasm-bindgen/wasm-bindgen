@@ -784,6 +784,8 @@ extern "C" {
     fn closure_with_cache(f: &Closure<dyn FnMut()>);
     #[wasm_bindgen(catch)]
     fn closure_with_call_cached() -> Result<(), JsValue>;
+    fn closure_with_call_and_cache(f: &Closure<dyn FnMut(u32)>);
+    fn closure_with_call_cached_throws() -> bool;
 }
 
 /// Test that Closure::with works correctly during the callback body
@@ -835,4 +837,28 @@ fn closure_with_use_after_free_throws() {
     // Calling it should throw an error.
     let result = closure_with_call_cached();
     let _ = result.expect_err("calling closure after Closure::with should throw");
+}
+
+/// Test that a Closure::with closure throws when JS retains and calls it after invalidation
+#[wasm_bindgen_test]
+fn closure_with_cached_throws_after_drop() {
+    let mut sum = 0u32;
+    Closure::with(
+        &mut |value: u32| {
+            sum += value;
+        },
+        |closure| {
+            // JS will cache the closure AND call it 3 times during this callback
+            closure_with_call_and_cache(closure);
+        },
+    );
+    // Closure worked during the callback
+    assert_eq!(sum, 6); // 1 + 2 + 3
+
+    // Now the closure has been invalidated. JS tries to call the cached reference
+    // and should get an exception.
+    assert!(
+        closure_with_call_cached_throws(),
+        "calling cached Closure::with closure after drop should throw"
+    );
 }

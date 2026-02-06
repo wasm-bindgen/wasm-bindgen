@@ -267,7 +267,12 @@ pub fn rust_call_throwing_js() {
     js_throw_error();
 
     // This line should never be reached
-    Reflect::set(&global(), &"unwind_continued_after_throw".into(), &JsValue::TRUE).unwrap();
+    Reflect::set(
+        &global(),
+        &"unwind_continued_after_throw".into(),
+        &JsValue::TRUE,
+    )
+    .unwrap();
 }
 
 /// Test that a JS throw from an import without `catch` triggers unwinding and runs Drop
@@ -277,7 +282,12 @@ fn js_throw_triggers_unwind_and_drop() {
     // Reset state
     js_reset_dropped();
     Reflect::set(&global(), &"unwind_drop_ran".into(), &JsValue::FALSE).unwrap();
-    Reflect::set(&global(), &"unwind_continued_after_throw".into(), &JsValue::FALSE).unwrap();
+    Reflect::set(
+        &global(),
+        &"unwind_continued_after_throw".into(),
+        &JsValue::FALSE,
+    )
+    .unwrap();
 
     // JS will call rust_call_throwing_js(), which calls js_throw_error()
     // The throw should unwind, run Drop, and propagate as an error
