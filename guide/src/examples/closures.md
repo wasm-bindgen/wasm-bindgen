@@ -10,9 +10,9 @@ demonstrates different `Closure` APIs for various use cases.
 
 ## Choosing a `Closure` API
 
-- **`ClosureBorrow::new`** / **`ClosureBorrow::new_mut`** — For immediate/synchronous
+- **`RefClosure::new`** / **`RefClosure::new_mut`** — For immediate/synchronous
   callbacks where JavaScript calls the closure right away and doesn't retain it.
-  Returns a `ClosureBorrow` with a lifetime tied to the closure's captured data,
+  Returns a `RefClosure` with a lifetime tied to the closure's captured data,
   ensuring safe automatic cleanup.
 
 - **`Closure::new`** — For long-lived closures like event handlers or timers.

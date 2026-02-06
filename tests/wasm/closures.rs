@@ -780,15 +780,15 @@ fn closure_with_assert_unwind_safe() {
 
 #[wasm_bindgen(module = "tests/wasm/closures.js")]
 extern "C" {
-    fn closure_with_call(f: &Closure<dyn FnMut()>);
-    fn closure_with_cache(f: &Closure<dyn FnMut()>);
+    fn closure_with_call(f: &RefClosure<dyn FnMut()>);
+    fn closure_with_cache(f: &RefClosure<dyn FnMut()>);
     #[wasm_bindgen(catch)]
     fn closure_with_call_cached() -> Result<(), JsValue>;
-    fn closure_with_call_and_cache(f: &Closure<dyn FnMut(u32)>);
+    fn closure_with_call_and_cache(f: &RefClosure<dyn FnMut(u32)>);
     fn closure_with_call_cached_throws() -> bool;
 }
 
-/// Test that ClosureBorrow::new_mut works correctly during the callback body
+/// Test that RefClosure::new_mut works correctly during the callback body
 #[wasm_bindgen_test]
 fn closure_with_works_during_body() {
     let called = Cell::new(false);
@@ -796,13 +796,13 @@ fn closure_with_works_during_body() {
         let mut func = || {
             called.set(true);
         };
-        let closure = ClosureBorrow::new_mut(&mut func);
-        closure_with_call(closure.as_ref());
+        let closure = RefClosure::new_mut(&mut func);
+        closure_with_call(&closure);
     }
     assert!(called.get());
 }
 
-/// Test that ClosureBorrow::new_mut allows capturing non-'static references
+/// Test that RefClosure::new_mut allows capturing non-'static references
 #[wasm_bindgen_test]
 fn closure_with_captures_non_static() {
     let mut value = 0u32;
@@ -810,15 +810,15 @@ fn closure_with_captures_non_static() {
         let mut func = || {
             value += 1;
         };
-        let closure = ClosureBorrow::new_mut(&mut func);
-        closure_with_call(closure.as_ref());
-        closure_with_call(closure.as_ref());
-        closure_with_call(closure.as_ref());
+        let closure = RefClosure::new_mut(&mut func);
+        closure_with_call(&closure);
+        closure_with_call(&closure);
+        closure_with_call(&closure);
     }
     assert_eq!(value, 3);
 }
 
-/// Test that using a ClosureBorrow closure after the borrow ends throws an error
+/// Test that using a RefClosure closure after the borrow ends throws an error
 #[wasm_bindgen_test]
 fn closure_with_use_after_free_throws() {
     // Cache the closure's JS function during the borrowed scope
@@ -826,17 +826,17 @@ fn closure_with_use_after_free_throws() {
         let mut func = || {
             // This closure body doesn't matter - we just want to cache the JS function
         };
-        let closure = ClosureBorrow::new_mut(&mut func);
-        closure_with_cache(closure.as_ref());
+        let closure = RefClosure::new_mut(&mut func);
+        closure_with_cache(&closure);
     }
 
     // After the borrow ends, the closure has been invalidated.
     // Calling it should throw an error.
     let result = closure_with_call_cached();
-    let _ = result.expect_err("calling closure after ClosureBorrow should throw");
+    let _ = result.expect_err("calling closure after RefClosure should throw");
 }
 
-/// Test that a ClosureBorrow closure throws when JS retains and calls it after invalidation
+/// Test that a RefClosure closure throws when JS retains and calls it after invalidation
 #[wasm_bindgen_test]
 fn closure_with_cached_throws_after_drop() {
     let mut sum = 0u32;
@@ -844,9 +844,9 @@ fn closure_with_cached_throws_after_drop() {
         let mut func = |value: u32| {
             sum += value;
         };
-        let closure = ClosureBorrow::new_mut(&mut func);
+        let closure = RefClosure::new_mut(&mut func);
         // JS will cache the closure AND call it 3 times during this callback
-        closure_with_call_and_cache(closure.as_ref());
+        closure_with_call_and_cache(&closure);
     }
     // Closure worked during the callback
     assert_eq!(sum, 6); // 1 + 2 + 3
@@ -855,6 +855,27 @@ fn closure_with_cached_throws_after_drop() {
     // and should get an exception.
     assert!(
         closure_with_call_cached_throws(),
-        "calling cached ClosureBorrow closure after drop should throw"
+        "calling cached RefClosure closure after drop should throw"
     );
+}
+
+/// Test that RefClosure can be used where &Closure is expected via Deref/AsRef
+#[wasm_bindgen_test]
+fn closure_borrow_deref_to_closure() {
+    #[wasm_bindgen(module = "tests/wasm/closures.js")]
+    extern "C" {
+        // This function takes &Closure, not &RefClosure
+        fn closure_with_call_closure(f: &Closure<dyn FnMut()>);
+    }
+
+    let called = Cell::new(false);
+    {
+        let mut func = || {
+            called.set(true);
+        };
+        let closure = RefClosure::new_mut(&mut func);
+        // Pass RefClosure where &Closure is expected - works via Deref
+        closure_with_call_closure(&closure);
+    }
+    assert!(called.get());
 }

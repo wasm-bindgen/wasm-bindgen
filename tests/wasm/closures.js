@@ -163,10 +163,15 @@ exports.js_call_forgotten_closure = () => {
   FORGOTTEN_CLOSURE();
 };
 
-// Test for ClosureBorrow - closure works during callback, throws after
+// Test for RefClosure - closure works during callback, throws after
 let CLOSURE_WITH_CACHE = null;
 
 exports.closure_with_call = f => {
+  f();
+};
+
+// Same as closure_with_call but used to test RefClosure -> &Closure deref
+exports.closure_with_call_closure = f => {
   f();
 };
 
@@ -178,7 +183,7 @@ exports.closure_with_call_cached = () => {
   CLOSURE_WITH_CACHE();
 };
 
-// Test that calling a ClosureBorrow closure after it's been invalidated throws
+// Test that calling a RefClosure closure after it's been invalidated throws
 let CLOSURE_WITH_ARG_CACHE = null;
 
 exports.closure_with_call_and_cache = f => {

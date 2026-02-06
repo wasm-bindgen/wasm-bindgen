@@ -6,7 +6,7 @@
 //!
 //! # Choosing a `Closure` API
 //!
-//! - [`ClosureBorrow::new`] / [`ClosureBorrow::new_mut`] — For immediate/synchronous
+//! - [`RefClosure::new`] / [`RefClosure::new_mut`] — For immediate/synchronous
 //!   callbacks. Allows non-`'static` captures and automatic cleanup.
 //!   Use [`.as_ref()`](AsRef::as_ref) to get `&Closure` for passing to JS.
 //! - [`Closure::new`] — For long-lived closures (event listeners, timers).
@@ -259,38 +259,37 @@ extern "C" {
 ///     // here or return some sort of handle to JS!
 /// }
 /// ```
-pub struct Closure<T: ?Sized> {
+pub struct OwnClosure<T: ?Sized> {
     js: JsClosure,
     // careful: must be Box<T> not just T because unsized PhantomData
     // seems to have weird interaction with Pin<>
     _marker: PhantomData<Box<T>>,
 }
 
-fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
+pub type Closure<T> = OwnClosure<T>;
+
+fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut OwnClosure<T>>) {
     let _ = &mut *pin;
 }
 
 /// A borrowed closure that is only valid for the lifetime `'a`.
 ///
-/// Created via [`ClosureBorrow::new`] or [`ClosureBorrow::new_mut`].
+/// Created via [`RefClosure::new`] or [`RefClosure::new_mut`].
 /// The lifetime `'a` comes from the reference to the closure, which means
-/// `ClosureBorrow` cannot outlive the closure or any data it captures.
+/// `RefClosure` cannot outlive the closure or any data it captures.
 ///
-/// When the `ClosureBorrow` is dropped, the corresponding JavaScript function
+/// When the `RefClosure` is dropped, the corresponding JavaScript function
 /// is automatically invalidated.
-///
-/// Use [`.as_ref()`](AsRef::as_ref) to get a `&Closure<T>` for passing to
-/// JavaScript functions.
 ///
 /// # Lifetime Safety
 ///
-/// Rust's borrow checker ensures that `ClosureBorrow` cannot be held longer
+/// Rust's borrow checker ensures that `RefClosure` cannot be held longer
 /// than the closure's captured data:
 ///
 /// ```ignore
 /// let mut sum = 0;
 /// let mut f = |x: u32| { sum += x; };  // f borrows sum
-/// let closure = ClosureBorrow::new_mut(&mut f);  // closure borrows f
+/// let closure = RefClosure::new_mut(&mut f);  // closure borrows f
 /// // closure cannot outlive f, and f cannot outlive sum
 /// ```
 ///
@@ -301,23 +300,23 @@ fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
 ///
 /// #[wasm_bindgen]
 /// extern "C" {
-///     fn call_immediately(cb: &Closure<dyn FnMut(u32)>);
+///     fn call_immediately(cb: &RefClosure<dyn FnMut(u32)>);
 /// }
 ///
 /// let mut sum = 0;
 /// let mut f = |x: u32| { sum += x; };
-/// let closure = ClosureBorrow::new_mut(&mut f);
-/// call_immediately(closure.as_ref());
+/// let closure = RefClosure::new_mut(&mut f);
+/// call_immediately(&closure);
 /// drop(closure);  // invalidates the JS function
 /// assert_eq!(sum, 42);
 /// ```
-pub struct ClosureBorrow<'a, T: ?Sized> {
+pub struct RefClosure<'a, T: ?Sized> {
     js: JsValue,
     _marker: PhantomData<T>,
     _lifetime: PhantomData<&'a ()>,
 }
 
-impl<'a, T: ?Sized> Drop for ClosureBorrow<'a, T> {
+impl<'a, T: ?Sized> Drop for RefClosure<'a, T> {
     fn drop(&mut self) {
         // Invalidate the closure on the JS side by setting state.a = state.b = 0.
         // This prevents any further calls to the closure after the borrow ends.
@@ -325,7 +324,24 @@ impl<'a, T: ?Sized> Drop for ClosureBorrow<'a, T> {
     }
 }
 
-impl<'a, T> ClosureBorrow<'a, T>
+impl<T: ?Sized> core::ops::Deref for RefClosure<'_, T> {
+    type Target = Closure<T>;
+
+    fn deref(&self) -> &Closure<T> {
+        // SAFETY: RefClosure and Closure have the same layout for their
+        // JsValue + PhantomData<T> fields. The lifetime is erased but that's
+        // safe because we're returning a reference tied to &self.
+        unsafe { &*(&self.js as *const JsValue as *const Closure<T>) }
+    }
+}
+
+impl<T: ?Sized> AsRef<OwnClosure<T>> for RefClosure<'_, T> {
+    fn as_ref(&self) -> &Closure<T> {
+        self
+    }
+}
+
+impl<'a, T> RefClosure<'a, T>
 where
     T: ?Sized + WasmClosure,
 {
@@ -335,28 +351,27 @@ where
     /// synchronous use. Unlike [`Closure::new`], this does not require the closure
     /// to be `'static`, allowing you to capture references to local variables.
     ///
-    /// The returned `ClosureBorrow<'a, _>` has lifetime `'a` from the closure
+    /// The returned `RefClosure<'a, _>` has lifetime `'a` from the closure
     /// reference, which means it cannot outlive the closure or any data the
-    /// closure captures. Use [`.as_ref()`](AsRef::as_ref) to get a `&Closure<T>`
-    /// for passing to JavaScript.
+    /// closure captures.
     ///
     /// For closures that need mutable state (`FnMut`), use [`new_mut`](Self::new_mut).
     ///
     /// # When to use borrowed closures
     ///
-    /// Use `ClosureBorrow::new` or `ClosureBorrow::new_mut` when:
+    /// Use `RefClosure::new` or `RefClosure::new_mut` when:
     /// - JavaScript will call the closure immediately and not retain it
     /// - You need to capture non-`'static` references
-    /// - You want automatic cleanup when the `ClosureBorrow` is dropped
+    /// - You want automatic cleanup when the `RefClosure` is dropped
     ///
     /// # Closure lifetime
     ///
-    /// The JavaScript function is only valid while the `ClosureBorrow` exists.
+    /// The JavaScript function is only valid while the `RefClosure` exists.
     /// Once dropped, the JavaScript function is invalidated. If JavaScript retains
     /// a reference and calls it later, it will throw: "closure invoked recursively
     /// or after being dropped".
     ///
-    /// Rust's borrow checker ensures `ClosureBorrow` cannot outlive the closure's
+    /// Rust's borrow checker ensures `RefClosure` cannot outlive the closure's
     /// captured data, preventing use-after-free bugs.
     ///
     /// # Example
@@ -366,7 +381,7 @@ where
     ///
     /// #[wasm_bindgen]
     /// extern "C" {
-    ///     fn call_with_value(cb: &Closure<dyn Fn(u32)>, value: u32);
+    ///     fn call_with_value(cb: &RefClosure<dyn Fn(u32)>, value: u32);
     /// }
     ///
     /// let data = vec![1, 2, 3];
@@ -374,16 +389,16 @@ where
     ///     // Can access `data` without moving it
     ///     println!("data len: {}", data.len());
     /// };
-    /// let closure = ClosureBorrow::new(&f);
-    /// call_with_value(closure.as_ref(), 42);
+    /// let closure = RefClosure::new(&f);
+    /// call_with_value(&closure, 42);
     /// ```
-    pub fn new<F>(t: &'a F) -> ClosureBorrow<'a, F::Static>
+    pub fn new<F>(t: &'a F) -> RefClosure<'a, F::Static>
     where
         F: UnsizeClosureRef<T> + ?Sized,
     {
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ClosureBorrow {
+        RefClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
                 data: WasmSlice { ptr, len },
                 unwind_safe: true,
@@ -408,24 +423,24 @@ where
     ///
     /// #[wasm_bindgen]
     /// extern "C" {
-    ///     fn call_three_times(cb: &Closure<dyn FnMut(u32)>);
+    ///     fn call_three_times(cb: &RefClosure<dyn FnMut(u32)>);
     /// }
     ///
     /// let mut sum = 0;
-    /// let closure = ClosureBorrow::new_mut(&mut |x: u32| {
+    /// let closure = RefClosure::new_mut(&mut |x: u32| {
     ///     sum += x;
     /// });
-    /// call_three_times(closure.as_ref());
+    /// call_three_times(&closure);
     /// // closure dropped, `sum` is accessible again
     /// assert_eq!(sum, 6); // 1 + 2 + 3
     /// ```
-    pub fn new_mut<F>(t: &'a mut F) -> ClosureBorrow<'a, F::Static>
+    pub fn new_mut<F>(t: &'a mut F) -> RefClosure<'a, F::Static>
     where
         F: UnsizeClosureRefMut<T> + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ClosureBorrow {
+        RefClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
                 data: WasmSlice { ptr, len },
                 unwind_safe: true,
@@ -440,13 +455,13 @@ where
     ///
     /// If the closure panics, the process will abort. This variant does not
     /// require `UnwindSafe`.
-    pub fn new_aborting<F>(t: &'a F) -> ClosureBorrow<'a, F::Static>
+    pub fn new_aborting<F>(t: &'a F) -> RefClosure<'a, F::Static>
     where
         F: UnsizeClosureRef<T> + ?Sized,
     {
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ClosureBorrow {
+        RefClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
                 data: WasmSlice { ptr, len },
                 unwind_safe: false,
@@ -461,13 +476,13 @@ where
     ///
     /// If the closure panics, the process will abort. This variant does not
     /// require `UnwindSafe`.
-    pub fn new_mut_aborting<F>(t: &'a mut F) -> ClosureBorrow<'a, F::Static>
+    pub fn new_mut_aborting<F>(t: &'a mut F) -> RefClosure<'a, F::Static>
     where
         F: UnsizeClosureRefMut<T> + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ClosureBorrow {
+        RefClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
                 data: WasmSlice { ptr, len },
                 unwind_safe: false,
@@ -479,7 +494,7 @@ where
     }
 }
 
-impl<T> Closure<T>
+impl<T> OwnClosure<T>
 where
     T: ?Sized + WasmClosure,
 {
@@ -867,7 +882,7 @@ where
     }
 }
 
-impl<T> WasmDescribe for Closure<T>
+impl<T> WasmDescribe for OwnClosure<T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -878,7 +893,7 @@ where
 }
 
 // `Closure` can only be passed by reference to imports.
-impl<T> IntoWasmAbi for &Closure<T>
+impl<T> IntoWasmAbi for &OwnClosure<T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -889,7 +904,7 @@ where
     }
 }
 
-impl<T> OptionIntoWasmAbi for &Closure<T>
+impl<T> OptionIntoWasmAbi for &OwnClosure<T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -898,7 +913,7 @@ where
     }
 }
 
-impl<T> WasmDescribe for ClosureBorrow<'_, T>
+impl<T> WasmDescribe for RefClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -908,8 +923,8 @@ where
     }
 }
 
-// `ClosureBorrow` can only be passed by reference to imports.
-impl<T> IntoWasmAbi for &ClosureBorrow<'_, T>
+// `RefClosure` can only be passed by reference to imports.
+impl<T> IntoWasmAbi for &RefClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -920,7 +935,7 @@ where
     }
 }
 
-impl<T> OptionIntoWasmAbi for &ClosureBorrow<'_, T>
+impl<T> OptionIntoWasmAbi for &RefClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -939,7 +954,7 @@ fn _check() {
     _assert::<&Closure<dyn FnMut() -> String>>();
 }
 
-impl<T> fmt::Debug for Closure<T>
+impl<T> fmt::Debug for OwnClosure<T>
 where
     T: ?Sized,
 {
@@ -948,7 +963,7 @@ where
     }
 }
 
-impl<T> Drop for Closure<T>
+impl<T> Drop for OwnClosure<T>
 where
     T: ?Sized,
 {

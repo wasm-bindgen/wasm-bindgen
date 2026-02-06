@@ -46,6 +46,11 @@ extern "C" {
         this: &ArrayUnwind,
         predicate: &Closure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
     ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
+    pub fn try_every_result_closure_borrow(
+        this: &ArrayUnwind,
+        predicate: &RefClosure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
+    ) -> Result<bool, JsValue>;
 
     // This currently aborts correctly
     // TODO: support &mut dyn FnMut as unwind safe to not abort (defaults as abort for now)
@@ -234,9 +239,9 @@ fn drop_throw_str() {
             foo.foo();
             Ok(true)
         };
-        let closure = ClosureBorrow::new_mut(&mut func);
+        let closure = RefClosure::new_mut(&mut func);
         assert!(js_array![0]
-            .try_every_result_closure(closure.as_ref())
+            .try_every_result_closure_borrow(&closure)
             .is_err());
     }
     assert!(!Reflect::get(&global(), &"food_throw_str".into())

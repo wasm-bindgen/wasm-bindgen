@@ -11,13 +11,13 @@ exceptions. See [Catching Panics](./catch-unwind.md) for details.
 
 | Use case | Recommended API |
 |----------|----------------|
-| Immediate/synchronous callbacks (forEach, map, etc.) | `ClosureBorrow::new` / `ClosureBorrow::new_mut` |
+| Immediate/synchronous callbacks (forEach, map, etc.) | `RefClosure::new` / `RefClosure::new_mut` |
 | Event listeners, timers, retained callbacks | `Closure::new` |
 | One-shot callbacks (e.g., Promise handlers) | `Closure::once` or `Closure::once_into_js` |
 
-## Immediate Closures with `ClosureBorrow`
+## Immediate Closures with `RefClosure`
 
-Use `ClosureBorrow::new` (for `Fn`) or `ClosureBorrow::new_mut` (for `FnMut`) when
+Use `RefClosure::new` (for `Fn`) or `RefClosure::new_mut` (for `FnMut`) when
 JavaScript will call the closure immediately and not retain it. This is the
 recommended approach for synchronous callbacks like array iteration, Promise
 executors, and similar APIs.
@@ -28,18 +28,18 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     // A JS function that calls the callback immediately with a value
-    fn call_with_value(cb: &Closure<dyn FnMut(u32)>, value: u32);
+    fn call_with_value(cb: &RefClosure<dyn FnMut(u32)>, value: u32);
 }
 
 let mut result = 0;
 
-// ClosureBorrow::new_mut allows capturing &mut result without 'static
+// RefClosure::new_mut allows capturing &mut result without 'static
 {
     let mut func = |value: u32| {
         result = value * 2;
     };
-    let closure = ClosureBorrow::new_mut(&mut func);
-    call_with_value(closure.as_ref(), 21);
+    let closure = RefClosure::new_mut(&mut func);
+    call_with_value(&closure, 21);
 }
 
 assert_eq!(result, 42);
@@ -49,18 +49,18 @@ Benefits of borrowed closures:
 
 - **Non-`'static` captures**: Unlike `Closure::new`, you can capture references
   to local variables
-- **Automatic cleanup**: The closure is invalidated when the `ClosureBorrow` is dropped
+- **Automatic cleanup**: The closure is invalidated when the `RefClosure` is dropped
 - **No heap allocation**: The closure data lives on the stack
-- **Lifetime safety**: Rust's borrow checker ensures `ClosureBorrow` cannot
+- **Lifetime safety**: Rust's borrow checker ensures `RefClosure` cannot
   outlive the closure's captured data
 
-**Important**: The JavaScript function is only valid while the `ClosureBorrow`
-exists. The `ClosureBorrow<'a, _>` has lifetime `'a` from the closure reference,
+**Important**: The JavaScript function is only valid while the `RefClosure`
+exists. The `RefClosure<'a, _>` has lifetime `'a` from the closure reference,
 which transitively includes any data the closure captures. This means Rust
-prevents you from holding the `ClosureBorrow` longer than its captured data lives.
+prevents you from holding the `RefClosure` longer than its captured data lives.
 
 If JavaScript retains a reference to the closure and calls it after the
-`ClosureBorrow` is dropped, it will throw: "closure invoked recursively or
+`RefClosure` is dropped, it will throw: "closure invoked recursively or
 after being dropped".
 
 ## Long-Lived Closures with `Closure::new`
@@ -166,7 +166,7 @@ Panics](./catch-unwind.md).
 ### UnwindSafe Requirement
 
 The default constructors (`Closure::new`, `Closure::wrap`, `Closure::once`,
-`ClosureBorrow::new`, `ClosureBorrow::new_mut`) require that closures be
+`RefClosure::new`, `RefClosure::new_mut`) require that closures be
 `UnwindSafe`. This is a marker trait that indicates a type is safe to use
 across panic boundaries.
 
@@ -182,7 +182,7 @@ The compiler error will indicate which captured type is problematic.
 
 If you don't need panic catching, use the `*_aborting` variants (`new_aborting`,
 `wrap_aborting`, `once_aborting`, `once_into_js_aborting`,
-`ClosureBorrow::new_aborting`, `ClosureBorrow::new_mut_aborting`) which do not
+`RefClosure::new_aborting`, `RefClosure::new_mut_aborting`) which do not
 require `UnwindSafe`:
 
 ```rust
@@ -239,7 +239,7 @@ let closure: Closure<dyn FnMut()> = Closure::wrap(Box::new(|| {}));
 
 ## Legacy `&dyn Fn` and `&mut dyn FnMut`
 
-> ⚠️ Note: This pattern will be **deprecated** going forward, to instead use the unwind-safe `ClosureBorrow` for immediate callbacks.
+> ⚠️ Note: This pattern will be **deprecated** going forward, to instead use the unwind-safe `RefClosure` for immediate callbacks.
 
 The `#[wasm_bindgen]` attribute also supports passing closures as `&dyn Fn` or
 `&mut dyn FnMut` trait object references. However, **this pattern is not unwind
@@ -255,10 +255,10 @@ extern "C" {
 }
 ```
 
-### Migrating to `ClosureBorrow`
+### Migrating to `RefClosure`
 
-Replace `&dyn Fn` / `&mut dyn FnMut` parameters with `&Closure<dyn Fn(...)>` and
-use `ClosureBorrow::new` (for `Fn`) or `ClosureBorrow::new_mut` (for `FnMut`):
+Replace `&dyn Fn` / `&mut dyn FnMut` parameters with `&RefClosure<dyn Fn(...)>` and
+use `RefClosure::new` (for `Fn`) or `RefClosure::new_mut` (for `FnMut`):
 
 ```rust
 #[wasm_bindgen]
@@ -270,15 +270,15 @@ forEach(&mut |value| { /* ... */ });
 // ✅ NEW: Unwind safe
 #[wasm_bindgen]
 extern "C" {
-    fn forEach(f: &Closure<dyn FnMut(JsValue)>);
+    fn forEach(f: &RefClosure<dyn FnMut(JsValue)>);
 }
 {
     let mut func = |value| { /* ... */ };
-    let closure = ClosureBorrow::new_mut(&mut func);
-    forEach(closure.as_ref());
+    let closure = RefClosure::new_mut(&mut func);
+    forEach(&closure);
 }
 ```
 
 Note that `js-sys` currently still uses the `&dyn Fn` pattern for its callback
-APIs (such as `Array::for_each`). These will be migrated to `Closure` in a
+APIs (such as `Array::for_each`). These will be migrated to `RefClosure` in a
 future release.

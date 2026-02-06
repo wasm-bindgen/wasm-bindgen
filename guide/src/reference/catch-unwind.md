@@ -108,9 +108,9 @@ try {
 
 ## Closures
 
-All `Closure` and `ClosureBorrow` variants catch panics when built with `panic=unwind`.
-This includes `Closure::new`, `Closure::wrap`, `Closure::once`, `ClosureBorrow::new`,
-and `ClosureBorrow::new_mut`. When a panic occurs inside a closure invoked from
+All `Closure` and `RefClosure` variants catch panics when built with `panic=unwind`.
+This includes `Closure::new`, `Closure::wrap`, `Closure::once`, `RefClosure::new`,
+and `RefClosure::new_mut`. When a panic occurs inside a closure invoked from
 JavaScript, the panic is caught and thrown as a `PanicError` exception.
 
 Like exported functions, catching panics in closures requires the closure to
@@ -139,30 +139,30 @@ try {
 }
 ```
 
-`ClosureBorrow::new_mut` also catches panics for immediate callbacks:
+`RefClosure::new_mut` also catches panics for immediate callbacks:
 
 ```rust
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    fn call_callback(cb: &Closure<dyn FnMut()>);
+    fn call_callback(cb: &RefClosure<dyn FnMut()>);
 }
 
 {
     let mut func = || {
         panic!("panic in callback!");
     };
-    let closure = ClosureBorrow::new_mut(&mut func);
+    let closure = RefClosure::new_mut(&mut func);
     // This panic will be caught and thrown as PanicError
-    call_callback(closure.as_ref());
+    call_callback(&closure);
 }
 ```
 
 For closures that should not catch panics (and abort the program instead), use
 the `*_aborting` variants: `Closure::new_aborting`, `Closure::wrap_aborting`,
 `Closure::once_aborting`, `Closure::once_into_js_aborting`,
-`ClosureBorrow::new_aborting`, and `ClosureBorrow::new_mut_aborting`.
+`RefClosure::new_aborting`, and `RefClosure::new_mut_aborting`.
 These do not require `UnwindSafe`.
 
 > **Note**: The deprecated `&dyn Fn` and `&mut dyn FnMut` patterns are **not**
