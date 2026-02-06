@@ -4,8 +4,8 @@ use core::mem;
 #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
 use crate::__rt::maybe_catch_unwind;
 use crate::closure::{
-    Closure, IntoWasmClosure, UnsizeClosureRef, WasmClosure, WasmClosureFnOnce,
-    WasmClosureFnOnceAbort,
+    Closure, IntoWasmClosure, UnsizeClosureRef, UnsizeClosureRefMut, WasmClosure,
+    WasmClosureFnOnce, WasmClosureFnOnceAbort,
 };
 use crate::convert::slices::WasmSlice;
 use crate::convert::RefFromWasmAbi;
@@ -159,7 +159,15 @@ macro_rules! closures {
     // Since Fn: FnMut, any Fn closure can be used as FnMut, so this covers all cases.
     // This avoids ambiguity when a closure implements both Fn and FnMut.
     (@impl_unsize_closure_ref $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (
-        impl<'a, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> UnsizeClosureRef<dyn FnMut $FnArgs -> R + 'a> for T
+        impl<'a, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> UnsizeClosureRef<dyn Fn $FnArgs -> R + 'a> for T
+        where
+            T: Fn $FnArgs -> R,
+        {
+            type Static = dyn Fn $FnArgs -> R;
+            fn unsize_closure_ref(&self) -> &(dyn Fn $FnArgs -> R + 'a) { self }
+        }
+
+        impl<'a, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> UnsizeClosureRefMut<dyn FnMut $FnArgs -> R + 'a> for T
         where
             T: FnMut $FnArgs -> R,
         {

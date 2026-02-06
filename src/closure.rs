@@ -264,6 +264,14 @@ pub struct Closure<T: ?Sized> {
     _marker: PhantomData<Box<T>>,
 }
 
+pub struct ClosureBorrow<'a, T: ?Sized> {
+    js: JsClosure,
+    _lt: &'a (),
+    // careful: must be Box<T> not just T because unsized PhantomData
+    // seems to have weird interaction with Pin<>
+    _marker: PhantomData<Box<T>>,
+}
+
 fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
     let _ = &mut *pin;
 }
@@ -342,9 +350,30 @@ where
     /// The closure stores a raw pointer to the borrowed data and is only valid
     /// for as long as that data lives. When dropped, the closure is invalidated
     /// on the JS side by setting `state.a = state.b = 0`.
-    fn from_borrowed<F>(t: &mut F, unwind_safe: bool) -> Closure<T>
+    unsafe fn from_borrowed<F>(t: &F, unwind_safe: bool) -> Closure<T>
     where
         F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let t: &T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        Closure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: WasmSlice { ptr, len },
+                unwind_safe,
+                _marker: PhantomData::<T>,
+            }),
+            _marker: PhantomData::<Box<T>>,
+        }
+    }
+
+    /// Creates a mut `Closure` from borrowed data. Used internally by `with` and `with_aborting`.
+    ///
+    /// The closure stores a raw pointer to the borrowed data and is only valid
+    /// for as long as that data lives. When dropped, the closure is invalidated
+    /// on the JS side by setting `state.a = state.b = 0`.
+    unsafe fn from_borrowed_mut<F>(t: &mut F, unwind_safe: bool) -> Closure<T>
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
@@ -386,14 +415,6 @@ where
     /// does not store it. For event listeners, timers, or any API where
     /// JavaScript retains the callback, use [`Closure::new`] instead.
     ///
-    /// # Choosing a `Closure` API
-    ///
-    /// | Use case | Recommended API |
-    /// |----------|----------------|
-    /// | Immediate/synchronous callbacks | `Closure::with` |
-    /// | Event listeners, timers | [`Closure::new`] + store handle |
-    /// | One-shot callbacks (e.g., Promise) | [`Closure::once`] or [`Closure::once_into_js`] |
-    ///
     /// # Example
     ///
     /// ```ignore
@@ -423,11 +444,24 @@ where
     /// caught and re-thrown as a JavaScript `PanicError` exception (when built
     /// with `panic=unwind`). Use [`with_aborting`](Self::with_aborting) if you
     /// prefer abort-on-panic behavior.
-    pub fn with<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
+    pub fn with<F, R>(t: &F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
     where
         F: UnsizeClosureRef<T> + ?Sized,
     {
-        let closure = Self::from_borrowed(t, true);
+        let closure = unsafe { Self::from_borrowed(t, true) };
+        // SAFETY: T and F::Static have the same memory layout; only the lifetime
+        // in the type differs. The closure is dropped before this function returns,
+        // ensuring the borrowed data outlives the closure.
+        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
+        f(static_ref)
+        // closure is dropped here, before the borrowed data's lifetime ends
+    }
+
+    pub fn with_mut<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
+    {
+        let closure = unsafe { Self::from_borrowed_mut(t, true) };
         // SAFETY: T and F::Static have the same memory layout; only the lifetime
         // in the type differs. The closure is dropped before this function returns,
         // ensuring the borrowed data outlives the closure.
@@ -444,10 +478,27 @@ where
     where
         F: UnsizeClosureRef<T> + ?Sized,
     {
-        let closure = Self::from_borrowed(t, false);
+        let closure = unsafe { Self::from_borrowed(t, false) };
         // SAFETY: Same as `with` - T and F::Static have the same layout.
         let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
         f(static_ref)
+    }
+
+    /// Like `with`, but creates a non-unwinding closure.
+    ///
+    /// Use this when you don't need panic catching across the JS boundary
+    /// or prefer abort-on-panic behavior.
+    pub fn with_mut_aborting<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
+    {
+        let closure = unsafe { Self::from_borrowed_mut(t, false) };
+        // SAFETY: T and F::Static have the same memory layout; only the lifetime
+        // in the type differs. The closure is dropped before this function returns,
+        // ensuring the borrowed data outlives the closure.
+        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
+        f(static_ref)
+        // closure is dropped here, before the borrowed data's lifetime ends
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -861,12 +912,25 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
     }
 }
 
-/// Trait for converting a mutable reference to a closure into a trait object reference.
+/// Trait for converting a reference to a closure into a trait object reference.
 ///
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
 pub trait UnsizeClosureRef<T: ?Sized> {
+    /// The `'static` version of `T`. For example, if `T` is `dyn Fn() + 'a`,
+    /// then `Static` is `dyn Fn()` (implicitly `'static`).
+    type Static: ?Sized + WasmClosure;
+
+    fn unsize_closure_ref(&self) -> &T;
+}
+
+/// Trait for converting a mutable reference to a closure into a trait object reference.
+///
+/// This trait is not stable and it's not recommended to use this in bounds or
+/// implement yourself.
+#[doc(hidden)]
+pub trait UnsizeClosureRefMut<T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn FnMut() + 'a`,
     /// then `Static` is `dyn FnMut()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;

@@ -202,10 +202,15 @@ fn many_arity() {
         assert_eq!((a, b), (1, 2));
     }));
     let s = String::new();
-    many_arity_call_mut4(&Closure::once(move |a, b, c| {
-        drop(s);
-        assert_eq!((a, b, c), (1, 2, 3));
-    }));
+    Closure::with(
+        move |a, b, c| {
+            drop(s);
+            assert_eq!((a, b, c), (1, 2, 3));
+        },
+        |c| {
+            many_arity_call_mut4(c);
+        },
+    );
     let s = String::new();
     many_arity_call_mut5(&Closure::once(move |a, b, c, d| {
         drop(s);
