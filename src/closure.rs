@@ -264,6 +264,11 @@ pub struct Closure<T: ?Sized> {
     _marker: PhantomData<Box<T>>,
 }
 
+fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
+    let _ = &mut *pin;
+}
+
+
 pub struct ClosureBorrow<'a, T: ?Sized> {
     closure: Closure<T>,
     _lifetime: &'a (),
@@ -279,10 +284,6 @@ impl<'a, T: ?Sized> AsMut<Closure<T>> for ClosureBorrow<'a, T> {
     fn as_mut(&mut self) -> &mut Closure<T> {
         &mut self.closure
     }
-}
-
-fn _assert_compiles<T>(mut pin: core::pin::Pin<&mut Closure<T>>) {
-    let _ = &mut *pin;
 }
 
 impl<T> Closure<T>
@@ -352,48 +353,6 @@ where
         F: MaybeUnwindSafe + IntoWasmClosure<T> + ?Sized,
     {
         Self::_wrap(data.unsize(), true)
-    }
-
-    /// Creates a `Closure` from borrowed data. Used internally by `with` and `with_aborting`.
-    ///
-    /// The closure stores a raw pointer to the borrowed data and is only valid
-    /// for as long as that data lives. When dropped, the closure is invalidated
-    /// on the JS side by setting `state.a = state.b = 0`.
-    unsafe fn from_borrowed<F>(t: &F, unwind_safe: bool) -> Closure<T>
-    where
-        F: UnsizeClosureRef<T> + ?Sized,
-    {
-        let t: &T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        Closure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
-                data: WasmSlice { ptr, len },
-                unwind_safe,
-                _marker: PhantomData::<T>,
-            }),
-            _marker: PhantomData::<Box<T>>,
-        }
-    }
-
-    /// Creates a mut `Closure` from borrowed data. Used internally by `with` and `with_aborting`.
-    ///
-    /// The closure stores a raw pointer to the borrowed data and is only valid
-    /// for as long as that data lives. When dropped, the closure is invalidated
-    /// on the JS side by setting `state.a = state.b = 0`.
-    unsafe fn from_borrowed_mut<F>(t: &mut F, unwind_safe: bool) -> Closure<T>
-    where
-        F: UnsizeClosureRefMut<T> + ?Sized,
-    {
-        let t: &mut T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        Closure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
-                data: WasmSlice { ptr, len },
-                unwind_safe,
-                _marker: PhantomData::<T>,
-            }),
-            _marker: PhantomData::<Box<T>>,
-        }
     }
 
     /// Creates a borrowed `Closure` from an immutable reference to a `Fn` closure.
@@ -480,120 +439,6 @@ where
             },
             _lifetime: &(),
         }
-    }
-
-    /// Executes a callback with a borrowed `Closure`, ideal for immediate use.
-    ///
-    /// Use this when passing a closure to JavaScript that will be called
-    /// immediately (synchronously) and not retained. Unlike [`Closure::new`],
-    /// this does not require the closure to be `'static`, allowing you to
-    /// capture references to local variables.
-    ///
-    /// # When to use `Closure::with`
-    ///
-    /// `Closure::with` is recommended when possible for immediate callbacks
-    /// because it:
-    ///
-    /// - Allows capturing non-`'static` references
-    /// - Automatically cleans up when the callback returns
-    /// - Avoids heap allocation for the closure data
-    ///
-    /// # Important: Closure lifetime
-    ///
-    /// The closure is **only valid during the callback `f`**. Once `with` returns,
-    /// the closure is invalidated on the JavaScript side. If JavaScript retains a
-    /// reference to the closure and attempts to call it later, it will throw an
-    /// error: "closure invoked recursively or after being dropped".
-    ///
-    /// This makes `Closure::with` ideal for APIs like `Array.forEach`,
-    /// `Array.map`, or any function that calls the callback synchronously and
-    /// does not store it. For event listeners, timers, or any API where
-    /// JavaScript retains the callback, use [`Closure::new`] instead.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// use wasm_bindgen::prelude::*;
-    ///
-    /// #[wasm_bindgen]
-    /// extern "C" {
-    ///     // A JS function that calls the callback immediately
-    ///     fn call_with_value(cb: &Closure<dyn FnMut(u32)>, value: u32);
-    /// }
-    ///
-    /// let mut result = 0;
-    ///
-    /// // Closure::with lets us capture `&mut result` without requiring 'static
-    /// Closure::with(&mut |value: u32| {
-    ///     result = value * 2;
-    /// }, |closure| {
-    ///     call_with_value(closure, 21);
-    /// });
-    ///
-    /// assert_eq!(result, 42);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// If the closure panics while being called from JavaScript, the panic is
-    /// caught and re-thrown as a JavaScript `PanicError` exception (when built
-    /// with `panic=unwind`). Use [`with_aborting`](Self::with_aborting) if you
-    /// prefer abort-on-panic behavior.
-    pub fn with<F, R>(t: &F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
-    where
-        F: UnsizeClosureRef<T> + ?Sized,
-    {
-        let closure = unsafe { Self::from_borrowed(t, true) };
-        // SAFETY: T and F::Static have the same memory layout; only the lifetime
-        // in the type differs. The closure is dropped before this function returns,
-        // ensuring the borrowed data outlives the closure.
-        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
-        f(static_ref)
-        // closure is dropped here, before the borrowed data's lifetime ends
-    }
-
-    pub fn with_mut<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
-    where
-        F: UnsizeClosureRefMut<T> + ?Sized,
-    {
-        let closure = unsafe { Self::from_borrowed_mut(t, true) };
-        // SAFETY: T and F::Static have the same memory layout; only the lifetime
-        // in the type differs. The closure is dropped before this function returns,
-        // ensuring the borrowed data outlives the closure.
-        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
-        f(static_ref)
-        // closure is dropped here, before the borrowed data's lifetime ends
-    }
-
-    /// Like `with`, but creates a non-unwinding closure.
-    ///
-    /// Use this when you don't need panic catching across the JS boundary
-    /// or prefer abort-on-panic behavior.
-    pub fn with_aborting<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
-    where
-        F: UnsizeClosureRef<T> + ?Sized,
-    {
-        let closure = unsafe { Self::from_borrowed(t, false) };
-        // SAFETY: Same as `with` - T and F::Static have the same layout.
-        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
-        f(static_ref)
-    }
-
-    /// Like `with`, but creates a non-unwinding closure.
-    ///
-    /// Use this when you don't need panic catching across the JS boundary
-    /// or prefer abort-on-panic behavior.
-    pub fn with_mut_aborting<F, R>(t: &mut F, f: impl FnOnce(&Closure<F::Static>) -> R) -> R
-    where
-        F: UnsizeClosureRefMut<T> + ?Sized,
-    {
-        let closure = unsafe { Self::from_borrowed_mut(t, false) };
-        // SAFETY: T and F::Static have the same memory layout; only the lifetime
-        // in the type differs. The closure is dropped before this function returns,
-        // ensuring the borrowed data outlives the closure.
-        let static_ref: &Closure<F::Static> = unsafe { mem::transmute(&closure) };
-        f(static_ref)
-        // closure is dropped here, before the borrowed data's lifetime ends
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
