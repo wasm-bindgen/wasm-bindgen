@@ -29,7 +29,7 @@ interface mixin GlobalEventHandlers {
 // below.
 //         attribute OnErrorEventHandler onerror;
            attribute EventHandler onfocus;
-           //(Not implemented)attribute EventHandler oncancel;
+           attribute EventHandler oncancel;
            attribute EventHandler onauxclick;
            [Pref="dom.element.popover.enabled"]
            attribute EventHandler onbeforetoggle;

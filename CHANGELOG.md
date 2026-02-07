@@ -16,6 +16,10 @@
   APIs like the CSS Custom Highlight API which adds the `highlights` attribute to the `CSS` namespace.
   [#4930](https://github.com/wasm-bindgen/wasm-bindgen/issues/4930)
 
+* Added `oncancel` event handler to `GlobalEventHandlers` (available on `HtmlElement`,
+  `Document`, `Window`, etc.).
+  [#4542](https://github.com/wasm-bindgen/wasm-bindgen/pull/4542)
+
 * Added `CommandEvent` and `CommandEventInit` from the Invoker Commands API.
   [#4552](https://github.com/wasm-bindgen/wasm-bindgen/pull/4552)
 
