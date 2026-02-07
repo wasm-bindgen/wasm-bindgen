@@ -20,6 +20,9 @@
   `Document`, `Window`, etc.).
   [#4542](https://github.com/wasm-bindgen/wasm-bindgen/pull/4542)
 
+* Added `CommandEvent` and `CommandEventInit` from the Invoker Commands API.
+  [#4552](https://github.com/wasm-bindgen/wasm-bindgen/pull/4552)
+
 * Added support for unstable WebIDL to override stable attribute types, allowing
   corrected type signatures behind `web_sys_unstable_apis`. Applied to `MouseEvent`
   coordinate attributes (`clientX`, `clientY`, `screenX`, `screenY`, `offsetX`,
