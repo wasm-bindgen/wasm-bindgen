@@ -402,10 +402,16 @@ fn _assert_compiles<T>(pin: core::pin::Pin<&mut ScopedClosure<'static, T>>) {
 impl<T: ?Sized> Drop for ScopedClosure<'_, T> {
     fn drop(&mut self) {
         // Invalidate the closure on the JS side.
-        // For owned closures, this decreases the refcount and frees the Rust data
-        // when the count reaches zero.
-        // For borrowed closures, this sets state.a = state.b = 0 to prevent
-        // any further calls to the closure.
+        //
+        // The JS bindings distinguish owned vs borrowed closures via the `dtor_idx`
+        // encoded in `WasmDescribe`: owned closures pass a non-zero destructor
+        // function pointer, borrowed closures pass `0`.
+        //
+        // For owned closures (`Closure::new`/`ScopedClosure::own`), this decreases
+        // the refcount and frees the Rust heap data when the count reaches zero.
+        //
+        // For borrowed closures (`ScopedClosure::borrow`/`borrow_mut`), this sets
+        // state.a = state.b = 0 to prevent any further calls to the closure.
         self.js.unchecked_ref::<JsClosure>()._wbg_cb_unref();
     }
 }

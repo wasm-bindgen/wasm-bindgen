@@ -170,8 +170,8 @@ fn long_lived() {
 #[wasm_bindgen_test]
 fn many_arity() {
     many_arity_call1(&Closure::new(|| {}));
-    many_arity_call2(&Closure::new(|a| assert_eq!(a, 1)));
-    many_arity_call3(&Closure::new(|a, b| assert_eq!((a, b), (1, 2))));
+    many_arity_call2(&ScopedClosure::new(|a| assert_eq!(a, 1)));
+    many_arity_call3(&StaticClosure::new(|a, b| assert_eq!((a, b), (1, 2))));
     many_arity_call4(&Closure::new(|a, b, c| assert_eq!((a, b, c), (1, 2, 3))));
     many_arity_call5(&Closure::new(|a, b, c, d| {
         assert_eq!((a, b, c, d), (1, 2, 3, 4))
