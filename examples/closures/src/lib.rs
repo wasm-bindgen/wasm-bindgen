@@ -7,10 +7,10 @@ fn run() -> Result<(), JsValue> {
     let window = web_sys::window().expect("should have a window in this context");
     let document = window.document().expect("window should have a document");
 
-    // Demonstrate RefClosure for immediate callbacks.
+    // Demonstrate ScopedClosure for immediate callbacks.
     // This is the recommended way to pass closures to JS for synchronous use.
     // The closure can capture local references and is automatically cleaned up.
-    demonstrate_closure_borrowed();
+    demonstrate_scoped_closure();
 
     // Note: js_sys::Array::for_each currently still uses the old `&mut dyn FnMut`
     // pattern, which will be migrated to Closure in a future release.
@@ -90,16 +90,15 @@ fn setup_clock(window: &Window, document: &Document) -> Result<(), JsValue> {
     Ok(())
 }
 
-// Demonstrate RefClosure for immediate/synchronous callbacks.
+// Demonstrate ScopedClosure for immediate/synchronous callbacks.
 //
-// Use RefClosure::new (for Fn) or RefClosure::new_mut (for FnMut) when
+// Use ScopedClosure::borrow (for Fn) or ScopedClosure::borrow_mut (for FnMut) when
 // JavaScript will call the closure immediately and won't retain it. Benefits:
 // - Can capture non-'static references (like &mut local_var)
-// - Automatic cleanup when RefClosure is dropped
-// - Lifetime safety: RefClosure can't outlive the closure's captured data
-// - No heap allocation for the closure data
+// - Automatic cleanup when ScopedClosure is dropped
+// - Lifetime safety: ScopedClosure can't outlive the closure's captured data
 // - Unwind safe (panics become JS exceptions)
-fn demonstrate_closure_borrowed() {
+fn demonstrate_scoped_closure() {
     #[wasm_bindgen(inline_js = r#"
         export function callThreeTimes(cb) {
             cb(1);
@@ -109,10 +108,10 @@ fn demonstrate_closure_borrowed() {
     "#)]
     extern "C" {
         // This JS function calls the callback immediately, three times
-        fn callThreeTimes(cb: &RefClosure<dyn FnMut(u32)>);
+        fn callThreeTimes(cb: &ScopedClosure<dyn FnMut(u32)>);
     }
 
-    // Example: Using RefClosure::new_mut to sum values
+    // Example: Using ScopedClosure::borrow_mut to sum values
     // The closure captures &mut sum without requiring 'static
     let mut sum = 0u32;
 
@@ -120,7 +119,7 @@ fn demonstrate_closure_borrowed() {
         let mut func = |value: u32| {
             sum += value;
         };
-        let closure = RefClosure::new_mut(&mut func);
+        let closure = ScopedClosure::borrow_mut(&mut func);
         // Pass the closure to JavaScript - it will be called synchronously
         // and then invalidated when closure is dropped
         callThreeTimes(&closure);

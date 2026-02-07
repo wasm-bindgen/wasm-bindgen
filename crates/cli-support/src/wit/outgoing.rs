@@ -268,7 +268,7 @@ impl InstructionBuilder<'_, '_> {
         let shim = self.export_table_element(descriptor.shim_idx);
         let dtor = match dtor_idx {
             None => ClosureDtor::RefLegacy,
-            Some(0) => ClosureDtor::RefClosure,
+            Some(0) => ClosureDtor::Borrowed,
             Some(idx) => ClosureDtor::OwnClosure(self.export_table_element(idx)),
         };
         let adapter = self.cx.export_adapter(shim, descriptor)?;

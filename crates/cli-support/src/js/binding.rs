@@ -1467,10 +1467,10 @@ fn instruction(
                         // to Rust.
                         js.finally(&format!("state{i}.a = state{i}.b = 0;"));
                     }
-                    ClosureDtor::RefClosure => {
-                        // Borrowed closure from the Closure::borrowed() body. Add
+                    ClosureDtor::Borrowed => {
+                        // Borrowed closure from ScopedClosure::borrow/borrow_mut. Add
                         // _wbg_cb_unref to invalidate the closure at the end of
-                        // the borrowed() block.
+                        // the scoped block.
                         js.prelude(&format!(
                             "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
                         ));

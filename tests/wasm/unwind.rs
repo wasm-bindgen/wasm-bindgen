@@ -49,7 +49,7 @@ extern "C" {
     #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
     pub fn try_every_result_closure_borrow(
         this: &ArrayUnwind,
-        predicate: &RefClosure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
+        predicate: &ScopedClosure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
     ) -> Result<bool, JsValue>;
 
     // This currently aborts correctly
@@ -239,7 +239,7 @@ fn drop_throw_str() {
             foo.foo();
             Ok(true)
         };
-        let closure = RefClosure::new_mut(&mut func);
+        let closure = ScopedClosure::borrow_mut(&mut func);
         assert!(js_array![0]
             .try_every_result_closure_borrow(&closure)
             .is_err());

@@ -105,9 +105,9 @@ pub enum ClosureDtor {
     /// Borrowed closure called from JS (e.g., `forEach` callback). The closure
     /// is invalidated after the JS call returns by calling `_wbg_cb_unref`.
     RefLegacy,
-    /// Borrowed closure passed to a Rust async import. The closure's lifetime
+    /// Borrowed closure (`ScopedClosure`) passed to a Rust async import. The closure's lifetime
     /// is tied to the async call and cleanup is handled on the Rust side.
-    RefClosure,
+    Borrowed,
 }
 
 #[derive(Debug, Clone)]

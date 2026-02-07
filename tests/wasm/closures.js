@@ -202,3 +202,21 @@ exports.closure_with_call_cached_throws = () => {
     return true;
   }
 };
+
+// Test for passing Closure by value (ownership transfer)
+let OWNED_CLOSURE_CACHE = null;
+
+exports.closure_take_ownership = f => {
+  // Store the closure and call it
+  OWNED_CLOSURE_CACHE = f;
+  f();
+};
+
+exports.closure_take_ownership_with_arg = (f, value) => {
+  f(value);
+};
+
+exports.closure_call_stored = () => {
+  // Call the previously stored closure
+  OWNED_CLOSURE_CACHE();
+};
