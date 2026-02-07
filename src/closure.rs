@@ -1,19 +1,33 @@
 //! Support for closures in `wasm-bindgen`
 //!
-//! This module defines the [`Closure`] type which is used to pass Rust closures
-//! to JavaScript. `Closure` is unwind safe: panics are caught and converted to
+//! This module defines the [`ScopedClosure`] type which is used to pass Rust closures
+//! to JavaScript. All closures are unwind safe: panics are caught and converted to
 //! JavaScript exceptions when built with `panic=unwind`.
 //!
 //! # Choosing a `Closure` API
 //!
-//! - [`ScopedClosure::new`] / [`ScopedClosure::new_mut`] — For immediate/synchronous
-//!   callbacks. Allows non-`'static` captures and automatic cleanup.
-//! - [`Closure::new`] / [`StaticClosure::new`] — For long-lived closures (event
-//!   listeners, timers). Requires `'static` and explicit lifetime management.
-//! - [`Closure::once`] / [`Closure::once_into_js`] — For one-shot callbacks.
+//! | Use Case | API | Lifetime |
+//! |----------|-----|----------|
+//! | Immediate/synchronous callbacks | [`ScopedClosure::borrow`] / [`ScopedClosure::borrow_mut`] | Non-`'static` allowed |
+//! | Long-lived callbacks (events, timers) | [`Closure::new`] / [`ScopedClosure::own`] | `'static` required |
+//! | One-shot callbacks | [`Closure::once`] / [`Closure::once_into_js`] | `'static` required |
+//! | Transfer ownership to JS | Pass `Closure` by value | `'static` required |
 //!
-//! `ScopedClosure<'a, T>` is the unified closure type with a lifetime parameter.
-//! `StaticClosure<T>` and `Closure<T>` are aliases for `ScopedClosure<'static, T>`.
+//! # Type Aliases
+//!
+//! - [`ScopedClosure<'a, T>`] — The unified closure type with a lifetime parameter
+//! - [`StaticClosure<T>`] — Alias for `ScopedClosure<'static, T>`
+//! - [`Closure<T>`] — Alias for `StaticClosure<T>` (for backwards compatibility)
+//!
+//! # Ownership Model
+//!
+//! `ScopedClosure` follows the same ownership model as other wasm-bindgen types:
+//! the JavaScript reference remains valid until the Rust value is dropped. When
+//! dropped, the closure is invalidated and any subsequent calls from JavaScript
+//! will throw an exception.
+//!
+//! For borrowed closures created with `borrow`/`borrow_mut`, Rust's borrow checker
+//! ensures the `ScopedClosure` cannot outlive the closure's captured data.
 //!
 //! See the [`ScopedClosure`] type documentation for detailed examples.
 
@@ -266,31 +280,43 @@ extern "C" {
 /// `ScopedClosure<'a, T>` is the unified closure type. The lifetime `'a` indicates
 /// how long the closure is valid:
 ///
-/// - `ScopedClosure<'static, T>` (aka [`StaticClosure<T>`] or [`Closure<T>`]) - An owned
+/// - **`ScopedClosure<'static, T>`** (aka [`StaticClosure<T>`] or [`Closure<T>`]) - An owned
 ///   closure with heap-allocated data. Requires `'static` captures. Use for long-lived
-///   closures like event listeners and timers.
+///   closures like event listeners and timers. Created with [`Closure::new`] or [`ScopedClosure::own`].
 ///
-/// - `ScopedClosure<'a, T>` (non-`'static`) - A borrowed closure referencing stack data.
-///   Allows non-`'static` captures. Use for immediate/synchronous callbacks.
+/// - **`ScopedClosure<'a, T>`** (non-`'static`) - A borrowed closure referencing stack data.
+///   Allows non-`'static` captures. Use for immediate/synchronous callbacks. Created with
+///   [`ScopedClosure::borrow`] or [`ScopedClosure::borrow_mut`].
 ///
-/// When the `ScopedClosure` is dropped, the corresponding JavaScript function
-/// is invalidated. Any subsequent calls from JS will throw an exception.
+/// # Ownership Model
+///
+/// `ScopedClosure` follows the same ownership model as other wasm-bindgen types:
+/// the JavaScript reference remains valid until the Rust value is dropped. When
+/// dropped, the closure is invalidated and any subsequent calls from JavaScript
+/// will throw: "closure invoked recursively or after being dropped".
+///
+/// For `'static` closures, you can also:
+/// - Pass by value to transfer ownership to JS (implements [`IntoWasmAbi`])
+/// - Call [`forget()`](Self::forget) to leak the closure (JS can use it indefinitely)
+/// - Call [`into_js_value()`](Self::into_js_value) to transfer to JS GC management
 ///
 /// # Lifetime Safety
 ///
-/// Rust's borrow checker ensures that `ScopedClosure` cannot be held longer
-/// than the closure's captured data:
+/// For borrowed closures, Rust's borrow checker ensures that `ScopedClosure` cannot
+/// be held longer than the closure's captured data:
 ///
 /// ```ignore
 /// let mut sum = 0;
 /// let mut f = |x: u32| { sum += x; };  // f borrows sum
-/// let closure = ScopedClosure::new_mut(&mut f);  // closure borrows f
+/// let closure = ScopedClosure::borrow_mut(&mut f);  // closure borrows f
 /// // closure cannot outlive f, and f cannot outlive sum
 /// ```
 ///
 /// # Examples
 ///
-/// ## Immediate callbacks with `ScopedClosure::new_mut`
+/// ## Borrowed closures with `ScopedClosure::borrow_mut`
+///
+/// Use for immediate/synchronous callbacks where JS calls the closure right away:
 ///
 /// ```ignore
 /// use wasm_bindgen::prelude::*;
@@ -301,14 +327,17 @@ extern "C" {
 /// }
 ///
 /// let mut sum = 0;
-/// let mut f = |x: u32| { sum += x; };
-/// let closure = ScopedClosure::new_mut(&mut f);
-/// call_immediately(&closure);
-/// drop(closure);  // invalidates the JS function
+/// {
+///     let mut f = |x: u32| { sum += x; };
+///     let closure = ScopedClosure::borrow_mut(&mut f);
+///     call_immediately(&closure);
+/// }  // closure dropped here, JS function invalidated
 /// assert_eq!(sum, 42);
 /// ```
 ///
-/// ## Long-lived closures with `Closure::new`
+/// ## Owned closures with `Closure::new`
+///
+/// Use for long-lived callbacks like event listeners and timers:
 ///
 /// ```ignore
 /// use wasm_bindgen::prelude::*;
@@ -324,6 +353,22 @@ extern "C" {
 /// });
 /// setInterval(&cb, 1000);
 /// // Must keep `cb` alive or call `cb.forget()` to transfer to JS
+/// ```
+///
+/// ## Transferring ownership to JS
+///
+/// Pass a `Closure` by value to transfer ownership:
+///
+/// ```ignore
+/// use wasm_bindgen::prelude::*;
+///
+/// #[wasm_bindgen]
+/// extern "C" {
+///     fn set_one_shot_callback(cb: Closure<dyn FnMut()>);
+/// }
+///
+/// let cb = Closure::new(|| { /* ... */ });
+/// set_one_shot_callback(cb);  // Ownership transferred, no need to store
 /// ```
 pub struct ScopedClosure<'a, T: ?Sized> {
     js: JsValue,

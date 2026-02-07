@@ -1,19 +1,28 @@
 # Passing Rust Closures to Imported JavaScript Functions
 
-The `Closure` type is the way to pass Rust closures to JavaScript. It is defined
-in the `wasm_bindgen` crate and exported in `wasm_bindgen::prelude`.
+The `ScopedClosure` type (and its aliases `Closure` and `StaticClosure`) is the way
+to pass Rust closures to JavaScript. It is defined in the `wasm_bindgen` crate and
+exported in `wasm_bindgen::prelude`.
 
-All `Closure` variants are **unwind safe**: when built with `panic=unwind`,
-panics inside closures are caught and converted to JavaScript `PanicError`
-exceptions. See [Catching Panics](./catch-unwind.md) for details.
+All closures are **unwind safe**: when built with `panic=unwind`, panics inside
+closures are caught and converted to JavaScript `PanicError` exceptions. See
+[Catching Panics](./catch-unwind.md) for details.
 
 ## Choosing a `Closure` API
 
 | Use case | Recommended API |
 |----------|----------------|
-| Immediate/synchronous callbacks (forEach, map, etc.) | `ScopedClosure::borrow` / `ScopedClosure::borrow_mut` |
-| Event listeners, timers, retained callbacks | `Closure::new` |
+| Immediate/synchronous callbacks | `ScopedClosure::borrow` / `ScopedClosure::borrow_mut` |
+| Event listeners, timers, retained callbacks | `Closure::new` / `ScopedClosure::own` |
 | One-shot callbacks (e.g., Promise handlers) | `Closure::once` or `Closure::once_into_js` |
+| Transfer ownership to JS | Pass `Closure` by value |
+
+## Ownership Model
+
+`ScopedClosure` follows the same ownership model as other wasm-bindgen types:
+the JavaScript reference remains valid until the Rust value is dropped. When
+dropped, the closure is invalidated and any subsequent calls from JavaScript
+will throw an exception.
 
 ## Immediate Closures with `ScopedClosure`
 
@@ -122,6 +131,28 @@ pub fn hello() -> Interval {
 
 `Closure` supports both `Fn` and `FnMut` closures, as well as arguments and
 return values.
+
+## Transferring Ownership to JavaScript
+
+You can pass a `Closure` by value to transfer ownership to JavaScript. This is
+useful for one-shot callbacks where you don't need to retain a handle in Rust:
+
+```rust
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    fn set_one_shot_callback(cb: Closure<dyn FnMut()>);
+}
+
+let cb = Closure::new(|| {
+    // This closure is now owned by JS
+});
+set_one_shot_callback(cb);  // Ownership transferred, no need to store or forget
+```
+
+Note that only `'static` closures (`Closure<T>` / `StaticClosure<T>`) can be passed
+by value. Borrowed closures must be passed by reference.
 
 ## One-Shot Closures with `Closure::once`
 
