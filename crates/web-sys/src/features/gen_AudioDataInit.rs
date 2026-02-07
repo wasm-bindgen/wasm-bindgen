@@ -130,7 +130,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioDataInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "transfer")]
     pub fn get_transfer(this: &AudioDataInit) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
@@ -139,7 +139,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioDataInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "transfer")]
     pub fn set_transfer(this: &AudioDataInit, val: &::wasm_bindgen::JsValue);
 }

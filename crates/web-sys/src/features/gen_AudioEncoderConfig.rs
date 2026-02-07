@@ -39,7 +39,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioEncoderConfig`, `BitrateMode`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "bitrateMode")]
     pub fn get_bitrate_mode(this: &AudioEncoderConfig) -> Option<BitrateMode>;
     #[cfg(web_sys_unstable_apis)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioEncoderConfig`, `BitrateMode`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "bitrateMode")]
     pub fn set_bitrate_mode(this: &AudioEncoderConfig, val: BitrateMode);
     #[cfg(web_sys_unstable_apis)]
@@ -78,7 +78,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "numberOfChannels")]
-    pub fn get_number_of_channels(this: &AudioEncoderConfig) -> Option<u32>;
+    pub fn get_number_of_channels(this: &AudioEncoderConfig) -> u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `numberOfChannels` field of this object."]
     #[doc = ""]
@@ -96,7 +96,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "sampleRate")]
-    pub fn get_sample_rate(this: &AudioEncoderConfig) -> Option<u32>;
+    pub fn get_sample_rate(this: &AudioEncoderConfig) -> u32;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `sampleRate` field of this object."]
     #[doc = ""]
@@ -115,10 +115,12 @@ impl AudioEncoderConfig {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(codec: &str) -> Self {
+    pub fn new(codec: &str, number_of_channels: u32, sample_rate: u32) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_codec(codec);
+        ret.set_number_of_channels(number_of_channels);
+        ret.set_sample_rate(sample_rate);
         ret
     }
     #[cfg(web_sys_unstable_apis)]

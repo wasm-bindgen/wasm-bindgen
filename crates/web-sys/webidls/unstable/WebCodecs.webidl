@@ -136,7 +136,7 @@ dictionary AudioDecoderConfig {
   required DOMString codec;
   [EnforceRange] required unsigned long sampleRate;
   [EnforceRange] required unsigned long numberOfChannels;
-  BufferSource description;
+  AllowSharedBufferSource description;
 };
 
 dictionary VideoDecoderConfig {
@@ -149,12 +149,14 @@ dictionary VideoDecoderConfig {
   VideoColorSpaceInit colorSpace;
   HardwareAcceleration hardwareAcceleration = "no-preference";
   boolean optimizeForLatency;
+  double rotation = 0;
+  boolean flip = false;
 };
 
 dictionary AudioEncoderConfig {
   required DOMString codec;
-  [EnforceRange] unsigned long sampleRate;
-  [EnforceRange] unsigned long numberOfChannels;
+  [EnforceRange] required unsigned long sampleRate;
+  [EnforceRange] required unsigned long numberOfChannels;
   [EnforceRange] unsigned long long bitrate;
   BitrateMode bitrateMode = "variable";
 };
@@ -492,7 +494,7 @@ interface ImageDecoder {
 };
 
 
-typedef (BufferSource or ReadableStream) ImageBufferSource;
+typedef (AllowSharedBufferSource or ReadableStream) ImageBufferSource;
 dictionary ImageDecoderInit {
   required DOMString type;
   required ImageBufferSource data;
@@ -516,7 +518,7 @@ dictionary ImageDecodeResult {
 };
 
 
-[Exposed=(Window,DedicatedWorker)]
+[Exposed=(Window,DedicatedWorker), SecureContext]
 interface ImageTrackList {
   getter ImageTrack (unsigned long index);
 
@@ -527,8 +529,8 @@ interface ImageTrackList {
 };
 
 
-[Exposed=(Window,DedicatedWorker)]
-interface ImageTrack : EventTarget {
+[Exposed=(Window,DedicatedWorker), SecureContext]
+interface ImageTrack {
   readonly attribute boolean animated;
   readonly attribute unsigned long frameCount;
   readonly attribute unrestricted float repetitionCount;
