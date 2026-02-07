@@ -75,6 +75,28 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn visible_rect(this: &VideoFrame) -> Option<DomRectReadOnly>;
     #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = rotation)]
+    #[doc = "Getter for the `rotation` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/rotation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn rotation(this: &VideoFrame) -> f64;
+    #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = flip)]
+    #[doc = "Getter for the `flip` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/flip)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn flip(this: &VideoFrame) -> bool;
+    #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = displayWidth)]
     #[doc = "Getter for the `displayWidth` field of this object."]
     #[doc = ""]
@@ -498,4 +520,16 @@ extern "C" {
         destination: &::js_sys::Uint8Array,
         options: &VideoFrameCopyToOptions,
     ) -> ::js_sys::Promise;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "VideoFrameMetadata")]
+    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = metadata)]
+    #[doc = "The `metadata()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/metadata)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameMetadata`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn metadata(this: &VideoFrame) -> VideoFrameMetadata;
 }

@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "fullRange")]
-    pub fn set_full_range(this: &VideoColorSpaceInit, val: bool);
+    pub fn set_full_range(this: &VideoColorSpaceInit, val: Option<bool>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoMatrixCoefficients")]
     #[doc = "Get the `matrix` field of this object."]
@@ -51,7 +51,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "matrix")]
-    pub fn set_matrix(this: &VideoColorSpaceInit, val: VideoMatrixCoefficients);
+    pub fn set_matrix(this: &VideoColorSpaceInit, val: Option<VideoMatrixCoefficients>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoColorPrimaries")]
     #[doc = "Get the `primaries` field of this object."]
@@ -71,7 +71,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "primaries")]
-    pub fn set_primaries(this: &VideoColorSpaceInit, val: VideoColorPrimaries);
+    pub fn set_primaries(this: &VideoColorSpaceInit, val: Option<VideoColorPrimaries>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoTransferCharacteristics")]
     #[doc = "Get the `transfer` field of this object."]
@@ -91,7 +91,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "transfer")]
-    pub fn set_transfer(this: &VideoColorSpaceInit, val: VideoTransferCharacteristics);
+    pub fn set_transfer(this: &VideoColorSpaceInit, val: Option<VideoTransferCharacteristics>);
 }
 #[cfg(web_sys_unstable_apis)]
 impl VideoColorSpaceInit {
@@ -108,28 +108,28 @@ impl VideoColorSpaceInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_full_range()` instead."]
-    pub fn full_range(&mut self, val: bool) -> &mut Self {
+    pub fn full_range(&mut self, val: Option<bool>) -> &mut Self {
         self.set_full_range(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoMatrixCoefficients")]
     #[deprecated = "Use `set_matrix()` instead."]
-    pub fn matrix(&mut self, val: VideoMatrixCoefficients) -> &mut Self {
+    pub fn matrix(&mut self, val: Option<VideoMatrixCoefficients>) -> &mut Self {
         self.set_matrix(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoColorPrimaries")]
     #[deprecated = "Use `set_primaries()` instead."]
-    pub fn primaries(&mut self, val: VideoColorPrimaries) -> &mut Self {
+    pub fn primaries(&mut self, val: Option<VideoColorPrimaries>) -> &mut Self {
         self.set_primaries(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoTransferCharacteristics")]
     #[deprecated = "Use `set_transfer()` instead."]
-    pub fn transfer(&mut self, val: VideoTransferCharacteristics) -> &mut Self {
+    pub fn transfer(&mut self, val: Option<VideoTransferCharacteristics>) -> &mut Self {
         self.set_transfer(val);
         self
     }

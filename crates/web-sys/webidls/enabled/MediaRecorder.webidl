@@ -10,6 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
+enum BitrateMode { "constant", "variable" };
+
 enum RecordingState { "inactive", "recording", "paused" };
 
 [Constructor(MediaStream stream, optional MediaRecorderOptions options),
@@ -27,11 +29,19 @@ interface MediaRecorder : EventTarget {
 
   attribute EventHandler onerror;
 
+  attribute EventHandler onpause;
+
+  attribute EventHandler onresume;
+
   attribute EventHandler onstart;
 
   attribute EventHandler onstop;
 
-  attribute EventHandler onwarning;
+  readonly attribute unsigned long videoBitsPerSecond;
+
+  readonly attribute unsigned long audioBitsPerSecond;
+
+  readonly attribute BitrateMode audioBitrateMode;
 
   [Throws]
   undefined start(optional long timeSlice);
@@ -56,4 +66,7 @@ dictionary MediaRecorderOptions {
   unsigned long audioBitsPerSecond;
   unsigned long videoBitsPerSecond;
   unsigned long bitsPerSecond;
+  BitrateMode audioBitrateMode = "variable";
+  DOMHighResTimeStamp videoKeyFrameIntervalDuration;
+  unsigned long videoKeyFrameIntervalCount;
 };

@@ -15,4 +15,5 @@ pub enum VideoMatrixCoefficients {
     Bt709 = "bt709",
     Bt470bg = "bt470bg",
     Smpte170m = "smpte170m",
+    Bt2020Ncl = "bt2020-ncl",
 }

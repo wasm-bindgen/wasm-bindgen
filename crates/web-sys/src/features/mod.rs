@@ -754,6 +754,13 @@ mod gen_BiquadFilterType;
 #[allow(unused_imports)]
 pub use gen_BiquadFilterType::*;
 
+#[cfg(feature = "BitrateMode")]
+#[allow(non_snake_case)]
+mod gen_BitrateMode;
+#[cfg(feature = "BitrateMode")]
+#[allow(unused_imports)]
+pub use gen_BitrateMode::*;
+
 #[cfg(feature = "Blob")]
 #[allow(non_snake_case)]
 mod gen_Blob;
@@ -10561,6 +10568,13 @@ mod gen_VideoEncoder;
 #[allow(unused_imports)]
 pub use gen_VideoEncoder::*;
 
+#[cfg(feature = "VideoEncoderBitrateMode")]
+#[allow(non_snake_case)]
+mod gen_VideoEncoderBitrateMode;
+#[cfg(feature = "VideoEncoderBitrateMode")]
+#[allow(unused_imports)]
+pub use gen_VideoEncoderBitrateMode::*;
+
 #[cfg(feature = "VideoEncoderConfig")]
 #[allow(non_snake_case)]
 mod gen_VideoEncoderConfig;
@@ -10623,6 +10637,13 @@ mod gen_VideoFrameInit;
 #[cfg(feature = "VideoFrameInit")]
 #[allow(unused_imports)]
 pub use gen_VideoFrameInit::*;
+
+#[cfg(feature = "VideoFrameMetadata")]
+#[allow(non_snake_case)]
+mod gen_VideoFrameMetadata;
+#[cfg(feature = "VideoFrameMetadata")]
+#[allow(unused_imports)]
+pub use gen_VideoFrameMetadata::*;
 
 #[cfg(feature = "VideoMatrixCoefficients")]
 #[allow(non_snake_case)]

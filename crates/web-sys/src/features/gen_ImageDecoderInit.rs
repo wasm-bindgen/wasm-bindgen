@@ -107,25 +107,23 @@ extern "C" {
     #[wasm_bindgen(method, setter = "preferAnimation")]
     pub fn set_prefer_animation(this: &ImageDecoderInit, val: bool);
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PremultiplyAlpha")]
-    #[doc = "Get the `premultiplyAlpha` field of this object."]
+    #[doc = "Get the `transfer` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageDecoderInit`, `PremultiplyAlpha`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageDecoderInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, getter = "premultiplyAlpha")]
-    pub fn get_premultiply_alpha(this: &ImageDecoderInit) -> Option<PremultiplyAlpha>;
+    #[wasm_bindgen(method, getter = "transfer")]
+    pub fn get_transfer(this: &ImageDecoderInit) -> Option<::js_sys::Array>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PremultiplyAlpha")]
-    #[doc = "Change the `premultiplyAlpha` field of this object."]
+    #[doc = "Change the `transfer` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageDecoderInit`, `PremultiplyAlpha`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageDecoderInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "premultiplyAlpha")]
-    pub fn set_premultiply_alpha(this: &ImageDecoderInit, val: PremultiplyAlpha);
+    #[wasm_bindgen(method, setter = "transfer")]
+    pub fn set_transfer(this: &ImageDecoderInit, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
@@ -192,10 +190,9 @@ impl ImageDecoderInit {
         self
     }
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PremultiplyAlpha")]
-    #[deprecated = "Use `set_premultiply_alpha()` instead."]
-    pub fn premultiply_alpha(&mut self, val: PremultiplyAlpha) -> &mut Self {
-        self.set_premultiply_alpha(val);
+    #[deprecated = "Use `set_transfer()` instead."]
+    pub fn transfer(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+        self.set_transfer(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]

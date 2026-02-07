@@ -53,6 +53,26 @@ extern "C" {
     #[wasm_bindgen(method, setter = "bitrate")]
     pub fn set_bitrate(this: &VideoEncoderConfig, val: f64);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "VideoEncoderBitrateMode")]
+    #[doc = "Get the `bitrateMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderBitrateMode`, `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "bitrateMode")]
+    pub fn get_bitrate_mode(this: &VideoEncoderConfig) -> Option<VideoEncoderBitrateMode>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "VideoEncoderBitrateMode")]
+    #[doc = "Change the `bitrateMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderBitrateMode`, `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "bitrateMode")]
+    pub fn set_bitrate_mode(this: &VideoEncoderConfig, val: VideoEncoderBitrateMode);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `codec` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
@@ -70,6 +90,24 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "codec")]
     pub fn set_codec(this: &VideoEncoderConfig, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Get the `contentHint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "contentHint")]
+    pub fn get_content_hint(this: &VideoEncoderConfig) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `contentHint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "contentHint")]
+    pub fn set_content_hint(this: &VideoEncoderConfig, val: &str);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `displayHeight` field of this object."]
     #[doc = ""]
@@ -249,9 +287,22 @@ impl VideoEncoderConfig {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "VideoEncoderBitrateMode")]
+    #[deprecated = "Use `set_bitrate_mode()` instead."]
+    pub fn bitrate_mode(&mut self, val: VideoEncoderBitrateMode) -> &mut Self {
+        self.set_bitrate_mode(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_codec()` instead."]
     pub fn codec(&mut self, val: &str) -> &mut Self {
         self.set_codec(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
+    #[deprecated = "Use `set_content_hint()` instead."]
+    pub fn content_hint(&mut self, val: &str) -> &mut Self {
+        self.set_content_hint(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]

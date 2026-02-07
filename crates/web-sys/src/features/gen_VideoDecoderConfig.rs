@@ -143,6 +143,24 @@ extern "C" {
     #[wasm_bindgen(method, setter = "displayAspectWidth")]
     pub fn set_display_aspect_width(this: &VideoDecoderConfig, val: u32);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Get the `flip` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "flip")]
+    pub fn get_flip(this: &VideoDecoderConfig) -> Option<bool>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `flip` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "flip")]
+    pub fn set_flip(this: &VideoDecoderConfig, val: bool);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HardwareAcceleration")]
     #[doc = "Get the `hardwareAcceleration` field of this object."]
     #[doc = ""]
@@ -180,6 +198,24 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "optimizeForLatency")]
     pub fn set_optimize_for_latency(this: &VideoDecoderConfig, val: bool);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Get the `rotation` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "rotation")]
+    pub fn get_rotation(this: &VideoDecoderConfig) -> Option<f64>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `rotation` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "rotation")]
+    pub fn set_rotation(this: &VideoDecoderConfig, val: f64);
 }
 #[cfg(web_sys_unstable_apis)]
 impl VideoDecoderConfig {
@@ -239,6 +275,12 @@ impl VideoDecoderConfig {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[deprecated = "Use `set_flip()` instead."]
+    pub fn flip(&mut self, val: bool) -> &mut Self {
+        self.set_flip(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HardwareAcceleration")]
     #[deprecated = "Use `set_hardware_acceleration()` instead."]
     pub fn hardware_acceleration(&mut self, val: HardwareAcceleration) -> &mut Self {
@@ -249,6 +291,12 @@ impl VideoDecoderConfig {
     #[deprecated = "Use `set_optimize_for_latency()` instead."]
     pub fn optimize_for_latency(&mut self, val: bool) -> &mut Self {
         self.set_optimize_for_latency(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
+    #[deprecated = "Use `set_rotation()` instead."]
+    pub fn rotation(&mut self, val: f64) -> &mut Self {
+        self.set_rotation(val);
         self
     }
 }
