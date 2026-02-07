@@ -274,10 +274,6 @@ impl<'a, 'b> Builder<'a, 'b> {
             js.pre_try + &js.prelude
         };
 
-        if self.catch {
-            js.cx.expose_handle_error()?;
-        }
-
         // Generate a try/catch block in debug mode which handles unexpected and
         // unhandled exceptions, typically used on imports. This currently just
         // logs what happened, but keeps the exception being thrown to propagate

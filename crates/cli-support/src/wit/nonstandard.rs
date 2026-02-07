@@ -65,6 +65,11 @@ pub struct WasmBindgenAux {
     pub exn_store: Option<walrus::FunctionId>,
     pub stack_pointer: Option<walrus::GlobalId>,
     pub thread_destroy: Option<walrus::FunctionId>,
+
+    /// The imported JSTag for catching JavaScript exceptions in Wasm.
+    /// When this is `Some`, all imports with `catch` use Wasm catch wrappers
+    /// instead of JS `handleError` wrappers.
+    pub js_tag: Option<walrus::TagId>,
 }
 
 pub type WasmBindgenAuxId = TypedCustomSectionId<WasmBindgenAux>;
@@ -484,6 +489,9 @@ impl walrus::CustomSection for WasmBindgenAux {
         }
         if let Some(id) = self.thread_destroy {
             roots.push_func(id);
+        }
+        if let Some(id) = self.js_tag {
+            roots.push_tag(id);
         }
     }
 }

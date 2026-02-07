@@ -2536,6 +2536,14 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn expose_handle_error(&mut self) -> Result<(), Error> {
+        if self
+            .intrinsics
+            .as_ref()
+            .unwrap()
+            .contains_key("handle_error")
+        {
+            return Ok(());
+        }
         let store = self
             .aux
             .exn_store
@@ -3150,6 +3158,9 @@ if (require('worker_threads').isMainThread) {{
 
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
+
+        self.generate_jstag_import();
+
         for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
                 AdapterKind::Import { .. } => continue,
@@ -3207,6 +3218,32 @@ if (require('worker_threads').isMainThread) {{
         };
 
         self.export_name_of(thread_destroy);
+    }
+
+    /// Generate the import for `WebAssembly.JSTag` if it was used.
+    fn generate_jstag_import(&mut self) {
+        let Some(js_tag) = self.aux.js_tag else {
+            return;
+        };
+
+        // Find the import ID for the JSTag
+        let import_id = self.module.imports.iter().find_map(|import| {
+            let walrus::ImportKind::Tag(tag_id) = import.kind else {
+                return None;
+            };
+            if tag_id == js_tag {
+                Some(import.id())
+            } else {
+                None
+            }
+        });
+
+        let Some(id) = import_id else {
+            return;
+        };
+
+        self.wasm_import_definitions
+            .insert(id, "WebAssembly.JSTag".to_string());
     }
 
     /// Registers import names for all `Global` imports first before we actually
@@ -3456,7 +3493,12 @@ if (require('worker_threads').isMainThread) {{
                 }
             }
             ContextAdapterKind::Import(core) => {
-                let code = if catch {
+                // When js_tag is set, all catch imports use wasm catch wrappers
+                // instead of the JS handleError wrapper
+                let has_wasm_catch = self.aux.js_tag.is_some();
+
+                let code = if catch && !has_wasm_catch {
+                    self.expose_handle_error()?;
                     format!("function() {{ return handleError(function {code}, arguments); }}")
                 } else if log_error {
                     format!("function() {{ return logError(function {code}, arguments); }}")
