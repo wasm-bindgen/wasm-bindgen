@@ -141,6 +141,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
     pub fn set_onfocus(this: &SvgElement, value: Option<&::js_sys::Function>);
+    # [wasm_bindgen (structural , method , getter , js_class = "SVGElement" , js_name = oncancel)]
+    #[doc = "Getter for the `oncancel` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/oncancel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn oncancel(this: &SvgElement) -> Option<::js_sys::Function>;
+    # [wasm_bindgen (structural , method , setter , js_class = "SVGElement" , js_name = oncancel)]
+    #[doc = "Setter for the `oncancel` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/oncancel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn set_oncancel(this: &SvgElement, value: Option<&::js_sys::Function>);
     # [wasm_bindgen (structural , method , getter , js_class = "SVGElement" , js_name = onauxclick)]
     #[doc = "Getter for the `onauxclick` field of this object."]
     #[doc = ""]

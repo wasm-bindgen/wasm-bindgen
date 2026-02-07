@@ -335,6 +335,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_onfocus(this: &HtmlElement, value: Option<&::js_sys::Function>);
+    # [wasm_bindgen (structural , method , getter , js_class = "HTMLElement" , js_name = oncancel)]
+    #[doc = "Getter for the `oncancel` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/oncancel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn oncancel(this: &HtmlElement) -> Option<::js_sys::Function>;
+    # [wasm_bindgen (structural , method , setter , js_class = "HTMLElement" , js_name = oncancel)]
+    #[doc = "Setter for the `oncancel` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/oncancel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_oncancel(this: &HtmlElement, value: Option<&::js_sys::Function>);
     # [wasm_bindgen (structural , method , getter , js_class = "HTMLElement" , js_name = onauxclick)]
     #[doc = "Getter for the `onauxclick` field of this object."]
     #[doc = ""]

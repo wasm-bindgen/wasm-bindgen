@@ -16,6 +16,10 @@
   APIs like the CSS Custom Highlight API which adds the `highlights` attribute to the `CSS` namespace.
   [#4930](https://github.com/wasm-bindgen/wasm-bindgen/issues/4930)
 
+* Added `oncancel` event handler to `GlobalEventHandlers` (available on `HtmlElement`,
+  `Document`, `Window`, etc.).
+  [#4542](https://github.com/wasm-bindgen/wasm-bindgen/pull/4542)
+
 * Added support for unstable WebIDL to override stable attribute types, allowing
   corrected type signatures behind `web_sys_unstable_apis`. Applied to `MouseEvent`
   coordinate attributes (`clientX`, `clientY`, `screenX`, `screenY`, `offsetX`,
