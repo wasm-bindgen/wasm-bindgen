@@ -4191,6 +4191,41 @@ mod gen_HiddenPluginEventInit;
 #[allow(unused_imports)]
 pub use gen_HiddenPluginEventInit::*;
 
+#[cfg(feature = "Highlight")]
+#[allow(non_snake_case)]
+mod gen_Highlight;
+#[cfg(feature = "Highlight")]
+#[allow(unused_imports)]
+pub use gen_Highlight::*;
+
+#[cfg(feature = "HighlightHitResult")]
+#[allow(non_snake_case)]
+mod gen_HighlightHitResult;
+#[cfg(feature = "HighlightHitResult")]
+#[allow(unused_imports)]
+pub use gen_HighlightHitResult::*;
+
+#[cfg(feature = "HighlightRegistry")]
+#[allow(non_snake_case)]
+mod gen_HighlightRegistry;
+#[cfg(feature = "HighlightRegistry")]
+#[allow(unused_imports)]
+pub use gen_HighlightRegistry::*;
+
+#[cfg(feature = "HighlightType")]
+#[allow(non_snake_case)]
+mod gen_HighlightType;
+#[cfg(feature = "HighlightType")]
+#[allow(unused_imports)]
+pub use gen_HighlightType::*;
+
+#[cfg(feature = "HighlightsFromPointOptions")]
+#[allow(non_snake_case)]
+mod gen_HighlightsFromPointOptions;
+#[cfg(feature = "HighlightsFromPointOptions")]
+#[allow(unused_imports)]
+pub use gen_HighlightsFromPointOptions::*;
+
 #[cfg(feature = "History")]
 #[allow(non_snake_case)]
 mod gen_History;
