@@ -1461,15 +1461,6 @@ impl TryToTokens for ast::ImportFunction {
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
             };
-        } else {
-            // When building with panic=unwind, we re-wrap foreign errors, so that
-            // critical errors can be distinguished from recoverable errors in the
-            // caller bindgen wrapper.
-            exceptional_ret = quote! {
-                if let Err(err) = #wasm_bindgen::__rt::take_last_exception() {
-                    #wasm_bindgen::__rt::js_panic(err);
-                }
-            };
         }
 
         let rust_name = &self.rust_name;
@@ -1542,7 +1533,6 @@ impl TryToTokens for ast::ImportFunction {
                         #(#arg_conversions)*
                         #import_name(#(#abi_argument_names),*)
                     };
-                    #wasm_bindgen::__rt::check_abort_flag();
                     #exceptional_ret
                     #convert_ret
                 }

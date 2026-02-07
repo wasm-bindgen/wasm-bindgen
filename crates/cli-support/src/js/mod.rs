@@ -2711,37 +2711,8 @@ if (require('worker_threads').isMainThread) {{
         });
     }
 
-    fn get_set_aborted(&self, err_name: &str) -> String {
-        if self.unwind_enabled {
-            format!(
-                "\
-                if (!({err_name} instanceof PanicError)) {{
-                    debugger;
-                    console.log('ABORT', e);
-                    // wasm.__wbindgen_set_abort_flag(1);
-                    // __wbg_aborted = true;
-                }}
-                "
-            )
-        } else {
-            "\
-            debugger;
-            console.log('ABORT', e);
-            // wasm.__wbindgen_set_abort_flag(1);
-            // __wbg_aborted = true;
-            "
-            .into()
-        }
-    }
-
     fn expose_make_mut_closure(&mut self) {
         self.expose_closure_finalization();
-
-        if self.unwind_enabled {
-            self.expose_aborted();
-        }
-
-        let set_aborted = self.get_set_aborted("e");
 
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
@@ -2749,59 +2720,22 @@ if (require('worker_threads').isMainThread) {{
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let abort_check = if self.config.abort_reinit {
-                "if (__wbg_aborted) {
-                    __wbg_reset_state();
-                }\n"
-            } else {
-                ""
-            };
-            let catch_abort = if self.config.abort_reinit {
-                format!(
-                    "catch (e) {{
-                    {set_aborted}
-                    throw e;
-                }} ",
-                )
-            } else {
-                "".to_string()
-            };
-            let safe_destructor = if self.config.abort_reinit {
-                "\
-                try {
-                    state.dtor(state.a, state.b);
-                    state.a = 0;
-                    CLOSURE_DTORS.unregister(state);
-                } catch (e) {
-                 debugger;
-                    console.log('ABORT', e);
-                    // wasm.__wbindgen_set_abort_flag(1);
-                    // __wbg_aborted = true;
-                    throw e;
-                } "
-            } else {
-                "\
+            let safe_destructor = "\
                 state.dtor(state.a, state.b);
                 state.a = 0;
                 CLOSURE_DTORS.unregister(state);\
-                "
-            };
-            let (state_init, instance_check) = if self.config.generate_reset_state
-                || self.config.abort_reinit
-            {
+                ";
+            let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
-                    format!("{abort_check}
-                    if (state.instance !== __wbg_instance_id) {{
+                    "
+                    if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
-                    }}
-                    "),
+                    }
+                    "
                 )
             } else {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
-                    "".into(),
-                )
+                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
             format!(
                 "
@@ -2817,7 +2751,7 @@ if (require('worker_threads').isMainThread) {{
                         state.a = 0;
                         try {{
                             return f(a, state.b, ...args);
-                        }} {catch_abort}finally {{
+                        }} finally {{
                             state.a = a;
                             real._wbg_cb_unref();
                         }}
@@ -2839,70 +2773,28 @@ if (require('worker_threads').isMainThread) {{
     fn expose_make_closure(&mut self) {
         self.expose_closure_finalization();
 
-        if self.unwind_enabled {
-            self.expose_aborted();
-        }
-
-        let set_aborted = self.get_set_aborted("e");
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let abort_check = if self.config.abort_reinit {
-                "if (__wbg_aborted) {
-                    __wbg_reset_state();
-                }\n"
-            } else {
-                ""
-            };
-            let catch_abort = if self.config.abort_reinit {
-                format!(
-                    "catch (e) {{
-                    {set_aborted}
-                    throw e;
-                }} "
-                )
-            } else {
-                "".to_string()
-            };
-            let safe_destructor = if self.config.abort_reinit {
-                "\
-                try {
-                    state.dtor(state.a, state.b);
-                    state.a = 0;
-                    CLOSURE_DTORS.unregister(state);
-                } catch (e) {
-                 debugger;
-                    console.log('ABORT', e);
-                    // wasm.__wbindgen_set_abort_flag(1);
-                    // __wbg_aborted = true;
-                    throw e;
-                } "
-            } else {
-                "\
+            let safe_destructor = "\
                 state.dtor(state.a, state.b);
                 state.a = 0;
                 CLOSURE_DTORS.unregister(state);\
-                "
-            };
-            let (state_init, instance_check) = if self.config.generate_reset_state
-                || self.config.abort_reinit
-            {
+                ";
+            let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
-                    format!("{abort_check}
-                    if (state.instance !== __wbg_instance_id) {{
+                    "
+                    if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
-                    }}
-                    "),
+                    }
+                    "
                 )
             } else {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor };",
-                    "".into(),
-                )
+                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
             };
             format!(
                 "
@@ -2916,7 +2808,7 @@ if (require('worker_threads').isMainThread) {{
                         state.cnt++;
                         try {{
                             return f(state.a, state.b, ...args);
-                        }} {catch_abort} finally {{
+                        }} finally {{
                             real._wbg_cb_unref();
                         }}
                     }};
@@ -2942,22 +2834,7 @@ if (require('worker_threads').isMainThread) {{
                     ? {{ register: () => {{}}, unregister: () => {{}} }}
                     : new FinalizationRegistry({});
                 ",
-                if self.config.abort_reinit {
-                    "\
-                    state => {
-                        try {
-                            if (__wbg_aborted === false && state.instance === __wbg_instance_id) {
-                                state.dtor(state.a, state.b);
-                            }
-                        } catch (e) {
-                         debugger;
-                            console.log('ABORT', e);
-                            // wasm.__wbindgen_set_abort_flag(1);
-                            // __wbg_aborted = true
-                            throw e;
-                        }
-                    }"
-                } else if self.config.generate_reset_state {
+                if self.config.generate_reset_state {
                     "\
                     state => {
                         if (state.instance === __wbg_instance_id) {
@@ -2984,34 +2861,11 @@ if (require('worker_threads').isMainThread) {{
         });
     }
 
-    fn expose_aborted(&mut self) {
-        intrinsic(&mut self.intrinsics, "aborted".into(), || {
-            "let __wbg_aborted = false;".into()
-        });
-    }
-
-    /// Call this when abort_reinit is enabled to ensure the set_abort_flag export is available.
-    fn require_set_abort_flag(&mut self) -> Result<(), Error> {
-        let store = self
-            .aux
-            .set_abort_flag
-            .ok_or_else(|| anyhow!("failed to find `__wbindgen_set_abort_flag` intrinsic"))?;
-        self.export_name_of(store);
-        Ok(())
-    }
-
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
 
         let mut reset_statements = Vec::new();
-
-        if self.config.abort_reinit || self.unwind_enabled {
-            self.require_set_abort_flag()?;
-            self.expose_aborted();
-            reset_statements.push("__wbg_instance_id++;\n__wbg_aborted = false;".to_string());
-        } else {
-            reset_statements.push("__wbg_instance_id++;".to_string());
-        }
+        reset_statements.push("__wbg_instance_id++;".to_string());
 
         for (num, kinds) in self.memories.values() {
             for kind in kinds {
@@ -3350,7 +3204,7 @@ if (require('worker_threads').isMainThread) {{
         self.export_destructor();
 
         // Generate reset state function last, to ensure it knows about all other state.
-        if self.config.generate_reset_state || self.config.abort_reinit {
+        if self.config.generate_reset_state {
             self.generate_reset_state()?;
         }
 
@@ -3693,11 +3547,6 @@ if (require('worker_threads').isMainThread) {{
         id: ImportId,
         instrs: &[InstructionData],
     ) -> Result<bool, Error> {
-        // Direct imports not possible with current abort wrapper
-        // (until we can move it into the WIT layer).
-        if self.config.abort_reinit {
-            return Ok(false);
-        }
         // First up extract the ID of the single called adapter, if any.
         let mut call = None;
         for instr in instrs {

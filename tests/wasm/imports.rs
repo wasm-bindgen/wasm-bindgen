@@ -158,9 +158,6 @@ fn strings() {
     assert_eq!(take_and_ret_string2("b"), "bb");
 }
 
-// This test cannot be passed with abort-reinit enabled, because it
-// unconditionally causes an abort.
-#[cfg(panicking_tests)]
 #[wasm_bindgen_test]
 fn exceptions() {
     test_exception_propagates();
@@ -207,9 +204,7 @@ fn rust_keyword2() {
     assert_eq!(FOO.with(JsValue::as_f64), Some(3.0));
 }
 
-// This test cannot be passed with abort-reinit enabled, because it
-// unconditionally causes an abort.
-#[cfg(all(panicking_tests, not(panic = "unwind")))]
+#[cfg(not(panic = "unwind"))]
 #[wasm_bindgen_test]
 fn custom_type() {
     take_custom_type(CustomType(()));

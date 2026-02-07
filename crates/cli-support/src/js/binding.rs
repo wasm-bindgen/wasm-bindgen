@@ -159,19 +159,13 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js = JsBuilder::new(self.cx, debug_name);
         if let Some(consumes_self) = self.method {
             let _ = params.next();
-            if js.cx.config.generate_reset_state || js.cx.config.abort_reinit {
-                let abort_check = if js.cx.config.abort_reinit {
-                    js.cx.expose_aborted();
-                    "__wbg_aborted || "
-                } else {
-                    ""
-                };
+            if js.cx.config.generate_reset_state {
                 js.prelude(
-                    &format!("
-                    if ({abort_check}this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {{
+                    "
+                    if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
                         throw new Error('Invalid stale object from previous Wasm instance');
-                    }}
-                    "),
+                    }
+                    ",
                 );
             }
             if js.cx.config.debug {
@@ -702,17 +696,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
-        if self.cx.config.generate_reset_state || self.cx.config.abort_reinit {
+        if self.cx.config.generate_reset_state {
             // Under reset state, we need comprehensive validation
-            if self.cx.config.abort_reinit {
-                self.cx.expose_aborted();
-                self.prelude(
-                    "\
-                    if (__wbg_aborted) {
-                        __wbg_reset_state()
-                    }",
-                );
-            }
             self.prelude(&format!(
                 "\
                 if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
@@ -807,14 +792,6 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
-            let should_check_aborted = js.cx.config.abort_reinit
-                    && matches!(
-                        instr,
-                        Instruction::CallExport(_) | Instruction::DeferFree { .. }
-                    );
-            if should_check_aborted {
-                js.cx.expose_aborted();
-            }
             let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
 
@@ -849,72 +826,17 @@ fn instruction(
             // Call the function through an export of the underlying module.
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
-            let wrap_try_catch = |call| {
-                // If the module is compiled with panic=unwind, panics are not critical errors
-                let catch_exception = if js.cx.has_intrinsic("panic_error") {
-                    "\
-                    catch(e) {
-                        if (!(e instanceof PanicError)) {
-                            debugger;
-                            console.log('ABORT', e);
-                            // wasm.__wbindgen_set_abort_flag(1);
-                            // __wbg_aborted = true;
-                        }
-                        throw e;
-                    }"
-                } else {
-                    "\
-                    catch(e) {
-                        debugger;
-                        console.log('ABORT', e);
-                        // wasm.__wbindgen_set_abort_flag(1);
-                        // __wbg_aborted = true;
-                        throw e;
-                    }"
-                };
-                format!(
-                    "\
-                    if (__wbg_aborted) {{
-                        __wbg_reset_state();
-                    }}
-                    try {{
-                        {call};
-                    }} {catch_exception}
-                    "
-                )
-            };
-
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    if should_check_aborted {
-                        js.finally(&wrap_try_catch(call));
-                    } else {
-                        js.finally(&format!("{call};"));
-                    }
+                    js.finally(&format!("{call};"));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => {
-                    if should_check_aborted {
-                        js.prelude(&wrap_try_catch(call));
-                    } else {
-                        js.prelude(&format!("{call};"));
-                    }
-                }
+                (false, 0) => js.prelude(&format!("{call};")),
                 (false, n) => {
-                    if should_check_aborted {
-                        let call = format!("ret = {call}");
-                        js.prelude(&format!(
-                            "\
-                            let ret;
-                            {}",
-                            &wrap_try_catch(call)
-                        ));
-                    } else {
-                        js.prelude(&format!("const ret = {call};"));
-                    }
+                    js.prelude(&format!("const ret = {call};"));
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {

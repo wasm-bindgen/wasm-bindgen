@@ -41,7 +41,6 @@ pub struct Bindgen {
     encode_into: EncodeInto,
     split_linked_modules: bool,
     generate_reset_state: bool,
-    abort_reinit: bool,
 }
 
 pub struct Output {
@@ -111,7 +110,6 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             generate_reset_state: false,
-            abort_reinit: false,
         }
     }
 
@@ -299,11 +297,6 @@ impl Bindgen {
         self
     }
 
-    pub fn abort_reinit(&mut self, abort_reinit: bool) -> &mut Bindgen {
-        self.abort_reinit = abort_reinit;
-        self
-    }
-
     pub fn generate<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         self.generate_output()?.emit(path.as_ref())
     }
@@ -353,15 +346,6 @@ impl Bindgen {
             && module.exports.iter().any(|export| export.name == "default")
         {
             bail!("exported symbol \"default\" not allowed for --target web")
-        }
-
-        if self.abort_reinit
-            && !matches!(
-                self.mode,
-                OutputMode::Module | OutputMode::Web | OutputMode::Node { module: false }
-            )
-        {
-            bail!("--abort-reinit is only supported for --target module, --target web, or --target nodejs")
         }
 
         // Check that reset_state is only used with --target module, web, or node
