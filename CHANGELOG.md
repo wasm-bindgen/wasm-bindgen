@@ -30,6 +30,13 @@
   unstable APIs are enabled, per the CSSOM View spec draft.
   [#4935](https://github.com/wasm-bindgen/wasm-bindgen/pull/4935)
 
+* Added support for unstable WebIDL to override stable method return types. This
+  enables User Timing Level 3 APIs where `Performance.mark()` and `Performance.measure()`
+  return `PerformanceMark` and `PerformanceMeasure` respectively (instead of `undefined`)
+  when `web_sys_unstable_apis` is enabled. Also added `PerformanceMarkOptions`,
+  `PerformanceMeasureOptions`, and the `detail` attribute on marks/measures.
+  [#3734](https://github.com/wasm-bindgen/wasm-bindgen/pull/3734)
+
 * Added non-standard `mode` option for `FileSystemFileHandle.createSyncAccessHandle()`.
   Also improved WebIDL generator to track stability at the signature level, allowing
   stable methods to have unstable overloads.

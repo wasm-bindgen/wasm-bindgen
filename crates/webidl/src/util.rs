@@ -546,6 +546,7 @@ impl<'src> FirstPassRecord<'src> {
                         catch,
                         variadic,
                         unstable,
+                        has_unstable_override: false,
                     });
                 }
             }
@@ -593,6 +594,7 @@ impl<'src> FirstPassRecord<'src> {
                             catch,
                             variadic: false,
                             unstable,
+                            has_unstable_override: false,
                         });
                     }
                 }

@@ -71,6 +71,29 @@ fn mark_stable_attributes_with_unstable_overrides(attributes: &mut [InterfaceAtt
     }
 }
 
+/// Mark stable methods that have unstable overrides with the same Rust name.
+///
+/// When an unstable WebIDL defines a method with the same signature as a stable
+/// method but with a different return type (e.g., `PerformanceMark` instead of
+/// `undefined`), we need to generate both versions with appropriate `#[cfg]` guards:
+/// - Stable: `#[cfg(not(web_sys_unstable_apis))]`
+/// - Unstable: `#[cfg(web_sys_unstable_apis)]`
+fn mark_stable_methods_with_unstable_overrides(methods: &mut [InterfaceMethod]) {
+    // Find method Rust names that have both stable and unstable versions
+    let unstable_names: HashSet<String> = methods
+        .iter()
+        .filter(|m| m.unstable)
+        .map(|m| m.name.to_string())
+        .collect();
+
+    // Mark stable methods that have an unstable counterpart with the same name
+    for method in methods.iter_mut() {
+        if !method.unstable && unstable_names.contains(&method.name.to_string()) {
+            method.has_unstable_override = true;
+        }
+    }
+}
+
 /// Options to configure the conversion process
 #[derive(Debug)]
 pub struct Options {
@@ -752,6 +775,11 @@ impl<'src> FirstPassRecord<'src> {
         // changing `long` to `double` for MouseEvent.clientX).
         mark_stable_attributes_with_unstable_overrides(&mut attributes);
 
+        // Mark stable methods that have unstable overrides with the same name.
+        // This allows unstable APIs to provide corrected return types (e.g.,
+        // changing `undefined` to `PerformanceMark` for Performance.mark).
+        mark_stable_methods_with_unstable_overrides(&mut methods);
+
         Interface {
             name,
             js_name,
@@ -900,7 +928,10 @@ impl<'src> FirstPassRecord<'src> {
             unstable,
             unstable_types,
         ) {
-            if !methods.iter().any(|old_method| {
+            // Check if this method would be a duplicate of an existing method.
+            // We allow both stable and unstable versions of the same method signature
+            // if they have different return types (for return type overrides).
+            let dominated = methods.iter().any(|old_method| {
                 old_method.variadic == method.variadic
                     && old_method.js_name == method.js_name
                     && old_method.variadic_type == method.variadic_type
@@ -909,7 +940,10 @@ impl<'src> FirstPassRecord<'src> {
                         .iter()
                         .map(|(_, idl, wb)| (idl.orig(), wb))
                         .eq(method.arguments.iter().map(|(_, idl, wb)| (idl.orig(), wb)))
-            }) {
+                    // Allow if one is stable and one is unstable with different return types
+                    && (old_method.unstable == method.unstable || old_method.ret_ty == method.ret_ty)
+            });
+            if !dominated {
                 methods.push(method);
             }
         }

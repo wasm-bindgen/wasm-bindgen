@@ -408,6 +408,10 @@ pub struct InterfaceMethod<'a> {
     pub catch: bool,
     pub variadic: bool,
     pub unstable: bool,
+    /// True if this is a stable method that has an unstable override with
+    /// the same name/signature but different return type. When true, this method
+    /// is gated behind `#[cfg(not(web_sys_unstable_apis))]`.
+    pub has_unstable_override: bool,
 }
 
 impl InterfaceMethod<'_> {
@@ -432,10 +436,24 @@ impl InterfaceMethod<'_> {
             catch,
             variadic,
             unstable,
+            has_unstable_override,
         } = self;
 
-        let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
+        // If this is a stable method that has an unstable override,
+        // gate it behind `not(web_sys_unstable_apis)` so it's excluded
+        // when the unstable version is enabled.
+        let unstable_attr = if *has_unstable_override {
+            Some(quote! {
+                #[cfg(not(web_sys_unstable_apis))]
+            })
+        } else {
+            maybe_unstable_attr(*unstable)
+        };
+        let unstable_docs = if *has_unstable_override {
+            None
+        } else {
+            maybe_unstable_docs(*unstable)
+        };
 
         let mut is_constructor = false;
 
