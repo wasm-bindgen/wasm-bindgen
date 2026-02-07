@@ -6,7 +6,7 @@ enum HighlightType {
 
 [Exposed=Window]
 interface Highlight {
-  constructor(AbstractRange... initialRanges);
+  constructor(optional sequence<AbstractRange> initialRanges = []);
   setlike<AbstractRange>;
   attribute long priority;
   attribute HighlightType type;

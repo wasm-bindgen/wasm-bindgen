@@ -10,6 +10,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
     pub type MediaRecorderOptions;
+    #[cfg(feature = "BitrateMode")]
+    #[doc = "Get the `audioBitrateMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BitrateMode`, `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, getter = "audioBitrateMode")]
+    pub fn get_audio_bitrate_mode(this: &MediaRecorderOptions) -> Option<BitrateMode>;
+    #[cfg(feature = "BitrateMode")]
+    #[doc = "Change the `audioBitrateMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BitrateMode`, `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, setter = "audioBitrateMode")]
+    pub fn set_audio_bitrate_mode(this: &MediaRecorderOptions, val: BitrateMode);
     #[doc = "Get the `audioBitsPerSecond` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
@@ -50,6 +62,26 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
     #[wasm_bindgen(method, setter = "videoBitsPerSecond")]
     pub fn set_video_bits_per_second(this: &MediaRecorderOptions, val: u32);
+    #[doc = "Get the `videoKeyFrameIntervalCount` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, getter = "videoKeyFrameIntervalCount")]
+    pub fn get_video_key_frame_interval_count(this: &MediaRecorderOptions) -> Option<u32>;
+    #[doc = "Change the `videoKeyFrameIntervalCount` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, setter = "videoKeyFrameIntervalCount")]
+    pub fn set_video_key_frame_interval_count(this: &MediaRecorderOptions, val: u32);
+    #[doc = "Get the `videoKeyFrameIntervalDuration` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, getter = "videoKeyFrameIntervalDuration")]
+    pub fn get_video_key_frame_interval_duration(this: &MediaRecorderOptions) -> Option<f64>;
+    #[doc = "Change the `videoKeyFrameIntervalDuration` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, setter = "videoKeyFrameIntervalDuration")]
+    pub fn set_video_key_frame_interval_duration(this: &MediaRecorderOptions, val: f64);
 }
 impl MediaRecorderOptions {
     #[doc = "Construct a new `MediaRecorderOptions`."]
@@ -59,6 +91,12 @@ impl MediaRecorderOptions {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
+    }
+    #[cfg(feature = "BitrateMode")]
+    #[deprecated = "Use `set_audio_bitrate_mode()` instead."]
+    pub fn audio_bitrate_mode(&mut self, val: BitrateMode) -> &mut Self {
+        self.set_audio_bitrate_mode(val);
+        self
     }
     #[deprecated = "Use `set_audio_bits_per_second()` instead."]
     pub fn audio_bits_per_second(&mut self, val: u32) -> &mut Self {
@@ -78,6 +116,16 @@ impl MediaRecorderOptions {
     #[deprecated = "Use `set_video_bits_per_second()` instead."]
     pub fn video_bits_per_second(&mut self, val: u32) -> &mut Self {
         self.set_video_bits_per_second(val);
+        self
+    }
+    #[deprecated = "Use `set_video_key_frame_interval_count()` instead."]
+    pub fn video_key_frame_interval_count(&mut self, val: u32) -> &mut Self {
+        self.set_video_key_frame_interval_count(val);
+        self
+    }
+    #[deprecated = "Use `set_video_key_frame_interval_duration()` instead."]
+    pub fn video_key_frame_interval_duration(&mut self, val: f64) -> &mut Self {
+        self.set_video_key_frame_interval_duration(val);
         self
     }
 }

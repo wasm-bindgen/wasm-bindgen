@@ -23,6 +23,10 @@
 * Added `CommandEvent` and `CommandEventInit` from the Invoker Commands API.
   [#4552](https://github.com/wasm-bindgen/wasm-bindgen/pull/4552)
 
+* Updated WebCodecs API to Working Draft 2026-01-29 and MediaRecorder API to 2025-04-17.
+  Added `rotation` and `flip` to `VideoDecoderConfig`.
+  [#4411](https://github.com/wasm-bindgen/wasm-bindgen/pull/4411)
+
 * Added support for unstable WebIDL to override stable attribute types, allowing
   corrected type signatures behind `web_sys_unstable_apis`. Applied to `MouseEvent`
   coordinate attributes (`clientX`, `clientY`, `screenX`, `screenY`, `offsetX`,

@@ -83,7 +83,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_0() -> Result<Highlight, JsValue>;
+    pub fn new() -> Result<Highlight, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(catch, constructor, js_class = "Highlight")]
+    #[doc = "The `new Highlight(..)` constructor, creating a new instance of `Highlight`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Highlight/Highlight)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Highlight`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_initial_ranges(
+        initial_ranges: &::wasm_bindgen::JsValue,
+    ) -> Result<Highlight, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "Highlight" , js_name = clear)]
     #[doc = "The `clear()` method."]
