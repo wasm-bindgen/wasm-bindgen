@@ -54,12 +54,12 @@ let mut result = 0;
 assert_eq!(result, 42);
 ```
 
-Benefits of scoped closures:
+Benefits of borrowed closures:
 
 - **Non-`'static` captures**: Unlike `Closure::new`, you can capture references
   to local variables
 - **Automatic cleanup**: The closure is invalidated when the `ScopedClosure` is dropped
-- **Lifetime safety**: Rust's borrow checker ensures `ScopedClosure` cannot
+- **Lifetime safety**: Rust's borrow checker ensures the `ScopedClosure` cannot
   outlive the closure's captured data
 
 **Important**: The JavaScript function is only valid while the `ScopedClosure`

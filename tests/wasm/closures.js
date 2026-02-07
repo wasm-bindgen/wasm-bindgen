@@ -220,3 +220,12 @@ exports.closure_call_stored = () => {
   // Call the previously stored closure
   OWNED_CLOSURE_CACHE();
 };
+
+// Test for ScopedClosure::borrow with Fn closures
+exports.closure_fn_with_call = f => {
+  f();
+};
+
+exports.closure_fn_with_call_arg = (f, value) => {
+  f(value);
+};

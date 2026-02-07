@@ -29,7 +29,7 @@
   (type (;27;) (func (param externref externref externref) (result externref)))
   (import "./reference_test_bg.js" "__wbg_Deno_0d853884e73838c9" (func (;0;) (type 20)))
   (import "./reference_test_bg.js" "__wbg_String_2d70b853773c9ecb" (func (;1;) (type 17)))
-  (import "./reference_test_bg.js" "__wbg___wbg_test_invoke_63ff9638ebf472cc" (func (;2;) (type 19)))
+  (import "./reference_test_bg.js" "__wbg___wbg_test_invoke_46372081c5da297a" (func (;2;) (type 19)))
   (import "./reference_test_bg.js" "__wbg___wbg_test_output_writeln_3002c52094d744d1" (func (;3;) (type 19)))
   (import "./reference_test_bg.js" "__wbg___wbgtest_og_console_log_81bdd3488fd1939c" (func (;4;) (type 7)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_debug_string_0bc8482c6e3508ae" (func (;5;) (type 17)))

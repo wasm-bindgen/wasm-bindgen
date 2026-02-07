@@ -953,3 +953,109 @@ fn closure_pass_by_value_stored() {
     let result = closure_call_stored();
     assert!(result.is_ok(), "calling stored closure should work");
 }
+
+#[wasm_bindgen(module = "tests/wasm/closures.js")]
+extern "C" {
+    fn closure_fn_with_call(f: &ScopedClosure<dyn Fn()>);
+    fn closure_fn_with_call_arg(f: &ScopedClosure<dyn Fn(u32)>, value: u32);
+}
+
+/// Test that ScopedClosure::borrow works for Fn closures
+#[wasm_bindgen_test]
+fn scoped_closure_borrow_fn() {
+    let called = Cell::new(false);
+    {
+        let func = || {
+            called.set(true);
+        };
+        let closure = ScopedClosure::borrow(&func);
+        closure_fn_with_call(&closure);
+    }
+    assert!(called.get());
+}
+
+/// Test that ScopedClosure::borrow can capture non-'static references (Fn)
+#[wasm_bindgen_test]
+fn scoped_closure_borrow_fn_captures_non_static() {
+    let data = vec![1, 2, 3, 4, 5];
+    let sum = Cell::new(0u32);
+    {
+        let func = || {
+            // Read-only access to captured data
+            sum.set(data.iter().sum());
+        };
+        let closure = ScopedClosure::borrow(&func);
+        closure_fn_with_call(&closure);
+    }
+    assert_eq!(sum.get(), 15);
+    // data is still accessible after closure is dropped
+    assert_eq!(data.len(), 5);
+}
+
+/// Test that ScopedClosure::borrow works with arguments
+#[wasm_bindgen_test]
+fn scoped_closure_borrow_fn_with_arg() {
+    let received = Cell::new(0u32);
+    {
+        let func = |value: u32| {
+            received.set(value);
+        };
+        let closure = ScopedClosure::borrow(&func);
+        closure_fn_with_call_arg(&closure, 42);
+    }
+    assert_eq!(received.get(), 42);
+}
+
+/// Test that ScopedClosure::own works the same as Closure::new
+#[wasm_bindgen_test]
+fn scoped_closure_own() {
+    use std::rc::Rc;
+
+    let called = Rc::new(Cell::new(false));
+    let called_clone = called.clone();
+
+    // Use ScopedClosure::own instead of Closure::new
+    let closure = ScopedClosure::own(move || {
+        called_clone.set(true);
+    });
+
+    closure_take_ownership(closure);
+    assert!(called.get());
+}
+
+/// Test that ScopedClosure::borrow_mut_aborting works
+#[wasm_bindgen_test]
+#[allow(deprecated)]
+fn scoped_closure_borrow_mut_aborting() {
+    use std::rc::Rc;
+
+    // Rc<Cell<T>> is not UnwindSafe, so we need _aborting variant
+    let counter = Rc::new(Cell::new(0u32));
+    {
+        let mut func = || {
+            counter.set(counter.get() + 1);
+        };
+        let closure = ScopedClosure::borrow_mut_aborting(&mut func);
+        closure_with_call(&closure);
+        closure_with_call(&closure);
+    }
+    assert_eq!(counter.get(), 2);
+}
+
+/// Test that ScopedClosure::borrow_aborting works
+#[wasm_bindgen_test]
+fn scoped_closure_borrow_aborting() {
+    use std::rc::Rc;
+
+    // Rc<Cell<T>> is not UnwindSafe, so we need _aborting variant
+    let counter = Rc::new(Cell::new(0u32));
+    {
+        let func = || {
+            counter.set(counter.get() + 1);
+        };
+        let closure = ScopedClosure::borrow_aborting(&func);
+        closure_fn_with_call(&closure);
+        closure_fn_with_call(&closure);
+    }
+    assert_eq!(counter.get(), 2);
+}
