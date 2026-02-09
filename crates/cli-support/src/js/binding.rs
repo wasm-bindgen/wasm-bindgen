@@ -1603,7 +1603,11 @@ fn instruction(
 }
 
 enum Invocation {
-    Core { id: walrus::FunctionId, defer: bool },
+    Core {
+        id: walrus::FunctionId,
+        export_id: Option<walrus::ExportId>,
+        defer: bool,
+    },
     Adapter(AdapterId),
 }
 
@@ -1613,11 +1617,16 @@ impl Invocation {
         match instr {
             DeferFree { free, .. } => Invocation::Core {
                 id: *free,
+                export_id: None,
                 defer: true,
             },
 
             CallExport(e) => match module.exports.get(*e).item {
-                walrus::ExportItem::Function(id) => Invocation::Core { id, defer: false },
+                walrus::ExportItem::Function(id) => Invocation::Core {
+                    id,
+                    export_id: Some(*e),
+                    defer: false,
+                },
                 _ => panic!("can only call exported function"),
             },
 
@@ -1650,8 +1659,11 @@ impl Invocation {
         log_error: &mut bool,
     ) -> Result<String, Error> {
         match self {
-            Invocation::Core { id, .. } => {
-                let name = cx.export_name_of(*id);
+            Invocation::Core { id, export_id, .. } => {
+                let name = match export_id {
+                    Some(eid) => cx.module.exports.get(*eid).name.clone(),
+                    None => cx.export_name_of(*id),
+                };
                 Ok(format!("wasm.{name}({})", args.join(", ")))
             }
             Invocation::Adapter(id) => {
