@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+* Added logic to the `no-modules` JavaScript boilerplate in order to support usage within WebWorkers. [#4943](https://github.com/wasm-bindgen/wasm-bindgen/issues/4943)
+
 ### Added
 
 * Added `ScopedClosure<'a, T>` as a unified closure type with lifetime parameter. `ScopedClosure::borrow(&f)` and `ScopedClosure::borrow_mut(&mut f)` create borrowed closures that can capture non-`'static` references, ideal for immediate/synchronous JS callbacks. `Closure<T>` and `StaticClosure<T>` are now type aliases for `ScopedClosure<'static, T>`, maintaining full backwards compatibility. Also added `IntoWasmAbi` implementation for `Closure<T>` enabling pass-by-value ownership transfer to JavaScript.
