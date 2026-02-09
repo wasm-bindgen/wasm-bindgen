@@ -21,6 +21,9 @@ time-core = "=0.1.2"
 # Pin other problematic dependencies
 rouille = "=3.6.2"
 
+# tempfile 3.25+ depends on getrandom 0.4+ which requires edition 2024 (Rust 1.85+)
+tempfile = "=3.24.0"
+
 # enable default feature for icu
 writeable = "0.6.0"
 
