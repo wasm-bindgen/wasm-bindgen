@@ -55,6 +55,9 @@
 
 ### Fixed
 
+* Fixed incorrect JS export names when LLVM merges identical functions at `opt-level >= 2`.
+  [#4946](https://github.com/wasm-bindgen/wasm-bindgen/issues/4946)
+
 * Fixed `ReferenceError` when using Rust struct names that conflict with JS builtins (e.g., `Array`).
   The constructor now correctly uses the aliased `FinalizationRegistry` identifier.
   [#4932](https://github.com/wasm-bindgen/wasm-bindgen/pull/4932)
