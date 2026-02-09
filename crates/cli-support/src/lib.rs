@@ -782,7 +782,7 @@ impl Output {
 /// instead of relying on JS `handleError` wrappers.
 fn generate_wasm_catch_wrappers(module: &mut Module) -> Result<(), Error> {
     let eh_version = transforms::detect_exception_handling_version(module);
-    log::debug!("Exception handling version: {:?}", eh_version);
+    log::debug!("Exception handling version: {eh_version:?}");
 
     if eh_version == transforms::ExceptionHandlingVersion::None {
         return Ok(());
