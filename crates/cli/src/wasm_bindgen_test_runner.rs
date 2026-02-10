@@ -346,6 +346,9 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     if std::env::var("WASM_BINDGEN_KEEP_LLD_EXPORTS").is_ok() {
         b.keep_lld_exports(true);
     }
+    if std::env::var("WASM_BINDGEN_ABORT_REINIT").is_ok() {
+        b.abort_reinit(true);
+    }
 
     // The path of benchmark baseline.
     let benchmark = if let Ok(path) = std::env::var("WASM_BINDGEN_BENCH_RESULT") {
