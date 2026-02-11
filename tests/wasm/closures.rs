@@ -1129,3 +1129,18 @@ fn immediate_closure_catches_panic_test() {
         "panic should be caught and converted to JS exception"
     );
 }
+
+#[wasm_bindgen_test]
+fn immediate_closure_to_scoped_closure() {
+    let mut sum = 0u32;
+    {
+        let mut func = |value| {
+            sum += value;
+        };
+        let immediate = ImmediateClosure::new(&mut func);
+        // Convert ImmediateClosure to ScopedClosure
+        let scoped: ScopedClosure<dyn FnMut(u32)> = (&immediate).into();
+        closure_with_call_and_cache(&scoped);
+    }
+    assert_eq!(sum, 6); // 1 + 2 + 3
+}

@@ -995,6 +995,27 @@ impl<T: ?Sized> fmt::Debug for ImmediateClosure<'_, T> {
     }
 }
 
+impl<'a, T: ?Sized + WasmClosure> From<&'a ImmediateClosure<'a, T>> for ScopedClosure<'a, T> {
+    /// Converts an `ImmediateClosure` reference into a `ScopedClosure`.
+    ///
+    /// This allows passing an `ImmediateClosure` where a `ScopedClosure` is expected,
+    /// enabling gradual migration of APIs from `ImmediateClosure` to `ScopedClosure`.
+    ///
+    /// Note that this conversion has overhead compared to using `ImmediateClosure`
+    /// directly, as it creates a JS wrapper object.
+    fn from(immediate: &'a ImmediateClosure<'a, T>) -> Self {
+        ScopedClosure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: immediate.data,
+                unwind_safe: immediate.unwind_safe,
+                _marker: PhantomData,
+            }),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+}
+
 /// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
 /// will throw if ever called more than once.
 #[doc(hidden)]

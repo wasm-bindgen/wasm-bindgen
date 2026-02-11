@@ -15,7 +15,8 @@
   no JS call on creation, no JS call on drop, and no GC overhead—the same ABI as
   `&dyn FnMut` but with panic safety. Use `ImmediateClosure::new(&mut f)` for
   `FnMut` or `ImmediateClosure::new_immutable(&f)` for `Fn`. Closure parameter
-  types are automatically inferred from context.
+  types are automatically inferred from context. Also implements
+  `From<&ImmediateClosure<T>> for ScopedClosure<T>` for API migration.
   [#4950](https://github.com/wasm-bindgen/wasm-bindgen/issues/4950)
 
 * Added `ScopedClosure<'a, T>` as a unified closure type with lifetime parameter. `ScopedClosure::borrow(&f)` and `ScopedClosure::borrow_mut(&mut f)` create borrowed closures that can capture non-`'static` references, ideal for immediate/synchronous JS callbacks. `Closure<T>` and `StaticClosure<T>` are now type aliases for `ScopedClosure<'static, T>`, maintaining full backwards compatibility. Also added `IntoWasmAbi` implementation for `Closure<T>` enabling pass-by-value ownership transfer to JavaScript.

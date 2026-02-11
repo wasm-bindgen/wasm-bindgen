@@ -25,6 +25,7 @@ use cfg_if::cfg_if;
 // convenient to directly write `WasmSlice` in some of the manually-written FFI
 // functions in `lib.rs` rather than `WasmRet<WasmSlice>`.
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct WasmSlice {
     pub ptr: u32,
     pub len: u32,
