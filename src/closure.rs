@@ -859,6 +859,142 @@ where
     }
 }
 
+/// A closure wrapper for immediate/synchronous callbacks.
+///
+/// `ImmediateClosure` wraps a borrowed closure for use in synchronous JS callbacks
+/// like `Array.forEach`, `Array.map`, etc. The JS side receives the closure,
+/// calls it immediately, and discards it - no GC tracking is needed.
+///
+/// Panics are caught and converted to JavaScript exceptions (when built with
+/// `panic=unwind`). No `UnwindSafe` bounds are required - the closure is wrapped
+/// internally.
+///
+/// # Choosing Between Closure Types
+///
+/// | Type | Use Case | Lifetime |
+/// |------|----------|----------|
+/// | `ImmediateClosure` | Synchronous callbacks (forEach, map) | Borrowed, immediate |
+/// | `ScopedClosure::borrow[_mut]` | Callbacks JS may store within scope | Borrowed, scoped |
+/// | `Closure::new` | Long-lived callbacks (events, timers) | `'static` |
+///
+/// # Example
+///
+/// ```ignore
+/// use wasm_bindgen::prelude::*;
+///
+/// #[wasm_bindgen]
+/// extern "C" {
+///     fn forEach(cb: &ImmediateClosure<dyn FnMut(JsValue)>);
+/// }
+///
+/// let mut sum = 0;
+/// let closure = ImmediateClosure::new(&mut |val: JsValue| {
+///     sum += val.as_f64().unwrap() as i32;
+/// });
+/// forEach(&closure);
+/// // sum is now updated
+/// ```
+pub struct ImmediateClosure<'a, T: ?Sized> {
+    data: WasmSlice,
+    unwind_safe: bool,
+    _marker: PhantomData<&'a mut T>,
+}
+
+impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
+    /// Creates an immediate closure from a mutable borrow of a `FnMut` closure.
+    ///
+    /// This is the common case for closures that mutate captured state.
+    /// Panics are caught and converted to JS exceptions.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let mut count = 0;
+    /// let closure = ImmediateClosure::new(&mut || { count += 1; });
+    /// call_closure(&closure);
+    /// assert_eq!(count, 1);
+    /// ```
+    pub fn new<F>(f: &'a mut F) -> ImmediateClosure<'a, F::Static>
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
+    {
+        let t: &mut T = f.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ImmediateClosure {
+            data: WasmSlice { ptr, len },
+            unwind_safe: true,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Creates an immediate closure from an immutable borrow of a `Fn` closure.
+    ///
+    /// Use this for closures that don't need to mutate captured state.
+    /// Panics are caught and converted to JS exceptions.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let data = vec![1, 2, 3];
+    /// let closure = ImmediateClosure::new_immutable(&|| {
+    ///     println!("data len: {}", data.len());
+    /// });
+    /// call_closure(&closure);
+    /// ```
+    pub fn new_immutable<F>(f: &'a F) -> ImmediateClosure<'a, F::Static>
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let t: &T = f.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ImmediateClosure {
+            data: WasmSlice { ptr, len },
+            unwind_safe: true,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Like [`new`](Self::new), but does not catch panics.
+    ///
+    /// If the closure panics, the process will abort. This variant is useful
+    /// when you want maximum performance and are certain the closure won't panic,
+    /// or when working with types that are not `UnwindSafe`.
+    pub fn new_aborting<F>(f: &'a mut F) -> ImmediateClosure<'a, F::Static>
+    where
+        F: UnsizeClosureRefMut<T> + ?Sized,
+    {
+        let t: &mut T = f.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ImmediateClosure {
+            data: WasmSlice { ptr, len },
+            unwind_safe: false,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Like [`new_immutable`](Self::new_immutable), but does not catch panics.
+    ///
+    /// If the closure panics, the process will abort.
+    pub fn new_immutable_aborting<F>(f: &'a F) -> ImmediateClosure<'a, F::Static>
+    where
+        F: UnsizeClosureRef<T> + ?Sized,
+    {
+        let t: &T = f.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ImmediateClosure {
+            data: WasmSlice { ptr, len },
+            unwind_safe: false,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T: ?Sized> fmt::Debug for ImmediateClosure<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ImmediateClosure").finish_non_exhaustive()
+    }
+}
+
 /// A trait for converting an `FnOnce(A...) -> R` into a `FnMut(A...) -> R` that
 /// will throw if ever called more than once.
 #[doc(hidden)]
@@ -1073,20 +1209,67 @@ where
     }
 }
 
+impl<T> WasmDescribe for ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        // Delegate to the underlying dyn Fn/FnMut - uses FUNCTION descriptor
+        <T as WasmDescribe>::describe();
+    }
+}
+
+impl<T> IntoWasmAbi for &ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+
+    fn into_abi(self) -> WasmSlice {
+        let WasmSlice { ptr, len } = self.data;
+        let len_with_flag = if self.unwind_safe {
+            len | 0x80000000
+        } else {
+            len
+        };
+        WasmSlice {
+            ptr,
+            len: len_with_flag,
+        }
+    }
+}
+
+impl<T> OptionIntoWasmAbi for &ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    fn none() -> WasmSlice {
+        WasmSlice { ptr: 0, len: 0 }
+    }
+}
+
 fn _check() {
     fn _assert<T: IntoWasmAbi>() {}
-    // By reference (any lifetime)
+    // ScopedClosure by reference (any lifetime)
     _assert::<&ScopedClosure<dyn Fn()>>();
     _assert::<&ScopedClosure<dyn Fn(String)>>();
     _assert::<&ScopedClosure<dyn Fn() -> String>>();
     _assert::<&ScopedClosure<dyn FnMut()>>();
     _assert::<&ScopedClosure<dyn FnMut(String)>>();
     _assert::<&ScopedClosure<dyn FnMut() -> String>>();
-    // By value (only 'static)
+    // ScopedClosure by value (only 'static)
     _assert::<ScopedClosure<'static, dyn Fn()>>();
     _assert::<ScopedClosure<'static, dyn FnMut()>>();
     _assert::<Closure<dyn Fn()>>();
     _assert::<Closure<dyn FnMut()>>();
+    // ImmediateClosure by reference
+    _assert::<&ImmediateClosure<dyn Fn()>>();
+    _assert::<&ImmediateClosure<dyn Fn(String)>>();
+    _assert::<&ImmediateClosure<dyn Fn() -> String>>();
+    _assert::<&ImmediateClosure<dyn FnMut()>>();
+    _assert::<&ImmediateClosure<dyn FnMut(String)>>();
+    _assert::<&ImmediateClosure<dyn FnMut() -> String>>();
 }
 
 impl<T> fmt::Debug for ScopedClosure<'_, T>

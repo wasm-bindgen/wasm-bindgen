@@ -110,7 +110,7 @@ macro_rules! externs {
 /// use wasm_bindgen::prelude::*;
 /// ```
 pub mod prelude {
-    pub use crate::closure::{Closure, ScopedClosure, StaticClosure};
+    pub use crate::closure::{Closure, ImmediateClosure, ScopedClosure, StaticClosure};
     pub use crate::JsCast;
     pub use crate::JsValue;
     pub use crate::UnwrapThrowExt;

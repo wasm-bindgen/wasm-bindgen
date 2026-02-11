@@ -841,7 +841,8 @@ fn closure_with_use_after_free_throws() {
 fn closure_with_cached_throws_after_drop() {
     let mut sum = 0u32;
     {
-        let mut func = |value: u32| {
+        // Test inference: value type should be inferred from closure_with_call_and_cache signature
+        let mut func = |value| {
             sum += value;
         };
         let closure = ScopedClosure::borrow_mut(&mut func);
@@ -923,7 +924,8 @@ fn closure_pass_by_value_with_arg() {
     let sum = Rc::new(Cell::new(0u32));
     let sum_clone = sum.clone();
 
-    let closure = Closure::new(move |value: u32| {
+    // Test inference: value type should be inferred from closure_take_ownership_with_arg signature
+    let closure = Closure::new(move |value| {
         sum_clone.set(sum_clone.get() + value);
     });
 
@@ -997,7 +999,8 @@ fn scoped_closure_borrow_fn_captures_non_static() {
 fn scoped_closure_borrow_fn_with_arg() {
     let received = Cell::new(0u32);
     {
-        let func = |value: u32| {
+        // Test inference: value type should be inferred from closure_fn_with_call_arg signature
+        let func = |value| {
             received.set(value);
         };
         let closure = ScopedClosure::borrow(&func);
@@ -1058,4 +1061,71 @@ fn scoped_closure_borrow_aborting() {
         closure_fn_with_call(&closure);
     }
     assert_eq!(counter.get(), 2);
+}
+
+#[wasm_bindgen(module = "tests/wasm/closures.js")]
+extern "C" {
+    fn immediate_closure_call(f: &ImmediateClosure<dyn FnMut()>);
+    fn immediate_closure_call_arg(f: &ImmediateClosure<dyn FnMut(u32)>, value: u32);
+    fn immediate_closure_call_ret(f: &ImmediateClosure<dyn FnMut(u32) -> u32>, value: u32) -> u32;
+    fn immediate_closure_fn_call(f: &ImmediateClosure<dyn Fn()>);
+    fn immediate_closure_catches_panic(f: &ImmediateClosure<dyn FnMut()>) -> bool;
+}
+
+#[wasm_bindgen_test]
+fn immediate_closure_basic() {
+    let mut called = false;
+    immediate_closure_call(&ImmediateClosure::new(&mut || {
+        called = true;
+    }));
+    assert!(called);
+}
+
+#[wasm_bindgen_test]
+fn immediate_closure_with_args() {
+    let mut sum = 0u32;
+    // Test inference: x should be inferred as u32 from the function signature
+    immediate_closure_call_arg(
+        &ImmediateClosure::new(&mut |x| {
+            sum += x;
+        }),
+        42,
+    );
+    assert_eq!(sum, 42);
+}
+
+#[wasm_bindgen_test]
+fn immediate_closure_with_return() {
+    // Test inference: x and return type should be inferred from the function signature
+    let result = immediate_closure_call_ret(&ImmediateClosure::new(&mut |x| x * 2), 21);
+    assert_eq!(result, 42);
+}
+
+#[wasm_bindgen_test]
+fn immediate_closure_immutable() {
+    let data = vec![1, 2, 3];
+    immediate_closure_fn_call(&ImmediateClosure::new_immutable(&|| {
+        assert_eq!(data.len(), 3);
+    }));
+    // data is still accessible after
+    assert_eq!(data.len(), 3);
+}
+
+#[wasm_bindgen_test]
+fn immediate_closure_debug() {
+    let mut f = || {};
+    let closure = ImmediateClosure::new(&mut f);
+    assert_eq!(&format!("{:?}", closure), "ImmediateClosure { .. }");
+}
+
+#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+#[wasm_bindgen_test]
+fn immediate_closure_catches_panic_test() {
+    let caught = immediate_closure_catches_panic(&ImmediateClosure::new(&mut || {
+        panic!("test panic");
+    }));
+    assert!(
+        caught,
+        "panic should be caught and converted to JS exception"
+    );
 }

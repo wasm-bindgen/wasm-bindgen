@@ -10,19 +10,22 @@ demonstrates different `Closure` APIs for various use cases.
 
 ## Choosing a `Closure` API
 
-- **`ScopedClosure::borrow`** / **`ScopedClosure::borrow_mut`** — For immediate/synchronous
-  callbacks where JavaScript calls the closure right away and doesn't retain it.
-  Returns a `ScopedClosure` with a lifetime tied to the closure's captured data,
-  ensuring safe automatic cleanup.
+- **`ImmediateClosure::new`** / **`ImmediateClosure::new_immutable`** — For
+  immediate/synchronous callbacks where JavaScript calls the closure right away
+  and doesn't retain it. Lightweight with no JS wrapper overhead.
 
-- **`Closure::new`** — For long-lived closures like event handlers or timers.
-  The closure must be `'static` and you must manage its lifetime (store it
-  somewhere or call `forget()`).
+- **`ScopedClosure::borrow`** / **`ScopedClosure::borrow_mut`** — For known-lifetime
+  callbacks where JavaScript may briefly retain the closure but you control when
+  it becomes invalid.
+
+- **`Closure::new`** — For indeterminate-lifetime closures like event handlers or
+  timers. The closure must be `'static` and you must manage its lifetime (store
+  it somewhere or call `forget()`).
 
 - **`Closure::once`** / **`Closure::once_into_js`** — For one-shot callbacks
   that will only be called once.
 
-All `Closure` variants are unwind safe — panics are caught and converted to
+All closure types are unwind safe — panics are caught and converted to
 JavaScript exceptions when built with `panic=unwind`. This requires the closure
 to implement `UnwindSafe`. If your closure captures non-unwind-safe types (like
 `Rc<RefCell<_>>`), use `AssertUnwindSafe` to wrap the closure, or use the

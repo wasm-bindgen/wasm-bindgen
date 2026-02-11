@@ -108,9 +108,10 @@ try {
 
 ## Closures
 
-All `Closure` and `ScopedClosure` variants catch panics when built with `panic=unwind`.
-This includes `Closure::new`, `Closure::wrap`, `Closure::once`, `ScopedClosure::borrow`,
-and `ScopedClosure::borrow_mut`. When a panic occurs inside a closure invoked from
+All `Closure`, `ScopedClosure`, and `ImmediateClosure` variants catch panics when
+built with `panic=unwind`. This includes `Closure::new`, `Closure::wrap`, `Closure::once`,
+`ScopedClosure::borrow`, `ScopedClosure::borrow_mut`, `ImmediateClosure::new`, and
+`ImmediateClosure::new_immutable`. When a panic occurs inside a closure invoked from
 JavaScript, the panic is caught and thrown as a `PanicError` exception.
 
 Like exported functions, catching panics in closures requires the closure to
@@ -139,35 +140,33 @@ try {
 }
 ```
 
-`ScopedClosure::borrow_mut` also catches panics for immediate callbacks:
+`ImmediateClosure` also catches panics for immediate/synchronous callbacks:
 
 ```rust
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    fn call_callback(cb: &ScopedClosure<dyn FnMut()>);
+    fn forEach(cb: &ImmediateClosure<dyn FnMut(u32)>);
 }
 
-{
-    let mut func = || {
-        panic!("panic in callback!");
-    };
-    let closure = ScopedClosure::borrow_mut(&mut func);
-    // This panic will be caught and thrown as PanicError
-    call_callback(&closure);
-}
+forEach(&ImmediateClosure::new(&mut |x| {
+    if x == 0 {
+        panic!("zero not allowed!");
+    }
+}));
 ```
 
 For closures that should not catch panics (and abort the program instead), use
 the `*_aborting` variants: `Closure::new_aborting`, `Closure::wrap_aborting`,
 `Closure::once_aborting`, `Closure::once_into_js_aborting`,
-`ScopedClosure::borrow_aborting`, and `ScopedClosure::borrow_mut_aborting`.
+`ScopedClosure::borrow_aborting`, `ScopedClosure::borrow_mut_aborting`,
+`ImmediateClosure::new_aborting`, and `ImmediateClosure::new_immutable_aborting`.
 These do not require `UnwindSafe`.
 
 > **Note**: The deprecated `&dyn Fn` and `&mut dyn FnMut` patterns are **not**
-> unwind safe. Panics in these closures may corrupt program state. Use `Closure`
-> instead.
+> unwind safe. Panics in these closures may corrupt program state. Use
+> `ImmediateClosure` instead.
 
 See [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md) for
 more details on closure APIs and the `UnwindSafe` requirement.
