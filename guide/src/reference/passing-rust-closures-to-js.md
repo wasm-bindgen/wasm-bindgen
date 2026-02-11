@@ -45,7 +45,7 @@ Use `ImmediateClosure::new` for `FnMut` closures (common case) or
 
 Benefits:
 
-- **Lightweight**: No JavaScript wrapper object, no GC overhead
+- **Lightweight**: No JS call on creation, no JS call on drop, no GC overhead
 - **Non-`'static` captures**: Capture references to local variables
 - **Type inference**: Closure parameter types are inferred from context
 - **Unwind safe**: Panics are caught and converted to JS exceptions
