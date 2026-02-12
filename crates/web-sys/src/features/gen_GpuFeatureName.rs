@@ -11,6 +11,7 @@ use wasm_bindgen::prelude::*;
 #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GpuFeatureName {
+    CoreFeaturesAndLimits = "core-features-and-limits",
     DepthClipControl = "depth-clip-control",
     Depth32floatStencil8 = "depth32float-stencil8",
     TextureCompressionBc = "texture-compression-bc",
@@ -27,4 +28,9 @@ pub enum GpuFeatureName {
     Float32Blendable = "float32-blendable",
     ClipDistances = "clip-distances",
     DualSourceBlending = "dual-source-blending",
+    Subgroups = "subgroups",
+    TextureFormatsTier1 = "texture-formats-tier1",
+    TextureFormatsTier2 = "texture-formats-tier2",
+    PrimitiveIndex = "primitive-index",
+    TextureComponentSwizzle = "texture-component-swizzle",
 }

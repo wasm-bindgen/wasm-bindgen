@@ -394,13 +394,13 @@ extern "C" {
         descriptor: &GpuExternalTextureDescriptor,
     ) -> Result<GpuExternalTexture, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "GpuError", feature = "JsOption",))]
+    #[cfg(feature = "GpuError")]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = popErrorScope)]
     #[doc = "The `popErrorScope()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/popErrorScope)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`, `GpuError`, `JsOption`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`, `GpuError`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]

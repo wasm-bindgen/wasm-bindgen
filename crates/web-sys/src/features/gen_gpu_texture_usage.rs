@@ -47,4 +47,12 @@ pub mod gpu_texture_usage {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub const RENDER_ATTACHMENT: u32 = 16u64 as u32;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "The `GPUTextureUsage.TRANSIENT_ATTACHMENT` const."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `gpu_texture_usage`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub const TRANSIENT_ATTACHMENT: u32 = 32u64 as u32;
 }

@@ -107,6 +107,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn usage(this: &GpuTexture) -> u32;
     #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (structural , method , getter , js_class = "GPUTexture" , js_name = textureBindingViewDimension)]
+    #[doc = "Getter for the `textureBindingViewDimension` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUTexture/textureBindingViewDimension)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTexture`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn texture_binding_view_dimension(this: &GpuTexture) -> ::wasm_bindgen::JsValue;
+    #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUTexture" , js_name = label)]
     #[doc = "Getter for the `label` field of this object."]
     #[doc = ""]

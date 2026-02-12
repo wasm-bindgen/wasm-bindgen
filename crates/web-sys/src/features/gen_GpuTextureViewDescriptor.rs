@@ -165,6 +165,24 @@ extern "C" {
     #[wasm_bindgen(method, setter = "mipLevelCount")]
     pub fn set_mip_level_count(this: &GpuTextureViewDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Get the `swizzle` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "swizzle")]
+    pub fn get_swizzle(this: &GpuTextureViewDescriptor) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `swizzle` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "swizzle")]
+    pub fn set_swizzle(this: &GpuTextureViewDescriptor, val: &str);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `usage` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
@@ -245,6 +263,12 @@ impl GpuTextureViewDescriptor {
     #[deprecated = "Use `set_mip_level_count()` instead."]
     pub fn mip_level_count(&mut self, val: u32) -> &mut Self {
         self.set_mip_level_count(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
+    #[deprecated = "Use `set_swizzle()` instead."]
+    pub fn swizzle(&mut self, val: &str) -> &mut Self {
+        self.set_swizzle(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
