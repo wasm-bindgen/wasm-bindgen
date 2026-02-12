@@ -59,6 +59,9 @@ interface GPUAdapterInfo {
     readonly attribute DOMString architecture;
     readonly attribute DOMString device;
     readonly attribute DOMString description;
+    readonly attribute unsigned long subgroupMinSize;
+    readonly attribute unsigned long subgroupMaxSize;
+    readonly attribute boolean isFallbackAdapter;
 };
 
 interface mixin NavigatorGPU {
@@ -91,7 +94,6 @@ interface GPUAdapter {
     [SameObject] readonly attribute GPUSupportedFeatures features;
     [SameObject] readonly attribute GPUSupportedLimits limits;
     [SameObject] readonly attribute GPUAdapterInfo info;
-    readonly attribute boolean isFallbackAdapter;
 
     Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
 };

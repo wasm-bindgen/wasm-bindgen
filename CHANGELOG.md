@@ -66,6 +66,9 @@
 * Added a panic message when a getter as more than one argument. 
   [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
 
+* Added `subgroupMinSize`, `subgroupMaxSize` and `isFallbackAdapter` to `GPUAdapterInfo`.
+  [#4956][https://github.com/wasm-bindgen/wasm-bindgen/pull/4956]
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.
@@ -89,6 +92,8 @@
   [#4409](https://github.com/wasm-bindgen/wasm-bindgen/pull/4409)
 
 ### Removed
+
+* Removed `GPUAdapter.isFallbackAdapter`. [#4956][https://github.com/wasm-bindgen/wasm-bindgen/pull/4956]
 
 ## [0.2.108](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.107...0.2.108)
 
