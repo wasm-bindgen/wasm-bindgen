@@ -35,6 +35,11 @@ struct Context<'a> {
     thread_count: Option<ThreadCount>,
     support_start: bool,
     linked_modules: bool,
+    /// Tracks the descriptor signature (arguments, ret, inner_ret) used when
+    /// creating each export adapter. Used to avoid incorrect deduplication
+    /// when wasm-ld ICF merges invoke functions for different closure types
+    /// into the same export.
+    export_adapter_sigs: HashMap<AdapterId, (Vec<Descriptor>, Descriptor, Option<Descriptor>)>,
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -66,6 +71,7 @@ pub fn process(
         thread_count,
         support_start: bindgen.emit_start,
         linked_modules: bindgen.split_linked_modules,
+        export_adapter_sigs: Default::default(),
     };
     cx.init()?;
 
@@ -1497,18 +1503,40 @@ impl<'a> Context<'a> {
     /// `signature` specified.
     fn export_adapter(
         &mut self,
-        export: ExportId,
+        mut export: ExportId,
         signature: Function,
     ) -> Result<AdapterId, Error> {
-        // Same export might be requested multiple times due to codegen-units.
-        // Check if we already have an adapter for it.
-        if let Some((_, id)) = self
+        // Same export might be requested multiple times due to codegen-units,
+        // or because wasm-ld ICF merged invoke functions for different closure
+        // types into the same function. Only reuse an existing adapter if the
+        // signature also matches (ignoring shim_idx which varies across
+        // codegen-units).
+        let sig_key = (
+            signature.arguments.clone(),
+            signature.ret.clone(),
+            signature.inner_ret.clone(),
+        );
+        if let Some((_, adapter_id)) = self
             .adapters
             .exports
             .iter()
             .find(|(export_id, _)| *export_id == export)
         {
-            return Ok(*id);
+            if self.export_adapter_sigs.get(adapter_id) == Some(&sig_key) {
+                // Same ExportId and signature (codegen-units duplicate).
+                return Ok(*adapter_id);
+            } else {
+                // Same ExportId but different signature: ICF merged two different
+                // closure types. Create a new export with a unique name so each
+                // adapter gets its own JS function.
+                let old_export = self.module.exports.get(export);
+                let name = format!("{}_{}", old_export.name, self.adapters.exports.len());
+                let func_id = match old_export.item {
+                    walrus::ExportItem::Function(f) => f,
+                    _ => unreachable!(),
+                };
+                export = self.module.exports.add(&name, func_id);
+            }
         }
 
         // Figure out how to translate all the incoming arguments ...
@@ -1592,6 +1620,7 @@ impl<'a> Context<'a> {
         );
 
         self.adapters.exports.push((export, id));
+        self.export_adapter_sigs.insert(id, sig_key);
 
         Ok(id)
     }
