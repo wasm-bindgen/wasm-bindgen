@@ -35,7 +35,7 @@
   (import "./reference_test_bg.js" "__wbg_then_b9e7b3b5f1a9e1b5" (func (;16;) (type 15)))
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;17;) (type 6)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;18;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "foo" (func $"foo externref shim"))

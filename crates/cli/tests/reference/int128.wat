@@ -7,7 +7,7 @@
   (type (;5;) (func (param i64 i64) (result i64 i64)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_be289d5034ed271b" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "echo_i128" (func $"echo_i128 multivalue shim"))

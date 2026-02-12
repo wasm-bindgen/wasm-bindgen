@@ -70,6 +70,10 @@
 
 ### Fixed
 
+* Increased externref stack size from 128 to 1024 slots to prevent "table index is out of bounds"
+  errors in applications with deep call stacks or many concurrent async operations.
+  [#4951](https://github.com/wasm-bindgen/wasm-bindgen/pull/4951)
+
 * Fixed `ReferenceError` when using Rust struct names that conflict with JS builtins (e.g., `Array`).
   The constructor now correctly uses the aliased `FinalizationRegistry` identifier.
   [#4932](https://github.com/wasm-bindgen/wasm-bindgen/pull/4932)

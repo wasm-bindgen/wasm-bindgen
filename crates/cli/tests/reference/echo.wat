@@ -25,7 +25,7 @@
   (import "./reference_test_bg.js" "__wbg_foo_unwrap" (func (;4;) (type 18)))
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;5;) (type 7)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;6;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_foo_free" (func $__wbg_foo_free))

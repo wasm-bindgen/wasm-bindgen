@@ -24,7 +24,7 @@ use walrus::{ConstExpr, FunctionId, GlobalId, Module, TableId, ValType};
 use walrus::{ExportId, ImportId, InstrLocId, TypeId};
 
 // must be kept in sync with src/lib.rs and EXTERNREF_HEAP_START
-const DEFAULT_MIN: u64 = 128;
+const DEFAULT_MIN: u64 = 1024;
 
 /// State of the externref pass, used to collect information while bindings are
 /// generated and used eventually to actually execute the entire pass.

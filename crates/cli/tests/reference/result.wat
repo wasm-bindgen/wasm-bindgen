@@ -12,7 +12,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_be289d5034ed271b" (func (;1;) (type 5)))
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;2;) (type 8)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "result_i32" (func $"result_i32 multivalue shim"))

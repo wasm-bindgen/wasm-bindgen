@@ -41,7 +41,7 @@
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;18;) (type 6)))
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000001" (func (;19;) (type 14)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;20;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_holdsnumber_free" (func $__wbg_holdsnumber_free))

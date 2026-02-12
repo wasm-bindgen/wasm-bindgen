@@ -21,7 +21,7 @@
   (import "./reference_test_bg.js" "__wbg_signal_54e2df9a78183990" (func (;12;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_some_prop_3c07d616a6648f3b" (func (;13;) (type 5)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;14;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "exported" (func $exported))

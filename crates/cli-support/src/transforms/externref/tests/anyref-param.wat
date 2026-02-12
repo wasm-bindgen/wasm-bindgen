@@ -11,8 +11,8 @@
 (module
   (type (;0;) (func (param i32)))
   (type (;1;) (func (param externref)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
-  (global (;0;) (mut i32) i32.const 128)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (global (;0;) (mut i32) i32.const 1024)
   (export "foo" (func $"foo externref shim"))
   (func $"foo externref shim" (;0;) (type 1) (param externref)
     (local i32)

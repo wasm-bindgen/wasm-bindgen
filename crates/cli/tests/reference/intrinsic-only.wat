@@ -5,7 +5,7 @@
   (type (;3;) (func (param i32 i32)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_be289d5034ed271b" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "causes_error" (func $"causes_error multivalue shim"))

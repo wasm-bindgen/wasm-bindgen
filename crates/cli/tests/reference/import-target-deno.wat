@@ -22,7 +22,7 @@
   (import "foo-raw" "bar_from_foo_raw" (func (;11;) (type 0)))
   (import "pure-extern" "extern_fn" (func (;12;) (type 0)))
   (import "tests/wasm/imports.js" "bar_from_foo" (func (;13;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "exported" (func $"exported multivalue shim"))

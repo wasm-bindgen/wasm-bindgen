@@ -21,7 +21,7 @@
   (type (;2;) (func (param f32 i32 i64 i32 i32)))
   (type (;3;) (func (param f32 externref i64 externref i32)))
   (import "" "a" (func $a (;0;) (type 3)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (export "foo" (func 2))
   (func $"a externref shim" (;1;) (type 2) (param f32 i32 i64 i32 i32)
     local.get 0

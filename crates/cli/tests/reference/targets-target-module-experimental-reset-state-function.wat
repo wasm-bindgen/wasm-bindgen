@@ -4,7 +4,7 @@
   (type (;2;) (func (param i32 i32) (result i32)))
   (import "./reference_test_bg.js" "__wbg_random_ae0b2256206ad108" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "add_that_might_fail" (func $add_that_might_fail))

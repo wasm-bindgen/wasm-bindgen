@@ -9,7 +9,7 @@
   (import "./reference_test_bg.js" "__wbg_parseFloat_e568a9a7c2403488" (func (;2;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;3;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "exported" (func $exported))

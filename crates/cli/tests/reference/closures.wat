@@ -24,7 +24,7 @@
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;11;) (type 5)))
   (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000001" (func (;12;) (type 5)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;13;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "delayed_callback" (func $"delayed_callback multivalue shim"))
