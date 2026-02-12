@@ -139,17 +139,17 @@ extern "C" {
 ///
 /// ## Transferring ownership to JS
 ///
-/// Pass a `Closure` by value to transfer ownership:
+/// Pass a `StaticClosure` (`ScopedClosure<'static, T>``) by value to transfer ownership:
 ///
 /// ```ignore
 /// use wasm_bindgen::prelude::*;
 ///
 /// #[wasm_bindgen]
 /// extern "C" {
-///     fn set_one_shot_callback(cb: Closure<dyn FnMut()>);
+///     fn set_one_shot_callback(cb: StaticClosure<dyn FnMut()>);
 /// }
 ///
-/// let cb = Closure::new(|| { /* ... */ });
+/// let cb = StaticClosure::new(|| { /* ... */ });
 /// set_one_shot_callback(cb);  // Ownership transferred, no need to store
 /// ```
 pub struct ScopedClosure<'a, T: ?Sized> {
