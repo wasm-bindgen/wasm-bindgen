@@ -94,7 +94,7 @@ impl Context {
 
         let table = module
             .tables
-            .add_local(false, DEFAULT_MIN, None, RefType::Externref);
+            .add_local(false, DEFAULT_MIN, None, RefType::EXTERNREF);
 
         module.tables.get_mut(table).name = Some("__wbindgen_externrefs".to_string());
 
@@ -390,7 +390,7 @@ impl Transform<'_> {
         for (i, old_ty) in target_ty.params().iter().enumerate() {
             let is_owned = func.args.remove(&i);
             let new_ty = is_owned
-                .map(|_which| ValType::Ref(RefType::Externref))
+                .map(|_which| ValType::Ref(RefType::EXTERNREF))
                 .unwrap_or(*old_ty);
             param_tys.push(new_ty);
             if new_ty == *old_ty {
@@ -415,7 +415,7 @@ impl Transform<'_> {
 
         let new_ret = if func.ret_externref {
             assert_eq!(target_ty.results(), &[ValType::I32]);
-            vec![ValType::Ref(RefType::Externref)]
+            vec![ValType::Ref(RefType::EXTERNREF)]
         } else {
             target_ty.results().to_vec()
         };
@@ -455,7 +455,7 @@ impl Transform<'_> {
         // gc passes if we don't actually end up using them.
         let fp = locals.add(ValType::I32);
         let scratch_i32 = locals.add(ValType::I32);
-        let scratch_externref = locals.add(ValType::Ref(RefType::Externref));
+        let scratch_externref = locals.add(ValType::Ref(RefType::EXTERNREF));
 
         // Update our stack pointer if there's any borrowed externref objects.
         if externref_stack > 0 {
@@ -552,7 +552,7 @@ impl Transform<'_> {
         if externref_stack > 0 {
             if self.cx.bulk_memory {
                 body.local_get(fp)
-                    .ref_null(RefType::Externref)
+                    .ref_null(RefType::EXTERNREF)
                     .i32_const(externref_stack)
                     .table_fill(self.table);
             } else {
@@ -561,7 +561,7 @@ impl Transform<'_> {
                     if i > 0 {
                         body.i32_const(i).binop(BinaryOp::I32Add);
                     }
-                    body.ref_null(RefType::Externref);
+                    body.ref_null(RefType::EXTERNREF);
                     body.table_set(self.table);
                 }
             }
@@ -636,7 +636,7 @@ impl Transform<'_> {
                         }
                     };
 
-                    let ty = RefType::Externref;
+                    let ty = RefType::EXTERNREF;
                     match intrinsic {
                         Intrinsic::TableGrow => {
                             // Change something that looks like:

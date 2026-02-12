@@ -100,7 +100,7 @@ pub fn run(
 /// Import the `WebAssembly.JSTag` as a Wasm tag.
 fn import_js_tag(module: &mut Module) -> Result<TagId, Error> {
     // JSTag has a single externref parameter (the caught exception)
-    let tag_ty = module.types.add(&[ValType::Ref(RefType::Externref)], &[]);
+    let tag_ty = module.types.add(&[ValType::Ref(RefType::EXTERNREF)], &[]);
 
     // Use the module's helper to add an imported tag
     let (tag_id, _import_id) =
@@ -139,7 +139,7 @@ fn generate_catch_wrapper(
         heap_alloc,
         exn_store,
         idx_local: module.locals.add(ValType::I32),
-        exn_local: module.locals.add(ValType::Ref(RefType::Externref)),
+        exn_local: module.locals.add(ValType::Ref(RefType::EXTERNREF)),
     };
 
     match eh_version {
@@ -197,7 +197,7 @@ fn generate_modern_eh_wrapper(
     ctx: CatchContext,
 ) {
     // Block type for externref result (the caught exception)
-    let externref_block_ty: InstrSeqType = ValType::Ref(RefType::Externref).into();
+    let externref_block_ty: InstrSeqType = ValType::Ref(RefType::EXTERNREF).into();
 
     // Create the try body sequence
     let try_body_id = builder.dangling_instr_seq(None).id();
@@ -280,7 +280,7 @@ fn generate_legacy_eh_wrapper(
 
     // Catch handler receives externref and produces results
     // This always needs a multi-value type since it has params
-    let catch_params = vec![ValType::Ref(RefType::Externref)];
+    let catch_params = vec![ValType::Ref(RefType::EXTERNREF)];
     let catch_block_ty: InstrSeqType = module.types.add(&catch_params, results).into();
 
     // Create the try body
