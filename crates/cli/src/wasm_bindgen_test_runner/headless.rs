@@ -1,5 +1,5 @@
 use super::shell::Shell;
-use anyhow::{bail, format_err, Context, Error};
+use anyhow::{bail, Context, Error};
 use log::{debug, warn};
 use rouille::url::Url;
 use serde::{Deserialize, Serialize};
@@ -144,28 +144,37 @@ pub fn run(
     let id = client.new_session(&driver, capabilities)?;
     client.session = Some(id.clone());
 
-    // Visit our local server to open up the page that runs tests, and then get
-    // some handles to objects on the page which we'll be scraping output from.
+    let browser_name = client
+        .session_browser_name(&id)
+        .unwrap_or_else(|| driver.browser().to_ascii_lowercase());
+    let style_mode = style_mode_for_browser(&browser_name);
+
+    // Visit our local server to open up the page that runs tests.
     //
     // If WASM_BINDGEN_TEST_ADDRESS is set, use it as the local server URL,
     // trying to inherit the port from the server if it isn't specified.
-    let url = match std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
+    let mut url = match std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
         Ok(u) => {
             let mut url = Url::parse(&u)?;
             if url.port().is_none() {
                 url.set_port(Some(server.port())).unwrap();
             }
-            url.to_string()
+            url
         }
-        Err(_) => format!("http://{server}"),
+        Err(_) => Url::parse(&format!("http://{server}"))?,
     };
+    // The headless template reads this fragment to pick the style.
+    let style = match style_mode {
+        StyleMode::DisplayNone => "display-none",
+        StyleMode::VisibilityHidden => "visibility-hidden",
+    };
+    url.set_fragment(Some(&format!("wbg_style={style}")));
 
-    shell.status(&format!("Visiting {url}..."));
-    client.goto(&id, &url)?;
+    shell.status(&format!(
+        "Visiting {url} (browser: {browser_name}, sink: append, style: {style_mode:?}, poll: 100ms)..."
+    ));
+    client.goto(&id, url.as_str())?;
     shell.status("Loading page elements...");
-    let output = client.element(&id, "#output")?;
-    let logs = client.element(&id, "#console_log")?;
-    let errors = client.element(&id, "#console_error")?;
 
     // At this point we need to wait for the test to finish before we can take a
     // look at what happened. There appears to be no great way to do this with
@@ -183,48 +192,107 @@ pub fn run(
     shell.status("Waiting for test to finish...");
     let start = Instant::now();
     let max = Duration::new(test_timeout, 0);
+    let no_stream_scrape = env::var_os("WASM_BINDGEN_TEST_NO_STREAM").is_some();
+    let mut shell_cleared = false;
+    let mut output_buf = String::new();
+    let mut output_offset = 0usize;
     while start.elapsed() < max {
-        if client.text(&id, &output)?.contains("test result: ") {
-            break;
+        if no_stream_scrape {
+            let output = client.text_content(&id, "#output", 0)?;
+            if output.chunk.contains("test result: ") {
+                output_buf = output.chunk;
+                output_offset = output.next_offset;
+                break;
+            }
+        } else {
+            let output = client.text_content(&id, "#output", output_offset)?;
+            let new_output = output.chunk;
+            output_offset = output.next_offset;
+
+            // Print new output as it appears (real-time streaming)
+            if !new_output.is_empty() {
+                // Clear shell status before first output so they don't mix
+                if !shell_cleared {
+                    shell.clear();
+                    shell_cleared = true;
+                }
+                io::stdout().lock().write_all(new_output.as_bytes())?;
+                output_buf.push_str(&new_output);
+            }
+
+            if output_buf.contains("test result: ") {
+                break;
+            }
         }
         thread::sleep(Duration::from_millis(100));
     }
-    shell.clear();
+    if !shell_cleared {
+        shell.clear();
+    }
 
-    // Tests have now finished or have timed out. At this point we need to print
-    // what happened on the console. Currently we just do this by scraping the
-    // output of various fields and printing them out, hopefully providing
-    // enough diagnostic info to see what went wrong (if anything).
-    let output = client.text(&id, &output)?;
-    let logs = client.text(&id, &logs)?;
-    let errors = client.text(&id, &errors)?;
+    // Tests have now finished or have timed out. At this point we need to check
+    // what happened. In streaming mode output was already printed in real-time.
+    // In no-stream mode, emit the buffered output now.
+    if no_stream_scrape && !output_buf.is_empty() {
+        io::stdout().lock().write_all(output_buf.as_bytes())?;
+    }
 
-    if output.contains("test result: ") {
-        println!("{output}");
+    // Print any remaining output that might have arrived after the last poll
+    let remaining_output = {
+        let output = client.text_content(&id, "#output", output_offset)?;
+        output.chunk
+    };
+    if !remaining_output.is_empty() {
+        io::stdout().lock().write_all(remaining_output.as_bytes())?;
+        output_buf.push_str(&remaining_output);
+    }
 
+    if output_buf.contains("test result: ") {
         // If the tests harness finished (either successfully or unsuccessfully)
         // then in theory all the info needed to debug the failure is in its own
         // output, so we shouldn't need the driver logs to get printed.
         drop_log();
     } else {
         println!("Failed to detect test as having been run. It might have timed out.");
-        if !output.is_empty() {
-            println!("output div contained:\n{}", tab(&output));
-        }
     }
 
-    if !output.contains("test result: ok") {
-        if !logs.is_empty() {
-            println!("console.log div contained:\n{}", tab(&logs));
-        }
-        if !errors.is_empty() {
-            println!("console.log div contained:\n{}", tab(&errors));
+    if !output_buf.contains("test result: ok") {
+        // Read console output incrementally to avoid exceeding WebDriver response limits.
+        let mut has_output = false;
+        let mut offset = 0;
+        loop {
+            let output = client.text_content(&id, "#console_output", offset)?;
+            let chunk = output.chunk;
+            if chunk.is_empty() {
+                break;
+            }
+            if !has_output {
+                println!("console output:");
+                has_output = true;
+            }
+            io::stdout().lock().write_all(tab(&chunk).as_bytes())?;
+            offset = output.next_offset;
         }
 
         bail!("some tests failed")
     }
 
     Ok(())
+}
+
+#[derive(Copy, Clone, Debug)]
+enum StyleMode {
+    DisplayNone,
+    VisibilityHidden,
+}
+
+fn style_mode_for_browser(browser_name: &str) -> StyleMode {
+    let browser = browser_name.to_ascii_lowercase();
+    if browser.contains("safari") {
+        StyleMode::VisibilityHidden
+    } else {
+        StyleMode::DisplayNone
+    }
 }
 
 enum Driver {
@@ -514,42 +582,78 @@ impl Client {
         Ok(())
     }
 
-    fn element(&mut self, id: &str, selector: &str) -> Result<String, Error> {
+    fn text_content(
+        &mut self,
+        id: &str,
+        selector: &str,
+        offset: usize,
+    ) -> Result<TextChunk, Error> {
         #[derive(Serialize)]
         struct Request {
-            using: String,
-            value: String,
+            script: String,
+            args: Vec<usize>,
         }
         #[derive(Deserialize)]
         struct Response {
-            value: Reference,
+            value: serde_json::Value,
         }
         #[derive(Deserialize)]
-        struct Reference {
-            #[serde(rename = "element-6066-11e4-a52e-4f735466cecf")]
-            gecko_reference: Option<String>,
-            #[serde(rename = "ELEMENT")]
-            safari_reference: Option<String>,
+        struct Value {
+            chunk: String,
+            next_offset: usize,
         }
-
         let request = Request {
-            using: "css selector".to_string(),
-            value: selector.to_string(),
+            script: format!(
+                "const el = document.querySelector({}); \
+                 if (!el || el.textContent == null) {{ \
+                     return {{ chunk: \"\", next_offset: arguments[0] }}; \
+                 }} \
+                 const text = el.textContent; \
+                 const start = Math.min(arguments[0], text.length); \
+                 return {{ chunk: text.slice(start), next_offset: text.length }};",
+                serde_json::to_string(selector)?
+            ),
+            args: vec![offset],
         };
-        let x: Response = self.post(&format!("/session/{id}/element"), &request)?;
-        x.value
-            .gecko_reference
-            .or(x.value.safari_reference)
-            .ok_or(format_err!("failed to find element reference in response"))
+        let x: Response = self.post(&format!("/session/{id}/execute/sync"), &request)?;
+        match x.value {
+            serde_json::Value::Object(_) => {
+                let value: Value = serde_json::from_value(x.value)?;
+                Ok(TextChunk {
+                    chunk: value.chunk,
+                    next_offset: value.next_offset,
+                })
+            }
+            serde_json::Value::Null => Ok(TextChunk {
+                chunk: String::new(),
+                next_offset: offset,
+            }),
+            other => bail!("unexpected response from execute/sync: {other:?}"),
+        }
     }
 
-    fn text(&mut self, id: &str, element: &str) -> Result<String, Error> {
-        #[derive(Deserialize)]
-        struct Response {
-            value: String,
-        }
-        let x: Response = self.get(&format!("/session/{id}/element/{element}/text"))?;
-        Ok(x.value)
+    fn session_browser_name(&mut self, id: &str) -> Option<String> {
+        let value: serde_json::Value = match self.get(&format!("/session/{id}")) {
+            Ok(value) => value,
+            Err(err) => {
+                debug!("failed to read webdriver session capabilities: {err:#}");
+                return None;
+            }
+        };
+        value
+            .get("value")
+            .and_then(|v| {
+                v.get("capabilities")
+                    .and_then(|caps| caps.get("browserName"))
+                    .or_else(|| v.get("browserName"))
+            })
+            .or_else(|| {
+                value
+                    .get("capabilities")
+                    .and_then(|caps| caps.get("browserName"))
+            })
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
     }
 
     fn get<U>(&mut self, path: &str) -> Result<U, Error>
@@ -589,8 +693,8 @@ impl Client {
                 .post(url.as_str())
                 .content_type("application/json")
                 .send(data.as_bytes())?,
-            Method::Delete => self.agent.delete(url.as_str()).call()?,
             Method::Get => self.agent.get(url.as_str()).call()?,
+            Method::Delete => self.agent.delete(url.as_str()).call()?,
         };
 
         let response_code = response.status();
@@ -614,6 +718,11 @@ impl Drop for Client {
             warn!("failed to close window {e:?}");
         }
     }
+}
+
+struct TextChunk {
+    chunk: String,
+    next_offset: usize,
 }
 
 fn tab(s: &str) -> String {

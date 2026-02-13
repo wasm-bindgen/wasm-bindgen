@@ -184,6 +184,66 @@ fn test_headless_worker_output_not_garbled() {
     );
 }
 
+/// Regression test for `WASM_BINDGEN_TEST_NO_STREAM`.
+/// Even when streaming is disabled, final harness output should still be printed.
+#[test]
+fn test_headless_worker_output_visible_with_no_stream() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_headless_worker_output_visible_with_no_stream");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_dedicated_worker);
+
+            #[wasm_bindgen_test]
+            fn test_1() {}
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env("WASM_BINDGEN_TEST_NO_STREAM", "1")
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        stdout.contains("running 1 test") || stderr.contains("running 1 test"),
+        "Expected 'running 1 test' in output with WASM_BINDGEN_TEST_NO_STREAM=1.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+    assert!(
+        stdout.contains("test test_1 ... ok") || stderr.contains("test test_1 ... ok"),
+        "Expected 'test test_1 ... ok' in output with WASM_BINDGEN_TEST_NO_STREAM=1.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+}
+
 /// Test that console output appears exactly once for a failing test in headless mode.
 /// When a test panics, the console output should be shown exactly once.
 #[test]
@@ -1462,3 +1522,359 @@ globalThis.spawnWorkerWithLogThenFail = function() {
          stdout:\n{stdout}\nstderr:\n{stderr}",
     );
 }
+
+// Additional headless streaming tests ported from origin/worker-logs-capture
+#[test]
+fn test_no_carriage_return_in_output() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_no_carriage_return_in_output");
+    project.file(
+        "src/lib.rs",
+        r#"
+            #[cfg(test)]
+            mod tests {
+                use wasm_bindgen_test::*;
+
+                wasm_bindgen_test_configure!(run_in_dedicated_worker);
+
+                #[wasm_bindgen_test]
+                fn test() {
+                    console_log!("hello");
+                }
+            }
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // Check that there are no carriage returns in the output.
+    // Progress updates use \r to update in-place, but they should be cleared before
+    // printing the final output.
+    let stdout_cr_count = stdout.matches('\r').count();
+    let stderr_cr_count = stderr.matches('\r').count();
+
+    assert_eq!(
+        stdout_cr_count, 0,
+        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
+        stdout_cr_count, stdout
+    );
+    assert_eq!(
+        stderr_cr_count, 0,
+        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
+        stderr_cr_count, stderr
+    );
+
+    // Verify test actually passed
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
+/// Test that console output appears exactly twice for a passing test with --nocapture.
+#[test]
+fn test_default_no_carriage_return_in_output() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_default_no_carriage_return_in_output");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            #[wasm_bindgen_test]
+            fn test() {
+                console_log!("hello");
+            }
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let stdout_cr_count = stdout.matches('\r').count();
+    let stderr_cr_count = stderr.matches('\r').count();
+
+    assert_eq!(
+        stdout_cr_count, 0,
+        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
+        stdout_cr_count, stdout
+    );
+    assert_eq!(
+        stderr_cr_count, 0,
+        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
+        stderr_cr_count, stderr
+    );
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
+// ============================================================================
+// run_in_browser mode tests (explicit main thread)
+// ============================================================================
+
+/// Test that output is not garbled in run_in_browser mode.
+#[test]
+fn test_browser_no_carriage_return_in_output() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_browser_no_carriage_return_in_output");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            fn test() {
+                console_log!("hello");
+            }
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let stdout_cr_count = stdout.matches('\r').count();
+    let stderr_cr_count = stderr.matches('\r').count();
+
+    assert_eq!(
+        stdout_cr_count, 0,
+        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
+        stdout_cr_count, stdout
+    );
+    assert_eq!(
+        stderr_cr_count, 0,
+        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
+        stderr_cr_count, stderr
+    );
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
+// ============================================================================
+// run_in_shared_worker mode tests
+// ============================================================================
+
+/// Test that output is not garbled in run_in_shared_worker mode.
+#[test]
+fn test_shared_worker_no_carriage_return_in_output() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_shared_worker_no_carriage_return_in_output");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_shared_worker);
+
+            #[wasm_bindgen_test]
+            fn test() {
+                console_log!("hello");
+            }
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let stdout_cr_count = stdout.matches('\r').count();
+    let stderr_cr_count = stderr.matches('\r').count();
+
+    assert_eq!(
+        stdout_cr_count, 0,
+        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
+        stdout_cr_count, stdout
+    );
+    assert_eq!(
+        stderr_cr_count, 0,
+        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
+        stderr_cr_count, stderr
+    );
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
+// ============================================================================
+// run_in_service_worker mode tests
+// ============================================================================
+
+/// Test that output is not garbled in run_in_service_worker mode.
+#[test]
+fn test_service_worker_no_carriage_return_in_output() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_service_worker_no_carriage_return_in_output");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_service_worker);
+
+            #[wasm_bindgen_test]
+            fn test() {
+                console_log!("hello");
+            }
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let stdout_cr_count = stdout.matches('\r').count();
+    let stderr_cr_count = stderr.matches('\r').count();
+
+    assert_eq!(
+        stdout_cr_count, 0,
+        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
+        stdout_cr_count, stdout
+    );
+    assert_eq!(
+        stderr_cr_count, 0,
+        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
+        stderr_cr_count, stderr
+    );
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
+// ============================================================================
+// Node.js worker_threads log capture tests
+// ============================================================================

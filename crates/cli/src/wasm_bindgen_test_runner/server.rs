@@ -215,7 +215,7 @@ pub(crate) fn spawn(
             // Now that we've gotten to the point where JS is executing, update our
             // status text as at this point we should be asynchronously fetching the
             // Wasm module.
-            document.getElementById('output').textContent = "Loading Wasm module...";
+            document.getElementById('output').textContent = "Loading Wasm module...\n";
             {}
 
             port.addEventListener("message", function(e) {{
@@ -242,10 +242,6 @@ pub(crate) fn spawn(
                         }}
                     }} else if (method == "output_append") {{
                         const el = document.getElementById("output");
-                        if (!el.dataset.appended) {{
-                            el.textContent = "";
-                            el.dataset.appended = "1";
-                        }}
                         el.textContent += args[0];
                     }}
                 }}
@@ -301,7 +297,8 @@ pub(crate) fn spawn(
                             }}
                             await new Promise((resolve) => {{
                                 navigator.serviceWorker.addEventListener('controllerchange', () => {{
-                                    if (navigator.serviceWorker.controller.scriptURL != location.href + url) {{
+                                    const expected_script_url = new URL(url, location.origin + location.pathname).href;
+                                    if (navigator.serviceWorker.controller.scriptURL != expected_script_url) {{
                                         throw "`wasm-bindgen-test-runner` does not support running multiple service worker tests at the same time"
                                     }}
                                     resolve();
@@ -326,7 +323,7 @@ pub(crate) fn spawn(
             // Now that we've gotten to the point where JS is executing, update our
             // status text as at this point we should be asynchronously fetching the
             // Wasm module.
-            document.getElementById('output').textContent = "Loading Wasm module...";
+            document.getElementById('output').textContent = "Loading Wasm module...\n";
 
             async function main(test) {{
                 const wasm = await init('./{module}_bg.wasm');
