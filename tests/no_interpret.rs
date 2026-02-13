@@ -3,7 +3,8 @@ const _: () = {
         let _ = 1 + 1;
     }
 
-    #[unsafe(link_section = ".init_array")]
+    #[cfg_attr(target_os = "macos", unsafe(link_section = "__DATA,__mod_init_func"))]
+    #[cfg_attr(not(target_os = "macos"), unsafe(link_section = ".init_array"))]
     static __CTOR: unsafe extern "C" fn() = __ctor;
 };
 
