@@ -471,7 +471,7 @@ impl Bindgen {
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
         // externref table and allocation function.
-        generate_wasm_catch_wrappers(&mut module)?;
+        generate_wasm_catch_wrappers(&mut module, self.abort_reinit)?;
 
         // We've done a whole bunch of transformations to the Wasm module, many
         // of which leave "garbage" lying around, so let's prune out all our
@@ -796,7 +796,7 @@ impl Output {
 /// When exception handling instructions are available in the module, this generates
 /// Wasm wrapper functions that catch JavaScript exceptions using `WebAssembly.JSTag`
 /// instead of relying on JS `handleError` wrappers.
-fn generate_wasm_catch_wrappers(module: &mut Module) -> Result<(), Error> {
+fn generate_wasm_catch_wrappers(module: &mut Module, abort_reinit: bool) -> Result<(), Error> {
     let eh_version = transforms::detect_exception_handling_version(module);
     log::debug!("Exception handling version: {eh_version:?}");
 
@@ -822,7 +822,7 @@ fn generate_wasm_catch_wrappers(module: &mut Module) -> Result<(), Error> {
         aux.exn_store
     );
 
-    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version)
+    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version, abort_reinit)
         .context("failed to generate catch wrappers");
 
     // Re-add the custom sections

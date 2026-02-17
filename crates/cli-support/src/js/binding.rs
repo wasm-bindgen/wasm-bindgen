@@ -851,27 +851,39 @@ fn instruction(
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
 
             let wrap_try_catch = |call| {
+                let unwrap_wrapped = if js.cx.aux.wrapped_js_tag.is_some() {
+                    "\
+                        if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {
+                            throw e.getArg(__wbindgen_wrapped_jstag, 0);
+                        }"
+                } else {
+                    ""
+                };
                 // If the module is compiled with panic=unwind, panics are not critical errors
                 let catch_exception = if js.cx.has_intrinsic("panic_error") {
-                    "\
-                    catch(e) {
-                        if (!(e instanceof PanicError)) {
+                    format!(
+                        "\
+                    catch(e) {{{unwrap_wrapped}
+                        if (!(e instanceof PanicError)) {{
                             debugger;
                             console.log('ABORT', e);
                             // wasm.__wbindgen_set_abort_flag(1);
                             // __wbg_aborted = true;
-                        }
+                        }}
                         throw e;
-                    }"
+                    }}"
+                    )
                 } else {
-                    "\
-                    catch(e) {
+                    format!(
+                        "\
+                    catch(e) {{{unwrap_wrapped}
                         debugger;
                         console.log('ABORT', e);
                         // wasm.__wbindgen_set_abort_flag(1);
                         // __wbg_aborted = true;
                         throw e;
-                    }"
+                    }}"
+                    )
                 };
                 format!(
                     "\

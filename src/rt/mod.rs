@@ -299,19 +299,13 @@ pub fn assert_not_null<T>(s: *mut T) {
     }
 }
 
-#[cfg(not(panic = "unwind"))]
 #[cold]
 #[inline(never)]
 fn throw_null() -> ! {
     super::throw_str("null pointer passed to rust");
 }
 
-#[cfg(panic = "unwind")]
-#[cold]
-#[inline(never)]
-fn throw_null() {
-    panic!("null pointer passed to rust");
-}
+
 
 /// A vendored version of `RefCell` from the standard library.
 ///

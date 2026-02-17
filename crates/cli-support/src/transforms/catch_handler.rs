@@ -114,6 +114,7 @@ pub fn run(
 
     log::debug!("Catch handler created {} wrappers", wrappers.len());
     aux.js_tag = Some(js_tag);
+    aux.wrapped_js_tag = wrapped_js_tag;
 
     Ok(())
 }
@@ -263,15 +264,8 @@ fn generate_modern_eh_wrapper(
             seq: catch_block_id,
         });
 
-        match ctx.wrapper_kind {
-            WrapperKind::AbortWrapper { wrapped_js_tag: _ } => {
-                // rethrow as wrapped_js_tag
-            }
-            WrapperKind::CatchWrapper => {
-                // Exception handling code (externref is on stack from catch)
-                emit_catch_handler(&mut body, ctx, results);
-            }
-        }
+        // Stack has externref from caught exception
+        emit_catch_handler(&mut body, ctx, results);
     }
 }
 
@@ -331,15 +325,8 @@ fn generate_legacy_eh_wrapper(
     {
         let mut catch_handler = builder.instr_seq(catch_handler_id);
 
-        match ctx.wrapper_kind {
-            WrapperKind::AbortWrapper { wrapped_js_tag: _ } => {
-                // rethrow as wrapped_js_tag
-            }
-            WrapperKind::CatchWrapper => {
-                // Stack has externref from caught exception
-                emit_catch_handler(&mut catch_handler, ctx, results);
-            }
-        }
+        // Stack has externref from caught exception
+        emit_catch_handler(&mut catch_handler, ctx, results);
     }
 
     // Add try instruction to function body
@@ -355,25 +342,36 @@ fn generate_legacy_eh_wrapper(
     }
 }
 
-/// Emit the exception handling code that stores the caught exception and returns defaults.
+/// Emit the exception handling code based on wrapper kind.
 ///
-/// Expects the caught externref to be on the stack. Emits code to:
-/// 1. Store the externref in the externref table
-/// 2. Call __wbindgen_exn_store with the table index
-/// 3. Push default return values
+/// Expects the caught externref to be on the stack.
+///
+/// For `CatchWrapper`: stores the exception and returns default values.
+/// For `AbortWrapper`: rethrows the exception with the wrapped tag.
 fn emit_catch_handler(
     builder: &mut walrus::InstrSeqBuilder,
     ctx: CatchContext,
     results: &[ValType],
 ) {
-    builder.local_set(ctx.exn_local);
-    builder.call(ctx.heap_alloc);
-    builder.local_tee(ctx.idx_local);
-    builder.local_get(ctx.exn_local);
-    builder.table_set(ctx.externref_table);
-    builder.local_get(ctx.idx_local);
-    builder.call(ctx.exn_store);
-    push_default_values(builder, results);
+    match ctx.wrapper_kind {
+        WrapperKind::AbortWrapper { wrapped_js_tag } => {
+            // Rethrow the exception with the wrapped tag
+            builder.instr(Throw {
+                tag: wrapped_js_tag,
+            });
+        }
+        WrapperKind::CatchWrapper => {
+            // Store the externref in the externref table and call exn_store
+            builder.local_set(ctx.exn_local);
+            builder.call(ctx.heap_alloc);
+            builder.local_tee(ctx.idx_local);
+            builder.local_get(ctx.exn_local);
+            builder.table_set(ctx.externref_table);
+            builder.local_get(ctx.idx_local);
+            builder.call(ctx.exn_store);
+            push_default_values(builder, results);
+        }
+    }
 }
 
 /// Push default values for the given result types onto the stack.
