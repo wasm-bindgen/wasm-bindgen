@@ -807,7 +807,7 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
-            let should_check_aborted = js.cx.unwind_enabled
+            let mut should_check_aborted = js.cx.unwind_enabled
                 || js.cx.config.abort_reinit
                     && matches!(
                         instr,
@@ -848,7 +848,7 @@ fn instruction(
             }
 
             // Call the function through an export of the underlying module.
-            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
+            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error, &mut should_check_aborted)?;
 
             let wrap_try_catch = |call| {
                 let unwrap_wrapped = if js.cx.aux.wrapped_js_tag.is_some() {
@@ -1735,6 +1735,7 @@ impl Invocation {
         args: &[String],
         prelude: &mut String,
         log_error: &mut bool,
+        handle_error: &mut bool,
     ) -> Result<String, Error> {
         match self {
             Invocation::Core { id, .. } => {
@@ -1753,6 +1754,9 @@ impl Invocation {
                 let variadic = cx.aux.imports_with_variadic.contains(id);
                 if cx.import_never_log_error(import) {
                     *log_error = false;
+                }
+                if cx.import_never_handle_error(import) {
+                    *handle_error = false;
                 }
                 cx.invoke_import(import, kind, args, variadic, prelude)
             }

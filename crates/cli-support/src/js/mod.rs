@@ -1400,8 +1400,15 @@ if (require('worker_threads').isMainThread) {{
                 return ptr;
             }}
             free() {{
-                const ptr = this.__destroy_into_raw();
-                wasm.{}(ptr, 0);
+                try {{
+                    const ptr = this.__destroy_into_raw();
+                    wasm.{}(ptr, 0);
+                }} catch(e) {{
+                    if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
+                        throw e.getArg(__wbindgen_wrapped_jstag, 0);
+                    }}
+                    console.log('ABORT', e);
+                }}
             }}
             ",
             wasm_bindgen_shared::free_function(name),
@@ -3715,6 +3722,20 @@ if (require('worker_threads').isMainThread) {{
             _ => false,
         }
     }
+
+    fn import_never_handle_error(&self, import: &AuxImport) -> bool {
+        match import {
+            // Some intrinsics are intended to exactly throw errors, and in
+            // general we shouldn't have exceptions in our intrinsics to debug,
+            // so skip these.
+            AuxImport::Intrinsic(Intrinsic::Throw | Intrinsic:: Rethrow) => true,
+
+            // Otherwise assume everything else gets a debug log of errors
+            // thrown in debug mode.
+            _ => false,
+        }
+    }
+
 
     /// Attempts to directly hook up the `id` import in the Wasm module with
     /// the `instrs` specified.
