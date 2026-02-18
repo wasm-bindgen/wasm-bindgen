@@ -76,6 +76,32 @@ global.TestArrays = class {
   get octetSequence() {
     return new Uint8Array([3, 4, 5]);
   }
+  sumShorts(values) {
+    return values.reduce((a, b) => a + b, 0);
+  }
+  async sumPromises(promises) {
+    const results = await Promise.all(promises);
+    return results.reduce((a, b) => a + b, 0);
+  }
+  getShorts() {
+    return [1, 2, 3];
+  }
+  getPromises() {
+    return [Promise.resolve(10), Promise.resolve(20), Promise.resolve(30)];
+  }
+  async getAsyncShorts() {
+    return [4, 5, 6];
+  }
+  async getAsyncPromises() {
+    return [Promise.resolve(100), Promise.resolve(200)];
+  }
+  async processShorts(input) {
+    return input.map(x => x * 2);
+  }
+  async processPromises(input) {
+    const results = await Promise.all(input);
+    return results.map(x => Promise.resolve(x * 2));
+  }
 };
 
 global.ArrayBufferTest = class {
@@ -422,6 +448,9 @@ global.Variadic = class Variadic {
   constructor() { }
   sum(...values) {
     return values.reduce((a, b) => a + b, 0);
+  }
+  countObjects(...items) {
+    return items.length;
   }
 };
 

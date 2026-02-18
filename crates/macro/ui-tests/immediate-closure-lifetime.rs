@@ -10,7 +10,7 @@ fn main() {
     let mut called = false;
     // This should fail: closure borrows `called` which is not 'static,
     // but the function signature requires 'static due to missing + 'a
-    bad_immediate_closure(&ImmediateClosure::new(&mut || {
+    bad_immediate_closure(&ImmediateClosure::new_mut(&mut || {
         called = true;
     }));
 }

@@ -60,6 +60,7 @@ interface OptionalAndUnionArguments {
 [Constructor()]
 interface Variadic {
   short sum(short... values);
+  long countObjects(object... items);
 };
 
 [Constructor()]

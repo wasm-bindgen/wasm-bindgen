@@ -44,14 +44,14 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, S
 use core::str;
 use core::str::FromStr;
 pub use wasm_bindgen;
-use wasm_bindgen::closure::WasmClosure;
+use wasm_bindgen::closure::{ScopedClosure, WasmClosure};
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, Upcast, UpcastFrom};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsOption, Null, Promising, Undefined};
-pub use wasm_bindgen::{AsUpcast, JsGeneric};
+pub use wasm_bindgen::JsGeneric;
 
 // When adding new imports:
 //
@@ -4633,20 +4633,18 @@ impl<T: JsFunction> Function<T> {
 }
 
 pub trait FunctionIntoClosure: JsFunction {
-    type ClosureType: WasmClosure + ?Sized;
     type ClosureTypeMut: WasmClosure + ?Sized;
 }
 
-macro_rules! impl_closure_into_function {
+macro_rules! impl_function_into_closure {
     ( $(($($var:ident)*))* ) => {$(
         impl<$($var: FromWasmAbi + JsGeneric,)* R: IntoWasmAbi + JsGeneric> FunctionIntoClosure for fn($($var),*) -> R {
-            type ClosureType = dyn Fn($($var),*) -> R;
             type ClosureTypeMut = dyn FnMut($($var),*) -> R;
         }
     )*};
 }
 
-impl_closure_into_function! {
+impl_function_into_closure! {
     ()
     (A)
     (A B)
@@ -4658,98 +4656,46 @@ impl_closure_into_function! {
     (A B C D E F G H)
 }
 
-// Note we can implement Deref, AsRef, and From once we have JsCanon trait.
-// JsCanon in turn depends on being able to emit JsCanon for imported types,
-// which as a js-sys trait then creates a dependency on js-sys from codegen.
-// (Also, when Rust gets Generic Constant Arguments we can gate on IS_MUT)
 impl<F: JsFunction> Function<F> {
-    /// Convert a Rust closure into a typed JavaScript Function.
-    ///
-    /// This function releases ownership of the closure to JS, and provides
-    /// an owned function handle for the same closure.
-    ///
-    /// The conversion is a direct type-safe conversion and upcast of a
-    /// closure into its corresponding typed JavaScript Function,
-    /// based on covariance and contravariance [`Upcast`] trait hierarchy.
-    ///
-    /// This method is only supported for static closures which do not have
-    /// borrowed lifetime data, and thus can be released into JS.
-    ///
-    /// For borrowed closures, which cannot cede ownership to JS,
-    /// instead use [`Function::from_closure_ref`].
-    ///
-    /// For mutable closures, see [`Function::from_immutable_closure`].
-    #[inline]
-    pub fn from_closure<C>(closure: Closure<C>) -> Self
-    where
-        F: FunctionIntoClosure,
-        C: WasmClosure + ?Sized,
-        <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<C>,
-    {
-        closure.into_js_value().unchecked_into()
-    }
-    /// Convert a Rust closure into a typed JavaScript Function.
-    ///
-    /// This function releases ownership of the closure to JS, and provides
-    /// an owned function handle for the same closure.
-    ///
-    /// The conversion is a direct type-safe conversion and upcast of a
-    /// closure into its corresponding typed JavaScript Function,
-    /// based on covariance and contravariance [`Upcast`] trait hierarchy.
-    ///
-    /// This method is only supported for static closures which do not have
-    /// borrowed lifetime data, and thus can be released into JS.
-    ///
-    /// For borrowed closures, which cannot cede ownership to JS,
-    /// instead use [`Function::from_closure_mut_ref`].
-    ///
-    /// For mutable closures, see [`Function::from_closure`].
-    #[inline]
-    pub fn from_immutable_closure<C>(closure: Closure<C>) -> Self
-    where
-        F: FunctionIntoClosure,
-        C: WasmClosure + ?Sized,
-        <F as FunctionIntoClosure>::ClosureType: UpcastFrom<C>,
-    {
-        closure.into_js_value().unchecked_into()
-    }
-
-    /// Convert a Rust closure into a typed JavaScript Function.
+    /// Convert a borrowed `ScopedClosure` into a typed JavaScript Function reference.
     ///
     /// The conversion is a direct type-safe conversion and upcast of a
     /// closure into its corresponding typed JavaScript Function,
     /// based on covariance and contravariance [`Upcast`] trait hierarchy.
     ///
     /// For transferring ownership to JS, use [`Function::from_closure`].
-    ///
-    /// For immutable closures, see [`Function::from_immutable_closure_ref`].
     #[inline]
-    pub fn from_closure_ref<'a, 'b, C>(closure: &'b ScopedClosure<'a, C>) -> &'b Self
+    pub fn closure_ref<'a, C>(closure: &'a ScopedClosure<'_, C>) -> &'a Self
     where
         F: FunctionIntoClosure,
         C: WasmClosure + ?Sized,
-        <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<C>,
+        <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<<C as WasmClosure>::AsMut>,
     {
         closure.as_js_value().unchecked_ref()
     }
 
     /// Convert a Rust closure into a typed JavaScript Function.
     ///
+    /// This function releases ownership of the closure to JS, and provides
+    /// an owned function handle for the same closure.
+    ///
     /// The conversion is a direct type-safe conversion and upcast of a
     /// closure into its corresponding typed JavaScript Function,
     /// based on covariance and contravariance [`Upcast`] trait hierarchy.
     ///
-    /// For transferring ownership to JS, use [`Function::from_closure_ref`].
+    /// This method is only supported for static closures which do not have
+    /// borrowed lifetime data, and thus can be released into JS.
     ///
-    /// For mutable closures, see [`Function::from_closure_ref`].
+    /// For borrowed closures, which cannot cede ownership to JS,
+    /// instead use [`Function::closure_ref`].
     #[inline]
-    pub fn from_immutable_closure_ref<'a, 'b, C>(closure: &'b ScopedClosure<'a, C>) -> &'b Self
+    pub fn from_closure<C>(closure: ScopedClosure<'static, C>) -> Self
     where
         F: FunctionIntoClosure,
         C: WasmClosure + ?Sized,
-        <F as FunctionIntoClosure>::ClosureType: UpcastFrom<C>,
+        <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<<C as WasmClosure>::AsMut>,
     {
-        closure.as_js_value().unchecked_ref()
+        closure.into_js_value().unchecked_into()
     }
 }
 

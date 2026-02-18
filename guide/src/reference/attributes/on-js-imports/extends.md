@@ -54,6 +54,8 @@ let y2: &Foo = y1.as_ref();
 
 // Or using upcast:
 let baz: Baz = ...;
-let bar: Bar = baz.clone().upcast();
-let foo: Foo = baz.upcast();
+let bar: Bar = baz.clone().upcast_into();
+let foo: &Foo = baz.upcast();
 ```
+
+> The `upcast()` method is also used when working with generic types. For example, when passing an `Array<Number>` to a function expecting `&Array<JsValue>`, use `my_array.upcast()`. See [Working with Generics](../../working-with-generics.md#upcasting-types) for more details.

@@ -1,7 +1,7 @@
 use crate::ast;
 use crate::encode;
 use crate::encode::EncodeChunk;
-use crate::generics::{self, generic_to_concrete, is_as_upcast_impl};
+use crate::generics::{self, generic_to_concrete};
 use crate::Diagnostic;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::format_ident;
@@ -1577,9 +1577,7 @@ impl TryToTokens for ast::ImportFunction {
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
 
         for (i, arg) in self.function.arguments.iter().enumerate() {
-            let impl_ty = &*arg.pat_type.ty;
-            let as_upcast_ty = is_as_upcast_impl(impl_ty);
-            let ty = as_upcast_ty.as_ref().unwrap_or(impl_ty);
+            let ty = &*arg.pat_type.ty;
             let name = match &*arg.pat_type.pat {
                 syn::Pat::Ident(syn::PatIdent {
                     by_ref: None,
@@ -1625,19 +1623,14 @@ impl TryToTokens for ast::ImportFunction {
                 )?;
                 if i > 0 || !is_method {
                     fn_class_generics.add_fn_bound(if let Some(mut_) = ref_mut {
-                        // For AsUpcast specific pattern (special case), use the inner impl_ty in the ABI signature
-                        if as_upcast_ty.is_some() {
-                            arguments.push(quote! { #name: #impl_ty });
-                        } else {
-                            arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
-                        }
+                        arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
                         if mut_.is_some() {
                             parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#concrete_ty> }
                         } else {
                             parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#concrete_ty> }
                         }
                     } else {
-                        arguments.push(quote! { #name: #impl_ty });
+                        arguments.push(quote! { #name: #ty });
                         parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> }
                     });
                 }
@@ -1648,26 +1641,14 @@ impl TryToTokens for ast::ImportFunction {
                     quote! { #concrete_ty }
                 };
 
-                // Apply upcast if this was impl AsUpcast<T> (owned only)
-                let upcast_var = if is_as_upcast_impl(impl_ty).is_some() {
-                    quote! { #wasm_bindgen::convert::Upcast::<#ty>::upcast(#var) }
-                } else {
-                    quote! { #var }
-                };
-
-                convert_arg = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#upcast_var)) } };
+                convert_arg = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } };
             } else {
                 if i > 0 || !is_method {
-                    arguments.push(quote! { #name: #impl_ty });
+                    arguments.push(quote! { #name: #ty });
                 }
                 abi_ty = quote! { #ty };
 
-                // Apply upcast if this was impl AsUpcast<T> (owned only)
-                convert_arg = if is_as_upcast_impl(impl_ty).is_some() {
-                    quote! { #wasm_bindgen::convert::Upcast::<#ty>::upcast(#var) }
-                } else {
-                    quote! { #var }
-                };
+                convert_arg = quote! { #var };
             }
 
             let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
@@ -1840,7 +1821,6 @@ impl TryToTokens for ast::ImportFunction {
                 // Type lifetimes: appear on impl AND passed to type
                 let class_lifetime_params = &fn_class_generics.class_lifetime_params;
                 // Bound-only lifetimes: appear on impl but NOT passed to type
-                // (from AsUpcast patterns like `impl AsUpcast<&'a T>`)
                 let class_bound_lifetime_params = &fn_class_generics.class_bound_lifetime_params;
                 let class_generic_params = &fn_class_generics.class_generic_params;
                 let class_generic_exprs = &fn_class_generics.class_generic_exprs;
@@ -2175,10 +2155,8 @@ impl TryToTokens for DescribeImport<'_> {
             .arguments
             .iter()
             .map(|arg| {
-                let ty = is_as_upcast_impl(&arg.pat_type.ty)
-                    .unwrap_or_else(|| (*arg.pat_type.ty).clone());
                 generics::generic_to_concrete(
-                    ty,
+                    (*arg.pat_type.ty).clone(),
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )

@@ -63,7 +63,7 @@ fn construct() {
     #[cfg(not(js_sys_unstable_apis))]
     let instance = Reflect::construct(&RECTANGLE_CLASS, &args).unwrap();
     #[cfg(js_sys_unstable_apis)]
-    let instance = Reflect::construct(&RECTANGLE_CLASS, args.upcast_ref()).unwrap();
+    let instance = Reflect::construct(&RECTANGLE_CLASS, args.upcast()).unwrap();
     assert_eq!(Rectangle::from(instance).x(), 10);
 }
 
@@ -122,9 +122,7 @@ fn get() {
     let r = Rectangle::new();
     r.set_x(10);
     assert_eq!(
-        Reflect::get_str(r.upcast_ref(), &"x".into())
-            .unwrap()
-            .unwrap(),
+        Reflect::get_str(r.upcast(), &"x".into()).unwrap().unwrap(),
         10
     );
 }
@@ -268,7 +266,7 @@ fn set_prototype_of() {
     );
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(
-        JsValue::from(Reflect::get_prototype_of(obj.upcast_ref()).unwrap()),
+        JsValue::from(Reflect::get_prototype_of(obj.upcast()).unwrap()),
         JsValue::null()
     );
 }

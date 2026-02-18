@@ -116,14 +116,13 @@ pub fn mdn_doc(class: &str, method: Option<&str>) -> String {
 
 // Array type is borrowed for arguments (`&mut [T]` or `&[T]`) and owned for return value (`Vec<T>`).
 pub(crate) fn array(base_ty: &str, pos: TypePosition, immutable: bool) -> syn::Type {
-    match pos {
-        TypePosition::Argument => {
-            shared_ref(
-                slice_ty(ident_ty(raw_ident(base_ty))),
-                /*mutable =*/ !immutable,
-            )
-        }
-        TypePosition::Return | TypePosition::Callback => vec_ty(ident_ty(raw_ident(base_ty))),
+    if pos.is_argument() && !pos.inner {
+        shared_ref(
+            slice_ty(ident_ty(raw_ident(base_ty))),
+            /*mutable =*/ !immutable,
+        )
+    } else {
+        vec_ty(ident_ty(raw_ident(base_ty)))
     }
 }
 
@@ -217,6 +216,28 @@ pub(crate) fn option_ty(t: syn::Type) -> syn::Type {
     ty.into()
 }
 
+/// From `T` create `::js_sys::JsOption<T>`
+///
+/// Used for nullable types nested inside generic containers (e.g., `Promise<JsOption<Foo>>`).
+/// Unlike `Option<T>` which is a Rust ABI, `JsOption<T>` is a valid erasable generic type.
+pub(crate) fn js_option_ty(t: syn::Type) -> syn::Type {
+    let arguments = syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
+        colon2_token: None,
+        lt_token: Default::default(),
+        args: FromIterator::from_iter(vec![syn::GenericArgument::Type(t)]),
+        gt_token: Default::default(),
+    });
+
+    let ident = raw_ident("JsOption");
+    let seg = syn::PathSegment { ident, arguments };
+    let path = syn::Path {
+        leading_colon: Some(Default::default()),
+        segments: FromIterator::from_iter(vec![syn::PathSegment::from(raw_ident("js_sys")), seg]),
+    };
+    let ty = syn::TypePath { qself: None, path };
+    ty.into()
+}
+
 /// Check if a type is `::wasm_bindgen::JsValue`
 pub(crate) fn is_js_value(ty: &syn::Type) -> bool {
     if let syn::Type::Path(type_path) = ty {
@@ -257,16 +278,62 @@ pub(crate) fn generic_ty(base: syn::Type, type_arg: syn::Type) -> syn::Type {
     syn::Type::Path(syn::TypePath { qself: None, path })
 }
 
-/// Possible positions for a type in a function signature.
+/// Direction of data flow across the JS/Wasm boundary.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum TypePosition {
-    /// Function argument position
+pub enum Direction {
+    /// Data flowing from Rust to JS (function arguments, callback returns)
     Argument,
-    /// Function return position
+    /// Data flowing from JS to Rust (function returns, callback arguments)
     Return,
-    /// Callback/closure position (primitives → JS types like Number, Boolean, JsString)
-    /// Because we can't know if callback is return or arg, must support covariant and contravariant usage.
-    Callback,
+}
+
+/// Position of a type in a function signature.
+///
+/// This models where a type appears, which affects how it's converted to Rust:
+/// - Top-level positions (`inner: false`) can use Rust-native types (`String`, `Option<T>`)
+/// - Inner positions (`inner: true`) must use JS-compatible types (`JsString`, `JsOption<T>`)
+///
+/// Inner positions include:
+/// - Nested inside generic type parameters (e.g., inside `Promise<T>`, `Array<T>`)
+/// - Callback function signatures (since callbacks become `&Function`, types are erased)
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct TypePosition {
+    pub direction: Direction,
+    /// Whether this type is nested inside a generic or callback.
+    /// When true, must use JS-compatible types.
+    pub inner: bool,
+}
+
+impl TypePosition {
+    /// Top-level function argument position.
+    pub const ARGUMENT: Self = Self {
+        direction: Direction::Argument,
+        inner: false,
+    };
+
+    /// Top-level function return position.
+    pub const RETURN: Self = Self {
+        direction: Direction::Return,
+        inner: false,
+    };
+
+    /// Convert to inner position (for generic type parameters or callbacks).
+    pub fn to_inner(self) -> Self {
+        Self {
+            direction: self.direction,
+            inner: true,
+        }
+    }
+
+    /// Check if this is an argument position (top-level or inner).
+    pub fn is_argument(self) -> bool {
+        matches!(self.direction, Direction::Argument)
+    }
+
+    /// Check if this is a return position (top-level or inner).
+    pub fn is_return(self) -> bool {
+        matches!(self.direction, Direction::Return)
+    }
 }
 
 impl<'src> FirstPassRecord<'src> {
@@ -528,7 +595,7 @@ impl<'src> FirstPassRecord<'src> {
                 for (name, idl_type) in args {
                     // Check that the type can be converted (use compat mode for validation)
                     if idl_type
-                        .to_syn_type(TypePosition::Argument, false, true)
+                        .to_syn_type(TypePosition::ARGUMENT, false, true)
                         .is_err()
                     {
                         return None;
@@ -572,12 +639,19 @@ impl<'src> FirstPassRecord<'src> {
                         rust_name = fixed.to_string();
                     }
                 }
+                // In next_unstable mode, we need variadic_type for the slice pattern
+                let variadic_type = if variadic {
+                    signature.args.last().and_then(|arg| arg.clone())
+                } else {
+                    None
+                };
+
                 ret.push(InterfaceMethod {
                     name: rust_ident(&rust_name),
                     js_name: js_name.to_string(),
                     deprecated: deprecated.clone(),
                     arguments,
-                    variadic_type: None,
+                    variadic_type,
                     ret_wbg_ty: Some(ret_ty.clone()),
                     kind: kind.clone(),
                     is_static,
@@ -589,7 +663,8 @@ impl<'src> FirstPassRecord<'src> {
                 });
             }
 
-            if !variadic {
+            // In next_unstable mode, skip variadic expansion - we use slice syntax instead
+            if !variadic || self.options.next_unstable {
                 continue;
             }
             let last_idl_type = signature.args[signature.args.len() - 1].as_ref().unwrap();

@@ -22,8 +22,8 @@ While direct `&dyn Fn` and `&mut dyn FnMut` closures [are still supported](#lega
 
 | Type | Constructor | Aborting Constructor | Assert Unwind Safe |
 | ---- | ----------- | -------------------- | ------------------ |
-| [`&ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` / `new_immutable` | `wrap_aborting` / `wrap_immutable_aborting` | `wrap_assert_unwind_safe` / `wrap_immutable_assert_unwind_safe` |
-| [`&ScopedClosure<'a, C>`](#non-static-lifetimes-pass-by-reference-only) | `Closure::borrow` / `borrow_mut` | `borrow_aborting` / `borrow_mut_aborting` | use `AssertUnwindSafe` wrapper |
+| [`&ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` (Fn) / `new_mut` (FnMut) | `wrap_aborting` / `wrap_mut_aborting` | `wrap_assert_unwind_safe` / `wrap_mut_assert_unwind_safe` |
+| [`&ScopedClosure<'a, C>`](#known-lifetime-callbacks-with-scopedclosure) | `Closure::borrow` (Fn) / `borrow_mut` (FnMut) | `borrow_aborting` / `borrow_mut_aborting` | `borrow_assert_unwind_safe` / `borrow_mut_assert_unwind_safe` |
 | [`ScopedClosure<'static, C>`](#static-lifetimes-with-closuret--scopedclosurestatic-t) | `Closure::own` (`Closure::new`) | `own_aborting` | use `AssertUnwindSafe` wrapper |
 | [`ScopedClosure<'static, C>` (one-shot)](#one-shot-static-closures-with-scopedclosurestatic-tonce) | `Closure::once` | `Closure::once_aborting` | use `AssertUnwindSafe` wrapper |
 
@@ -35,7 +35,7 @@ See [Catching Panics](./catch-unwind.md) for details.
 
 The `_assert_unwind_safe` variants catch panics but don't require `MaybeUnwindSafe`, enabling type inference with inline closures while still catching panics. Use these when you need inference and are confident the closure is unwind-safe.
 
-Alternatively, you can wrap your closure with `std::panic::AssertUnwindSafe` and use the regular constructors (`new`, `own`, `borrow`, `borrow_mut`). This is useful when you want to keep using the coercion-based constructors:
+Alternatively, you can wrap your closure with `std::panic::AssertUnwindSafe` and use the regular constructors (`new`, `new_mut`, `own`, `borrow`, `borrow_mut`). This is useful when you want to keep using the coercion-based constructors:
 
 ```rust
 use std::panic::AssertUnwindSafe;
@@ -47,7 +47,7 @@ let closure = Closure::own(AssertUnwindSafe(move || {
 }));
 ```
 
-This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `&ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new` (verified unwind-safe), `wrap_assert_unwind_safe` (asserted unwind-safe with inference), or `wrap_aborting` (aborts on panic).
+This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `&ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new_mut` (verified unwind-safe), `wrap_mut_assert_unwind_safe` (asserted unwind-safe with inference), or `wrap_mut_aborting` (aborts on panic).
 
 ## Immediate/Synchronous Callbacks with `ImmediateClosure`
 
@@ -65,7 +65,7 @@ extern "C" {
 }
 
 let mut sum = 0;
-forEach(&ImmediateClosure::new(&mut |x| {
+forEach(&ImmediateClosure::new_mut(&mut |x| {
     sum += x;
 }));
 ```
@@ -73,8 +73,8 @@ forEach(&ImmediateClosure::new(&mut |x| {
 Type inference works automatically—no need to annotate closure parameter types
 when the target type is known from context.
 
-Use `ImmediateClosure::new` for `FnMut` closures (common case) or
-`ImmediateClosure::new_immutable` for `Fn` closures.
+Use `ImmediateClosure::new` for immutable `Fn` closures (easier to satisfy unwind safety) or
+`ImmediateClosure::new_mut` for mutable `FnMut` closures when you need to mutate captured state.
 
 ### Lifetime Bounds in Extern Declarations
 
@@ -99,13 +99,13 @@ extern "C" {
 
 ### Aborting and Assert Unwind Safe Variants
 
-By default `ImmediateClosure::new` enforces unwind safety via `MaybeUnwindSafe`.
+By default `ImmediateClosure::new` and `new_mut` enforce unwind safety via `MaybeUnwindSafe`.
 When you need to capture types that aren't `UnwindSafe` (like `Rc<RefCell<T>>`),
 you have two options:
 
-1. **`wrap_aborting` / `wrap_immutable_aborting`** — Aborts on panic instead of catching. Use when you prefer abort-on-panic behavior.
+1. **`wrap_aborting` / `wrap_mut_aborting`** — Aborts on panic instead of catching. Use when you prefer abort-on-panic behavior.
 
-2. **`wrap_assert_unwind_safe` / `wrap_immutable_assert_unwind_safe`** — Catches panics but doesn't verify `MaybeUnwindSafe`. Use when you want panic catching and are confident the closure is unwind-safe.
+2. **`wrap_assert_unwind_safe` / `wrap_mut_assert_unwind_safe`** — Catches panics but doesn't verify `MaybeUnwindSafe`. Use when you want panic catching and are confident the closure is unwind-safe.
 
 ```rust
 use wasm_bindgen::prelude::*;
@@ -121,12 +121,12 @@ extern "C" {
 let data = Rc::new(RefCell::new(0));
 
 // Option 1: Abort on panic
-forEach(&ImmediateClosure::wrap_aborting(&mut |x| {
+forEach(&ImmediateClosure::wrap_mut_aborting(&mut |x| {
     *data.borrow_mut() += x;
 }));
 
 // Option 2: Catch panics (caller asserts unwind safety)
-forEach(&ImmediateClosure::wrap_assert_unwind_safe(&mut |x| {
+forEach(&ImmediateClosure::wrap_mut_assert_unwind_safe(&mut |x| {
     *data.borrow_mut() += x;
 }));
 ```
@@ -154,15 +154,15 @@ if you want Rust to retain ownership of a static closure.
 
 ### Non-Static Lifetimes (Pass by Reference Only)
 
-For creating a `ScopedClosure<'a, T>` from a non-static lifetime, use `Closure::borrow` (for `Fn`)
-or `Closure::borrow_mut` (for `FnMut`) when JavaScript may store the callback temporarily but
+For creating a `ScopedClosure<'a, T>` from a non-static lifetime, use `Closure::borrow` (for immutable `Fn`)
+or `Closure::borrow_mut` (for mutable `FnMut`) when JavaScript may store the callback temporarily but
 you control when it becomes invalid. The closure is invalidated when the `ScopedClosure` is dropped.
 
 **Non-static closures can only be passed by reference** since the underlying closure data
 may live on the stack.
 
 These are unwind safe. For non-unwind-safe closures, use `Closure::borrow_aborting` and
-`Closure::borrow_mut_aborting` (aborts on panic), or wrap your closure with `AssertUnwindSafe`
+`Closure::borrow_mut_aborting` (aborts on panic), or use `Closure::borrow_assert_unwind_safe`
 to assert unwind safety while still catching panics.
 
 ```rust
@@ -170,8 +170,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    // (Using the AsUpcast trait, accept any closure which can upcast under JS upcast rules)
-    fn register_callback(cb: impl AsUpcast<&ScopedClosure<dyn FnMut(u32)>>);
+    fn register_callback(cb: &ScopedClosure<dyn FnMut(u32)>);
     fn trigger_callbacks();
 }
 
@@ -305,6 +304,32 @@ let callback = Closure::once_into_js(move || {
 // callback is a JsValue containing a JS function
 ```
 
+## Mutability Conversions
+
+`ImmediateClosure` provides an `as_mut()` method to convert an immutable `Fn` 
+closure reference to a mutable `FnMut` closure reference.
+
+This is possible since `dyn FnMut` mutability tracking for JS types does not guard multiple
+references being held (since this is impossible in JS), but rather, function reentrancy. And
+banning reentrancy for `dyn Fn` closures is a safe addition, whereas the converse would
+not be.
+
+### `as_mut()` Method
+
+```rust
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    fn needs_fnmut_immediate(cb: &ImmediateClosure<dyn FnMut(u32)>);
+}
+
+// ImmediateClosure
+let func: &dyn Fn(u32) = &|x| println!("{}", x);
+let closure = ImmediateClosure::wrap_assert_unwind_safe(func);
+needs_fnmut_immediate(closure.as_mut());
+```
+
 ## Legacy `&dyn Fn` and `&mut dyn FnMut`
 
 > Raw `&dyn Fn` and `&mut dyn FnMut` may be deprecated in a future release,
@@ -366,7 +391,7 @@ The compiler error will indicate which captured type is problematic.
 
 If you don't need panic catching, use the `*_aborting` variants (`own_aborting`,
 `once_aborting`, `Closure::borrow_aborting`, `Closure::borrow_mut_aborting`,
-`ImmediateClosure::wrap_aborting`) which do not require `UnwindSafe`:
+`ImmediateClosure::wrap_aborting`, `ImmediateClosure::wrap_mut_aborting`) which do not require `UnwindSafe`:
 
 ```rust
 use std::cell::RefCell;
@@ -398,11 +423,11 @@ let closure: Closure<dyn FnMut()> = Closure::wrap_assert_unwind_safe(Box::new(mo
 }));
 ```
 
-For `ImmediateClosure`, use `wrap_assert_unwind_safe` directly:
+For `ImmediateClosure`, use `wrap_mut_assert_unwind_safe` directly:
 
 ```rust
 let data = Rc::new(RefCell::new(0));
-forEach(&ImmediateClosure::wrap_assert_unwind_safe(&mut |x| {
+forEach(&ImmediateClosure::wrap_mut_assert_unwind_safe(&mut |x| {
     *data.borrow_mut() += x;
 }));
 ```
@@ -421,26 +446,101 @@ let closure = Closure::new(AssertUnwindSafe(move || {
 }));
 ```
 
+## Upcasting `ScopedClosure`
+
+`ScopedClosure` supports full JS type variance within the erasable generic type system via `upcast()`
+and `upcast_into()`. This is possible since it eagerly moves the Rust function to a JS function on
+construction, in contrast to `ImmediateClosure` whose `Repr` is its Rust fat pointer and not its
+`JsValue` representation.
+
+This enables covariance and contravariance on argument and return types:
+
+```rust
+use wasm_bindgen::prelude::*;
+use js_sys::Number;
+
+// Return type covariance: i32 -> Number -> JsValue
+let closure: Closure<dyn Fn() -> i32> = Closure::own(|| 42i32);
+let _wider: &Closure<dyn Fn() -> JsValue> = closure.upcast_ref();
+
+// Argument contravariance: JsValue -> Number -> i32
+let closure: Closure<dyn Fn(JsValue)> = Closure::own(|_: JsValue| {});
+let _narrower: &Closure<dyn Fn(i32)> = closure.upcast_ref();
+```
+
+This works because the JavaScript function doesn't care about Rust's type distinctions—the
+conversion between `i32`, `Number`, and `JsValue` happens at the JS-Wasm boundary,
+not inside the closure itself.
+
 ## Converting Closures to Typed Functions
 
-The `js_sys::Function::from_closure()` and `js_sys::Function::from_immutable_closure()` methods provide type-safe conversion from `Closure` to typed `Function` with comprehensive covariance support.
+The `js_sys::Function` type provides methods for type-safe conversion from `Closure`/`ScopedClosure` to typed `Function` with comprehensive covariance support:
 
-Conversion by value is only supported for `'static` owned closures. For borrowed closures, `Function::from_closure_ref()` and `Function::from_immutable_closure_ref()` can be used.
+| Method | Input | Output | Use Case |
+|--------|-------|--------|----------|
+| `from_closure` | `ScopedClosure<'static, C>` | `Function<F>` | Owned closures (transfers ownership to JS) |
+| `closure_ref` | `&ScopedClosure<C>` | `&Function<F>` | Borrowed closures |
 
 ```rust
 use js_sys::{Function, Number, JsString};
 use wasm_bindgen::prelude::*;
 
-// Owned static conversion cases
+// Owned static conversion - transfers ownership to JS
 let closure: Closure<dyn FnMut() -> u32> = Closure::new(|| 42);
 let func: Function<fn() -> Number> = Function::from_closure(closure);
-// String types convert to JsString
-let str_closure: Closure<dyn Fn() -> String> = Closure::new(|| "hello".to_string());
-let str_func: Function<fn() -> JsString> = Function::from_immutable_closure(str_closure);
 
-// Borrowed ScopedClosure conversion via ref
+// Borrowed ScopedClosure conversion
 let mut val: u32 = 5;
-let func = || val;
-let closure = ScopedClosure::borrow(&func);
-let func: &Function<fn() -> Number> = Function::from_immutable_closure_ref(&closure);
+let mut func = || { val += 1; val };
+let closure = ScopedClosure::borrow_mut(&mut func);
+let func_ref: &Function<fn() -> Number> = Function::closure_ref(&closure);
 ```
+
+### Passing Closures to Typed Callback APIs
+
+Many JavaScript APIs like `DOMTokenList.forEach` or `Array.forEach` accept typed callback
+functions. You can pass Rust closures to these APIs using `Function::closure_ref` with
+`ScopedClosure::borrow_mut`:
+
+```rust
+use js_sys::{Array, Function, JsString, Number, Undefined};
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    // Simulates APIs like DOMTokenList.forEach that take typed callbacks
+    fn invoke_for_each_callback(
+        callback: &Function<fn(JsString, Number) -> Undefined>,
+        items: &Array<JsString>,
+    );
+}
+
+let items: Array<JsString> = Array::new_typed();
+items.push(&JsString::from("apple"));
+items.push(&JsString::from("banana"));
+
+let mut results = Vec::new();
+
+// Rust closure borrowing local data
+let mut func = |value: JsString, index: Number| {
+    results.push((value.as_string().unwrap(), index.value_of() as u32));
+};
+
+// ScopedClosure borrows the Rust closure, Function::closure_ref provides
+// a typed &Function reference for the JS callback parameter
+invoke_for_each_callback(
+    Function::closure_ref(&ScopedClosure::borrow_mut(&mut func)),
+    &items
+);
+
+// After the call, results contains: [("apple", 0), ("banana", 1)]
+```
+
+This pattern works with any API expecting a typed `&Function<fn(...) -> ...>` callback,
+such as the generated `web-sys` bindings for `DOMTokenList::for_each`, `NodeList::for_each`,
+and similar iteration methods.
+
+> **Future improvement:** If `js-sys` is migrated into `wasm-bindgen` core in a future
+> release, it will be possible to implement `Deref<Target = Function<F>>` for `ScopedClosure`,
+> enabling automatic dereferencing and Rust-to-JS type conversions. This would simplify
+> the above pattern to just `invoke_for_each_callback(&ScopedClosure::borrow_mut(&mut func), &items)`.

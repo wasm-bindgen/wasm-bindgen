@@ -10,7 +10,7 @@ fn test_upcast_child_to_base() {
     child.set_child_value(42);
 
     // Upcast child to BaseType and pass to function expecting BaseType
-    let base: BaseType = child.upcast();
+    let base: BaseType = child.upcast_into();
     let result = UpcastTest::process_base(&base);
     assert_eq!(result, "child value");
 }
@@ -24,7 +24,7 @@ fn test_upcast_grandchild_to_base() {
     grandchild.set_grand_child_value(true);
 
     // Upcast grandchild directly to BaseType (skipping intermediate parent)
-    let base: BaseType = grandchild.upcast();
+    let base: BaseType = grandchild.upcast_into();
     let result = UpcastTest::process_base(&base);
     assert_eq!(result, "grandchild value");
 }
@@ -38,7 +38,7 @@ fn test_upcast_grandchild_to_child() {
     grandchild.set_grand_child_value(false);
 
     // Upcast grandchild to ChildType
-    let child: ChildType = grandchild.upcast();
+    let child: ChildType = grandchild.upcast_into();
     assert_eq!(child.child_value(), 123);
 
     let result = UpcastTest::process_child(&child);

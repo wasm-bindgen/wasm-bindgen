@@ -24,7 +24,7 @@ fn callback_interface_as_typed_function() {
     // In next-unstable mode, callback interfaces are replaced with typed functions
     // Function<fn() -> Undefined> instead of VoidFunction
     // Method names are simple (no _with_X suffix) since there's only one variant
-    let f: Function<fn() -> wasm_bindgen::Undefined> = Function::new_no_args_typed("");
+    let f: Function<fn() -> js_sys::Undefined> = Function::new_no_args_typed("");
     let iface = TakeCallbackInterface::new().unwrap();
     iface.a(&f);
 }

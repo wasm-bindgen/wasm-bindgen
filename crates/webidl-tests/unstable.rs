@@ -9,7 +9,7 @@ fn can_use_unstable_apis() {
     let unstable_interface = GetUnstableInterface::get();
     assert_eq!(0u32, unstable_interface.enum_value());
 
-    let mut dict = UnstableDictionary::new();
+    let dict = UnstableDictionary::new();
     dict.set_unstable_enum(UnstableEnum::B);
     assert_eq!(
         2u32,

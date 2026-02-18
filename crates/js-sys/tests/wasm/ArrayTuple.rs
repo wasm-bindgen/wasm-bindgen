@@ -213,7 +213,7 @@ fn covariance_to_array() {
     let tuple: ArrayTuple<(Number, Number)> =
         ArrayTuple::new2(&Number::from(42), &Number::from(100));
 
-    let length = accepts_number_array(tuple.upcast());
+    let length = accepts_number_array(tuple.upcast_into());
     assert_eq!(length, 2);
 }
 
@@ -226,29 +226,29 @@ fn complex_nested_covariance() {
     let promise_func: Promise<Function<fn() -> Number>> = Promise::resolve(&func);
 
     let num: Number = Number::from(42);
-    let num_as_jsvalue: JsValue = num.upcast();
+    let num_as_jsvalue: JsValue = num.upcast_into();
     assert!(num_as_jsvalue.as_f64().is_some());
 
     let func_num: Function<fn() -> Number> = Function::new_no_args_typed("return 42");
-    let func_jsvalue: Function<fn() -> JsValue> = func_num.upcast();
+    let func_jsvalue: Function<fn() -> JsValue> = func_num.upcast_into();
     assert!(func_jsvalue.is_function());
 
-    let promise_func_num: Promise<Function<fn() -> Number>> = Promise::resolve(&func).upcast();
-    let promise_func_jsvalue: Promise<Function<fn() -> JsValue>> = promise_func_num.upcast();
+    let promise_func_num: Promise<Function<fn() -> Number>> = Promise::resolve(&func).upcast_into();
+    let promise_func_jsvalue: Promise<Function<fn() -> JsValue>> = promise_func_num.upcast_into();
     assert!(promise_func_jsvalue.is_object());
 
     let tuple_complex: ArrayTuple<(Promise<Function<fn() -> Number>>, Number)> =
-        ArrayTuple::new2(promise_func.upcast_ref(), &Number::from(100));
+        ArrayTuple::new2(promise_func.upcast(), &Number::from(100));
     // In js_sys_unstable_apis, the Upcast impl for deeply nested generics requires exact type matching
     // for the inner generic parameters, so we cast to Array<JsValue> instead
     #[cfg(not(js_sys_unstable_apis))]
     {
-        let tuple_wider: ArrayTuple<(Promise<Function>, JsValue)> = tuple_complex.upcast();
+        let tuple_wider: ArrayTuple<(Promise<Function>, JsValue)> = tuple_complex.upcast_into();
         assert_eq!(tuple_wider.len(), 2);
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        let tuple_wider: Array<JsValue> = tuple_complex.upcast();
+        let tuple_wider: Array<JsValue> = tuple_complex.upcast_into();
         assert_eq!(tuple_wider.length(), 2);
     }
 }
@@ -260,7 +260,7 @@ fn arraytuple_to_array_mixed_types() {
     let tuple: ArrayTuple<(Number, JsString, Array)> =
         ArrayTuple::new3(&Number::from(42), &JsString::from("hello"), &Array::new());
 
-    let array: Array<JsValue> = tuple.upcast();
+    let array: Array<JsValue> = tuple.upcast_into();
     assert_eq!(array.length(), 3);
 
     #[cfg(not(js_sys_unstable_apis))]
@@ -282,7 +282,7 @@ fn arraytuple_to_array_single_type() {
     use wasm_bindgen::prelude::Upcast;
 
     let tuple1: ArrayTuple<(Number,)> = ArrayTuple::new1(&Number::from(100));
-    let array1: Array<JsValue> = tuple1.upcast();
+    let array1: Array<JsValue> = tuple1.upcast_into();
     assert_eq!(array1.length(), 1);
     #[cfg(not(js_sys_unstable_apis))]
     assert_eq!(array1.get(0).as_f64().unwrap(), 100.0);
@@ -294,7 +294,7 @@ fn arraytuple_to_array_single_type() {
         &JsString::from("b"),
         &JsString::from("c"),
     );
-    let array_strings: Array<JsString> = tuple_strings.upcast();
+    let array_strings: Array<JsString> = tuple_strings.upcast_into();
     assert_eq!(array_strings.length(), 3);
     #[cfg(not(js_sys_unstable_apis))]
     assert_eq!(array_strings.get(0).as_string().unwrap(), "a");
@@ -325,7 +325,7 @@ fn arraytuple_to_array_large_tuple() {
         &Number::from(7),
         &Number::from(8),
     );
-    let array8: Array<Number> = tuple8.upcast();
+    let array8: Array<Number> = tuple8.upcast_into();
     assert_eq!(array8.length(), 8);
     #[cfg(not(js_sys_unstable_apis))]
     {
@@ -345,7 +345,7 @@ fn arraytuple_to_array_large_tuple() {
         &JsString::from("d"),
         &Number::from(5),
     );
-    let array5: Array<JsValue> = tuple5.upcast();
+    let array5: Array<JsValue> = tuple5.upcast_into();
     assert_eq!(array5.length(), 5);
 }
 
@@ -362,7 +362,7 @@ fn arraytuple_to_array_nested_generics() {
     let tuple: ArrayTuple<(Array<Number>, Array<JsString>)> =
         ArrayTuple::new2(&num_array, &str_array);
 
-    let array_of_arrays: Array<Array<JsValue>> = tuple.upcast();
+    let array_of_arrays: Array<Array<JsValue>> = tuple.upcast_into();
     assert_eq!(array_of_arrays.length(), 2);
 
     #[cfg(not(js_sys_unstable_apis))]
@@ -379,7 +379,7 @@ fn arraytuple_identity_covariance() {
     let tuple: ArrayTuple<(Number, JsString)> =
         ArrayTuple::new2(&Number::from(42), &JsString::from("test"));
 
-    let same: ArrayTuple<(Number, JsString)> = tuple.upcast();
+    let same: ArrayTuple<(Number, JsString)> = tuple.upcast_into();
     assert_eq!(same.len(), 2);
     assert_eq!(same.get0(), 42);
     assert_eq!(same.get1(), "test");

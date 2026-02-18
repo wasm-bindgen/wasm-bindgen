@@ -239,9 +239,9 @@ fn drop_throw_str() {
             foo.foo();
             Ok(true)
         };
-        let closure = ScopedClosure::borrow_mut(&mut func);
+        let closure = ScopedClosure::borrow(&mut func);
         assert!(js_array![0]
-            .try_every_result_closure_borrow(&closure)
+            .try_every_result_closure_borrow(closure.as_mut())
             .is_err());
     }
     assert!(!Reflect::get(&global(), &"food_throw_str".into())

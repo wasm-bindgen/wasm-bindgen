@@ -54,7 +54,7 @@ use wasm_bindgen::__rt::marker::ErasableGeneric;
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
 use wasm_bindgen::convert::{FromWasmAbi, Upcast};
-use wasm_bindgen::{prelude::*, AsUpcast, JsError, JsGeneric};
+use wasm_bindgen::{prelude::*, JsError, JsGeneric};
 
 mod queue;
 #[cfg_attr(docsrs, doc(cfg(feature = "futures-core-03-stream")))]
@@ -249,7 +249,7 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&ImmediateClosure::wrap_aborting(
+    Promise::new_typed(&ImmediateClosure::wrap_mut_aborting(
         &mut move |resolve, reject| {
             let future = future.take().unwrap_throw();
 
@@ -333,11 +333,11 @@ where
 pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
 where
     F: Future<Output = Result<T, JsValue>> + 'static,
-    T: FromWasmAbi + JsGeneric + AsUpcast<T, JsValue> + 'static,
+    T: FromWasmAbi + JsGeneric + Upcast<T> + 'static,
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&ImmediateClosure::wrap_aborting(
+    Promise::new_typed(&ImmediateClosure::wrap_mut_aborting(
         &mut move |resolve, reject| {
             let future = future.take().unwrap_throw();
             spawn_local(async move {

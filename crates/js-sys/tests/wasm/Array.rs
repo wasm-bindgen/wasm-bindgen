@@ -515,7 +515,7 @@ fn find() {
     );
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(
-        even.find(&ImmediateClosure::new(
+        even.find(&ImmediateClosure::new_mut(
             &mut |x: JsValue, _: u32, _: Array<JsValue>| x.as_f64().unwrap() % 2.0 == 0.0
         )),
         Some(JsValue::from(2))
@@ -528,7 +528,7 @@ fn find() {
     );
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(
-        odd.find(&ImmediateClosure::new(
+        odd.find(&ImmediateClosure::new_mut(
             &mut |x: JsValue, _: u32, _: Array<JsValue>| x.as_f64().unwrap() % 2.0 == 0.0
         )),
         None
@@ -541,7 +541,7 @@ fn find() {
     );
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(
-        mixed.find(&ImmediateClosure::new(
+        mixed.find(&ImmediateClosure::new_mut(
             &mut |x: JsValue, _: u32, _: Array<JsValue>| x.as_f64().unwrap() % 2.0 == 0.0
         )),
         Some(JsValue::from(10))
@@ -603,7 +603,7 @@ fn reduce() {
     );
     #[cfg(js_sys_unstable_apis)]
     let arr = js_array![JsString; "0", "1", "2", "3", "4"].reduce(
-        &ImmediateClosure::new(
+        &ImmediateClosure::new_mut(
             &mut |ac: JsValue, cr: JsString, _: u32, _: Array<JsString>| {
                 JsValue::from(format!(
                     "{}{}",
@@ -628,7 +628,7 @@ fn reduce_right() {
     );
     #[cfg(js_sys_unstable_apis)]
     let arr = js_array![JsString; "0", "1", "2", "3", "4"].reduce_right(
-        &ImmediateClosure::new(
+        &ImmediateClosure::new_mut(
             &mut |ac: JsValue, cr: JsString, _: u32, _: Array<JsString>| {
                 JsValue::from(format!(
                     "{}{}",
@@ -952,12 +952,12 @@ fn covariance() {
 
     // Test that we can pass Array<Number> where Array<JsValue> is expected
     // This works because Number is covariant to JsValue
-    let length = accepts_jsvalue_array(number_array.upcast());
+    let length = accepts_jsvalue_array(number_array.upcast_into());
     assert_eq!(length, 3);
 
     // Also test with Array<JsString>
     let string_array = js_array![JsString; "a", "b", "c"];
-    let length = accepts_jsvalue_array(string_array.upcast());
+    let length = accepts_jsvalue_array(string_array.upcast_into());
     assert_eq!(length, 3);
 }
 
@@ -1028,7 +1028,7 @@ macro_rules! unwrap_find {
 #[cfg(js_sys_unstable_apis)]
 macro_rules! unwrap_find {
     ($arr:expr, $pred:expr) => {
-        $arr.find(&ImmediateClosure::new($pred)).unwrap()
+        $arr.find(&ImmediateClosure::new_mut($pred)).unwrap()
     };
 }
 
@@ -1846,7 +1846,9 @@ fn test_from_iterable_map() {
 
     let result: Array<Number> = Array::from_iterable_map(
         &source,
-        &ImmediateClosure::wrap_aborting(&mut |val, _idx| Ok(Number::from(val.value_of() * 2.0))),
+        &ImmediateClosure::wrap_mut_aborting(&mut |val, _idx| {
+            Ok(Number::from(val.value_of() * 2.0))
+        }),
     )
     .unwrap();
 
@@ -1863,14 +1865,14 @@ fn test_array_try_every() {
     arr.push(&TestItem::new(4, &JsString::from("b")));
     arr.push(&TestItem::new(6, &JsString::from("c")));
 
-    let result = arr.try_every(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_every(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() % 2 == 0)
     }));
     assert!(result.is_ok());
     assert!(result.unwrap());
 
     arr.push(&TestItem::new(7, &JsString::from("d")));
-    let result = arr.try_every(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_every(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() % 2 == 0)
     }));
     assert!(result.is_ok());
@@ -1883,7 +1885,7 @@ fn test_array_try_every_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_every(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_every(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         if val.id() == 2 {
             Err(JsError::new("error at 2"))
         } else {
@@ -1901,7 +1903,7 @@ fn test_array_try_filter() {
     arr.push(&TestItem::new(3, &JsString::from("c")));
     arr.push(&TestItem::new(4, &JsString::from("d")));
 
-    let result = arr.try_filter(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_filter(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() % 2 == 0)
     }));
     assert!(result.is_ok());
@@ -1917,13 +1919,15 @@ fn test_array_try_filter_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_filter(&ImmediateClosure::wrap_assert_unwind_safe(&mut |val, _| {
-        if val.id() == 2 {
-            Err(JsError::new("filter error"))
-        } else {
-            Ok(true)
-        }
-    }));
+    let result = arr.try_filter(&ImmediateClosure::wrap_mut_assert_unwind_safe(
+        &mut |val, _| {
+            if val.id() == 2 {
+                Err(JsError::new("filter error"))
+            } else {
+                Ok(true)
+            }
+        },
+    ));
     assert!(result.is_err());
 }
 
@@ -1934,7 +1938,7 @@ fn test_array_try_find() {
     arr.push(&TestItem::new(2, &JsString::from("banana")));
     arr.push(&TestItem::new(3, &JsString::from("cherry")));
 
-    let result = arr.try_find(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_find(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() == 2)
     }));
     assert!(result.is_ok());
@@ -1942,7 +1946,7 @@ fn test_array_try_find() {
     assert!(found.is_some());
     assert_eq!(found.unwrap().name(), "banana");
 
-    let result = arr.try_find(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_find(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() == 99)
     }));
     assert!(result.is_ok());
@@ -1954,7 +1958,7 @@ fn test_array_try_find_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_find(&ImmediateClosure::new(&mut |_val: TestItem, _| {
+    let result = arr.try_find(&ImmediateClosure::new_mut(&mut |_val: TestItem, _| {
         Err(JsError::new("find error"))
     }));
     assert!(result.is_err());
@@ -1967,13 +1971,13 @@ fn test_array_try_find_index() {
     arr.push(&TestItem::new(2, &JsString::from("b")));
     arr.push(&TestItem::new(3, &JsString::from("c")));
 
-    let result = arr.try_find_index(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_find_index(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() == 2)
     }));
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), 1);
 
-    let result = arr.try_find_index(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_find_index(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() == 99)
     }));
     assert!(result.is_ok());
@@ -1985,7 +1989,7 @@ fn test_array_try_find_index_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_find_index(&ImmediateClosure::new(&mut |_val: TestItem, _| {
+    let result = arr.try_find_index(&ImmediateClosure::new_mut(&mut |_val: TestItem, _| {
         Err(JsError::new("find_index error"))
     }));
     assert!(result.is_err());
@@ -1998,7 +2002,7 @@ fn test_array_try_find_last() {
     arr.push(&TestItem::new(2, &JsString::from("b")));
     arr.push(&TestItem::new(3, &JsString::from("c")));
 
-    let result = arr.try_find_last(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_find_last(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() > 1)
     }));
     assert!(result.is_ok());
@@ -2011,7 +2015,7 @@ fn test_array_try_find_last_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_find_last(&ImmediateClosure::new(&mut |_val: TestItem, _| {
+    let result = arr.try_find_last(&ImmediateClosure::new_mut(&mut |_val: TestItem, _| {
         Err(JsError::new("find_last error"))
     }));
     assert!(result.is_err());
@@ -2024,7 +2028,7 @@ fn test_array_try_find_last_index() {
     arr.push(&TestItem::new(2, &JsString::from("b")));
     arr.push(&TestItem::new(3, &JsString::from("c")));
 
-    let result = arr.try_find_last_index(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_find_last_index(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() > 1)
     }));
     assert!(result.is_ok());
@@ -2036,7 +2040,7 @@ fn test_array_try_find_last_index_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_find_last_index(&ImmediateClosure::new(&mut |_val: TestItem, _| {
+    let result = arr.try_find_last_index(&ImmediateClosure::new_mut(&mut |_val: TestItem, _| {
         Err(JsError::new("find_last_index error"))
     }));
     assert!(result.is_err());
@@ -2050,7 +2054,7 @@ fn test_array_try_for_each() {
     arr.push(&TestItem::new(3, &JsString::from("c")));
 
     let mut sum = 0;
-    let result = arr.try_for_each(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_for_each(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         sum += val.id();
         Ok(())
     }));
@@ -2064,7 +2068,7 @@ fn test_array_try_for_each_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_for_each(&ImmediateClosure::new(&mut |val: TestItem, _| {
+    let result = arr.try_for_each(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         if val.id() == 2 {
             Err(JsError::new("for_each error"))
         } else {
@@ -2082,7 +2086,7 @@ fn test_array_try_map() {
     arr.push(&TestItem::new(3, &JsString::from("c")));
 
     let result: Result<Array<TestItem>, JsValue> =
-        arr.try_map(&ImmediateClosure::new(&mut |val: TestItem, _| {
+        arr.try_map(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
             Ok(val.with_prefix(&JsString::from("pre_")))
         }));
     assert!(result.is_ok());
@@ -2098,7 +2102,7 @@ fn test_array_try_map_error() {
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
     let result: Result<Array<TestItem>, JsValue> =
-        arr.try_map(&ImmediateClosure::new(&mut |val: TestItem, _| {
+        arr.try_map(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
             if val.id() == 2 {
                 Err(JsError::new("map error"))
             } else {
@@ -2117,7 +2121,7 @@ fn test_array_try_reduce() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce(
-        &ImmediateClosure::new(&mut |acc: Number, val: Number, _| {
+        &ImmediateClosure::new_mut(&mut |acc: Number, val: Number, _| {
             Ok(Number::from(acc.value_of() + val.value_of()))
         }),
         &initial,
@@ -2134,7 +2138,7 @@ fn test_array_try_reduce_error() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce(
-        &ImmediateClosure::new(&mut |_acc: Number, val: Number, _| {
+        &ImmediateClosure::new_mut(&mut |_acc: Number, val: Number, _| {
             if val.value_of() == 2.0 {
                 Err(JsError::new("reduce error"))
             } else {
@@ -2155,7 +2159,7 @@ fn test_array_try_reduce_right() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce_right(
-        &ImmediateClosure::new(&mut |acc: JsValue, val: Number, _| {
+        &ImmediateClosure::new_mut(&mut |acc: JsValue, val: Number, _| {
             let acc_num: Number = acc.unchecked_into();
             Ok(Number::from(acc_num.value_of() + val.value_of()))
         }),
@@ -2173,7 +2177,7 @@ fn test_array_try_reduce_right_error() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce_right(
-        &ImmediateClosure::new(&mut |_acc: JsValue, val: Number, _| {
+        &ImmediateClosure::new_mut(&mut |_acc: JsValue, val: Number, _| {
             if val.value_of() == 1.0 {
                 Err(JsError::new("reduce_right error"))
             } else {
@@ -2192,13 +2196,13 @@ fn test_array_try_some() {
     arr.push(&TestItem::new(2, &JsString::from("b")));
     arr.push(&TestItem::new(3, &JsString::from("c")));
 
-    let result = arr.try_some(&ImmediateClosure::new(&mut |val: TestItem| {
+    let result = arr.try_some(&ImmediateClosure::new_mut(&mut |val: TestItem| {
         Ok(val.id() == 2)
     }));
     assert!(result.is_ok());
     assert!(result.unwrap());
 
-    let result = arr.try_some(&ImmediateClosure::new(&mut |val: TestItem| {
+    let result = arr.try_some(&ImmediateClosure::new_mut(&mut |val: TestItem| {
         Ok(val.id() == 99)
     }));
     assert!(result.is_ok());
@@ -2210,7 +2214,7 @@ fn test_array_try_some_error() {
     let arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
-    let result = arr.try_some(&ImmediateClosure::new(&mut |_val: TestItem| {
+    let result = arr.try_some(&ImmediateClosure::new_mut(&mut |_val: TestItem| {
         Err(JsError::new("some error"))
     }));
     assert!(result.is_err());
@@ -2223,9 +2227,9 @@ fn test_array_try_sort_by() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_sort_by(&ImmediateClosure::new(&mut |a: TestItem, b: TestItem| {
-        Ok((a.id() as i32) - (b.id() as i32))
-    }));
+    let result = arr.try_sort_by(&ImmediateClosure::new_mut(
+        &mut |a: TestItem, b: TestItem| Ok((a.id() as i32) - (b.id() as i32)),
+    ));
     assert!(result.is_ok());
     let sorted = result.unwrap();
     assert_eq!(unwrap_get!(sorted, 0).id(), 1);
@@ -2239,9 +2243,9 @@ fn test_array_try_sort_by_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_sort_by(&ImmediateClosure::new(&mut |_a: TestItem, _b: TestItem| {
-        Err(JsError::new("sort error"))
-    }));
+    let result = arr.try_sort_by(&ImmediateClosure::new_mut(
+        &mut |_a: TestItem, _b: TestItem| Err(JsError::new("sort error")),
+    ));
     assert!(result.is_err());
 }
 
@@ -2252,9 +2256,9 @@ fn test_array_try_to_sorted_by() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_to_sorted_by(&ImmediateClosure::new(&mut |a: TestItem, b: TestItem| {
-        Ok((b.id() as i32) - (a.id() as i32))
-    }));
+    let result = arr.try_to_sorted_by(&ImmediateClosure::new_mut(
+        &mut |a: TestItem, b: TestItem| Ok((b.id() as i32) - (a.id() as i32)),
+    ));
     assert!(result.is_ok());
     let sorted = result.unwrap();
     assert_eq!(unwrap_get!(sorted, 0).id(), 3);
@@ -2269,9 +2273,9 @@ fn test_array_try_to_sorted_by_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_to_sorted_by(&ImmediateClosure::new(&mut |_a: TestItem, _b: TestItem| {
-        Err(JsError::new("to_sorted error"))
-    }));
+    let result = arr.try_to_sorted_by(&ImmediateClosure::new_mut(
+        &mut |_a: TestItem, _b: TestItem| Err(JsError::new("to_sorted error")),
+    ));
     assert!(result.is_err());
 }
 

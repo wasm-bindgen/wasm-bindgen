@@ -490,7 +490,7 @@ fn replace() {
     #[cfg(not(js_sys_unstable_apis))]
     let result = js.replace_with_function("T", &get_replacer_function());
     #[cfg(js_sys_unstable_apis)]
-    let result = js.replace_with_function("T", get_replacer_function().upcast_ref());
+    let result = js.replace_with_function("T", get_replacer_function().upcast());
 
     assert_eq!(result, "border-top");
 

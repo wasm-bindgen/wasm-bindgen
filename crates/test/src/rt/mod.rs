@@ -813,13 +813,12 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
         let test: Pin<&mut F> = unsafe { Pin::map_unchecked_mut(self, |me| &mut me.test) };
         let mut future_output = None;
         let result = CURRENT_OUTPUT.set(&output, || {
-            let mut test = AssertUnwindSafe(Some(test));
-            let mut future_output_ref = AssertUnwindSafe(&mut future_output);
+            let mut test = Some(test);
             let mut func = || {
                 let test = test.take().unwrap_throw();
-                **future_output_ref = Some(test.poll(cx))
+                future_output = Some(test.poll(cx))
             };
-            let closure = ScopedClosure::borrow_mut(&mut func);
+            let closure = ScopedClosure::borrow_mut_assert_unwind_safe(&mut func);
             __wbg_test_invoke(&closure)
         });
         match (result, future_output) {

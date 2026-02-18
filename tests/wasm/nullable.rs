@@ -251,7 +251,7 @@ fn test_nullable_in_generic_context() {
 fn test_upcast_value_to_nullable() {
     // A Number can upcast to JsOption<Number>
     let num = Number::from(42);
-    let nullable: JsOption<Number> = num.upcast();
+    let nullable: JsOption<Number> = num.upcast_into();
     assert!(!nullable.is_empty());
     assert_eq!(nullable.unwrap().value_of(), 42.0);
 }
@@ -260,7 +260,7 @@ fn test_upcast_value_to_nullable() {
 fn test_upcast_string_to_nullable() {
     // A JsString can upcast to JsOption<JsString>
     let s = JsString::from("hello");
-    let nullable: JsOption<JsString> = s.upcast();
+    let nullable: JsOption<JsString> = s.upcast_into();
     assert!(!nullable.is_empty());
     assert_eq!(nullable.unwrap(), "hello");
 }
@@ -269,7 +269,7 @@ fn test_upcast_string_to_nullable() {
 fn test_upcast_null_to_nullable() {
     // Null can upcast to JsOption<T> for any T
     let null = Null::NULL;
-    let nullable: JsOption<Number> = null.upcast();
+    let nullable: JsOption<Number> = null.upcast_into();
     assert!(nullable.is_empty());
 }
 
@@ -277,7 +277,7 @@ fn test_upcast_null_to_nullable() {
 fn test_upcast_undefined_to_nullable() {
     // Undefined can upcast to JsOption<T> for any T
     let undef = Undefined::UNDEFINED;
-    let nullable: JsOption<Number> = undef.upcast();
+    let nullable: JsOption<Number> = undef.upcast_into();
     assert!(nullable.is_empty());
 }
 
@@ -286,15 +286,15 @@ fn test_upcast_null_to_different_nullable_types() {
     // Null upcasts to JsOption of any type
     let null = Null::NULL;
 
-    let nullable_num: JsOption<Number> = null.upcast();
+    let nullable_num: JsOption<Number> = null.upcast_into();
     assert!(nullable_num.is_empty());
 
     let null = Null::NULL;
-    let nullable_str: JsOption<JsString> = null.upcast();
+    let nullable_str: JsOption<JsString> = null.upcast_into();
     assert!(nullable_str.is_empty());
 
     let null = Null::NULL;
-    let nullable_obj: JsOption<Object> = null.upcast();
+    let nullable_obj: JsOption<Object> = null.upcast_into();
     assert!(nullable_obj.is_empty());
 }
 
@@ -302,22 +302,22 @@ fn test_upcast_null_to_different_nullable_types() {
 fn test_upcast_in_function_call() {
     // Test using upcast to pass a value to a function expecting JsOption
     let num = Number::from(123);
-    take_nullable_number(num.upcast());
+    take_nullable_number(num.upcast_into());
 
     let s = JsString::from("test");
-    take_nullable_string(s.upcast());
+    take_nullable_string(s.upcast_into());
 }
 
 #[wasm_bindgen_test]
 fn test_upcast_null_in_function_call() {
     // Test using upcast to pass Null to a function expecting JsOption
-    take_nullable_null(Null::NULL.upcast());
+    take_nullable_null(Null::NULL.upcast_into());
 }
 
 #[wasm_bindgen_test]
 fn test_upcast_undefined_in_function_call() {
     // Test using upcast to pass Undefined to a function expecting JsOption
-    take_nullable_null(Undefined::UNDEFINED.upcast());
+    take_nullable_null(Undefined::UNDEFINED.upcast_into());
 }
 
 // Helper function that accepts JsOption via upcast
@@ -328,14 +328,14 @@ fn accepts_nullable_number(val: JsOption<Number>) -> Option<f64> {
 #[wasm_bindgen_test]
 fn test_upcast_with_helper_function() {
     // Pass a Number directly via upcast
-    let result = accepts_nullable_number(Number::from(99).upcast());
+    let result = accepts_nullable_number(Number::from(99).upcast_into());
     assert_eq!(result, Some(99.0));
 
     // Pass Null via upcast
-    let result = accepts_nullable_number(Null::NULL.upcast());
+    let result = accepts_nullable_number(Null::NULL.upcast_into());
     assert_eq!(result, None);
 
     // Pass Undefined via upcast
-    let result = accepts_nullable_number(Undefined::UNDEFINED.upcast());
+    let result = accepts_nullable_number(Undefined::UNDEFINED.upcast_into());
     assert_eq!(result, None);
 }

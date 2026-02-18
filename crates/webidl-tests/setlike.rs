@@ -22,7 +22,7 @@ macro_rules! read_test_suite {
             #[cfg(wbg_next_unstable)]
             {
                 // Create a typed Function<fn(JsString) -> Undefined> callback
-                let cb: js_sys::Function<fn(js_sys::JsString) -> wasm_bindgen::Undefined> =
+                let cb: js_sys::Function<fn(js_sys::JsString) -> js_sys::Undefined> =
                     Closure::wrap(Box::new(|value: js_sys::JsString| {
                         let value: String = value.into();
                         match value.as_str() {

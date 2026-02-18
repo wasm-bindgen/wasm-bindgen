@@ -4,6 +4,22 @@
 //! to JavaScript. All closures are unwind safe by default: panics are caught and converted to
 //! JavaScript exceptions when built with `panic=unwind`.
 //!
+//! # Immutable by Default
+//!
+//! The closure API defaults to **immutable** (`Fn`) closures because they are more
+//! likely to satisfy `UnwindSafe` automatically:
+//!
+//! - `&T` where `T: RefUnwindSafe` is `UnwindSafe`
+//! - `&mut T` is **never** `UnwindSafe` regardless of `T`
+//!
+//! This means:
+//! - [`ScopedClosure::borrow`] creates an immutable `Fn` closure
+//! - [`ScopedClosure::borrow_mut`] creates a mutable `FnMut` closure
+//! - [`ImmediateClosure::new`] creates an immutable `Fn` closure
+//! - [`ImmediateClosure::new_mut`] creates a mutable `FnMut` closure
+//!
+//! Immutable closures can be upcasted to mutable closures using [`upcast_ref`](crate::Upcast::upcast_ref).
+//!
 //! # Type Aliases
 //!
 //! - [`ScopedClosure<'a, T>`] — The unified closure type with a lifetime parameter
@@ -20,8 +36,8 @@
 //! - **`&dyn FnMut` / `&dyn Fn`**: Use when you don't need unwind safety and prefer
 //!   panics to abort the process.
 //!
-//! For [`ScopedClosure`], the default constructors (`new`, `borrow`, `borrow_mut`) catch
-//! panics, while the `_aborting` variants (`new_aborting`, `borrow_aborting`, etc.) do not.
+//! For [`ScopedClosure`], the default constructors (`borrow`, `borrow_mut`, `own`) catch
+//! panics, while the `_aborting` variants (`borrow_aborting`, `borrow_mut_aborting`, etc.) do not.
 //!
 //! # Ownership Model
 //!
@@ -69,8 +85,8 @@ extern "C" {
 ///
 /// - **`ScopedClosure<'a, T>`** (non-`'static`) - A borrowed closure referencing stack data.
 ///   Allows non-`'static` captures. Use for immediate/synchronous callbacks. Created with
-///   [`ScopedClosure::borrow`] or [`ScopedClosure::borrow_mut`]. Cannot transfer ownership
-///   to JS GC.
+///   [`ScopedClosure::borrow`] (for `FnMut`) or [`ScopedClosure::borrow_immutable`] (for `Fn`).
+///   Cannot transfer ownership to JS GC.
 ///
 /// [`Closure<T>`] is currently a type alias for `ScopedClosure<'static, T>`. In
 /// a future release, a lifetime argument will be added to this alias.
@@ -95,13 +111,13 @@ extern "C" {
 /// ```ignore
 /// let mut sum = 0;
 /// let mut f = |x: u32| { sum += x; };  // f borrows sum
-/// let closure = ScopedClosure::borrow_mut(&mut f);  // closure borrows f
+/// let closure = ScopedClosure::borrow(&mut f);  // closure borrows f
 /// // closure cannot outlive f, and f cannot outlive sum
 /// ```
 ///
 /// # Examples
 ///
-/// ## Borrowed closures with `ScopedClosure::borrow_mut`
+/// ## Borrowed closures with `ScopedClosure::borrow`
 ///
 /// Use for immediate/synchronous callbacks where JS calls the closure right away:
 ///
@@ -116,7 +132,7 @@ extern "C" {
 /// let mut sum = 0;
 /// {
 ///     let mut f = |x: u32| { sum += x; };
-///     let closure = ScopedClosure::borrow_mut(&mut f);
+///     let closure = ScopedClosure::borrow(&mut f);
 ///     call_immediately(&closure);
 /// }  // closure dropped here, JS function invalidated
 /// assert_eq!(sum, 42);
@@ -218,6 +234,9 @@ where
     /// Creates a new owned `'static` closure that aborts on panic.
     ///
     /// Alias for [`own_aborting`](Self::own_aborting).
+    ///
+    /// **Note: Not unwind safe. Prefer [`own`](Self::own) or `own` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
     pub fn new<F>(t: F) -> Self
     where
         F: IntoWasmClosure<T> + 'static,
@@ -228,12 +247,14 @@ where
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
     /// Rust function, with panic unwind support.
     ///
+    /// The type parameter `T` determines whether the closure is `Fn` or `FnMut`.
+    ///
     /// Supports unwind via its UnwindSafe bound when building with panic=unwind.
     ///
     /// When provided to a JS function as an own value, to be managed by the JS GC.
     ///
     /// See [`borrow`](Self::borrow) for creating a borrowed `ScopedClosure` with
-    /// an associated lifetime.
+    /// an associated lifetime (defaults to immutable `Fn`).
     pub fn own<F>(t: F) -> Self
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
@@ -246,10 +267,15 @@ where
     /// Unlike [`own`](Self::own), this version does NOT catch panics and does NOT
     /// require `UnwindSafe`. If the closure panics, the process will abort.
     ///
+    /// The type parameter `T` determines whether the closure is `Fn` or `FnMut`.
+    ///
     /// When provided to a JS function as an own value, to be managed by the JS GC.
     ///
-    /// See [`borrow`](Self::borrow) for creating a borrowed `ScopedClosure` with
-    /// an associated lifetime.
+    /// See [`borrow_aborting`](Self::borrow_aborting) for creating a borrowed
+    /// `ScopedClosure` with an associated lifetime.
+    ///
+    /// **Note: Not unwind safe. Prefer [`own`](Self::own) or `own` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
     pub fn own_aborting<F>(t: F) -> Self
     where
         F: IntoWasmClosure<T> + 'static,
@@ -260,7 +286,10 @@ where
     /// A more direct version of `Closure::new` which creates a `Closure` from
     /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
     ///
-    /// See [`Self::wrap_unwind_safe`] for catching panics.
+    /// This version does NOT catch panics. If the closure panics, the process will abort.
+    ///
+    /// **Note: Not unwind safe. Prefer [`wrap_assert_unwind_safe`](Self::wrap_assert_unwind_safe)
+    /// when possible.**
     pub fn wrap<F>(data: Box<F>) -> Self
     where
         F: IntoWasmClosure<T> + ?Sized,
@@ -307,13 +336,14 @@ where
     /// synchronous use. Unlike [`Closure::own`], this does not require the closure
     /// to be `'static`, allowing you to capture references to local variables.
     ///
+    /// Use [`borrow_mut`](Self::borrow_mut) when you need to mutate captured state.
+    ///
     /// The returned `ScopedClosure<'a, _>` has lifetime `'a` from the closure
     /// reference, which means it cannot outlive the closure or any data the
     /// closure captures.
     ///
     /// Supports unwind via its UnwindSafe bound when building with panic=unwind.
-    ///
-    /// For closures that need mutable state (`FnMut`), use [`borrow_mut`](Self::borrow_mut).
+    /// The resulting closure can be upcasted to `FnMut` using [`upcast_ref`](crate::Upcast::upcast_ref).
     ///
     /// # When to use scoped closures
     ///
@@ -340,15 +370,17 @@ where
     /// #[wasm_bindgen]
     /// extern "C" {
     ///     fn call_with_value(cb: &ScopedClosure<dyn Fn(u32)>, value: u32);
+    ///     fn call_fnmut(cb: &ScopedClosure<dyn FnMut(u32)>, value: u32);
     /// }
     ///
     /// let data = vec![1, 2, 3];
-    /// let f = || {
-    ///     // Can access `data` without moving it
-    ///     println!("data len: {}", data.len());
+    /// let f = |x| {
+    ///     println!("data len: {}, x: {}", data.len(), x);
     /// };
     /// let closure = ScopedClosure::borrow(&f);
     /// call_with_value(&closure, 42);
+    /// // Can also upcast to FnMut
+    /// call_fnmut(closure.upcast_ref(), 42);
     /// ```
     pub fn borrow<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
@@ -367,10 +399,34 @@ where
         }
     }
 
+    /// Like [`borrow`](Self::borrow), but catches panics without requiring `MaybeUnwindSafe`.
+    ///
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    pub fn borrow_assert_unwind_safe<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    where
+        F: IntoWasmClosureRef<'a, T> + ?Sized,
+    {
+        let t: &T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ScopedClosure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: WasmSlice { ptr, len },
+                unwind_safe: true,
+                _marker: PhantomData,
+            }),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+
     /// Like [`borrow`](Self::borrow), but does not catch panics.
     ///
     /// If the closure panics, the process will abort. This variant does not
     /// require `UnwindSafe`.
+    ///
+    /// **Note: Not unwind safe. Prefer [`borrow`](Self::borrow) or
+    /// [`borrow_assert_unwind_safe`](Self::borrow_assert_unwind_safe) when possible.**
     pub fn borrow_aborting<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
         F: IntoWasmClosureRef<'a, T> + ?Sized,
@@ -390,8 +446,9 @@ where
 
     /// Creates a scoped closure by mutably borrowing a `FnMut` closure.
     ///
-    /// This is the most common variant for scoped closures since most closures
-    /// that mutate captured state need `FnMut`.
+    /// Use this for closures that need to mutate captured state. For closures that
+    /// don't need mutation, prefer [`borrow`](Self::borrow) which creates an immutable
+    /// `Fn` closure that is more likely to satisfy `UnwindSafe` automatically.
     ///
     /// See [`borrow`](Self::borrow) for full documentation on scoped closures.
     ///
@@ -430,10 +487,34 @@ where
         }
     }
 
+    /// Like [`borrow_mut`](Self::borrow_mut), but catches panics without requiring `MaybeUnwindSafe`.
+    ///
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    pub fn borrow_mut_assert_unwind_safe<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    where
+        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
+    {
+        let t: &mut T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ScopedClosure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: WasmSlice { ptr, len },
+                unwind_safe: true,
+                _marker: PhantomData,
+            }),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+
     /// Like [`borrow_mut`](Self::borrow_mut), but does not catch panics.
     ///
     /// If the closure panics, the process will abort. This variant does not
     /// require `UnwindSafe`.
+    ///
+    /// **Note: Not unwind safe. Prefer [`borrow_mut`](Self::borrow_mut) or
+    /// [`borrow_mut_assert_unwind_safe`](Self::borrow_mut_assert_unwind_safe) when possible.**
     pub fn borrow_mut_aborting<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
         F: IntoWasmClosureRefMut<'a, T> + ?Sized,
@@ -547,6 +628,9 @@ where
     /// -> R>` that will dynamically throw a JavaScript error if called more
     /// than once.
     ///
+    /// **Note: Not unwind safe. Prefer [`once`](Self::once) or `once` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
+    ///
     /// Note: the `A` and `R` type parameters are here just for backward compat
     /// and will be removed in the future.
     pub fn once_wrap<F, A, R>(fn_once: F) -> Self
@@ -600,6 +684,9 @@ where
     /// function. If the JavaScript function is never called then the `FnOnce`
     /// and everything it closes over will leak.
     ///
+    /// **Note: Not unwind safe. Prefer [`once_into_js`](Self::once_into_js) or `once_into_js` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
+    ///
     /// Note: the `A` and `R` type parameters are here just for backward compat
     /// and will be removed in the future.
     pub fn once_into_js_wrap<F, A, R>(fn_once: F) -> JsValue
@@ -623,9 +710,7 @@ where
 /// # Unwind Safety
 ///
 /// `ImmediateClosure` provides unwind safety by catching panics and converting them
-/// to JavaScript exceptions. If you don't need unwind safety and prefer panics to
-/// abort the process, you can use raw `&dyn FnMut` or `&dyn Fn` closures directly.
-/// These raw closure types are fully supported and will not be deprecated.
+/// to JavaScript exceptions.
 ///
 /// # Example
 ///
@@ -638,7 +723,7 @@ where
 /// }
 ///
 /// let mut sum = 0;
-/// let closure = ImmediateClosure::new(&mut |val: JsValue| {
+/// let closure = ImmediateClosure::new_mut(&mut |val: JsValue| {
 ///     sum += val.as_f64().unwrap() as i32;
 /// });
 /// forEach(&closure);
@@ -655,24 +740,31 @@ pub struct ImmediateClosure<'a, T: ?Sized> {
 }
 
 impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
-    /// Creates an immediate closure from a mutable borrow of a `FnMut` closure.
+    /// Creates an immediate closure from an immutable borrow of a `Fn` closure.
     ///
-    /// This is the common case for closures that mutate captured state.
+    /// Immutable closures (`Fn`) are preferred because they are more likely to satisfy `UnwindSafe`
+    /// automatically. Use [`new_mut`](Self::new_mut) when you need to mutate captured state.
+    ///
+    /// Note that immutable closures can be `upcast()` to mutable closures on the JS boundary
+    /// when required by function signatures.
+    ///
     /// Panics are caught as JS exceptions when building with panic=unwind.
+    /// The resulting closure can be upcasted to `FnMut` using [`upcast_ref`](crate::Upcast::upcast_ref).
     ///
     /// # Example
     ///
     /// ```ignore
-    /// let mut count = 0;
-    /// let closure = ImmediateClosure::new(&mut || { count += 1; });
+    /// let data = vec![1, 2, 3];
+    /// let closure = ImmediateClosure::new(&|| {
+    ///     println!("data len: {}", data.len());
+    /// });
     /// call_closure(&closure);
-    /// assert_eq!(count, 1);
     /// ```
-    pub fn new<F>(f: &'a mut F) -> ImmediateClosure<'a, F::WithLifetime>
+    pub fn new<F>(f: &'a F) -> ImmediateClosure<'a, F::WithLifetime>
     where
-        F: IntoWasmClosureRefMut<'a, T> + ?Sized + MaybeUnwindSafe,
+        F: IntoWasmClosureRef<'a, T> + ?Sized + MaybeUnwindSafe,
     {
-        let t: &mut T = f.unsize_closure_ref();
+        let t: &T = f.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ImmediateClosure {
             data: WasmSlice { ptr, len },
@@ -681,25 +773,27 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
         }
     }
 
-    /// Creates an immediate closure from an immutable borrow of a `Fn` closure.
+    /// Creates an immediate closure from a mutable borrow of a `FnMut` closure.
     ///
-    /// Use this for closures that don't need to mutate captured state.
+    /// Use this for closures that need to mutate captured state. For closures that
+    /// don't need mutation, [`new`](Self::new) creates an immutable `Fn` closure
+    /// that is more likely to satisfy `UnwindSafe` automatically.
+    ///
     /// Panics are caught as JS exceptions when building with panic=unwind.
     ///
     /// # Example
     ///
     /// ```ignore
-    /// let data = vec![1, 2, 3];
-    /// let closure = ImmediateClosure::new_immutable(&|| {
-    ///     println!("data len: {}", data.len());
-    /// });
+    /// let mut count = 0;
+    /// let closure = ImmediateClosure::new_mut(&mut || { count += 1; });
     /// call_closure(&closure);
+    /// assert_eq!(count, 1);
     /// ```
-    pub fn new_immutable<F>(f: &'a F) -> ImmediateClosure<'a, F::WithLifetime>
+    pub fn new_mut<F>(f: &'a mut F) -> ImmediateClosure<'a, F::WithLifetime>
     where
-        F: IntoWasmClosureRef<'a, T> + ?Sized + MaybeUnwindSafe,
+        F: IntoWasmClosureRefMut<'a, T> + ?Sized + MaybeUnwindSafe,
     {
-        let t: &T = f.unsize_closure_ref();
+        let t: &mut T = f.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ImmediateClosure {
             data: WasmSlice { ptr, len },
@@ -712,10 +806,12 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
 impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
     /// Like [`new`](Self::new), but does not catch panics.
     ///
-    /// _Note: While this variant is useful for direct type inference, it will
-    /// abort if the closure panics, so [`ImmediateClosure::new`] is recommended
-    /// when possible._
-    pub fn wrap_aborting(f: &'a mut T) -> Self {
+    /// This variant enables type inference from the expected type, since it
+    /// takes the dyn type directly.
+    ///
+    /// **Note: Not unwind safe. Prefer [`new`](Self::new) or
+    /// [`wrap_assert_unwind_safe`](Self::wrap_assert_unwind_safe) when possible.**
+    pub fn wrap_aborting(f: &'a T) -> Self {
         ImmediateClosure {
             data: T::to_wasm_slice(f),
             unwind_safe: false,
@@ -723,12 +819,14 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
         }
     }
 
-    /// Like [`new_immutable`](Self::new_immutable), but does not catch panics.
+    /// Like [`new_mut`](Self::new_mut), but does not catch panics.
     ///
-    /// _Note: While this variant is useful for direct type inference, it will
-    /// abort if the closure panics, so [`ImmediateClosure::new_immutable`] is recommended
-    /// when possible._
-    pub fn wrap_immutable_aborting(f: &'a T) -> Self {
+    /// This variant enables type inference from the expected type, since it
+    /// takes the dyn type directly.
+    ///
+    /// **Note: Not unwind safe. Prefer [`new_mut`](Self::new_mut) or
+    /// [`wrap_mut_assert_unwind_safe`](Self::wrap_mut_assert_unwind_safe) when possible.**
+    pub fn wrap_mut_aborting(f: &'a mut T) -> Self {
         ImmediateClosure {
             data: T::to_wasm_slice(f),
             unwind_safe: false,
@@ -738,19 +836,19 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
 
     /// Like [`wrap_aborting`](Self::wrap_aborting), but catches panics and converts them to JS exceptions.
     ///
-    /// This variant enables type inference while still catching panics. The caller
-    /// asserts that the closure is unwind-safe (no `MaybeUnwindSafe` bound is checked).
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
     ///
     /// # Example
     ///
     /// ```ignore
-    /// let mut count = 0;
-    /// // Type of `x` is inferred from context
-    /// let closure: ImmediateClosure<dyn FnMut(u32)> = ImmediateClosure::wrap_assert_unwind_safe(&mut |x| {
-    ///     count += x;
+    /// let data = vec![1, 2, 3];
+    /// // Type is inferred from context
+    /// let closure: ImmediateClosure<dyn Fn()> = ImmediateClosure::wrap_assert_unwind_safe(&|| {
+    ///     println!("data len: {}", data.len());
     /// });
     /// ```
-    pub fn wrap_assert_unwind_safe(f: &'a mut T) -> Self {
+    pub fn wrap_assert_unwind_safe(f: &'a T) -> Self {
         ImmediateClosure {
             data: T::to_wasm_slice(f),
             unwind_safe: true,
@@ -758,25 +856,58 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
         }
     }
 
-    /// Like [`wrap_immutable_aborting`](Self::wrap_immutable_aborting), but catches panics and converts them to JS exceptions.
+    /// Like [`wrap_mut_aborting`](Self::wrap_mut_aborting), but catches panics and converts them to JS exceptions.
     ///
-    /// This variant enables type inference while still catching panics. The caller
-    /// asserts that the closure is unwind-safe (no `MaybeUnwindSafe` bound is checked).
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
     ///
     /// # Example
     ///
     /// ```ignore
-    /// let data = vec![1, 2, 3];
-    /// // Type is inferred from context
-    /// let closure: ImmediateClosure<dyn Fn()> = ImmediateClosure::wrap_immutable_assert_unwind_safe(&|| {
-    ///     println!("data len: {}", data.len());
+    /// let mut count = 0;
+    /// // Type of `x` is inferred from context
+    /// let closure: ImmediateClosure<dyn FnMut(u32)> = ImmediateClosure::wrap_mut_assert_unwind_safe(&mut |x| {
+    ///     count += x;
     /// });
     /// ```
-    pub fn wrap_immutable_assert_unwind_safe(f: &'a T) -> Self {
+    pub fn wrap_mut_assert_unwind_safe(f: &'a mut T) -> Self {
         ImmediateClosure {
             data: T::to_wasm_slice(f),
             unwind_safe: true,
             _marker: PhantomData,
+        }
+    }
+
+    /// Returns a reference to this closure as a mutable `FnMut` closure.
+    ///
+    /// This is safe because every `Fn` can be called through a `FnMut` interface.
+    /// The fat pointer representation is compatible—`&dyn Fn` can be safely
+    /// reinterpreted as `&dyn FnMut`.
+    ///
+    /// Note: Unlike `ScopedClosure::as_mut`, this only supports the Fn→FnMut conversion
+    /// with the same argument and return types. `ImmediateClosure` stores a Rust fat
+    /// pointer directly, so argument/return type variance is not possible.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use wasm_bindgen::prelude::*;
+    ///
+    /// #[wasm_bindgen]
+    /// extern "C" {
+    ///     fn needs_fnmut(cb: &ImmediateClosure<dyn FnMut(u32)>);
+    /// }
+    ///
+    /// let func: &dyn Fn(u32) = &|x| println!("{}", x);
+    /// let closure: ImmediateClosure<dyn Fn(u32)> = ImmediateClosure::wrap_assert_unwind_safe(func);
+    /// needs_fnmut(closure.as_mut());
+    /// ```
+    pub fn as_mut(&self) -> &ImmediateClosure<'a, T::AsMut> {
+        // SAFETY: ImmediateClosure stores a WasmSlice (fat pointer data) and metadata.
+        // The type parameter T is phantom data. A &dyn Fn fat pointer can be safely
+        // reinterpreted as &dyn FnMut since Fn is a supertrait of FnMut.
+        unsafe {
+            &*(self as *const ImmediateClosure<'a, T> as *const ImmediateClosure<'a, T::AsMut>)
         }
     }
 }
@@ -784,27 +915,6 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
 impl<T: ?Sized> fmt::Debug for ImmediateClosure<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ImmediateClosure").finish_non_exhaustive()
-    }
-}
-
-impl<'a, T: ?Sized + WasmClosure> From<&'a ImmediateClosure<'a, T>> for ScopedClosure<'a, T> {
-    /// Converts an `ImmediateClosure` reference into a `ScopedClosure`.
-    ///
-    /// This allows passing an `ImmediateClosure` where a `ScopedClosure` is expected,
-    /// enabling gradual migration of APIs from `ImmediateClosure` to `ScopedClosure`.
-    ///
-    /// Note that this conversion has overhead compared to using `ImmediateClosure`
-    /// directly, as it creates a JS wrapper object.
-    fn from(immediate: &'a ImmediateClosure<'a, T>) -> Self {
-        ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
-                data: immediate.data,
-                unwind_safe: immediate.unwind_safe,
-                _marker: PhantomData,
-            }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
     }
 }
 
@@ -1099,11 +1209,16 @@ where
 #[doc(hidden)]
 pub unsafe trait WasmClosure: WasmDescribe {
     const IS_MUT: bool;
+    /// The mutable version of this closure type.
+    /// For `dyn Fn(...) -> R` this is `dyn FnMut(...) -> R`.
+    /// For `dyn FnMut(...) -> R` this is itself.
+    type AsMut: ?Sized;
     fn to_wasm_slice(r: &Self) -> WasmSlice;
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     const IS_MUT: bool = T::IS_MUT;
+    type AsMut = T::AsMut;
     fn to_wasm_slice(r: &Self) -> WasmSlice {
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
         WasmSlice { ptr, len }

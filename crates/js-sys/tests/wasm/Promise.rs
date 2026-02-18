@@ -9,10 +9,10 @@ fn promise_inheritance() {
     #[cfg(not(js_sys_unstable_apis))]
     let promise: Promise<JsValue> = Promise::new(&mut |_, _| ());
     #[cfg(js_sys_unstable_apis)]
-    let promise: Promise<JsValue> = Promise::new(&ImmediateClosure::new(&mut |_: Function<
+    let promise: Promise<JsValue> = Promise::new(&ImmediateClosure::new_mut(&mut |_: Function<
         fn(JsValue) -> Undefined,
     >,
-                                                                              _: Function<
+                                                                                  _: Function<
         fn(JsValue) -> Undefined,
     >| ()));
     assert!(promise.is_instance_of::<Promise>());
@@ -499,12 +499,12 @@ async fn covariance() {
 
     let number_promise = Promise::resolve(&Number::from(42.0));
 
-    let result = accepts_jsvalue_promise(number_promise.upcast()).await;
+    let result = accepts_jsvalue_promise(number_promise.upcast_into()).await;
     let num: Number = result.unchecked_into();
     assert_eq!(num.value_of(), 42.0);
 
     let string_promise = Promise::resolve(&JsString::from("hello"));
-    let result = accepts_jsvalue_promise(string_promise.upcast()).await;
+    let result = accepts_jsvalue_promise(string_promise.upcast_into()).await;
     let s: JsString = result.unchecked_into();
     assert_eq!(s, JsString::from("hello"));
 }
@@ -523,7 +523,7 @@ async fn test_promise_all_with_upcast() {
     // Promise::all should accept Array<Promise<TestValue>> and return Promise<Array<JsValue>>
     // because TestValue: Upcast<JsValue> (via extends = Object)
     let result_promise = Promise::all(&arr);
-    let result_promise: Promise<Array<JsValue>> = result_promise.upcast();
+    let result_promise: Promise<Array<JsValue>> = result_promise.upcast_into();
     let result_array: Array<JsValue> = JsFuture::from(result_promise).await.unwrap();
 
     assert_eq!(result_array.length(), 3);

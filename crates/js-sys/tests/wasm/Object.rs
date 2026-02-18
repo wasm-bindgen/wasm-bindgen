@@ -306,7 +306,7 @@ fn property_descriptor_get_set() {
 
     // Create and set a setter function
     let setter: Function<fn(Number) -> Undefined> = Function::new_with_args_typed("x", "");
-    desc.set_set(setter.clone().upcast());
+    desc.set_set(setter.clone().upcast_into());
     let retrieved_setter = desc.get_set();
     assert!(retrieved_setter.is_some());
 }
@@ -457,7 +457,7 @@ fn property_is_enumerable() {
 fn set_prototype_of() {
     let a = foo_42();
     let b = foo_42();
-    Object::set_prototype_of(&a, b.upcast_ref());
+    Object::set_prototype_of(&a, b.upcast());
     assert!(b.is_prototype_of(&a.into()));
 }
 
@@ -484,7 +484,7 @@ fn value_of() {
 fn entries_typed() {
     let arr: Array = Array::new();
     let func: Function = Function::new_no_args("");
-    let obj: Object<JsString> = Reflect::construct(&func, arr.upcast_ref())
+    let obj: Object<JsString> = Reflect::construct(&func, arr.upcast())
         .unwrap()
         .unchecked_into();
     Reflect::set(&obj, &"a".into(), &JsString::from("1").into()).unwrap();

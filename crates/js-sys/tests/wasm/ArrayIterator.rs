@@ -43,7 +43,7 @@ fn entries() {
         {
             use wasm_bindgen::prelude::Upcast;
 
-            let array: Array = a.upcast();
+            let array: Array = a.upcast_into();
             assert_eq!(array.shift().unwrap().as_f64().unwrap(), i as f64);
             assert_eq!(array.shift().unwrap().as_f64().unwrap(), (i + 1) as f64);
             assert_eq!(array.length(), 0);

@@ -411,31 +411,6 @@ pub trait UpcastFrom<S: ?Sized> {}
 /// New upcast relationships should typically be defined by implementing `FromUpcast`
 /// rather than `Upcast` directly, to avoid orphan rule issues.
 pub trait Upcast<T: ?Sized> {
-    /// Perform a zero-cost type-safe upcast to a wider type within the Wasm
-    /// bindgen generics type system.
-    ///
-    /// This enables proper nested conversions that obey subtyping rules,
-    /// supporting strict API type checking.
-    ///
-    /// The common pattern when passing a narrow type is to call `upcast()`
-    /// or `upcast_ref()` to obtain the correct type for the function usage,
-    /// while ensuring safe type checked usage.
-    ///
-    /// For example, if passing `Promise<Number>` as an argument to a function
-    /// where `Promise<JsValue>` is expected, or `FunctionArgs<JsValue>` as an
-    /// argument where `FunctionArgs<Number>` is expected.
-    ///
-    /// This is a compile time conversion only by the nature of the erasable
-    /// generics type system.
-    #[inline]
-    fn upcast(self) -> T
-    where
-        Self: Sized + ErasableGeneric,
-        T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
-    {
-        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
-    }
-
     /// Perform a zero-cost type-safe upcast to a wider ref type within the Wasm
     /// bindgen generics type system.
     ///
@@ -443,7 +418,7 @@ pub trait Upcast<T: ?Sized> {
     /// supporting strict API type checking.
     ///
     /// The common pattern when passing a narrow type is to call `upcast()`
-    /// or `upcast_ref()` to obtain the correct type for the function usage,
+    /// or `upcast_into()` to obtain the correct type for the function usage,
     /// while ensuring safe type checked usage.
     ///
     /// For example, if passing `Promise<Number>` as an argument to a function
@@ -453,12 +428,37 @@ pub trait Upcast<T: ?Sized> {
     /// This is a compile time conversion only by the nature of the erasable
     /// generics type system.
     #[inline]
-    fn upcast_ref(&self) -> &T
+    fn upcast(&self) -> &T
     where
         Self: ErasableGeneric,
         T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
     {
         unsafe { &*(self as *const Self as *const T) }
+    }
+
+    /// Perform a zero-cost type-safe upcast to a wider type within the Wasm
+    /// bindgen generics type system.
+    ///
+    /// This enables proper nested conversions that obey subtyping rules,
+    /// supporting strict API type checking.
+    ///
+    /// The common pattern when passing a narrow type is to call `upcast()`
+    /// or `upcast_into()` to obtain the correct type for the function usage,
+    /// while ensuring safe type checked usage.
+    ///
+    /// For example, if passing `Promise<Number>` as an argument to a function
+    /// where `Promise<JsValue>` is expected, or `FunctionArgs<JsValue>` as an
+    /// argument where `FunctionArgs<Number>` is expected.
+    ///
+    /// This is a compile time conversion only by the nature of the erasable
+    /// generics type system.
+    #[inline]
+    fn upcast_into(self) -> T
+    where
+        Self: Sized + ErasableGeneric,
+        T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
+    {
+        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
     }
 }
 
@@ -500,23 +500,6 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5] [Target1 Target2 Target3 Target4 Target5]);
 impl_tuple_upcast!([T1 T2 T3 T4 T5 T6] [Target1 Target2 Target3 Target4 Target5 Target6]);
 impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7] [Target1 Target2 Target3 Target4 Target5 Target6 Target7]);
 impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Target5 Target6 Target7 Target8]);
-
-/// Marker trait to indicate a callable upcast type.
-///
-/// This trait is used in import function signatures to accept any type that
-/// can upcast to `T`. It combines the `Upcast<T>` capability with matching
-/// `ErasableGeneric` repr types.
-pub trait AsUpcast<T: ErasableGeneric, R = <T as ErasableGeneric>::Repr>:
-    Upcast<T> + ErasableGeneric<Repr = R>
-{
-}
-
-impl<S, T> AsUpcast<T> for S
-where
-    S: Upcast<T> + ErasableGeneric<Repr = T::Repr>,
-    T: ErasableGeneric,
-{
-}
 
 /// A convenience trait for types that erase to [`JsValue`].
 ///

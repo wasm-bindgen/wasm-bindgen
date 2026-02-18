@@ -41,7 +41,7 @@ macro_rules! read_test_suite {
                     }
                 });
                 let cb: js_sys::Function<
-                    fn(js_sys::Number, js_sys::JsString) -> wasm_bindgen::Undefined,
+                    fn(js_sys::Number, js_sys::JsString) -> js_sys::Undefined,
                 > = Function::from_closure(closure);
 
                 maplike.for_each(&cb).unwrap();

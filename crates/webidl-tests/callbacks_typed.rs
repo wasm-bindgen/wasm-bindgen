@@ -1,8 +1,6 @@
 use crate::generated::*;
 use js_sys::*;
 use wasm_bindgen::prelude::*;
-#[cfg(wbg_next_unstable)]
-use wasm_bindgen::Undefined;
 use wasm_bindgen_test::*;
 
 /// Regression test: In stable mode, callbacks must accept &Function

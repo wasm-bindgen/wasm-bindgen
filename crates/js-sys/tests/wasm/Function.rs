@@ -162,11 +162,11 @@ fn bind1() {
     #[cfg(not(js_sys_unstable_apis))]
     let prepended_list = a_list.bind1(&JsValue::NULL, &JsValue::from(2));
     #[cfg(js_sys_unstable_apis)]
-    let prepended_list = a_list.bindn(&JsValue::NULL.into(), (&Number::from(2).upcast(),));
+    let prepended_list = a_list.bindn(&JsValue::NULL.into(), (Number::from(2).upcast(),));
 
     #[cfg(not(js_sys_unstable_apis))]
     assert_eq!(
-        Array::from(&call_function(prepended_list.upcast_ref()))
+        Array::from(&call_function(prepended_list.upcast()))
             .pop_checked()
             .unwrap(),
         2
@@ -174,7 +174,7 @@ fn bind1() {
 
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(
-        Array::from_iterable(&call_function::<Array<Number>>(&prepended_list.upcast()))
+        Array::from_iterable(&call_function::<Array<Number>>(prepended_list.upcast()))
             .unwrap()
             .pop_checked()
             .unwrap(),
@@ -188,14 +188,11 @@ fn bind1() {
     let add_42 = adder.bindn(&JsValue::NULL, (&Number::from(42),));
 
     #[cfg(not(js_sys_unstable_apis))]
-    assert_eq!(call_function_arg(add_42.upcast_ref(), JsValue::from(1)), 43);
+    assert_eq!(call_function_arg(add_42.upcast(), JsValue::from(1)), 43);
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(call_function_arg::<Number, _>(&add_42, Number::from(1)), 43);
     #[cfg(not(js_sys_unstable_apis))]
-    assert_eq!(
-        call_function_arg(add_42.upcast_ref(), JsValue::from(378)),
-        420
-    );
+    assert_eq!(call_function_arg(add_42.upcast(), JsValue::from(378)), 420);
     #[cfg(js_sys_unstable_apis)]
     assert_eq!(call_function_arg(&add_42, Number::from(378)), 420);
 }
@@ -207,7 +204,7 @@ fn bind2() {
     let prepended_list = a_list.bind2(&JsValue::NULL, &JsValue::from(2), &JsValue::from(3));
 
     #[cfg(not(js_sys_unstable_apis))]
-    let arr = Array::from(&call_function(prepended_list.upcast_ref()));
+    let arr = Array::from(&call_function(prepended_list.upcast()));
     #[cfg(js_sys_unstable_apis)]
     let arr = Array::from_iterable(&call_function(&prepended_list)).unwrap();
 
@@ -217,7 +214,7 @@ fn bind2() {
     let adder = add_arguments();
     let always_69 = adder.bind2(&JsValue::NULL, &JsValue::from(66), &JsValue::from(3));
 
-    assert_eq!(call_function(always_69.upcast_ref()), 69);
+    assert_eq!(call_function(always_69.upcast()), 69);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -226,7 +223,7 @@ fn bind2() {
     let a_list = list();
     let prepended_list = a_list.bindn(
         &JsValue::NULL,
-        (&Number::from(2).upcast(), &Number::from(3).upcast()),
+        (Number::from(2).upcast(), Number::from(3).upcast()),
     );
 
     #[cfg(not(js_sys_unstable_apis))]
@@ -257,7 +254,7 @@ fn bind3() {
     );
 
     #[cfg(not(js_sys_unstable_apis))]
-    let arr = Array::from(&call_function(prepended_list.upcast_ref()));
+    let arr = Array::from(&call_function(prepended_list.upcast()));
     #[cfg(js_sys_unstable_apis)]
     let arr = Array::from_iterable(&call_function(&prepended_list)).unwrap();
 
@@ -268,7 +265,7 @@ fn bind3() {
     let adder = add_arguments();
     let always_69 = adder.bind2(&JsValue::NULL, &JsValue::from(66), &JsValue::from(3));
 
-    assert_eq!(call_function(always_69.upcast_ref()), 69);
+    assert_eq!(call_function(always_69.upcast()), 69);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -278,9 +275,9 @@ fn bind3() {
     let prepended_list = a_list.bind(
         &JsValue::NULL,
         (
-            &Number::from(2).upcast(),
-            &Number::from(3).upcast(),
-            &Number::from(4).upcast(),
+            Number::from(2).upcast(),
+            Number::from(3).upcast(),
+            Number::from(4).upcast(),
         ),
     );
 
@@ -337,7 +334,7 @@ fn bind4() {
         &JsValue::from(3),
         &JsValue::from(4),
     );
-    assert_eq!(call_function(add_fixed.upcast_ref()), 10);
+    assert_eq!(call_function(add_fixed.upcast()), 10);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -347,10 +344,10 @@ fn bind4() {
     let add_fixed = adder.bind(
         &JsValue::NULL,
         (
-            &Number::from(1).upcast(),
-            &Number::from(2).upcast(),
-            &Number::from(3).upcast(),
-            &Number::from(4).upcast(),
+            Number::from(1).upcast(),
+            Number::from(2).upcast(),
+            Number::from(3).upcast(),
+            Number::from(4).upcast(),
         ),
     );
     assert_eq!(call_function::<Number>(&add_fixed.upcast()), 10);
@@ -368,7 +365,7 @@ fn bind5() {
         &JsValue::from(4),
         &JsValue::from(5),
     );
-    assert_eq!(call_function(add_fixed.upcast_ref()), 15);
+    assert_eq!(call_function(add_fixed.upcast()), 15);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -378,11 +375,11 @@ fn bind5() {
     let add_fixed = adder.bind(
         &JsValue::NULL,
         (
-            &Number::from(1).upcast(),
-            &Number::from(2).upcast(),
-            &Number::from(3).upcast(),
-            &Number::from(4).upcast(),
-            &Number::from(5).upcast(),
+            Number::from(1).upcast(),
+            Number::from(2).upcast(),
+            Number::from(3).upcast(),
+            Number::from(4).upcast(),
+            Number::from(5).upcast(),
         ),
     );
     assert_eq!(call_function::<Number>(&add_fixed.upcast()), 15);
@@ -401,7 +398,7 @@ fn bind6() {
         &JsValue::from(5),
         &JsValue::from(6),
     );
-    assert_eq!(call_function(add_fixed.upcast_ref()), 21);
+    assert_eq!(call_function(add_fixed.upcast()), 21);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -411,12 +408,12 @@ fn bind6() {
     let add_fixed = adder.bind(
         &JsValue::NULL,
         (
-            Number::from(1).upcast_ref(),
-            Number::from(2).upcast_ref(),
-            Number::from(3).upcast_ref(),
-            Number::from(4).upcast_ref(),
-            Number::from(5).upcast_ref(),
-            Number::from(6).upcast_ref(),
+            Number::from(1).upcast(),
+            Number::from(2).upcast(),
+            Number::from(3).upcast(),
+            Number::from(4).upcast(),
+            Number::from(5).upcast(),
+            Number::from(6).upcast(),
         ),
     );
     assert_eq!(call_function::<Number>(&add_fixed.upcast()), 21);
@@ -436,7 +433,7 @@ fn bind7() {
         &JsValue::from(6),
         &JsValue::from(7),
     );
-    assert_eq!(call_function(add_fixed.upcast_ref()), 28);
+    assert_eq!(call_function(add_fixed.upcast()), 28);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -446,13 +443,13 @@ fn bind7() {
     let add_fixed = adder.bind(
         &JsValue::NULL,
         (
-            Number::from(1).upcast_ref(),
-            Number::from(2).upcast_ref(),
-            Number::from(3).upcast_ref(),
-            Number::from(4).upcast_ref(),
-            Number::from(5).upcast_ref(),
-            Number::from(6).upcast_ref(),
-            Number::from(7).upcast_ref(),
+            Number::from(1).upcast(),
+            Number::from(2).upcast(),
+            Number::from(3).upcast(),
+            Number::from(4).upcast(),
+            Number::from(5).upcast(),
+            Number::from(6).upcast(),
+            Number::from(7).upcast(),
         ),
     );
     assert_eq!(call_function::<Number>(&add_fixed.upcast()), 28);
@@ -473,7 +470,7 @@ fn bind8() {
         &JsValue::from(7),
         &JsValue::from(8),
     );
-    assert_eq!(call_function(add_fixed.upcast_ref()), 36);
+    assert_eq!(call_function(add_fixed.upcast()), 36);
 }
 
 #[cfg(js_sys_unstable_apis)]
@@ -483,14 +480,14 @@ fn bind8() {
     let add_fixed = adder.bind(
         &JsValue::NULL,
         (
-            Number::from(1).upcast_ref(),
-            Number::from(2).upcast_ref(),
-            Number::from(3).upcast_ref(),
-            Number::from(4).upcast_ref(),
-            Number::from(5).upcast_ref(),
-            Number::from(6).upcast_ref(),
-            Number::from(7).upcast_ref(),
-            Number::from(8).upcast_ref(),
+            Number::from(1).upcast(),
+            Number::from(2).upcast(),
+            Number::from(3).upcast(),
+            Number::from(4).upcast(),
+            Number::from(5).upcast(),
+            Number::from(6).upcast(),
+            Number::from(7).upcast(),
+            Number::from(8).upcast(),
         ),
     );
     assert_eq!(call_function::<Number>(&add_fixed), 36);
@@ -520,10 +517,10 @@ fn call4() {
         .call(
             &test_context(),
             (
-                Number::from(1).upcast_ref(),
-                Number::from(2).upcast_ref(),
-                Number::from(3).upcast_ref(),
-                Number::from(4).upcast_ref(),
+                Number::from(1).upcast(),
+                Number::from(2).upcast(),
+                Number::from(3).upcast(),
+                Number::from(4).upcast(),
             ),
         )
         .unwrap();
@@ -555,11 +552,11 @@ fn call5() {
         .call(
             &test_context(),
             (
-                &Number::from(1).upcast(),
-                &Number::from(2).upcast(),
-                &Number::from(3).upcast(),
-                &Number::from(4).upcast(),
-                &Number::from(5).upcast(),
+                Number::from(1).upcast(),
+                Number::from(2).upcast(),
+                Number::from(3).upcast(),
+                Number::from(4).upcast(),
+                Number::from(5).upcast(),
             ),
         )
         .unwrap();
@@ -592,12 +589,12 @@ fn call6() {
         .call(
             &test_context(),
             (
-                Number::from(1).upcast_ref(),
-                Number::from(2).upcast_ref(),
-                Number::from(3).upcast_ref(),
-                Number::from(4).upcast_ref(),
-                Number::from(5).upcast_ref(),
-                Number::from(6).upcast_ref(),
+                Number::from(1).upcast(),
+                Number::from(2).upcast(),
+                Number::from(3).upcast(),
+                Number::from(4).upcast(),
+                Number::from(5).upcast(),
+                Number::from(6).upcast(),
             ),
         )
         .unwrap();
@@ -631,13 +628,13 @@ fn call7() {
         .call(
             &test_context(),
             (
-                Number::from(1).upcast_ref(),
-                Number::from(2).upcast_ref(),
-                Number::from(3).upcast_ref(),
-                Number::from(4).upcast_ref(),
-                Number::from(5).upcast_ref(),
-                Number::from(6).upcast_ref(),
-                Number::from(7).upcast_ref(),
+                Number::from(1).upcast(),
+                Number::from(2).upcast(),
+                Number::from(3).upcast(),
+                Number::from(4).upcast(),
+                Number::from(5).upcast(),
+                Number::from(6).upcast(),
+                Number::from(7).upcast(),
             ),
         )
         .unwrap();
@@ -690,14 +687,14 @@ fn call8() {
 #[wasm_bindgen_test]
 fn generic_function_new() {
     let f: Function<fn() -> Number> = Function::new_no_args_typed("return 42");
-    assert_eq!(call_function_none(f.upcast_ref()), 42);
+    assert_eq!(call_function_none(f.upcast()), 42);
 }
 
 #[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn generic_function_new() {
     let f: Function<fn() -> Number> = Function::new_no_args_typed("return 42");
-    assert_eq!(call_function_none(f.upcast_ref()).value_of(), 42.0);
+    assert_eq!(call_function_none(f.upcast()).value_of(), 42.0);
 }
 
 #[wasm_bindgen_test]
@@ -723,23 +720,23 @@ fn closure_to_function_covariance() {
     let _ret1 = foo.call(&JsValue::UNDEFINED, (&Number::from(5),)).unwrap();
 
     let closure: Closure<dyn Fn(Number) -> ()> = Closure::new(|_: Number| -> () {});
-    let foo: Function<fn(Number) -> Undefined> = Function::from_immutable_closure(closure);
+    let foo: Function<fn(Number) -> Undefined> = Function::from_closure(closure);
     let _ret1 = foo.call(&JsValue::UNDEFINED, (&Number::from(5),)).unwrap();
 
-    call_function_arg_num(foo.upcast_ref(), Number::from(42));
+    call_function_arg_num(foo.upcast(), Number::from(42));
 
     let closure_i32: Closure<dyn FnMut(Number) -> i32> =
         Closure::new(|foo: Number| -> i32 { foo.as_f64().unwrap() as i32 + 5 });
     let func_i32: Function<fn(Number) -> Number> = Function::from_closure(closure_i32);
     let bound = func_i32.bind1(&JsValue::UNDEFINED, &Number::from(5));
 
-    let result_f32 = call_function_none(bound.upcast_ref());
+    let result_f32 = call_function_none(bound.upcast());
     assert_eq!(result_f32.value_of(), 10.0);
 
     let closure_f32: Closure<dyn FnMut() -> f32> = Closure::new(|| -> f32 { 3.14 });
-    let func_f32: Function<fn() -> Number> = Function::from_closure(closure_f32);
+    let func_f32: &Function<fn() -> Number> = Function::closure_ref(&closure_f32);
 
-    let result_f32 = call_function_none(func_f32.upcast_ref());
+    let result_f32 = call_function_none(func_f32.upcast());
     assert_eq!(result_f32.value_of() as f32, 3.14);
 }
 
@@ -754,21 +751,21 @@ fn closure_to_function_covariance() {
         .unwrap();
 
     let closure: Closure<dyn Fn(f64) -> ()> = Closure::new(|_: f64| -> () {});
-    let foo: Function<fn(Number) -> Undefined> = Function::from_immutable_closure(closure);
+    let foo: Function<fn(Number) -> Undefined> = Function::from_closure(closure);
     let _ret1 = foo.call(&JsValue::UNDEFINED, (&Number::from(5),)).unwrap();
 
-    call_function_arg_num(foo.upcast_ref(), Number::from(42));
+    call_function_arg_num(foo.upcast(), Number::from(42));
 
     let closure_i32: Closure<dyn FnMut(f64) -> i32> =
         Closure::new(|foo| -> i32 { (foo as i32) + 5 });
     let func_i32: Function<fn(Number) -> Number> = Function::from_closure(closure_i32);
     let bound = func_i32.bind(&JsValue::UNDEFINED, (&Number::from(5),));
 
-    let result_f32 = call_function_none(bound.upcast_ref());
+    let result_f32 = call_function_none(bound.upcast());
     assert_eq!(result_f32.value_of(), 10.0);
 
     let closure_f32: Closure<dyn FnMut() -> f32> = Closure::new(|| -> f32 { 3.14 });
-    let func_f32: &Function<fn() -> Number> = Function::from_closure_ref(&closure_f32);
+    let func_f32: &Function<fn() -> Number> = Function::closure_ref(&closure_f32);
 
     let result_f32 = call_function_none(func_f32.upcast());
     assert_eq!(result_f32.value_of() as f32, 3.14);
@@ -779,7 +776,7 @@ fn function_returning_array_of_functions() {
     let outer: Function<fn() -> Array<Function<fn() -> Number>>> =
         Function::new_no_args_typed("return [function() { return 42; }]");
 
-    let outer_cast: Function<fn() -> Array<Function<fn() -> JsValue>>> = outer.upcast();
+    let outer_cast: Function<fn() -> Array<Function<fn() -> JsValue>>> = outer.upcast_into();
 
     let arr = outer_cast.call(&JsValue::NULL, ()).unwrap();
     assert_eq!(arr.length(), 1);
@@ -797,4 +794,48 @@ fn function_accepting_array_of_functions() {
 
     let result2 = outer.call(&Undefined::UNDEFINED, (&arr,)).unwrap();
     assert_eq!(result2.value_of(), 2.0);
+}
+
+#[wasm_bindgen(module = "tests/wasm/Function.js")]
+extern "C" {
+    /// Simulates a for_each method like DOMTokenList.forEach
+    /// Calls the callback with (string, index) for each item
+    fn invoke_for_each_callback(
+        callback: &Function<fn(JsString, Number) -> Undefined>,
+        items: &Array<JsString>,
+    );
+}
+
+/// Test for_each pattern: passing a Rust closure through Function::closure_ref
+/// to a function that expects `&Function<fn(JsString, Number) -> Undefined>`
+/// This simulates the signature:
+/// ```ignore
+/// pub fn for_each(
+///     this: &DomTokenList,
+///     callback: &::js_sys::Function<fn(::js_sys::JsString, ::js_sys::Number) -> ::js_sys::Undefined>,
+/// ) -> Result<(), JsValue>;
+/// ```
+#[wasm_bindgen_test]
+fn for_each_with_closure_conversion() {
+    let items: Array<JsString> = Array::new_typed();
+    items.push(&JsString::from("apple"));
+    items.push(&JsString::from("banana"));
+    items.push(&JsString::from("cherry"));
+
+    let mut results = Vec::new();
+    // Rust closure, borrowing results data
+    let mut func = |value: JsString, index: Number| {
+        results.push((value.as_string().unwrap(), index.value_of() as u32));
+    };
+    // Scoped closure, borrowing the Rust closure
+    {
+        let scoped_closure = ScopedClosure::borrow_mut(&mut func);
+        invoke_for_each_callback(Function::closure_ref(&scoped_closure), &items);
+    }
+
+    // Verify the closure was called correctly for each item
+    assert_eq!(results.len(), 3);
+    assert_eq!(results[0], ("apple".to_string(), 0));
+    assert_eq!(results[1], ("banana".to_string(), 1));
+    assert_eq!(results[2], ("cherry".to_string(), 2));
 }

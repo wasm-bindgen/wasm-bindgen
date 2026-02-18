@@ -113,13 +113,14 @@ catch panics and convert them to JavaScript `PanicError` exceptions. The panic-c
 constructors are:
 
 - `Closure::own`, `Closure::once`, `Closure::once_into_js`
-- `Closure::borrow`, `Closure::borrow_mut`
+- `Closure::borrow` (Fn), `Closure::borrow_mut` (FnMut)
+- `Closure::borrow_assert_unwind_safe`, `Closure::borrow_mut_assert_unwind_safe`
 - `Closure::wrap_assert_unwind_safe`
-- `ImmediateClosure::new`, `ImmediateClosure::new_immutable`
-- `ImmediateClosure::wrap_assert_unwind_safe`, `ImmediateClosure::wrap_immutable_assert_unwind_safe`
+- `ImmediateClosure::new` (Fn), `ImmediateClosure::new_mut` (FnMut)
+- `ImmediateClosure::wrap_assert_unwind_safe` (Fn), `ImmediateClosure::wrap_mut_assert_unwind_safe` (FnMut)
 
 The `*_aborting` variants (`own_aborting`, `once_wrap`, `borrow_aborting`, `borrow_mut_aborting`,
-`wrap_aborting`, `wrap_immutable_aborting`, etc.) do NOT catch panics and will abort if the
+`wrap_aborting`, `wrap_mut_aborting`, etc.) do NOT catch panics and will abort if the
 closure panics. These variants also don't require the `MaybeUnwindSafe` bound.
 
 Note: `Closure::new` is an alias for `own_aborting` and does NOT catch panics.
@@ -160,7 +161,7 @@ extern "C" {
     fn forEach(cb: &ImmediateClosure<dyn FnMut(u32)>);
 }
 
-forEach(&ImmediateClosure::new(&mut |x| {
+forEach(&ImmediateClosure::new_mut(&mut |x| {
     if x == 0 {
         panic!("zero not allowed!");
     }
@@ -168,10 +169,10 @@ forEach(&ImmediateClosure::new(&mut |x| {
 ```
 
 For closures that should not catch panics (and abort the program instead), use
-the `*_aborting` variants: `Closure::new_aborting`, `Closure::wrap_aborting`,
-`Closure::once_aborting`, `Closure::once_into_js_aborting`,
+the `*_aborting` variants: `Closure::new`, `Closure::wrap`,
+`Closure::once_wrap`, `Closure::once_into_js_wrap`,
 `ScopedClosure::borrow_aborting`, `ScopedClosure::borrow_mut_aborting`,
-`ImmediateClosure::new_aborting`, and `ImmediateClosure::new_immutable_aborting`.
+`ImmediateClosure::wrap_aborting`, and `ImmediateClosure::wrap_mut_aborting`.
 These do not require `UnwindSafe`.
 
 > **Note**: The deprecated `&dyn Fn` and `&mut dyn FnMut` patterns are **not**

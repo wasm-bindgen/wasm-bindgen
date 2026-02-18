@@ -8,7 +8,8 @@ use weedle::types::*;
 
 use crate::first_pass::FirstPassRecord;
 use crate::util::{
-    array, camel_case_ident, generic_ty, option_ty, shared_ref, snake_case_ident, TypePosition,
+    array, camel_case_ident, generic_ty, js_option_ty, option_ty, shared_ref, slice_ty,
+    snake_case_ident, Direction, TypePosition,
 };
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
@@ -676,6 +677,24 @@ impl<'a> WbgType<'a> {
         }
     }
 
+    /// Returns true if this type is a primitive that can be used directly in a Rust slice.
+    /// These types have efficient `IntoWasmAbi` implementations for `&[T]`.
+    pub(crate) fn is_slice_primitive(&self) -> bool {
+        matches!(
+            self,
+            WbgType::Byte
+                | WbgType::Octet
+                | WbgType::Short
+                | WbgType::UnsignedShort
+                | WbgType::Long
+                | WbgType::UnsignedLong
+                | WbgType::Float
+                | WbgType::UnrestrictedFloat
+                | WbgType::Double
+                | WbgType::UnrestrictedDouble
+        )
+    }
+
     /// Converts to syn type if possible.
     pub(crate) fn to_syn_type(
         &self,
@@ -683,22 +702,22 @@ impl<'a> WbgType<'a> {
         legacy: bool,
         no_generics: bool,
     ) -> Result<Option<syn::Type>, TypeError> {
-        // Callback position is ONLY for non-compat (generics enabled) mode
+        // Inner position with no_generics doesn't make sense - inner types need generics
         assert!(
-            !(pos == TypePosition::Callback && no_generics),
-            "TypePosition::Callback must never be used when no_generics=true"
+            !(pos.inner && no_generics),
+            "Inner TypePosition must never be used when no_generics=true"
         );
 
-        // Handle callback types: primitives → JS types (Number, Boolean, JsString, etc.)
-        // Conservative approach: always use generalized JS types for callbacks
-        if pos == TypePosition::Callback {
+        // Handle inner types (inside generics or callbacks): primitives → JS types
+        // These must use JS-compatible types since they're erased at the ABI level
+        if pos.inner {
             let js_sys = |name: &str| {
                 let path = vec![rust_ident("js_sys"), rust_ident(name)];
                 Some(leading_colon_path_ty(path))
             };
 
             return match self {
-                // All numeric types become js_sys::Number for callbacks
+                // All numeric types become js_sys::Number for inner positions
                 WbgType::Byte
                 | WbgType::Octet
                 | WbgType::Short
@@ -720,15 +739,50 @@ impl<'a> WbgType<'a> {
                     Ok(js_sys("JsString"))
                 }
 
-                // For everything else, delegate to normal conversion with Return position
-                _ => self.to_syn_type(TypePosition::Return, legacy, no_generics),
+                // JsOption must use JsOption<T> for inner positions (not Rust Option<T>)
+                WbgType::JsOption(wbg_type) => {
+                    let inner = wbg_type.to_syn_type(pos, legacy, no_generics)?;
+                    match inner {
+                        Some(inner) => {
+                            // JsOption<JsValue> isn't well-supported, just use JsValue
+                            if let syn::Type::Path(path) = &inner {
+                                if path.qself.is_none()
+                                    && path
+                                        .path
+                                        .segments
+                                        .last()
+                                        .map(|p| p.ident == "JsValue")
+                                        .unwrap_or(false)
+                                {
+                                    return Ok(Some(inner.clone()));
+                                }
+                            }
+                            Ok(Some(js_option_ty(inner)))
+                        }
+                        None => Ok(None),
+                    }
+                }
+
+                // For everything else, delegate to normal conversion but keep inner=true
+                _ => self.to_syn_type_inner(pos, legacy, no_generics),
             };
         }
 
+        self.to_syn_type_inner(pos, legacy, no_generics)
+    }
+
+    /// Inner implementation of to_syn_type (handles non-inner-specific logic)
+    fn to_syn_type_inner(
+        &self,
+        pos: TypePosition,
+        legacy: bool,
+        no_generics: bool,
+    ) -> Result<Option<syn::Type>, TypeError> {
         let externref = |ty| {
-            Some(match pos {
-                TypePosition::Argument => shared_ref(ty, false),
-                TypePosition::Return | TypePosition::Callback => ty,
+            Some(if pos.is_argument() && !pos.inner {
+                shared_ref(ty, false)
+            } else {
+                ty
             })
         };
         let js_sys = |name: &str| {
@@ -767,9 +821,10 @@ impl<'a> WbgType<'a> {
             WbgType::UnrestrictedFloat => Ok(Some(ident_ty(raw_ident("f32")))),
             WbgType::Double => Ok(Some(ident_ty(raw_ident("f64")))),
             WbgType::UnrestrictedDouble => Ok(Some(ident_ty(raw_ident("f64")))),
-            WbgType::DomString | WbgType::ByteString | WbgType::UsvString => match pos {
-                TypePosition::Argument => Ok(Some(shared_ref(ident_ty(raw_ident("str")), false))),
-                TypePosition::Return => {
+            WbgType::DomString | WbgType::ByteString | WbgType::UsvString => {
+                if pos.is_argument() {
+                    Ok(Some(shared_ref(ident_ty(raw_ident("str")), false)))
+                } else {
                     // Return position: use String
                     let path = vec![
                         rust_ident("alloc"),
@@ -778,8 +833,7 @@ impl<'a> WbgType<'a> {
                     ];
                     Ok(Some(leading_colon_path_ty(path)))
                 }
-                TypePosition::Callback => Ok(js_sys("JsString")),
-            },
+            }
             WbgType::Object => Ok(js_sys("Object")),
             WbgType::Symbol => Ok(js_sys("Symbol")),
             WbgType::Error => Ok(js_sys("Error")),
@@ -788,76 +842,83 @@ impl<'a> WbgType<'a> {
 
             WbgType::ArrayBuffer => Ok(js_sys("ArrayBuffer")),
             WbgType::DataView { .. } => Ok(js_sys("DataView")),
-            WbgType::Int8Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("i8", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            WbgType::Int8Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("i8", pos, *immutable)))
+                } else {
                     Ok(js_sys("Int8Array"))
                 }
-            },
-            WbgType::Uint8Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("u8", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Uint8Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("u8", pos, *immutable)))
+                } else {
                     Ok(js_sys("Uint8Array"))
                 }
-            },
-            WbgType::Uint8ClampedArray { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => {
+            }
+            WbgType::Uint8ClampedArray { immutable, .. } => {
+                if legacy || pos.is_return() {
                     Ok(Some(clamped(array("u8", pos, *immutable))))
-                }
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+                } else {
                     Ok(js_sys("Uint8ClampedArray"))
                 }
-            },
-            WbgType::Int16Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("i16", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Int16Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("i16", pos, *immutable)))
+                } else {
                     Ok(js_sys("Int16Array"))
                 }
-            },
-            WbgType::Uint16Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("u16", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Uint16Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("u16", pos, *immutable)))
+                } else {
                     Ok(js_sys("Uint16Array"))
                 }
-            },
-            WbgType::Int32Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("i32", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Int32Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("i32", pos, *immutable)))
+                } else {
                     Ok(js_sys("Int32Array"))
                 }
-            },
-            WbgType::Uint32Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("u32", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Uint32Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("u32", pos, *immutable)))
+                } else {
                     Ok(js_sys("Uint32Array"))
                 }
-            },
-            WbgType::Float32Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("f32", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Float32Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("f32", pos, *immutable)))
+                } else {
                     Ok(js_sys("Float32Array"))
                 }
-            },
-            WbgType::Float64Array { immutable, .. } => match (legacy, pos) {
-                (true, _) | (_, TypePosition::Return) => Ok(Some(array("f64", pos, *immutable))),
-                (false, TypePosition::Argument) | (false, TypePosition::Callback) => {
+            }
+            WbgType::Float64Array { immutable, .. } => {
+                if legacy || pos.is_return() {
+                    Ok(Some(array("f64", pos, *immutable)))
+                } else {
                     Ok(js_sys("Float64Array"))
                 }
-            },
+            }
 
             WbgType::ArrayBufferView { .. } | WbgType::BufferSource { .. } => Ok(js_sys("Object")),
 
             WbgType::JsOption(wbg_type) => {
+                // Top-level position: use Rust Option<T>
+                // (inner positions are handled in to_syn_type before calling to_syn_type_inner)
                 let inner = wbg_type.to_syn_type(pos, legacy, no_generics)?;
 
                 match inner {
                     Some(inner) => {
-                        // TODO: this is a bit of a hack, but `Option<JsValue>` isn't
-                        // supported right now. As a result if we see `JsValue` for our
-                        // inner type, leave that as the same when we create a nullable
-                        // version of that. That way `any?` just becomes `JsValue` and
-                        // it's up to users to dispatch and/or create instances
-                        // appropriately.
+                        // `Option<JsValue>` isn't well-supported.
+                        // If the inner type is JsValue, just return JsValue directly.
+                        // That way `any?` just becomes `JsValue` and it's up to users
+                        // to dispatch and/or create instances appropriately.
                         if let syn::Type::Path(path) = &inner {
                             if path.qself.is_none()
                                 && path
@@ -876,29 +937,25 @@ impl<'a> WbgType<'a> {
                     None => Ok(None),
                 }
             }
-            // webidl sequences must always be returned as javascript `Array`s. They may accept
-            // anything implementing the @@iterable interface.
-            // The same implementation is fine for `FrozenArray`
             WbgType::FrozenArray(_wbg_type)
-            | WbgType::Sequence(_wbg_type)
-            | WbgType::ObservableArray(_wbg_type) => match pos {
-                TypePosition::Argument => Ok(js_value),
-                TypePosition::Return | TypePosition::Callback => {
-                    if no_generics {
-                        // Backwards compat mode: no generics
-                        Ok(js_sys("Array"))
-                    } else {
-                        // New mode: with generics
-                        let path = vec![rust_ident("js_sys"), rust_ident("Array")];
-                        let base = leading_colon_path_ty(path);
-                        let inner = _wbg_type
-                            .to_syn_type(TypePosition::Callback, legacy, no_generics)?
-                            .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
-                        let generic_type = generic_ty(base, inner);
-                        Ok(externref(generic_type))
-                    }
+            | WbgType::ObservableArray(_wbg_type)
+            | WbgType::Sequence(_wbg_type) => {
+                if pos.is_argument() && !pos.inner {
+                    Ok(js_value)
+                } else if no_generics {
+                    // Backwards compat mode: no generics
+                    Ok(js_sys("Array"))
+                } else {
+                    // New mode: with generics
+                    let path = vec![rust_ident("js_sys"), rust_ident("Array")];
+                    let base = leading_colon_path_ty(path);
+                    let inner = _wbg_type
+                        .to_syn_type(pos.to_inner(), legacy, no_generics)?
+                        .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
+                    let generic_type = generic_ty(base, inner);
+                    Ok(externref(generic_type))
                 }
-            },
+            }
             WbgType::Promise(_wbg_type) => {
                 if no_generics {
                     // Backwards compat mode: no generics
@@ -908,7 +965,7 @@ impl<'a> WbgType<'a> {
                     let path = vec![rust_ident("js_sys"), rust_ident("Promise")];
                     let base = leading_colon_path_ty(path);
                     let inner = _wbg_type
-                        .to_syn_type(TypePosition::Callback, legacy, no_generics)?
+                        .to_syn_type(pos.to_inner(), legacy, no_generics)?
                         .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                     let generic_type = generic_ty(base, inner);
                     Ok(externref(generic_type))
@@ -924,7 +981,7 @@ impl<'a> WbgType<'a> {
                     let path = vec![rust_ident("js_sys"), rust_ident("Object")];
                     let base = leading_colon_path_ty(path);
                     let inner = _wbg_type_to
-                        .to_syn_type(TypePosition::Callback, legacy, no_generics)?
+                        .to_syn_type(pos.to_inner(), legacy, no_generics)?
                         .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                     let generic_type = generic_ty(base, inner);
                     Ok(externref(generic_type))
@@ -939,7 +996,7 @@ impl<'a> WbgType<'a> {
                     let path = vec![rust_ident("js_sys"), rust_ident("Iterator")];
                     let base = leading_colon_path_ty(path);
                     let inner = _wbg_type
-                        .to_syn_type(TypePosition::Callback, legacy, no_generics)?
+                        .to_syn_type(pos.to_inner(), legacy, no_generics)?
                         .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                     let generic_type = generic_ty(base, inner);
                     Ok(externref(generic_type))
@@ -954,7 +1011,7 @@ impl<'a> WbgType<'a> {
                     let path = vec![rust_ident("js_sys"), rust_ident("AsyncIterator")];
                     let base = leading_colon_path_ty(path);
                     let inner = _wbg_type
-                        .to_syn_type(TypePosition::Callback, legacy, no_generics)?
+                        .to_syn_type(pos.to_inner(), legacy, no_generics)?
                         .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                     let generic_type = generic_ty(base, inner);
                     Ok(externref(generic_type))
@@ -969,13 +1026,21 @@ impl<'a> WbgType<'a> {
                     Ok(js_sys("Function"))
                 } else {
                     // New mode: Function<fn(A1, A2, ...) -> R>
-                    // Use Callback position for both arguments and returns (conservative generalization)
+                    // Callback params and returns are always inner (they're erased to Function at ABI level)
+                    let inner_arg = TypePosition {
+                        direction: Direction::Argument,
+                        inner: true,
+                    };
+                    let inner_ret = TypePosition {
+                        direction: Direction::Return,
+                        inner: true,
+                    };
 
                     // Convert up to 9 parameters
                     let mut param_types = Vec::new();
                     for param in params.iter().take(9) {
                         let ty = param
-                            .to_syn_type(TypePosition::Callback, legacy, false)?
+                            .to_syn_type(inner_arg, legacy, false)?
                             .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                         param_types.push(ty);
                     }
@@ -983,7 +1048,7 @@ impl<'a> WbgType<'a> {
                     // Return type defaults to Undefined for void functions
                     let ret_ty: syn::Type = match return_type {
                         Some(rt) => rt
-                            .to_syn_type(TypePosition::Callback, legacy, false)?
+                            .to_syn_type(inner_ret, legacy, false)?
                             .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue)),
                         None => parse_quote!(::js_sys::Undefined),
                     };
@@ -1008,12 +1073,12 @@ impl<'a> WbgType<'a> {
                 let base = leading_colon_path_ty(path);
                 // Handle conversion errors by falling back to JsValue
                 let inner_a = _wbg_type_a
-                    .to_syn_type(TypePosition::Callback, legacy, no_generics)
+                    .to_syn_type(pos.to_inner(), legacy, no_generics)
                     .ok()
                     .flatten()
                     .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                 let inner_b = _wbg_type_b
-                    .to_syn_type(TypePosition::Callback, legacy, no_generics)
+                    .to_syn_type(pos.to_inner(), legacy, no_generics)
                     .ok()
                     .flatten()
                     .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
@@ -1063,9 +1128,9 @@ impl<'a> WbgType<'a> {
 
             WbgType::Any => Ok(js_value),
             WbgType::Undefined => {
-                // Undefined is only used in callback return positions
+                // Undefined is only used in inner positions (callback returns, inside generics)
                 // For regular method returns, void/undefined means no return type (None)
-                if pos == TypePosition::Callback {
+                if pos.inner {
                     Ok(Some(parse_quote!(::js_sys::Undefined)))
                 } else {
                     Ok(None)
@@ -1402,9 +1467,10 @@ impl IdentifierType<'_> {
         no_generics: bool,
     ) -> Result<Option<syn::Type>, TypeError> {
         let externref = |ty| {
-            Some(match pos {
-                TypePosition::Argument => shared_ref(ty, false),
-                TypePosition::Return | TypePosition::Callback => ty,
+            Some(if pos.is_argument() && !pos.inner {
+                shared_ref(ty, false)
+            } else {
+                ty
             })
         };
         let js_sys = |name: &str| {

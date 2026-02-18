@@ -19,13 +19,13 @@
 * Added `ImmediateClosure<'a, T>` as a lightweight, unwind-safe replacement for
   `&dyn FnMut` in immediate/synchronous callbacks. Unlike `ScopedClosure`, it has
   no JS call on creation, no JS call on drop, and no GC overhead—the same ABI as
-  `&dyn FnMut` but with panic safety. Use `ImmediateClosure::new(&mut f)` for
-  `FnMut` or `ImmediateClosure::new_immutable(&f)` for `Fn`. Closure parameter
-  types are automatically inferred from context. Also implements
-  `From<&ImmediateClosure<T>> for ScopedClosure<T>` for API migration.
+  `&dyn FnMut` but with panic safety. Use `ImmediateClosure::new(&f)` for
+  immutable `Fn` closures (easier to satisfy unwind safety) or `ImmediateClosure::new_mut(&mut f)` for
+  mutable `FnMut` closures. Closure parameter types are automatically inferred from context.
+  Also implements `From<&ImmediateClosure<T>> for ScopedClosure<T>` for API migration.
   [#4950](https://github.com/wasm-bindgen/wasm-bindgen/issues/4950)
 
-* Added `ScopedClosure<'a, T>` as a unified closure type with lifetime parameter. `ScopedClosure::borrow(&f)` and `ScopedClosure::borrow_mut(&mut f)` create borrowed closures that can capture non-`'static` references, ideal for immediate/synchronous JS callbacks. `Closure<T>` and `StaticClosure<T>` are now type aliases for `ScopedClosure<'static, T>`, maintaining full backwards compatibility. Also added `IntoWasmAbi` implementation for `Closure<T>` enabling pass-by-value ownership transfer to JavaScript.
+* Added `ScopedClosure<'a, T>` as a unified closure type with lifetime parameter. `ScopedClosure::borrow(&f)` (for immutable `Fn`) and `ScopedClosure::borrow_mut(&mut f)` (for mutable `FnMut`) create borrowed closures that can capture non-`'static` references, ideal for immediate/synchronous JS callbacks. `Closure<T>` is now a type alias for `ScopedClosure<'static, T>`, maintaining backwards compatibility. Also added `IntoWasmAbi` implementation for `Closure<T>` enabling pass-by-value ownership transfer to JavaScript.
 
 * Add Node.js `worker_threads` support for atomics builds. When targeting Node.js with atomics enabled, wasm-bindgen now generates `initSync({ module, memory, thread_stack_size })` and `__wbg_get_imports(memory)` functions that allow worker threads to initialize with a shared WebAssembly.Memory and pre-compiled module. Auto-initialization occurs only on the main thread for backwards compatibility.
 

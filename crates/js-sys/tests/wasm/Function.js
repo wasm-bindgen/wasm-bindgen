@@ -30,3 +30,10 @@ exports.multiply_sum = function() {
         return this.multiplier * ((a || 0) + (b || 0) + (c || 0) + (d || 0) + (e || 0) + (f || 0) + (g || 0) + (h || 0));
     };
 };
+// Simulates a for_each method that calls a callback with (string, index) pairs
+// Similar to DOMTokenList.forEach or Array.forEach
+exports.invoke_for_each_callback = function(callback, items) {
+    items.forEach(function(item, index) {
+        callback(item, index);
+    });
+};

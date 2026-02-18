@@ -159,11 +159,12 @@ macro_rules! closures {
             }
         }
 
-        unsafe impl<$($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '_
+        unsafe impl<'__closure, $($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '__closure
         where
             Self: WasmDescribe,
         {
             const IS_MUT: bool = $is_mut;
+            type AsMut = dyn FnMut $FnArgs -> R + '__closure;
             fn to_wasm_slice(r: &Self) -> WasmSlice {
                 let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
                 WasmSlice { ptr, len }

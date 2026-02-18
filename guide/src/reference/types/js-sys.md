@@ -6,6 +6,8 @@ Wasm-bindgen supports generic typing using type erasure for imported JavaScript 
 
 For a conceptual overview and usage guide, see [Working with Generics](../working-with-generics.md).
 
+> When passing a typed value (e.g., `Array<Number>`) to a function expecting a wider type (e.g., `&Array<JsValue>`), use the `upcast()` method: `my_array.upcast()`. See [Upcasting Types](../working-with-generics.md#upcasting-types) for details.
+
 All generic types listed implement `JsGeneric` and default to `JsValue` when type parameters are unspecified.
 
 | Type | Description |
@@ -109,32 +111,29 @@ let result = f.call(&context, (&my_number, &my_string))?;  // Number, JsString u
 
 ### Converting from Closures
 
-Use `Function::from_closure()` and `Function::from_immutable_closure()` to convert `Closure` types to typed `Function`:
+Use `Function::from_closure()` to convert owned `Closure` types to typed `Function`, and `Function::closure_ref()` for borrowed closures:
 
 ```rust
 use js_sys::{Function, Number, JsString};
 use wasm_bindgen::prelude::*;
 
-// FnMut closure to Function
+// Owned closure to Function (transfers ownership to JS)
 let closure: Closure<dyn FnMut(Number) -> JsString> = Closure::new(|n: Number| {
     JsString::from(format!("Value: {}", n.value_of()))
 });
 let func: Function<fn(Number) -> JsString> = Function::from_closure(closure);
-
-// Fn closure to Function
-let closure: Closure<dyn Fn() -> Number> = Closure::new(|| Number::from(42));
-let func: Function<fn() -> Number> = Function::from_immutable_closure(closure);
 ```
 
-For borrowed closures, use the `_ref` variants:
+For borrowed closures, use `closure_ref`:
 
 ```rust
 let mut count = 0u32;
-let closure = Closure::borrow_mut(&mut || {
+let mut increment = || {
     count += 1;
     Number::from(count)
-});
-let func: &Function<fn() -> Number> = Function::from_closure_ref(&closure);
+};
+let closure = ScopedClosure::borrow_mut(&mut increment);
+let func: &Function<fn() -> Number> = Function::closure_ref(&closure);
 ```
 
 ### Primitive type coercion
@@ -144,11 +143,11 @@ Rust primitives automatically coerce to JS types in closure return positions:
 ```rust
 // u32 coerces to Number
 let closure: Closure<dyn Fn() -> u32> = Closure::new(|| 42);
-let func: Function<fn() -> Number> = Function::from_immutable_closure(closure);
+let func: Function<fn() -> Number> = Function::from_closure(closure);
 
 // String coerces to JsString
 let closure: Closure<dyn Fn() -> String> = Closure::new(|| "hello".to_string());
-let func: Function<fn() -> JsString> = Function::from_immutable_closure(closure);
+let func: Function<fn() -> JsString> = Function::from_closure(closure);
 ```
 
 This works for all numeric primitives (`u8`, `i32`, `f64`, etc.) and string types (`String`, `&str`, `char`).

@@ -69,25 +69,33 @@ fn generate_arguments(
     variadic_type: Option<&WbgType<'_>>,
     generics_compat: bool,
 ) -> Option<Vec<TokenStream>> {
-    let mut result = Vec::with_capacity(arguments.len());
+    let mut output = Vec::with_capacity(arguments.len());
     for (i, (name, wbg_ty)) in arguments.iter().enumerate() {
         if variadic && i + 1 == arguments.len() {
-            // In next_unstable mode (generics_compat=false), use typed Array<T>
+            // In next_unstable mode (generics_compat=false), use typed slice &[T]
             if !generics_compat {
                 if let Some(vt) = variadic_type {
-                    if let Ok(Some(elem_ty)) =
-                        vt.to_syn_type(crate::util::TypePosition::Argument, false, false)
-                    {
-                        result.push(quote!( #name: &::js_sys::Array<#elem_ty> ));
+                    // For slice elements:
+                    // - Primitives (i16, f32, etc.) use Rust types directly (efficient IntoWasmAbi)
+                    // - Non-primitives (Object, interfaces) use JS types without & prefix
+                    let elem_ty = if vt.is_slice_primitive() {
+                        // Use top-level argument conversion for primitives (gives i16, f32, etc.)
+                        vt.to_syn_type(crate::util::TypePosition::ARGUMENT, false, false)
+                    } else {
+                        // Use inner conversion for non-primitives (gives Object, etc. without &)
+                        vt.to_syn_type(crate::util::TypePosition::ARGUMENT.to_inner(), false, false)
+                    };
+                    if let Ok(Some(elem_ty)) = elem_ty {
+                        output.push(quote!( #name: &[#elem_ty] ));
                         continue;
                     }
                 }
             }
             // Fallback to untyped Array
-            result.push(quote!( #name: &::js_sys::Array ));
+            output.push(quote!( #name: &::js_sys::Array ));
         } else {
             let ty = match wbg_ty.to_syn_type(
-                crate::util::TypePosition::Argument,
+                crate::util::TypePosition::ARGUMENT,
                 false,
                 generics_compat,
             ) {
@@ -109,10 +117,10 @@ fn generate_arguments(
                     return None;
                 }
             };
-            result.push(quote!( #name: #ty ));
+            output.push(quote!( #name: #ty ));
         }
     }
-    Some(result)
+    Some(output)
 }
 
 fn generate_variadic(variadic: bool) -> Option<TokenStream> {
@@ -498,7 +506,7 @@ impl InterfaceMethod<'_> {
         use crate::util::TypePosition;
         let ret_ty = match ret_wbg_ty {
             Some(wbg_ty) => {
-                match wbg_ty.to_syn_type(TypePosition::Return, false, generics_compat) {
+                match wbg_ty.to_syn_type(TypePosition::RETURN, false, generics_compat) {
                     Ok(ty) => ty,
                     Err(e) => {
                         log::warn!("SKIP {name} on {parent_name}: ret type failed: {e:?}");
@@ -560,7 +568,7 @@ impl InterfaceMethod<'_> {
         // Add features from argument types
         for (_, wbg_ty) in arguments.iter() {
             if let Ok(Some(ty)) =
-                wbg_ty.to_syn_type(crate::util::TypePosition::Argument, false, generics_compat)
+                wbg_ty.to_syn_type(crate::util::TypePosition::ARGUMENT, false, generics_compat)
             {
                 add_features(&mut features, &ty);
             }
@@ -1186,7 +1194,7 @@ impl Function<'_> {
         use crate::util::TypePosition;
         let ret_ty = match ret_wbg_ty {
             Some(wbg_ty) => {
-                match wbg_ty.to_syn_type(TypePosition::Return, false, generics_compat) {
+                match wbg_ty.to_syn_type(TypePosition::RETURN, false, generics_compat) {
                     Ok(ty) => ty,
                     Err(_) => return None,
                 }
@@ -1210,7 +1218,7 @@ impl Function<'_> {
         // Add features from argument types
         for (_, wbg_ty) in arguments.iter() {
             if let Ok(Some(ty)) =
-                wbg_ty.to_syn_type(crate::util::TypePosition::Argument, false, generics_compat)
+                wbg_ty.to_syn_type(crate::util::TypePosition::ARGUMENT, false, generics_compat)
             {
                 add_features(&mut features, &ty);
             }

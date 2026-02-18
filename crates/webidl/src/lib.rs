@@ -538,14 +538,14 @@ impl<'src> FirstPassRecord<'src> {
         };
 
         // use argument position now as we're just binding setters
-        // Use compat mode for dictionary fields (they don't typically use generics)
+        let generics_compat = !self.options.next_unstable;
         let ty = wbg_type
-            .to_syn_type(TypePosition::Argument, false, true)
+            .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
             .ok()
             .flatten()?;
 
         let mut return_ty = wbg_type
-            .to_syn_type(TypePosition::Return, false, true)
+            .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .ok()
             .flatten()?;
 
@@ -648,9 +648,9 @@ impl<'src> FirstPassRecord<'src> {
         unstable: bool,
     ) {
         let wbg_type = member.definition.const_type.to_wbg_type(self);
-        // Constants don't need generics
+        let generics_compat = !self.options.next_unstable;
         let ty = wbg_type
-            .to_syn_type(TypePosition::Return, false, true)
+            .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .unwrap()
             .unwrap();
 
@@ -714,7 +714,7 @@ impl<'src> FirstPassRecord<'src> {
         let ty = definition
             .type_
             .to_wbg_type(self)
-            .to_syn_type(TypePosition::Return, false, self.options.next_unstable)
+            .to_syn_type(TypePosition::RETURN, false, self.options.next_unstable)
             .unwrap_or(None);
 
         let js_name = definition.identifier.0.to_string();
@@ -739,9 +739,9 @@ impl<'src> FirstPassRecord<'src> {
         unstable: bool,
     ) {
         let wbg_type = member.const_type.to_wbg_type(self);
-        // Constants don't need generics
+        let generics_compat = !self.options.next_unstable;
         let ty = wbg_type
-            .to_syn_type(TypePosition::Return, false, true)
+            .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .unwrap()
             .unwrap();
 
@@ -909,10 +909,11 @@ impl<'src> FirstPassRecord<'src> {
         let catch = throws(attrs);
         let deprecated: Option<Option<String>> = get_rust_deprecated(attrs);
 
+        let generics_compat = !self.options.next_unstable;
         let ty = type_
             .type_
             .to_wbg_type(self)
-            .to_syn_type(TypePosition::Return, false, true)
+            .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .unwrap_or(None);
 
         // Skip types which can't be converted
@@ -945,7 +946,7 @@ impl<'src> FirstPassRecord<'src> {
                 let ty = type_
                     .type_
                     .to_wbg_type(self)
-                    .to_syn_type(TypePosition::Argument, true, true)
+                    .to_syn_type(TypePosition::ARGUMENT, true, generics_compat)
                     .unwrap_or(None);
 
                 // Skip types which can't be converted
@@ -966,7 +967,7 @@ impl<'src> FirstPassRecord<'src> {
             }
 
             for (idl, ty) in idls.into_iter().filter_map(|idl| {
-                idl.to_syn_type(TypePosition::Argument, false, true)
+                idl.to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
                     .ok()
                     .flatten()
                     .map(|ty| (idl, ty))

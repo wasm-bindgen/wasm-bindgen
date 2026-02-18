@@ -1120,7 +1120,10 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
                 record.add_custom_method(self_name, "values", values_wbg, stability);
 
                 // forEach callback - single-value iterable: (value, index)
+                // Use interface-specific callback name to avoid collisions between iterables
                 use WbgType;
+
+                let callback_name: &'src str = format!("{self_name}IterableForEachCallback").leak();
 
                 let callback_data = CallbackData {
                     params: vec![
@@ -1129,17 +1132,19 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
                     ],
                     return_type: None, // undefined return
                 };
-                record
-                    .callbacks
-                    .insert("IterableForEachCallback", callback_data);
+                record.callbacks.insert(callback_name, callback_data);
+
+                let callback_type: &'src Type<'src> = Box::leak(Box::new(Type::Single(
+                    SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
+                        type_: Identifier(callback_name),
+                        q_mark: None,
+                    })),
+                )));
 
                 let foreach_callback_arg = Arg {
                     attributes: &None,
                     name: "callback",
-                    ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
-                        type_: Identifier("IterableForEachCallback"),
-                        q_mark: None,
-                    }))),
+                    ty: callback_type,
                     optional: false,
                     variadic: false,
                 };
@@ -1187,22 +1192,27 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
                 record.add_custom_method(self_name, "values", values_wbg, stability);
 
                 // forEach callback - double iterable: (value, key)
+                // Use interface-specific callback name to avoid collisions between iterables
+
+                let callback_name: &'src str = format!("{self_name}IterableForEachCallback").leak();
 
                 let callback_data = CallbackData {
                     params: vec![value_ty.to_wbg_type(record), key_ty.to_wbg_type(record)],
                     return_type: None, // undefined return
                 };
-                record
-                    .callbacks
-                    .insert("IterableForEachCallback", callback_data);
+                record.callbacks.insert(callback_name, callback_data);
+
+                let callback_type: &'src Type<'src> = Box::leak(Box::new(Type::Single(
+                    SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
+                        type_: Identifier(callback_name),
+                        q_mark: None,
+                    })),
+                )));
 
                 let foreach_callback_arg = Arg {
                     attributes: &None,
                     name: "callback",
-                    ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
-                        type_: Identifier("IterableForEachCallback"),
-                        q_mark: None,
-                    }))),
+                    ty: callback_type,
                     optional: false,
                     variadic: false,
                 };

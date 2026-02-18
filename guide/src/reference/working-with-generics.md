@@ -25,6 +25,8 @@ Wasm-bindgen generics use **type erasure** to provide rich typing information in
 
 Currently, all of `js-sys` now supports experimental type erased generics, with `web-sys` still pending.
 
+> When passing a typed value (e.g., `Array<Number>`) to a function expecting a wider type (e.g., `&Array<JsValue>`), use the [`upcast()`](#upcasting-types) method: `my_array.upcast()`. This is a zero-cost compile-time conversion.
+
 ## Example
 
 Consider importing a JS function that returns a Promise for an array of strings. This can be implemented using the typed `Promise<T>` and typed `Array<T>` in js-sys:
@@ -163,7 +165,7 @@ process_js_values(&numbers);
 
 ## Upcasting Types
 
-Generic JS types support type-safe upcasting through the `Upcast<Target>` trait, implemented using `FromUpcast<Source>` (just like `From` and `Into`). This enables widening from specific to general types via the `upcast()` and `upcast_ref()` methods.
+Generic JS types support type-safe upcasting through the `Upcast<Target>` trait, implemented using `FromUpcast<Source>` (just like `From` and `Into`). This enables widening from specific to general types via the `upcast()` and `upcast_into()` methods.
 
 `upcast()` can be thought of as providing the TypeScript-like type safety on top of the erasable generics type system - it will not allow converting from a wider type to a narrower type and in the process providing type safety mechanisms at compile time through the Rust compiler.
 
@@ -174,14 +176,14 @@ use js_sys::{Array, Number, Object};
 
 // Number → JsValue
 let num = Number::from(42);
-let js_value: JsValue = num.upcast();
+let js_value: JsValue = num.upcast_into();
 
 // Array<Number> → Array<JsValue>
 let num_array: Array<Number> = Array::new_typed();
-let js_array: Array<JsValue> = num_array.upcast();
+let js_array: Array<JsValue> = num_array.upcast_into();
 
 // Array<Number> → Object (inheritance)
-let obj: Object = num_array.upcast();
+let obj: Object = num_array.upcast_into();
 ```
 
 ### Automatic Upcast Generation
@@ -203,9 +205,11 @@ extern "C" {
 
 // Upcast implementations are automatically generated:
 let my_type = MyCustomType::new();
-let obj: Object = my_type.clone().upcast(); // ✓ Object upcast (from extends)
-let js_val: JsValue = my_type.upcast(); // ✓ JsValue upcast (always generated)
+let obj: &Object = my_type.upcast(); // ✓ Object upcast by ref (from extends)
+let js_val: JsValue = my_type.clone().upcast_into(); // ✓ JsValue upcast by value (always generated)
 ```
+
+Upcasts are always provided both for ref and value conversions.
 
 The following Upcast implementations are automatically generated:
 
