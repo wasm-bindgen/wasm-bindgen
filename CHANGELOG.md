@@ -85,12 +85,17 @@
 
 ### Fixed
 
-* Fixed incorrect `cfg(web_sys_unstable_apis)` gating on stable method signatures that
+* Fixed incorrect `#[cfg(web_sys_unstable_apis)]` gating on stable method signatures that
   share a WebIDL operation with unstable overloads. For example, `Clipboard.read()` (0 args)
   was incorrectly gated as unstable because the unstable `read(options)` overload existed.
   The WebIDL code generator now uses an authoritative expansion model where stable and unstable
   signature sets are built independently and compared: identical signatures merge (no gate),
   stable-only signatures get `not(unstable)`, and unstable-only signatures get `unstable`.
+  Also adds typed generics (`Promise<T>`, `Array<T>`, `Function<fn(...)>`, etc.) to all
+  unstable API methods, and adds missing `PhotoCapabilities`, `PhotoSettings`,
+  `MediaSettingsRange`, `Point2D`, `RedEyeReduction`, `FillLightMode`, and `MeteringMode`
+  types from the W3C Image Capture spec.
+  [#4964](https://github.com/wasm-bindgen/wasm-bindgen/pull/4964)
 
 * Increased externref stack size from 128 to 1024 slots to prevent "table index is out of bounds"
   errors in applications with deep call stacks or many concurrent async operations.
