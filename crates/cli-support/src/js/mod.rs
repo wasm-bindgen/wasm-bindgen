@@ -1391,6 +1391,8 @@ if (require('worker_threads').isMainThread) {{
             }
         }
 
+        let mut free = format!("wasm.{}(ptr, 0)", wasm_bindgen_shared::free_function(name));
+        free = binding::wrap_try_catch(&free, self.config.abort_reinit);
         dst.push_str(&format!(
             "\
             __destroy_into_raw() {{
@@ -1401,10 +1403,9 @@ if (require('worker_threads').isMainThread) {{
             }}
             free() {{
                 const ptr = this.__destroy_into_raw();
-                wasm.{}(ptr, 0);
+                {free}
             }}
-            ",
-            wasm_bindgen_shared::free_function(name),
+            "
         ));
         ts_dst.push_str("  free(): void;\n");
         ts_dst.push_str("  [Symbol.dispose](): void;\n");
@@ -3160,6 +3161,7 @@ if (require('worker_threads').isMainThread) {{
         self.prestore_global_import_identifiers()?;
 
         self.generate_jstag_import();
+        self.generate_wrapped_jstag_import();
 
         for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
@@ -3244,6 +3246,38 @@ if (require('worker_threads').isMainThread) {{
 
         self.wasm_import_definitions
             .insert(id, "WebAssembly.JSTag".to_string());
+    }
+
+    /// Generate the import for the wrapped JSTag if it was used (abort-reinit mode).
+    fn generate_wrapped_jstag_import(&mut self) {
+        let Some(wrapped_js_tag) = self.aux.wrapped_js_tag else {
+            return;
+        };
+
+        // Find the import ID for the wrapped JSTag
+        let import_id = self.module.imports.iter().find_map(|import| {
+            let walrus::ImportKind::Tag(tag_id) = import.kind else {
+                return None;
+            };
+            if tag_id == wrapped_js_tag {
+                Some(import.id())
+            } else {
+                None
+            }
+        });
+
+        let Some(id) = import_id else {
+            return;
+        };
+
+        // Create a top-level constant for the wrapped tag
+        self.global(
+            "const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
+        );
+
+        // Use the constant for the import
+        self.wasm_import_definitions
+            .insert(id, "__wbindgen_wrapped_jstag".to_string());
     }
 
     /// Registers import names for all `Global` imports first before we actually
@@ -3530,6 +3564,19 @@ if (require('worker_threads').isMainThread) {{
             // general we shouldn't have exceptions in our intrinsics to debug,
             // so skip these.
             AuxImport::Intrinsic(_) => true,
+
+            // Otherwise assume everything else gets a debug log of errors
+            // thrown in debug mode.
+            _ => false,
+        }
+    }
+
+    fn import_never_handle_error(&self, import: &AuxImport) -> bool {
+        match import {
+            // Some intrinsics are intended to exactly throw errors, and in
+            // general we shouldn't have exceptions in our intrinsics to debug,
+            // so skip these.
+            AuxImport::Intrinsic(Intrinsic::Throw | Intrinsic::Rethrow) => true,
 
             // Otherwise assume everything else gets a debug log of errors
             // thrown in debug mode.
@@ -4264,12 +4311,26 @@ if (require('worker_threads').isMainThread) {{
 
             Intrinsic::Throw => {
                 assert_eq!(args.len(), 1);
-                format!("throw new Error({})", args[0])
+                if self.aux.wrapped_js_tag.is_some() {
+                    format!(
+                        "throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [new Error({})])",
+                        args[0]
+                    )
+                } else {
+                    format!("throw new Error({})", args[0])
+                }
             }
 
             Intrinsic::Rethrow => {
                 assert_eq!(args.len(), 1);
-                format!("throw {}", args[0])
+                if self.aux.wrapped_js_tag.is_some() {
+                    format!(
+                        "throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [{}])",
+                        args[0]
+                    )
+                } else {
+                    format!("throw {}", args[0])
+                }
             }
 
             Intrinsic::Module => {

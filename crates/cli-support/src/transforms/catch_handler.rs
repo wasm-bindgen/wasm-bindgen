@@ -23,11 +23,21 @@ use walrus::{FunctionBuilder, FunctionId, LocalId, Module, RefType, TableId, Tag
 
 use super::ExceptionHandlingVersion;
 
+/// The kind of wrapper being generated.
+#[derive(Clone, Copy)]
+enum WrapperKind {
+    /// A catch wrapper for `#[wasm_bindgen(catch)]` imports.
+    CatchWrapper,
+    /// An abort wrapper that rethrows exceptions with a wrapped tag.
+    AbortWrapper { wrapped_js_tag: TagId },
+}
+
 /// Intrinsics and IDs needed to generate catch wrappers.
 #[derive(Clone, Copy)]
 struct CatchContext {
     original_func: FunctionId,
     js_tag: TagId,
+    wrapper_kind: WrapperKind,
     externref_table: TableId,
     heap_alloc: FunctionId,
     exn_store: FunctionId,
@@ -46,6 +56,7 @@ pub fn run(
     aux: &mut WasmBindgenAux,
     wit: &NonstandardWitSection,
     eh_version: ExceptionHandlingVersion,
+    abort_reinit: bool,
 ) -> Result<(), Error> {
     if aux.imports_with_catch.is_empty() {
         return Ok(());
@@ -65,20 +76,30 @@ pub fn run(
         .ok_or_else(|| anyhow::anyhow!("__wbindgen_exn_store required for catch wrappers"))?;
 
     // Import the JSTag
-    let js_tag = import_js_tag(module)?;
+    let js_tag = import_js_tag(module);
+    let wrapped_js_tag = if abort_reinit {
+        Some(import_externref_tag(module, "__wbindgen_wrapped_jstag"))
+    } else {
+        None
+    };
 
     let mut wrappers = HashMap::new();
 
     // Generate wrappers for each import with catch
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
-        if !aux.imports_with_catch.contains(adapter_id) {
+        let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
+            WrapperKind::CatchWrapper
+        } else if let Some(wrapped_js_tag) = wrapped_js_tag {
+            WrapperKind::AbortWrapper { wrapped_js_tag }
+        } else {
             continue;
-        }
+        };
 
         let wrapper_id = generate_catch_wrapper(
             module,
             *func_id,
             js_tag,
+            wrapper_kind,
             externref_table,
             heap_alloc,
             exn_store,
@@ -93,20 +114,24 @@ pub fn run(
 
     log::debug!("Catch handler created {} wrappers", wrappers.len());
     aux.js_tag = Some(js_tag);
+    aux.wrapped_js_tag = wrapped_js_tag;
 
     Ok(())
 }
 
 /// Import the `WebAssembly.JSTag` as a Wasm tag.
-fn import_js_tag(module: &mut Module) -> Result<TagId, Error> {
+fn import_externref_tag(module: &mut Module, name: &str) -> TagId {
     // JSTag has a single externref parameter (the caught exception)
     let tag_ty = module.types.add(&[ValType::Ref(RefType::EXTERNREF)], &[]);
 
     // Use the module's helper to add an imported tag
-    let (tag_id, _import_id) =
-        module.add_import_tag(crate::PLACEHOLDER_MODULE, "__wbindgen_jstag", tag_ty);
+    let (tag_id, _import_id) = module.add_import_tag(crate::PLACEHOLDER_MODULE, name, tag_ty);
 
-    Ok(tag_id)
+    tag_id
+}
+
+fn import_js_tag(module: &mut Module) -> TagId {
+    import_externref_tag(module, "__wbindgen_jstag")
 }
 
 /// Generate a catch wrapper function for the given import.
@@ -114,6 +139,7 @@ fn generate_catch_wrapper(
     module: &mut Module,
     original_func: FunctionId,
     js_tag: TagId,
+    wrapper_kind: WrapperKind,
     externref_table: TableId,
     heap_alloc: FunctionId,
     exn_store: FunctionId,
@@ -135,6 +161,7 @@ fn generate_catch_wrapper(
     let ctx = CatchContext {
         original_func,
         js_tag,
+        wrapper_kind,
         externref_table,
         heap_alloc,
         exn_store,
@@ -237,7 +264,7 @@ fn generate_modern_eh_wrapper(
             seq: catch_block_id,
         });
 
-        // Exception handling code (externref is on stack from catch)
+        // Stack has externref from caught exception
         emit_catch_handler(&mut body, ctx, results);
     }
 }
@@ -315,25 +342,36 @@ fn generate_legacy_eh_wrapper(
     }
 }
 
-/// Emit the exception handling code that stores the caught exception and returns defaults.
+/// Emit the exception handling code based on wrapper kind.
 ///
-/// Expects the caught externref to be on the stack. Emits code to:
-/// 1. Store the externref in the externref table
-/// 2. Call __wbindgen_exn_store with the table index
-/// 3. Push default return values
+/// Expects the caught externref to be on the stack.
+///
+/// For `CatchWrapper`: stores the exception and returns default values.
+/// For `AbortWrapper`: rethrows the exception with the wrapped tag.
 fn emit_catch_handler(
     builder: &mut walrus::InstrSeqBuilder,
     ctx: CatchContext,
     results: &[ValType],
 ) {
-    builder.local_set(ctx.exn_local);
-    builder.call(ctx.heap_alloc);
-    builder.local_tee(ctx.idx_local);
-    builder.local_get(ctx.exn_local);
-    builder.table_set(ctx.externref_table);
-    builder.local_get(ctx.idx_local);
-    builder.call(ctx.exn_store);
-    push_default_values(builder, results);
+    match ctx.wrapper_kind {
+        WrapperKind::AbortWrapper { wrapped_js_tag } => {
+            // Rethrow the exception with the wrapped tag
+            builder.instr(Throw {
+                tag: wrapped_js_tag,
+            });
+        }
+        WrapperKind::CatchWrapper => {
+            // Store the externref in the externref table and call exn_store
+            builder.local_set(ctx.exn_local);
+            builder.call(ctx.heap_alloc);
+            builder.local_tee(ctx.idx_local);
+            builder.local_get(ctx.exn_local);
+            builder.table_set(ctx.externref_table);
+            builder.local_get(ctx.idx_local);
+            builder.call(ctx.exn_store);
+            push_default_values(builder, results);
+        }
+    }
 }
 
 /// Push default values for the given result types onto the stack.
@@ -434,7 +472,7 @@ mod tests {
         assert_eq!(module.tags.iter().count(), 0);
 
         // Import the JS tag
-        let tag_id = import_js_tag(&mut module).unwrap();
+        let tag_id = import_js_tag(&mut module);
 
         // Should now have one tag
         assert_eq!(module.tags.iter().count(), 1);
@@ -520,7 +558,7 @@ mod tests {
             .unwrap();
 
         // Import JSTag
-        let js_tag = import_js_tag(&mut module).unwrap();
+        let js_tag = import_js_tag(&mut module);
 
         // Count functions before
         let func_count_before = module.funcs.iter().count();
@@ -530,6 +568,7 @@ mod tests {
             &mut module,
             import_func,
             js_tag,
+            WrapperKind::CatchWrapper,
             table,
             heap_alloc,
             exn_store,
@@ -614,7 +653,7 @@ mod tests {
             .unwrap();
 
         // Import JSTag
-        let js_tag = import_js_tag(&mut module).unwrap();
+        let js_tag = import_js_tag(&mut module);
 
         // Count functions before
         let func_count_before = module.funcs.iter().count();
@@ -624,6 +663,7 @@ mod tests {
             &mut module,
             import_func,
             js_tag,
+            WrapperKind::CatchWrapper,
             table,
             heap_alloc,
             exn_store,
@@ -740,7 +780,7 @@ mod tests {
         assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
 
         // Run the transform
-        run(&mut module, &mut aux, &wit, eh_version).unwrap();
+        run(&mut module, &mut aux, &wit, eh_version, false).unwrap();
 
         // JSTag should be set in aux
         assert!(aux.js_tag.is_some());
@@ -776,7 +816,7 @@ mod tests {
         assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
 
         // Run should be a no-op since no imports need catching
-        run(&mut module, &mut aux, &wit, eh_version).unwrap();
+        run(&mut module, &mut aux, &wit, eh_version, false).unwrap();
         assert!(aux.js_tag.is_none());
     }
 
@@ -838,12 +878,13 @@ mod tests {
             })
             .unwrap();
 
-        let js_tag = import_js_tag(&mut module).unwrap();
+        let js_tag = import_js_tag(&mut module);
 
         let wrapper_id = generate_catch_wrapper(
             &mut module,
             import_func,
             js_tag,
+            WrapperKind::CatchWrapper,
             table,
             heap_alloc,
             exn_store,
@@ -928,12 +969,13 @@ mod tests {
             })
             .unwrap();
 
-        let js_tag = import_js_tag(&mut module).unwrap();
+        let js_tag = import_js_tag(&mut module);
 
         let wrapper_id = generate_catch_wrapper(
             &mut module,
             import_func,
             js_tag,
+            WrapperKind::CatchWrapper,
             table,
             heap_alloc,
             exn_store,

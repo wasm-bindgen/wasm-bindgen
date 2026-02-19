@@ -70,6 +70,11 @@ pub struct WasmBindgenAux {
     /// When this is `Some`, all imports with `catch` use Wasm catch wrappers
     /// instead of JS `handleError` wrappers.
     pub js_tag: Option<walrus::TagId>,
+
+    /// The imported wrapped JSTag for abort-reinit mode.
+    /// This is a custom WebAssembly.Tag used to wrap exceptions so they can be
+    /// distinguished from other JS exceptions.
+    pub wrapped_js_tag: Option<walrus::TagId>,
 }
 
 pub type WasmBindgenAuxId = TypedCustomSectionId<WasmBindgenAux>;

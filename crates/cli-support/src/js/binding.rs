@@ -95,6 +95,25 @@ pub enum TsReference {
     StringEnum(String),
 }
 
+pub fn wrap_try_catch(call: &str, should_check_aborted: bool) -> String {
+    if should_check_aborted {
+        format!(
+            "\
+            try {{
+                {call};
+            }} catch(e) {{
+                if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
+                    throw e.getArg(__wbindgen_wrapped_jstag, 0);
+                }}
+                throw e;
+            }}
+            "
+        )
+    } else {
+        format!("{call};")
+    }
+}
+
 impl<'a, 'b> Builder<'a, 'b> {
     pub fn new(cx: &'a mut Context<'b>) -> Builder<'a, 'b> {
         Builder {
@@ -792,6 +811,12 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
+            let mut should_check_aborted = js.cx.config.abort_reinit
+                && js.cx.aux.wrapped_js_tag.is_some()
+                && matches!(
+                    instr,
+                    Instruction::CallExport(_) | Instruction::DeferFree { .. }
+                );
             let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
 
@@ -824,19 +849,30 @@ fn instruction(
             }
 
             // Call the function through an export of the underlying module.
-            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error)?;
+            let call = invoc.invoke(
+                js.cx,
+                &args,
+                &mut js.prelude,
+                log_error,
+                &mut should_check_aborted,
+            )?;
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    js.finally(&format!("{call};"));
+                    js.finally(&wrap_try_catch(&call, should_check_aborted));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => js.prelude(&format!("{call};")),
+                (false, 0) => js.prelude(&wrap_try_catch(&call, should_check_aborted)),
                 (false, n) => {
-                    js.prelude(&format!("const ret = {call};"));
+                    js.prelude(&format!(
+                        "\
+                        let ret;
+                        {}",
+                        &wrap_try_catch(&format!("ret = {call};"), should_check_aborted)
+                    ));
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {
@@ -1644,6 +1680,7 @@ impl Invocation {
         args: &[String],
         prelude: &mut String,
         log_error: &mut bool,
+        handle_error: &mut bool,
     ) -> Result<String, Error> {
         match self {
             Invocation::Core { id, .. } => {
@@ -1662,6 +1699,9 @@ impl Invocation {
                 let variadic = cx.aux.imports_with_variadic.contains(id);
                 if cx.import_never_log_error(import) {
                     *log_error = false;
+                }
+                if cx.import_never_handle_error(import) {
+                    *handle_error = false;
                 }
                 cx.invoke_import(import, kind, args, variadic, prelude)
             }
