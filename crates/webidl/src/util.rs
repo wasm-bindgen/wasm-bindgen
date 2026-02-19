@@ -2,7 +2,6 @@ use std::collections::{BTreeSet, HashSet};
 use std::fs;
 use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
-use std::ptr;
 
 use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::{Ident, TokenStream};
@@ -403,7 +402,7 @@ impl<'src> FirstPassRecord<'src> {
         // Next expand all the signatures in `data` into all signatures that
         // we're going to generate. These signatures will be used to determine
         // the names for all the various functions.
-        #[derive(Clone)]
+        #[derive(Clone, PartialEq)]
         struct ExpandedSig<'a> {
             orig: &'a Signature<'a>,
             args: Vec<Option<WbgType<'a>>>,
@@ -570,7 +569,7 @@ impl<'src> FirstPassRecord<'src> {
 
                 for &other_idx in disambiguate_against.iter() {
                     let other = &all_signatures[other_idx];
-                    if ptr::eq(signature, other) {
+                    if signature == other {
                         continue;
                     }
                     if other.orig.args.get(i).map(|s| s.name) == Some(arg_name) {
