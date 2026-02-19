@@ -225,7 +225,7 @@ pub(crate) struct OperationData<'src> {
     pub(crate) stability: ApiStability,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct Signature<'src> {
     pub(crate) args: Vec<Arg<'src>>,
     pub(crate) ret: weedle::types::ReturnType<'src>,
@@ -233,7 +233,7 @@ pub(crate) struct Signature<'src> {
     pub(crate) stability: ApiStability,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct Arg<'src> {
     pub(crate) attributes: &'src Option<ExtendedAttributeList<'src>>,
     pub(crate) name: &'src str,

@@ -521,14 +521,12 @@ impl<'src> FirstPassRecord<'src> {
         // and unstable `put(i32)` come from different definitions, so the stable version
         // is NOT added to the unstable set.
         {
-            let unstable_origs: HashSet<*const Signature<'_>> = unstable_signatures
+            let unstable_origs: HashSet<&Signature<'_>> = unstable_signatures
                 .iter()
-                .map(|&idx| actual_signatures[idx].orig as *const _)
+                .map(|&idx| actual_signatures[idx].orig)
                 .collect();
             for (idx, signature) in actual_signatures.iter().enumerate() {
-                if !unstable_signatures.contains(&idx)
-                    && unstable_origs.contains(&(signature.orig as *const _))
-                {
+                if !unstable_signatures.contains(&idx) && unstable_origs.contains(signature.orig) {
                     unstable_signatures.push(idx);
                 }
             }
