@@ -5,6 +5,7 @@ use web_sys::HtmlElement;
 #[wasm_bindgen(module = "/tests/wasm/element.js")]
 extern "C" {
     fn new_html() -> HtmlElement;
+    fn attach_element(element: &HtmlElement);
 }
 
 #[wasm_bindgen_test]
@@ -119,6 +120,8 @@ fn test_html_element() {
         "true",
         "Should be content_editable"
     );
+    // Safari does not consider an element "editable" unless it is connected to the DOM
+    attach_element(&element);
     assert!(element.is_content_editable(), "Should be content_editable");
 
     element.set_spellcheck(false);
