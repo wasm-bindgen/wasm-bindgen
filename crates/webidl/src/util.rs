@@ -482,38 +482,94 @@ impl<'src> FirstPassRecord<'src> {
             }
         };
 
-        let mut ret = Vec::new();
-        for signature in actual_signatures.iter() {
-            // Ignore signatures with invalid return types
-            //
-            // TODO: overloads probably never change return types, so we should
-            //       do this much earlier to avoid all the above work if
-            //       possible.
-            let ret_ty = signature.orig.ret.to_wbg_type(self);
+        // Classify each expanded signature as stable or unstable.
+        let mut stable_signatures: Vec<usize> = Vec::new();
+        let mut unstable_signatures: Vec<usize> = Vec::new();
 
+        for (idx, signature) in actual_signatures.iter().enumerate() {
+            let has_unstable_args = signature.args.iter().any(|arg| {
+                arg.as_ref()
+                    .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
+            });
+            let sig_unstable =
+                unstable || signature.orig.stability.is_unstable() || has_unstable_args;
+
+            if sig_unstable {
+                unstable_signatures.push(idx);
+            } else {
+                stable_signatures.push(idx);
+            }
+        }
+
+        // For signatures from the SAME original definition as an unstable signature,
+        // include them in the unstable set too. This handles optional unstable args:
+        // e.g. `read(optional UnstableType x = {})` expands to `read()` and `read(x)`.
+        // `read()` is stable, but it's a sibling of the unstable `read(x)` (same orig),
+        // so it should appear in both sets.
+        //
+        // This does NOT apply across different definitions: e.g. stable `put(f64)`
+        // and unstable `put(i32)` come from different definitions, so the stable version
+        // is NOT added to the unstable set.
+        {
+            let unstable_origs: HashSet<*const Signature<'_>> = unstable_signatures
+                .iter()
+                .map(|&idx| actual_signatures[idx].orig as *const _)
+                .collect();
+            for (idx, signature) in actual_signatures.iter().enumerate() {
+                if !unstable_signatures.contains(&idx)
+                    && unstable_origs.contains(&(signature.orig as *const _))
+                {
+                    unstable_signatures.push(idx);
+                }
+            }
+        }
+
+        fn idl_arguments<'a: 'b, 'b>(
+            args: impl Iterator<Item = (String, &'b WbgType<'a>)>,
+        ) -> Option<Vec<(Ident, WbgType<'a>)>> {
+            let mut output = vec![];
+            for (name, idl_type) in args {
+                if idl_type
+                    .to_syn_type(TypePosition::ARGUMENT, false, true)
+                    .is_err()
+                {
+                    return None;
+                }
+                output.push((rust_ident(&snake_case_ident(&name[..])), idl_type.clone()));
+            }
+            Some(output)
+        }
+
+        fn compute_rust_name<'a>(
+            signature: &ExpandedSig<'a>,
+            disambiguate_against: &[usize],
+            all_signatures: &[ExpandedSig<'a>],
+            js_name: &str,
+        ) -> String {
             let mut rust_name = snake_case_ident(js_name);
             let mut first = true;
+
             for (i, arg) in signature
                 .args
                 .iter()
                 .enumerate()
                 .filter_map(|(i, ty)| ty.as_ref().map(|ty| (i, ty)))
             {
-                // Find out if any other known signature either has the same
-                // name for this argument or a different type for this argument.
                 let mut any_same_name = false;
                 let mut any_different_type = false;
                 let mut any_different = false;
                 let arg_name = signature.orig.args[i].name;
 
-                for other in actual_signatures.iter() {
-                    if other.orig.args.get(i).map(|s| s.name) == Some(arg_name)
-                        && !ptr::eq(signature, other)
-                    {
+                for &other_idx in disambiguate_against.iter() {
+                    let other = &all_signatures[other_idx];
+                    if ptr::eq(signature, other) {
+                        continue;
+                    }
+                    if other.orig.args.get(i).map(|s| s.name) == Some(arg_name) {
                         any_same_name = true;
                     }
-                    if let Some(Some(other)) = other.args.get(i) {
-                        if other != arg {
+                    if let Some(Some(other_arg)) = other.args.get(i) {
+                        if other_arg != arg {
                             any_different_type = true;
                             any_different = true;
                         }
@@ -522,9 +578,6 @@ impl<'src> FirstPassRecord<'src> {
                     }
                 }
 
-                // If all signatures have the exact same type for this argument,
-                // then there's nothing to disambiguate so we don't modify the
-                // name.
                 if !any_different {
                     continue;
                 }
@@ -535,20 +588,32 @@ impl<'src> FirstPassRecord<'src> {
                     rust_name.push_str("_and_");
                 }
 
-                // If this name of the argument for this signature is unique
-                // then that's a bit more human readable so we include it in the
-                // method name. Otherwise the type name should disambiguate
-                // correctly.
-                //
-                // If any signature's argument has the same name as our argument
-                // then we can't use that if the types are also the same because
-                // otherwise it could be ambiguous.
                 if any_same_name && any_different_type {
                     arg.push_snake_case_name(&mut rust_name);
                 } else {
                     rust_name.push_str(&snake_case_ident(arg_name));
                 }
             }
+
+            rust_name
+        }
+
+        fn create_method<'a>(
+            first_pass: &FirstPassRecord<'a>,
+            signature: &ExpandedSig<'a>,
+            rust_name: &str,
+            js_name: &str,
+            type_name: Option<&str>,
+            kind: &InterfaceMethodKind,
+            id: &OperationId<'_>,
+            is_static: bool,
+            force_structural: bool,
+            force_throws: bool,
+            container_attrs: Option<&ExtendedAttributeList<'_>>,
+            unstable_flag: bool,
+            has_unstable_override: bool,
+        ) -> Option<InterfaceMethod<'a>> {
+            let ret_ty = signature.orig.ret.to_wbg_type(first_pass);
             let structural =
                 force_structural || is_structural(signature.orig.attrs.as_ref(), container_attrs);
             let catch = force_throws
@@ -564,8 +629,6 @@ impl<'src> FirstPassRecord<'src> {
                         .is_none());
             let deprecated = get_rust_deprecated(signature.orig.attrs);
             let ret_ty = if id == &OperationId::IndexingGetter {
-                // All indexing getters should return optional values (or
-                // otherwise be marked with catch).
                 match ret_ty {
                     WbgType::JsOption(_) => ret_ty,
                     ref ty => {
@@ -587,27 +650,6 @@ impl<'src> FirstPassRecord<'src> {
                     .map(|arg| arg.variadic)
                     .unwrap_or(false);
 
-            fn idl_arguments<'a: 'b, 'b>(
-                args: impl Iterator<Item = (String, &'b WbgType<'a>)>,
-            ) -> Option<Vec<(Ident, WbgType<'a>)>> {
-                let mut output = vec![];
-
-                for (name, idl_type) in args {
-                    // Check that the type can be converted (use compat mode for validation)
-                    if idl_type
-                        .to_syn_type(TypePosition::ARGUMENT, false, true)
-                        .is_err()
-                    {
-                        return None;
-                    }
-
-                    output.push((rust_ident(&snake_case_ident(&name[..])), idl_type.clone()));
-                }
-
-                Some(output)
-            }
-
-            // Store WbgType for arguments - conversion happens during code generation
             let arguments =
                 idl_arguments(signature.args.iter().zip(&signature.orig.args).filter_map(
                     |(idl_type, orig_arg)| {
@@ -615,99 +657,135 @@ impl<'src> FirstPassRecord<'src> {
                             .as_ref()
                             .map(|idl_type| (orig_arg.name.to_string(), idl_type))
                     },
-                ));
+                ))?;
 
-            // Stable types can have methods that have unstable argument types.
-            // If any of the arguments types are `unstable` then this method is downgraded
-            // to be unstable.
-            let has_unstable_args = signature.args.iter().any(|arg| {
-                arg.as_ref()
-                    .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
-            });
-
-            // Use the signature's stability rather than the operation's stability.
-            // This allows stable methods to have unstable overloads (e.g., when a
-            // partial interface in the unstable directory adds a new overload with
-            // unstable argument types to an existing stable method).
-            let unstable = unstable || signature.orig.stability.is_unstable() || has_unstable_args;
-
-            if let Some(arguments) = arguments {
-                let mut rust_name = rust_name.clone();
-
-                if let Some(map) = type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name)) {
-                    if let Some(fixed) = map.get(rust_name.as_str()) {
-                        rust_name = fixed.to_string();
-                    }
+            let mut rust_name = rust_name.to_string();
+            if let Some(map) = type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name)) {
+                if let Some(fixed) = map.get(rust_name.as_str()) {
+                    rust_name = fixed.to_string();
                 }
-                // In next_unstable mode, we need variadic_type for the slice pattern
-                let variadic_type = if variadic {
-                    signature.args.last().and_then(|arg| arg.clone())
-                } else {
-                    None
-                };
+            }
 
-                ret.push(InterfaceMethod {
-                    name: rust_ident(&rust_name),
-                    js_name: js_name.to_string(),
-                    deprecated: deprecated.clone(),
-                    arguments,
-                    variadic_type,
-                    ret_wbg_ty: Some(ret_ty.clone()),
-                    kind: kind.clone(),
+            let variadic_type = if variadic {
+                signature.args.last().and_then(|arg| arg.clone())
+            } else {
+                None
+            };
+
+            Some(InterfaceMethod {
+                name: rust_ident(&rust_name),
+                js_name: js_name.to_string(),
+                deprecated,
+                arguments,
+                variadic_type,
+                ret_wbg_ty: Some(ret_ty),
+                kind: kind.clone(),
+                is_static,
+                structural,
+                catch,
+                variadic,
+                unstable: unstable_flag,
+                has_unstable_override,
+            })
+        }
+
+        // Helper to build a method set from signature indices, with variadic expansion.
+        let build_method_set = |sig_indices: &[usize],
+                                unstable_flag: bool|
+         -> Vec<InterfaceMethod<'_>> {
+            let mut methods = Vec::new();
+            for &sig_idx in sig_indices {
+                let signature = &actual_signatures[sig_idx];
+                let rust_name =
+                    compute_rust_name(signature, sig_indices, &actual_signatures, js_name);
+
+                if let Some(method) = create_method(
+                    self,
+                    signature,
+                    &rust_name,
+                    js_name,
+                    type_name,
+                    &kind,
+                    id,
                     is_static,
-                    structural,
-                    catch,
-                    variadic,
-                    unstable,
-                    has_unstable_override: false,
-                });
-            }
+                    force_structural,
+                    force_throws,
+                    container_attrs,
+                    unstable_flag,
+                    false,
+                ) {
+                    methods.push(method.clone());
 
-            // In next_unstable mode, skip variadic expansion - we use slice syntax instead
-            if !variadic || self.options.next_unstable {
-                continue;
-            }
-            let last_idl_type = signature.args[signature.args.len() - 1].as_ref().unwrap();
-            let last_name = signature.orig.args[signature.args.len() - 1].name;
-            for i in 0..=MAX_VARIADIC_ARGUMENTS_COUNT {
-                let arguments = idl_arguments(
-                    signature.args[..signature.args.len() - 1]
-                        .iter()
-                        .zip(&signature.orig.args)
-                        .filter_map(|(idl_type, orig_arg)| {
-                            idl_type
-                                .as_ref()
-                                .map(|idl_type| (orig_arg.name.to_string(), idl_type))
-                        })
-                        .chain((1..=i).map(|j| (format!("{last_name}_{j}"), last_idl_type))),
-                );
-
-                if let Some(arguments) = arguments {
-                    let mut rust_name = format!("{}_{i}", &rust_name);
-
-                    if let Some(map) =
-                        type_name.and_then(|type_name| FIXED_INTERFACES.get(type_name))
-                    {
-                        if let Some(fixed) = map.get(rust_name.as_str()) {
-                            rust_name = fixed.to_string();
+                    if method.variadic && !self.options.next_unstable {
+                        let last_idl_type = signature.args.last().unwrap().as_ref().unwrap();
+                        let last_name = signature.orig.args.last().unwrap().name;
+                        for i in 0..=MAX_VARIADIC_ARGUMENTS_COUNT {
+                            let arguments = idl_arguments(
+                                signature.args[..signature.args.len() - 1]
+                                    .iter()
+                                    .zip(&signature.orig.args)
+                                    .filter_map(|(idl_type, orig_arg)| {
+                                        idl_type
+                                            .as_ref()
+                                            .map(|idl_type| (orig_arg.name.to_string(), idl_type))
+                                    })
+                                    .chain(
+                                        (1..=i)
+                                            .map(|j| (format!("{last_name}_{j}"), last_idl_type)),
+                                    ),
+                            );
+                            if let Some(arguments) = arguments {
+                                let mut name = format!("{}_{i}", &rust_name);
+                                if let Some(map) = type_name.and_then(|t| FIXED_INTERFACES.get(t)) {
+                                    if let Some(fixed) = map.get(name.as_str()) {
+                                        name = fixed.to_string();
+                                    }
+                                }
+                                methods.push(InterfaceMethod {
+                                    name: rust_ident(&name),
+                                    arguments,
+                                    variadic: false,
+                                    variadic_type: Some(last_idl_type.clone()),
+                                    ..method.clone()
+                                });
+                            }
                         }
                     }
-                    ret.push(InterfaceMethod {
-                        name: rust_ident(&rust_name),
-                        js_name: js_name.to_string(),
-                        deprecated: deprecated.clone(),
-                        arguments,
-                        variadic_type: Some(last_idl_type.clone()),
-                        kind: kind.clone(),
-                        ret_wbg_ty: Some(ret_ty.clone()),
-                        is_static,
-                        structural,
-                        catch,
-                        variadic: false,
-                        unstable,
-                        has_unstable_override: false,
-                    });
                 }
+            }
+            methods
+        };
+
+        let stable_methods = build_method_set(&stable_signatures, false);
+        let unstable_methods = build_method_set(&unstable_signatures, true);
+
+        // If only one set has methods, no gating needed
+        if unstable_methods.is_empty() {
+            return stable_methods;
+        }
+        if stable_methods.is_empty() {
+            return unstable_methods;
+        }
+
+        // Both sets have methods - determine gating by comparing
+        let mut ret: Vec<InterfaceMethod<'_>> = Vec::new();
+
+        for mut method in stable_methods {
+            let merged = unstable_methods
+                .iter()
+                .any(|um| um.name == method.name && method.same_signature(um));
+            // Merged = in both sets, no gate. Otherwise gate with not(unstable).
+            method.has_unstable_override = !merged;
+            ret.push(method);
+        }
+
+        for method in unstable_methods {
+            let merged = ret
+                .iter()
+                .any(|sm| sm.name == method.name && sm.same_signature(&method));
+            if !merged {
+                // Only in unstable set - emit with unstable gate
+                ret.push(method);
             }
         }
 

@@ -458,6 +458,27 @@ pub struct InterfaceMethod<'a> {
     pub has_unstable_override: bool,
 }
 
+impl<'a> InterfaceMethod<'a> {
+    /// Returns true if this method has the same effective signature as `other`.
+    ///
+    /// Two methods have the same signature when they would produce the same Rust
+    /// binding: same JS name, same argument types, same return type, and same
+    /// throws behavior. Used for both deduplication (across operations) and
+    /// merge detection (stable/unstable gating).
+    pub fn same_signature(&self, other: &InterfaceMethod<'_>) -> bool {
+        self.js_name == other.js_name
+            && self.variadic == other.variadic
+            && self.variadic_type == other.variadic_type
+            && self.ret_wbg_ty == other.ret_wbg_ty
+            && self.catch == other.catch
+            && self
+                .arguments
+                .iter()
+                .map(|(_, wbg_ty)| wbg_ty)
+                .eq(other.arguments.iter().map(|(_, wbg_ty)| wbg_ty))
+    }
+}
+
 impl InterfaceMethod<'_> {
     pub(crate) fn generate(
         &self,

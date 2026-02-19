@@ -167,7 +167,7 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
-    pub fn measure_with_str(
+    pub fn measure_with_start_mark(
         this: &Performance,
         measure_name: &str,
         start_mark: &str,
@@ -179,7 +179,7 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
-    pub fn measure_with_str_and_end_mark(
+    pub fn measure_with_start_mark_and_end_mark(
         this: &Performance,
         measure_name: &str,
         start_mark: &str,

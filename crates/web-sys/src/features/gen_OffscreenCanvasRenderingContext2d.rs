@@ -421,23 +421,6 @@ extern "C" {
         dx: f64,
         dy: f64,
     ) -> Result<(), JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = drawImage)]
-    #[doc = "The `drawImage()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/drawImage)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvasRenderingContext2d`, `VideoFrame`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn draw_image_with_video_frame(
-        this: &OffscreenCanvasRenderingContext2d,
-        image: &VideoFrame,
-        dx: f64,
-        dy: f64,
-    ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = drawImage)]
     #[doc = "The `drawImage()` method."]
@@ -523,25 +506,6 @@ extern "C" {
     pub fn draw_image_with_offscreen_canvas_and_dw_and_dh(
         this: &OffscreenCanvasRenderingContext2d,
         image: &OffscreenCanvas,
-        dx: f64,
-        dy: f64,
-        dw: f64,
-        dh: f64,
-    ) -> Result<(), JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = drawImage)]
-    #[doc = "The `drawImage()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/drawImage)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvasRenderingContext2d`, `VideoFrame`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn draw_image_with_video_frame_and_dw_and_dh(
-        this: &OffscreenCanvasRenderingContext2d,
-        image: &VideoFrame,
         dx: f64,
         dy: f64,
         dw: f64,
@@ -656,6 +620,42 @@ extern "C" {
         sy: f64,
         sw: f64,
         sh: f64,
+        dx: f64,
+        dy: f64,
+        dw: f64,
+        dh: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "VideoFrame")]
+    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = drawImage)]
+    #[doc = "The `drawImage()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/drawImage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvasRenderingContext2d`, `VideoFrame`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn draw_image_with_video_frame(
+        this: &OffscreenCanvasRenderingContext2d,
+        image: &VideoFrame,
+        dx: f64,
+        dy: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "VideoFrame")]
+    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = drawImage)]
+    #[doc = "The `drawImage()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/drawImage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvasRenderingContext2d`, `VideoFrame`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn draw_image_with_video_frame_and_dw_and_dh(
+        this: &OffscreenCanvasRenderingContext2d,
+        image: &VideoFrame,
         dx: f64,
         dy: f64,
         dw: f64,

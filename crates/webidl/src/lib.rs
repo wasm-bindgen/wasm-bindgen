@@ -70,22 +70,22 @@ fn mark_stable_attributes_with_unstable_overrides(attributes: &mut [InterfaceAtt
     }
 }
 
-/// Mark stable methods that have unstable overrides with the same Rust name.
+/// Mark stable methods that have unstable methods with the same Rust name.
 ///
-/// When an unstable WebIDL defines a method with the same signature as a stable
-/// method but with a different return type (e.g., `PerformanceMark` instead of
-/// `undefined`), we need to generate both versions with appropriate `#[cfg]` guards:
+/// This handles cross-operation name clashes: when a stable method from one source
+/// (e.g., interface) and an unstable method from another source (e.g., mixin) end up
+/// with the same Rust name. Both need cfg gates to avoid compile-time clashes:
 /// - Stable: `#[cfg(not(web_sys_unstable_apis))]`
 /// - Unstable: `#[cfg(web_sys_unstable_apis)]`
 fn mark_stable_methods_with_unstable_overrides(methods: &mut [InterfaceMethod]) {
-    // Find method Rust names that have both stable and unstable versions
+    // Collect Rust names of unstable methods
     let unstable_names: HashSet<String> = methods
         .iter()
         .filter(|m| m.unstable)
         .map(|m| m.name.to_string())
         .collect();
 
-    // Mark stable methods that have an unstable counterpart with the same name
+    // Mark stable methods that have an unstable counterpart with the same Rust name
     for method in methods.iter_mut() {
         if !method.unstable && unstable_names.contains(&method.name.to_string()) {
             method.has_unstable_override = true;
@@ -1019,19 +1019,10 @@ impl<'src> FirstPassRecord<'src> {
         ) {
             // Check if this method would be a duplicate of an existing method.
             // We allow both stable and unstable versions of the same method signature
-            // if they have different return types (for return type overrides).
-            let dominated = methods.iter().any(|old_method| {
-                old_method.variadic == method.variadic
-                    && old_method.js_name == method.js_name
-                    && old_method.variadic_type == method.variadic_type
-                    && old_method
-                        .arguments
-                        .iter()
-                        .map(|(_, wbg_ty)| wbg_ty)
-                        .eq(method.arguments.iter().map(|(_, wbg_ty)| wbg_ty))
-                    // Allow if one is stable and one is unstable with different return types
-                    && (old_method.unstable == method.unstable || old_method.ret_wbg_ty == method.ret_wbg_ty)
-            });
+            // since they will be cfg-gated and only one will be active at compile time.
+            let dominated = methods
+                .iter()
+                .any(|old_method| method.same_signature(old_method));
             if !dominated {
                 methods.push(method);
             }
