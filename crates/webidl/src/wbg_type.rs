@@ -8,8 +8,8 @@ use weedle::types::*;
 
 use crate::first_pass::FirstPassRecord;
 use crate::util::{
-    array, camel_case_ident, generic_ty, js_option_ty, option_ty, shared_ref, slice_ty,
-    snake_case_ident, Direction, TypePosition,
+    array, camel_case_ident, generic_ty, js_option_ty, option_ty, shared_ref, snake_case_ident,
+    Direction, TypePosition,
 };
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
