@@ -83,5 +83,6 @@ dictionary FileSystemSyncAccessHandleOptions {
 
 [Exposed=DedicatedWorker, SecureContext]
 partial interface FileSystemFileHandle {
+    Promise<FileSystemSyncAccessHandle> createSyncAccessHandle();
     Promise<FileSystemSyncAccessHandle> createSyncAccessHandle(FileSystemSyncAccessHandleOptions options);
 };
