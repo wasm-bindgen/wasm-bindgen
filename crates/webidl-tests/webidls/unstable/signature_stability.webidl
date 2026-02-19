@@ -29,3 +29,8 @@ partial interface GeolocationLike {
 dictionary UnstableOptions {
   DOMString mode;
 };
+
+// Unstable type referenced by stable WebGLLike.texUpload() overload
+[Constructor()]
+interface UnstableFrame {
+};

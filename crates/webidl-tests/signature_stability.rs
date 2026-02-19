@@ -86,6 +86,33 @@ fn unstable_no_throws_method_returns_unit() {
     let _ = result;
 }
 
+// Test WebGL pattern: multiple stable overloads where one uses an unstable type.
+// Stable overloads that don't use the unstable type should have NO cfg gate.
+// They should be available in both stable and unstable modes.
+#[wasm_bindgen_test]
+fn stable_overloads_not_gated_by_unstable_type_sibling() {
+    let gl = WebGlLike::new().unwrap();
+    let tex = TextureLike::new().unwrap();
+
+    // These stable overloads should always be available, regardless of unstable flag.
+    // They must NOT get cfg(not(web_sys_unstable_apis)) just because a sibling
+    // overload (texUpload with UnstableFrame) uses an unstable type.
+    let _ = gl.tex_upload_with_x_and_y(&tex, 0i32, 0i32);
+    let _ = gl.tex_upload_with_dx_and_dy(&tex, 0.0, 0.0);
+    let _ = gl.tex_upload_with_data(&tex, "data");
+}
+
+// The unstable-type overload should only be available in unstable mode.
+#[cfg(web_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn unstable_type_overload_available_with_flag() {
+    let gl = WebGlLike::new().unwrap();
+    let tex = TextureLike::new().unwrap();
+    let frame = UnstableFrame::new().unwrap();
+
+    let _ = gl.tex_upload(&tex, &frame);
+}
+
 // Test that read() without arguments is available in stable mode.
 // The optional param's type (UnstableOptions) is unstable,
 // so stable only gets read() with no args.

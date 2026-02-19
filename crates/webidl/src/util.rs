@@ -756,6 +756,14 @@ impl<'src> FirstPassRecord<'src> {
             methods
         };
 
+        // Check if any unstable signature comes from an actual unstable IDL definition
+        // (as opposed to a stable definition that merely uses an unstable type).
+        // The authoritative expansion model only applies when there's a real IDL override.
+        let has_unstable_idl_override = unstable_signatures.iter().any(|&idx| {
+            let sig = &actual_signatures[idx];
+            unstable || sig.orig.stability.is_unstable()
+        });
+
         let stable_methods = build_method_set(&stable_signatures, false);
         let unstable_methods = build_method_set(&unstable_signatures, true);
 
@@ -767,22 +775,26 @@ impl<'src> FirstPassRecord<'src> {
             return unstable_methods;
         }
 
-        // Both sets have methods - determine gating by comparing
+        if !has_unstable_idl_override {
+            // No actual IDL override — just stable methods that happen to use unstable types.
+            // Emit stable methods with no gate, unstable-type methods with unstable gate.
+            let mut ret = stable_methods;
+            ret.extend(unstable_methods);
+            return ret;
+        }
+
+        // Both sets have methods from an actual IDL override - determine gating by comparing
         let mut ret: Vec<InterfaceMethod<'_>> = Vec::new();
 
         for mut method in stable_methods {
-            let merged = unstable_methods
-                .iter()
-                .any(|um| um.name == method.name && method.same_signature(um));
+            let merged = unstable_methods.iter().any(|um| method.same_signature(um));
             // Merged = in both sets, no gate. Otherwise gate with not(unstable).
             method.has_unstable_override = !merged;
             ret.push(method);
         }
 
         for method in unstable_methods {
-            let merged = ret
-                .iter()
-                .any(|sm| sm.name == method.name && sm.same_signature(&method));
+            let merged = ret.iter().any(|sm| sm.same_signature(&method));
             if !merged {
                 // Only in unstable set - emit with unstable gate
                 ret.push(method);

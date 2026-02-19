@@ -590,6 +590,25 @@ global.GeolocationLike = class GeolocationLike {
   }
 };
 
+global.TextureLike = class TextureLike {
+  constructor() {}
+};
+
+global.UnstableFrame = class UnstableFrame {
+  constructor() {}
+};
+
+global.WebGLLike = class WebGLLike {
+  constructor() {}
+
+  texUpload(texture, arg1, arg2) {
+    if (typeof arg1 === 'number' && Number.isInteger(arg1)) return 'long';
+    if (typeof arg1 === 'number') return 'double';
+    if (typeof arg1 === 'string') return 'string';
+    return 'frame';
+  }
+};
+
 global.TestOptionalUnstableArg = class TestOptionalUnstableArg {
   constructor() {}
   

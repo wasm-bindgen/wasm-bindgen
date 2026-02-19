@@ -2619,7 +2619,6 @@ extern "C" {
         pname: u32,
         param: i32,
     );
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2638,7 +2637,6 @@ extern "C" {
         type_: u32,
         pixels: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2657,7 +2655,6 @@ extern "C" {
         type_: u32,
         pixels: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2676,7 +2673,6 @@ extern "C" {
         type_: u32,
         pixels: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2693,7 +2689,6 @@ extern "C" {
         type_: u32,
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2710,7 +2705,6 @@ extern "C" {
         type_: u32,
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2727,7 +2721,6 @@ extern "C" {
         type_: u32,
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2744,7 +2737,6 @@ extern "C" {
         type_: u32,
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2761,7 +2753,6 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2780,7 +2771,6 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2799,7 +2789,6 @@ extern "C" {
         type_: u32,
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2819,7 +2808,6 @@ extern "C" {
         type_: u32,
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2839,7 +2827,6 @@ extern "C" {
         type_: u32,
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2859,7 +2846,6 @@ extern "C" {
         type_: u32,
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2879,7 +2865,6 @@ extern "C" {
         type_: u32,
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
@@ -2899,7 +2884,6 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2919,7 +2903,6 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -2939,7 +2922,6 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
@@ -3002,7 +2984,6 @@ extern "C" {
         type_: u32,
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3022,7 +3003,6 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3042,7 +3022,6 @@ extern "C" {
         type_: u32,
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
@@ -3063,7 +3042,6 @@ extern "C" {
         type_: u32,
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
@@ -3084,7 +3062,6 @@ extern "C" {
         type_: u32,
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
@@ -3105,7 +3082,6 @@ extern "C" {
         type_: u32,
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
@@ -3126,7 +3102,6 @@ extern "C" {
         type_: u32,
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
@@ -3147,7 +3122,6 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3167,7 +3141,6 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3187,7 +3160,6 @@ extern "C" {
         type_: u32,
         src_data: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3207,7 +3179,6 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3228,7 +3199,6 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3249,7 +3219,6 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
@@ -3323,7 +3292,6 @@ extern "C" {
         height: i32,
         depth: i32,
     );
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3342,7 +3310,6 @@ extern "C" {
         type_: u32,
         pixels: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3361,7 +3328,6 @@ extern "C" {
         type_: u32,
         pixels: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3380,7 +3346,6 @@ extern "C" {
         type_: u32,
         pixels: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3398,7 +3363,6 @@ extern "C" {
         type_: u32,
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3416,7 +3380,6 @@ extern "C" {
         type_: u32,
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3434,7 +3397,6 @@ extern "C" {
         type_: u32,
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3452,7 +3414,6 @@ extern "C" {
         type_: u32,
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3470,7 +3431,6 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3489,7 +3449,6 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3508,7 +3467,6 @@ extern "C" {
         type_: u32,
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3528,7 +3486,6 @@ extern "C" {
         type_: u32,
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3548,7 +3505,6 @@ extern "C" {
         type_: u32,
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3568,7 +3524,6 @@ extern "C" {
         type_: u32,
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3588,7 +3543,6 @@ extern "C" {
         type_: u32,
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
@@ -3608,7 +3562,6 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3628,7 +3581,6 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3648,7 +3600,6 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
@@ -3712,7 +3663,6 @@ extern "C" {
         type_: u32,
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3733,7 +3683,6 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3754,7 +3703,6 @@ extern "C" {
         type_: u32,
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
@@ -3776,7 +3724,6 @@ extern "C" {
         type_: u32,
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
@@ -3798,7 +3745,6 @@ extern "C" {
         type_: u32,
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
@@ -3820,7 +3766,6 @@ extern "C" {
         type_: u32,
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
@@ -3842,7 +3787,6 @@ extern "C" {
         type_: u32,
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
@@ -3864,7 +3808,6 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3885,7 +3828,6 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3906,7 +3848,6 @@ extern "C" {
         type_: u32,
         src_data: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3927,7 +3868,6 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3949,7 +3889,6 @@ extern "C" {
         src_data: Option<&::js_sys::Object>,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
@@ -3971,7 +3910,6 @@ extern "C" {
         src_data: Option<&[u8]>,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]

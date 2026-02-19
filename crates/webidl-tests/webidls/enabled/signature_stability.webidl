@@ -35,6 +35,26 @@ interface GeolocationLike {
   undefined getCurrentPosition(PositionCallback successCallback);
 };
 
+// Test case for WebGL texImage2D pattern: multiple stable overloads of the same
+// JS operation, where one overload references an unstable type (UnstableFrame).
+// The stable overloads that don't use the unstable type should have NO cfg gate.
+// Only the overload using UnstableFrame should get #[cfg(web_sys_unstable_apis)].
+[Constructor()]
+interface TextureLike {
+};
+
+[Constructor()]
+interface WebGLLike {
+  [Throws]
+  undefined texUpload(TextureLike texture, long x, long y);
+  [Throws]
+  undefined texUpload(TextureLike texture, double dx, double dy);
+  [Throws]
+  undefined texUpload(TextureLike texture, DOMString data);
+  [Throws]
+  undefined texUpload(TextureLike texture, UnstableFrame frame);
+};
+
 // Test case for Clipboard.read() - stable has optional unstable param.
 // Stable: read() should exist and NOT be cfg-gated
 // Unstable: read_with_unstable_options() should be unstable
