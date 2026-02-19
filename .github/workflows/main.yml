@@ -283,7 +283,8 @@ jobs:
           - name: "webidl-tests (unstable)"
             run: cargo test -p webidl-tests --target wasm32-unknown-unknown
             env:
-              RUSTFLAGS: --cfg=web_sys_unstable_apis
+              RUSTFLAGS: --cfg=web_sys_unstable_apis --cfg=wbg_next_unstable
+              WBG_NEXT_UNSTABLE: "1"
           - name: "webidl-tests (next)"
             run: cargo test -p webidl-tests --target wasm32-unknown-unknown
             env:
