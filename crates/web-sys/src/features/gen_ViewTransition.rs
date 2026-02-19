@@ -26,7 +26,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn update_callback_done(this: &ViewTransition) -> ::js_sys::Promise;
+    pub fn update_callback_done(this: &ViewTransition) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "ViewTransition" , js_name = ready)]
     #[doc = "Getter for the `ready` field of this object."]
@@ -37,7 +37,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn ready(this: &ViewTransition) -> ::js_sys::Promise;
+    pub fn ready(this: &ViewTransition) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "ViewTransition" , js_name = finished)]
     #[doc = "Getter for the `finished` field of this object."]
@@ -48,7 +48,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn finished(this: &ViewTransition) -> ::js_sys::Promise;
+    pub fn finished(this: &ViewTransition) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "ViewTransition" , js_name = skipTransition)]
     #[doc = "The `skipTransition()` method."]

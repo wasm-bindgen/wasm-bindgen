@@ -34,7 +34,7 @@ fn main() -> Result<()> {
         &opt.output_dir,
         wasm_bindgen_webidl::Options {
             features,
-            next_unstable,
+            next_unstable: std::cell::Cell::new(next_unstable),
         },
     )?;
 

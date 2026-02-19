@@ -40,7 +40,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "bindGroupLayouts")]
-    pub fn get_bind_group_layouts(this: &GpuPipelineLayoutDescriptor) -> ::js_sys::Array;
+    pub fn get_bind_group_layouts(
+        this: &GpuPipelineLayoutDescriptor,
+    ) -> ::js_sys::Array<::js_sys::JsOption<GpuBindGroupLayout>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `bindGroupLayouts` field of this object."]
     #[doc = ""]

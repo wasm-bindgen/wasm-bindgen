@@ -96,7 +96,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_encryption_key(this: &SFrameTransform, key: &CryptoKey) -> ::js_sys::Promise;
+    pub fn set_encryption_key(
+        this: &SFrameTransform,
+        key: &CryptoKey,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CryptoKey")]
     # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
@@ -112,7 +115,7 @@ extern "C" {
         this: &SFrameTransform,
         key: &CryptoKey,
         key_id: u32,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CryptoKey")]
     # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
@@ -128,7 +131,7 @@ extern "C" {
         this: &SFrameTransform,
         key: &CryptoKey,
         key_id: f64,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "BigInt", feature = "CryptoKey",))]
     # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
@@ -144,5 +147,5 @@ extern "C" {
         this: &SFrameTransform,
         key: &CryptoKey,
         key_id: &::js_sys::BigInt,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 }

@@ -40,7 +40,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "attributes")]
-    pub fn get_attributes(this: &GpuVertexBufferLayout) -> ::js_sys::Array;
+    pub fn get_attributes(this: &GpuVertexBufferLayout) -> ::js_sys::Array<GpuVertexAttribute>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attributes` field of this object."]
     #[doc = ""]

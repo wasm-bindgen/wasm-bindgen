@@ -22,7 +22,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "held")]
-    pub fn get_held(this: &LockManagerSnapshot) -> Option<::js_sys::Array>;
+    pub fn get_held(this: &LockManagerSnapshot) -> Option<::js_sys::Array<LockInfo>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `held` field of this object."]
     #[doc = ""]
@@ -40,7 +40,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "pending")]
-    pub fn get_pending(this: &LockManagerSnapshot) -> Option<::js_sys::Array>;
+    pub fn get_pending(this: &LockManagerSnapshot) -> Option<::js_sys::Array<LockInfo>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `pending` field of this object."]
     #[doc = ""]

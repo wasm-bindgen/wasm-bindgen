@@ -40,16 +40,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn alternate(this: &UsbInterface) -> UsbAlternateInterface;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UsbAlternateInterface")]
     # [wasm_bindgen (structural , method , getter , js_class = "USBInterface" , js_name = alternates)]
     #[doc = "Getter for the `alternates` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBInterface/alternates)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UsbInterface`*"]
+    #[doc = "*This API requires the following crate features to be activated: `UsbAlternateInterface`, `UsbInterface`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn alternates(this: &UsbInterface) -> ::js_sys::Array;
+    pub fn alternates(this: &UsbInterface) -> ::js_sys::Array<UsbAlternateInterface>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "USBInterface" , js_name = claimed)]
     #[doc = "Getter for the `claimed` field of this object."]

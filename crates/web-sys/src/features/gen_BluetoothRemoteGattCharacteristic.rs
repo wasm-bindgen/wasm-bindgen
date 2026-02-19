@@ -92,72 +92,79 @@ extern "C" {
         value: Option<&::js_sys::Function>,
     );
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = getDescriptor)]
     #[doc = "The `getDescriptor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptor)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_descriptor_with_str(
         this: &BluetoothRemoteGattCharacteristic,
         descriptor: &str,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<BluetoothRemoteGattDescriptor>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = getDescriptor)]
     #[doc = "The `getDescriptor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptor)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_descriptor_with_u32(
         this: &BluetoothRemoteGattCharacteristic,
         descriptor: u32,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<BluetoothRemoteGattDescriptor>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = getDescriptors)]
     #[doc = "The `getDescriptors()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptors)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_descriptors(this: &BluetoothRemoteGattCharacteristic) -> ::js_sys::Promise;
+    pub fn get_descriptors(
+        this: &BluetoothRemoteGattCharacteristic,
+    ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattDescriptor>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = getDescriptors)]
     #[doc = "The `getDescriptors()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptors)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_descriptors_with_str(
         this: &BluetoothRemoteGattCharacteristic,
         descriptor: &str,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattDescriptor>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = getDescriptors)]
     #[doc = "The `getDescriptors()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptors)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_descriptors_with_u32(
         this: &BluetoothRemoteGattCharacteristic,
         descriptor: u32,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattDescriptor>>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = readValue)]
     #[doc = "The `readValue()` method."]
@@ -168,7 +175,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn read_value(this: &BluetoothRemoteGattCharacteristic) -> ::js_sys::Promise;
+    pub fn read_value(
+        this: &BluetoothRemoteGattCharacteristic,
+    ) -> ::js_sys::Promise<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = startNotifications)]
     #[doc = "The `startNotifications()` method."]
@@ -179,7 +188,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn start_notifications(this: &BluetoothRemoteGattCharacteristic) -> ::js_sys::Promise;
+    pub fn start_notifications(
+        this: &BluetoothRemoteGattCharacteristic,
+    ) -> ::js_sys::Promise<BluetoothRemoteGattCharacteristic>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = stopNotifications)]
     #[doc = "The `stopNotifications()` method."]
@@ -190,7 +201,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn stop_notifications(this: &BluetoothRemoteGattCharacteristic) -> ::js_sys::Promise;
+    pub fn stop_notifications(
+        this: &BluetoothRemoteGattCharacteristic,
+    ) -> ::js_sys::Promise<BluetoothRemoteGattCharacteristic>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValue)]
     #[doc = "The `writeValue()` method."]
@@ -204,7 +217,7 @@ extern "C" {
     pub fn write_value_with_buffer_source(
         this: &BluetoothRemoteGattCharacteristic,
         value: &::js_sys::Object,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValue)]
     #[doc = "The `writeValue()` method."]
@@ -218,7 +231,7 @@ extern "C" {
     pub fn write_value_with_u8_slice(
         this: &BluetoothRemoteGattCharacteristic,
         value: &mut [u8],
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValue)]
     #[doc = "The `writeValue()` method."]
@@ -232,7 +245,7 @@ extern "C" {
     pub fn write_value_with_u8_array(
         this: &BluetoothRemoteGattCharacteristic,
         value: &::js_sys::Uint8Array,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValueWithResponse)]
     #[doc = "The `writeValueWithResponse()` method."]
@@ -246,7 +259,7 @@ extern "C" {
     pub fn write_value_with_response_with_buffer_source(
         this: &BluetoothRemoteGattCharacteristic,
         value: &::js_sys::Object,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValueWithResponse)]
     #[doc = "The `writeValueWithResponse()` method."]
@@ -260,7 +273,7 @@ extern "C" {
     pub fn write_value_with_response_with_u8_slice(
         this: &BluetoothRemoteGattCharacteristic,
         value: &mut [u8],
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValueWithResponse)]
     #[doc = "The `writeValueWithResponse()` method."]
@@ -274,7 +287,7 @@ extern "C" {
     pub fn write_value_with_response_with_u8_array(
         this: &BluetoothRemoteGattCharacteristic,
         value: &::js_sys::Uint8Array,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValueWithoutResponse)]
     #[doc = "The `writeValueWithoutResponse()` method."]
@@ -288,7 +301,7 @@ extern "C" {
     pub fn write_value_without_response_with_buffer_source(
         this: &BluetoothRemoteGattCharacteristic,
         value: &::js_sys::Object,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValueWithoutResponse)]
     #[doc = "The `writeValueWithoutResponse()` method."]
@@ -302,7 +315,7 @@ extern "C" {
     pub fn write_value_without_response_with_u8_slice(
         this: &BluetoothRemoteGattCharacteristic,
         value: &mut [u8],
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTCharacteristic" , js_name = writeValueWithoutResponse)]
     #[doc = "The `writeValueWithoutResponse()` method."]
@@ -316,5 +329,5 @@ extern "C" {
     pub fn write_value_without_response_with_u8_array(
         this: &BluetoothRemoteGattCharacteristic,
         value: &::js_sys::Uint8Array,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
 }

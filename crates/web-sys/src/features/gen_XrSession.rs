@@ -315,33 +315,37 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn end(this: &XrSession) -> ::js_sys::Promise;
+    pub fn end(this: &XrSession) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrFrame")]
     # [wasm_bindgen (method , structural , js_class = "XRSession" , js_name = requestAnimationFrame)]
     #[doc = "The `requestAnimationFrame()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRSession/requestAnimationFrame)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrSession`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrFrame`, `XrSession`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_animation_frame(this: &XrSession, callback: &::js_sys::Function) -> u32;
+    pub fn request_animation_frame(
+        this: &XrSession,
+        callback: &::js_sys::Function<fn(::js_sys::Number, XrFrame) -> ::js_sys::Undefined>,
+    ) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "XrReferenceSpaceType")]
+    #[cfg(all(feature = "XrReferenceSpace", feature = "XrReferenceSpaceType",))]
     # [wasm_bindgen (method , structural , js_class = "XRSession" , js_name = requestReferenceSpace)]
     #[doc = "The `requestReferenceSpace()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRSession/requestReferenceSpace)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrReferenceSpaceType`, `XrSession`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrReferenceSpace`, `XrReferenceSpaceType`, `XrSession`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn request_reference_space(
         this: &XrSession,
         type_: XrReferenceSpaceType,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<XrReferenceSpace>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "XRSession" , js_name = updateRenderState)]
     #[doc = "The `updateRenderState()` method."]
@@ -375,5 +379,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn update_target_frame_rate(this: &XrSession, rate: f32) -> ::js_sys::Promise;
+    pub fn update_target_frame_rate(
+        this: &XrSession,
+        rate: f32,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 }

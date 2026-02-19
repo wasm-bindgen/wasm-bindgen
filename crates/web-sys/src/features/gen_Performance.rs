@@ -247,16 +247,19 @@ extern "C" {
         start_or_measure_options: &PerformanceMeasureOptions,
     ) -> Result<PerformanceMeasure, JsValue>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MemoryMeasurement")]
     # [wasm_bindgen (method , structural , js_class = "Performance" , js_name = measureUserAgentSpecificMemory)]
     #[doc = "The `measureUserAgentSpecificMemory()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Performance`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryMeasurement`, `Performance`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn measure_user_agent_specific_memory(this: &Performance) -> ::js_sys::Promise;
+    pub fn measure_user_agent_specific_memory(
+        this: &Performance,
+    ) -> ::js_sys::Promise<MemoryMeasurement>;
     # [wasm_bindgen (method , structural , js_class = "Performance" , js_name = now)]
     #[doc = "The `now()` method."]
     #[doc = ""]

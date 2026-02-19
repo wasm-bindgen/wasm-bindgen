@@ -17,16 +17,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type NavigatorUaData;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "NavigatorUaBrandVersion")]
     # [wasm_bindgen (structural , method , getter , js_class = "NavigatorUAData" , js_name = brands)]
     #[doc = "Getter for the `brands` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaData`*"]
+    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaBrandVersion`, `NavigatorUaData`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn brands(this: &NavigatorUaData) -> ::js_sys::Array;
+    pub fn brands(this: &NavigatorUaData) -> ::js_sys::Array<NavigatorUaBrandVersion>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "NavigatorUAData" , js_name = mobile)]
     #[doc = "Getter for the `mobile` field of this object."]
@@ -50,19 +51,20 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn platform(this: &NavigatorUaData) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UaDataValues")]
     # [wasm_bindgen (method , structural , js_class = "NavigatorUAData" , js_name = getHighEntropyValues)]
     #[doc = "The `getHighEntropyValues()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/getHighEntropyValues)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaData`*"]
+    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaData`, `UaDataValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_high_entropy_values(
         this: &NavigatorUaData,
         hints: &::wasm_bindgen::JsValue,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<UaDataValues>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UaLowEntropyJson")]
     # [wasm_bindgen (method , structural , js_class = "NavigatorUAData" , js_name = toJSON)]

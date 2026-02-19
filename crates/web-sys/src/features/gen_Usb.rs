@@ -61,26 +61,30 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_ondisconnect(this: &Usb, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UsbDevice")]
     # [wasm_bindgen (method , structural , js_class = "USB" , js_name = getDevices)]
     #[doc = "The `getDevices()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USB/getDevices)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Usb`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Usb`, `UsbDevice`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_devices(this: &Usb) -> ::js_sys::Promise;
+    pub fn get_devices(this: &Usb) -> ::js_sys::Promise<::js_sys::Array<UsbDevice>>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "UsbDeviceRequestOptions")]
+    #[cfg(all(feature = "UsbDevice", feature = "UsbDeviceRequestOptions",))]
     # [wasm_bindgen (method , structural , js_class = "USB" , js_name = requestDevice)]
     #[doc = "The `requestDevice()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USB/requestDevice)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Usb`, `UsbDeviceRequestOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Usb`, `UsbDevice`, `UsbDeviceRequestOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_device(this: &Usb, options: &UsbDeviceRequestOptions) -> ::js_sys::Promise;
+    pub fn request_device(
+        this: &Usb,
+        options: &UsbDeviceRequestOptions,
+    ) -> ::js_sys::Promise<UsbDevice>;
 }

@@ -39,14 +39,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_label(this: &GpuShaderModule, value: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuCompilationInfo")]
     # [wasm_bindgen (method , structural , js_class = "GPUShaderModule" , js_name = getCompilationInfo)]
     #[doc = "The `getCompilationInfo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUShaderModule/getCompilationInfo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuShaderModule`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCompilationInfo`, `GpuShaderModule`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_compilation_info(this: &GpuShaderModule) -> ::js_sys::Promise;
+    pub fn get_compilation_info(this: &GpuShaderModule) -> ::js_sys::Promise<GpuCompilationInfo>;
 }

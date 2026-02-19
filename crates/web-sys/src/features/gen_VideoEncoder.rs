@@ -134,19 +134,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn flush(this: &VideoEncoder) -> ::js_sys::Promise;
+    pub fn flush(this: &VideoEncoder) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoEncoderConfig")]
+    #[cfg(all(feature = "VideoEncoderConfig", feature = "VideoEncoderSupport",))]
     # [wasm_bindgen (static_method_of = VideoEncoder , js_class = "VideoEncoder" , js_name = isConfigSupported)]
     #[doc = "The `isConfigSupported()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoEncoder/isConfigSupported_static)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoEncoder`, `VideoEncoderConfig`*"]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoder`, `VideoEncoderConfig`, `VideoEncoderSupport`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn is_config_supported(config: &VideoEncoderConfig) -> ::js_sys::Promise;
+    pub fn is_config_supported(
+        config: &VideoEncoderConfig,
+    ) -> ::js_sys::Promise<VideoEncoderSupport>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "VideoEncoder" , js_name = reset)]
     #[doc = "The `reset()` method."]

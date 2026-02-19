@@ -17,7 +17,7 @@ fn main() {
         &out_dir,
         wasm_bindgen_webidl::Options {
             features: false,
-            next_unstable,
+            next_unstable: std::cell::Cell::new(next_unstable),
         },
     )
     .unwrap();

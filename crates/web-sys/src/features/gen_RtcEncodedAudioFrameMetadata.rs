@@ -22,8 +22,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "contributingSources")]
-    pub fn get_contributing_sources(this: &RtcEncodedAudioFrameMetadata)
-        -> Option<::js_sys::Array>;
+    pub fn get_contributing_sources(
+        this: &RtcEncodedAudioFrameMetadata,
+    ) -> Option<::js_sys::Array<::js_sys::Number>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `contributingSources` field of this object."]
     #[doc = ""]

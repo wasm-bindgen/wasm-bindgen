@@ -171,7 +171,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_sink_id_with_str(this: &AudioContext, sink_id: &str) -> ::js_sys::Promise;
+    pub fn set_sink_id_with_str(
+        this: &AudioContext,
+        sink_id: &str,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioSinkOptions")]
     # [wasm_bindgen (method , structural , js_class = "AudioContext" , js_name = setSinkId)]
@@ -186,7 +189,7 @@ extern "C" {
     pub fn set_sink_id_with_audio_sink_options(
         this: &AudioContext,
         sink_id: &AudioSinkOptions,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     # [wasm_bindgen (catch , method , structural , js_class = "AudioContext" , js_name = suspend)]
     #[doc = "The `suspend()` method."]
     #[doc = ""]

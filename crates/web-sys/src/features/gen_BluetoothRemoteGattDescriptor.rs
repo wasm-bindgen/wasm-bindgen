@@ -62,7 +62,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn read_value(this: &BluetoothRemoteGattDescriptor) -> ::js_sys::Promise;
+    pub fn read_value(
+        this: &BluetoothRemoteGattDescriptor,
+    ) -> ::js_sys::Promise<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = writeValue)]
     #[doc = "The `writeValue()` method."]
@@ -76,7 +78,7 @@ extern "C" {
     pub fn write_value_with_buffer_source(
         this: &BluetoothRemoteGattDescriptor,
         value: &::js_sys::Object,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = writeValue)]
     #[doc = "The `writeValue()` method."]
@@ -90,7 +92,7 @@ extern "C" {
     pub fn write_value_with_u8_slice(
         this: &BluetoothRemoteGattDescriptor,
         value: &mut [u8],
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = writeValue)]
     #[doc = "The `writeValue()` method."]
@@ -104,5 +106,5 @@ extern "C" {
     pub fn write_value_with_u8_array(
         this: &BluetoothRemoteGattDescriptor,
         value: &::js_sys::Uint8Array,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
 }

@@ -26,7 +26,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn post_task(this: &Scheduler, callback: &::js_sys::Function) -> ::js_sys::Promise;
+    pub fn post_task(
+        this: &Scheduler,
+        callback: &::js_sys::Function<fn() -> ::wasm_bindgen::JsValue>,
+    ) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SchedulerPostTaskOptions")]
     # [wasm_bindgen (method , structural , js_class = "Scheduler" , js_name = postTask)]
@@ -40,7 +43,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn post_task_with_options(
         this: &Scheduler,
-        callback: &::js_sys::Function,
+        callback: &::js_sys::Function<fn() -> ::wasm_bindgen::JsValue>,
         options: &SchedulerPostTaskOptions,
     ) -> ::js_sys::Promise;
 }

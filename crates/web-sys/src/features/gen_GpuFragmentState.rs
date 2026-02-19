@@ -22,7 +22,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "constants")]
-    pub fn get_constants(this: &GpuFragmentState) -> Option<::js_sys::Object>;
+    pub fn get_constants(this: &GpuFragmentState) -> Option<::js_sys::Object<::js_sys::Number>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `constants` field of this object."]
     #[doc = ""]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "constants")]
-    pub fn set_constants(this: &GpuFragmentState, val: &::js_sys::Object);
+    pub fn set_constants(this: &GpuFragmentState, val: &::js_sys::Object<::js_sys::Number>);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `entryPoint` field of this object."]
     #[doc = ""]
@@ -78,7 +78,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "targets")]
-    pub fn get_targets(this: &GpuFragmentState) -> ::js_sys::Array;
+    pub fn get_targets(
+        this: &GpuFragmentState,
+    ) -> ::js_sys::Array<::js_sys::JsOption<GpuColorTargetState>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `targets` field of this object."]
     #[doc = ""]
@@ -107,7 +109,7 @@ impl GpuFragmentState {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_constants()` instead."]
-    pub fn constants(&mut self, val: &::js_sys::Object) -> &mut Self {
+    pub fn constants(&mut self, val: &::js_sys::Object<::js_sys::Number>) -> &mut Self {
         self.set_constants(val);
         self
     }

@@ -86,6 +86,24 @@ fn unstable_no_throws_method_returns_unit() {
     let _ = result;
 }
 
+// Test that unstable IDL overrides use typed Function<fn(...)> parameters.
+// The unstable getCurrentPosition takes PositionCallback which is
+// `callback PositionCallback = undefined (Position position)`.
+// This should generate &Function<fn(Position) -> Undefined>, not &Function.
+#[cfg(web_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn unstable_callback_uses_typed_function() {
+    use wasm_bindgen::closure::ScopedClosure;
+
+    let geo = GeolocationLike::new().unwrap();
+
+    // from_closure produces Function<fn(Position) -> Undefined>.
+    // This only compiles if get_current_position accepts the typed signature.
+    let callback =
+        js_sys::Function::from_closure(ScopedClosure::<dyn Fn(Position)>::new(|_pos: Position| {}));
+    geo.get_current_position(&callback);
+}
+
 // Test WebGL pattern: multiple stable overloads where one uses an unstable type.
 // Stable overloads that don't use the unstable type should have NO cfg gate.
 // They should be available in both stable and unstable modes.

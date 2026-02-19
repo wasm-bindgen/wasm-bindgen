@@ -357,7 +357,14 @@ impl<'src> FirstPassRecord<'src> {
         // signature where that and all remaining optional arguments are
         // undefined.
         let mut signatures = Vec::new();
+        let saved_next_unstable = self.options.next_unstable.get();
         for signature in data.signatures.iter() {
+            // Signatures from unstable IDL definitions always use typed generics
+            // for WbgType expansion (callbacks become typed, etc.)
+            if unstable || signature.stability.is_unstable() {
+                self.options.next_unstable.set(true);
+            }
+
             fn pass<'src>(
                 this: &FirstPassRecord<'src>,
                 id: &'src OperationId<'_>,
@@ -388,6 +395,9 @@ impl<'src> FirstPassRecord<'src> {
 
             let idl_args = Vec::with_capacity(signature.args.len());
             pass(self, id, &mut signatures, signature, idl_args);
+
+            // Restore the original setting
+            self.options.next_unstable.set(saved_next_unstable);
         }
 
         // Next expand all the signatures in `data` into all signatures that
@@ -716,7 +726,7 @@ impl<'src> FirstPassRecord<'src> {
                 ) {
                     methods.push(method.clone());
 
-                    if method.variadic && !self.options.next_unstable {
+                    if method.variadic && !self.options.next_unstable.get() {
                         let last_idl_type = signature.args.last().unwrap().as_ref().unwrap();
                         let last_name = signature.orig.args.last().unwrap().name;
                         for i in 0..=MAX_VARIADIC_ARGUMENTS_COUNT {
@@ -765,7 +775,13 @@ impl<'src> FirstPassRecord<'src> {
         });
 
         let stable_methods = build_method_set(&stable_signatures, false);
+
+        // Unstable IDL signatures use typed generics for return type conversion.
+        if has_unstable_idl_override {
+            self.options.next_unstable.set(true);
+        }
         let unstable_methods = build_method_set(&unstable_signatures, true);
+        self.options.next_unstable.set(saved_next_unstable);
 
         // If only one set has methods, no gating needed
         if unstable_methods.is_empty() {

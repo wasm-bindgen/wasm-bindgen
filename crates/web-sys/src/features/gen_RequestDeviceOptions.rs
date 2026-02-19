@@ -40,7 +40,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "filters")]
-    pub fn get_filters(this: &RequestDeviceOptions) -> Option<::js_sys::Array>;
+    pub fn get_filters(
+        this: &RequestDeviceOptions,
+    ) -> Option<::js_sys::Array<BluetoothLeScanFilterInit>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `filters` field of this object."]
     #[doc = ""]

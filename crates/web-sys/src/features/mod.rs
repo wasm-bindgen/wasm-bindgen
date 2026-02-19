@@ -2889,6 +2889,13 @@ mod gen_FileSystemWritableFileStream;
 #[allow(unused_imports)]
 pub use gen_FileSystemWritableFileStream::*;
 
+#[cfg(feature = "FillLightMode")]
+#[allow(non_snake_case)]
+mod gen_FillLightMode;
+#[cfg(feature = "FillLightMode")]
+#[allow(unused_imports)]
+pub use gen_FillLightMode::*;
+
 #[cfg(feature = "FillMode")]
 #[allow(non_snake_case)]
 mod gen_FillMode;
@@ -5766,6 +5773,13 @@ mod gen_MediaSessionPlaybackState;
 #[allow(unused_imports)]
 pub use gen_MediaSessionPlaybackState::*;
 
+#[cfg(feature = "MediaSettingsRange")]
+#[allow(non_snake_case)]
+mod gen_MediaSettingsRange;
+#[cfg(feature = "MediaSettingsRange")]
+#[allow(unused_imports)]
+pub use gen_MediaSettingsRange::*;
+
 #[cfg(feature = "MediaSource")]
 #[allow(non_snake_case)]
 mod gen_MediaSource;
@@ -5996,6 +6010,13 @@ mod gen_MessagePort;
 #[cfg(feature = "MessagePort")]
 #[allow(unused_imports)]
 pub use gen_MessagePort::*;
+
+#[cfg(feature = "MeteringMode")]
+#[allow(non_snake_case)]
+mod gen_MeteringMode;
+#[cfg(feature = "MeteringMode")]
+#[allow(unused_imports)]
+pub use gen_MeteringMode::*;
 
 #[cfg(feature = "MidiAccess")]
 #[allow(non_snake_case)]
@@ -6823,6 +6844,20 @@ mod gen_Permissions;
 #[allow(unused_imports)]
 pub use gen_Permissions::*;
 
+#[cfg(feature = "PhotoCapabilities")]
+#[allow(non_snake_case)]
+mod gen_PhotoCapabilities;
+#[cfg(feature = "PhotoCapabilities")]
+#[allow(unused_imports)]
+pub use gen_PhotoCapabilities::*;
+
+#[cfg(feature = "PhotoSettings")]
+#[allow(non_snake_case)]
+mod gen_PhotoSettings;
+#[cfg(feature = "PhotoSettings")]
+#[allow(unused_imports)]
+pub use gen_PhotoSettings::*;
+
 #[cfg(feature = "PictureInPictureEvent")]
 #[allow(non_snake_case)]
 mod gen_PictureInPictureEvent;
@@ -6878,6 +6913,13 @@ mod gen_PluginCrashedEventInit;
 #[cfg(feature = "PluginCrashedEventInit")]
 #[allow(unused_imports)]
 pub use gen_PluginCrashedEventInit::*;
+
+#[cfg(feature = "Point2d")]
+#[allow(non_snake_case)]
+mod gen_Point2d;
+#[cfg(feature = "Point2d")]
+#[allow(unused_imports)]
+pub use gen_Point2d::*;
 
 #[cfg(feature = "PointerEvent")]
 #[allow(non_snake_case)]
@@ -7452,6 +7494,13 @@ mod gen_RecordingState;
 #[cfg(feature = "RecordingState")]
 #[allow(unused_imports)]
 pub use gen_RecordingState::*;
+
+#[cfg(feature = "RedEyeReduction")]
+#[allow(non_snake_case)]
+mod gen_RedEyeReduction;
+#[cfg(feature = "RedEyeReduction")]
+#[allow(unused_imports)]
+pub use gen_RedEyeReduction::*;
 
 #[cfg(feature = "ReferrerPolicy")]
 #[allow(non_snake_case)]

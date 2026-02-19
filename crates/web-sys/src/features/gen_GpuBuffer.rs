@@ -192,7 +192,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn map_async(this: &GpuBuffer, mode: u32) -> ::js_sys::Promise;
+    pub fn map_async(this: &GpuBuffer, mode: u32) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -203,7 +203,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn map_async_with_u32(this: &GpuBuffer, mode: u32, offset: u32) -> ::js_sys::Promise;
+    pub fn map_async_with_u32(
+        this: &GpuBuffer,
+        mode: u32,
+        offset: u32,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -214,7 +218,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn map_async_with_f64(this: &GpuBuffer, mode: u32, offset: f64) -> ::js_sys::Promise;
+    pub fn map_async_with_f64(
+        this: &GpuBuffer,
+        mode: u32,
+        offset: f64,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -230,7 +238,7 @@ extern "C" {
         mode: u32,
         offset: u32,
         size: u32,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -246,7 +254,7 @@ extern "C" {
         mode: u32,
         offset: f64,
         size: u32,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -262,7 +270,7 @@ extern "C" {
         mode: u32,
         offset: u32,
         size: f64,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -278,7 +286,7 @@ extern "C" {
         mode: u32,
         offset: f64,
         size: f64,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = unmap)]
     #[doc = "The `unmap()` method."]

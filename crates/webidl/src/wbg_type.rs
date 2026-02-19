@@ -421,7 +421,7 @@ impl<'a> ToWbgType<'a> for Identifier<'a> {
         } else if record.enums.contains_key(self.0) {
             IdentifierType::Enum(self.0)
         } else if let Some(callback_data) = record.callbacks.get(self.0) {
-            if record.options.next_unstable {
+            if record.options.next_unstable.get() {
                 // In next_unstable mode, use typed callback
                 return WbgType::Callback {
                     params: callback_data.params.clone(),
@@ -437,7 +437,7 @@ impl<'a> ToWbgType<'a> for Identifier<'a> {
         } else if record.async_iterators.contains(self.0) {
             IdentifierType::AsyncIterator
         } else if let Some(data) = record.callback_interfaces.get(self.0) {
-            if record.options.next_unstable && data.single_function {
+            if record.options.next_unstable.get() && data.single_function {
                 // In next_unstable mode, single-function callback interfaces become typed callbacks
                 return WbgType::Callback {
                     params: data.params.clone(),
@@ -1071,16 +1071,11 @@ impl<'a> WbgType<'a> {
                 // ArrayTuple<(K, V)> represents a JS array [k, v] pair
                 let path = vec![rust_ident("js_sys"), rust_ident("ArrayTuple")];
                 let base = leading_colon_path_ty(path);
-                // Handle conversion errors by falling back to JsValue
                 let inner_a = _wbg_type_a
-                    .to_syn_type(pos.to_inner(), legacy, no_generics)
-                    .ok()
-                    .flatten()
+                    .to_syn_type(pos.to_inner(), legacy, no_generics)?
                     .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                 let inner_b = _wbg_type_b
-                    .to_syn_type(pos.to_inner(), legacy, no_generics)
-                    .ok()
-                    .flatten()
+                    .to_syn_type(pos.to_inner(), legacy, no_generics)?
                     .unwrap_or_else(|| parse_quote!(::wasm_bindgen::JsValue));
                 // ArrayTuple takes a single tuple type parameter: ArrayTuple<(K, V)>
                 let tuple_ty: syn::Type = parse_quote!((#inner_a, #inner_b));

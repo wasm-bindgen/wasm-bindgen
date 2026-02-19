@@ -39,7 +39,9 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn for_each(
         this: &BluetoothManufacturerDataMap,
-        callback: &::js_sys::Function,
+        callback: &::js_sys::Function<
+            fn(::js_sys::DataView, ::js_sys::Number) -> ::js_sys::Undefined,
+        >,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "BluetoothManufacturerDataMap" , js_name = get)]
@@ -73,7 +75,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn entries(this: &BluetoothManufacturerDataMap) -> ::js_sys::Iterator;
+    pub fn entries(
+        this: &BluetoothManufacturerDataMap,
+    ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::Number, ::js_sys::DataView)>>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "BluetoothManufacturerDataMap" , js_name = keys)]
     #[doc = "The `keys()` method."]
@@ -84,7 +88,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn keys(this: &BluetoothManufacturerDataMap) -> ::js_sys::Iterator;
+    pub fn keys(this: &BluetoothManufacturerDataMap) -> ::js_sys::Iterator<::js_sys::Number>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "BluetoothManufacturerDataMap" , js_name = values)]
     #[doc = "The `values()` method."]
@@ -95,5 +99,5 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn values(this: &BluetoothManufacturerDataMap) -> ::js_sys::Iterator;
+    pub fn values(this: &BluetoothManufacturerDataMap) -> ::js_sys::Iterator<::js_sys::DataView>;
 }

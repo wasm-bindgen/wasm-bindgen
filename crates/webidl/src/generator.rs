@@ -519,9 +519,13 @@ impl InterfaceMethod<'_> {
         } else {
             maybe_unstable_docs(*unstable)
         };
-        // In next_unstable mode, use generics (generics_compat=false)
-        // In compat mode, use legacy types (generics_compat=true)
-        let generics_compat = !options.next_unstable;
+        // Unstable APIs always use typed generics (generics_compat=false).
+        // Stable APIs use legacy types by default, typed generics if next_unstable is set.
+        let generics_compat = if *unstable {
+            false
+        } else {
+            !options.next_unstable.get()
+        };
 
         // Convert WbgType to syn::Type during code generation
         use crate::util::TypePosition;
@@ -1207,9 +1211,13 @@ impl Function<'_> {
             unstable,
         } = self;
 
-        // In next_unstable mode, use generics (generics_compat=false)
-        // In compat mode, use legacy types (generics_compat=true)
-        let generics_compat = !options.next_unstable;
+        // Unstable APIs always use typed generics (generics_compat=false).
+        // Stable APIs use legacy types by default, typed generics if next_unstable is set.
+        let generics_compat = if *unstable {
+            false
+        } else {
+            !options.next_unstable.get()
+        };
 
         // Convert WbgType to syn::Type during code generation
         use crate::util::TypePosition;

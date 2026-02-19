@@ -74,7 +74,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn profiles(this: &XrInputSource) -> ::js_sys::Array;
+    pub fn profiles(this: &XrInputSource) -> ::js_sys::Array<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Gamepad")]
     # [wasm_bindgen (structural , method , getter , js_class = "XRInputSource" , js_name = gamepad)]

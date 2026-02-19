@@ -800,14 +800,18 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             stability,
         );
 
-        // callback MapLikeForEachCallback = undefined (V value, K key);
+        // callback {Name}MapLikeForEachCallback = undefined (V value, K key);
+        let callback_name: &'src str = format!("{self_name}MapLikeForEachCallback").leak();
+        let callback_type: &'src Type<'src> = Box::leak(Box::new(Type::Single(
+            SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
+                type_: Identifier(callback_name),
+                q_mark: None,
+            })),
+        )));
         let foreach_callback_arg = Arg {
             attributes: &None,
             name: "callback",
-            ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
-                type_: Identifier("MapLikeForEachCallback"),
-                q_mark: None,
-            }))),
+            ty: callback_type,
             optional: false,
             variadic: false,
         };
@@ -820,9 +824,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             ],
             return_type: None, // undefined return
         };
-        record
-            .callbacks
-            .insert("MapLikeForEachCallback", callback_data);
+        record.callbacks.insert(callback_name, callback_data);
 
         // [Throws] undefined forEach(MapLikeForEachCallback cb);
         first_pass_operation(
@@ -976,14 +978,19 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             ctx.1,
         );
 
-        // callback SetlikeForEachCallback = undefined (V value);
+        // callback {Name}SetlikeForEachCallback = undefined (V value);
+        let self_name = ctx.0;
+        let callback_name: &'src str = format!("{self_name}SetlikeForEachCallback").leak();
+        let callback_type: &'src Type<'src> = Box::leak(Box::new(Type::Single(
+            SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
+                type_: Identifier(callback_name),
+                q_mark: None,
+            })),
+        )));
         let foreach_callback_arg = Arg {
             attributes: &None,
             name: "callback",
-            ty: &Type::Single(SingleType::NonAny(NonAnyType::Identifier(MayBeNull {
-                type_: Identifier("SetlikeForEachCallback"),
-                q_mark: None,
-            }))),
+            ty: callback_type,
             optional: false,
             variadic: false,
         };
@@ -993,9 +1000,7 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             params: vec![value_ty.type_.to_wbg_type(record)],
             return_type: None, // undefined return
         };
-        record
-            .callbacks
-            .insert("SetlikeForEachCallback", callback_data);
+        record.callbacks.insert(callback_name, callback_data);
 
         // [Throws] undefined forEach(SetlikeForEachCallback cb);
         first_pass_operation(
@@ -1648,7 +1653,7 @@ impl<'src> FirstPass<'src, ()> for weedle::CallbackInterfaceDefinition<'src> {
             .collect();
         // In legacy mode, use the old behavior (count all members)
         // In next_unstable mode, only count operations
-        let single_function = if record.options.next_unstable {
+        let single_function = if record.options.next_unstable.get() {
             operations.len() == 1
         } else {
             self.members.body.len() == 1
@@ -1656,7 +1661,7 @@ impl<'src> FirstPass<'src, ()> for weedle::CallbackInterfaceDefinition<'src> {
         // Extract the method name from callback interfaces with operations
         // In legacy mode (!next_unstable), always extract for dict generation
         // In next_unstable mode, only for single-function interfaces
-        let method_name = if !record.options.next_unstable {
+        let method_name = if !record.options.next_unstable.get() {
             operations
                 .first()
                 .and_then(|op| op.identifier.map(|id| id.0))

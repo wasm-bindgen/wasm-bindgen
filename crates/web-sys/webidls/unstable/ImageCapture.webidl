@@ -4,19 +4,64 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-capture/ImageCapture.html
+ * https://www.w3.org/TR/image-capture/
  *
- * Copyright © 2012-2014 W3C® (MIT, ERCIM, Keio, Beihang), All Rights Reserved.
+ * Copyright © 2012-2025 W3C® (MIT, ERCIM, Keio, Beihang), All Rights Reserved.
  * W3C liability, trademark and document use rules apply.
  */
 
-[Pref="dom.imagecapture.enabled", Constructor(MediaStreamTrack videoTrack)]
+[Exposed=Window, SecureContext]
 interface ImageCapture {
-   Promise<Blob>              takePhoto(optional PhotoSettings photoSettings);
+   constructor(MediaStreamTrack videoTrack);
+   Promise<Blob>              takePhoto(optional PhotoSettings photoSettings = {});
    Promise<PhotoCapabilities> getPhotoCapabilities();
    Promise<PhotoSettings>     getPhotoSettings();
 
    Promise<ImageBitmap>       grabFrame();
 
    readonly attribute MediaStreamTrack track;
+};
+
+dictionary PhotoCapabilities {
+  RedEyeReduction         redEyeReduction;
+  MediaSettingsRange      imageHeight;
+  MediaSettingsRange      imageWidth;
+  sequence<FillLightMode> fillLightMode;
+};
+
+dictionary PhotoSettings {
+  FillLightMode   fillLightMode;
+  double          imageHeight;
+  double          imageWidth;
+  boolean         redEyeReduction;
+};
+
+dictionary MediaSettingsRange {
+    double max;
+    double min;
+    double step;
+};
+
+enum RedEyeReduction {
+  "never",
+  "always",
+  "controllable"
+};
+
+enum FillLightMode {
+  "auto",
+  "off",
+  "flash"
+};
+
+enum MeteringMode {
+  "none",
+  "manual",
+  "single-shot",
+  "continuous"
+};
+
+dictionary Point2D {
+  double x = 0.0;
+  double y = 0.0;
 };

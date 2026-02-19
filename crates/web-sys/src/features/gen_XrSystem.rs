@@ -49,27 +49,34 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn is_session_supported(this: &XrSystem, mode: XrSessionMode) -> ::js_sys::Promise;
+    pub fn is_session_supported(
+        this: &XrSystem,
+        mode: XrSessionMode,
+    ) -> ::js_sys::Promise<::js_sys::Boolean>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "XrSessionMode")]
+    #[cfg(all(feature = "XrSession", feature = "XrSessionMode",))]
     # [wasm_bindgen (method , structural , js_class = "XRSystem" , js_name = requestSession)]
     #[doc = "The `requestSession()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRSystem/requestSession)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrSessionMode`, `XrSystem`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrSession`, `XrSessionMode`, `XrSystem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_session(this: &XrSystem, mode: XrSessionMode) -> ::js_sys::Promise;
+    pub fn request_session(this: &XrSystem, mode: XrSessionMode) -> ::js_sys::Promise<XrSession>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "XrSessionInit", feature = "XrSessionMode",))]
+    #[cfg(all(
+        feature = "XrSession",
+        feature = "XrSessionInit",
+        feature = "XrSessionMode",
+    ))]
     # [wasm_bindgen (method , structural , js_class = "XRSystem" , js_name = requestSession)]
     #[doc = "The `requestSession()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRSystem/requestSession)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrSessionInit`, `XrSessionMode`, `XrSystem`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrSession`, `XrSessionInit`, `XrSessionMode`, `XrSystem`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -77,5 +84,5 @@ extern "C" {
         this: &XrSystem,
         mode: XrSessionMode,
         options: &XrSessionInit,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<XrSession>;
 }

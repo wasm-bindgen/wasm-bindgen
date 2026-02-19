@@ -94,7 +94,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn close(this: &SerialPort) -> ::js_sys::Promise;
+    pub fn close(this: &SerialPort) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "SerialPort" , js_name = forget)]
     #[doc = "The `forget()` method."]
@@ -105,7 +105,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn forget(this: &SerialPort) -> ::js_sys::Promise;
+    pub fn forget(this: &SerialPort) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SerialPortInfo")]
     # [wasm_bindgen (method , structural , js_class = "SerialPort" , js_name = getInfo)]
@@ -119,16 +119,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_info(this: &SerialPort) -> SerialPortInfo;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "SerialInputSignals")]
     # [wasm_bindgen (method , structural , js_class = "SerialPort" , js_name = getSignals)]
     #[doc = "The `getSignals()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SerialPort/getSignals)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `SerialPort`*"]
+    #[doc = "*This API requires the following crate features to be activated: `SerialInputSignals`, `SerialPort`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_signals(this: &SerialPort) -> ::js_sys::Promise;
+    pub fn get_signals(this: &SerialPort) -> ::js_sys::Promise<SerialInputSignals>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SerialOptions")]
     # [wasm_bindgen (method , structural , js_class = "SerialPort" , js_name = open)]
@@ -140,7 +141,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn open(this: &SerialPort, options: &SerialOptions) -> ::js_sys::Promise;
+    pub fn open(
+        this: &SerialPort,
+        options: &SerialOptions,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "SerialPort" , js_name = setSignals)]
     #[doc = "The `setSignals()` method."]
@@ -151,7 +155,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_signals(this: &SerialPort) -> ::js_sys::Promise;
+    pub fn set_signals(this: &SerialPort) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SerialOutputSignals")]
     # [wasm_bindgen (method , structural , js_class = "SerialPort" , js_name = setSignals)]
@@ -166,5 +170,5 @@ extern "C" {
     pub fn set_signals_with_signals(
         this: &SerialPort,
         signals: &SerialOutputSignals,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 }

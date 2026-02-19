@@ -206,7 +206,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn watch_advertisements(this: &BluetoothDevice) -> ::js_sys::Promise;
+    pub fn watch_advertisements(this: &BluetoothDevice) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WatchAdvertisementsOptions")]
     # [wasm_bindgen (method , structural , js_class = "BluetoothDevice" , js_name = watchAdvertisements)]
@@ -221,5 +221,5 @@ extern "C" {
     pub fn watch_advertisements_with_options(
         this: &BluetoothDevice,
         options: &WatchAdvertisementsOptions,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 }

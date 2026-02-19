@@ -712,28 +712,32 @@ extern "C" {
         a_options: &ImageBitmapOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoFrame")]
+    #[cfg(all(feature = "ImageBitmap", feature = "VideoFrame",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_image_bitmap_with_video_frame(
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "ImageBitmapOptions", feature = "VideoFrame",))]
+    #[cfg(all(
+        feature = "ImageBitmap",
+        feature = "ImageBitmapOptions",
+        feature = "VideoFrame",
+    ))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -741,15 +745,15 @@ extern "C" {
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoFrame")]
+    #[cfg(all(feature = "ImageBitmap", feature = "VideoFrame",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -760,15 +764,19 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "ImageBitmapOptions", feature = "VideoFrame",))]
+    #[cfg(all(
+        feature = "ImageBitmap",
+        feature = "ImageBitmapOptions",
+        feature = "VideoFrame",
+    ))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `VideoFrame`, `WorkerGlobalScope`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -780,7 +788,7 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise, JsValue>;
+    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
     #[cfg(feature = "Request")]
     # [wasm_bindgen (method , structural , js_class = "WorkerGlobalScope" , js_name = fetch)]
     #[doc = "The `fetch()` method."]

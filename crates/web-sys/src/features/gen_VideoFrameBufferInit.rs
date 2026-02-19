@@ -170,7 +170,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "layout")]
-    pub fn get_layout(this: &VideoFrameBufferInit) -> Option<::js_sys::Array>;
+    pub fn get_layout(this: &VideoFrameBufferInit) -> Option<::js_sys::Array<PlaneLayout>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `layout` field of this object."]
     #[doc = ""]
@@ -244,7 +244,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "transfer")]
-    pub fn get_transfer(this: &VideoFrameBufferInit) -> Option<::js_sys::Array>;
+    pub fn get_transfer(
+        this: &VideoFrameBufferInit,
+    ) -> Option<::js_sys::Array<::js_sys::ArrayBuffer>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `transfer` field of this object."]
     #[doc = ""]

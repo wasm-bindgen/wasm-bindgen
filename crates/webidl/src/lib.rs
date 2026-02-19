@@ -94,12 +94,22 @@ fn mark_stable_methods_with_unstable_overrides(methods: &mut [InterfaceMethod]) 
 }
 
 /// Options to configure the conversion process
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Options {
     /// Whether to generate per-type cfg features (`#[cfg(feature = "TypeName")]`)
     pub features: bool,
-    /// Whether to generate the next major unstable generics output
-    pub next_unstable: bool,
+    /// Whether to generate the next major unstable generics output for stable APIs.
+    /// Unstable APIs always use typed generics regardless of this flag.
+    pub next_unstable: std::cell::Cell<bool>,
+}
+
+impl std::fmt::Debug for Options {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Options")
+            .field("features", &self.features)
+            .field("next_unstable", &self.next_unstable.get())
+            .finish()
+    }
 }
 
 #[derive(Default)]
@@ -272,7 +282,7 @@ impl<'src> FirstPassRecord<'src> {
 
         // In next_unstable mode, don't generate callback interface dict types
         // They are replaced with typed callbacks
-        if self.options.next_unstable {
+        if self.options.next_unstable.get() {
             return;
         }
 
@@ -538,7 +548,12 @@ impl<'src> FirstPassRecord<'src> {
         };
 
         // use argument position now as we're just binding setters
-        let generics_compat = !self.options.next_unstable;
+        // Unstable APIs always use typed generics; stable uses legacy by default.
+        let generics_compat = if unstable_override {
+            false
+        } else {
+            !self.options.next_unstable.get()
+        };
         let ty = wbg_type
             .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
             .ok()
@@ -648,7 +663,11 @@ impl<'src> FirstPassRecord<'src> {
         unstable: bool,
     ) {
         let wbg_type = member.definition.const_type.to_wbg_type(self);
-        let generics_compat = !self.options.next_unstable;
+        let generics_compat = if unstable {
+            false
+        } else {
+            !self.options.next_unstable.get()
+        };
         let ty = wbg_type
             .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .unwrap()
@@ -711,10 +730,15 @@ impl<'src> FirstPassRecord<'src> {
         let catch = throws(&definition.attributes);
         let unstable = unstable || member.stability.is_unstable();
 
+        let generics_compat = if unstable {
+            false
+        } else {
+            !self.options.next_unstable.get()
+        };
         let ty = definition
             .type_
             .to_wbg_type(self)
-            .to_syn_type(TypePosition::RETURN, false, self.options.next_unstable)
+            .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .unwrap_or(None);
 
         let js_name = definition.identifier.0.to_string();
@@ -739,7 +763,11 @@ impl<'src> FirstPassRecord<'src> {
         unstable: bool,
     ) {
         let wbg_type = member.const_type.to_wbg_type(self);
-        let generics_compat = !self.options.next_unstable;
+        let generics_compat = if unstable {
+            false
+        } else {
+            !self.options.next_unstable.get()
+        };
         let ty = wbg_type
             .to_syn_type(TypePosition::RETURN, false, generics_compat)
             .unwrap()
@@ -909,7 +937,11 @@ impl<'src> FirstPassRecord<'src> {
         let catch = throws(attrs);
         let deprecated: Option<Option<String>> = get_rust_deprecated(attrs);
 
-        let generics_compat = !self.options.next_unstable;
+        let generics_compat = if unstable {
+            false
+        } else {
+            !self.options.next_unstable.get()
+        };
         let ty = type_
             .type_
             .to_wbg_type(self)
@@ -1180,7 +1212,7 @@ mod tests {
 
         let options = Options {
             features: false,
-            next_unstable: true,
+            next_unstable: std::cell::Cell::new(true),
         };
         let result = compile(webidl, "", options).unwrap();
 
@@ -1225,7 +1257,7 @@ mod tests {
 
         let options = Options {
             features: false,
-            next_unstable: true,
+            next_unstable: std::cell::Cell::new(true),
         };
         let result = compile(webidl, "", options).unwrap();
 

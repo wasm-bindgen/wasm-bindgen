@@ -26,7 +26,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn ready(this: &ImageTrackList) -> ::js_sys::Promise;
+    pub fn ready(this: &ImageTrackList) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "ImageTrackList" , js_name = length)]
     #[doc = "Getter for the `length` field of this object."]

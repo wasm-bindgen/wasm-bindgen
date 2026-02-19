@@ -28,18 +28,19 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn length(this: &XrInputSourceArray) -> u32;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrInputSource")]
     # [wasm_bindgen (catch , method , structural , js_class = "XRInputSourceArray" , js_name = forEach)]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceArray/forEach)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrInputSourceArray`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrInputSource`, `XrInputSourceArray`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn for_each(
         this: &XrInputSourceArray,
-        callback: &::js_sys::Function,
+        callback: &::js_sys::Function<fn(XrInputSource, ::js_sys::Number) -> ::js_sys::Undefined>,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrInputSource")]
@@ -54,16 +55,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get(this: &XrInputSourceArray, index: u32) -> Option<XrInputSource>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrInputSource")]
     # [wasm_bindgen (method , structural , js_class = "XRInputSourceArray" , js_name = entries)]
     #[doc = "The `entries()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceArray/entries)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrInputSourceArray`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrInputSource`, `XrInputSourceArray`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn entries(this: &XrInputSourceArray) -> ::js_sys::Iterator;
+    pub fn entries(this: &XrInputSourceArray) -> ::js_sys::Iterator<XrInputSource>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "XRInputSourceArray" , js_name = keys)]
     #[doc = "The `keys()` method."]
@@ -74,16 +76,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn keys(this: &XrInputSourceArray) -> ::js_sys::Iterator;
+    pub fn keys(this: &XrInputSourceArray) -> ::js_sys::Iterator<::js_sys::Number>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrInputSource")]
     # [wasm_bindgen (method , structural , js_class = "XRInputSourceArray" , js_name = values)]
     #[doc = "The `values()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceArray/values)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrInputSourceArray`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrInputSource`, `XrInputSourceArray`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn values(this: &XrInputSourceArray) -> ::js_sys::Iterator;
+    pub fn values(this: &XrInputSourceArray) -> ::js_sys::Iterator<XrInputSource>;
 }

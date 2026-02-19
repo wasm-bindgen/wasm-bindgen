@@ -120,7 +120,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "viewFormats")]
-    pub fn get_view_formats(this: &GpuCanvasConfiguration) -> Option<::js_sys::Array>;
+    pub fn get_view_formats(
+        this: &GpuCanvasConfiguration,
+    ) -> Option<::js_sys::Array<GpuTextureFormat>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `viewFormats` field of this object."]
     #[doc = ""]
