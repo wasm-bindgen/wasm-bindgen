@@ -5,6 +5,12 @@
 
 ### Added
 
+* Added unstable Geolocation API types per the latest W3C spec: `GeolocationCoordinates`,
+  `GeolocationPosition`, and `GeolocationPositionError`. The `Geolocation` interface now
+  has both stable methods (using the old `Position`/`PositionError` types with `[Throws]`)
+  and unstable methods (using the new types without `[Throws]}`, matching actual browser behavior).
+  [#2578](https://github.com/AbesBend662/AbesBend662.github.io/pull/2578)
+
 * Added support for erasable generic type parameters on imported JavaScript types,
   using sound type erasure in JS bindgen boundary. Includes updated js-sys bindings
   with generic implementations for many standard JS types and functions including
