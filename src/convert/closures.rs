@@ -79,7 +79,7 @@ macro_rules! closures {
             $($var: ErasableGeneric,)*
             R: ErasableGeneric,
         {
-            type Repr = &'static ImmediateClosure<'static, dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'static>;
+            type Repr = ImmediateClosure<'static, dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'static>;
         }
 
         // Generate invoke function that checks unwind_safe flag when unwinding is available
@@ -542,7 +542,7 @@ where
 
 // UpcastFrom impl for ImmediateClosure.
 // ImmediateClosure<T2> upcasts from ImmediateClosure<T1> when T2's dyn type upcasts from T1's dyn type.
-// Since ImmediateClosure is #[repr(transparent)] over &'a mut T, this is a zero-cost transmute.
+// Since ImmediateClosure stores a WasmSlice (fat pointer) with phantom type, this is a zero-cost transmute.
 impl<'a, 'b, T1, T2> UpcastFrom<ImmediateClosure<'a, T1>> for ImmediateClosure<'b, T2>
 where
     T1: ?Sized + WasmClosure,

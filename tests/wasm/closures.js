@@ -269,3 +269,15 @@ exports.immediate_closure_fnmut_reentrant = f => {
 exports.immediate_closure_fnmut_reentrant_invoke = () => {
   IMMEDIATE_REENTRANT_CB();
 };
+
+// Same pattern for Fn (immutable) closures
+let IMMEDIATE_FN_REENTRANT_CB = null;
+exports.immediate_closure_fn_reentrant = f => {
+  IMMEDIATE_FN_REENTRANT_CB = f;
+  f();
+  IMMEDIATE_FN_REENTRANT_CB = null;
+};
+
+exports.immediate_closure_fn_reentrant_invoke = () => {
+  IMMEDIATE_FN_REENTRANT_CB();
+};

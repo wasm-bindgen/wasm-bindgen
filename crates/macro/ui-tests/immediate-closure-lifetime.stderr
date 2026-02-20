@@ -1,29 +1,29 @@
 error[E0373]: closure may outlive the current function, but it borrows `called`, which is owned by the current function
-  --> ui-tests/immediate-closure-lifetime.rs:13:59
+  --> ui-tests/immediate-closure-lifetime.rs:13:58
    |
-13 |     bad_immediate_closure(&ImmediateClosure::new_mut(&mut || {
-   |                                                           ^^ may outlive borrowed value `called`
+13 |     bad_immediate_closure(ImmediateClosure::new_mut(&mut || {
+   |                                                          ^^ may outlive borrowed value `called`
 14 |         called = true;
    |         ------ `called` is borrowed here
    |
 note: function requires argument type to outlive `'static`
   --> ui-tests/immediate-closure-lifetime.rs:13:5
    |
-13 | /     bad_immediate_closure(&ImmediateClosure::new_mut(&mut || {
+13 | /     bad_immediate_closure(ImmediateClosure::new_mut(&mut || {
 14 | |         called = true;
 15 | |     }));
    | |_______^
 help: to force the closure to take ownership of `called` (and any other referenced variables), use the `move` keyword
    |
-13 |     bad_immediate_closure(&ImmediateClosure::new_mut(&mut move || {
-   |                                                           ++++
+13 |     bad_immediate_closure(ImmediateClosure::new_mut(&mut move || {
+   |                                                          ++++
 
 error[E0716]: temporary value dropped while borrowed
-  --> ui-tests/immediate-closure-lifetime.rs:13:59
+  --> ui-tests/immediate-closure-lifetime.rs:13:58
    |
-13 |        bad_immediate_closure(&ImmediateClosure::new_mut(&mut || {
-   |   _____-                                                     ^
-   |  |___________________________________________________________|
+13 |        bad_immediate_closure(ImmediateClosure::new_mut(&mut || {
+   |   _____-                                                    ^
+   |  |__________________________________________________________|
 14 | ||         called = true;
 15 | ||     }));
    | ||     ^ -- temporary value is freed at the end of this statement

@@ -151,7 +151,7 @@ fn stringify_with_replacer() {
     {
         output2 = JSON::stringify_with_replacer(
             &JsValue::from(obj),
-            &ImmediateClosure::new_mut(&mut |k: JsString, v: JsValue| {
+            ImmediateClosure::new_mut(&mut |k: JsString, v: JsValue| {
                 if k == "hello" {
                     Ok(None)
                 } else {
@@ -183,7 +183,7 @@ fn stringify_with_replacer_error() {
     {
         result = JSON::stringify_with_replacer(
             &JsValue::from(arr),
-            &ImmediateClosure::new_mut(&mut |_: JsString, _: JsValue| {
+            ImmediateClosure::new_mut(&mut |_: JsString, _: JsValue| {
                 Err(JsError::new("rust really rocks"))
             }),
             None,
@@ -251,7 +251,7 @@ fn stringify_with_replacer_and_space_error() {
 
     let result = JSON::stringify_with_replacer_func(
         &arr,
-        &ImmediateClosure::new_mut(&mut |_: JsString, _: JsValue| {
+        ImmediateClosure::new_mut(&mut |_: JsString, _: JsValue| {
             Err(JsError::new("rust really rocks"))
         }),
         Some(4),
@@ -274,7 +274,7 @@ fn stringify_with_replacer_func_typed() {
     // Replacer function that doubles numbers
     let output: String = JSON::stringify_with_replacer_func(
         &JsValue::from(obj),
-        &ImmediateClosure::new_mut(&mut |_: JsString, value: JsValue| {
+        ImmediateClosure::new_mut(&mut |_: JsString, value: JsValue| {
             if let Some(n) = value.as_f64() {
                 Ok(Some(JsValue::from(n * 2.0)))
             } else {

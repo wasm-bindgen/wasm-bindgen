@@ -12,7 +12,7 @@ fn set2vec(s: &Set<JsValue>) -> Vec<JsValue> {
 #[cfg(js_sys_unstable_apis)]
 fn set2vec(s: &Set<JsValue>) -> Vec<JsValue> {
     let mut result = Vec::new();
-    s.for_each(&ImmediateClosure::new_mut(&mut |x| result.push(x)));
+    s.for_each(ImmediateClosure::new_mut(&mut |x| result.push(x)));
     result
 }
 

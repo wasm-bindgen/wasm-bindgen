@@ -582,7 +582,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Array, catch, js_name = from)]
     pub fn from_iterable_map<'a, I: Iterable, U>(
         val: &I,
-        map: &ImmediateClosure<'a, dyn FnMut(I::Item, u32) -> Result<U, JsError> + 'a>,
+        map: ImmediateClosure<'a, dyn FnMut(I::Item, u32) -> Result<U, JsError> + 'a>,
     ) -> Result<Array<U>, JsValue>;
 
     /// The `Array.fromAsync()` static method creates a new, shallow-copied `Array` instance
@@ -640,7 +640,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = every, catch)]
     pub fn try_every<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
     ) -> Result<bool, JsValue>;
 
     /// The `fill()` method fills all the elements of an array from a start index
@@ -688,7 +688,7 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn find<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32, Array<T>) -> bool + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32, Array<T>) -> bool + 'a>,
     ) -> Option<T>;
 
     /// The `find()` method returns the value of the first element in the array that satisfies
@@ -698,7 +698,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = find, catch)]
     pub fn try_find<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
     ) -> Result<Option<T>, JsValue>;
 
     /// The `findIndex()` method returns the index of the first element in the array that
@@ -720,7 +720,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = findIndex, catch)]
     pub fn try_find_index<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
     ) -> Result<i32, JsValue>;
 
     /// The `findLast()` method of Array instances iterates the array in reverse order
@@ -751,7 +751,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = findLast, catch)]
     pub fn try_find_last<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
     ) -> Result<Option<T>, JsValue>;
 
     /// The `findLastIndex()` method of Array instances iterates the array in reverse order
@@ -775,7 +775,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = findLastIndex, catch)]
     pub fn try_find_last_index<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
     ) -> Result<i32, JsValue>;
 
     /// The `flat()` method creates a new array with all sub-array elements concatenated into it
@@ -804,7 +804,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = flatMap, catch)]
     pub fn try_flat_map<'a, T, U>(
         this: &Array<T>,
-        callback: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Vec<U> + 'a>,
+        callback: ImmediateClosure<'a, dyn FnMut(T, u32) -> Vec<U> + 'a>,
     ) -> Result<Array<U>, JsValue>;
 
     /// The `forEach()` method executes a provided function once for each array element.
@@ -821,7 +821,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<'a, T>(
         this: &Array<T>,
-        callback: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<(), JsError> + 'a>,
+        callback: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<(), JsError> + 'a>,
     ) -> Result<(), JsValue>;
 
     /// The `includes()` method determines whether an array includes a certain
@@ -905,7 +905,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = map, catch)]
     pub fn try_map<'a, T, U>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<U, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<U, JsError> + 'a>,
     ) -> Result<Array<U>, JsValue>;
 
     /// The `Array.of()` method creates a new Array instance with a variable
@@ -1005,7 +1005,7 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn reduce<'a, T, A>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(A, T, u32, Array<T>) -> A + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(A, T, u32, Array<T>) -> A + 'a>,
         initial_value: &A,
     ) -> A;
 
@@ -1016,7 +1016,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = reduce, catch)]
     pub fn try_reduce<'a, T, A>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(A, T, u32) -> Result<A, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(A, T, u32) -> Result<A, JsError> + 'a>,
         initial_value: &A,
     ) -> Result<A, JsValue>;
 
@@ -1040,7 +1040,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = reduceRight)]
     pub fn reduce_right<'a, T, A>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(A, T, u32, Array<T>) -> A + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(A, T, u32, Array<T>) -> A + 'a>,
         initial_value: &A,
     ) -> A;
 
@@ -1051,7 +1051,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = reduceRight, catch)]
     pub fn try_reduce_right<'a, T, A>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(JsValue, T, u32) -> Result<A, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(JsValue, T, u32) -> Result<A, JsError> + 'a>,
         initial_value: &A,
     ) -> Result<A, JsValue>;
 
@@ -1142,7 +1142,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = some, catch)]
     pub fn try_some<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T) -> Result<bool, JsError> + 'a>,
     ) -> Result<bool, JsValue>;
 
     /// The `sort()` method sorts the elements of an array in place and returns
@@ -1170,7 +1170,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = sort, catch)]
     pub fn try_sort_by<'a, T>(
         this: &Array<T>,
-        compare_fn: &ImmediateClosure<'a, dyn FnMut(T, T) -> Result<i32, JsError> + 'a>,
+        compare_fn: ImmediateClosure<'a, dyn FnMut(T, T) -> Result<i32, JsError> + 'a>,
     ) -> Result<Array<T>, JsValue>;
 
     /// The `splice()` method changes the contents of an array by removing existing elements and/or
@@ -1237,7 +1237,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toSorted, catch)]
     pub fn try_to_sorted_by<'a, T>(
         this: &Array<T>,
-        compare_fn: &ImmediateClosure<'a, dyn FnMut(T, T) -> Result<i32, JsError> + 'a>,
+        compare_fn: ImmediateClosure<'a, dyn FnMut(T, T) -> Result<i32, JsError> + 'a>,
     ) -> Result<Array<T>, JsValue>;
 
     /// The `toSpliced()` method returns a new array with some elements removed and/or
@@ -4939,7 +4939,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<'a, K, V>(
         this: &Map<K, V>,
-        callback: &ImmediateClosure<'a, dyn FnMut(V, K) -> Result<(), JsError> + 'a>,
+        callback: ImmediateClosure<'a, dyn FnMut(V, K) -> Result<(), JsError> + 'a>,
     ) -> Result<(), JsValue>;
 
     /// The `get()` method returns a specified element from a Map object.
@@ -7843,7 +7843,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = forEach)]
-    pub fn for_each<'a, T>(this: &Set<T>, callback: &ImmediateClosure<'a, dyn FnMut(T) + 'a>);
+    pub fn for_each<'a, T>(this: &Set<T>, callback: ImmediateClosure<'a, dyn FnMut(T) + 'a>);
 
     /// The `forEach()` method executes a provided function once for each value
     /// in the Set object, in insertion order.
@@ -7852,7 +7852,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<'a, T>(
         this: &Set<T>,
-        callback: &ImmediateClosure<'a, dyn FnMut(T) -> Result<(), JsError> + 'a>,
+        callback: ImmediateClosure<'a, dyn FnMut(T) -> Result<(), JsError> + 'a>,
     ) -> Result<(), JsValue>;
 
     /// The `has()` method returns a boolean indicating whether an element with
@@ -8721,7 +8721,7 @@ pub mod JSON {
         #[wasm_bindgen(catch, js_namespace = JSON, js_name = stringify)]
         pub fn stringify_with_replacer<'a>(
             obj: &JsValue,
-            replacer: &ImmediateClosure<
+            replacer: ImmediateClosure<
                 'a,
                 dyn FnMut(JsString, JsValue) -> Result<Option<JsValue>, JsError> + 'a,
             >,
@@ -8741,7 +8741,7 @@ pub mod JSON {
         #[wasm_bindgen(catch, js_namespace = JSON, js_name = stringify)]
         pub fn stringify_with_replacer_func<'a>(
             obj: &JsValue,
-            replacer: &ImmediateClosure<
+            replacer: ImmediateClosure<
                 'a,
                 dyn FnMut(JsString, JsValue) -> Result<Option<JsValue>, JsError> + 'a,
             >,
@@ -12774,7 +12774,7 @@ extern "C" {
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(constructor)]
     pub fn new<'a, T: JsGeneric>(
-        cb: &ImmediateClosure<
+        cb: ImmediateClosure<
             'a,
             dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>) + 'a,
         >,
@@ -12786,7 +12786,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[wasm_bindgen(constructor)]
     pub fn new_typed<'a, T: JsGeneric>(
-        cb: &ImmediateClosure<
+        cb: ImmediateClosure<
             'a,
             dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>) + 'a,
         >,
@@ -13219,7 +13219,7 @@ macro_rules! arrays {
             /// `Array.prototype.forEach()`. `TypedArray` is one of the typed array
             /// types here.
             #[wasm_bindgen(method, js_name = forEach, catch)]
-            pub fn try_for_each<'a>(this: &$name, callback: &ImmediateClosure<'a, dyn FnMut($ty, u32, $name) -> Result<(), JsError> + 'a>) -> Result<(), JsValue>;
+            pub fn try_for_each<'a>(this: &$name, callback: ImmediateClosure<'a, dyn FnMut($ty, u32, $name) -> Result<(), JsError> + 'a>) -> Result<(), JsValue>;
 
             /// The length accessor property represents the length (in elements) of a
             /// typed array.

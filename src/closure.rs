@@ -924,11 +924,11 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
         }
     }
 
-    /// Returns a reference to this closure as a mutable `FnMut` closure.
+    /// Converts this closure to a mutable `FnMut` closure.
     ///
     /// This is safe because every `Fn` can be called through a `FnMut` interface.
-    /// The fat pointer representation is compatible—`&dyn Fn` can be safely
-    /// reinterpreted as `&dyn FnMut`.
+    /// The fat pointer representation is compatible—`dyn Fn` can be safely
+    /// reinterpreted as `dyn FnMut`.
     ///
     /// Note: Unlike `ScopedClosure::as_mut`, this only supports the Fn→FnMut conversion
     /// with the same argument and return types. `ImmediateClosure` stores a Rust fat
@@ -941,19 +941,21 @@ impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
     ///
     /// #[wasm_bindgen]
     /// extern "C" {
-    ///     fn needs_fnmut(cb: &ImmediateClosure<dyn FnMut(u32)>);
+    ///     fn needs_fnmut(cb: ImmediateClosure<dyn FnMut(u32)>);
     /// }
     ///
     /// let func: &dyn Fn(u32) = &|x| println!("{}", x);
     /// let closure: ImmediateClosure<dyn Fn(u32)> = ImmediateClosure::new_assert_unwind_safe(func);
     /// needs_fnmut(closure.as_mut());
     /// ```
-    pub fn as_mut(&self) -> &ImmediateClosure<'a, T::AsMut> {
+    pub fn as_mut(self) -> ImmediateClosure<'a, T::AsMut> {
         // SAFETY: ImmediateClosure stores a WasmSlice (fat pointer data) and metadata.
-        // The type parameter T is phantom data. A &dyn Fn fat pointer can be safely
-        // reinterpreted as &dyn FnMut since Fn is a supertrait of FnMut.
-        unsafe {
-            &*(self as *const ImmediateClosure<'a, T> as *const ImmediateClosure<'a, T::AsMut>)
+        // The type parameter T is phantom data. A dyn Fn fat pointer can be safely
+        // reinterpreted as dyn FnMut since Fn is a supertrait of FnMut.
+        ImmediateClosure {
+            data: self.data,
+            unwind_safe: self.unwind_safe,
+            _marker: PhantomData,
         }
     }
 }
@@ -1191,15 +1193,6 @@ where
     }
 }
 
-fn immediate_closure_into_abi<T: WasmClosure + ?Sized>(c: &ImmediateClosure<'_, T>) -> WasmSlice {
-    let WasmSlice { ptr, len } = c.data;
-    let len_with_flag = if c.unwind_safe { len | 0x80000000 } else { len };
-    WasmSlice {
-        ptr,
-        len: len_with_flag,
-    }
-}
-
 impl<T> IntoWasmAbi for ImmediateClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
@@ -1207,31 +1200,20 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
-        immediate_closure_into_abi(&self)
-    }
-}
-
-impl<T> IntoWasmAbi for &ImmediateClosure<'_, T>
-where
-    T: WasmClosure + ?Sized,
-{
-    type Abi = WasmSlice;
-
-    fn into_abi(self) -> WasmSlice {
-        immediate_closure_into_abi(self)
+        let WasmSlice { ptr, len } = self.data;
+        let len_with_flag = if self.unwind_safe {
+            len | 0x80000000
+        } else {
+            len
+        };
+        WasmSlice {
+            ptr,
+            len: len_with_flag,
+        }
     }
 }
 
 impl<T> OptionIntoWasmAbi for ImmediateClosure<'_, T>
-where
-    T: WasmClosure + ?Sized,
-{
-    fn none() -> WasmSlice {
-        WasmSlice { ptr: 0, len: 0 }
-    }
-}
-
-impl<T> OptionIntoWasmAbi for &ImmediateClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
 {
@@ -1254,13 +1236,6 @@ fn _check() {
     _assert::<ScopedClosure<'static, dyn FnMut()>>();
     _assert::<Closure<dyn Fn()>>();
     _assert::<Closure<dyn FnMut()>>();
-    // ImmediateClosure by reference
-    _assert::<&ImmediateClosure<dyn Fn()>>();
-    _assert::<&ImmediateClosure<dyn Fn(String)>>();
-    _assert::<&ImmediateClosure<dyn Fn() -> String>>();
-    _assert::<&ImmediateClosure<dyn FnMut()>>();
-    _assert::<&ImmediateClosure<dyn FnMut(String)>>();
-    _assert::<&ImmediateClosure<dyn FnMut() -> String>>();
     // ImmediateClosure by value
     _assert::<ImmediateClosure<dyn Fn()>>();
     _assert::<ImmediateClosure<dyn Fn(String)>>();

@@ -12,7 +12,7 @@ closures are caught and converted to JavaScript `PanicError` exceptions. See
 
 | Use case | Import function signature | Accepts |
 | -------- | ------------------------- | ------- |
-| Immediate/synchronous callbacks | `&ImmediateClosure<C>` | `&ImmediateClosure` only |
+| Immediate/synchronous callbacks | `ImmediateClosure<C>` or `&ImmediateClosure<C>` | `ImmediateClosure` (by value or reference) |
 | Known-lifetime callbacks | `&ScopedClosure<'lifetime, C>` | `&ScopedClosure<'a>`, `&ScopedClosure<'static>`, and `&From<ImmediateClosure>` by conversion |
 | Indeterminate lifetime | `ScopedClosure<'static, C>` | `ScopedClosure<'static>` only |
 

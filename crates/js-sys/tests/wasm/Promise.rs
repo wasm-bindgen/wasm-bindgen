@@ -9,10 +9,10 @@ fn promise_inheritance() {
     #[cfg(not(js_sys_unstable_apis))]
     let promise: Promise<JsValue> = Promise::new(&mut |_, _| ());
     #[cfg(js_sys_unstable_apis)]
-    let promise: Promise<JsValue> = Promise::new(&ImmediateClosure::new_mut(&mut |_: Function<
+    let promise: Promise<JsValue> = Promise::new(ImmediateClosure::new_mut(&mut |_: Function<
         fn(JsValue) -> Undefined,
     >,
-                                                                                  _: Function<
+                                                                                 _: Function<
         fn(JsValue) -> Undefined,
     >| ()));
     assert!(promise.is_instance_of::<Promise>());
