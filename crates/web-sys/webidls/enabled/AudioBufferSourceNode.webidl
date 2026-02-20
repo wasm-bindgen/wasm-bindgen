@@ -20,12 +20,12 @@ interface AudioBufferSourceNode : AudioScheduledSourceNode {
     attribute boolean loop;
     attribute double loopStart;
     attribute double loopEnd;
-    [RustDeprecated] attribute EventHandler onended;
     [Throws] undefined start (optional double when = 0,
                      optional double offset,
                      optional double duration);
-    [Throws, RustDeprecated] undefined stop (optional double when = 0);
 };
+
+AudioBufferSourceNode includes rustAudioScheduledSourceNode;
 
 dictionary AudioBufferSourceOptions {
     AudioBuffer? buffer;

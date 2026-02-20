@@ -92,7 +92,6 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/onended)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioBufferSourceNode`*"]
-    #[deprecated]
     pub fn onended(this: &AudioBufferSourceNode) -> Option<::js_sys::Function>;
     # [wasm_bindgen (structural , method , setter , js_class = "AudioBufferSourceNode" , js_name = onended)]
     #[doc = "Setter for the `onended` field of this object."]
@@ -100,7 +99,6 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/onended)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioBufferSourceNode`*"]
-    #[deprecated]
     pub fn set_onended(this: &AudioBufferSourceNode, value: Option<&::js_sys::Function>);
     #[cfg(feature = "BaseAudioContext")]
     #[wasm_bindgen(catch, constructor, js_class = "AudioBufferSourceNode")]
@@ -164,7 +162,6 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/stop)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioBufferSourceNode`*"]
-    #[deprecated]
     pub fn stop(this: &AudioBufferSourceNode) -> Result<(), JsValue>;
     # [wasm_bindgen (catch , method , structural , js_class = "AudioBufferSourceNode" , js_name = stop)]
     #[doc = "The `stop()` method."]
@@ -172,6 +169,5 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/stop)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioBufferSourceNode`*"]
-    #[deprecated]
     pub fn stop_with_when(this: &AudioBufferSourceNode, when: f64) -> Result<(), JsValue>;
 }
