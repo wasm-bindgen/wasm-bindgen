@@ -22,7 +22,7 @@ extern "C" {
         note = "Use `set_body_opt_blob()` or `set_body_opt_buffer_source()` or `set_body_opt_u8_slice()` or `set_body_opt_u8_array()` or `set_body_opt_form_data()` or `set_body_opt_url_search_params()` or `set_body_opt_str()` or `set_body_opt_readable_stream()` instead."
     )]
     #[wasm_bindgen(method, setter = "body")]
-    pub fn set_body(this: &RequestInit, val: Option<&::wasm_bindgen::JsValue>);
+    pub fn set_body(this: &RequestInit, val: &::wasm_bindgen::JsValue);
     #[cfg(feature = "Blob")]
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
@@ -236,7 +236,7 @@ impl RequestInit {
     }
     #[deprecated = "Use `set_body()` instead."]
     pub fn body(&mut self, val: Option<&::wasm_bindgen::JsValue>) -> &mut Self {
-        self.set_body(val);
+        self.set_body(val.unwrap_or(&::wasm_bindgen::JsValue::NULL));
         self
     }
     #[cfg(feature = "RequestCache")]

@@ -26,7 +26,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "applicationServerKey")]
     pub fn set_application_server_key(
         this: &PushSubscriptionOptionsInit,
-        val: Option<&::wasm_bindgen::JsValue>,
+        val: &::wasm_bindgen::JsValue,
     );
     #[doc = "Change the `applicationServerKey` field of this object."]
     #[doc = ""]
@@ -82,7 +82,7 @@ impl PushSubscriptionOptionsInit {
     }
     #[deprecated = "Use `set_application_server_key()` instead."]
     pub fn application_server_key(&mut self, val: Option<&::wasm_bindgen::JsValue>) -> &mut Self {
-        self.set_application_server_key(val);
+        self.set_application_server_key(val.unwrap_or(&::wasm_bindgen::JsValue::NULL));
         self
     }
     #[deprecated = "Use `set_user_visible_only()` instead."]

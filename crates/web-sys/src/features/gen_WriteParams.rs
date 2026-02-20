@@ -22,7 +22,7 @@ extern "C" {
         note = "Use `set_data_opt_buffer_source()` or `set_data_opt_u8_slice()` or `set_data_opt_u8_array()` or `set_data_opt_blob()` or `set_data_opt_str()` instead."
     )]
     #[wasm_bindgen(method, setter = "data")]
-    pub fn set_data(this: &WriteParams, val: Option<&::wasm_bindgen::JsValue>);
+    pub fn set_data(this: &WriteParams, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WriteParams`*"]
@@ -117,7 +117,7 @@ impl WriteParams {
     }
     #[deprecated = "Use `set_data()` instead."]
     pub fn data(&mut self, val: Option<&::wasm_bindgen::JsValue>) -> &mut Self {
-        self.set_data(val);
+        self.set_data(val.unwrap_or(&::wasm_bindgen::JsValue::NULL));
         self
     }
     #[deprecated = "Use `set_position()` instead."]
