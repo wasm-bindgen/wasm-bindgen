@@ -410,11 +410,17 @@ fn of() {
     };
     #[cfg(js_sys_unstable_apis)]
     let arr = Array::of(&[a.clone(), b.clone(), c.clone()]);
-    let vec = to_rust(&arr);
+    let vec = arr.to_vec();
     assert_eq!(vec.len(), 3);
     assert_eq!(vec[0], a);
     assert_eq!(vec[1], b);
     assert_eq!(vec[2], c);
+    let items = vec![JsString::from("a"), JsString::from("b")];
+    let arr = Array::<JsString>::of(&items);
+    let vec = arr.to_vec();
+    assert_eq!(vec.len(), 2);
+    assert_eq!(vec[0], "a");
+    assert_eq!(vec[1], "b");
 }
 
 #[wasm_bindgen_test]

@@ -1540,6 +1540,7 @@ impl TryToTokens for ast::ImportFunction {
         let mut class = None;
         let mut is_constructor = false;
         let mut is_method = false;
+        let mut is_self_returning_static = false;
         if let ast::ImportFunctionKind::Method {
             class: class_name,
             ty,
@@ -1555,6 +1556,15 @@ impl TryToTokens for ast::ImportFunction {
                 }) => is_method = true,
                 _ => {}
             };
+            // For constructors and static methods whose return type matches the
+            // class (e.g. `Array::of<T>() -> Array<T>`), override the class type
+            // to use the return type so class-level generics get hoisted.
+            if self.class_return_path().is_some() {
+                class = Some((class_name, get_ty(self.js_ret.as_ref().unwrap())));
+                if !is_constructor {
+                    is_self_returning_static = true;
+                }
+            }
         }
 
         let vis = &self.function.rust_vis;
@@ -1814,8 +1824,8 @@ impl TryToTokens for ast::ImportFunction {
             let has_class_generics = !fn_class_generics.class_generic_params.is_empty()
                 || !fn_class_generics.class_lifetime_params.is_empty()
                 || !fn_class_generics.class_bound_lifetime_params.is_empty();
-            if !is_method && !is_constructor || !has_class_generics {
-                // For static functions not the constructor, we impl on generic default
+            if (!is_method && !is_constructor && !is_self_returning_static) || !has_class_generics {
+                // For static functions not the constructor/self-returning, we impl on generic default
                 class_impl_def = Some(quote! { impl #class });
             } else {
                 // Type lifetimes: appear on impl AND passed to type
@@ -1969,8 +1979,7 @@ impl ast::ImportFunction {
         if let ast::ImportFunctionKind::Method {
             ty,
             kind:
-                ast::MethodKind::Constructor
-                | ast::MethodKind::Operation(ast::Operation {
+                ast::MethodKind::Operation(ast::Operation {
                     is_static: false, ..
                 }),
             ..
@@ -1980,6 +1989,13 @@ impl ast::ImportFunction {
                 unreachable!(); // validated at parse time
             };
             class = Some(path);
+        }
+
+        // For constructors and static methods whose return type matches the class
+        // (e.g. `Array::of<T>() -> Array<T>`), use the return type path for hoisting
+        // since it carries the generic arguments.
+        if class.is_none() {
+            class = self.class_return_path();
         }
 
         if let Some(cls_path) = class {
@@ -2136,6 +2152,86 @@ impl ast::ImportFunction {
             class_bound_lifetime_params,
             fn_lifetime_params,
         })
+    }
+
+    /// For constructors and static methods (via `static_method_of`), checks whether
+    /// the return type matches the class name. If so, returns the path from `js_ret`
+    /// which carries any generic arguments (e.g. `Array<T>`).
+    ///
+    /// This is used to determine when class-level generic hoisting should apply:
+    ///  - Constructors always return their own class, so this always matches.
+    ///  - Static methods like `#[wasm_bindgen(static_method_of = Array, js_name = of)]`
+    ///    returning `Array<T>` also match, and need the same hoisting treatment.
+    ///
+    /// For static methods, since we are *inferring* that hoisting should happen (the
+    /// user didn't explicitly opt in like with `constructor`), we only match when all
+    /// type generic arguments are bare type parameter idents (e.g. `Array<T>`). Cases
+    /// like `Array<I::Item>` or `Promise<U::Resolution>` are left as plain static
+    /// methods — the associated type is a function-level concern, not a class property.
+    fn class_return_path(&self) -> Option<&syn::Path> {
+        let ast::ImportFunctionKind::Method {
+            class: class_name,
+            kind,
+            ..
+        } = &self.kind
+        else {
+            return None;
+        };
+
+        let is_constructor = matches!(kind, ast::MethodKind::Constructor);
+        let is_static = matches!(
+            kind,
+            ast::MethodKind::Operation(ast::Operation {
+                is_static: true,
+                ..
+            })
+        );
+
+        if !is_constructor && !is_static {
+            return None;
+        }
+
+        let ret_ty = self.js_ret.as_ref()?;
+        let syn::Type::Path(syn::TypePath {
+            qself: None,
+            ref path,
+        }) = get_ty(ret_ty)
+        else {
+            return None;
+        };
+
+        let seg = path.segments.last()?;
+        if seg.ident != class_name.as_str() {
+            return None;
+        }
+
+        // For static methods, only infer class hoisting when all type args are
+        // bare generic param idents — not associated types like `I::Item`.
+        if is_static {
+            if let syn::PathArguments::AngleBracketed(ref gen_args) = seg.arguments {
+                let fn_params: Vec<&Ident> = generics::generic_params(&self.generics)
+                    .iter()
+                    .map(|p| p.0)
+                    .collect();
+                for arg in &gen_args.args {
+                    match arg {
+                        syn::GenericArgument::Lifetime(_) => {}
+                        syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
+                            qself: None,
+                            path: arg_path,
+                        })) if arg_path.segments.len() == 1
+                            && matches!(
+                                arg_path.segments[0].arguments,
+                                syn::PathArguments::None
+                            )
+                            && fn_params.iter().any(|p| *p == &arg_path.segments[0].ident) => {}
+                        _ => return None,
+                    }
+                }
+            }
+        }
+
+        Some(path)
     }
 }
 

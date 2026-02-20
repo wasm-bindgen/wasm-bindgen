@@ -911,7 +911,7 @@ extern "C" {
     /// The `Array.of()` method creates a new Array instance with a variable
     /// number of arguments, regardless of number or type of the arguments.
     ///
-    /// Note: For type inference use `Array<T>::of(&[T])`.
+    /// Note: For type inference use `Array::<T>::of(&[T])`.
     ///
     /// The difference between `Array.of()` and the `Array` constructor is in the
     /// handling of integer arguments: `Array.of(7)` creates an array with a single
