@@ -911,6 +911,8 @@ extern "C" {
     /// The `Array.of()` method creates a new Array instance with a variable
     /// number of arguments, regardless of number or type of the arguments.
     ///
+    /// Note: For type inference use `Array<T>::of(&[T])`.
+    ///
     /// The difference between `Array.of()` and the `Array` constructor is in the
     /// handling of integer arguments: `Array.of(7)` creates an array with a single
     /// element, `7`, whereas `Array(7)` creates an empty array with a `length`
@@ -921,37 +923,26 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Array, js_name = of, variadic)]
     pub fn of<T>(values: &[T]) -> Array<T>;
 
+    // Next major: deprecate these
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of1<T>(a: &T) -> Array<T>;
+    pub fn of1(a: &JsValue) -> Array;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of2<T>(a: &T, b: &T) -> Array<T>;
+    pub fn of2(a: &JsValue, b: &JsValue) -> Array;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of3<T>(a: &T, b: &T, c: &T) -> Array<T>;
+    pub fn of3(a: &JsValue, b: &JsValue, c: &JsValue) -> Array;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of4<T>(a: &T, b: &T, c: &T, d: &T) -> Array<T>;
+    pub fn of4(a: &JsValue, b: &JsValue, c: &JsValue, d: &JsValue) -> Array;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of5<T>(a: &T, b: &T, c: &T, d: &T, e: &T) -> Array<T>;
-
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
-    #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of6<T>(a: &T, b: &T, c: &T, d: &T, e: &T, f: &T) -> Array<T>;
-
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
-    #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of7<T>(a: &T, b: &T, c: &T, d: &T, e: &T, f: &T, g: &T) -> Array<T>;
-
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
-    #[wasm_bindgen(static_method_of = Array, js_name = of)]
-    pub fn of8<T>(a: &T, b: &T, c: &T, d: &T, e: &T, f: &T, g: &T, h: &T) -> Array<T>;
+    pub fn of5(a: &JsValue, b: &JsValue, c: &JsValue, d: &JsValue, e: &JsValue) -> Array;
 
     /// The `pop()` method removes the last element from an array and returns that
     /// element. This method changes the length of the array.
