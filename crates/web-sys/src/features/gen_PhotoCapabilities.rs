@@ -15,25 +15,25 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type PhotoCapabilities;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FillLightMode")]
     #[doc = "Get the `fillLightMode` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FillLightMode`, `PhotoCapabilities`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PhotoCapabilities`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "fillLightMode")]
-    pub fn get_fill_light_mode(this: &PhotoCapabilities) -> Option<::js_sys::Array<FillLightMode>>;
+    pub fn get_fill_light_mode(
+        this: &PhotoCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FillLightMode")]
     #[doc = "Change the `fillLightMode` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FillLightMode`, `PhotoCapabilities`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PhotoCapabilities`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "fillLightMode")]
-    pub fn set_fill_light_mode(this: &PhotoCapabilities, val: &[FillLightMode]);
+    pub fn set_fill_light_mode(this: &PhotoCapabilities, val: &[::js_sys::JsString]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaSettingsRange")]
     #[doc = "Get the `imageHeight` field of this object."]
@@ -109,9 +109,8 @@ impl PhotoCapabilities {
         ret
     }
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FillLightMode")]
     #[deprecated = "Use `set_fill_light_mode()` instead."]
-    pub fn fill_light_mode(&mut self, val: &[FillLightMode]) -> &mut Self {
+    pub fn fill_light_mode(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_fill_light_mode(val);
         self
     }

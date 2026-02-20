@@ -22,44 +22,42 @@ extern "C" {
     #[deprecated]
     pub fn type_(this: &GamepadHapticActuator) -> GamepadHapticActuatorType;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GamepadHapticEffectType")]
     # [wasm_bindgen (structural , method , getter , js_class = "GamepadHapticActuator" , js_name = effects)]
     #[doc = "Getter for the `effects` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GamepadHapticActuator/effects)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GamepadHapticActuator`, `GamepadHapticEffectType`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GamepadHapticActuator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn effects(this: &GamepadHapticActuator) -> ::js_sys::Array<GamepadHapticEffectType>;
+    pub fn effects(this: &GamepadHapticActuator) -> ::js_sys::Array<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "GamepadHapticEffectType", feature = "GamepadHapticsResult",))]
+    #[cfg(feature = "GamepadHapticEffectType")]
     # [wasm_bindgen (method , structural , js_class = "GamepadHapticActuator" , js_name = playEffect)]
     #[doc = "The `playEffect()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GamepadHapticActuator/playEffect)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GamepadHapticActuator`, `GamepadHapticEffectType`, `GamepadHapticsResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GamepadHapticActuator`, `GamepadHapticEffectType`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn play_effect(
         this: &GamepadHapticActuator,
         type_: GamepadHapticEffectType,
-    ) -> ::js_sys::Promise<GamepadHapticsResult>;
+    ) -> ::js_sys::Promise<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
         feature = "GamepadEffectParameters",
         feature = "GamepadHapticEffectType",
-        feature = "GamepadHapticsResult",
     ))]
     # [wasm_bindgen (method , structural , js_class = "GamepadHapticActuator" , js_name = playEffect)]
     #[doc = "The `playEffect()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GamepadHapticActuator/playEffect)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GamepadEffectParameters`, `GamepadHapticActuator`, `GamepadHapticEffectType`, `GamepadHapticsResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GamepadEffectParameters`, `GamepadHapticActuator`, `GamepadHapticEffectType`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -67,7 +65,7 @@ extern "C" {
         this: &GamepadHapticActuator,
         type_: GamepadHapticEffectType,
         params: &GamepadEffectParameters,
-    ) -> ::js_sys::Promise<GamepadHapticsResult>;
+    ) -> ::js_sys::Promise<::js_sys::JsString>;
     # [wasm_bindgen (catch , method , structural , js_class = "GamepadHapticActuator" , js_name = pulse)]
     #[doc = "The `pulse()` method."]
     #[doc = ""]
@@ -80,15 +78,14 @@ extern "C" {
         duration: f64,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GamepadHapticsResult")]
     # [wasm_bindgen (method , structural , js_class = "GamepadHapticActuator" , js_name = reset)]
     #[doc = "The `reset()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GamepadHapticActuator/reset)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GamepadHapticActuator`, `GamepadHapticsResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GamepadHapticActuator`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn reset(this: &GamepadHapticActuator) -> ::js_sys::Promise<GamepadHapticsResult>;
+    pub fn reset(this: &GamepadHapticActuator) -> ::js_sys::Promise<::js_sys::JsString>;
 }

@@ -53,27 +53,25 @@ extern "C" {
     #[wasm_bindgen(method, setter = "defaultQueue")]
     pub fn set_default_queue(this: &GpuDeviceDescriptor, val: &GpuQueueDescriptor);
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuFeatureName")]
     #[doc = "Get the `requiredFeatures` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuDeviceDescriptor`, `GpuFeatureName`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuDeviceDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "requiredFeatures")]
     pub fn get_required_features(
         this: &GpuDeviceDescriptor,
-    ) -> Option<::js_sys::Array<GpuFeatureName>>;
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuFeatureName")]
     #[doc = "Change the `requiredFeatures` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuDeviceDescriptor`, `GpuFeatureName`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuDeviceDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "requiredFeatures")]
-    pub fn set_required_features(this: &GpuDeviceDescriptor, val: &[GpuFeatureName]);
+    pub fn set_required_features(this: &GpuDeviceDescriptor, val: &[::js_sys::JsString]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `requiredLimits` field of this object."]
     #[doc = ""]
@@ -147,9 +145,8 @@ impl GpuDeviceDescriptor {
         self
     }
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuFeatureName")]
     #[deprecated = "Use `set_required_features()` instead."]
-    pub fn required_features(&mut self, val: &[GpuFeatureName]) -> &mut Self {
+    pub fn required_features(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_required_features(val);
         self
     }

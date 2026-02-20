@@ -49,6 +49,7 @@ pub(crate) static BUILTIN_IDENTS: Lazy<BTreeSet<&'static str>> = Lazy::new(|| {
         "JsOption",
         "ArrayTuple",
         "Symbol",
+        "BigInt",
         "JsError",
         "Boolean",
         "Number",

@@ -1501,7 +1501,14 @@ impl IdentifierType<'_> {
                 Ok(externref(ty))
             }
             IdentifierType::Enum(name) => {
-                Ok(Some(ident_ty(rust_ident(camel_case_ident(name).as_str()))))
+                if pos.inner {
+                    // String enums are repr(u32) so they can't be used directly
+                    // in inner/slice positions. Use JsString instead, which is
+                    // repr(transparent) over JsValue.
+                    Ok(js_sys("JsString"))
+                } else {
+                    Ok(Some(ident_ty(rust_ident(camel_case_ident(name).as_str()))))
+                }
             }
             IdentifierType::UnsignedLongLong => {
                 WbgType::UnsignedLongLong.to_syn_type(pos, legacy, no_generics)
