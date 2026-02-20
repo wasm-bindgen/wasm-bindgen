@@ -50,7 +50,6 @@ extern "C" {
     #[doc = "Change the `urls` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
-    #[deprecated(note = "Use `set_urls_str()` or `set_urls_str_sequence()` instead.")]
     #[wasm_bindgen(method, setter = "urls")]
     pub fn set_urls(this: &RtcIceServer, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `urls` field of this object."]

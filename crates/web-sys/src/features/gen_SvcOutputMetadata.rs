@@ -46,12 +46,6 @@ impl SvcOutputMetadata {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_temporal_layer_id()` instead."]
-    pub fn temporal_layer_id(&mut self, val: u32) -> &mut Self {
-        self.set_temporal_layer_id(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for SvcOutputMetadata {

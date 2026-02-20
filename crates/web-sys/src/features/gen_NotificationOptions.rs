@@ -140,7 +140,6 @@ extern "C" {
     #[doc = "Change the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
-    #[deprecated(note = "Use `set_timestamp_u32()` or `set_timestamp_f64()` instead.")]
     #[wasm_bindgen(method, setter = "timestamp")]
     pub fn set_timestamp(this: &NotificationOptions, val: f64);
     #[doc = "Change the `timestamp` field of this object."]
@@ -161,7 +160,6 @@ extern "C" {
     #[doc = "Change the `vibrate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
-    #[deprecated(note = "Use `set_vibrate_u32()` or `set_vibrate_u32_sequence()` instead.")]
     #[wasm_bindgen(method, setter = "vibrate")]
     pub fn set_vibrate(this: &NotificationOptions, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `vibrate` field of this object."]

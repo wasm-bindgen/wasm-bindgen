@@ -20,9 +20,6 @@ extern "C" {
     #[doc = "Change the `applicationServerKey` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionOptionsInit`*"]
-    #[deprecated(
-        note = "Use `set_application_server_key_opt_buffer_source()` or `set_application_server_key_opt_u8_slice()` or `set_application_server_key_opt_u8_array()` or `set_application_server_key_opt_str()` instead."
-    )]
     #[wasm_bindgen(method, setter = "applicationServerKey")]
     pub fn set_application_server_key(
         this: &PushSubscriptionOptionsInit,

@@ -104,29 +104,4 @@ impl GpuUncapturedErrorEventInit {
         ret.set_error(error);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_bubbles()` instead."]
-    pub fn bubbles(&mut self, val: bool) -> &mut Self {
-        self.set_bubbles(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_cancelable()` instead."]
-    pub fn cancelable(&mut self, val: bool) -> &mut Self {
-        self.set_cancelable(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_composed()` instead."]
-    pub fn composed(&mut self, val: bool) -> &mut Self {
-        self.set_composed(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuError")]
-    #[deprecated = "Use `set_error()` instead."]
-    pub fn error(&mut self, val: &GpuError) -> &mut Self {
-        self.set_error(val);
-        self
-    }
 }

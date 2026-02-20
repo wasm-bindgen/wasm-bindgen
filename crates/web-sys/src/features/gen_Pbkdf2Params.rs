@@ -28,7 +28,6 @@ extern "C" {
     #[doc = "Change the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
-    #[deprecated(note = "Use `set_hash_object()` or `set_hash_str()` instead.")]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash(this: &Pbkdf2Params, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `hash` field of this object."]
@@ -59,9 +58,6 @@ extern "C" {
     #[doc = "Change the `salt` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
-    #[deprecated(
-        note = "Use `set_salt_buffer_source()` or `set_salt_u8_slice()` or `set_salt_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "salt")]
     pub fn set_salt(this: &Pbkdf2Params, val: &::js_sys::Object);
     #[doc = "Change the `salt` field of this object."]
@@ -94,6 +90,35 @@ impl Pbkdf2Params {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_name(name);
         ret.set_hash(hash);
+        ret.set_iterations(iterations);
+        ret.set_salt(salt);
+        ret
+    }
+    #[doc = "Construct a new `Pbkdf2Params`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    pub fn new_with_object(
+        name: &str,
+        hash: &::js_sys::Object,
+        iterations: u32,
+        salt: &::js_sys::Object,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_name(name);
+        ret.set_hash_object(hash);
+        ret.set_iterations(iterations);
+        ret.set_salt(salt);
+        ret
+    }
+    #[doc = "Construct a new `Pbkdf2Params`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    pub fn new_with_str(name: &str, hash: &str, iterations: u32, salt: &::js_sys::Object) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_name(name);
+        ret.set_hash_str(hash);
         ret.set_iterations(iterations);
         ret.set_salt(salt);
         ret

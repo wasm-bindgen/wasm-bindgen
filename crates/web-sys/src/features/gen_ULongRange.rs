@@ -64,18 +64,6 @@ impl ULongRange {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_max()` instead."]
-    pub fn max(&mut self, val: u32) -> &mut Self {
-        self.set_max(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_min()` instead."]
-    pub fn min(&mut self, val: u32) -> &mut Self {
-        self.set_min(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for ULongRange {

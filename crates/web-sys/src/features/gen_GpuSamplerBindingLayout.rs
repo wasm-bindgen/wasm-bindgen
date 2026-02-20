@@ -48,13 +48,6 @@ impl GpuSamplerBindingLayout {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuSamplerBindingType")]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: GpuSamplerBindingType) -> &mut Self {
-        self.set_type(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuSamplerBindingLayout {

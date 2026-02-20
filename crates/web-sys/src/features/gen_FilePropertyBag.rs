@@ -18,7 +18,6 @@ extern "C" {
     #[doc = "Change the `lastModified` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FilePropertyBag`*"]
-    #[deprecated(note = "Use `set_last_modified_i32()` or `set_last_modified_f64()` instead.")]
     #[wasm_bindgen(method, setter = "lastModified")]
     pub fn set_last_modified(this: &FilePropertyBag, val: f64);
     #[doc = "Change the `lastModified` field of this object."]

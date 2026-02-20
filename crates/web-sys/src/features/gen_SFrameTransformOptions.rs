@@ -48,13 +48,6 @@ impl SFrameTransformOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "SFrameTransformRole")]
-    #[deprecated = "Use `set_role()` instead."]
-    pub fn role(&mut self, val: SFrameTransformRole) -> &mut Self {
-        self.set_role(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for SFrameTransformOptions {

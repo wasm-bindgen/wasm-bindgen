@@ -102,31 +102,6 @@ impl MediaMetadataInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_album()` instead."]
-    pub fn album(&mut self, val: &str) -> &mut Self {
-        self.set_album(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_artist()` instead."]
-    pub fn artist(&mut self, val: &str) -> &mut Self {
-        self.set_artist(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "MediaImage")]
-    #[deprecated = "Use `set_artwork()` instead."]
-    pub fn artwork(&mut self, val: &[MediaImage]) -> &mut Self {
-        self.set_artwork(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_title()` instead."]
-    pub fn title(&mut self, val: &str) -> &mut Self {
-        self.set_title(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MediaMetadataInit {

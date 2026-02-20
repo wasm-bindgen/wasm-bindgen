@@ -91,25 +91,4 @@ impl FileSystemPermissionDescriptor {
         ret.set_handle(handle);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PermissionName")]
-    #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: PermissionName) -> &mut Self {
-        self.set_name(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FileSystemHandle")]
-    #[deprecated = "Use `set_handle()` instead."]
-    pub fn handle(&mut self, val: &FileSystemHandle) -> &mut Self {
-        self.set_handle(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FileSystemPermissionMode")]
-    #[deprecated = "Use `set_mode()` instead."]
-    pub fn mode(&mut self, val: FileSystemPermissionMode) -> &mut Self {
-        self.set_mode(val);
-        self
-    }
 }

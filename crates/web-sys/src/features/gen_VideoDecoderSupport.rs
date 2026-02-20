@@ -66,19 +66,6 @@ impl VideoDecoderSupport {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoDecoderConfig")]
-    #[deprecated = "Use `set_config()` instead."]
-    pub fn config(&mut self, val: &VideoDecoderConfig) -> &mut Self {
-        self.set_config(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_supported()` instead."]
-    pub fn supported(&mut self, val: bool) -> &mut Self {
-        self.set_supported(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for VideoDecoderSupport {

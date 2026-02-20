@@ -100,30 +100,6 @@ impl HidDeviceFilter {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_product_id()` instead."]
-    pub fn product_id(&mut self, val: u16) -> &mut Self {
-        self.set_product_id(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_usage()` instead."]
-    pub fn usage(&mut self, val: u16) -> &mut Self {
-        self.set_usage(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_usage_page()` instead."]
-    pub fn usage_page(&mut self, val: u16) -> &mut Self {
-        self.set_usage_page(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_vendor_id()` instead."]
-    pub fn vendor_id(&mut self, val: u32) -> &mut Self {
-        self.set_vendor_id(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for HidDeviceFilter {

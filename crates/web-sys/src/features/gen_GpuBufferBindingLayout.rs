@@ -48,20 +48,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_min_binding_size_u32()` or `set_min_binding_size_f64()` instead."
-    )]
     #[wasm_bindgen(method, setter = "minBindingSize")]
-    pub fn set_min_binding_size(this: &GpuBufferBindingLayout, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `minBindingSize` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBufferBindingLayout`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "minBindingSize")]
-    pub fn set_min_binding_size_u32(this: &GpuBufferBindingLayout, val: u32);
+    pub fn set_min_binding_size(this: &GpuBufferBindingLayout, val: u32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `minBindingSize` field of this object."]
     #[doc = ""]
@@ -104,25 +92,6 @@ impl GpuBufferBindingLayout {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_has_dynamic_offset()` instead."]
-    pub fn has_dynamic_offset(&mut self, val: bool) -> &mut Self {
-        self.set_has_dynamic_offset(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_min_binding_size()` instead."]
-    pub fn min_binding_size(&mut self, val: f64) -> &mut Self {
-        self.set_min_binding_size(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuBufferBindingType")]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: GpuBufferBindingType) -> &mut Self {
-        self.set_type(val);
-        self
     }
 }
 #[cfg(web_sys_unstable_apis)]

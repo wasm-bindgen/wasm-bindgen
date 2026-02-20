@@ -28,9 +28,6 @@ extern "C" {
     #[doc = "Change the `iv` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
-    #[deprecated(
-        note = "Use `set_iv_buffer_source()` or `set_iv_u8_slice()` or `set_iv_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "iv")]
     pub fn set_iv(this: &AesCbcParams, val: &::js_sys::Object);
     #[doc = "Change the `iv` field of this object."]
@@ -58,6 +55,26 @@ impl AesCbcParams {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_name(name);
         ret.set_iv(iv);
+        ret
+    }
+    #[doc = "Construct a new `AesCbcParams`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
+    pub fn new_with_u8_slice(name: &str, iv: &mut [u8]) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_name(name);
+        ret.set_iv_u8_slice(iv);
+        ret
+    }
+    #[doc = "Construct a new `AesCbcParams`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
+    pub fn new_with_u8_array(name: &str, iv: &::js_sys::Uint8Array) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_name(name);
+        ret.set_iv_u8_array(iv);
         ret
     }
     #[deprecated = "Use `set_name()` instead."]

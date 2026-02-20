@@ -122,18 +122,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_duration_u32()` or `set_duration_f64()` instead.")]
     #[wasm_bindgen(method, setter = "duration")]
-    pub fn set_duration(this: &VideoFrameBufferInit, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `duration` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrameBufferInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "duration")]
-    pub fn set_duration_u32(this: &VideoFrameBufferInit, val: u32);
+    pub fn set_duration(this: &VideoFrameBufferInit, val: u32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `duration` field of this object."]
     #[doc = ""]
@@ -255,18 +245,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_timestamp_i32()` or `set_timestamp_f64()` instead.")]
     #[wasm_bindgen(method, setter = "timestamp")]
-    pub fn set_timestamp(this: &VideoFrameBufferInit, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `timestamp` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrameBufferInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "timestamp")]
-    pub fn set_timestamp_i32(this: &VideoFrameBufferInit, val: i32);
+    pub fn set_timestamp(this: &VideoFrameBufferInit, val: i32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `timestamp` field of this object."]
     #[doc = ""]
@@ -330,7 +310,7 @@ impl VideoFrameBufferInit {
         coded_height: u32,
         coded_width: u32,
         format: VideoPixelFormat,
-        timestamp: f64,
+        timestamp: i32,
     ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
@@ -340,93 +320,25 @@ impl VideoFrameBufferInit {
         ret.set_timestamp(timestamp);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_coded_height()` instead."]
-    pub fn coded_height(&mut self, val: u32) -> &mut Self {
-        self.set_coded_height(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_coded_width()` instead."]
-    pub fn coded_width(&mut self, val: u32) -> &mut Self {
-        self.set_coded_width(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoColorSpaceInit")]
-    #[deprecated = "Use `set_color_space()` instead."]
-    pub fn color_space(&mut self, val: &VideoColorSpaceInit) -> &mut Self {
-        self.set_color_space(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_display_height()` instead."]
-    pub fn display_height(&mut self, val: u32) -> &mut Self {
-        self.set_display_height(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_display_width()` instead."]
-    pub fn display_width(&mut self, val: u32) -> &mut Self {
-        self.set_display_width(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_duration()` instead."]
-    pub fn duration(&mut self, val: f64) -> &mut Self {
-        self.set_duration(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_flip()` instead."]
-    pub fn flip(&mut self, val: bool) -> &mut Self {
-        self.set_flip(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoPixelFormat")]
-    #[deprecated = "Use `set_format()` instead."]
-    pub fn format(&mut self, val: VideoPixelFormat) -> &mut Self {
-        self.set_format(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PlaneLayout")]
-    #[deprecated = "Use `set_layout()` instead."]
-    pub fn layout(&mut self, val: &[PlaneLayout]) -> &mut Self {
-        self.set_layout(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoFrameMetadata")]
-    #[deprecated = "Use `set_metadata()` instead."]
-    pub fn metadata(&mut self, val: &VideoFrameMetadata) -> &mut Self {
-        self.set_metadata(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_rotation()` instead."]
-    pub fn rotation(&mut self, val: f64) -> &mut Self {
-        self.set_rotation(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_timestamp()` instead."]
-    pub fn timestamp(&mut self, val: f64) -> &mut Self {
-        self.set_timestamp(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_transfer()` instead."]
-    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
-        self.set_transfer(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "DomRectInit")]
-    #[deprecated = "Use `set_visible_rect()` instead."]
-    pub fn visible_rect(&mut self, val: &DomRectInit) -> &mut Self {
-        self.set_visible_rect(val);
-        self
+    #[doc = "Construct a new `VideoFrameBufferInit`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoFrameBufferInit`, `VideoPixelFormat`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_f64(
+        coded_height: u32,
+        coded_width: u32,
+        format: VideoPixelFormat,
+        timestamp: f64,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_coded_height(coded_height);
+        ret.set_coded_width(coded_width);
+        ret.set_format(format);
+        ret.set_timestamp_f64(timestamp);
+        ret
     }
 }

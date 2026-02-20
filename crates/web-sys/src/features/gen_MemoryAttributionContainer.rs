@@ -64,18 +64,6 @@ impl MemoryAttributionContainer {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_id()` instead."]
-    pub fn id(&mut self, val: &str) -> &mut Self {
-        self.set_id(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_src()` instead."]
-    pub fn src(&mut self, val: &str) -> &mut Self {
-        self.set_src(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MemoryAttributionContainer {

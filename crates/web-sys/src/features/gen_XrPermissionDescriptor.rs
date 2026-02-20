@@ -106,30 +106,4 @@ impl XrPermissionDescriptor {
         ret.set_name(name);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PermissionName")]
-    #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: PermissionName) -> &mut Self {
-        self.set_name(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "XrSessionMode")]
-    #[deprecated = "Use `set_mode()` instead."]
-    pub fn mode(&mut self, val: XrSessionMode) -> &mut Self {
-        self.set_mode(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_optional_features()` instead."]
-    pub fn optional_features(&mut self, val: &[::wasm_bindgen::JsValue]) -> &mut Self {
-        self.set_optional_features(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_required_features()` instead."]
-    pub fn required_features(&mut self, val: &[::wasm_bindgen::JsValue]) -> &mut Self {
-        self.set_required_features(val);
-        self
-    }
 }

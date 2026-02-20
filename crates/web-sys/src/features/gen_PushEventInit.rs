@@ -48,9 +48,6 @@ extern "C" {
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
-    #[deprecated(
-        note = "Use `set_data_buffer_source()` or `set_data_u8_slice()` or `set_data_u8_array()` or `set_data_str()` instead."
-    )]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data(this: &PushEventInit, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `data` field of this object."]

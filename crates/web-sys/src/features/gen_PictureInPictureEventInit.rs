@@ -109,29 +109,4 @@ impl PictureInPictureEventInit {
         ret.set_picture_in_picture_window(picture_in_picture_window);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_bubbles()` instead."]
-    pub fn bubbles(&mut self, val: bool) -> &mut Self {
-        self.set_bubbles(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_cancelable()` instead."]
-    pub fn cancelable(&mut self, val: bool) -> &mut Self {
-        self.set_cancelable(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_composed()` instead."]
-    pub fn composed(&mut self, val: bool) -> &mut Self {
-        self.set_composed(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PictureInPictureWindow")]
-    #[deprecated = "Use `set_picture_in_picture_window()` instead."]
-    pub fn picture_in_picture_window(&mut self, val: &PictureInPictureWindow) -> &mut Self {
-        self.set_picture_in_picture_window(val);
-        self
-    }
 }

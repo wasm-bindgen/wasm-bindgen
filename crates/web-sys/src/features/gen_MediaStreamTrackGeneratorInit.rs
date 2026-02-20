@@ -47,10 +47,4 @@ impl MediaStreamTrackGeneratorInit {
         ret.set_kind(kind);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_kind()` instead."]
-    pub fn kind(&mut self, val: &str) -> &mut Self {
-        self.set_kind(val);
-        self
-    }
 }

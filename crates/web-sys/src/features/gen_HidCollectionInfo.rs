@@ -160,51 +160,6 @@ impl HidCollectionInfo {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_children()` instead."]
-    pub fn children(&mut self, val: &[HidCollectionInfo]) -> &mut Self {
-        self.set_children(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "HidReportInfo")]
-    #[deprecated = "Use `set_feature_reports()` instead."]
-    pub fn feature_reports(&mut self, val: &[HidReportInfo]) -> &mut Self {
-        self.set_feature_reports(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "HidReportInfo")]
-    #[deprecated = "Use `set_input_reports()` instead."]
-    pub fn input_reports(&mut self, val: &[HidReportInfo]) -> &mut Self {
-        self.set_input_reports(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "HidReportInfo")]
-    #[deprecated = "Use `set_output_reports()` instead."]
-    pub fn output_reports(&mut self, val: &[HidReportInfo]) -> &mut Self {
-        self.set_output_reports(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: u8) -> &mut Self {
-        self.set_type(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_usage()` instead."]
-    pub fn usage(&mut self, val: u16) -> &mut Self {
-        self.set_usage(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_usage_page()` instead."]
-    pub fn usage_page(&mut self, val: u16) -> &mut Self {
-        self.set_usage_page(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for HidCollectionInfo {

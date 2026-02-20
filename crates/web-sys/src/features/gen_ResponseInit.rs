@@ -18,9 +18,6 @@ extern "C" {
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
-    #[deprecated(
-        note = "Use `set_headers_headers()` or `set_headers_str_sequence_sequence()` or `set_headers_record_from_str_to_str()` instead."
-    )]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers(this: &ResponseInit, val: &::wasm_bindgen::JsValue);
     #[cfg(feature = "Headers")]

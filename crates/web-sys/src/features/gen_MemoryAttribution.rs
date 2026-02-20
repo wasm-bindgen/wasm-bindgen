@@ -84,25 +84,6 @@ impl MemoryAttribution {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "MemoryAttributionContainer")]
-    #[deprecated = "Use `set_container()` instead."]
-    pub fn container(&mut self, val: &MemoryAttributionContainer) -> &mut Self {
-        self.set_container(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_scope()` instead."]
-    pub fn scope(&mut self, val: &str) -> &mut Self {
-        self.set_scope(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_url()` instead."]
-    pub fn url(&mut self, val: &str) -> &mut Self {
-        self.set_url(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MemoryAttribution {

@@ -190,7 +190,6 @@ extern "C" {
     #[doc = "Change the `bytesReceived` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcInboundRtpStreamStats`*"]
-    #[deprecated(note = "Use `set_bytes_received_u32()` or `set_bytes_received_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytesReceived")]
     pub fn set_bytes_received(this: &RtcInboundRtpStreamStats, val: f64);
     #[doc = "Change the `bytesReceived` field of this object."]

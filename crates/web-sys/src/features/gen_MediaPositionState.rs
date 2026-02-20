@@ -82,24 +82,6 @@ impl MediaPositionState {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_duration()` instead."]
-    pub fn duration(&mut self, val: f64) -> &mut Self {
-        self.set_duration(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_playback_rate()` instead."]
-    pub fn playback_rate(&mut self, val: f64) -> &mut Self {
-        self.set_playback_rate(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_position()` instead."]
-    pub fn position(&mut self, val: f64) -> &mut Self {
-        self.set_position(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MediaPositionState {

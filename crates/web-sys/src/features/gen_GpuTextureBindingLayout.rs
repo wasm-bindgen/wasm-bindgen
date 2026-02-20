@@ -86,26 +86,6 @@ impl GpuTextureBindingLayout {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_multisampled()` instead."]
-    pub fn multisampled(&mut self, val: bool) -> &mut Self {
-        self.set_multisampled(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureSampleType")]
-    #[deprecated = "Use `set_sample_type()` instead."]
-    pub fn sample_type(&mut self, val: GpuTextureSampleType) -> &mut Self {
-        self.set_sample_type(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureViewDimension")]
-    #[deprecated = "Use `set_view_dimension()` instead."]
-    pub fn view_dimension(&mut self, val: GpuTextureViewDimension) -> &mut Self {
-        self.set_view_dimension(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuTextureBindingLayout {

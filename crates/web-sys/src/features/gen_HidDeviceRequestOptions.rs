@@ -50,11 +50,4 @@ impl HidDeviceRequestOptions {
         ret.set_filters(filters);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "HidDeviceFilter")]
-    #[deprecated = "Use `set_filters()` instead."]
-    pub fn filters(&mut self, val: &[HidDeviceFilter]) -> &mut Self {
-        self.set_filters(val);
-        self
-    }
 }

@@ -92,25 +92,4 @@ impl GpuStorageTextureBindingLayout {
         ret.set_format(format);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuStorageTextureAccess")]
-    #[deprecated = "Use `set_access()` instead."]
-    pub fn access(&mut self, val: GpuStorageTextureAccess) -> &mut Self {
-        self.set_access(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureFormat")]
-    #[deprecated = "Use `set_format()` instead."]
-    pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
-        self.set_format(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureViewDimension")]
-    #[deprecated = "Use `set_view_dimension()` instead."]
-    pub fn view_dimension(&mut self, val: GpuTextureViewDimension) -> &mut Self {
-        self.set_view_dimension(val);
-        self
-    }
 }

@@ -52,11 +52,4 @@ impl BluetoothPermissionStorage {
         ret.set_allowed_devices(allowed_devices);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AllowedBluetoothDevice")]
-    #[deprecated = "Use `set_allowed_devices()` instead."]
-    pub fn allowed_devices(&mut self, val: &[AllowedBluetoothDevice]) -> &mut Self {
-        self.set_allowed_devices(val);
-        self
-    }
 }

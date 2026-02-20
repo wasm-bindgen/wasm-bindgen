@@ -40,7 +40,6 @@ extern "C" {
     #[doc = "Change the `duration` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EffectTiming`*"]
-    #[deprecated(note = "Use `set_duration_f64()` or `set_duration_str()` instead.")]
     #[wasm_bindgen(method, setter = "duration")]
     pub fn set_duration(this: &EffectTiming, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `duration` field of this object."]

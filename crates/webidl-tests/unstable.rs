@@ -26,14 +26,16 @@ fn dictionary_union_expansion() {
     let a: &TypeA = obj.unchecked_ref();
     let b: &TypeB = obj.unchecked_ref();
 
-    // Required field: deprecated unsuffixed setter and type-safe suffixed setters
+    // In unstable mode: first typed variant gets the unsuffixed name,
+    // remaining variants get suffixes. No JsValue fallback.
     let dict = DictWithUnion::new(a);
-    dict.set_view(a); // deprecated backward-compat setter
-    dict.set_view_type_a(a);
-    dict.set_view_type_b(b);
+    dict.set_view(a); // first typed variant (TypeA), unsuffixed
+    dict.set_view_type_b(b); // second typed variant, suffixed
 
-    // Optional field: same expansion
-    dict.set_optional_view(a); // deprecated backward-compat setter
-    dict.set_optional_view_type_a(a);
-    dict.set_optional_view_type_b(b);
+    // Constructor expansion: alternate constructors for each union variant
+    let _dict2 = DictWithUnion::new_with_type_b(b);
+
+    // Optional field: same pattern
+    dict.set_optional_view(a); // first typed variant (TypeA), unsuffixed
+    dict.set_optional_view_type_b(b); // second typed variant, suffixed
 }

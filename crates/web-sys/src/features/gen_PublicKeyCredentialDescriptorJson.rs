@@ -86,22 +86,4 @@ impl PublicKeyCredentialDescriptorJson {
         ret.set_type(type_);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_id()` instead."]
-    pub fn id(&mut self, val: &str) -> &mut Self {
-        self.set_id(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_transports()` instead."]
-    pub fn transports(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
-        self.set_transports(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: &str) -> &mut Self {
-        self.set_type(val);
-        self
-    }
 }

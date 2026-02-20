@@ -30,20 +30,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_data_buffer_source()` or `set_data_u8_slice()` or `set_data_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data(this: &EncodedAudioChunkInit, val: &::js_sys::Object);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `data` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EncodedAudioChunkInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "data")]
-    pub fn set_data_buffer_source(this: &EncodedAudioChunkInit, val: &::js_sys::Object);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
@@ -78,18 +66,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_duration_u32()` or `set_duration_f64()` instead.")]
     #[wasm_bindgen(method, setter = "duration")]
-    pub fn set_duration(this: &EncodedAudioChunkInit, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `duration` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EncodedAudioChunkInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "duration")]
-    pub fn set_duration_u32(this: &EncodedAudioChunkInit, val: u32);
+    pub fn set_duration(this: &EncodedAudioChunkInit, val: u32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `duration` field of this object."]
     #[doc = ""]
@@ -115,18 +93,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_timestamp_i32()` or `set_timestamp_f64()` instead.")]
     #[wasm_bindgen(method, setter = "timestamp")]
-    pub fn set_timestamp(this: &EncodedAudioChunkInit, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `timestamp` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `EncodedAudioChunkInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "timestamp")]
-    pub fn set_timestamp_i32(this: &EncodedAudioChunkInit, val: i32);
+    pub fn set_timestamp(this: &EncodedAudioChunkInit, val: i32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `timestamp` field of this object."]
     #[doc = ""]
@@ -186,7 +154,7 @@ impl EncodedAudioChunkInit {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(data: &::js_sys::Object, timestamp: f64, type_: EncodedAudioChunkType) -> Self {
+    pub fn new(data: &::js_sys::Object, timestamp: i32, type_: EncodedAudioChunkType) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_data(data);
@@ -194,35 +162,42 @@ impl EncodedAudioChunkInit {
         ret.set_type(type_);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_data()` instead."]
-    pub fn data(&mut self, val: &::js_sys::Object) -> &mut Self {
-        self.set_data(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_duration()` instead."]
-    pub fn duration(&mut self, val: f64) -> &mut Self {
-        self.set_duration(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_timestamp()` instead."]
-    pub fn timestamp(&mut self, val: f64) -> &mut Self {
-        self.set_timestamp(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_transfer()` instead."]
-    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
-        self.set_transfer(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "EncodedAudioChunkType")]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: EncodedAudioChunkType) -> &mut Self {
-        self.set_type(val);
-        self
+    #[doc = "Construct a new `EncodedAudioChunkInit`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedAudioChunkInit`, `EncodedAudioChunkType`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_u8_slice(
+        data: &mut [u8],
+        timestamp: i32,
+        type_: EncodedAudioChunkType,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_data_u8_slice(data);
+        ret.set_timestamp(timestamp);
+        ret.set_type(type_);
+        ret
+    }
+    #[cfg(feature = "EncodedAudioChunkType")]
+    #[doc = "Construct a new `EncodedAudioChunkInit`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedAudioChunkInit`, `EncodedAudioChunkType`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_u8_array(
+        data: &::js_sys::Uint8Array,
+        timestamp: i32,
+        type_: EncodedAudioChunkType,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_data_u8_array(data);
+        ret.set_timestamp(timestamp);
+        ret.set_type(type_);
+        ret
     }
 }

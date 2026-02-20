@@ -48,9 +48,6 @@ extern "C" {
     #[doc = "Change the `track` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
-    #[deprecated(
-        note = "Use `set_track_opt_video_track()` or `set_track_opt_audio_track()` or `set_track_opt_text_track()` instead."
-    )]
     #[wasm_bindgen(method, setter = "track")]
     pub fn set_track(this: &TrackEventInit, val: Option<&::js_sys::Object>);
     #[cfg(feature = "VideoTrack")]

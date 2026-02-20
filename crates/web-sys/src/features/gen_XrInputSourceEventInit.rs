@@ -125,36 +125,4 @@ impl XrInputSourceEventInit {
         ret.set_input_source(input_source);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_bubbles()` instead."]
-    pub fn bubbles(&mut self, val: bool) -> &mut Self {
-        self.set_bubbles(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_cancelable()` instead."]
-    pub fn cancelable(&mut self, val: bool) -> &mut Self {
-        self.set_cancelable(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_composed()` instead."]
-    pub fn composed(&mut self, val: bool) -> &mut Self {
-        self.set_composed(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "XrFrame")]
-    #[deprecated = "Use `set_frame()` instead."]
-    pub fn frame(&mut self, val: &XrFrame) -> &mut Self {
-        self.set_frame(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "XrInputSource")]
-    #[deprecated = "Use `set_input_source()` instead."]
-    pub fn input_source(&mut self, val: &XrInputSource) -> &mut Self {
-        self.set_input_source(val);
-        self
-    }
 }

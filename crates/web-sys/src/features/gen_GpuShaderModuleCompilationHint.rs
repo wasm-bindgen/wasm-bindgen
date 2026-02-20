@@ -42,18 +42,6 @@ extern "C" {
     #[wasm_bindgen(method, getter = "layout")]
     pub fn get_layout(this: &GpuShaderModuleCompilationHint) -> ::wasm_bindgen::JsValue;
     #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `layout` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuShaderModuleCompilationHint`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_layout_gpu_pipeline_layout()` or `set_layout_gpu_auto_layout_mode()` instead."
-    )]
-    #[wasm_bindgen(method, setter = "layout")]
-    pub fn set_layout(this: &GpuShaderModuleCompilationHint, val: &::wasm_bindgen::JsValue);
-    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuPipelineLayout")]
     #[doc = "Change the `layout` field of this object."]
     #[doc = ""]
@@ -62,10 +50,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "layout")]
-    pub fn set_layout_gpu_pipeline_layout(
-        this: &GpuShaderModuleCompilationHint,
-        val: &GpuPipelineLayout,
-    );
+    pub fn set_layout(this: &GpuShaderModuleCompilationHint, val: &GpuPipelineLayout);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuAutoLayoutMode")]
     #[doc = "Change the `layout` field of this object."]
@@ -93,17 +78,5 @@ impl GpuShaderModuleCompilationHint {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_entry_point(entry_point);
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_entry_point()` instead."]
-    pub fn entry_point(&mut self, val: &str) -> &mut Self {
-        self.set_entry_point(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_layout()` instead."]
-    pub fn layout(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
-        self.set_layout(val);
-        self
     }
 }

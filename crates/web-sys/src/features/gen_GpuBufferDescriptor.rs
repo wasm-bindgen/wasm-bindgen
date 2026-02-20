@@ -66,18 +66,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_size_u32()` or `set_size_f64()` instead.")]
     #[wasm_bindgen(method, setter = "size")]
-    pub fn set_size(this: &GpuBufferDescriptor, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `size` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBufferDescriptor`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "size")]
-    pub fn set_size_u32(this: &GpuBufferDescriptor, val: u32);
+    pub fn set_size(this: &GpuBufferDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `size` field of this object."]
     #[doc = ""]
@@ -114,35 +104,24 @@ impl GpuBufferDescriptor {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(size: f64, usage: u32) -> Self {
+    pub fn new(size: u32, usage: u32) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_size(size);
         ret.set_usage(usage);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_label()` instead."]
-    pub fn label(&mut self, val: &str) -> &mut Self {
-        self.set_label(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_mapped_at_creation()` instead."]
-    pub fn mapped_at_creation(&mut self, val: bool) -> &mut Self {
-        self.set_mapped_at_creation(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_size()` instead."]
-    pub fn size(&mut self, val: f64) -> &mut Self {
-        self.set_size(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_usage()` instead."]
-    pub fn usage(&mut self, val: u32) -> &mut Self {
-        self.set_usage(val);
-        self
+    #[doc = "Construct a new `GpuBufferDescriptor`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBufferDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_f64(size: f64, usage: u32) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_size_f64(size);
+        ret.set_usage(usage);
+        ret
     }
 }

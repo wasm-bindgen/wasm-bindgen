@@ -30,18 +30,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_delay_u32()` or `set_delay_f64()` instead.")]
     #[wasm_bindgen(method, setter = "delay")]
-    pub fn set_delay(this: &SchedulerPostTaskOptions, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `delay` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `SchedulerPostTaskOptions`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "delay")]
-    pub fn set_delay_u32(this: &SchedulerPostTaskOptions, val: u32);
+    pub fn set_delay(this: &SchedulerPostTaskOptions, val: u32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `delay` field of this object."]
     #[doc = ""]
@@ -104,26 +94,6 @@ impl SchedulerPostTaskOptions {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_delay()` instead."]
-    pub fn delay(&mut self, val: f64) -> &mut Self {
-        self.set_delay(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "TaskPriority")]
-    #[deprecated = "Use `set_priority()` instead."]
-    pub fn priority(&mut self, val: TaskPriority) -> &mut Self {
-        self.set_priority(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AbortSignal")]
-    #[deprecated = "Use `set_signal()` instead."]
-    pub fn signal(&mut self, val: &AbortSignal) -> &mut Self {
-        self.set_signal(val);
-        self
     }
 }
 #[cfg(web_sys_unstable_apis)]

@@ -18,9 +18,6 @@ extern "C" {
     #[doc = "Change the `autoAllocateChunkSize` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UnderlyingSource`*"]
-    #[deprecated(
-        note = "Use `set_auto_allocate_chunk_size_u32()` or `set_auto_allocate_chunk_size_f64()` instead."
-    )]
     #[wasm_bindgen(method, setter = "autoAllocateChunkSize")]
     pub fn set_auto_allocate_chunk_size(this: &UnderlyingSource, val: f64);
     #[doc = "Change the `autoAllocateChunkSize` field of this object."]

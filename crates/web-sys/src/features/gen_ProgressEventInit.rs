@@ -58,7 +58,6 @@ extern "C" {
     #[doc = "Change the `loaded` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProgressEventInit`*"]
-    #[deprecated(note = "Use `set_loaded_u32()` or `set_loaded_f64()` instead.")]
     #[wasm_bindgen(method, setter = "loaded")]
     pub fn set_loaded(this: &ProgressEventInit, val: f64);
     #[doc = "Change the `loaded` field of this object."]
@@ -79,7 +78,6 @@ extern "C" {
     #[doc = "Change the `total` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProgressEventInit`*"]
-    #[deprecated(note = "Use `set_total_u32()` or `set_total_f64()` instead.")]
     #[wasm_bindgen(method, setter = "total")]
     pub fn set_total(this: &ProgressEventInit, val: f64);
     #[doc = "Change the `total` field of this object."]

@@ -50,7 +50,6 @@ extern "C" {
     #[doc = "Change the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReport`*"]
-    #[deprecated(note = "Use `set_timestamp_u32()` or `set_timestamp_f64()` instead.")]
     #[wasm_bindgen(method, setter = "timestamp")]
     pub fn set_timestamp(this: &CheckerboardReport, val: f64);
     #[doc = "Change the `timestamp` field of this object."]

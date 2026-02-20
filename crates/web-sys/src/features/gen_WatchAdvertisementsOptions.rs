@@ -48,13 +48,6 @@ impl WatchAdvertisementsOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AbortSignal")]
-    #[deprecated = "Use `set_signal()` instead."]
-    pub fn signal(&mut self, val: &AbortSignal) -> &mut Self {
-        self.set_signal(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WatchAdvertisementsOptions {

@@ -76,9 +76,6 @@ extern "C" {
     #[doc = "Change the `challenge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptions`*"]
-    #[deprecated(
-        note = "Use `set_challenge_buffer_source()` or `set_challenge_u8_slice()` or `set_challenge_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &PublicKeyCredentialRequestOptions, val: &::js_sys::Object);
     #[doc = "Change the `challenge` field of this object."]
@@ -187,21 +184,27 @@ impl PublicKeyCredentialRequestOptions {
         ret.set_challenge(challenge);
         ret
     }
+    #[doc = "Construct a new `PublicKeyCredentialRequestOptions`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptions`*"]
+    pub fn new_with_u8_slice(challenge: &mut [u8]) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_challenge_u8_slice(challenge);
+        ret
+    }
+    #[doc = "Construct a new `PublicKeyCredentialRequestOptions`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptions`*"]
+    pub fn new_with_u8_array(challenge: &::js_sys::Uint8Array) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_challenge_u8_array(challenge);
+        ret
+    }
     #[deprecated = "Use `set_allow_credentials()` instead."]
     pub fn allow_credentials(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_allow_credentials(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_attestation()` instead."]
-    pub fn attestation(&mut self, val: &str) -> &mut Self {
-        self.set_attestation(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_attestation_formats()` instead."]
-    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
-        self.set_attestation_formats(val);
         self
     }
     #[deprecated = "Use `set_challenge()` instead."]
@@ -213,12 +216,6 @@ impl PublicKeyCredentialRequestOptions {
     #[deprecated = "Use `set_extensions()` instead."]
     pub fn extensions(&mut self, val: &AuthenticationExtensionsClientInputs) -> &mut Self {
         self.set_extensions(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_hints()` instead."]
-    pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
-        self.set_hints(val);
         self
     }
     #[deprecated = "Use `set_rp_id()` instead."]

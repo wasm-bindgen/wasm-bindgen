@@ -89,24 +89,4 @@ impl GpuBindGroupDescriptor {
         ret.set_layout(layout);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_label()` instead."]
-    pub fn label(&mut self, val: &str) -> &mut Self {
-        self.set_label(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuBindGroupEntry")]
-    #[deprecated = "Use `set_entries()` instead."]
-    pub fn entries(&mut self, val: &[GpuBindGroupEntry]) -> &mut Self {
-        self.set_entries(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuBindGroupLayout")]
-    #[deprecated = "Use `set_layout()` instead."]
-    pub fn layout(&mut self, val: &GpuBindGroupLayout) -> &mut Self {
-        self.set_layout(val);
-        self
-    }
 }

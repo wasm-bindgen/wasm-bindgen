@@ -51,18 +51,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(note = "Use `set_bytes_u32()` or `set_bytes_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytes")]
-    pub fn set_bytes(this: &MemoryMeasurement, val: f64);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `bytes` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MemoryMeasurement`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "bytes")]
-    pub fn set_bytes_u32(this: &MemoryMeasurement, val: u32);
+    pub fn set_bytes(this: &MemoryMeasurement, val: u32);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `bytes` field of this object."]
     #[doc = ""]
@@ -85,19 +75,6 @@ impl MemoryMeasurement {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "MemoryBreakdownEntry")]
-    #[deprecated = "Use `set_breakdown()` instead."]
-    pub fn breakdown(&mut self, val: &[MemoryBreakdownEntry]) -> &mut Self {
-        self.set_breakdown(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_bytes()` instead."]
-    pub fn bytes(&mut self, val: f64) -> &mut Self {
-        self.set_bytes(val);
-        self
     }
 }
 #[cfg(web_sys_unstable_apis)]

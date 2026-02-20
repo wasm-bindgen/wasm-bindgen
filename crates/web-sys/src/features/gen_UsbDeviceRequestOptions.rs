@@ -50,11 +50,4 @@ impl UsbDeviceRequestOptions {
         ret.set_filters(filters);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "UsbDeviceFilter")]
-    #[deprecated = "Use `set_filters()` instead."]
-    pub fn filters(&mut self, val: &[UsbDeviceFilter]) -> &mut Self {
-        self.set_filters(val);
-        self
-    }
 }

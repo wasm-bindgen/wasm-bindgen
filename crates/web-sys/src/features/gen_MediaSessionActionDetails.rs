@@ -104,29 +104,4 @@ impl MediaSessionActionDetails {
         ret.set_action(action);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "MediaSessionAction")]
-    #[deprecated = "Use `set_action()` instead."]
-    pub fn action(&mut self, val: MediaSessionAction) -> &mut Self {
-        self.set_action(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_fast_seek()` instead."]
-    pub fn fast_seek(&mut self, val: Option<bool>) -> &mut Self {
-        self.set_fast_seek(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_seek_offset()` instead."]
-    pub fn seek_offset(&mut self, val: Option<f64>) -> &mut Self {
-        self.set_seek_offset(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_seek_time()` instead."]
-    pub fn seek_time(&mut self, val: Option<f64>) -> &mut Self {
-        self.set_seek_time(val);
-        self
-    }
 }

@@ -84,25 +84,6 @@ impl LockInfo {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_client_id()` instead."]
-    pub fn client_id(&mut self, val: &str) -> &mut Self {
-        self.set_client_id(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "LockMode")]
-    #[deprecated = "Use `set_mode()` instead."]
-    pub fn mode(&mut self, val: LockMode) -> &mut Self {
-        self.set_mode(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: &str) -> &mut Self {
-        self.set_name(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for LockInfo {

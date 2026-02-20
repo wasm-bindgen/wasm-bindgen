@@ -146,41 +146,4 @@ impl GpuRenderBundleEncoderDescriptor {
         ret.set_color_formats(color_formats);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_label()` instead."]
-    pub fn label(&mut self, val: &str) -> &mut Self {
-        self.set_label(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_color_formats()` instead."]
-    pub fn color_formats(&mut self, val: &[::js_sys::JsOption<::js_sys::JsString>]) -> &mut Self {
-        self.set_color_formats(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureFormat")]
-    #[deprecated = "Use `set_depth_stencil_format()` instead."]
-    pub fn depth_stencil_format(&mut self, val: GpuTextureFormat) -> &mut Self {
-        self.set_depth_stencil_format(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_sample_count()` instead."]
-    pub fn sample_count(&mut self, val: u32) -> &mut Self {
-        self.set_sample_count(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_depth_read_only()` instead."]
-    pub fn depth_read_only(&mut self, val: bool) -> &mut Self {
-        self.set_depth_read_only(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_stencil_read_only()` instead."]
-    pub fn stencil_read_only(&mut self, val: bool) -> &mut Self {
-        self.set_stencil_read_only(val);
-        self
-    }
 }

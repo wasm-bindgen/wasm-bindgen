@@ -88,24 +88,4 @@ impl GpuColorTargetState {
         ret.set_format(format);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuBlendState")]
-    #[deprecated = "Use `set_blend()` instead."]
-    pub fn blend(&mut self, val: &GpuBlendState) -> &mut Self {
-        self.set_blend(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureFormat")]
-    #[deprecated = "Use `set_format()` instead."]
-    pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
-        self.set_format(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_write_mask()` instead."]
-    pub fn write_mask(&mut self, val: u32) -> &mut Self {
-        self.set_write_mask(val);
-        self
-    }
 }

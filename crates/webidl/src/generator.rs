@@ -810,6 +810,7 @@ impl Interface<'_> {
 }
 
 /// A single setter variant for a dictionary field (one per union member when expanded)
+#[derive(PartialEq, Eq)]
 pub struct DictionaryFieldSetter {
     pub ty: Type,
     pub name_suffix: Option<String>,
@@ -817,6 +818,7 @@ pub struct DictionaryFieldSetter {
     pub deprecated: bool,
 }
 
+#[derive(PartialEq, Eq)]
 pub struct DictionaryField {
     pub name: String,
     pub js_name: String,
@@ -896,9 +898,10 @@ impl DictionaryField {
             setter_features.remove(&parent_ident.to_string());
             let setter_cfg_features = get_cfg_features(options, &setter_features);
 
-            // Deprecate backward-compat setters that have type-safe alternatives
-            // But don't add our deprecation if the field is already deprecated
-            let setter_deprecated = if setter.deprecated && deprecated.is_none() {
+            // Deprecate backward-compat setters that have type-safe alternatives,
+            // but only for unstable APIs. For stable APIs the fallback setter is
+            // the primary API and shouldn't produce deprecation warnings.
+            let setter_deprecated = if setter.deprecated && self.unstable && deprecated.is_none() {
                 let name = &self.name;
                 let alternatives: Vec<_> = self
                     .setter_types
@@ -938,6 +941,11 @@ impl DictionaryField {
     }
 
     fn generate_rust_setter(&self, cfg_features: &Option<syn::Attribute>) -> TokenStream {
+        // Unstable APIs don't need the deprecated builder method
+        if self.unstable {
+            return quote! {};
+        }
+
         let DictionaryField {
             name,
             js_name: _,
@@ -946,12 +954,11 @@ impl DictionaryField {
             setter_types: _,
             is_js_value_ref_option_type: _,
             required: _,
-            unstable,
+            unstable: _,
             deprecated: _,
         } = self;
 
         let name = rust_ident(name);
-        let unstable_attr = maybe_unstable_attr(*unstable);
 
         let setter_name = self.setter_name();
         let deprecated = format!("Use `{setter_name}()` instead.");
@@ -965,7 +972,6 @@ impl DictionaryField {
         };
 
         quote! {
-            #unstable_attr
             #cfg_features
             #[deprecated = #deprecated]
             pub fn #name(&mut self, val: #ty) -> &mut Self {
@@ -1035,34 +1041,105 @@ impl Dictionary {
 
         let js_name = raw_ident(js_name);
 
-        let mut required_features = BTreeSet::new();
-        let mut required_args = vec![];
-        let mut required_calls = vec![];
-
-        for field in fields.iter() {
-            if field.required {
-                let name = rust_ident(&field.name);
-                let set_name = rust_ident(&format!("set_{}", field.name));
-                let ty = &field.ty;
-                required_args.push(quote!( #name: #ty ));
-                required_calls.push(quote!( ret.#set_name(#name); ));
-                add_features(&mut required_features, &field.ty);
-            }
+        // Build constructor variants. For each required field with multiple setter
+        // variants (union types), we expand into multiple constructors: new() for the
+        // first variant, new_with_{suffix}() for the rest. Non-union required fields
+        // are shared across all constructor variants, preserving original field order.
+        struct CtorVariant {
+            ctor_name: Ident,
+            args: Vec<TokenStream>,
+            calls: Vec<TokenStream>,
+            features: BTreeSet<String>,
         }
 
-        required_features.remove(&name.to_string());
+        // Find the union field (if any) among required fields.
+        let union_field = fields
+            .iter()
+            .find(|f| f.required && f.setter_types.len() > 1);
 
-        let cfg_features = get_cfg_features(options, &required_features);
+        // Helper: build args/calls for a single constructor variant, substituting
+        // the given setter for the union field while keeping all fields in order.
+        let build_ctor = |union_setter: Option<&DictionaryFieldSetter>,
+                          union_field: Option<&DictionaryField>|
+         -> (Vec<TokenStream>, Vec<TokenStream>, BTreeSet<String>) {
+            let mut args = vec![];
+            let mut calls = vec![];
+            let mut features = BTreeSet::new();
+            for field in fields.iter() {
+                if !field.required {
+                    continue;
+                }
+                if union_field == Some(field) {
+                    let setter = union_setter.unwrap();
+                    let arg_name = rust_ident(&field.name);
+                    let set_name = match &setter.name_suffix {
+                        Some(suffix) => format_ident!("set_{}_{}", field.name, suffix),
+                        None => format_ident!("set_{}", field.name),
+                    };
+                    let ty = &setter.ty;
+                    args.push(quote!( #arg_name: #ty ));
+                    calls.push(quote!( ret.#set_name(#arg_name); ));
+                    add_features(&mut features, ty);
+                } else {
+                    let arg_name = rust_ident(&field.name);
+                    let set_name = field.setter_name();
+                    let ty = field
+                        .setter_types
+                        .first()
+                        .map(|s| &s.ty)
+                        .unwrap_or(&field.ty);
+                    args.push(quote!( #arg_name: #ty ));
+                    calls.push(quote!( ret.#set_name(#arg_name); ));
+                    add_features(&mut features, ty);
+                }
+            }
+            (args, calls, features)
+        };
 
-        required_features.insert(name.to_string());
+        let ctor_variants: Vec<CtorVariant> = if let Some(union_field) = union_field {
+            let mut seen_types = Vec::new();
+            union_field
+                .setter_types
+                .iter()
+                .enumerate()
+                .filter(|(_, setter)| !setter.deprecated)
+                .filter_map(|(i, setter)| {
+                    // Skip variants whose type duplicates an earlier variant
+                    if seen_types.contains(&setter.ty) {
+                        return None;
+                    }
+                    seen_types.push(setter.ty.clone());
+
+                    let ctor_name = if i == 0 {
+                        format_ident!("new")
+                    } else {
+                        match &setter.name_suffix {
+                            Some(suffix) => format_ident!("new_with_{}", suffix),
+                            None => format_ident!("new"),
+                        }
+                    };
+                    let (args, calls, features) = build_ctor(Some(setter), Some(union_field));
+                    Some(CtorVariant {
+                        ctor_name,
+                        args,
+                        calls,
+                        features,
+                    })
+                })
+                .collect()
+        } else {
+            let (args, calls, features) = build_ctor(None, None);
+            vec![CtorVariant {
+                ctor_name: format_ident!("new"),
+                args,
+                calls,
+                features,
+            }]
+        };
 
         let doc_comment = comment(
             format!("The `{name}` dictionary."),
             &get_features_doc(options, name.to_string()),
-        );
-        let ctor_doc_comment = comment(
-            format!("Construct a new `{name}`."),
-            &required_doc_string(options, &required_features),
         );
 
         let (field_features, field_cfg_features): (Vec<_>, Vec<_>) = fields
@@ -1085,6 +1162,38 @@ impl Dictionary {
             .map(|(field, cfg_features)| field.generate_rust_setter(cfg_features))
             .collect::<Vec<_>>();
 
+        let constructors: Vec<TokenStream> = ctor_variants
+            .iter()
+            .map(|variant| {
+                let ctor_name = &variant.ctor_name;
+                let args = &variant.args;
+                let calls = &variant.calls;
+
+                let mut ctor_features = variant.features.clone();
+                ctor_features.remove(&name.to_string());
+                let ctor_cfg_features = get_cfg_features(options, &ctor_features);
+
+                ctor_features.insert(name.to_string());
+                let ctor_doc_comment = comment(
+                    format!("Construct a new `{name}`."),
+                    &required_doc_string(options, &ctor_features),
+                );
+
+                quote! {
+                    #ctor_cfg_features
+                    #ctor_doc_comment
+                    #unstable_docs
+                    #deprecated
+                    pub fn #ctor_name(#(#args),*) -> Self {
+                        #[allow(unused_mut)]
+                        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+                        #(#calls)*
+                        ret
+                    }
+                }
+            })
+            .collect();
+
         let mut base_stream = quote! {
             #![allow(unused_imports)]
             #![allow(clippy::all)]
@@ -1106,22 +1215,13 @@ impl Dictionary {
 
             #unstable_attr
             impl #name {
-                #cfg_features
-                #ctor_doc_comment
-                #unstable_docs
-                #deprecated
-                pub fn new(#(#required_args),*) -> Self {
-                    #[allow(unused_mut)]
-                    let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-                    #(#required_calls)*
-                    ret
-                }
+                #(#constructors)*
 
                 #(#fields)*
             }
         };
 
-        if required_args.is_empty() {
+        if ctor_variants.first().map_or(true, |v| v.args.is_empty()) {
             let default_impl = quote! {
                 #unstable_attr
                 impl Default for #name {

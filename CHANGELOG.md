@@ -90,6 +90,11 @@
   getters with setter type requirements.
   [#4955](https://github.com/wasm-bindgen/wasm-bindgen/pull/4955)
 
+* Improved dictionary union type expansion: unstable APIs no longer emit deprecated
+  builder methods or deprecation warnings on the fallback setter. Dictionaries with
+  required union fields now generate expanded constructors for each variant (e.g.
+  `new()`, `new_with_gpu_texture_view()`), with duplicate-signature variants elided.
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.

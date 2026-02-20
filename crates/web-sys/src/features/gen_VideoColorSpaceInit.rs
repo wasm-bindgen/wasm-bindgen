@@ -106,33 +106,6 @@ impl VideoColorSpaceInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_full_range()` instead."]
-    pub fn full_range(&mut self, val: Option<bool>) -> &mut Self {
-        self.set_full_range(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoMatrixCoefficients")]
-    #[deprecated = "Use `set_matrix()` instead."]
-    pub fn matrix(&mut self, val: Option<VideoMatrixCoefficients>) -> &mut Self {
-        self.set_matrix(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoColorPrimaries")]
-    #[deprecated = "Use `set_primaries()` instead."]
-    pub fn primaries(&mut self, val: Option<VideoColorPrimaries>) -> &mut Self {
-        self.set_primaries(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoTransferCharacteristics")]
-    #[deprecated = "Use `set_transfer()` instead."]
-    pub fn transfer(&mut self, val: Option<VideoTransferCharacteristics>) -> &mut Self {
-        self.set_transfer(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for VideoColorSpaceInit {

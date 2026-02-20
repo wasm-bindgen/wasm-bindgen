@@ -18,7 +18,6 @@ extern "C" {
     #[doc = "Change the `expires` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCertificateExpiration`*"]
-    #[deprecated(note = "Use `set_expires_u32()` or `set_expires_f64()` instead.")]
     #[wasm_bindgen(method, setter = "expires")]
     pub fn set_expires(this: &RtcCertificateExpiration, val: f64);
     #[doc = "Change the `expires` field of this object."]

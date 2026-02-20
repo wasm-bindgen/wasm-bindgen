@@ -50,7 +50,6 @@ extern "C" {
     #[doc = "Change the `bytesReceived` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
-    #[deprecated(note = "Use `set_bytes_received_u32()` or `set_bytes_received_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytesReceived")]
     pub fn set_bytes_received(this: &RtcIceCandidatePairStats, val: f64);
     #[doc = "Change the `bytesReceived` field of this object."]
@@ -71,7 +70,6 @@ extern "C" {
     #[doc = "Change the `bytesSent` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
-    #[deprecated(note = "Use `set_bytes_sent_u32()` or `set_bytes_sent_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytesSent")]
     pub fn set_bytes_sent(this: &RtcIceCandidatePairStats, val: f64);
     #[doc = "Change the `bytesSent` field of this object."]
@@ -144,7 +142,6 @@ extern "C" {
     #[doc = "Change the `priority` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
-    #[deprecated(note = "Use `set_priority_u32()` or `set_priority_f64()` instead.")]
     #[wasm_bindgen(method, setter = "priority")]
     pub fn set_priority(this: &RtcIceCandidatePairStats, val: f64);
     #[doc = "Change the `priority` field of this object."]

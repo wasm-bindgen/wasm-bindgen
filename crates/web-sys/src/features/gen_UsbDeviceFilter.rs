@@ -136,42 +136,6 @@ impl UsbDeviceFilter {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_class_code()` instead."]
-    pub fn class_code(&mut self, val: u8) -> &mut Self {
-        self.set_class_code(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_product_id()` instead."]
-    pub fn product_id(&mut self, val: u16) -> &mut Self {
-        self.set_product_id(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_protocol_code()` instead."]
-    pub fn protocol_code(&mut self, val: u8) -> &mut Self {
-        self.set_protocol_code(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_serial_number()` instead."]
-    pub fn serial_number(&mut self, val: &str) -> &mut Self {
-        self.set_serial_number(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_subclass_code()` instead."]
-    pub fn subclass_code(&mut self, val: u8) -> &mut Self {
-        self.set_subclass_code(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_vendor_id()` instead."]
-    pub fn vendor_id(&mut self, val: u16) -> &mut Self {
-        self.set_vendor_id(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for UsbDeviceFilter {

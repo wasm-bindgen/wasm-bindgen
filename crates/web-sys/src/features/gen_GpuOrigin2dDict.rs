@@ -64,18 +64,6 @@ impl GpuOrigin2dDict {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_x()` instead."]
-    pub fn x(&mut self, val: u32) -> &mut Self {
-        self.set_x(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_y()` instead."]
-    pub fn y(&mut self, val: u32) -> &mut Self {
-        self.set_y(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuOrigin2dDict {

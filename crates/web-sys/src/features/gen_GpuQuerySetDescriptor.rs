@@ -87,23 +87,4 @@ impl GpuQuerySetDescriptor {
         ret.set_type(type_);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_label()` instead."]
-    pub fn label(&mut self, val: &str) -> &mut Self {
-        self.set_label(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_count()` instead."]
-    pub fn count(&mut self, val: u32) -> &mut Self {
-        self.set_count(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuQueryType")]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: GpuQueryType) -> &mut Self {
-        self.set_type(val);
-        self
-    }
 }

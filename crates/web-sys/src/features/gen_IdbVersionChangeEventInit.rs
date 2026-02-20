@@ -48,7 +48,6 @@ extern "C" {
     #[doc = "Change the `newVersion` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbVersionChangeEventInit`*"]
-    #[deprecated(note = "Use `set_new_version_opt_u32()` or `set_new_version_opt_f64()` instead.")]
     #[wasm_bindgen(method, setter = "newVersion")]
     pub fn set_new_version(this: &IdbVersionChangeEventInit, val: Option<f64>);
     #[doc = "Change the `newVersion` field of this object."]
@@ -69,7 +68,6 @@ extern "C" {
     #[doc = "Change the `oldVersion` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbVersionChangeEventInit`*"]
-    #[deprecated(note = "Use `set_old_version_u32()` or `set_old_version_f64()` instead.")]
     #[wasm_bindgen(method, setter = "oldVersion")]
     pub fn set_old_version(this: &IdbVersionChangeEventInit, val: f64);
     #[doc = "Change the `oldVersion` field of this object."]

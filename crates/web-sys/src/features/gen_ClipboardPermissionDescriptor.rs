@@ -68,17 +68,4 @@ impl ClipboardPermissionDescriptor {
         ret.set_name(name);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PermissionName")]
-    #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: PermissionName) -> &mut Self {
-        self.set_name(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_allow_without_gesture()` instead."]
-    pub fn allow_without_gesture(&mut self, val: bool) -> &mut Self {
-        self.set_allow_without_gesture(val);
-        self
-    }
 }

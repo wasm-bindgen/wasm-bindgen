@@ -64,18 +64,6 @@ impl NavigatorUaBrandVersion {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_brand()` instead."]
-    pub fn brand(&mut self, val: &str) -> &mut Self {
-        self.set_brand(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_version()` instead."]
-    pub fn version(&mut self, val: &str) -> &mut Self {
-        self.set_version(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for NavigatorUaBrandVersion {

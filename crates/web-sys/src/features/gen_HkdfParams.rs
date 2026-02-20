@@ -28,7 +28,6 @@ extern "C" {
     #[doc = "Change the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
-    #[deprecated(note = "Use `set_hash_object()` or `set_hash_str()` instead.")]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash(this: &HkdfParams, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `hash` field of this object."]
@@ -49,9 +48,6 @@ extern "C" {
     #[doc = "Change the `info` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
-    #[deprecated(
-        note = "Use `set_info_buffer_source()` or `set_info_u8_slice()` or `set_info_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "info")]
     pub fn set_info(this: &HkdfParams, val: &::js_sys::Object);
     #[doc = "Change the `info` field of this object."]
@@ -77,9 +73,6 @@ extern "C" {
     #[doc = "Change the `salt` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
-    #[deprecated(
-        note = "Use `set_salt_buffer_source()` or `set_salt_u8_slice()` or `set_salt_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "salt")]
     pub fn set_salt(this: &HkdfParams, val: &::js_sys::Object);
     #[doc = "Change the `salt` field of this object."]
@@ -112,6 +105,40 @@ impl HkdfParams {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_name(name);
         ret.set_hash(hash);
+        ret.set_info(info);
+        ret.set_salt(salt);
+        ret
+    }
+    #[doc = "Construct a new `HkdfParams`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    pub fn new_with_object(
+        name: &str,
+        hash: &::js_sys::Object,
+        info: &::js_sys::Object,
+        salt: &::js_sys::Object,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_name(name);
+        ret.set_hash_object(hash);
+        ret.set_info(info);
+        ret.set_salt(salt);
+        ret
+    }
+    #[doc = "Construct a new `HkdfParams`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    pub fn new_with_str(
+        name: &str,
+        hash: &str,
+        info: &::js_sys::Object,
+        salt: &::js_sys::Object,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_name(name);
+        ret.set_hash_str(hash);
         ret.set_info(info);
         ret.set_salt(salt);
         ret

@@ -30,20 +30,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_data_prefix_buffer_source()` or `set_data_prefix_u8_slice()` or `set_data_prefix_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "dataPrefix")]
     pub fn set_data_prefix(this: &BluetoothDataFilterInit, val: &::js_sys::Object);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `dataPrefix` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothDataFilterInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "dataPrefix")]
-    pub fn set_data_prefix_buffer_source(this: &BluetoothDataFilterInit, val: &::js_sys::Object);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `dataPrefix` field of this object."]
     #[doc = ""]
@@ -78,20 +66,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_mask_buffer_source()` or `set_mask_u8_slice()` or `set_mask_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "mask")]
     pub fn set_mask(this: &BluetoothDataFilterInit, val: &::js_sys::Object);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `mask` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BluetoothDataFilterInit`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "mask")]
-    pub fn set_mask_buffer_source(this: &BluetoothDataFilterInit, val: &::js_sys::Object);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `mask` field of this object."]
     #[doc = ""]
@@ -123,18 +99,6 @@ impl BluetoothDataFilterInit {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_data_prefix()` instead."]
-    pub fn data_prefix(&mut self, val: &::js_sys::Object) -> &mut Self {
-        self.set_data_prefix(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_mask()` instead."]
-    pub fn mask(&mut self, val: &::js_sys::Object) -> &mut Self {
-        self.set_mask(val);
-        self
     }
 }
 #[cfg(web_sys_unstable_apis)]

@@ -50,13 +50,6 @@ impl UsbPermissionStorage {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AllowedUsbDevice")]
-    #[deprecated = "Use `set_allowed_devices()` instead."]
-    pub fn allowed_devices(&mut self, val: &[AllowedUsbDevice]) -> &mut Self {
-        self.set_allowed_devices(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for UsbPermissionStorage {

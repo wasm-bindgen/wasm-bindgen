@@ -68,20 +68,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_origin_u32_sequence()` or `set_origin_gpu_origin_3d_dict()` instead."
-    )]
     #[wasm_bindgen(method, setter = "origin")]
-    pub fn set_origin(this: &GpuCopyExternalImageDestInfo, val: &::wasm_bindgen::JsValue);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `origin` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuCopyExternalImageDestInfo`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "origin")]
-    pub fn set_origin_u32_sequence(this: &GpuCopyExternalImageDestInfo, val: &[::js_sys::Number]);
+    pub fn set_origin(this: &GpuCopyExternalImageDestInfo, val: &[::js_sys::Number]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuOrigin3dDict")]
     #[doc = "Change the `origin` field of this object."]
@@ -148,37 +136,5 @@ impl GpuCopyExternalImageDestInfo {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_texture(texture);
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTextureAspect")]
-    #[deprecated = "Use `set_aspect()` instead."]
-    pub fn aspect(&mut self, val: GpuTextureAspect) -> &mut Self {
-        self.set_aspect(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_mip_level()` instead."]
-    pub fn mip_level(&mut self, val: u32) -> &mut Self {
-        self.set_mip_level(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_origin()` instead."]
-    pub fn origin(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
-        self.set_origin(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuTexture")]
-    #[deprecated = "Use `set_texture()` instead."]
-    pub fn texture(&mut self, val: &GpuTexture) -> &mut Self {
-        self.set_texture(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_premultiplied_alpha()` instead."]
-    pub fn premultiplied_alpha(&mut self, val: bool) -> &mut Self {
-        self.set_premultiplied_alpha(val);
-        self
     }
 }

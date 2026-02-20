@@ -88,27 +88,6 @@ impl VideoFrameCopyToOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoPixelFormat")]
-    #[deprecated = "Use `set_format()` instead."]
-    pub fn format(&mut self, val: VideoPixelFormat) -> &mut Self {
-        self.set_format(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PlaneLayout")]
-    #[deprecated = "Use `set_layout()` instead."]
-    pub fn layout(&mut self, val: &[PlaneLayout]) -> &mut Self {
-        self.set_layout(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "DomRectInit")]
-    #[deprecated = "Use `set_rect()` instead."]
-    pub fn rect(&mut self, val: &DomRectInit) -> &mut Self {
-        self.set_rect(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for VideoFrameCopyToOptions {

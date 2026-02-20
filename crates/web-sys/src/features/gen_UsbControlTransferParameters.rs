@@ -134,36 +134,4 @@ impl UsbControlTransferParameters {
         ret.set_value(value);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_index()` instead."]
-    pub fn index(&mut self, val: u16) -> &mut Self {
-        self.set_index(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "UsbRecipient")]
-    #[deprecated = "Use `set_recipient()` instead."]
-    pub fn recipient(&mut self, val: UsbRecipient) -> &mut Self {
-        self.set_recipient(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_request()` instead."]
-    pub fn request(&mut self, val: u8) -> &mut Self {
-        self.set_request(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "UsbRequestType")]
-    #[deprecated = "Use `set_request_type()` instead."]
-    pub fn request_type(&mut self, val: UsbRequestType) -> &mut Self {
-        self.set_request_type(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_value()` instead."]
-    pub fn value(&mut self, val: u16) -> &mut Self {
-        self.set_value(val);
-        self
-    }
 }

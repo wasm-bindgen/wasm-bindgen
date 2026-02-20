@@ -68,20 +68,6 @@ impl LockManagerSnapshot {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "LockInfo")]
-    #[deprecated = "Use `set_held()` instead."]
-    pub fn held(&mut self, val: &[LockInfo]) -> &mut Self {
-        self.set_held(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "LockInfo")]
-    #[deprecated = "Use `set_pending()` instead."]
-    pub fn pending(&mut self, val: &[LockInfo]) -> &mut Self {
-        self.set_pending(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for LockManagerSnapshot {

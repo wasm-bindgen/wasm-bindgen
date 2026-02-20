@@ -141,42 +141,4 @@ impl SerialOptions {
         ret.set_baud_rate(baud_rate);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_baud_rate()` instead."]
-    pub fn baud_rate(&mut self, val: u32) -> &mut Self {
-        self.set_baud_rate(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_buffer_size()` instead."]
-    pub fn buffer_size(&mut self, val: u32) -> &mut Self {
-        self.set_buffer_size(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_data_bits()` instead."]
-    pub fn data_bits(&mut self, val: u8) -> &mut Self {
-        self.set_data_bits(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FlowControlType")]
-    #[deprecated = "Use `set_flow_control()` instead."]
-    pub fn flow_control(&mut self, val: FlowControlType) -> &mut Self {
-        self.set_flow_control(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "ParityType")]
-    #[deprecated = "Use `set_parity()` instead."]
-    pub fn parity(&mut self, val: ParityType) -> &mut Self {
-        self.set_parity(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_stop_bits()` instead."]
-    pub fn stop_bits(&mut self, val: u8) -> &mut Self {
-        self.set_stop_bits(val);
-        self
-    }
 }

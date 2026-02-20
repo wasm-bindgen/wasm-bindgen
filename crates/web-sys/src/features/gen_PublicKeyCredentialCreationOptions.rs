@@ -75,9 +75,6 @@ extern "C" {
     #[doc = "Change the `challenge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`*"]
-    #[deprecated(
-        note = "Use `set_challenge_buffer_source()` or `set_challenge_u8_slice()` or `set_challenge_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &PublicKeyCredentialCreationOptions, val: &::js_sys::Object);
     #[doc = "Change the `challenge` field of this object."]
@@ -223,16 +220,52 @@ impl PublicKeyCredentialCreationOptions {
         ret.set_user(user);
         ret
     }
+    #[cfg(all(
+        feature = "PublicKeyCredentialRpEntity",
+        feature = "PublicKeyCredentialUserEntity",
+    ))]
+    #[doc = "Construct a new `PublicKeyCredentialCreationOptions`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`, `PublicKeyCredentialRpEntity`, `PublicKeyCredentialUserEntity`*"]
+    pub fn new_with_u8_slice(
+        challenge: &mut [u8],
+        pub_key_cred_params: &::wasm_bindgen::JsValue,
+        rp: &PublicKeyCredentialRpEntity,
+        user: &PublicKeyCredentialUserEntity,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_challenge_u8_slice(challenge);
+        ret.set_pub_key_cred_params(pub_key_cred_params);
+        ret.set_rp(rp);
+        ret.set_user(user);
+        ret
+    }
+    #[cfg(all(
+        feature = "PublicKeyCredentialRpEntity",
+        feature = "PublicKeyCredentialUserEntity",
+    ))]
+    #[doc = "Construct a new `PublicKeyCredentialCreationOptions`."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`, `PublicKeyCredentialRpEntity`, `PublicKeyCredentialUserEntity`*"]
+    pub fn new_with_u8_array(
+        challenge: &::js_sys::Uint8Array,
+        pub_key_cred_params: &::wasm_bindgen::JsValue,
+        rp: &PublicKeyCredentialRpEntity,
+        user: &PublicKeyCredentialUserEntity,
+    ) -> Self {
+        #[allow(unused_mut)]
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        ret.set_challenge_u8_array(challenge);
+        ret.set_pub_key_cred_params(pub_key_cred_params);
+        ret.set_rp(rp);
+        ret.set_user(user);
+        ret
+    }
     #[cfg(feature = "AttestationConveyancePreference")]
     #[deprecated = "Use `set_attestation()` instead."]
     pub fn attestation(&mut self, val: AttestationConveyancePreference) -> &mut Self {
         self.set_attestation(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_attestation_formats()` instead."]
-    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
-        self.set_attestation_formats(val);
         self
     }
     #[cfg(feature = "AuthenticatorSelectionCriteria")]
@@ -255,12 +288,6 @@ impl PublicKeyCredentialCreationOptions {
     #[deprecated = "Use `set_extensions()` instead."]
     pub fn extensions(&mut self, val: &AuthenticationExtensionsClientInputs) -> &mut Self {
         self.set_extensions(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_hints()` instead."]
-    pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
-        self.set_hints(val);
         self
     }
     #[deprecated = "Use `set_pub_key_cred_params()` instead."]

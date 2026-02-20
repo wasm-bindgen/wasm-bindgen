@@ -90,23 +90,4 @@ impl GpuShaderModuleDescriptor {
         ret.set_code(code);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_label()` instead."]
-    pub fn label(&mut self, val: &str) -> &mut Self {
-        self.set_label(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_code()` instead."]
-    pub fn code(&mut self, val: &str) -> &mut Self {
-        self.set_code(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuShaderModuleCompilationHint")]
-    #[deprecated = "Use `set_compilation_hints()` instead."]
-    pub fn compilation_hints(&mut self, val: &[GpuShaderModuleCompilationHint]) -> &mut Self {
-        self.set_compilation_hints(val);
-        self
-    }
 }

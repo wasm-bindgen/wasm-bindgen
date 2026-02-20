@@ -51,12 +51,6 @@ impl AuthenticationExtensionsDevicePublicKeyOutputs {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_signature()` instead."]
-    pub fn signature(&mut self, val: &::js_sys::ArrayBuffer) -> &mut Self {
-        self.set_signature(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for AuthenticationExtensionsDevicePublicKeyOutputs {

@@ -46,12 +46,6 @@ impl VideoEncoderEncodeOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_key_frame()` instead."]
-    pub fn key_frame(&mut self, val: bool) -> &mut Self {
-        self.set_key_frame(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for VideoEncoderEncodeOptions {

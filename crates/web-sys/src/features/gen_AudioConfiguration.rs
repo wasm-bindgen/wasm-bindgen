@@ -18,7 +18,6 @@ extern "C" {
     #[doc = "Change the `bitrate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]
-    #[deprecated(note = "Use `set_bitrate_u32()` or `set_bitrate_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bitrate")]
     pub fn set_bitrate(this: &AudioConfiguration, val: f64);
     #[doc = "Change the `bitrate` field of this object."]

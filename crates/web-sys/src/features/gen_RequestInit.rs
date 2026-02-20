@@ -18,9 +18,6 @@ extern "C" {
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
-    #[deprecated(
-        note = "Use `set_body_opt_blob()` or `set_body_opt_buffer_source()` or `set_body_opt_u8_slice()` or `set_body_opt_u8_array()` or `set_body_opt_form_data()` or `set_body_opt_url_search_params()` or `set_body_opt_str()` or `set_body_opt_readable_stream()` instead."
-    )]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body(this: &RequestInit, val: &::wasm_bindgen::JsValue);
     #[cfg(feature = "Blob")]
@@ -99,9 +96,6 @@ extern "C" {
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
-    #[deprecated(
-        note = "Use `set_headers_headers()` or `set_headers_str_sequence_sequence()` or `set_headers_record_from_str_to_str()` instead."
-    )]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers(this: &RequestInit, val: &::wasm_bindgen::JsValue);
     #[cfg(feature = "Headers")]
@@ -162,9 +156,6 @@ extern "C" {
     #[doc = "Change the `observe` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ObserverCallback`, `RequestInit`*"]
-    #[deprecated(
-        note = "Use `set_observe_callback()` or `set_observe_observer_callback()` instead."
-    )]
     #[wasm_bindgen(method, setter = "observe")]
     pub fn set_observe(this: &RequestInit, val: &ObserverCallback);
     #[doc = "Change the `observe` field of this object."]

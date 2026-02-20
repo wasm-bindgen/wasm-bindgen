@@ -618,14 +618,23 @@ impl<'src> FirstPassRecord<'src> {
         }
 
         // Expand union types into multiple type-safe setters.
-        // The first setter keeps the original name (deprecated), additional ones get suffixes.
+        // In stable mode: the first setter is the &JsValue fallback (unsuffixed),
+        //   typed variants get suffixes.
+        // In unstable mode: no JsValue fallback, first typed variant is unsuffixed,
+        //   remaining typed variants get suffixes.
         let flattened_types = wbg_type.flatten(None);
         let setter_types = if flattened_types.len() > 1 {
-            let mut setters = vec![DictionaryFieldSetter {
-                ty: ty.clone(),
-                name_suffix: None,
-                deprecated: true,
-            }];
+            let mut setters = Vec::new();
+
+            // In stable mode, add the JsValue fallback as the unsuffixed setter
+            if generics_compat {
+                setters.push(DictionaryFieldSetter {
+                    ty: ty.clone(),
+                    name_suffix: None,
+                    deprecated: false,
+                });
+            }
+
             for flattened in &flattened_types {
                 if let Some(setter_ty) = flattened
                     .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
@@ -634,9 +643,15 @@ impl<'src> FirstPassRecord<'src> {
                 {
                     let mut suffix = String::new();
                     flattened.push_snake_case_name(&mut suffix);
+                    // In unstable mode, the first typed setter gets the unsuffixed name
+                    let name_suffix = if !generics_compat && setters.is_empty() {
+                        None
+                    } else {
+                        Some(suffix)
+                    };
                     setters.push(DictionaryFieldSetter {
                         ty: setter_ty,
-                        name_suffix: Some(suffix),
+                        name_suffix,
                         deprecated: false,
                     });
                 }

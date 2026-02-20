@@ -48,13 +48,6 @@ impl IdbTransactionOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "IdbTransactionDurability")]
-    #[deprecated = "Use `set_durability()` instead."]
-    pub fn durability(&mut self, val: IdbTransactionDurability) -> &mut Self {
-        self.set_durability(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for IdbTransactionOptions {

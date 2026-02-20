@@ -50,13 +50,6 @@ impl SerialPortRequestOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "SerialPortFilter")]
-    #[deprecated = "Use `set_filters()` instead."]
-    pub fn filters(&mut self, val: &[SerialPortFilter]) -> &mut Self {
-        self.set_filters(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for SerialPortRequestOptions {

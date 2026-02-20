@@ -109,28 +109,4 @@ impl SerialInputSignals {
         ret.set_ring_indicator(ring_indicator);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_clear_to_send()` instead."]
-    pub fn clear_to_send(&mut self, val: bool) -> &mut Self {
-        self.set_clear_to_send(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_data_carrier_detect()` instead."]
-    pub fn data_carrier_detect(&mut self, val: bool) -> &mut Self {
-        self.set_data_carrier_detect(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_data_set_ready()` instead."]
-    pub fn data_set_ready(&mut self, val: bool) -> &mut Self {
-        self.set_data_set_ready(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_ring_indicator()` instead."]
-    pub fn ring_indicator(&mut self, val: bool) -> &mut Self {
-        self.set_ring_indicator(val);
-        self
-    }
 }

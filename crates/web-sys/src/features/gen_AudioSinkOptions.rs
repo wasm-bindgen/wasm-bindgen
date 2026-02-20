@@ -50,11 +50,4 @@ impl AudioSinkOptions {
         ret.set_type(type_);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AudioSinkType")]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: AudioSinkType) -> &mut Self {
-        self.set_type(val);
-        self
-    }
 }

@@ -40,9 +40,6 @@ extern "C" {
     #[doc = "Change the `write` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsLargeBlobInputs`*"]
-    #[deprecated(
-        note = "Use `set_write_buffer_source()` or `set_write_u8_slice()` or `set_write_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "write")]
     pub fn set_write(this: &AuthenticationExtensionsLargeBlobInputs, val: &::js_sys::Object);
     #[doc = "Change the `write` field of this object."]

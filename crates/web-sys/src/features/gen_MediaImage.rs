@@ -83,22 +83,4 @@ impl MediaImage {
         ret.set_src(src);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_sizes()` instead."]
-    pub fn sizes(&mut self, val: &str) -> &mut Self {
-        self.set_sizes(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_src()` instead."]
-    pub fn src(&mut self, val: &str) -> &mut Self {
-        self.set_src(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: &str) -> &mut Self {
-        self.set_type(val);
-        self
-    }
 }

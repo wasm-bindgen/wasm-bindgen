@@ -104,20 +104,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[deprecated(
-        note = "Use `set_description_buffer_source()` or `set_description_u8_slice()` or `set_description_u8_array()` instead."
-    )]
     #[wasm_bindgen(method, setter = "description")]
     pub fn set_description(this: &VideoDecoderConfig, val: &::js_sys::Object);
-    #[cfg(web_sys_unstable_apis)]
-    #[doc = "Change the `description` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    #[wasm_bindgen(method, setter = "description")]
-    pub fn set_description_buffer_source(this: &VideoDecoderConfig, val: &::js_sys::Object);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `description` field of this object."]
     #[doc = ""]
@@ -260,73 +248,5 @@ impl VideoDecoderConfig {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_codec(codec);
         ret
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_codec()` instead."]
-    pub fn codec(&mut self, val: &str) -> &mut Self {
-        self.set_codec(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_coded_height()` instead."]
-    pub fn coded_height(&mut self, val: u32) -> &mut Self {
-        self.set_coded_height(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_coded_width()` instead."]
-    pub fn coded_width(&mut self, val: u32) -> &mut Self {
-        self.set_coded_width(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "VideoColorSpaceInit")]
-    #[deprecated = "Use `set_color_space()` instead."]
-    pub fn color_space(&mut self, val: &VideoColorSpaceInit) -> &mut Self {
-        self.set_color_space(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_description()` instead."]
-    pub fn description(&mut self, val: &::js_sys::Object) -> &mut Self {
-        self.set_description(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_display_aspect_height()` instead."]
-    pub fn display_aspect_height(&mut self, val: u32) -> &mut Self {
-        self.set_display_aspect_height(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_display_aspect_width()` instead."]
-    pub fn display_aspect_width(&mut self, val: u32) -> &mut Self {
-        self.set_display_aspect_width(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_flip()` instead."]
-    pub fn flip(&mut self, val: bool) -> &mut Self {
-        self.set_flip(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "HardwareAcceleration")]
-    #[deprecated = "Use `set_hardware_acceleration()` instead."]
-    pub fn hardware_acceleration(&mut self, val: HardwareAcceleration) -> &mut Self {
-        self.set_hardware_acceleration(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_optimize_for_latency()` instead."]
-    pub fn optimize_for_latency(&mut self, val: bool) -> &mut Self {
-        self.set_optimize_for_latency(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_rotation()` instead."]
-    pub fn rotation(&mut self, val: f64) -> &mut Self {
-        self.set_rotation(val);
-        self
     }
 }

@@ -66,19 +66,6 @@ impl HidReportInfo {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "HidReportItem")]
-    #[deprecated = "Use `set_items()` instead."]
-    pub fn items(&mut self, val: &[HidReportItem]) -> &mut Self {
-        self.set_items(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_report_id()` instead."]
-    pub fn report_id(&mut self, val: u8) -> &mut Self {
-        self.set_report_id(val);
-        self
-    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for HidReportInfo {

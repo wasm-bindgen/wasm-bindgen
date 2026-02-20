@@ -103,29 +103,4 @@ impl AudioDataCopyToOptions {
         ret.set_plane_index(plane_index);
         ret
     }
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AudioSampleFormat")]
-    #[deprecated = "Use `set_format()` instead."]
-    pub fn format(&mut self, val: AudioSampleFormat) -> &mut Self {
-        self.set_format(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_frame_count()` instead."]
-    pub fn frame_count(&mut self, val: u32) -> &mut Self {
-        self.set_frame_count(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_frame_offset()` instead."]
-    pub fn frame_offset(&mut self, val: u32) -> &mut Self {
-        self.set_frame_offset(val);
-        self
-    }
-    #[cfg(web_sys_unstable_apis)]
-    #[deprecated = "Use `set_plane_index()` instead."]
-    pub fn plane_index(&mut self, val: u32) -> &mut Self {
-        self.set_plane_index(val);
-        self
-    }
 }
