@@ -94,6 +94,7 @@
   builder methods or deprecation warnings on the fallback setter. Dictionaries with
   required union fields now generate expanded constructors for each variant (e.g.
   `new()`, `new_with_gpu_texture_view()`), with duplicate-signature variants elided.
+  [#4966](https://github.com/wasm-bindgen/wasm-bindgen/pull/4966)
 
 ### Changed
 
