@@ -81,6 +81,15 @@
 * Added a panic message when a getter as more than one argument. 
   [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
 
+* Updated WebGPU bindings to the February 2026 spec. Dictionary fields with union
+  types now generate multiple type-safe setters (e.g. `set_resource_gpu_sampler()`,
+  `set_resource_gpu_texture_view()`) alongside a deprecated fallback setter. Sequence
+  arguments in unstable APIs now use typed slices (`&[T]`) instead of `&JsValue`.
+  Fixed inner string enum types to use `JsString` in generic positions, added `BigInt`
+  to builtin identifiers, and fixed dictionary field feature gates to not over-constrain
+  getters with setter type requirements.
+  [#4955](https://github.com/wasm-bindgen/wasm-bindgen/pull/4955)
+
 ### Changed
 
 * `Closure::new()`, `Closure::once()`, and related methods now require `UnwindSafe` bounds on closures when building with `panic=unwind`. New `_aborting` variants (`new_aborting()`, `once_aborting()`, etc.) are provided for closures that don't need panic catching and want to avoid the `UnwindSafe` requirement.
