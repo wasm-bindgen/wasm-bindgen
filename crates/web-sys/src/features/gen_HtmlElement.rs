@@ -40,6 +40,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_scroll_height(this: &HtmlElement, value: i32);
+    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (structural , method , getter , js_class = "HTMLElement" , js_name = scrollTop)]
     #[doc = "Getter for the `scrollTop` field of this object."]
     #[doc = ""]
@@ -47,6 +48,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn scroll_top(this: &HtmlElement) -> i32;
+    #[cfg(not(web_sys_unstable_apis))]
     # [wasm_bindgen (structural , method , setter , js_class = "HTMLElement" , js_name = scrollTop)]
     #[doc = "Setter for the `scrollTop` field of this object."]
     #[doc = ""]
@@ -243,6 +245,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn offset_height(this: &HtmlElement) -> i32;
+    #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (structural , method , getter , js_class = "HTMLElement" , js_name = scrollTop)]
+    #[doc = "Getter for the `scrollTop` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/scrollTop)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn scroll_top(this: &HtmlElement) -> f64;
+    #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (structural , method , setter , js_class = "HTMLElement" , js_name = scrollTop)]
+    #[doc = "Setter for the `scrollTop` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/scrollTop)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_scroll_top(this: &HtmlElement, value: f64);
     # [wasm_bindgen (structural , method , getter , js_class = "HTMLElement" , js_name = oncopy)]
     #[doc = "Getter for the `oncopy` field of this object."]
     #[doc = ""]
@@ -1646,6 +1670,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn show_popover(this: &HtmlElement) -> Result<(), JsValue>;
+    #[cfg(feature = "ShowPopoverOptions")]
+    # [wasm_bindgen (catch , method , structural , js_class = "HTMLElement" , js_name = showPopover)]
+    #[doc = "The `showPopover()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/showPopover)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`, `ShowPopoverOptions`*"]
+    pub fn show_popover_with_options(
+        this: &HtmlElement,
+        options: &ShowPopoverOptions,
+    ) -> Result<(), JsValue>;
     # [wasm_bindgen (catch , method , structural , js_class = "HTMLElement" , js_name = togglePopover)]
     #[doc = "The `togglePopover()` method."]
     #[doc = ""]

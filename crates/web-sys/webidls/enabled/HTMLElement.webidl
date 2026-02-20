@@ -70,7 +70,7 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandChecked;
 
   [Throws, Pref="dom.element.popover.enabled"]
-  undefined showPopover();
+  undefined showPopover(optional ShowPopoverOptions options = {});
   [Throws, Pref="dom.element.popover.enabled"]
   undefined hidePopover();
   [Throws, Pref="dom.element.popover.enabled"]

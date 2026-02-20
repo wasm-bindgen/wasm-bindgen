@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added stable `ShowPopoverOptions` dictionary and `show_popover_with_options()` method to
+  `HtmlElement`, and unstable `TogglePopoverOptions` dictionary per the WHATWG HTML spec.
+  [#4968](https://github.com/wasm-bindgen/wasm-bindgen/pull/4968)
+
 * Added unstable Geolocation API types per the latest W3C spec: `GeolocationCoordinates`,
   `GeolocationPosition`, and `GeolocationPositionError`. The `Geolocation` interface now
   has both stable methods (using the old `Position`/`PositionError` types with `[Throws]`)
@@ -107,6 +111,11 @@
   These methods are inherited from `AudioScheduledSourceNode` and are not deprecated
   in the Web API spec.
   [#4546](https://github.com/wasm-bindgen/wasm-bindgen/issues/4546)
+
+* Fixed `Element::scroll_top()`, `Element::scroll_left()`, and `HtmlElement::scroll_top()`
+  to return `f64` instead of `i32` per the CSSOM View spec, behind `web_sys_unstable_apis`.
+  The stable API is unchanged for backwards compatibility.
+  [#4525](https://github.com/wasm-bindgen/wasm-bindgen/issues/4525)
 
 * Fixed incorrect JS export names when LLVM merges identical functions at `opt-level >= 2`.
   [#4946](https://github.com/wasm-bindgen/wasm-bindgen/issues/4946)
