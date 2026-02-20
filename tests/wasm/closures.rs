@@ -1123,8 +1123,7 @@ fn immediate_closure_new_with_assert_unwind_safe() {
 fn immediate_closure_with_return() {
     // Test inference: x and return type should be inferred from the function signature
     // Using wrap_mut_aborting since it enables inference and this closure is simple
-    let result =
-        immediate_closure_call_ret(ImmediateClosure::new_mut_aborting(&mut |x| x * 2), 21);
+    let result = immediate_closure_call_ret(ImmediateClosure::new_mut_aborting(&mut |x| x * 2), 21);
     assert_eq!(result, 42);
 }
 
