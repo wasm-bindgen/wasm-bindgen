@@ -101,6 +101,10 @@
   errors in applications with deep call stacks or many concurrent async operations.
   [#4951](https://github.com/wasm-bindgen/wasm-bindgen/pull/4951)
 
+* Fixed incorrect `Closure` adapter deduplication when wasm-ld's Identical Code Folding merges
+  invoke functions for different closure types into the same export.
+  [#4953](https://github.com/wasm-bindgen/wasm-bindgen/issues/4953)
+
 * Fixed `ReferenceError` when using Rust struct names that conflict with JS builtins (e.g., `Array`).
   The constructor now correctly uses the aliased `FinalizationRegistry` identifier.
   [#4932](https://github.com/wasm-bindgen/wasm-bindgen/pull/4932)
