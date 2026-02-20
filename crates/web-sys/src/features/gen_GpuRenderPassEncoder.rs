@@ -72,16 +72,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn end_occlusion_query(this: &GpuRenderPassEncoder);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuRenderBundle")]
     # [wasm_bindgen (method , structural , js_class = "GPURenderPassEncoder" , js_name = executeBundles)]
     #[doc = "The `executeBundles()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPURenderPassEncoder/executeBundles)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassEncoder`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderBundle`, `GpuRenderPassEncoder`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn execute_bundles(this: &GpuRenderPassEncoder, bundles: &::wasm_bindgen::JsValue);
+    pub fn execute_bundles(this: &GpuRenderPassEncoder, bundles: &[GpuRenderBundle]);
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "GPURenderPassEncoder" , js_name = setBlendConstant)]
     #[doc = "The `setBlendConstant()` method."]
@@ -94,7 +95,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_blend_constant_with_f64_sequence(
         this: &GpuRenderPassEncoder,
-        color: &::wasm_bindgen::JsValue,
+        color: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuColorDict")]
@@ -183,7 +184,7 @@ extern "C" {
         this: &GpuRenderPassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets: &::wasm_bindgen::JsValue,
+        dynamic_offsets: &[::js_sys::Number],
     );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBindGroup")]

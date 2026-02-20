@@ -33,10 +33,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "contributingSources")]
-    pub fn set_contributing_sources(
-        this: &RtcEncodedVideoFrameMetadata,
-        val: &::wasm_bindgen::JsValue,
-    );
+    pub fn set_contributing_sources(this: &RtcEncodedVideoFrameMetadata, val: &[::js_sys::Number]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `dependencies` field of this object."]
     #[doc = ""]
@@ -59,7 +56,7 @@ extern "C" {
         note = "Use `set_dependencies_u32_sequence()` or `set_dependencies_f64_sequence()` instead."
     )]
     #[wasm_bindgen(method, setter = "dependencies")]
-    pub fn set_dependencies(this: &RtcEncodedVideoFrameMetadata, val: &::wasm_bindgen::JsValue);
+    pub fn set_dependencies(this: &RtcEncodedVideoFrameMetadata, val: &[::js_sys::Number]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `dependencies` field of this object."]
     #[doc = ""]
@@ -70,7 +67,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "dependencies")]
     pub fn set_dependencies_u32_sequence(
         this: &RtcEncodedVideoFrameMetadata,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::Number],
     );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `dependencies` field of this object."]
@@ -82,7 +79,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "dependencies")]
     pub fn set_dependencies_f64_sequence(
         this: &RtcEncodedVideoFrameMetadata,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::Number],
     );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `frameId` field of this object."]
@@ -318,13 +315,13 @@ impl RtcEncodedVideoFrameMetadata {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_contributing_sources()` instead."]
-    pub fn contributing_sources(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn contributing_sources(&mut self, val: &[::js_sys::Number]) -> &mut Self {
         self.set_contributing_sources(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_dependencies()` instead."]
-    pub fn dependencies(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn dependencies(&mut self, val: &[::js_sys::Number]) -> &mut Self {
         self.set_dependencies(val);
         self
     }

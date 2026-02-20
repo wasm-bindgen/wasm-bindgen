@@ -125,6 +125,7 @@ extern "C" {
         this: &GpuCanvasConfiguration,
     ) -> Option<::js_sys::Array<GpuTextureFormat>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTextureFormat")]
     #[doc = "Change the `viewFormats` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuCanvasConfiguration`, `GpuTextureFormat`*"]
@@ -132,7 +133,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "viewFormats")]
-    pub fn set_view_formats(this: &GpuCanvasConfiguration, val: &::wasm_bindgen::JsValue);
+    pub fn set_view_formats(this: &GpuCanvasConfiguration, val: &[GpuTextureFormat]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuCanvasConfiguration {
@@ -187,7 +188,7 @@ impl GpuCanvasConfiguration {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureFormat")]
     #[deprecated = "Use `set_view_formats()` instead."]
-    pub fn view_formats(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn view_formats(&mut self, val: &[GpuTextureFormat]) -> &mut Self {
         self.set_view_formats(val);
         self
     }

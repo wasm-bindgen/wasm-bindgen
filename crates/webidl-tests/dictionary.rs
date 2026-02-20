@@ -78,3 +78,15 @@ fn correct_casing_in_js() {
     dict.set_weird_field_name(1);
     assert_camel_case(&dict);
 }
+
+#[wasm_bindgen_test]
+fn nullable_sequence_field() {
+    // Regression test: nullable sequence dictionary fields should compile.
+    // The builder pattern previously broke due to is_js_value_ref_option_type
+    // type mismatch between the setter and the unwrap_or call.
+    let dict = DictWithNullableSequence::new();
+    #[cfg(not(wbg_next_unstable))]
+    dict.set_nullable_sequence(&JsValue::NULL);
+    #[cfg(wbg_next_unstable)]
+    dict.set_nullable_sequence(None);
+}

@@ -27,6 +27,7 @@ extern "C" {
         this: &HighlightsFromPointOptions,
     ) -> Option<::js_sys::Array<ShadowRoot>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ShadowRoot")]
     #[doc = "Change the `shadowRoots` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HighlightsFromPointOptions`, `ShadowRoot`*"]
@@ -34,7 +35,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "shadowRoots")]
-    pub fn set_shadow_roots(this: &HighlightsFromPointOptions, val: &::wasm_bindgen::JsValue);
+    pub fn set_shadow_roots(this: &HighlightsFromPointOptions, val: &[ShadowRoot]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl HighlightsFromPointOptions {
@@ -52,7 +53,7 @@ impl HighlightsFromPointOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ShadowRoot")]
     #[deprecated = "Use `set_shadow_roots()` instead."]
-    pub fn shadow_roots(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn shadow_roots(&mut self, val: &[ShadowRoot]) -> &mut Self {
         self.set_shadow_roots(val);
         self
     }

@@ -65,6 +65,7 @@ extern "C" {
         this: &GpuDeviceDescriptor,
     ) -> Option<::js_sys::Array<GpuFeatureName>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuFeatureName")]
     #[doc = "Change the `requiredFeatures` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuDeviceDescriptor`, `GpuFeatureName`*"]
@@ -72,7 +73,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "requiredFeatures")]
-    pub fn set_required_features(this: &GpuDeviceDescriptor, val: &::wasm_bindgen::JsValue);
+    pub fn set_required_features(this: &GpuDeviceDescriptor, val: &[GpuFeatureName]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `requiredLimits` field of this object."]
     #[doc = ""]
@@ -148,7 +149,7 @@ impl GpuDeviceDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuFeatureName")]
     #[deprecated = "Use `set_required_features()` instead."]
-    pub fn required_features(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn required_features(&mut self, val: &[GpuFeatureName]) -> &mut Self {
         self.set_required_features(val);
         self
     }

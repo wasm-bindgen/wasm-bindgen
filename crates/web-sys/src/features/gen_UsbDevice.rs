@@ -365,7 +365,7 @@ extern "C" {
     pub fn isochronous_transfer_in(
         this: &UsbDevice,
         endpoint_number: u8,
-        packet_lengths: &::wasm_bindgen::JsValue,
+        packet_lengths: &[::js_sys::Number],
     ) -> ::js_sys::Promise<UsbIsochronousInTransferResult>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbIsochronousOutTransferResult")]
@@ -382,7 +382,7 @@ extern "C" {
         this: &UsbDevice,
         endpoint_number: u8,
         data: &::js_sys::Object,
-        packet_lengths: &::wasm_bindgen::JsValue,
+        packet_lengths: &[::js_sys::Number],
     ) -> Result<::js_sys::Promise<UsbIsochronousOutTransferResult>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbIsochronousOutTransferResult")]
@@ -399,7 +399,7 @@ extern "C" {
         this: &UsbDevice,
         endpoint_number: u8,
         data: &mut [u8],
-        packet_lengths: &::wasm_bindgen::JsValue,
+        packet_lengths: &[::js_sys::Number],
     ) -> Result<::js_sys::Promise<UsbIsochronousOutTransferResult>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbIsochronousOutTransferResult")]
@@ -416,7 +416,7 @@ extern "C" {
         this: &UsbDevice,
         endpoint_number: u8,
         data: &::js_sys::Uint8Array,
-        packet_lengths: &::wasm_bindgen::JsValue,
+        packet_lengths: &[::js_sys::Number],
     ) -> Result<::js_sys::Promise<UsbIsochronousOutTransferResult>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "USBDevice" , js_name = open)]

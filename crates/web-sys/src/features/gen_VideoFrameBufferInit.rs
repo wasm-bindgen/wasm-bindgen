@@ -192,6 +192,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "layout")]
     pub fn get_layout(this: &VideoFrameBufferInit) -> Option<::js_sys::Array<PlaneLayout>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PlaneLayout")]
     #[doc = "Change the `layout` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrameBufferInit`*"]
@@ -199,7 +200,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "layout")]
-    pub fn set_layout(this: &VideoFrameBufferInit, val: &::wasm_bindgen::JsValue);
+    pub fn set_layout(this: &VideoFrameBufferInit, val: &[PlaneLayout]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoFrameMetadata")]
     #[doc = "Get the `metadata` field of this object."]
@@ -294,7 +295,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "transfer")]
-    pub fn set_transfer(this: &VideoFrameBufferInit, val: &::wasm_bindgen::JsValue);
+    pub fn set_transfer(this: &VideoFrameBufferInit, val: &[::js_sys::ArrayBuffer]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomRectInit")]
     #[doc = "Get the `visibleRect` field of this object."]
@@ -392,7 +393,7 @@ impl VideoFrameBufferInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PlaneLayout")]
     #[deprecated = "Use `set_layout()` instead."]
-    pub fn layout(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn layout(&mut self, val: &[PlaneLayout]) -> &mut Self {
         self.set_layout(val);
         self
     }
@@ -417,7 +418,7 @@ impl VideoFrameBufferInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_transfer()` instead."]
-    pub fn transfer(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
         self.set_transfer(val);
         self
     }

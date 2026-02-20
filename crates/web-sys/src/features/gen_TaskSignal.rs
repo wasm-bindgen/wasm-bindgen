@@ -60,7 +60,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn any(signals: &::wasm_bindgen::JsValue) -> TaskSignal;
+    pub fn any(signals: &[AbortSignal]) -> TaskSignal;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "TaskSignalAnyInit")]
     # [wasm_bindgen (static_method_of = TaskSignal , js_class = "TaskSignal" , js_name = any)]
@@ -72,6 +72,5 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn any_with_init(signals: &::wasm_bindgen::JsValue, init: &TaskSignalAnyInit)
-        -> TaskSignal;
+    pub fn any_with_init(signals: &[AbortSignal], init: &TaskSignalAnyInit) -> TaskSignal;
 }

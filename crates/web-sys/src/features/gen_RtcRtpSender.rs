@@ -92,7 +92,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn generate_key_frame_with_rids(
         this: &RtcRtpSender,
-        rids: &::wasm_bindgen::JsValue,
+        rids: &[::js_sys::JsString],
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(feature = "RtcRtpCapabilities")]
     # [wasm_bindgen (static_method_of = RtcRtpSender , js_class = "RTCRtpSender" , js_name = getCapabilities)]

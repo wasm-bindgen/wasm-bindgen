@@ -166,7 +166,7 @@ extern "C" {
         this: &GpuComputePassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets: &::wasm_bindgen::JsValue,
+        dynamic_offsets: &[::js_sys::Number],
     );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBindGroup")]

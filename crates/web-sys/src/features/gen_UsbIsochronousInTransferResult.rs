@@ -42,30 +42,32 @@ extern "C" {
         this: &UsbIsochronousInTransferResult,
     ) -> ::js_sys::Array<UsbIsochronousInTransferPacket>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UsbIsochronousInTransferPacket")]
     #[wasm_bindgen(catch, constructor, js_class = "USBIsochronousInTransferResult")]
     #[doc = "The `new UsbIsochronousInTransferResult(..)` constructor, creating a new instance of `UsbIsochronousInTransferResult`."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBIsochronousInTransferResult/USBIsochronousInTransferResult)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousInTransferResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousInTransferPacket`, `UsbIsochronousInTransferResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(
-        packets: &::wasm_bindgen::JsValue,
+        packets: &[UsbIsochronousInTransferPacket],
     ) -> Result<UsbIsochronousInTransferResult, JsValue>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UsbIsochronousInTransferPacket")]
     #[wasm_bindgen(catch, constructor, js_class = "USBIsochronousInTransferResult")]
     #[doc = "The `new UsbIsochronousInTransferResult(..)` constructor, creating a new instance of `UsbIsochronousInTransferResult`."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBIsochronousInTransferResult/USBIsochronousInTransferResult)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousInTransferResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousInTransferPacket`, `UsbIsochronousInTransferResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_data(
-        packets: &::wasm_bindgen::JsValue,
+        packets: &[UsbIsochronousInTransferPacket],
         data: Option<&::js_sys::DataView>,
     ) -> Result<UsbIsochronousInTransferResult, JsValue>;
 }

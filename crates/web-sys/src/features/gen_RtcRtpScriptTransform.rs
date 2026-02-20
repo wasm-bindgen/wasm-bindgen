@@ -57,6 +57,6 @@ extern "C" {
     pub fn new_with_options_and_transfer(
         worker: &Worker,
         options: &::wasm_bindgen::JsValue,
-        transfer: &::wasm_bindgen::JsValue,
+        transfer: &[::js_sys::Object],
     ) -> Result<RtcRtpScriptTransform, JsValue>;
 }

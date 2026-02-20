@@ -25,6 +25,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "brands")]
     pub fn get_brands(this: &UaLowEntropyJson) -> Option<::js_sys::Array<NavigatorUaBrandVersion>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "NavigatorUaBrandVersion")]
     #[doc = "Change the `brands` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigatorUaBrandVersion`, `UaLowEntropyJson`*"]
@@ -32,7 +33,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "brands")]
-    pub fn set_brands(this: &UaLowEntropyJson, val: &::wasm_bindgen::JsValue);
+    pub fn set_brands(this: &UaLowEntropyJson, val: &[NavigatorUaBrandVersion]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `mobile` field of this object."]
     #[doc = ""]
@@ -86,7 +87,7 @@ impl UaLowEntropyJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "NavigatorUaBrandVersion")]
     #[deprecated = "Use `set_brands()` instead."]
-    pub fn brands(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn brands(&mut self, val: &[NavigatorUaBrandVersion]) -> &mut Self {
         self.set_brands(val);
         self
     }

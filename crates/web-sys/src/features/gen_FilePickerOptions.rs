@@ -103,6 +103,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "types")]
     pub fn get_types(this: &FilePickerOptions) -> Option<::js_sys::Array<FilePickerAcceptType>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "FilePickerAcceptType")]
     #[doc = "Change the `types` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FilePickerAcceptType`, `FilePickerOptions`*"]
@@ -110,7 +111,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "types")]
-    pub fn set_types(this: &FilePickerOptions, val: &::wasm_bindgen::JsValue);
+    pub fn set_types(this: &FilePickerOptions, val: &[FilePickerAcceptType]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl FilePickerOptions {
@@ -147,7 +148,7 @@ impl FilePickerOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FilePickerAcceptType")]
     #[deprecated = "Use `set_types()` instead."]
-    pub fn types(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn types(&mut self, val: &[FilePickerAcceptType]) -> &mut Self {
         self.set_types(val);
         self
     }

@@ -45,6 +45,7 @@ extern "C" {
         this: &GpuRenderPassDescriptor,
     ) -> ::js_sys::Array<::js_sys::JsOption<GpuRenderPassColorAttachment>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuRenderPassColorAttachment")]
     #[doc = "Change the `colorAttachments` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuRenderPassDescriptor`*"]
@@ -52,7 +53,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "colorAttachments")]
-    pub fn set_color_attachments(this: &GpuRenderPassDescriptor, val: &::wasm_bindgen::JsValue);
+    pub fn set_color_attachments(
+        this: &GpuRenderPassDescriptor,
+        val: &[::js_sys::JsOption<GpuRenderPassColorAttachment>],
+    );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuRenderPassDepthStencilAttachment")]
     #[doc = "Get the `depthStencilAttachment` field of this object."]
@@ -160,13 +164,14 @@ extern "C" {
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuRenderPassDescriptor {
+    #[cfg(feature = "GpuRenderPassColorAttachment")]
     #[doc = "Construct a new `GpuRenderPassDescriptor`."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuRenderPassDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(color_attachments: &::wasm_bindgen::JsValue) -> Self {
+    pub fn new(color_attachments: &[::js_sys::JsOption<GpuRenderPassColorAttachment>]) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_color_attachments(color_attachments);
@@ -181,7 +186,10 @@ impl GpuRenderPassDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuRenderPassColorAttachment")]
     #[deprecated = "Use `set_color_attachments()` instead."]
-    pub fn color_attachments(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn color_attachments(
+        &mut self,
+        val: &[::js_sys::JsOption<GpuRenderPassColorAttachment>],
+    ) -> &mut Self {
         self.set_color_attachments(val);
         self
     }

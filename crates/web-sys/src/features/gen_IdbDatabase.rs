@@ -239,7 +239,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn transaction_with_str_sequence_and_mode_and_options(
         this: &IdbDatabase,
-        store_names: &::wasm_bindgen::JsValue,
+        store_names: &[::js_sys::JsString],
         mode: IdbTransactionMode,
         options: &IdbTransactionOptions,
     ) -> Result<IdbTransaction, JsValue>;

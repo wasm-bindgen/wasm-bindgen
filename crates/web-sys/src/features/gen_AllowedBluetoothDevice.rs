@@ -54,7 +54,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "allowedServices")]
     pub fn set_allowed_services_str_sequence(
         this: &AllowedBluetoothDevice,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::JsString],
     );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `deviceId` field of this object."]

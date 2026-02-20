@@ -62,6 +62,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "attributes")]
     pub fn get_attributes(this: &GpuVertexBufferLayout) -> ::js_sys::Array<GpuVertexAttribute>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuVertexAttribute")]
     #[doc = "Change the `attributes` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuVertexAttribute`, `GpuVertexBufferLayout`*"]
@@ -69,7 +70,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attributes")]
-    pub fn set_attributes(this: &GpuVertexBufferLayout, val: &::wasm_bindgen::JsValue);
+    pub fn set_attributes(this: &GpuVertexBufferLayout, val: &[GpuVertexAttribute]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuVertexStepMode")]
     #[doc = "Get the `stepMode` field of this object."]
@@ -93,13 +94,14 @@ extern "C" {
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuVertexBufferLayout {
+    #[cfg(feature = "GpuVertexAttribute")]
     #[doc = "Construct a new `GpuVertexBufferLayout`."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuVertexBufferLayout`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuVertexAttribute`, `GpuVertexBufferLayout`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(array_stride: f64, attributes: &::wasm_bindgen::JsValue) -> Self {
+    pub fn new(array_stride: f64, attributes: &[GpuVertexAttribute]) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_array_stride(array_stride);
@@ -115,7 +117,7 @@ impl GpuVertexBufferLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuVertexAttribute")]
     #[deprecated = "Use `set_attributes()` instead."]
-    pub fn attributes(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn attributes(&mut self, val: &[GpuVertexAttribute]) -> &mut Self {
         self.set_attributes(val);
         self
     }

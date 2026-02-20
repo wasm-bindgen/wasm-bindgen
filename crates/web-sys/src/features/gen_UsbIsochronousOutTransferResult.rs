@@ -31,16 +31,17 @@ extern "C" {
         this: &UsbIsochronousOutTransferResult,
     ) -> ::js_sys::Array<UsbIsochronousOutTransferPacket>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UsbIsochronousOutTransferPacket")]
     #[wasm_bindgen(catch, constructor, js_class = "USBIsochronousOutTransferResult")]
     #[doc = "The `new UsbIsochronousOutTransferResult(..)` constructor, creating a new instance of `UsbIsochronousOutTransferResult`."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBIsochronousOutTransferResult/USBIsochronousOutTransferResult)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousOutTransferResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `UsbIsochronousOutTransferPacket`, `UsbIsochronousOutTransferResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(
-        packets: &::wasm_bindgen::JsValue,
+        packets: &[UsbIsochronousOutTransferPacket],
     ) -> Result<UsbIsochronousOutTransferResult, JsValue>;
 }

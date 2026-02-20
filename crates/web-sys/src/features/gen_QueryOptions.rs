@@ -32,7 +32,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "postscriptNames")]
-    pub fn set_postscript_names(this: &QueryOptions, val: &::wasm_bindgen::JsValue);
+    pub fn set_postscript_names(this: &QueryOptions, val: &[::js_sys::JsString]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl QueryOptions {
@@ -49,7 +49,7 @@ impl QueryOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_postscript_names()` instead."]
-    pub fn postscript_names(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn postscript_names(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_postscript_names(val);
         self
     }

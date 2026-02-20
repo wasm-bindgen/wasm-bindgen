@@ -190,7 +190,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "transfer")]
-    pub fn set_transfer(this: &AudioDataInit, val: &::wasm_bindgen::JsValue);
+    pub fn set_transfer(this: &AudioDataInit, val: &[::js_sys::ArrayBuffer]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl AudioDataInit {
@@ -258,7 +258,7 @@ impl AudioDataInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_transfer()` instead."]
-    pub fn transfer(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
         self.set_transfer(val);
         self
     }

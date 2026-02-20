@@ -26,6 +26,7 @@ extern "C" {
     pub fn get_breakdown(this: &MemoryMeasurement)
         -> Option<::js_sys::Array<MemoryBreakdownEntry>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MemoryBreakdownEntry")]
     #[doc = "Change the `breakdown` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MemoryBreakdownEntry`, `MemoryMeasurement`*"]
@@ -33,7 +34,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "breakdown")]
-    pub fn set_breakdown(this: &MemoryMeasurement, val: &::wasm_bindgen::JsValue);
+    pub fn set_breakdown(this: &MemoryMeasurement, val: &[MemoryBreakdownEntry]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `bytes` field of this object."]
     #[doc = ""]
@@ -88,7 +89,7 @@ impl MemoryMeasurement {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MemoryBreakdownEntry")]
     #[deprecated = "Use `set_breakdown()` instead."]
-    pub fn breakdown(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn breakdown(&mut self, val: &[MemoryBreakdownEntry]) -> &mut Self {
         self.set_breakdown(val);
         self
     }

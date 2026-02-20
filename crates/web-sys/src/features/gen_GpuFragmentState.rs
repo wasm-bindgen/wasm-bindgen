@@ -83,6 +83,7 @@ extern "C" {
         this: &GpuFragmentState,
     ) -> ::js_sys::Array<::js_sys::JsOption<GpuColorTargetState>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuColorTargetState")]
     #[doc = "Change the `targets` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuColorTargetState`, `GpuFragmentState`*"]
@@ -90,18 +91,21 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "targets")]
-    pub fn set_targets(this: &GpuFragmentState, val: &::wasm_bindgen::JsValue);
+    pub fn set_targets(this: &GpuFragmentState, val: &[::js_sys::JsOption<GpuColorTargetState>]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuFragmentState {
-    #[cfg(feature = "GpuShaderModule")]
+    #[cfg(all(feature = "GpuColorTargetState", feature = "GpuShaderModule",))]
     #[doc = "Construct a new `GpuFragmentState`."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuFragmentState`, `GpuShaderModule`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuColorTargetState`, `GpuFragmentState`, `GpuShaderModule`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(module: &GpuShaderModule, targets: &::wasm_bindgen::JsValue) -> Self {
+    pub fn new(
+        module: &GpuShaderModule,
+        targets: &[::js_sys::JsOption<GpuColorTargetState>],
+    ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_module(module);
@@ -130,7 +134,7 @@ impl GpuFragmentState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuColorTargetState")]
     #[deprecated = "Use `set_targets()` instead."]
-    pub fn targets(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn targets(&mut self, val: &[::js_sys::JsOption<GpuColorTargetState>]) -> &mut Self {
         self.set_targets(val);
         self
     }

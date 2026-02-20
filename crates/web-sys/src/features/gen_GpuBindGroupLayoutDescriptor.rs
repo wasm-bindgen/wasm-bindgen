@@ -45,6 +45,7 @@ extern "C" {
         this: &GpuBindGroupLayoutDescriptor,
     ) -> ::js_sys::Array<GpuBindGroupLayoutEntry>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBindGroupLayoutEntry")]
     #[doc = "Change the `entries` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupLayoutDescriptor`, `GpuBindGroupLayoutEntry`*"]
@@ -52,17 +53,18 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "entries")]
-    pub fn set_entries(this: &GpuBindGroupLayoutDescriptor, val: &::wasm_bindgen::JsValue);
+    pub fn set_entries(this: &GpuBindGroupLayoutDescriptor, val: &[GpuBindGroupLayoutEntry]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuBindGroupLayoutDescriptor {
+    #[cfg(feature = "GpuBindGroupLayoutEntry")]
     #[doc = "Construct a new `GpuBindGroupLayoutDescriptor`."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupLayoutDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupLayoutDescriptor`, `GpuBindGroupLayoutEntry`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(entries: &::wasm_bindgen::JsValue) -> Self {
+    pub fn new(entries: &[GpuBindGroupLayoutEntry]) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_entries(entries);
@@ -77,7 +79,7 @@ impl GpuBindGroupLayoutDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBindGroupLayoutEntry")]
     #[deprecated = "Use `set_entries()` instead."]
-    pub fn entries(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn entries(&mut self, val: &[GpuBindGroupLayoutEntry]) -> &mut Self {
         self.set_entries(val);
         self
     }

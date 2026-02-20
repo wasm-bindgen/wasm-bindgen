@@ -27,6 +27,7 @@ extern "C" {
         this: &MemoryBreakdownEntry,
     ) -> Option<::js_sys::Array<MemoryAttribution>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MemoryAttribution")]
     #[doc = "Change the `attribution` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MemoryAttribution`, `MemoryBreakdownEntry`*"]
@@ -34,7 +35,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attribution")]
-    pub fn set_attribution(this: &MemoryBreakdownEntry, val: &::wasm_bindgen::JsValue);
+    pub fn set_attribution(this: &MemoryBreakdownEntry, val: &[MemoryAttribution]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `bytes` field of this object."]
     #[doc = ""]
@@ -89,7 +90,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "types")]
-    pub fn set_types(this: &MemoryBreakdownEntry, val: &::wasm_bindgen::JsValue);
+    pub fn set_types(this: &MemoryBreakdownEntry, val: &[::js_sys::JsString]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MemoryBreakdownEntry {
@@ -107,7 +108,7 @@ impl MemoryBreakdownEntry {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MemoryAttribution")]
     #[deprecated = "Use `set_attribution()` instead."]
-    pub fn attribution(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn attribution(&mut self, val: &[MemoryAttribution]) -> &mut Self {
         self.set_attribution(val);
         self
     }
@@ -119,7 +120,7 @@ impl MemoryBreakdownEntry {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_types()` instead."]
-    pub fn types(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn types(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_types(val);
         self
     }

@@ -219,6 +219,7 @@ fn test_sequence_callback() {
         input.push(&JsString::from("a"));
         input.push(&JsString::from("b"));
 
+        let input = input.to_vec();
         let result = test.invoke_sequence_callback(&Function::from_closure(closure), &input);
         assert_eq!(result.length(), 3);
     }

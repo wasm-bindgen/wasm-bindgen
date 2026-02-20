@@ -66,7 +66,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "attestationFormats")]
     pub fn set_attestation_formats(
         this: &PublicKeyCredentialRequestOptions,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::JsString],
     );
     #[doc = "Get the `challenge` field of this object."]
     #[doc = ""]
@@ -138,7 +138,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "hints")]
-    pub fn set_hints(this: &PublicKeyCredentialRequestOptions, val: &::wasm_bindgen::JsValue);
+    pub fn set_hints(this: &PublicKeyCredentialRequestOptions, val: &[::js_sys::JsString]);
     #[doc = "Get the `rpId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptions`*"]
@@ -200,7 +200,7 @@ impl PublicKeyCredentialRequestOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_attestation_formats()` instead."]
-    pub fn attestation_formats(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_attestation_formats(val);
         self
     }
@@ -217,7 +217,7 @@ impl PublicKeyCredentialRequestOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_hints()` instead."]
-    pub fn hints(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_hints(val);
         self
     }

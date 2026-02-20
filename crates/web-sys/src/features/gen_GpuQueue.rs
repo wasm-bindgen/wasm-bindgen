@@ -56,7 +56,7 @@ extern "C" {
         this: &GpuQueue,
         source: &GpuCopyExternalImageSourceInfo,
         destination: &GpuCopyExternalImageDestInfo,
-        copy_size: &::wasm_bindgen::JsValue,
+        copy_size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -91,16 +91,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn on_submitted_work_done(this: &GpuQueue) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuCommandBuffer")]
     # [wasm_bindgen (method , structural , js_class = "GPUQueue" , js_name = submit)]
     #[doc = "The `submit()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUQueue/submit)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuQueue`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCommandBuffer`, `GpuQueue`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn submit(this: &GpuQueue, command_buffers: &::wasm_bindgen::JsValue);
+    pub fn submit(this: &GpuQueue, command_buffers: &[GpuCommandBuffer]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBuffer")]
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeBuffer)]
@@ -894,7 +895,7 @@ extern "C" {
         destination: &GpuTexelCopyTextureInfo,
         data: &::js_sys::Object,
         data_layout: &GpuTexelCopyBufferLayout,
-        size: &::wasm_bindgen::JsValue,
+        size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -915,7 +916,7 @@ extern "C" {
         destination: &GpuTexelCopyTextureInfo,
         data: &[u8],
         data_layout: &GpuTexelCopyBufferLayout,
-        size: &::wasm_bindgen::JsValue,
+        size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -936,7 +937,7 @@ extern "C" {
         destination: &GpuTexelCopyTextureInfo,
         data: &::js_sys::Uint8Array,
         data_layout: &GpuTexelCopyBufferLayout,
-        size: &::wasm_bindgen::JsValue,
+        size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(

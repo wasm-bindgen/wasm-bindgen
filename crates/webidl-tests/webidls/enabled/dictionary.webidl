@@ -49,3 +49,8 @@ dictionary Required {
 dictionary PreserveNames {
   long weird_fieldName;
 };
+
+// Test nullable sequence field (reproduces gen_L10nValue / gen_RegisteredKey bug)
+dictionary DictWithNullableSequence {
+  sequence<long>? nullableSequence = null;
+};

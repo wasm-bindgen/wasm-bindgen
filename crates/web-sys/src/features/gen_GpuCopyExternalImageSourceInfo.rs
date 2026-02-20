@@ -62,10 +62,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "origin")]
-    pub fn set_origin_u32_sequence(
-        this: &GpuCopyExternalImageSourceInfo,
-        val: &::wasm_bindgen::JsValue,
-    );
+    pub fn set_origin_u32_sequence(this: &GpuCopyExternalImageSourceInfo, val: &[::js_sys::Number]);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuOrigin2dDict")]
     #[doc = "Change the `origin` field of this object."]

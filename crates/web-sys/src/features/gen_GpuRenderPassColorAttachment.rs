@@ -46,7 +46,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "clearValue")]
     pub fn set_clear_value_f64_sequence(
         this: &GpuRenderPassColorAttachment,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::Number],
     );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuColorDict")]

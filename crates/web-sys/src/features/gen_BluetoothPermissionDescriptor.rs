@@ -83,6 +83,7 @@ extern "C" {
         this: &BluetoothPermissionDescriptor,
     ) -> Option<::js_sys::Array<BluetoothLeScanFilterInit>>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothLeScanFilterInit")]
     #[doc = "Change the `filters` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BluetoothLeScanFilterInit`, `BluetoothPermissionDescriptor`*"]
@@ -90,7 +91,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "filters")]
-    pub fn set_filters(this: &BluetoothPermissionDescriptor, val: &::wasm_bindgen::JsValue);
+    pub fn set_filters(this: &BluetoothPermissionDescriptor, val: &[BluetoothLeScanFilterInit]);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `optionalServices` field of this object."]
     #[doc = ""]
@@ -113,7 +114,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "optionalServices")]
     pub fn set_optional_services(
         this: &BluetoothPermissionDescriptor,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::wasm_bindgen::JsValue],
     );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `optionalServices` field of this object."]
@@ -125,7 +126,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "optionalServices")]
     pub fn set_optional_services_str_sequence(
         this: &BluetoothPermissionDescriptor,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::JsString],
     );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `optionalServices` field of this object."]
@@ -137,7 +138,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "optionalServices")]
     pub fn set_optional_services_u32_sequence(
         this: &BluetoothPermissionDescriptor,
-        val: &::wasm_bindgen::JsValue,
+        val: &[::js_sys::Number],
     );
 }
 #[cfg(web_sys_unstable_apis)]
@@ -177,13 +178,13 @@ impl BluetoothPermissionDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothLeScanFilterInit")]
     #[deprecated = "Use `set_filters()` instead."]
-    pub fn filters(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn filters(&mut self, val: &[BluetoothLeScanFilterInit]) -> &mut Self {
         self.set_filters(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_optional_services()` instead."]
-    pub fn optional_services(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+    pub fn optional_services(&mut self, val: &[::wasm_bindgen::JsValue]) -> &mut Self {
         self.set_optional_services(val);
         self
     }

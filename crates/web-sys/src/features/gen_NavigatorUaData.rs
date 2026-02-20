@@ -63,7 +63,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_high_entropy_values(
         this: &NavigatorUaData,
-        hints: &::wasm_bindgen::JsValue,
+        hints: &[::js_sys::JsString],
     ) -> ::js_sys::Promise<UaDataValues>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UaLowEntropyJson")]

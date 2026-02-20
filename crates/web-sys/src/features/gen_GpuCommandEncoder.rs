@@ -429,7 +429,7 @@ extern "C" {
         this: &GpuCommandEncoder,
         source: &GpuTexelCopyBufferInfo,
         destination: &GpuTexelCopyTextureInfo,
-        copy_size: &::wasm_bindgen::JsValue,
+        copy_size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -470,7 +470,7 @@ extern "C" {
         this: &GpuCommandEncoder,
         source: &GpuTexelCopyTextureInfo,
         destination: &GpuTexelCopyBufferInfo,
-        copy_size: &::wasm_bindgen::JsValue,
+        copy_size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -508,7 +508,7 @@ extern "C" {
         this: &GpuCommandEncoder,
         source: &GpuTexelCopyTextureInfo,
         destination: &GpuTexelCopyTextureInfo,
-        copy_size: &::wasm_bindgen::JsValue,
+        copy_size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "GpuExtent3dDict", feature = "GpuTexelCopyTextureInfo",))]

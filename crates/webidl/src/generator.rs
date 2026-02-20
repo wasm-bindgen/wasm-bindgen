@@ -1,4 +1,4 @@
-use crate::util::{camel_case_ident, raw_ident, rust_ident};
+use crate::util::{camel_case_ident, leading_colon_path_ty, raw_ident, rust_ident, shared_ref};
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use quote::format_ident;
@@ -825,6 +825,8 @@ pub struct DictionaryField {
     pub return_ty: Type,
     /// All setter variants - for union types, one per union member
     pub setter_types: Vec<DictionaryFieldSetter>,
+    /// When true, the nullable type collapses: the setter takes `&JsValue` instead of
+    /// `Option<&JsValue>`, and the builder uses `unwrap_or(&JsValue::NULL)`.
     pub is_js_value_ref_option_type: bool,
     pub required: bool,
     pub unstable: bool,
@@ -861,13 +863,25 @@ impl DictionaryField {
             &required_doc_string(options, features),
         );
 
+        // When is_js_value_ref_option_type is set and we have a single setter,
+        // collapse the nullable type to &JsValue for backwards compatibility.
+        let js_value_ref_override =
+            if self.is_js_value_ref_option_type && self.setter_types.len() == 1 {
+                Some(shared_ref(
+                    leading_colon_path_ty(vec![rust_ident("wasm_bindgen"), rust_ident("JsValue")]),
+                    false,
+                ))
+            } else {
+                None
+            };
+
         // Generate setters for each type variant
         let setters = self.setter_types.iter().map(|setter| {
             let setter_name = match &setter.name_suffix {
                 Some(suffix) => format_ident!("set_{}_{}", self.name, suffix),
                 None => format_ident!("set_{}", self.name),
             };
-            let ty = &setter.ty;
+            let ty = js_value_ref_override.as_ref().unwrap_or(&setter.ty);
 
             // Get features for this specific setter type
             let mut setter_features = BTreeSet::new();
@@ -935,8 +949,9 @@ impl DictionaryField {
         let setter_name = self.setter_name();
         let deprecated = format!("Use `{setter_name}()` instead.");
 
-        // Only use unwrap_or for JsValue option types when we DON'T have multiple setters
-        // (i.e., when we're not expanding union types)
+        // When is_js_value_ref_option_type is set and we have a single setter,
+        // the setter takes &JsValue but the builder takes Option<&JsValue>,
+        // so unwrap_or is needed to bridge the types.
         let shim_args = if self.is_js_value_ref_option_type && self.setter_types.len() == 1 {
             quote! { val.unwrap_or(&::wasm_bindgen::JsValue::NULL) }
         } else {
