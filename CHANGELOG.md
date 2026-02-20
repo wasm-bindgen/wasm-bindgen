@@ -9,6 +9,9 @@
 
 ### Fixed
 
+* Fixed a regression where Array.of1,... variants using generic `Array<T>` broke inference.
+  Reverted to use non-generic JsValue arguments.
+
 ### Removed
 
 ## [0.2.109](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.108...0.2.109)
