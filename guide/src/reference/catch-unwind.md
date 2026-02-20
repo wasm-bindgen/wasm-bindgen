@@ -112,18 +112,20 @@ When built with `panic=unwind`, certain `ScopedClosure` and `ImmediateClosure` c
 catch panics and convert them to JavaScript `PanicError` exceptions. The panic-catching
 constructors are:
 
-- `Closure::own`, `Closure::once`, `Closure::once_into_js`
+- `Closure::new`, `Closure::own`, `Closure::once`, `Closure::once_into_js`
+- `Closure::wrap`, `Closure::wrap_assert_unwind_safe`
+- `Closure::own_assert_unwind_safe`, `Closure::once_assert_unwind_safe`
 - `Closure::borrow` (Fn), `Closure::borrow_mut` (FnMut)
 - `Closure::borrow_assert_unwind_safe`, `Closure::borrow_mut_assert_unwind_safe`
-- `Closure::wrap_assert_unwind_safe`
 - `ImmediateClosure::new` (Fn), `ImmediateClosure::new_mut` (FnMut)
-- `ImmediateClosure::wrap_assert_unwind_safe` (Fn), `ImmediateClosure::wrap_mut_assert_unwind_safe` (FnMut)
+- `ImmediateClosure::new_assert_unwind_safe` (Fn), `ImmediateClosure::new_mut_assert_unwind_safe` (FnMut)
 
-The `*_aborting` variants (`own_aborting`, `once_wrap`, `borrow_aborting`, `borrow_mut_aborting`,
-`wrap_aborting`, `wrap_mut_aborting`, etc.) do NOT catch panics and will abort if the
-closure panics. These variants also don't require the `MaybeUnwindSafe` bound.
+The `*_aborting` variants (`own_aborting`, `once_aborting`, `wrap_aborting`, `borrow_aborting`,
+`borrow_mut_aborting`, `ImmediateClosure::new_aborting`, `ImmediateClosure::new_mut_aborting`)
+do NOT catch panics and will abort if the closure panics. These variants also don't require
+the `MaybeUnwindSafe` bound.
 
-Note: `Closure::new` is an alias for `own_aborting` and does NOT catch panics.
+Note: `Closure::new` is an alias for `Closure::own` and catches panics (requires `MaybeUnwindSafe`).
 
 Catching panics in closures requires the closure to satisfy the `UnwindSafe` trait,
 or you can use the `*_assert_unwind_safe` variants which skip this check.
@@ -169,10 +171,10 @@ forEach(&ImmediateClosure::new_mut(&mut |x| {
 ```
 
 For closures that should not catch panics (and abort the program instead), use
-the `*_aborting` variants: `Closure::new`, `Closure::wrap`,
-`Closure::once_wrap`, `Closure::once_into_js_wrap`,
+the `*_aborting` variants: `Closure::own_aborting`, `Closure::wrap_aborting`,
+`Closure::once_aborting`,
 `ScopedClosure::borrow_aborting`, `ScopedClosure::borrow_mut_aborting`,
-`ImmediateClosure::wrap_aborting`, and `ImmediateClosure::wrap_mut_aborting`.
+`ImmediateClosure::new_aborting`, and `ImmediateClosure::new_mut_aborting`.
 These do not require `UnwindSafe`.
 
 > **Note**: The deprecated `&dyn Fn` and `&mut dyn FnMut` patterns are **not**

@@ -22,10 +22,10 @@ While direct `&dyn Fn` and `&mut dyn FnMut` closures [are still supported](#lega
 
 | Type | Constructor | Aborting Constructor | Assert Unwind Safe |
 | ---- | ----------- | -------------------- | ------------------ |
-| [`&ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` (Fn) / `new_mut` (FnMut) | `wrap_aborting` / `wrap_mut_aborting` | `wrap_assert_unwind_safe` / `wrap_mut_assert_unwind_safe` |
+| [`&ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` (Fn) / `new_mut` (FnMut) | `new_aborting` / `new_mut_aborting` | `new_assert_unwind_safe` / `new_mut_assert_unwind_safe` |
 | [`&ScopedClosure<'a, C>`](#known-lifetime-callbacks-with-scopedclosure) | `Closure::borrow` (Fn) / `borrow_mut` (FnMut) | `borrow_aborting` / `borrow_mut_aborting` | `borrow_assert_unwind_safe` / `borrow_mut_assert_unwind_safe` |
-| [`ScopedClosure<'static, C>`](#static-lifetimes-with-closuret--scopedclosurestatic-t) | `Closure::own` (`Closure::new`) | `own_aborting` | use `AssertUnwindSafe` wrapper |
-| [`ScopedClosure<'static, C>` (one-shot)](#one-shot-static-closures-with-scopedclosurestatic-tonce) | `Closure::once` | `Closure::once_aborting` | use `AssertUnwindSafe` wrapper |
+| [`ScopedClosure<'static, C>`](#static-lifetimes-with-closuret--scopedclosurestatic-t) | `Closure::own` (`Closure::new`) | `own_aborting` | `own_assert_unwind_safe` |
+| [`ScopedClosure<'static, C>` (one-shot)](#one-shot-static-closures-with-scopedclosurestatic-tonce) | `Closure::once` | `Closure::once_aborting` | `once_assert_unwind_safe` |
 
 `Closure<C>` is a backwards compatible alias for `ScopedClosure<'static, C>`, while providing constructors for arbitrary lifetimes.
 
@@ -47,7 +47,7 @@ let closure = Closure::own(AssertUnwindSafe(move || {
 }));
 ```
 
-This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `&ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new_mut` (verified unwind-safe), `wrap_mut_assert_unwind_safe` (asserted unwind-safe with inference), or `wrap_mut_aborting` (aborts on panic).
+This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `&ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new_mut` (verified unwind-safe), `new_mut_assert_unwind_safe` (asserted unwind-safe with inference), or `new_mut_aborting` (aborts on panic).
 
 ## Immediate/Synchronous Callbacks with `ImmediateClosure`
 
@@ -103,9 +103,9 @@ By default `ImmediateClosure::new` and `new_mut` enforce unwind safety via `Mayb
 When you need to capture types that aren't `UnwindSafe` (like `Rc<RefCell<T>>`),
 you have two options:
 
-1. **`wrap_aborting` / `wrap_mut_aborting`** — Aborts on panic instead of catching. Use when you prefer abort-on-panic behavior.
+1. **`new_aborting` / `new_mut_aborting`** — Aborts on panic instead of catching. Use when you prefer abort-on-panic behavior.
 
-2. **`wrap_assert_unwind_safe` / `wrap_mut_assert_unwind_safe`** — Catches panics but doesn't verify `MaybeUnwindSafe`. Use when you want panic catching and are confident the closure is unwind-safe.
+2. **`new_assert_unwind_safe` / `new_mut_assert_unwind_safe`** — Catches panics but doesn't verify `MaybeUnwindSafe`. Use when you want panic catching and are confident the closure is unwind-safe.
 
 ```rust
 use wasm_bindgen::prelude::*;
@@ -121,12 +121,12 @@ extern "C" {
 let data = Rc::new(RefCell::new(0));
 
 // Option 1: Abort on panic
-forEach(&ImmediateClosure::wrap_mut_aborting(&mut |x| {
+forEach(&ImmediateClosure::new_mut_aborting(&mut |x| {
     *data.borrow_mut() += x;
 }));
 
 // Option 2: Catch panics (caller asserts unwind safety)
-forEach(&ImmediateClosure::wrap_mut_assert_unwind_safe(&mut |x| {
+forEach(&ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
     *data.borrow_mut() += x;
 }));
 ```
@@ -326,7 +326,7 @@ extern "C" {
 
 // ImmediateClosure
 let func: &dyn Fn(u32) = &|x| println!("{}", x);
-let closure = ImmediateClosure::wrap_assert_unwind_safe(func);
+let closure = ImmediateClosure::new_assert_unwind_safe(func);
 needs_fnmut_immediate(closure.as_mut());
 ```
 
@@ -391,7 +391,7 @@ The compiler error will indicate which captured type is problematic.
 
 If you don't need panic catching, use the `*_aborting` variants (`own_aborting`,
 `once_aborting`, `Closure::borrow_aborting`, `Closure::borrow_mut_aborting`,
-`ImmediateClosure::wrap_aborting`, `ImmediateClosure::wrap_mut_aborting`) which do not require `UnwindSafe`:
+`ImmediateClosure::new_aborting`, `ImmediateClosure::new_mut_aborting`) which do not require `UnwindSafe`:
 
 ```rust
 use std::cell::RefCell;
@@ -406,9 +406,9 @@ let closure = Closure::own_aborting(move || {
 });
 ```
 
-#### Fix 1b: Use wrap_assert_unwind_safe
+#### Fix 1b: Use assert_unwind_safe variants
 
-For `ScopedClosure`, you can use `Closure::wrap_assert_unwind_safe` with a boxed closure:
+For `ScopedClosure`, you can use `Closure::own_assert_unwind_safe` directly:
 
 ```rust
 use std::cell::RefCell;
@@ -418,16 +418,25 @@ use wasm_bindgen::prelude::*;
 let data = Rc::new(RefCell::new(0));
 
 // No UnwindSafe requirement — catches panics, caller asserts safety
+let closure: Closure<dyn FnMut()> = Closure::own_assert_unwind_safe(move || {
+    *data.borrow_mut() += 1;
+});
+```
+
+Or use `Closure::wrap_assert_unwind_safe` with a boxed closure:
+
+```rust
+let data = Rc::new(RefCell::new(0));
 let closure: Closure<dyn FnMut()> = Closure::wrap_assert_unwind_safe(Box::new(move || {
     *data.borrow_mut() += 1;
 }));
 ```
 
-For `ImmediateClosure`, use `wrap_mut_assert_unwind_safe` directly:
+For `ImmediateClosure`, use `new_mut_assert_unwind_safe` directly:
 
 ```rust
 let data = Rc::new(RefCell::new(0));
-forEach(&ImmediateClosure::wrap_mut_assert_unwind_safe(&mut |x| {
+forEach(&ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
     *data.borrow_mut() += x;
 }));
 ```
