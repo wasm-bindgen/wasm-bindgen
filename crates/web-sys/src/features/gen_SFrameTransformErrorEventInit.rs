@@ -107,9 +107,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "frame")]
     pub fn set_frame(this: &SFrameTransformErrorEventInit, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BigInt")]
     #[doc = "Get the `keyID` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `SFrameTransformErrorEventInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BigInt`, `SFrameTransformErrorEventInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -118,12 +119,46 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `keyID` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `SFrameTransformErrorEventInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BigInt`, `SFrameTransformErrorEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_key_id_opt_u32()` or `set_key_id_opt_f64()` or `set_key_id_opt_big_int()` instead."
+    )]
+    #[wasm_bindgen(method, setter = "keyID")]
+    pub fn set_key_id(this: &SFrameTransformErrorEventInit, val: Option<&::wasm_bindgen::JsValue>);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `keyID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BigInt`, `SFrameTransformErrorEventInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "keyID")]
-    pub fn set_key_id(this: &SFrameTransformErrorEventInit, val: &::wasm_bindgen::JsValue);
+    pub fn set_key_id_opt_u32(this: &SFrameTransformErrorEventInit, val: Option<u32>);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `keyID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BigInt`, `SFrameTransformErrorEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "keyID")]
+    pub fn set_key_id_opt_f64(this: &SFrameTransformErrorEventInit, val: Option<f64>);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BigInt")]
+    #[doc = "Change the `keyID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BigInt`, `SFrameTransformErrorEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "keyID")]
+    pub fn set_key_id_opt_big_int(
+        this: &SFrameTransformErrorEventInit,
+        val: Option<&::js_sys::BigInt>,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl SFrameTransformErrorEventInit {
@@ -173,9 +208,10 @@ impl SFrameTransformErrorEventInit {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BigInt")]
     #[deprecated = "Use `set_key_id()` instead."]
     pub fn key_id(&mut self, val: Option<&::wasm_bindgen::JsValue>) -> &mut Self {
-        self.set_key_id(val.unwrap_or(&::wasm_bindgen::JsValue::NULL));
+        self.set_key_id(val);
         self
     }
 }

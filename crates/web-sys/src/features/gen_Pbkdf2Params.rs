@@ -28,8 +28,19 @@ extern "C" {
     #[doc = "Change the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[deprecated(note = "Use `set_hash_object()` or `set_hash_str()` instead.")]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash(this: &Pbkdf2Params, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_object(this: &Pbkdf2Params, val: &::js_sys::Object);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_str(this: &Pbkdf2Params, val: &str);
     #[doc = "Get the `iterations` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
@@ -48,8 +59,26 @@ extern "C" {
     #[doc = "Change the `salt` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[deprecated(
+        note = "Use `set_salt_buffer_source()` or `set_salt_u8_slice()` or `set_salt_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "salt")]
     pub fn set_salt(this: &Pbkdf2Params, val: &::js_sys::Object);
+    #[doc = "Change the `salt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[wasm_bindgen(method, setter = "salt")]
+    pub fn set_salt_buffer_source(this: &Pbkdf2Params, val: &::js_sys::Object);
+    #[doc = "Change the `salt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[wasm_bindgen(method, setter = "salt")]
+    pub fn set_salt_u8_slice(this: &Pbkdf2Params, val: &mut [u8]);
+    #[doc = "Change the `salt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Pbkdf2Params`*"]
+    #[wasm_bindgen(method, setter = "salt")]
+    pub fn set_salt_u8_array(this: &Pbkdf2Params, val: &::js_sys::Uint8Array);
 }
 impl Pbkdf2Params {
     #[doc = "Construct a new `Pbkdf2Params`."]

@@ -51,9 +51,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "artist")]
     pub fn set_artist(this: &MediaMetadataInit, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MediaImage")]
     #[doc = "Get the `artwork` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaImage`, `MediaMetadataInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -62,7 +63,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `artwork` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaImage`, `MediaMetadataInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -113,6 +114,7 @@ impl MediaMetadataInit {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MediaImage")]
     #[deprecated = "Use `set_artwork()` instead."]
     pub fn artwork(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_artwork(val);

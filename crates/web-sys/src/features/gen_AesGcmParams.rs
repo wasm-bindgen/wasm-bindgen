@@ -28,8 +28,26 @@ extern "C" {
     #[doc = "Change the `additionalData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[deprecated(
+        note = "Use `set_additional_data_buffer_source()` or `set_additional_data_u8_slice()` or `set_additional_data_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "additionalData")]
     pub fn set_additional_data(this: &AesGcmParams, val: &::js_sys::Object);
+    #[doc = "Change the `additionalData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "additionalData")]
+    pub fn set_additional_data_buffer_source(this: &AesGcmParams, val: &::js_sys::Object);
+    #[doc = "Change the `additionalData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "additionalData")]
+    pub fn set_additional_data_u8_slice(this: &AesGcmParams, val: &mut [u8]);
+    #[doc = "Change the `additionalData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "additionalData")]
+    pub fn set_additional_data_u8_array(this: &AesGcmParams, val: &::js_sys::Uint8Array);
     #[doc = "Get the `iv` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
@@ -38,8 +56,26 @@ extern "C" {
     #[doc = "Change the `iv` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[deprecated(
+        note = "Use `set_iv_buffer_source()` or `set_iv_u8_slice()` or `set_iv_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "iv")]
     pub fn set_iv(this: &AesGcmParams, val: &::js_sys::Object);
+    #[doc = "Change the `iv` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "iv")]
+    pub fn set_iv_buffer_source(this: &AesGcmParams, val: &::js_sys::Object);
+    #[doc = "Change the `iv` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "iv")]
+    pub fn set_iv_u8_slice(this: &AesGcmParams, val: &mut [u8]);
+    #[doc = "Change the `iv` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "iv")]
+    pub fn set_iv_u8_array(this: &AesGcmParams, val: &::js_sys::Uint8Array);
     #[doc = "Get the `tagLength` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]

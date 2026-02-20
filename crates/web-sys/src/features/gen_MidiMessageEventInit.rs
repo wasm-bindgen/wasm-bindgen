@@ -48,8 +48,19 @@ extern "C" {
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiMessageEventInit`*"]
+    #[deprecated(note = "Use `set_data_u8_slice()` or `set_data_u8_array()` instead.")]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data(this: &MidiMessageEventInit, val: &::js_sys::Uint8Array);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiMessageEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_u8_slice(this: &MidiMessageEventInit, val: &mut [u8]);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiMessageEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_u8_array(this: &MidiMessageEventInit, val: &::js_sys::Uint8Array);
 }
 impl MidiMessageEventInit {
     #[doc = "Construct a new `MidiMessageEventInit`."]

@@ -18,8 +18,19 @@ extern "C" {
     #[doc = "Change the `value` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FetchReadableStreamReadDataArray`*"]
+    #[deprecated(note = "Use `set_value_u8_slice()` or `set_value_u8_array()` instead.")]
     #[wasm_bindgen(method, setter = "value")]
     pub fn set_value(this: &FetchReadableStreamReadDataArray, val: &::js_sys::Uint8Array);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FetchReadableStreamReadDataArray`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_u8_slice(this: &FetchReadableStreamReadDataArray, val: &mut [u8]);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FetchReadableStreamReadDataArray`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_u8_array(this: &FetchReadableStreamReadDataArray, val: &::js_sys::Uint8Array);
 }
 impl FetchReadableStreamReadDataArray {
     #[doc = "Construct a new `FetchReadableStreamReadDataArray`."]

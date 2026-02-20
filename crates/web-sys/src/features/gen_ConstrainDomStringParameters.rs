@@ -18,8 +18,22 @@ extern "C" {
     #[doc = "Change the `exact` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[deprecated(note = "Use `set_exact_str()` or `set_exact_str_sequence()` instead.")]
     #[wasm_bindgen(method, setter = "exact")]
     pub fn set_exact(this: &ConstrainDomStringParameters, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `exact` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[wasm_bindgen(method, setter = "exact")]
+    pub fn set_exact_str(this: &ConstrainDomStringParameters, val: &str);
+    #[doc = "Change the `exact` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[wasm_bindgen(method, setter = "exact")]
+    pub fn set_exact_str_sequence(
+        this: &ConstrainDomStringParameters,
+        val: &::wasm_bindgen::JsValue,
+    );
     #[doc = "Get the `ideal` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
@@ -28,8 +42,22 @@ extern "C" {
     #[doc = "Change the `ideal` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[deprecated(note = "Use `set_ideal_str()` or `set_ideal_str_sequence()` instead.")]
     #[wasm_bindgen(method, setter = "ideal")]
     pub fn set_ideal(this: &ConstrainDomStringParameters, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `ideal` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[wasm_bindgen(method, setter = "ideal")]
+    pub fn set_ideal_str(this: &ConstrainDomStringParameters, val: &str);
+    #[doc = "Change the `ideal` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[wasm_bindgen(method, setter = "ideal")]
+    pub fn set_ideal_str_sequence(
+        this: &ConstrainDomStringParameters,
+        val: &::wasm_bindgen::JsValue,
+    );
 }
 impl ConstrainDomStringParameters {
     #[doc = "Construct a new `ConstrainDomStringParameters`."]

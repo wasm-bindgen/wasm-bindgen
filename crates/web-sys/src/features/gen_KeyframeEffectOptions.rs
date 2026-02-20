@@ -40,8 +40,19 @@ extern "C" {
     #[doc = "Change the `duration` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeEffectOptions`*"]
+    #[deprecated(note = "Use `set_duration_f64()` or `set_duration_str()` instead.")]
     #[wasm_bindgen(method, setter = "duration")]
     pub fn set_duration(this: &KeyframeEffectOptions, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `duration` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyframeEffectOptions`*"]
+    #[wasm_bindgen(method, setter = "duration")]
+    pub fn set_duration_f64(this: &KeyframeEffectOptions, val: f64);
+    #[doc = "Change the `duration` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyframeEffectOptions`*"]
+    #[wasm_bindgen(method, setter = "duration")]
+    pub fn set_duration_str(this: &KeyframeEffectOptions, val: &str);
     #[doc = "Get the `easing` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeEffectOptions`*"]

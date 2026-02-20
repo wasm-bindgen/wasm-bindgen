@@ -28,8 +28,19 @@ extern "C" {
     #[doc = "Change the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EcdsaParams`*"]
+    #[deprecated(note = "Use `set_hash_object()` or `set_hash_str()` instead.")]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash(this: &EcdsaParams, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcdsaParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_object(this: &EcdsaParams, val: &::js_sys::Object);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcdsaParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_str(this: &EcdsaParams, val: &str);
 }
 impl EcdsaParams {
     #[doc = "Construct a new `EcdsaParams`."]

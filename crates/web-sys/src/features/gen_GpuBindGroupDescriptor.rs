@@ -33,9 +33,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &GpuBindGroupDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBindGroupEntry")]
     #[doc = "Get the `entries` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupDescriptor`, `GpuBindGroupEntry`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -44,7 +45,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `entries` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupDescriptor`, `GpuBindGroupEntry`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -94,6 +95,7 @@ impl GpuBindGroupDescriptor {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBindGroupEntry")]
     #[deprecated = "Use `set_entries()` instead."]
     pub fn entries(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_entries(val);

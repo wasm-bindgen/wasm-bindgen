@@ -28,8 +28,26 @@ extern "C" {
     #[doc = "Change the `iv` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
+    #[deprecated(
+        note = "Use `set_iv_buffer_source()` or `set_iv_u8_slice()` or `set_iv_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "iv")]
     pub fn set_iv(this: &AesCbcParams, val: &::js_sys::Object);
+    #[doc = "Change the `iv` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
+    #[wasm_bindgen(method, setter = "iv")]
+    pub fn set_iv_buffer_source(this: &AesCbcParams, val: &::js_sys::Object);
+    #[doc = "Change the `iv` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
+    #[wasm_bindgen(method, setter = "iv")]
+    pub fn set_iv_u8_slice(this: &AesCbcParams, val: &mut [u8]);
+    #[doc = "Change the `iv` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCbcParams`*"]
+    #[wasm_bindgen(method, setter = "iv")]
+    pub fn set_iv_u8_array(this: &AesCbcParams, val: &::js_sys::Uint8Array);
 }
 impl AesCbcParams {
     #[doc = "Construct a new `AesCbcParams`."]

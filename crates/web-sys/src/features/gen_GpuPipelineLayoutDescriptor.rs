@@ -33,9 +33,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &GpuPipelineLayoutDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBindGroupLayout")]
     #[doc = "Get the `bindGroupLayouts` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuPipelineLayoutDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupLayout`, `GpuPipelineLayoutDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -46,7 +47,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `bindGroupLayouts` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuPipelineLayoutDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupLayout`, `GpuPipelineLayoutDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -77,6 +78,7 @@ impl GpuPipelineLayoutDescriptor {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBindGroupLayout")]
     #[deprecated = "Use `set_bind_group_layouts()` instead."]
     pub fn bind_group_layouts(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_bind_group_layouts(val);

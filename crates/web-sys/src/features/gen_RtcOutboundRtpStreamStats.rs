@@ -190,8 +190,19 @@ extern "C" {
     #[doc = "Change the `bytesSent` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[deprecated(note = "Use `set_bytes_sent_u32()` or `set_bytes_sent_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytesSent")]
     pub fn set_bytes_sent(this: &RtcOutboundRtpStreamStats, val: f64);
+    #[doc = "Change the `bytesSent` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "bytesSent")]
+    pub fn set_bytes_sent_u32(this: &RtcOutboundRtpStreamStats, val: u32);
+    #[doc = "Change the `bytesSent` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "bytesSent")]
+    pub fn set_bytes_sent_f64(this: &RtcOutboundRtpStreamStats, val: f64);
     #[doc = "Get the `droppedFrames` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]

@@ -28,8 +28,19 @@ extern "C" {
     #[doc = "Change the `bytes` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
+    #[deprecated(note = "Use `set_bytes_opt_u32()` or `set_bytes_opt_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytes")]
     pub fn set_bytes(this: &NativeOsFileWriteAtomicOptions, val: Option<f64>);
+    #[doc = "Change the `bytes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
+    #[wasm_bindgen(method, setter = "bytes")]
+    pub fn set_bytes_opt_u32(this: &NativeOsFileWriteAtomicOptions, val: Option<u32>);
+    #[doc = "Change the `bytes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
+    #[wasm_bindgen(method, setter = "bytes")]
+    pub fn set_bytes_opt_f64(this: &NativeOsFileWriteAtomicOptions, val: Option<f64>);
     #[doc = "Get the `flush` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]

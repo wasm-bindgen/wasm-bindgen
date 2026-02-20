@@ -19,7 +19,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nValue`*"]
     #[wasm_bindgen(method, setter = "attributes")]
-    pub fn set_attributes(this: &L10nValue, val: &::wasm_bindgen::JsValue);
+    pub fn set_attributes(this: &L10nValue, val: Option<&::wasm_bindgen::JsValue>);
     #[doc = "Get the `value` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nValue`*"]

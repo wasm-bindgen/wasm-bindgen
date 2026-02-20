@@ -28,8 +28,19 @@ extern "C" {
     #[doc = "Change the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
+    #[deprecated(note = "Use `set_hash_object()` or `set_hash_str()` instead.")]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash(this: &HmacImportParams, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_object(this: &HmacImportParams, val: &::js_sys::Object);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_str(this: &HmacImportParams, val: &str);
 }
 impl HmacImportParams {
     #[doc = "Construct a new `HmacImportParams`."]

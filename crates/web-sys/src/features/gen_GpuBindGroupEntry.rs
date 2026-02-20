@@ -33,9 +33,17 @@ extern "C" {
     #[wasm_bindgen(method, setter = "binding")]
     pub fn set_binding(this: &GpuBindGroupEntry, val: u32);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(
+        feature = "GpuBuffer",
+        feature = "GpuBufferBinding",
+        feature = "GpuExternalTexture",
+        feature = "GpuSampler",
+        feature = "GpuTexture",
+        feature = "GpuTextureView",
+    ))]
     #[doc = "Get the `resource` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -44,12 +52,75 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `resource` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_resource_gpu_sampler()` or `set_resource_gpu_texture()` or `set_resource_gpu_texture_view()` or `set_resource_gpu_buffer()` or `set_resource_gpu_buffer_binding()` or `set_resource_gpu_external_texture()` instead."
+    )]
+    #[wasm_bindgen(method, setter = "resource")]
+    pub fn set_resource(this: &GpuBindGroupEntry, val: &::wasm_bindgen::JsValue);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuSampler")]
+    #[doc = "Change the `resource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "resource")]
-    pub fn set_resource(this: &GpuBindGroupEntry, val: &::wasm_bindgen::JsValue);
+    pub fn set_resource_gpu_sampler(this: &GpuBindGroupEntry, val: &GpuSampler);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
+    #[doc = "Change the `resource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "resource")]
+    pub fn set_resource_gpu_texture(this: &GpuBindGroupEntry, val: &GpuTexture);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTextureView")]
+    #[doc = "Change the `resource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "resource")]
+    pub fn set_resource_gpu_texture_view(this: &GpuBindGroupEntry, val: &GpuTextureView);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBuffer")]
+    #[doc = "Change the `resource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "resource")]
+    pub fn set_resource_gpu_buffer(this: &GpuBindGroupEntry, val: &GpuBuffer);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBufferBinding")]
+    #[doc = "Change the `resource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "resource")]
+    pub fn set_resource_gpu_buffer_binding(this: &GpuBindGroupEntry, val: &GpuBufferBinding);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuExternalTexture")]
+    #[doc = "Change the `resource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBindGroupEntry`, `GpuBuffer`, `GpuBufferBinding`, `GpuExternalTexture`, `GpuSampler`, `GpuTexture`, `GpuTextureView`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "resource")]
+    pub fn set_resource_gpu_external_texture(this: &GpuBindGroupEntry, val: &GpuExternalTexture);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuBindGroupEntry {
@@ -73,6 +144,14 @@ impl GpuBindGroupEntry {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(
+        feature = "GpuBuffer",
+        feature = "GpuBufferBinding",
+        feature = "GpuExternalTexture",
+        feature = "GpuSampler",
+        feature = "GpuTexture",
+        feature = "GpuTextureView",
+    ))]
     #[deprecated = "Use `set_resource()` instead."]
     pub fn resource(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_resource(val);

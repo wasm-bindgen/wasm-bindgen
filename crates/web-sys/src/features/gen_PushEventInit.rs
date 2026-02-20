@@ -48,8 +48,31 @@ extern "C" {
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
+    #[deprecated(
+        note = "Use `set_data_buffer_source()` or `set_data_u8_slice()` or `set_data_u8_array()` or `set_data_str()` instead."
+    )]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data(this: &PushEventInit, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_buffer_source(this: &PushEventInit, val: &::js_sys::Object);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_u8_slice(this: &PushEventInit, val: &mut [u8]);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_u8_array(this: &PushEventInit, val: &::js_sys::Uint8Array);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_str(this: &PushEventInit, val: &str);
 }
 impl PushEventInit {
     #[doc = "Construct a new `PushEventInit`."]

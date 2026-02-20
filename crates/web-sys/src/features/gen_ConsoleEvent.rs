@@ -18,8 +18,24 @@ extern "C" {
     #[doc = "Change the `ID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[deprecated(note = "Use `set_id_u32()` or `set_id_f64()` or `set_id_str()` instead.")]
     #[wasm_bindgen(method, setter = "ID")]
     pub fn set_id(this: &ConsoleEvent, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `ID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "ID")]
+    pub fn set_id_u32(this: &ConsoleEvent, val: u32);
+    #[doc = "Change the `ID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "ID")]
+    pub fn set_id_f64(this: &ConsoleEvent, val: f64);
+    #[doc = "Change the `ID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "ID")]
+    pub fn set_id_str(this: &ConsoleEvent, val: &str);
     #[doc = "Get the `addonId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -108,8 +124,26 @@ extern "C" {
     #[doc = "Change the `innerID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[deprecated(
+        note = "Use `set_inner_id_u32()` or `set_inner_id_f64()` or `set_inner_id_str()` instead."
+    )]
     #[wasm_bindgen(method, setter = "innerID")]
     pub fn set_inner_id(this: &ConsoleEvent, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `innerID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "innerID")]
+    pub fn set_inner_id_u32(this: &ConsoleEvent, val: u32);
+    #[doc = "Change the `innerID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "innerID")]
+    pub fn set_inner_id_f64(this: &ConsoleEvent, val: f64);
+    #[doc = "Change the `innerID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "innerID")]
+    pub fn set_inner_id_str(this: &ConsoleEvent, val: &str);
     #[doc = "Get the `level` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]

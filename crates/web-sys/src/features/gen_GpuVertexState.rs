@@ -71,9 +71,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "module")]
     pub fn set_module(this: &GpuVertexState, val: &GpuShaderModule);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuVertexBufferLayout")]
     #[doc = "Get the `buffers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuVertexState`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuVertexBufferLayout`, `GpuVertexState`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -84,7 +85,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `buffers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuVertexState`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuVertexBufferLayout`, `GpuVertexState`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -126,6 +127,7 @@ impl GpuVertexState {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuVertexBufferLayout")]
     #[deprecated = "Use `set_buffers()` instead."]
     pub fn buffers(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_buffers(val);

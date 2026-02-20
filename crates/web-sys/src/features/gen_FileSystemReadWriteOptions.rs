@@ -18,8 +18,19 @@ extern "C" {
     #[doc = "Change the `at` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemReadWriteOptions`*"]
+    #[deprecated(note = "Use `set_at_u32()` or `set_at_f64()` instead.")]
     #[wasm_bindgen(method, setter = "at")]
     pub fn set_at(this: &FileSystemReadWriteOptions, val: f64);
+    #[doc = "Change the `at` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemReadWriteOptions`*"]
+    #[wasm_bindgen(method, setter = "at")]
+    pub fn set_at_u32(this: &FileSystemReadWriteOptions, val: u32);
+    #[doc = "Change the `at` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemReadWriteOptions`*"]
+    #[wasm_bindgen(method, setter = "at")]
+    pub fn set_at_f64(this: &FileSystemReadWriteOptions, val: f64);
 }
 impl FileSystemReadWriteOptions {
     #[doc = "Construct a new `FileSystemReadWriteOptions`."]

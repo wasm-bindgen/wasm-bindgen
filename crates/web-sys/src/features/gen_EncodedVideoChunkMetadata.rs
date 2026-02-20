@@ -30,8 +30,44 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_alpha_side_data_buffer_source()` or `set_alpha_side_data_u8_slice()` or `set_alpha_side_data_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "alphaSideData")]
     pub fn set_alpha_side_data(this: &EncodedVideoChunkMetadata, val: &::js_sys::Object);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `alphaSideData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedVideoChunkMetadata`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "alphaSideData")]
+    pub fn set_alpha_side_data_buffer_source(
+        this: &EncodedVideoChunkMetadata,
+        val: &::js_sys::Object,
+    );
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `alphaSideData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedVideoChunkMetadata`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "alphaSideData")]
+    pub fn set_alpha_side_data_u8_slice(this: &EncodedVideoChunkMetadata, val: &mut [u8]);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `alphaSideData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EncodedVideoChunkMetadata`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "alphaSideData")]
+    pub fn set_alpha_side_data_u8_array(
+        this: &EncodedVideoChunkMetadata,
+        val: &::js_sys::Uint8Array,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoDecoderConfig")]
     #[doc = "Get the `decoderConfig` field of this object."]

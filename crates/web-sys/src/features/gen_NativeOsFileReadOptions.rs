@@ -18,8 +18,19 @@ extern "C" {
     #[doc = "Change the `bytes` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
+    #[deprecated(note = "Use `set_bytes_opt_u32()` or `set_bytes_opt_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytes")]
     pub fn set_bytes(this: &NativeOsFileReadOptions, val: Option<f64>);
+    #[doc = "Change the `bytes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
+    #[wasm_bindgen(method, setter = "bytes")]
+    pub fn set_bytes_opt_u32(this: &NativeOsFileReadOptions, val: Option<u32>);
+    #[doc = "Change the `bytes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
+    #[wasm_bindgen(method, setter = "bytes")]
+    pub fn set_bytes_opt_f64(this: &NativeOsFileReadOptions, val: Option<f64>);
     #[doc = "Get the `encoding` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]

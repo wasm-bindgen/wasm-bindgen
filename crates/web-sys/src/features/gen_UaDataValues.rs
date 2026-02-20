@@ -51,9 +51,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "bitness")]
     pub fn set_bitness(this: &UaDataValues, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "NavigatorUaBrandVersion")]
     #[doc = "Get the `brands` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UaDataValues`*"]
+    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaBrandVersion`, `UaDataValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -62,7 +63,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `brands` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UaDataValues`*"]
+    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaBrandVersion`, `UaDataValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -87,9 +88,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "formFactors")]
     pub fn set_form_factors(this: &UaDataValues, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "NavigatorUaBrandVersion")]
     #[doc = "Get the `fullVersionList` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UaDataValues`*"]
+    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaBrandVersion`, `UaDataValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -100,7 +102,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `fullVersionList` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UaDataValues`*"]
+    #[doc = "*This API requires the following crate features to be activated: `NavigatorUaBrandVersion`, `UaDataValues`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -223,6 +225,7 @@ impl UaDataValues {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "NavigatorUaBrandVersion")]
     #[deprecated = "Use `set_brands()` instead."]
     pub fn brands(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_brands(val);
@@ -235,6 +238,7 @@ impl UaDataValues {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "NavigatorUaBrandVersion")]
     #[deprecated = "Use `set_full_version_list()` instead."]
     pub fn full_version_list(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_full_version_list(val);

@@ -35,9 +35,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "highlight")]
     pub fn set_highlight(this: &HighlightHitResult, val: &Highlight);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "AbstractRange")]
     #[doc = "Get the `ranges` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HighlightHitResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `AbstractRange`, `HighlightHitResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -46,7 +47,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `ranges` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HighlightHitResult`*"]
+    #[doc = "*This API requires the following crate features to be activated: `AbstractRange`, `HighlightHitResult`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -74,6 +75,7 @@ impl HighlightHitResult {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "AbstractRange")]
     #[deprecated = "Use `set_ranges()` instead."]
     pub fn ranges(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_ranges(val);

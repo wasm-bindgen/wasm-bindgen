@@ -28,8 +28,19 @@ extern "C" {
     #[doc = "Change the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[deprecated(note = "Use `set_hash_object()` or `set_hash_str()` instead.")]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash(this: &HkdfParams, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_object(this: &HkdfParams, val: &::js_sys::Object);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_str(this: &HkdfParams, val: &str);
     #[doc = "Get the `info` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
@@ -38,8 +49,26 @@ extern "C" {
     #[doc = "Change the `info` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[deprecated(
+        note = "Use `set_info_buffer_source()` or `set_info_u8_slice()` or `set_info_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "info")]
     pub fn set_info(this: &HkdfParams, val: &::js_sys::Object);
+    #[doc = "Change the `info` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "info")]
+    pub fn set_info_buffer_source(this: &HkdfParams, val: &::js_sys::Object);
+    #[doc = "Change the `info` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "info")]
+    pub fn set_info_u8_slice(this: &HkdfParams, val: &mut [u8]);
+    #[doc = "Change the `info` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "info")]
+    pub fn set_info_u8_array(this: &HkdfParams, val: &::js_sys::Uint8Array);
     #[doc = "Get the `salt` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
@@ -48,8 +77,26 @@ extern "C" {
     #[doc = "Change the `salt` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[deprecated(
+        note = "Use `set_salt_buffer_source()` or `set_salt_u8_slice()` or `set_salt_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "salt")]
     pub fn set_salt(this: &HkdfParams, val: &::js_sys::Object);
+    #[doc = "Change the `salt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "salt")]
+    pub fn set_salt_buffer_source(this: &HkdfParams, val: &::js_sys::Object);
+    #[doc = "Change the `salt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "salt")]
+    pub fn set_salt_u8_slice(this: &HkdfParams, val: &mut [u8]);
+    #[doc = "Change the `salt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HkdfParams`*"]
+    #[wasm_bindgen(method, setter = "salt")]
+    pub fn set_salt_u8_array(this: &HkdfParams, val: &::js_sys::Uint8Array);
 }
 impl HkdfParams {
     #[doc = "Construct a new `HkdfParams`."]

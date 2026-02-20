@@ -53,9 +53,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "mipLevel")]
     pub fn set_mip_level(this: &GpuTexelCopyTextureInfo, val: u32);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuOrigin3dDict")]
     #[doc = "Get the `origin` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyTextureInfo`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuOrigin3dDict`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -64,12 +65,34 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `origin` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuTexelCopyTextureInfo`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuOrigin3dDict`, `GpuTexelCopyTextureInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_origin_u32_sequence()` or `set_origin_gpu_origin_3d_dict()` instead."
+    )]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin(this: &GpuTexelCopyTextureInfo, val: &::wasm_bindgen::JsValue);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuOrigin3dDict`, `GpuTexelCopyTextureInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "origin")]
-    pub fn set_origin(this: &GpuTexelCopyTextureInfo, val: &::wasm_bindgen::JsValue);
+    pub fn set_origin_u32_sequence(this: &GpuTexelCopyTextureInfo, val: &::wasm_bindgen::JsValue);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuOrigin3dDict")]
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuOrigin3dDict`, `GpuTexelCopyTextureInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin_gpu_origin_3d_dict(this: &GpuTexelCopyTextureInfo, val: &GpuOrigin3dDict);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTexture")]
     #[doc = "Get the `texture` field of this object."]
@@ -120,6 +143,7 @@ impl GpuTexelCopyTextureInfo {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuOrigin3dDict")]
     #[deprecated = "Use `set_origin()` instead."]
     pub fn origin(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_origin(val);

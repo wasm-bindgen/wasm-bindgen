@@ -110,8 +110,29 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_public_key_algorithm_i32()` or `set_public_key_algorithm_f64()` instead."
+    )]
     #[wasm_bindgen(method, setter = "publicKeyAlgorithm")]
     pub fn set_public_key_algorithm(this: &AuthenticatorAttestationResponseJson, val: f64);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `publicKeyAlgorithm` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "publicKeyAlgorithm")]
+    pub fn set_public_key_algorithm_i32(this: &AuthenticatorAttestationResponseJson, val: i32);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `publicKeyAlgorithm` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "publicKeyAlgorithm")]
+    pub fn set_public_key_algorithm_f64(this: &AuthenticatorAttestationResponseJson, val: f64);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `transports` field of this object."]
     #[doc = ""]

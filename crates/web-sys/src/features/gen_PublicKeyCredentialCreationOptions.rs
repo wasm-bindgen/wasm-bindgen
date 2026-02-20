@@ -75,8 +75,32 @@ extern "C" {
     #[doc = "Change the `challenge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`*"]
+    #[deprecated(
+        note = "Use `set_challenge_buffer_source()` or `set_challenge_u8_slice()` or `set_challenge_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &PublicKeyCredentialCreationOptions, val: &::js_sys::Object);
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_buffer_source(
+        this: &PublicKeyCredentialCreationOptions,
+        val: &::js_sys::Object,
+    );
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_u8_slice(this: &PublicKeyCredentialCreationOptions, val: &mut [u8]);
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_u8_array(
+        this: &PublicKeyCredentialCreationOptions,
+        val: &::js_sys::Uint8Array,
+    );
     #[doc = "Get the `excludeCredentials` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptions`*"]

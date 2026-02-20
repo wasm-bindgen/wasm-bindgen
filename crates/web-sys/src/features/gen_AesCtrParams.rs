@@ -28,8 +28,26 @@ extern "C" {
     #[doc = "Change the `counter` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesCtrParams`*"]
+    #[deprecated(
+        note = "Use `set_counter_buffer_source()` or `set_counter_u8_slice()` or `set_counter_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "counter")]
     pub fn set_counter(this: &AesCtrParams, val: &::js_sys::Object);
+    #[doc = "Change the `counter` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCtrParams`*"]
+    #[wasm_bindgen(method, setter = "counter")]
+    pub fn set_counter_buffer_source(this: &AesCtrParams, val: &::js_sys::Object);
+    #[doc = "Change the `counter` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCtrParams`*"]
+    #[wasm_bindgen(method, setter = "counter")]
+    pub fn set_counter_u8_slice(this: &AesCtrParams, val: &mut [u8]);
+    #[doc = "Change the `counter` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesCtrParams`*"]
+    #[wasm_bindgen(method, setter = "counter")]
+    pub fn set_counter_u8_array(this: &AesCtrParams, val: &::js_sys::Uint8Array);
     #[doc = "Get the `length` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesCtrParams`*"]

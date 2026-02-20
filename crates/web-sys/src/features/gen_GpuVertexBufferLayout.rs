@@ -30,12 +30,32 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(note = "Use `set_array_stride_u32()` or `set_array_stride_f64()` instead.")]
     #[wasm_bindgen(method, setter = "arrayStride")]
     pub fn set_array_stride(this: &GpuVertexBufferLayout, val: f64);
     #[cfg(web_sys_unstable_apis)]
-    #[doc = "Get the `attributes` field of this object."]
+    #[doc = "Change the `arrayStride` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuVertexBufferLayout`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "arrayStride")]
+    pub fn set_array_stride_u32(this: &GpuVertexBufferLayout, val: u32);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `arrayStride` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuVertexBufferLayout`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "arrayStride")]
+    pub fn set_array_stride_f64(this: &GpuVertexBufferLayout, val: f64);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuVertexAttribute")]
+    #[doc = "Get the `attributes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuVertexAttribute`, `GpuVertexBufferLayout`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -44,7 +64,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attributes` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuVertexBufferLayout`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuVertexAttribute`, `GpuVertexBufferLayout`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -93,6 +113,7 @@ impl GpuVertexBufferLayout {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuVertexAttribute")]
     #[deprecated = "Use `set_attributes()` instead."]
     pub fn attributes(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_attributes(val);

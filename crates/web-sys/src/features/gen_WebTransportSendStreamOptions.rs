@@ -30,8 +30,27 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(note = "Use `set_send_order_opt_i32()` or `set_send_order_opt_f64()` instead.")]
     #[wasm_bindgen(method, setter = "sendOrder")]
     pub fn set_send_order(this: &WebTransportSendStreamOptions, val: Option<f64>);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `sendOrder` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransportSendStreamOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "sendOrder")]
+    pub fn set_send_order_opt_i32(this: &WebTransportSendStreamOptions, val: Option<i32>);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `sendOrder` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransportSendStreamOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "sendOrder")]
+    pub fn set_send_order_opt_f64(this: &WebTransportSendStreamOptions, val: Option<f64>);
 }
 #[cfg(web_sys_unstable_apis)]
 impl WebTransportSendStreamOptions {

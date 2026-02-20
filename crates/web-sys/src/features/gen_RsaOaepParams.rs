@@ -28,8 +28,26 @@ extern "C" {
     #[doc = "Change the `label` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]
+    #[deprecated(
+        note = "Use `set_label_buffer_source()` or `set_label_u8_slice()` or `set_label_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &RsaOaepParams, val: &::js_sys::Object);
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_buffer_source(this: &RsaOaepParams, val: &::js_sys::Object);
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_u8_slice(this: &RsaOaepParams, val: &mut [u8]);
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_u8_array(this: &RsaOaepParams, val: &::js_sys::Uint8Array);
 }
 impl RsaOaepParams {
     #[doc = "Construct a new `RsaOaepParams`."]

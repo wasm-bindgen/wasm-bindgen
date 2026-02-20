@@ -18,8 +18,26 @@ extern "C" {
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptor`*"]
+    #[deprecated(
+        note = "Use `set_id_buffer_source()` or `set_id_u8_slice()` or `set_id_u8_array()` instead."
+    )]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &PublicKeyCredentialDescriptor, val: &::js_sys::Object);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptor`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_buffer_source(this: &PublicKeyCredentialDescriptor, val: &::js_sys::Object);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptor`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_u8_slice(this: &PublicKeyCredentialDescriptor, val: &mut [u8]);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptor`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_u8_array(this: &PublicKeyCredentialDescriptor, val: &::js_sys::Uint8Array);
     #[doc = "Get the `transports` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptor`*"]

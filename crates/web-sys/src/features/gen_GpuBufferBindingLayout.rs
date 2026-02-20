@@ -48,8 +48,29 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_min_binding_size_u32()` or `set_min_binding_size_f64()` instead."
+    )]
     #[wasm_bindgen(method, setter = "minBindingSize")]
     pub fn set_min_binding_size(this: &GpuBufferBindingLayout, val: f64);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `minBindingSize` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBufferBindingLayout`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "minBindingSize")]
+    pub fn set_min_binding_size_u32(this: &GpuBufferBindingLayout, val: u32);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `minBindingSize` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBufferBindingLayout`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "minBindingSize")]
+    pub fn set_min_binding_size_f64(this: &GpuBufferBindingLayout, val: f64);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBufferBindingType")]
     #[doc = "Get the `type` field of this object."]

@@ -10,16 +10,32 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
     pub type MediaStreamConstraints;
+    #[cfg(feature = "MediaTrackConstraints")]
     #[doc = "Get the `audio` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, getter = "audio")]
     pub fn get_audio(this: &MediaStreamConstraints) -> ::wasm_bindgen::JsValue;
     #[doc = "Change the `audio` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
+    #[deprecated(note = "Use `set_audio_bool()` or `set_audio_media_track_constraints()` instead.")]
     #[wasm_bindgen(method, setter = "audio")]
     pub fn set_audio(this: &MediaStreamConstraints, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `audio` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
+    #[wasm_bindgen(method, setter = "audio")]
+    pub fn set_audio_bool(this: &MediaStreamConstraints, val: bool);
+    #[cfg(feature = "MediaTrackConstraints")]
+    #[doc = "Change the `audio` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
+    #[wasm_bindgen(method, setter = "audio")]
+    pub fn set_audio_media_track_constraints(
+        this: &MediaStreamConstraints,
+        val: &MediaTrackConstraints,
+    );
     #[doc = "Get the `fake` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
@@ -50,16 +66,32 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
     #[wasm_bindgen(method, setter = "picture")]
     pub fn set_picture(this: &MediaStreamConstraints, val: bool);
+    #[cfg(feature = "MediaTrackConstraints")]
     #[doc = "Get the `video` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, getter = "video")]
     pub fn get_video(this: &MediaStreamConstraints) -> ::wasm_bindgen::JsValue;
     #[doc = "Change the `video` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
+    #[deprecated(note = "Use `set_video_bool()` or `set_video_media_track_constraints()` instead.")]
     #[wasm_bindgen(method, setter = "video")]
     pub fn set_video(this: &MediaStreamConstraints, val: &::wasm_bindgen::JsValue);
+    #[doc = "Change the `video` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
+    #[wasm_bindgen(method, setter = "video")]
+    pub fn set_video_bool(this: &MediaStreamConstraints, val: bool);
+    #[cfg(feature = "MediaTrackConstraints")]
+    #[doc = "Change the `video` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`, `MediaTrackConstraints`*"]
+    #[wasm_bindgen(method, setter = "video")]
+    pub fn set_video_media_track_constraints(
+        this: &MediaStreamConstraints,
+        val: &MediaTrackConstraints,
+    );
 }
 impl MediaStreamConstraints {
     #[doc = "Construct a new `MediaStreamConstraints`."]
@@ -70,6 +102,7 @@ impl MediaStreamConstraints {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "MediaTrackConstraints")]
     #[deprecated = "Use `set_audio()` instead."]
     pub fn audio(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_audio(val);
@@ -90,6 +123,7 @@ impl MediaStreamConstraints {
         self.set_picture(val);
         self
     }
+    #[cfg(feature = "MediaTrackConstraints")]
     #[deprecated = "Use `set_video()` instead."]
     pub fn video(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_video(val);

@@ -84,16 +84,16 @@ test-web-sys *ARGS="":
 test-web-sys-next *ARGS="":
     RUSTFLAGS="--cfg=wbg_next_unstable" cargo test -p web-sys --target wasm32-unknown-unknown --all-features {{ARGS}}
 
-test-web-idl *ARGS="":
+test-webidl *ARGS="":
     cargo test -p wasm-bindgen-webidl {{ARGS}}
 
-test-web-idl-tests *ARGS="":
+test-webidl-tests *ARGS="":
     cargo test -p webidl-tests --target wasm32-unknown-unknown {{ARGS}}
 
-test-web-idl-tests-unstable *ARGS="":
+test-webidl-tests-unstable *ARGS="":
     RUSTFLAGS="--cfg=web_sys_unstable_apis" cargo test -p webidl-tests --target wasm32-unknown-unknown {{ARGS}}
 
-test-web-idl-tests-next *ARGS="":
+test-webidl-tests-next *ARGS="":
     WBG_NEXT_UNSTABLE=1 RUSTFLAGS="--cfg=wbg_next_unstable --cfg=web_sys_unstable_apis" cargo test -p webidl-tests --target wasm32-unknown-unknown {{ARGS}}
 
 generate-web-sys:

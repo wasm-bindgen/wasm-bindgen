@@ -876,12 +876,14 @@ impl DictionaryField {
             let setter_cfg_features = get_cfg_features(options, &setter_features);
 
             // Deprecate backward-compat setters that have type-safe alternatives
-            let setter_deprecated = if setter.deprecated {
+            // But don't add our deprecation if the field is already deprecated
+            let setter_deprecated = if setter.deprecated && deprecated.is_none() {
+                let name = &self.name;
                 let alternatives: Vec<_> = self
                     .setter_types
                     .iter()
                     .filter_map(|s| s.name_suffix.as_ref())
-                    .map(|s| format!("`set_{}_{}()`", self.name, s))
+                    .map(|s| format!("`set_{name}_{s}()`"))
                     .collect();
                 let msg = format!("Use {} instead.", alternatives.join(" or "));
                 Some(quote!( #[deprecated(note = #msg)] ))
@@ -933,7 +935,9 @@ impl DictionaryField {
         let setter_name = self.setter_name();
         let deprecated = format!("Use `{setter_name}()` instead.");
 
-        let shim_args = if self.is_js_value_ref_option_type {
+        // Only use unwrap_or for JsValue option types when we DON'T have multiple setters
+        // (i.e., when we're not expanding union types)
+        let shim_args = if self.is_js_value_ref_option_type && self.setter_types.len() == 1 {
             quote! { val.unwrap_or(&::wasm_bindgen::JsValue::NULL) }
         } else {
             quote! { val }

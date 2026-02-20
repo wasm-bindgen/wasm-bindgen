@@ -89,9 +89,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "inlineVerticalFieldOfView")]
     pub fn set_inline_vertical_field_of_view(this: &XrRenderStateInit, val: f64);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrLayer")]
     #[doc = "Get the `layers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrRenderStateInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrLayer`, `XrRenderStateInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -100,12 +101,12 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `layers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrRenderStateInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `XrLayer`, `XrRenderStateInit`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "layers")]
-    pub fn set_layers(this: &XrRenderStateInit, val: &::wasm_bindgen::JsValue);
+    pub fn set_layers(this: &XrRenderStateInit, val: Option<&::wasm_bindgen::JsValue>);
 }
 #[cfg(web_sys_unstable_apis)]
 impl XrRenderStateInit {
@@ -146,6 +147,7 @@ impl XrRenderStateInit {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrLayer")]
     #[deprecated = "Use `set_layers()` instead."]
     pub fn layers(&mut self, val: Option<&::wasm_bindgen::JsValue>) -> &mut Self {
         self.set_layers(val.unwrap_or(&::wasm_bindgen::JsValue::NULL));

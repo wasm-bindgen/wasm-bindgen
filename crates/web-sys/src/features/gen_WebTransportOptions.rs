@@ -73,9 +73,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "requireUnreliable")]
     pub fn set_require_unreliable(this: &WebTransportOptions, val: bool);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WebTransportHash")]
     #[doc = "Get the `serverCertificateHashes` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransportOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransportHash`, `WebTransportOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -86,7 +87,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `serverCertificateHashes` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransportOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransportHash`, `WebTransportOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -126,6 +127,7 @@ impl WebTransportOptions {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WebTransportHash")]
     #[deprecated = "Use `set_server_certificate_hashes()` instead."]
     pub fn server_certificate_hashes(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_server_certificate_hashes(val);

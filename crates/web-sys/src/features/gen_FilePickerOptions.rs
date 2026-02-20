@@ -51,9 +51,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &FilePickerOptions, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "FileSystemHandle", feature = "WellKnownDirectory",))]
     #[doc = "Get the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `FileSystemHandle`, `WellKnownDirectory`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -62,16 +63,40 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `FileSystemHandle`, `WellKnownDirectory`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(
+        note = "Use `set_start_in_well_known_directory()` or `set_start_in_file_system_handle()` instead."
+    )]
+    #[wasm_bindgen(method, setter = "startIn")]
+    pub fn set_start_in(this: &FilePickerOptions, val: &::wasm_bindgen::JsValue);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WellKnownDirectory")]
+    #[doc = "Change the `startIn` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `FileSystemHandle`, `WellKnownDirectory`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "startIn")]
-    pub fn set_start_in(this: &FilePickerOptions, val: &::wasm_bindgen::JsValue);
+    pub fn set_start_in_well_known_directory(this: &FilePickerOptions, val: WellKnownDirectory);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "FileSystemHandle")]
+    #[doc = "Change the `startIn` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `FileSystemHandle`, `WellKnownDirectory`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "startIn")]
+    pub fn set_start_in_file_system_handle(this: &FilePickerOptions, val: &FileSystemHandle);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "FilePickerAcceptType")]
     #[doc = "Get the `types` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerAcceptType`, `FilePickerOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -80,7 +105,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `types` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerAcceptType`, `FilePickerOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -113,12 +138,14 @@ impl FilePickerOptions {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "FileSystemHandle", feature = "WellKnownDirectory",))]
     #[deprecated = "Use `set_start_in()` instead."]
     pub fn start_in(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_start_in(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "FilePickerAcceptType")]
     #[deprecated = "Use `set_types()` instead."]
     pub fn types(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_types(val);

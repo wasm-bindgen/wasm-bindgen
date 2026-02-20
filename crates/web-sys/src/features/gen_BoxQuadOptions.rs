@@ -22,16 +22,38 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `CssBoxType`*"]
     #[wasm_bindgen(method, setter = "box")]
     pub fn set_box(this: &BoxQuadOptions, val: CssBoxType);
+    #[cfg(all(feature = "Document", feature = "Element", feature = "Text",))]
     #[doc = "Get the `relativeTo` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Document`, `Element`, `Text`*"]
     #[wasm_bindgen(method, getter = "relativeTo")]
     pub fn get_relative_to(this: &BoxQuadOptions) -> Option<::js_sys::Object>;
     #[doc = "Change the `relativeTo` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Document`, `Element`, `Text`*"]
+    #[deprecated(
+        note = "Use `set_relative_to_text()` or `set_relative_to_element()` or `set_relative_to_document()` instead."
+    )]
     #[wasm_bindgen(method, setter = "relativeTo")]
     pub fn set_relative_to(this: &BoxQuadOptions, val: &::js_sys::Object);
+    #[cfg(feature = "Text")]
+    #[doc = "Change the `relativeTo` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Document`, `Element`, `Text`*"]
+    #[wasm_bindgen(method, setter = "relativeTo")]
+    pub fn set_relative_to_text(this: &BoxQuadOptions, val: &Text);
+    #[cfg(feature = "Element")]
+    #[doc = "Change the `relativeTo` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Document`, `Element`, `Text`*"]
+    #[wasm_bindgen(method, setter = "relativeTo")]
+    pub fn set_relative_to_element(this: &BoxQuadOptions, val: &Element);
+    #[cfg(feature = "Document")]
+    #[doc = "Change the `relativeTo` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Document`, `Element`, `Text`*"]
+    #[wasm_bindgen(method, setter = "relativeTo")]
+    pub fn set_relative_to_document(this: &BoxQuadOptions, val: &Document);
 }
 impl BoxQuadOptions {
     #[doc = "Construct a new `BoxQuadOptions`."]
@@ -48,6 +70,7 @@ impl BoxQuadOptions {
         self.set_box(val);
         self
     }
+    #[cfg(all(feature = "Document", feature = "Element", feature = "Text",))]
     #[deprecated = "Use `set_relative_to()` instead."]
     pub fn relative_to(&mut self, val: &::js_sys::Object) -> &mut Self {
         self.set_relative_to(val);

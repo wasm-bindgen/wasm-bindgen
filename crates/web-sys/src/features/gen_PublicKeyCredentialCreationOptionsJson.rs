@@ -101,9 +101,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &PublicKeyCredentialCreationOptionsJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PublicKeyCredentialDescriptorJson")]
     #[doc = "Get the `excludeCredentials` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialDescriptorJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -114,7 +115,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `excludeCredentials` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialDescriptorJson`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -169,9 +170,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "hints")]
     pub fn set_hints(this: &PublicKeyCredentialCreationOptionsJson, val: &::wasm_bindgen::JsValue);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PublicKeyCredentialParameters")]
     #[doc = "Get the `pubKeyCredParams` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialParameters`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -182,7 +184,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `pubKeyCredParams` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialCreationOptionsJson`, `PublicKeyCredentialParameters`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -307,6 +309,7 @@ impl PublicKeyCredentialCreationOptionsJson {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PublicKeyCredentialDescriptorJson")]
     #[deprecated = "Use `set_exclude_credentials()` instead."]
     pub fn exclude_credentials(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_exclude_credentials(val);
@@ -326,6 +329,7 @@ impl PublicKeyCredentialCreationOptionsJson {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PublicKeyCredentialParameters")]
     #[deprecated = "Use `set_pub_key_cred_params()` instead."]
     pub fn pub_key_cred_params(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_pub_key_cred_params(val);

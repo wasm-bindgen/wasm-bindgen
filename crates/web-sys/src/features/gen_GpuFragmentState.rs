@@ -71,9 +71,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "module")]
     pub fn set_module(this: &GpuFragmentState, val: &GpuShaderModule);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuColorTargetState")]
     #[doc = "Get the `targets` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuFragmentState`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuColorTargetState`, `GpuFragmentState`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -84,7 +85,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `targets` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuFragmentState`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuColorTargetState`, `GpuFragmentState`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -127,6 +128,7 @@ impl GpuFragmentState {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuColorTargetState")]
     #[deprecated = "Use `set_targets()` instead."]
     pub fn targets(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_targets(val);

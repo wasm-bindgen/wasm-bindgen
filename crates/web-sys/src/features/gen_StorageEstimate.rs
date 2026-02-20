@@ -18,8 +18,19 @@ extern "C" {
     #[doc = "Change the `quota` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
+    #[deprecated(note = "Use `set_quota_u32()` or `set_quota_f64()` instead.")]
     #[wasm_bindgen(method, setter = "quota")]
     pub fn set_quota(this: &StorageEstimate, val: f64);
+    #[doc = "Change the `quota` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
+    #[wasm_bindgen(method, setter = "quota")]
+    pub fn set_quota_u32(this: &StorageEstimate, val: u32);
+    #[doc = "Change the `quota` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
+    #[wasm_bindgen(method, setter = "quota")]
+    pub fn set_quota_f64(this: &StorageEstimate, val: f64);
     #[doc = "Get the `usage` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
@@ -28,8 +39,19 @@ extern "C" {
     #[doc = "Change the `usage` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
+    #[deprecated(note = "Use `set_usage_u32()` or `set_usage_f64()` instead.")]
     #[wasm_bindgen(method, setter = "usage")]
     pub fn set_usage(this: &StorageEstimate, val: f64);
+    #[doc = "Change the `usage` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
+    #[wasm_bindgen(method, setter = "usage")]
+    pub fn set_usage_u32(this: &StorageEstimate, val: u32);
+    #[doc = "Change the `usage` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEstimate`*"]
+    #[wasm_bindgen(method, setter = "usage")]
+    pub fn set_usage_f64(this: &StorageEstimate, val: f64);
 }
 impl StorageEstimate {
     #[doc = "Construct a new `StorageEstimate`."]

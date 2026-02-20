@@ -15,9 +15,10 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type MemoryBreakdownEntry;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MemoryAttribution")]
     #[doc = "Get the `attribution` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MemoryBreakdownEntry`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryAttribution`, `MemoryBreakdownEntry`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -28,7 +29,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attribution` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MemoryBreakdownEntry`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryAttribution`, `MemoryBreakdownEntry`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -50,8 +51,27 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[deprecated(note = "Use `set_bytes_u32()` or `set_bytes_f64()` instead.")]
     #[wasm_bindgen(method, setter = "bytes")]
     pub fn set_bytes(this: &MemoryBreakdownEntry, val: f64);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `bytes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryBreakdownEntry`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "bytes")]
+    pub fn set_bytes_u32(this: &MemoryBreakdownEntry, val: u32);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `bytes` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryBreakdownEntry`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "bytes")]
+    pub fn set_bytes_f64(this: &MemoryBreakdownEntry, val: f64);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `types` field of this object."]
     #[doc = ""]
@@ -85,6 +105,7 @@ impl MemoryBreakdownEntry {
         ret
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "MemoryAttribution")]
     #[deprecated = "Use `set_attribution()` instead."]
     pub fn attribution(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_attribution(val);
