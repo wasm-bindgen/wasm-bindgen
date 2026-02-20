@@ -103,6 +103,11 @@
 
 ### Fixed
 
+* Fixed `Element::scroll_top()`, `Element::scroll_left()`, and `HtmlElement::scroll_top()`
+  to return `f64` instead of `i32` per the CSSOM View spec, behind `web_sys_unstable_apis`.
+  The stable API is unchanged for backwards compatibility.
+  [#4525](https://github.com/wasm-bindgen/wasm-bindgen/issues/4525)
+
 * Fixed incorrect JS export names when LLVM merges identical functions at `opt-level >= 2`.
   [#4946](https://github.com/wasm-bindgen/wasm-bindgen/issues/4946)
 
