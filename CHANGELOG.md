@@ -7,6 +7,16 @@
 
 ### Changed
 
+### Fixed
+
+### Removed
+
+## [0.2.109](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.108...0.2.109)
+
+### Added
+
+### Changed
+
 * Refactor new closure methods - ensures that all closure constructor functions have the variants `Closure::foo()`, `Closure::foo_aborting()` and
   `Closure::foo_assert_unwind_safe()` this then fully allows switching from the UnwindSafe bound now being applies on foo() to use one of the
   alternatives, given these limitations of AssertUnwindSafe. The same applies to `ImmediateClosure`. In addition, mutable reentrancy guards are
@@ -20,8 +30,6 @@
   for constructors to also include `static_method_of` methods returning the own type, to allow
   `Array::of` generic to now be on the `Array<T>` impl block.
   [#4974](https://github.com/wasm-bindgen/wasm-bindgen/pull/4974)
-
-### Removed
 
 ## [0.2.109](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.108...0.2.109)
 
