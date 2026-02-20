@@ -1221,7 +1221,7 @@ impl Dictionary {
             }
         };
 
-        if ctor_variants.first().map_or(true, |v| v.args.is_empty()) {
+        if ctor_variants.first().is_none_or(|v| v.args.is_empty()) {
             let default_impl = quote! {
                 #unstable_attr
                 impl Default for #name {
