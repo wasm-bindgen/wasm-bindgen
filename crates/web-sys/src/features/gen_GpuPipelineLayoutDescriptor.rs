@@ -73,13 +73,21 @@ impl GpuPipelineLayoutDescriptor {
         ret.set_bind_group_layouts(bind_group_layouts);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_label()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(&mut self, val: &str) -> &mut Self {
         self.set_label(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBindGroupLayout")]
     #[deprecated = "Use `set_bind_group_layouts()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bind_group_layouts(
         &mut self,
         val: &[::js_sys::JsOption<GpuBindGroupLayout>],

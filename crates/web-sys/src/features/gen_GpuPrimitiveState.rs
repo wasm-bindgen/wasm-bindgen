@@ -126,31 +126,51 @@ impl GpuPrimitiveState {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCullMode")]
     #[deprecated = "Use `set_cull_mode()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn cull_mode(&mut self, val: GpuCullMode) -> &mut Self {
         self.set_cull_mode(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuFrontFace")]
     #[deprecated = "Use `set_front_face()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn front_face(&mut self, val: GpuFrontFace) -> &mut Self {
         self.set_front_face(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuIndexFormat")]
     #[deprecated = "Use `set_strip_index_format()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn strip_index_format(&mut self, val: GpuIndexFormat) -> &mut Self {
         self.set_strip_index_format(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuPrimitiveTopology")]
     #[deprecated = "Use `set_topology()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn topology(&mut self, val: GpuPrimitiveTopology) -> &mut Self {
         self.set_topology(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_unclipped_depth()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn unclipped_depth(&mut self, val: bool) -> &mut Self {
         self.set_unclipped_depth(val);
         self

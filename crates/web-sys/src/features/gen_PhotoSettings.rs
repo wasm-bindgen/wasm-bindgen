@@ -102,23 +102,39 @@ impl PhotoSettings {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FillLightMode")]
     #[deprecated = "Use `set_fill_light_mode()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn fill_light_mode(&mut self, val: FillLightMode) -> &mut Self {
         self.set_fill_light_mode(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_image_height()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn image_height(&mut self, val: f64) -> &mut Self {
         self.set_image_height(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_image_width()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn image_width(&mut self, val: f64) -> &mut Self {
         self.set_image_width(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_red_eye_reduction()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn red_eye_reduction(&mut self, val: bool) -> &mut Self {
         self.set_red_eye_reduction(val);
         self

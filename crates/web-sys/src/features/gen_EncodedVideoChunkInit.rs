@@ -200,28 +200,48 @@ impl EncodedVideoChunkInit {
         ret.set_type(type_);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_data()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn data(&mut self, val: &::js_sys::Object) -> &mut Self {
         self.set_data(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_duration()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn duration(&mut self, val: u32) -> &mut Self {
         self.set_duration(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_timestamp()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn timestamp(&mut self, val: i32) -> &mut Self {
         self.set_timestamp(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_transfer()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
         self.set_transfer(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "EncodedVideoChunkType")]
     #[deprecated = "Use `set_type()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(&mut self, val: EncodedVideoChunkType) -> &mut Self {
         self.set_type(val);
         self

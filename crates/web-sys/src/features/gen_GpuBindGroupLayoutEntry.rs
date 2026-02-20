@@ -176,42 +176,70 @@ impl GpuBindGroupLayoutEntry {
         ret.set_visibility(visibility);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_binding()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn binding(&mut self, val: u32) -> &mut Self {
         self.set_binding(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBufferBindingLayout")]
     #[deprecated = "Use `set_buffer()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn buffer(&mut self, val: &GpuBufferBindingLayout) -> &mut Self {
         self.set_buffer(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuExternalTextureBindingLayout")]
     #[deprecated = "Use `set_external_texture()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn external_texture(&mut self, val: &GpuExternalTextureBindingLayout) -> &mut Self {
         self.set_external_texture(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuSamplerBindingLayout")]
     #[deprecated = "Use `set_sampler()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn sampler(&mut self, val: &GpuSamplerBindingLayout) -> &mut Self {
         self.set_sampler(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuStorageTextureBindingLayout")]
     #[deprecated = "Use `set_storage_texture()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn storage_texture(&mut self, val: &GpuStorageTextureBindingLayout) -> &mut Self {
         self.set_storage_texture(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureBindingLayout")]
     #[deprecated = "Use `set_texture()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn texture(&mut self, val: &GpuTextureBindingLayout) -> &mut Self {
         self.set_texture(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_visibility()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn visibility(&mut self, val: u32) -> &mut Self {
         self.set_visibility(val);
         self

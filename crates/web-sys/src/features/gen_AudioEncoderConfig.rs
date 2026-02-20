@@ -132,28 +132,48 @@ impl AudioEncoderConfig {
         ret.set_sample_rate(sample_rate);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_bitrate()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bitrate(&mut self, val: u32) -> &mut Self {
         self.set_bitrate(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BitrateMode")]
     #[deprecated = "Use `set_bitrate_mode()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bitrate_mode(&mut self, val: BitrateMode) -> &mut Self {
         self.set_bitrate_mode(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_codec()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn codec(&mut self, val: &str) -> &mut Self {
         self.set_codec(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_number_of_channels()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn number_of_channels(&mut self, val: u32) -> &mut Self {
         self.set_number_of_channels(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_sample_rate()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn sample_rate(&mut self, val: u32) -> &mut Self {
         self.set_sample_rate(val);
         self

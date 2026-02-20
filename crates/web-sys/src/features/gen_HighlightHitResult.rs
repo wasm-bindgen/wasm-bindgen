@@ -68,14 +68,22 @@ impl HighlightHitResult {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
     #[deprecated = "Use `set_highlight()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn highlight(&mut self, val: &Highlight) -> &mut Self {
         self.set_highlight(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AbstractRange")]
     #[deprecated = "Use `set_ranges()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ranges(&mut self, val: &[AbstractRange]) -> &mut Self {
         self.set_ranges(val);
         self

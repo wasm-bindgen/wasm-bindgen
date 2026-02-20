@@ -50,8 +50,12 @@ impl SerialPortRequestOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SerialPortFilter")]
     #[deprecated = "Use `set_filters()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn filters(&mut self, val: &[SerialPortFilter]) -> &mut Self {
         self.set_filters(val);
         self

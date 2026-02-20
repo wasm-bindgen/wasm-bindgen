@@ -134,29 +134,49 @@ impl UsbControlTransferParameters {
         ret.set_value(value);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_index()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn index(&mut self, val: u16) -> &mut Self {
         self.set_index(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbRecipient")]
     #[deprecated = "Use `set_recipient()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn recipient(&mut self, val: UsbRecipient) -> &mut Self {
         self.set_recipient(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_request()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn request(&mut self, val: u8) -> &mut Self {
         self.set_request(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbRequestType")]
     #[deprecated = "Use `set_request_type()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn request_type(&mut self, val: UsbRequestType) -> &mut Self {
         self.set_request_type(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_value()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn value(&mut self, val: u16) -> &mut Self {
         self.set_value(val);
         self

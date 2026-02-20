@@ -71,14 +71,22 @@ impl GpuBlendState {
         ret.set_color(color);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBlendComponent")]
     #[deprecated = "Use `set_alpha()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn alpha(&mut self, val: &GpuBlendComponent) -> &mut Self {
         self.set_alpha(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBlendComponent")]
     #[deprecated = "Use `set_color()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn color(&mut self, val: &GpuBlendComponent) -> &mut Self {
         self.set_color(val);
         self

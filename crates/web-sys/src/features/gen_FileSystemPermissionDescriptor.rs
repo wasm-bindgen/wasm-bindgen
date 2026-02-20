@@ -91,20 +91,32 @@ impl FileSystemPermissionDescriptor {
         ret.set_handle(handle);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PermissionName")]
     #[deprecated = "Use `set_name()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn name(&mut self, val: PermissionName) -> &mut Self {
         self.set_name(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FileSystemHandle")]
     #[deprecated = "Use `set_handle()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn handle(&mut self, val: &FileSystemHandle) -> &mut Self {
         self.set_handle(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FileSystemPermissionMode")]
     #[deprecated = "Use `set_mode()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn mode(&mut self, val: FileSystemPermissionMode) -> &mut Self {
         self.set_mode(val);
         self

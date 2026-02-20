@@ -69,13 +69,21 @@ impl ImageDecodeResult {
         ret.set_image(image);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_complete()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn complete(&mut self, val: bool) -> &mut Self {
         self.set_complete(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoFrame")]
     #[deprecated = "Use `set_image()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn image(&mut self, val: &VideoFrame) -> &mut Self {
         self.set_image(val);
         self

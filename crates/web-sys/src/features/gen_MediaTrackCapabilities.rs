@@ -344,90 +344,154 @@ impl MediaTrackCapabilities {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DoubleRange")]
     #[deprecated = "Use `set_aspect_ratio()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn aspect_ratio(&mut self, val: &DoubleRange) -> &mut Self {
         self.set_aspect_ratio(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_auto_gain_control()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn auto_gain_control(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
         self.set_auto_gain_control(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_background_blur()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn background_blur(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
         self.set_background_blur(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[deprecated = "Use `set_channel_count()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn channel_count(&mut self, val: &ULongRange) -> &mut Self {
         self.set_channel_count(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_device_id()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device_id(&mut self, val: &str) -> &mut Self {
         self.set_device_id(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_echo_cancellation()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn echo_cancellation(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
         self.set_echo_cancellation(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_facing_mode()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn facing_mode(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_facing_mode(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DoubleRange")]
     #[deprecated = "Use `set_frame_rate()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn frame_rate(&mut self, val: &DoubleRange) -> &mut Self {
         self.set_frame_rate(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_group_id()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn group_id(&mut self, val: &str) -> &mut Self {
         self.set_group_id(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[deprecated = "Use `set_height()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn height(&mut self, val: &ULongRange) -> &mut Self {
         self.set_height(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DoubleRange")]
     #[deprecated = "Use `set_latency()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn latency(&mut self, val: &DoubleRange) -> &mut Self {
         self.set_latency(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_noise_suppression()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn noise_suppression(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
         self.set_noise_suppression(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_resize_mode()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn resize_mode(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_resize_mode(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[deprecated = "Use `set_sample_rate()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn sample_rate(&mut self, val: &ULongRange) -> &mut Self {
         self.set_sample_rate(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[deprecated = "Use `set_sample_size()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn sample_size(&mut self, val: &ULongRange) -> &mut Self {
         self.set_sample_size(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[deprecated = "Use `set_width()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn width(&mut self, val: &ULongRange) -> &mut Self {
         self.set_width(val);
         self

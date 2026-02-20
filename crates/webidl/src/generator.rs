@@ -975,9 +975,14 @@ impl DictionaryField {
             quote! { val }
         };
 
+        let unstable_attr = maybe_unstable_attr(self.unstable);
+        let unstable_docs = maybe_unstable_docs(self.unstable);
+
         quote! {
+            #unstable_attr
             #cfg_features
             #[deprecated = #deprecated]
+            #unstable_docs
             pub fn #name(&mut self, val: #builder_ty) -> &mut Self {
                 self.#setter_name(#shim_args);
                 self

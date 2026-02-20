@@ -68,13 +68,21 @@ impl MediaStreamTrackProcessorInit {
         ret.set_track(track);
         ret
     }
+    #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_max_buffer_size()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_buffer_size(&mut self, val: u16) -> &mut Self {
         self.set_max_buffer_size(val);
         self
     }
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaStreamTrack")]
     #[deprecated = "Use `set_track()` instead."]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn track(&mut self, val: &MediaStreamTrack) -> &mut Self {
         self.set_track(val);
         self
