@@ -321,7 +321,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    fn needs_fnmut_immediate(cb: &ImmediateClosure<dyn FnMut(u32)>);
+    fn needs_fnmut_immediate(cb: ImmediateClosure<dyn FnMut(u32)>);
 }
 
 // ImmediateClosure
@@ -356,8 +356,8 @@ extern "C" {
 // Preferred:
 #[wasm_bindgen]
 extern "C" {
-    fn takes_closure(f: &ImmediateClosure<dyn Fn()>);
-    fn takes_mut_closure(f: &ImmediateClosure<dyn FnMut()>);
+    fn takes_closure(f: ImmediateClosure<dyn Fn()>);
+    fn takes_mut_closure(f: ImmediateClosure<dyn FnMut()>);
 }
 ```
 
@@ -436,7 +436,7 @@ For `ImmediateClosure`, use `new_mut_assert_unwind_safe` directly:
 
 ```rust
 let data = Rc::new(RefCell::new(0));
-forEach(&ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
+forEach(ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
     *data.borrow_mut() += x;
 }));
 ```

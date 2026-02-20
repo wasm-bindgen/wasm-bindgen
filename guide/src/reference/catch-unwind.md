@@ -160,10 +160,10 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    fn forEach(cb: &ImmediateClosure<dyn FnMut(u32)>);
+    fn forEach(cb: ImmediateClosure<dyn FnMut(u32)>);
 }
 
-forEach(&ImmediateClosure::new_mut(&mut |x| {
+forEach(ImmediateClosure::new_mut(&mut |x| {
     if x == 0 {
         panic!("zero not allowed!");
     }
