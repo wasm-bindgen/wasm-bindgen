@@ -7,12 +7,19 @@
 
 ### Changed
 
+* Refactor new closure methods - ensures that all closure constructor functions have the variants `Closure::foo()`, `Closure::foo_aborting()` and
+  `Closure::foo_assert_unwind_safe()` this then fully allows switching from the UnwindSafe bound now being applies on foo() to use one of the
+  alternatives, given these limitations of AssertUnwindSafe. The same applies to `ImmediateClosure`. In addition, mutable reentrancy guards are
+  added for `ImmediateClosure`, and it is updated to support pass-by-value as well.
+  [#4975](https://github.com/wasm-bindgen/wasm-bindgen/pull/4975)
+
 ### Fixed
 
 * Fixed a regression where Array.of1,... variants using generic `Array<T>` broke inference.
   Reverted to use non-generic JsValue arguments. In addition extends generic class hoisting to
   for constructors to also include `static_method_of` methods returning the own type, to allow
   `Array::of` generic to now be on the `Array<T>` impl block.
+  [#4974](https://github.com/wasm-bindgen/wasm-bindgen/pull/4974)
 
 ### Removed
 
@@ -172,8 +179,6 @@
   on functions annotated with `#[wasm_bindgen]`. The `#[expect]` attributes are now
   converted to `#[allow]` in generated code to prevent spurious warnings.
   [#4409](https://github.com/wasm-bindgen/wasm-bindgen/pull/4409)
-
-### Removed
 
 ## [0.2.108](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.107...0.2.108)
 

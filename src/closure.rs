@@ -1182,8 +1182,32 @@ where
 {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
-        // Delegate to the underlying dyn Fn/FnMut - uses FUNCTION descriptor
-        <T as WasmDescribe>::describe();
+        // For FnMut closures, wrap with REFMUT so the CLI generates
+        // a reentrancy guard in JS. For Fn closures, emit bare FUNCTION.
+        if T::IS_MUT {
+            inform(REFMUT);
+        }
+        T::describe();
+    }
+}
+
+fn immediate_closure_into_abi<T: WasmClosure + ?Sized>(c: &ImmediateClosure<'_, T>) -> WasmSlice {
+    let WasmSlice { ptr, len } = c.data;
+    let len_with_flag = if c.unwind_safe { len | 0x80000000 } else { len };
+    WasmSlice {
+        ptr,
+        len: len_with_flag,
+    }
+}
+
+impl<T> IntoWasmAbi for ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+
+    fn into_abi(self) -> WasmSlice {
+        immediate_closure_into_abi(&self)
     }
 }
 
@@ -1194,16 +1218,16 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
-        let WasmSlice { ptr, len } = self.data;
-        let len_with_flag = if self.unwind_safe {
-            len | 0x80000000
-        } else {
-            len
-        };
-        WasmSlice {
-            ptr,
-            len: len_with_flag,
-        }
+        immediate_closure_into_abi(self)
+    }
+}
+
+impl<T> OptionIntoWasmAbi for ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    fn none() -> WasmSlice {
+        WasmSlice { ptr: 0, len: 0 }
     }
 }
 
@@ -1237,6 +1261,13 @@ fn _check() {
     _assert::<&ImmediateClosure<dyn FnMut()>>();
     _assert::<&ImmediateClosure<dyn FnMut(String)>>();
     _assert::<&ImmediateClosure<dyn FnMut() -> String>>();
+    // ImmediateClosure by value
+    _assert::<ImmediateClosure<dyn Fn()>>();
+    _assert::<ImmediateClosure<dyn Fn(String)>>();
+    _assert::<ImmediateClosure<dyn Fn() -> String>>();
+    _assert::<ImmediateClosure<dyn FnMut()>>();
+    _assert::<ImmediateClosure<dyn FnMut(String)>>();
+    _assert::<ImmediateClosure<dyn FnMut() -> String>>();
 }
 
 impl<T> fmt::Debug for ScopedClosure<'_, T>

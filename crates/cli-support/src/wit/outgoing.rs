@@ -162,7 +162,12 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Option(d) => self.outgoing_option(d)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
-            Descriptor::Function(_) | Descriptor::Slice(_) => {
+            Descriptor::Function(descriptor) => {
+                // By-value ImmediateClosure: same ABI as &ImmediateClosure
+                self.outgoing_function(false, descriptor, None)?;
+            }
+
+            Descriptor::Slice(_) => {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
@@ -226,6 +231,17 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Function(descriptor) => {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
+
+            // ImmediateClosure<dyn FnMut(...)> emits RefMut(Function(...)) to
+            // signal that a reentrancy guard is needed in the JS wrapper.
+            Descriptor::RefMut(inner) => match inner.as_ref() {
+                Descriptor::Function(descriptor) => {
+                    self.outgoing_function(true, descriptor, None)?;
+                }
+                _ => bail!(
+                    "unsupported reference argument type for calling JS function from Rust: {arg:?}"
+                ),
+            },
 
             _ => bail!(
                 "unsupported reference argument type for calling JS function from Rust: {arg:?}"

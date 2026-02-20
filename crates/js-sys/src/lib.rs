@@ -669,7 +669,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = filter, catch)]
     pub fn try_filter<'a, T>(
         this: &Array<T>,
-        predicate: &ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
+        predicate: ImmediateClosure<'a, dyn FnMut(T, u32) -> Result<bool, JsError> + 'a>,
     ) -> Result<Array<T>, JsValue>;
 
     /// The `find()` method returns the value of the first element in the array that satisfies

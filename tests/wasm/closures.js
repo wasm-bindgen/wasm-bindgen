@@ -255,3 +255,17 @@ exports.immediate_closure_catches_panic = f => {
     return true;
   }
 };
+
+// Calls the closure, which may call immediate_closure_fnmut_reentrant_invoke
+// to trigger reentrancy
+let IMMEDIATE_REENTRANT_CB = null;
+exports.immediate_closure_fnmut_reentrant = f => {
+  IMMEDIATE_REENTRANT_CB = f;
+  f();
+  IMMEDIATE_REENTRANT_CB = null;
+};
+
+// Called from inside the closure to attempt reentrant invocation
+exports.immediate_closure_fnmut_reentrant_invoke = () => {
+  IMMEDIATE_REENTRANT_CB();
+};

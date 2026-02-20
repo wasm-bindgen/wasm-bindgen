@@ -1909,7 +1909,7 @@ fn test_array_try_filter() {
     arr.push(&TestItem::new(3, &JsString::from("c")));
     arr.push(&TestItem::new(4, &JsString::from("d")));
 
-    let result = arr.try_filter(&ImmediateClosure::new_mut(&mut |val: TestItem, _| {
+    let result = arr.try_filter(ImmediateClosure::new_mut(&mut |val: TestItem, _| {
         Ok(val.id() % 2 == 0)
     }));
     assert!(result.is_ok());
@@ -1925,7 +1925,7 @@ fn test_array_try_filter_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_filter(&ImmediateClosure::new_mut_assert_unwind_safe(
+    let result = arr.try_filter(ImmediateClosure::new_mut_assert_unwind_safe(
         &mut |val, _| {
             if val.id() == 2 {
                 Err(JsError::new("filter error"))

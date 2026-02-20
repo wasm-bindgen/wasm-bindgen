@@ -1089,6 +1089,9 @@ extern "C" {
     ) -> u32;
     fn immediate_closure_fn_call<'a>(f: &ImmediateClosure<'a, dyn Fn() + 'a>);
     fn immediate_closure_catches_panic<'a>(f: &ImmediateClosure<'a, dyn FnMut() + 'a>) -> bool;
+    fn immediate_closure_fnmut_reentrant<'a>(f: &ImmediateClosure<'a, dyn FnMut() + 'a>);
+    #[wasm_bindgen(catch)]
+    fn immediate_closure_fnmut_reentrant_invoke() -> Result<(), JsValue>;
 }
 
 #[wasm_bindgen_test]
@@ -1180,6 +1183,26 @@ fn immediate_closure_catches_panic_test() {
         caught,
         "panic should be caught and converted to JS exception"
     );
+}
+
+/// Test that FnMut ImmediateClosure has a reentrancy guard.
+/// JS caches the closure and tries to call it from within itself — the
+/// reentrant call should throw.
+#[wasm_bindgen_test]
+fn immediate_closure_fnmut_reentrancy_guard() {
+    let mut call_count = 0u32;
+    let mut func = || {
+        call_count += 1;
+        if call_count == 1 {
+            // First call: try to invoke ourselves reentrantly via JS
+            let result = immediate_closure_fnmut_reentrant_invoke();
+            // The reentrant call should fail (JS exception from the guard)
+            assert!(result.is_err(), "reentrant FnMut call should be rejected");
+        }
+    };
+    immediate_closure_fnmut_reentrant(&ImmediateClosure::new_mut_aborting(&mut func));
+    // Only the outer call should have succeeded
+    assert_eq!(call_count, 1);
 }
 
 /// Test that ImmediateClosure::wrap_mut_aborting works with closures capturing RefCell (not UnwindSafe).
