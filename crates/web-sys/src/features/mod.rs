@@ -8734,6 +8734,13 @@ mod gen_SharedWorkerGlobalScope;
 #[allow(unused_imports)]
 pub use gen_SharedWorkerGlobalScope::*;
 
+#[cfg(feature = "ShowPopoverOptions")]
+#[allow(non_snake_case)]
+mod gen_ShowPopoverOptions;
+#[cfg(feature = "ShowPopoverOptions")]
+#[allow(unused_imports)]
+pub use gen_ShowPopoverOptions::*;
+
 #[cfg(feature = "SignResponse")]
 #[allow(non_snake_case)]
 mod gen_SignResponse;
@@ -10140,6 +10147,13 @@ mod gen_ToggleEventInit;
 #[cfg(feature = "ToggleEventInit")]
 #[allow(unused_imports)]
 pub use gen_ToggleEventInit::*;
+
+#[cfg(feature = "TogglePopoverOptions")]
+#[allow(non_snake_case)]
+mod gen_TogglePopoverOptions;
+#[cfg(feature = "TogglePopoverOptions")]
+#[allow(unused_imports)]
+pub use gen_TogglePopoverOptions::*;
 
 #[cfg(feature = "TokenBinding")]
 #[allow(non_snake_case)]

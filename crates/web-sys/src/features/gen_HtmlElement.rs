@@ -1646,6 +1646,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn show_popover(this: &HtmlElement) -> Result<(), JsValue>;
+    #[cfg(feature = "ShowPopoverOptions")]
+    # [wasm_bindgen (catch , method , structural , js_class = "HTMLElement" , js_name = showPopover)]
+    #[doc = "The `showPopover()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/showPopover)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`, `ShowPopoverOptions`*"]
+    pub fn show_popover_with_options(
+        this: &HtmlElement,
+        options: &ShowPopoverOptions,
+    ) -> Result<(), JsValue>;
     # [wasm_bindgen (catch , method , structural , js_class = "HTMLElement" , js_name = togglePopover)]
     #[doc = "The `togglePopover()` method."]
     #[doc = ""]
