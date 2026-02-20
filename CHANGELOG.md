@@ -10,7 +10,9 @@
 ### Fixed
 
 * Fixed a regression where Array.of1,... variants using generic `Array<T>` broke inference.
-  Reverted to use non-generic JsValue arguments.
+  Reverted to use non-generic JsValue arguments. In addition extends generic class hoisting to
+  for constructors to also include `static_method_of` methods returning the own type, to allow
+  `Array::of` generic to now be on the `Array<T>` impl block.
 
 ### Removed
 
