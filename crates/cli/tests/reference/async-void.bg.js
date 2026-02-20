@@ -34,10 +34,18 @@ export function __wbg_createTask_b3c71c63b67bb6ef() { return handleError(functio
     const ret = console.createTask(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments); }
-export function __wbg_new_typed_ba4e97687832c766(arg0, arg1) {
+export function __wbg_new_typed_41a2f1c19fbf9990(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
-        var cb0 = (arg0, arg1) => wasm_bindgen__convert__closures_____invoke__h0000000000000001(state0.a, state0.b, arg0, arg1);
+        var cb0 = (arg0, arg1) => {
+            const a = state0.a;
+            state0.a = 0;
+            try {
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000001(a, state0.b, arg0, arg1);
+            } finally {
+                state0.a = a;
+            }
+        };
         const ret = new Promise(cb0);
         return ret;
     } finally {
