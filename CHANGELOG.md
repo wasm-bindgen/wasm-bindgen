@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added stable `ShowPopoverOptions` dictionary and `show_popover_with_options()` method to
+  `HtmlElement`, and unstable `TogglePopoverOptions` dictionary per the WHATWG HTML spec.
+  [#4968](https://github.com/wasm-bindgen/wasm-bindgen/pull/4968)
+
 * Added unstable Geolocation API types per the latest W3C spec: `GeolocationCoordinates`,
   `GeolocationPosition`, and `GeolocationPositionError`. The `Geolocation` interface now
   has both stable methods (using the old `Position`/`PositionError` types with `[Throws]`)
