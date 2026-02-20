@@ -83,3 +83,15 @@ fn growable() {
     let fixed = SharedArrayBuffer::new(50);
     assert!(!fixed.growable());
 }
+
+#[wasm_bindgen_test]
+fn grow() {
+    if !is_shared_array_buffer_supported() {
+        return;
+    }
+    let options = ArrayBufferOptions::new(100);
+    let buf = SharedArrayBuffer::new_with_options(50, &options);
+    assert_eq!(buf.byte_length(), 50);
+    buf.grow(75).unwrap();
+    assert_eq!(buf.byte_length(), 75);
+}

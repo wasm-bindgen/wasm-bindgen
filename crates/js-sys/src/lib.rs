@@ -2291,11 +2291,18 @@ extern "C" {
     pub fn byte_length(this: &SharedArrayBuffer) -> usize;
 
     /// The `growable` accessor property of `SharedArrayBuffer` instances returns whether
-    /// this `SharedArrayBuffer` can be grow or not.
+    /// this `SharedArrayBuffer` can be grown or not.
     ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/byteLength)
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/growable)
     #[wasm_bindgen(method, getter)]
     pub fn growable(this: &SharedArrayBuffer) -> bool;
+
+    /// The `grow()` method of `SharedArrayBuffer` instances grows the
+    /// `SharedArrayBuffer` to the specified size, in bytes.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/grow)
+    #[wasm_bindgen(method, catch)]
+    pub fn grow(this: &SharedArrayBuffer, new_byte_length: usize) -> Result<(), JsValue>;
 
     /// The `maxByteLength` accessor property of `SharedArrayBuffer` instances returns the maximum
     /// length (in bytes) that this `SharedArrayBuffer` can be resized to.
