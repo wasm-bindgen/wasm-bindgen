@@ -214,6 +214,59 @@ impl GpuTextureViewDescriptor {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[deprecated = "Use `set_array_layer_count()` instead."]
+    pub fn array_layer_count(&mut self, val: u32) -> &mut Self {
+        self.set_array_layer_count(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureAspect")]
+    #[deprecated = "Use `set_aspect()` instead."]
+    pub fn aspect(&mut self, val: GpuTextureAspect) -> &mut Self {
+        self.set_aspect(val);
+        self
+    }
+    #[deprecated = "Use `set_base_array_layer()` instead."]
+    pub fn base_array_layer(&mut self, val: u32) -> &mut Self {
+        self.set_base_array_layer(val);
+        self
+    }
+    #[deprecated = "Use `set_base_mip_level()` instead."]
+    pub fn base_mip_level(&mut self, val: u32) -> &mut Self {
+        self.set_base_mip_level(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureViewDimension")]
+    #[deprecated = "Use `set_dimension()` instead."]
+    pub fn dimension(&mut self, val: GpuTextureViewDimension) -> &mut Self {
+        self.set_dimension(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureFormat")]
+    #[deprecated = "Use `set_format()` instead."]
+    pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
+        self.set_format(val);
+        self
+    }
+    #[deprecated = "Use `set_mip_level_count()` instead."]
+    pub fn mip_level_count(&mut self, val: u32) -> &mut Self {
+        self.set_mip_level_count(val);
+        self
+    }
+    #[deprecated = "Use `set_swizzle()` instead."]
+    pub fn swizzle(&mut self, val: &str) -> &mut Self {
+        self.set_swizzle(val);
+        self
+    }
+    #[deprecated = "Use `set_usage()` instead."]
+    pub fn usage(&mut self, val: u32) -> &mut Self {
+        self.set_usage(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuTextureViewDescriptor {

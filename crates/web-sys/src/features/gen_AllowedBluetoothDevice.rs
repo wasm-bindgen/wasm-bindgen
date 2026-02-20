@@ -115,4 +115,19 @@ impl AllowedBluetoothDevice {
         ret.set_may_use_gatt(may_use_gatt);
         ret
     }
+    #[deprecated = "Use `set_allowed_services()` instead."]
+    pub fn allowed_services(&mut self, val: &str) -> &mut Self {
+        self.set_allowed_services(val);
+        self
+    }
+    #[deprecated = "Use `set_device_id()` instead."]
+    pub fn device_id(&mut self, val: &str) -> &mut Self {
+        self.set_device_id(val);
+        self
+    }
+    #[deprecated = "Use `set_may_use_gatt()` instead."]
+    pub fn may_use_gatt(&mut self, val: bool) -> &mut Self {
+        self.set_may_use_gatt(val);
+        self
+    }
 }

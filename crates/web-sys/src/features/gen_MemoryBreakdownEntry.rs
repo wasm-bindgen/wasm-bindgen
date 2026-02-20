@@ -95,6 +95,22 @@ impl MemoryBreakdownEntry {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "MemoryAttribution")]
+    #[deprecated = "Use `set_attribution()` instead."]
+    pub fn attribution(&mut self, val: &[MemoryAttribution]) -> &mut Self {
+        self.set_attribution(val);
+        self
+    }
+    #[deprecated = "Use `set_bytes()` instead."]
+    pub fn bytes(&mut self, val: u32) -> &mut Self {
+        self.set_bytes(val);
+        self
+    }
+    #[deprecated = "Use `set_types()` instead."]
+    pub fn types(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_types(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MemoryBreakdownEntry {

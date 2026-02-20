@@ -85,4 +85,19 @@ impl PublicKeyCredentialUserEntityJson {
         ret.set_name(name);
         ret
     }
+    #[deprecated = "Use `set_display_name()` instead."]
+    pub fn display_name(&mut self, val: &str) -> &mut Self {
+        self.set_display_name(val);
+        self
+    }
+    #[deprecated = "Use `set_id()` instead."]
+    pub fn id(&mut self, val: &str) -> &mut Self {
+        self.set_id(val);
+        self
+    }
+    #[deprecated = "Use `set_name()` instead."]
+    pub fn name(&mut self, val: &str) -> &mut Self {
+        self.set_name(val);
+        self
+    }
 }

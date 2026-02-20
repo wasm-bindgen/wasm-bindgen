@@ -127,6 +127,31 @@ impl BluetoothLeScanFilterInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_manufacturer_data()` instead."]
+    pub fn manufacturer_data(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_manufacturer_data(val);
+        self
+    }
+    #[deprecated = "Use `set_name()` instead."]
+    pub fn name(&mut self, val: &str) -> &mut Self {
+        self.set_name(val);
+        self
+    }
+    #[deprecated = "Use `set_name_prefix()` instead."]
+    pub fn name_prefix(&mut self, val: &str) -> &mut Self {
+        self.set_name_prefix(val);
+        self
+    }
+    #[deprecated = "Use `set_service_data()` instead."]
+    pub fn service_data(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_service_data(val);
+        self
+    }
+    #[deprecated = "Use `set_services()` instead."]
+    pub fn services(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_services(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for BluetoothLeScanFilterInit {

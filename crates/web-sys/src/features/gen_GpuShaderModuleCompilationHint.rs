@@ -79,4 +79,14 @@ impl GpuShaderModuleCompilationHint {
         ret.set_entry_point(entry_point);
         ret
     }
+    #[deprecated = "Use `set_entry_point()` instead."]
+    pub fn entry_point(&mut self, val: &str) -> &mut Self {
+        self.set_entry_point(val);
+        self
+    }
+    #[deprecated = "Use `set_layout()` instead."]
+    pub fn layout(&mut self, val: &GpuPipelineLayout) -> &mut Self {
+        self.set_layout(val);
+        self
+    }
 }

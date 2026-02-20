@@ -341,4 +341,79 @@ impl VideoFrameBufferInit {
         ret.set_timestamp_f64(timestamp);
         ret
     }
+    #[deprecated = "Use `set_coded_height()` instead."]
+    pub fn coded_height(&mut self, val: u32) -> &mut Self {
+        self.set_coded_height(val);
+        self
+    }
+    #[deprecated = "Use `set_coded_width()` instead."]
+    pub fn coded_width(&mut self, val: u32) -> &mut Self {
+        self.set_coded_width(val);
+        self
+    }
+    #[cfg(feature = "VideoColorSpaceInit")]
+    #[deprecated = "Use `set_color_space()` instead."]
+    pub fn color_space(&mut self, val: &VideoColorSpaceInit) -> &mut Self {
+        self.set_color_space(val);
+        self
+    }
+    #[deprecated = "Use `set_display_height()` instead."]
+    pub fn display_height(&mut self, val: u32) -> &mut Self {
+        self.set_display_height(val);
+        self
+    }
+    #[deprecated = "Use `set_display_width()` instead."]
+    pub fn display_width(&mut self, val: u32) -> &mut Self {
+        self.set_display_width(val);
+        self
+    }
+    #[deprecated = "Use `set_duration()` instead."]
+    pub fn duration(&mut self, val: u32) -> &mut Self {
+        self.set_duration(val);
+        self
+    }
+    #[deprecated = "Use `set_flip()` instead."]
+    pub fn flip(&mut self, val: bool) -> &mut Self {
+        self.set_flip(val);
+        self
+    }
+    #[cfg(feature = "VideoPixelFormat")]
+    #[deprecated = "Use `set_format()` instead."]
+    pub fn format(&mut self, val: VideoPixelFormat) -> &mut Self {
+        self.set_format(val);
+        self
+    }
+    #[cfg(feature = "PlaneLayout")]
+    #[deprecated = "Use `set_layout()` instead."]
+    pub fn layout(&mut self, val: &[PlaneLayout]) -> &mut Self {
+        self.set_layout(val);
+        self
+    }
+    #[cfg(feature = "VideoFrameMetadata")]
+    #[deprecated = "Use `set_metadata()` instead."]
+    pub fn metadata(&mut self, val: &VideoFrameMetadata) -> &mut Self {
+        self.set_metadata(val);
+        self
+    }
+    #[deprecated = "Use `set_rotation()` instead."]
+    pub fn rotation(&mut self, val: f64) -> &mut Self {
+        self.set_rotation(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: i32) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
+    #[deprecated = "Use `set_transfer()` instead."]
+    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
+        self.set_transfer(val);
+        self
+    }
+    #[cfg(feature = "DomRectInit")]
+    #[deprecated = "Use `set_visible_rect()` instead."]
+    pub fn visible_rect(&mut self, val: &DomRectInit) -> &mut Self {
+        self.set_visible_rect(val);
+        self
+    }
 }

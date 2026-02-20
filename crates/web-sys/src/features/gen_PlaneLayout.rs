@@ -66,4 +66,14 @@ impl PlaneLayout {
         ret.set_stride(stride);
         ret
     }
+    #[deprecated = "Use `set_offset()` instead."]
+    pub fn offset(&mut self, val: u32) -> &mut Self {
+        self.set_offset(val);
+        self
+    }
+    #[deprecated = "Use `set_stride()` instead."]
+    pub fn stride(&mut self, val: u32) -> &mut Self {
+        self.set_stride(val);
+        self
+    }
 }

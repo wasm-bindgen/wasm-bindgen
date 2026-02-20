@@ -126,6 +126,35 @@ impl GpuPrimitiveState {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "GpuCullMode")]
+    #[deprecated = "Use `set_cull_mode()` instead."]
+    pub fn cull_mode(&mut self, val: GpuCullMode) -> &mut Self {
+        self.set_cull_mode(val);
+        self
+    }
+    #[cfg(feature = "GpuFrontFace")]
+    #[deprecated = "Use `set_front_face()` instead."]
+    pub fn front_face(&mut self, val: GpuFrontFace) -> &mut Self {
+        self.set_front_face(val);
+        self
+    }
+    #[cfg(feature = "GpuIndexFormat")]
+    #[deprecated = "Use `set_strip_index_format()` instead."]
+    pub fn strip_index_format(&mut self, val: GpuIndexFormat) -> &mut Self {
+        self.set_strip_index_format(val);
+        self
+    }
+    #[cfg(feature = "GpuPrimitiveTopology")]
+    #[deprecated = "Use `set_topology()` instead."]
+    pub fn topology(&mut self, val: GpuPrimitiveTopology) -> &mut Self {
+        self.set_topology(val);
+        self
+    }
+    #[deprecated = "Use `set_unclipped_depth()` instead."]
+    pub fn unclipped_depth(&mut self, val: bool) -> &mut Self {
+        self.set_unclipped_depth(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuPrimitiveState {

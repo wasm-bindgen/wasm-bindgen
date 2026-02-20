@@ -534,6 +534,147 @@ impl HidReportItem {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_has_null()` instead."]
+    pub fn has_null(&mut self, val: bool) -> &mut Self {
+        self.set_has_null(val);
+        self
+    }
+    #[deprecated = "Use `set_has_preferred_state()` instead."]
+    pub fn has_preferred_state(&mut self, val: bool) -> &mut Self {
+        self.set_has_preferred_state(val);
+        self
+    }
+    #[deprecated = "Use `set_is_absolute()` instead."]
+    pub fn is_absolute(&mut self, val: bool) -> &mut Self {
+        self.set_is_absolute(val);
+        self
+    }
+    #[deprecated = "Use `set_is_array()` instead."]
+    pub fn is_array(&mut self, val: bool) -> &mut Self {
+        self.set_is_array(val);
+        self
+    }
+    #[deprecated = "Use `set_is_buffered_bytes()` instead."]
+    pub fn is_buffered_bytes(&mut self, val: bool) -> &mut Self {
+        self.set_is_buffered_bytes(val);
+        self
+    }
+    #[deprecated = "Use `set_is_constant()` instead."]
+    pub fn is_constant(&mut self, val: bool) -> &mut Self {
+        self.set_is_constant(val);
+        self
+    }
+    #[deprecated = "Use `set_is_linear()` instead."]
+    pub fn is_linear(&mut self, val: bool) -> &mut Self {
+        self.set_is_linear(val);
+        self
+    }
+    #[deprecated = "Use `set_is_range()` instead."]
+    pub fn is_range(&mut self, val: bool) -> &mut Self {
+        self.set_is_range(val);
+        self
+    }
+    #[deprecated = "Use `set_is_volatile()` instead."]
+    pub fn is_volatile(&mut self, val: bool) -> &mut Self {
+        self.set_is_volatile(val);
+        self
+    }
+    #[deprecated = "Use `set_logical_maximum()` instead."]
+    pub fn logical_maximum(&mut self, val: i32) -> &mut Self {
+        self.set_logical_maximum(val);
+        self
+    }
+    #[deprecated = "Use `set_logical_minimum()` instead."]
+    pub fn logical_minimum(&mut self, val: i32) -> &mut Self {
+        self.set_logical_minimum(val);
+        self
+    }
+    #[deprecated = "Use `set_physical_maximum()` instead."]
+    pub fn physical_maximum(&mut self, val: i32) -> &mut Self {
+        self.set_physical_maximum(val);
+        self
+    }
+    #[deprecated = "Use `set_physical_minimum()` instead."]
+    pub fn physical_minimum(&mut self, val: i32) -> &mut Self {
+        self.set_physical_minimum(val);
+        self
+    }
+    #[deprecated = "Use `set_report_count()` instead."]
+    pub fn report_count(&mut self, val: u16) -> &mut Self {
+        self.set_report_count(val);
+        self
+    }
+    #[deprecated = "Use `set_report_size()` instead."]
+    pub fn report_size(&mut self, val: u16) -> &mut Self {
+        self.set_report_size(val);
+        self
+    }
+    #[deprecated = "Use `set_strings()` instead."]
+    pub fn strings(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_strings(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_exponent()` instead."]
+    pub fn unit_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_exponent(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_factor_current_exponent()` instead."]
+    pub fn unit_factor_current_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_factor_current_exponent(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_factor_length_exponent()` instead."]
+    pub fn unit_factor_length_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_factor_length_exponent(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_factor_luminous_intensity_exponent()` instead."]
+    pub fn unit_factor_luminous_intensity_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_factor_luminous_intensity_exponent(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_factor_mass_exponent()` instead."]
+    pub fn unit_factor_mass_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_factor_mass_exponent(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_factor_temperature_exponent()` instead."]
+    pub fn unit_factor_temperature_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_factor_temperature_exponent(val);
+        self
+    }
+    #[deprecated = "Use `set_unit_factor_time_exponent()` instead."]
+    pub fn unit_factor_time_exponent(&mut self, val: i8) -> &mut Self {
+        self.set_unit_factor_time_exponent(val);
+        self
+    }
+    #[cfg(feature = "HidUnitSystem")]
+    #[deprecated = "Use `set_unit_system()` instead."]
+    pub fn unit_system(&mut self, val: HidUnitSystem) -> &mut Self {
+        self.set_unit_system(val);
+        self
+    }
+    #[deprecated = "Use `set_usage_maximum()` instead."]
+    pub fn usage_maximum(&mut self, val: u32) -> &mut Self {
+        self.set_usage_maximum(val);
+        self
+    }
+    #[deprecated = "Use `set_usage_minimum()` instead."]
+    pub fn usage_minimum(&mut self, val: u32) -> &mut Self {
+        self.set_usage_minimum(val);
+        self
+    }
+    #[deprecated = "Use `set_usages()` instead."]
+    pub fn usages(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_usages(val);
+        self
+    }
+    #[deprecated = "Use `set_wrap()` instead."]
+    pub fn wrap(&mut self, val: bool) -> &mut Self {
+        self.set_wrap(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for HidReportItem {

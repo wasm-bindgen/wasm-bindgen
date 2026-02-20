@@ -226,4 +226,40 @@ impl ImageDecoderInit {
         ret.set_type(type_);
         ret
     }
+    #[cfg(feature = "ColorSpaceConversion")]
+    #[deprecated = "Use `set_color_space_conversion()` instead."]
+    pub fn color_space_conversion(&mut self, val: ColorSpaceConversion) -> &mut Self {
+        self.set_color_space_conversion(val);
+        self
+    }
+    #[deprecated = "Use `set_data()` instead."]
+    pub fn data(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_data(val);
+        self
+    }
+    #[deprecated = "Use `set_desired_height()` instead."]
+    pub fn desired_height(&mut self, val: u32) -> &mut Self {
+        self.set_desired_height(val);
+        self
+    }
+    #[deprecated = "Use `set_desired_width()` instead."]
+    pub fn desired_width(&mut self, val: u32) -> &mut Self {
+        self.set_desired_width(val);
+        self
+    }
+    #[deprecated = "Use `set_prefer_animation()` instead."]
+    pub fn prefer_animation(&mut self, val: bool) -> &mut Self {
+        self.set_prefer_animation(val);
+        self
+    }
+    #[deprecated = "Use `set_transfer()` instead."]
+    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
+        self.set_transfer(val);
+        self
+    }
+    #[deprecated = "Use `set_type()` instead."]
+    pub fn type_(&mut self, val: &str) -> &mut Self {
+        self.set_type(val);
+        self
+    }
 }

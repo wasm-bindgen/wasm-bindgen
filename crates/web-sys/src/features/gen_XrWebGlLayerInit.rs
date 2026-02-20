@@ -136,6 +136,36 @@ impl XrWebGlLayerInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_alpha()` instead."]
+    pub fn alpha(&mut self, val: bool) -> &mut Self {
+        self.set_alpha(val);
+        self
+    }
+    #[deprecated = "Use `set_antialias()` instead."]
+    pub fn antialias(&mut self, val: bool) -> &mut Self {
+        self.set_antialias(val);
+        self
+    }
+    #[deprecated = "Use `set_depth()` instead."]
+    pub fn depth(&mut self, val: bool) -> &mut Self {
+        self.set_depth(val);
+        self
+    }
+    #[deprecated = "Use `set_framebuffer_scale_factor()` instead."]
+    pub fn framebuffer_scale_factor(&mut self, val: f64) -> &mut Self {
+        self.set_framebuffer_scale_factor(val);
+        self
+    }
+    #[deprecated = "Use `set_ignore_depth_values()` instead."]
+    pub fn ignore_depth_values(&mut self, val: bool) -> &mut Self {
+        self.set_ignore_depth_values(val);
+        self
+    }
+    #[deprecated = "Use `set_stencil()` instead."]
+    pub fn stencil(&mut self, val: bool) -> &mut Self {
+        self.set_stencil(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for XrWebGlLayerInit {

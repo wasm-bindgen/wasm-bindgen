@@ -64,6 +64,16 @@ impl XrSessionInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_optional_features()` instead."]
+    pub fn optional_features(&mut self, val: &[::wasm_bindgen::JsValue]) -> &mut Self {
+        self.set_optional_features(val);
+        self
+    }
+    #[deprecated = "Use `set_required_features()` instead."]
+    pub fn required_features(&mut self, val: &[::wasm_bindgen::JsValue]) -> &mut Self {
+        self.set_required_features(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for XrSessionInit {

@@ -66,4 +66,14 @@ impl AudioEncoderInit {
         ret.set_output(output);
         ret
     }
+    #[deprecated = "Use `set_error()` instead."]
+    pub fn error(&mut self, val: &::js_sys::Function) -> &mut Self {
+        self.set_error(val);
+        self
+    }
+    #[deprecated = "Use `set_output()` instead."]
+    pub fn output(&mut self, val: &::js_sys::Function) -> &mut Self {
+        self.set_output(val);
+        self
+    }
 }

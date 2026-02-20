@@ -104,4 +104,24 @@ impl GpuColorDict {
         ret.set_r(r);
         ret
     }
+    #[deprecated = "Use `set_a()` instead."]
+    pub fn a(&mut self, val: f64) -> &mut Self {
+        self.set_a(val);
+        self
+    }
+    #[deprecated = "Use `set_b()` instead."]
+    pub fn b(&mut self, val: f64) -> &mut Self {
+        self.set_b(val);
+        self
+    }
+    #[deprecated = "Use `set_g()` instead."]
+    pub fn g(&mut self, val: f64) -> &mut Self {
+        self.set_g(val);
+        self
+    }
+    #[deprecated = "Use `set_r()` instead."]
+    pub fn r(&mut self, val: f64) -> &mut Self {
+        self.set_r(val);
+        self
+    }
 }

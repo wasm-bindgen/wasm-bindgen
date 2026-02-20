@@ -161,6 +161,11 @@ impl WebGlContextAttributes {
         self.set_stencil(val);
         self
     }
+    #[deprecated = "Use `set_xr_compatible()` instead."]
+    pub fn xr_compatible(&mut self, val: bool) -> &mut Self {
+        self.set_xr_compatible(val);
+        self
+    }
 }
 impl Default for WebGlContextAttributes {
     fn default() -> Self {

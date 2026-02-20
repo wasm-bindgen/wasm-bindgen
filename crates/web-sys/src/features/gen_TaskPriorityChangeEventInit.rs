@@ -104,4 +104,25 @@ impl TaskPriorityChangeEventInit {
         ret.set_previous_priority(previous_priority);
         ret
     }
+    #[deprecated = "Use `set_bubbles()` instead."]
+    pub fn bubbles(&mut self, val: bool) -> &mut Self {
+        self.set_bubbles(val);
+        self
+    }
+    #[deprecated = "Use `set_cancelable()` instead."]
+    pub fn cancelable(&mut self, val: bool) -> &mut Self {
+        self.set_cancelable(val);
+        self
+    }
+    #[deprecated = "Use `set_composed()` instead."]
+    pub fn composed(&mut self, val: bool) -> &mut Self {
+        self.set_composed(val);
+        self
+    }
+    #[cfg(feature = "TaskPriority")]
+    #[deprecated = "Use `set_previous_priority()` instead."]
+    pub fn previous_priority(&mut self, val: TaskPriority) -> &mut Self {
+        self.set_previous_priority(val);
+        self
+    }
 }

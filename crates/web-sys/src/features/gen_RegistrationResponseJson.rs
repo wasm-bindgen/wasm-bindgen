@@ -165,4 +165,39 @@ impl RegistrationResponseJson {
         ret.set_type(type_);
         ret
     }
+    #[deprecated = "Use `set_authenticator_attachment()` instead."]
+    pub fn authenticator_attachment(&mut self, val: &str) -> &mut Self {
+        self.set_authenticator_attachment(val);
+        self
+    }
+    #[cfg(feature = "AuthenticationExtensionsClientOutputsJson")]
+    #[deprecated = "Use `set_client_extension_results()` instead."]
+    pub fn client_extension_results(
+        &mut self,
+        val: &AuthenticationExtensionsClientOutputsJson,
+    ) -> &mut Self {
+        self.set_client_extension_results(val);
+        self
+    }
+    #[deprecated = "Use `set_id()` instead."]
+    pub fn id(&mut self, val: &str) -> &mut Self {
+        self.set_id(val);
+        self
+    }
+    #[deprecated = "Use `set_raw_id()` instead."]
+    pub fn raw_id(&mut self, val: &str) -> &mut Self {
+        self.set_raw_id(val);
+        self
+    }
+    #[cfg(feature = "AuthenticatorAttestationResponseJson")]
+    #[deprecated = "Use `set_response()` instead."]
+    pub fn response(&mut self, val: &AuthenticatorAttestationResponseJson) -> &mut Self {
+        self.set_response(val);
+        self
+    }
+    #[deprecated = "Use `set_type()` instead."]
+    pub fn type_(&mut self, val: &str) -> &mut Self {
+        self.set_type(val);
+        self
+    }
 }

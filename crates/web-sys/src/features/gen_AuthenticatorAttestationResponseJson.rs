@@ -188,4 +188,34 @@ impl AuthenticatorAttestationResponseJson {
         ret.set_transports(transports);
         ret
     }
+    #[deprecated = "Use `set_attestation_object()` instead."]
+    pub fn attestation_object(&mut self, val: &str) -> &mut Self {
+        self.set_attestation_object(val);
+        self
+    }
+    #[deprecated = "Use `set_authenticator_data()` instead."]
+    pub fn authenticator_data(&mut self, val: &str) -> &mut Self {
+        self.set_authenticator_data(val);
+        self
+    }
+    #[deprecated = "Use `set_client_data_json()` instead."]
+    pub fn client_data_json(&mut self, val: &str) -> &mut Self {
+        self.set_client_data_json(val);
+        self
+    }
+    #[deprecated = "Use `set_public_key()` instead."]
+    pub fn public_key(&mut self, val: &str) -> &mut Self {
+        self.set_public_key(val);
+        self
+    }
+    #[deprecated = "Use `set_public_key_algorithm()` instead."]
+    pub fn public_key_algorithm(&mut self, val: i32) -> &mut Self {
+        self.set_public_key_algorithm(val);
+        self
+    }
+    #[deprecated = "Use `set_transports()` instead."]
+    pub fn transports(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_transports(val);
+        self
+    }
 }

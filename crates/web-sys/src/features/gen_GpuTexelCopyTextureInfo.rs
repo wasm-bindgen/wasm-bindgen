@@ -116,4 +116,26 @@ impl GpuTexelCopyTextureInfo {
         ret.set_texture(texture);
         ret
     }
+    #[cfg(feature = "GpuTextureAspect")]
+    #[deprecated = "Use `set_aspect()` instead."]
+    pub fn aspect(&mut self, val: GpuTextureAspect) -> &mut Self {
+        self.set_aspect(val);
+        self
+    }
+    #[deprecated = "Use `set_mip_level()` instead."]
+    pub fn mip_level(&mut self, val: u32) -> &mut Self {
+        self.set_mip_level(val);
+        self
+    }
+    #[deprecated = "Use `set_origin()` instead."]
+    pub fn origin(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_origin(val);
+        self
+    }
+    #[cfg(feature = "GpuTexture")]
+    #[deprecated = "Use `set_texture()` instead."]
+    pub fn texture(&mut self, val: &GpuTexture) -> &mut Self {
+        self.set_texture(val);
+        self
+    }
 }

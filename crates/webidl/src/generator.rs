@@ -941,11 +941,6 @@ impl DictionaryField {
     }
 
     fn generate_rust_setter(&self, cfg_features: &Option<syn::Attribute>) -> TokenStream {
-        // Unstable APIs don't need the deprecated builder method
-        if self.unstable {
-            return quote! {};
-        }
-
         let DictionaryField {
             name,
             js_name: _,
@@ -963,6 +958,15 @@ impl DictionaryField {
         let setter_name = self.setter_name();
         let deprecated = format!("Use `{setter_name}()` instead.");
 
+        // In unstable mode the first setter is a typed variant, so the
+        // builder method uses the same type as the first setter. In stable
+        // mode the builder uses the original (broad) type.
+        let builder_ty = if self.unstable {
+            self.setter_types.first().map(|s| &s.ty).unwrap_or(ty)
+        } else {
+            ty
+        };
+
         // When is_js_value_ref_option_type is set, the first setter takes &JsValue
         // but the builder takes Option<&JsValue>, so unwrap_or bridges the types.
         let shim_args = if self.is_js_value_ref_option_type {
@@ -974,7 +978,7 @@ impl DictionaryField {
         quote! {
             #cfg_features
             #[deprecated = #deprecated]
-            pub fn #name(&mut self, val: #ty) -> &mut Self {
+            pub fn #name(&mut self, val: #builder_ty) -> &mut Self {
                 self.#setter_name(#shim_args);
                 self
             }

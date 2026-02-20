@@ -118,4 +118,20 @@ impl GpuComputePipelineDescriptor {
         ret.set_compute(compute);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[deprecated = "Use `set_layout()` instead."]
+    pub fn layout(&mut self, val: &GpuPipelineLayout) -> &mut Self {
+        self.set_layout(val);
+        self
+    }
+    #[cfg(feature = "GpuProgrammableStage")]
+    #[deprecated = "Use `set_compute()` instead."]
+    pub fn compute(&mut self, val: &GpuProgrammableStage) -> &mut Self {
+        self.set_compute(val);
+        self
+    }
 }

@@ -138,4 +138,31 @@ impl BluetoothPermissionDescriptor {
         ret.set_name(name);
         ret
     }
+    #[cfg(feature = "PermissionName")]
+    #[deprecated = "Use `set_name()` instead."]
+    pub fn name(&mut self, val: PermissionName) -> &mut Self {
+        self.set_name(val);
+        self
+    }
+    #[deprecated = "Use `set_accept_all_devices()` instead."]
+    pub fn accept_all_devices(&mut self, val: bool) -> &mut Self {
+        self.set_accept_all_devices(val);
+        self
+    }
+    #[deprecated = "Use `set_device_id()` instead."]
+    pub fn device_id(&mut self, val: &str) -> &mut Self {
+        self.set_device_id(val);
+        self
+    }
+    #[cfg(feature = "BluetoothLeScanFilterInit")]
+    #[deprecated = "Use `set_filters()` instead."]
+    pub fn filters(&mut self, val: &[BluetoothLeScanFilterInit]) -> &mut Self {
+        self.set_filters(val);
+        self
+    }
+    #[deprecated = "Use `set_optional_services()` instead."]
+    pub fn optional_services(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_optional_services(val);
+        self
+    }
 }

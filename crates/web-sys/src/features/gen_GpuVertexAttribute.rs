@@ -112,4 +112,20 @@ impl GpuVertexAttribute {
         ret.set_shader_location(shader_location);
         ret
     }
+    #[cfg(feature = "GpuVertexFormat")]
+    #[deprecated = "Use `set_format()` instead."]
+    pub fn format(&mut self, val: GpuVertexFormat) -> &mut Self {
+        self.set_format(val);
+        self
+    }
+    #[deprecated = "Use `set_offset()` instead."]
+    pub fn offset(&mut self, val: u32) -> &mut Self {
+        self.set_offset(val);
+        self
+    }
+    #[deprecated = "Use `set_shader_location()` instead."]
+    pub fn shader_location(&mut self, val: u32) -> &mut Self {
+        self.set_shader_location(val);
+        self
+    }
 }

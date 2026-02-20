@@ -200,4 +200,30 @@ impl EncodedVideoChunkInit {
         ret.set_type(type_);
         ret
     }
+    #[deprecated = "Use `set_data()` instead."]
+    pub fn data(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_data(val);
+        self
+    }
+    #[deprecated = "Use `set_duration()` instead."]
+    pub fn duration(&mut self, val: u32) -> &mut Self {
+        self.set_duration(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: i32) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
+    #[deprecated = "Use `set_transfer()` instead."]
+    pub fn transfer(&mut self, val: &[::js_sys::ArrayBuffer]) -> &mut Self {
+        self.set_transfer(val);
+        self
+    }
+    #[cfg(feature = "EncodedVideoChunkType")]
+    #[deprecated = "Use `set_type()` instead."]
+    pub fn type_(&mut self, val: EncodedVideoChunkType) -> &mut Self {
+        self.set_type(val);
+        self
+    }
 }

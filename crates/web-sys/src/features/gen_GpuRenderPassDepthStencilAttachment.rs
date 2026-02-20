@@ -227,4 +227,53 @@ impl GpuRenderPassDepthStencilAttachment {
         ret.set_view_gpu_texture_view(view);
         ret
     }
+    #[deprecated = "Use `set_depth_clear_value()` instead."]
+    pub fn depth_clear_value(&mut self, val: f32) -> &mut Self {
+        self.set_depth_clear_value(val);
+        self
+    }
+    #[cfg(feature = "GpuLoadOp")]
+    #[deprecated = "Use `set_depth_load_op()` instead."]
+    pub fn depth_load_op(&mut self, val: GpuLoadOp) -> &mut Self {
+        self.set_depth_load_op(val);
+        self
+    }
+    #[deprecated = "Use `set_depth_read_only()` instead."]
+    pub fn depth_read_only(&mut self, val: bool) -> &mut Self {
+        self.set_depth_read_only(val);
+        self
+    }
+    #[cfg(feature = "GpuStoreOp")]
+    #[deprecated = "Use `set_depth_store_op()` instead."]
+    pub fn depth_store_op(&mut self, val: GpuStoreOp) -> &mut Self {
+        self.set_depth_store_op(val);
+        self
+    }
+    #[deprecated = "Use `set_stencil_clear_value()` instead."]
+    pub fn stencil_clear_value(&mut self, val: u32) -> &mut Self {
+        self.set_stencil_clear_value(val);
+        self
+    }
+    #[cfg(feature = "GpuLoadOp")]
+    #[deprecated = "Use `set_stencil_load_op()` instead."]
+    pub fn stencil_load_op(&mut self, val: GpuLoadOp) -> &mut Self {
+        self.set_stencil_load_op(val);
+        self
+    }
+    #[deprecated = "Use `set_stencil_read_only()` instead."]
+    pub fn stencil_read_only(&mut self, val: bool) -> &mut Self {
+        self.set_stencil_read_only(val);
+        self
+    }
+    #[cfg(feature = "GpuStoreOp")]
+    #[deprecated = "Use `set_stencil_store_op()` instead."]
+    pub fn stencil_store_op(&mut self, val: GpuStoreOp) -> &mut Self {
+        self.set_stencil_store_op(val);
+        self
+    }
+    #[deprecated = "Use `set_view()` instead."]
+    pub fn view(&mut self, val: &GpuTexture) -> &mut Self {
+        self.set_view(val);
+        self
+    }
 }

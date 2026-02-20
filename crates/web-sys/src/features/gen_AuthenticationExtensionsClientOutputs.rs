@@ -150,10 +150,25 @@ impl AuthenticationExtensionsClientOutputs {
         self.set_cred_props(val);
         self
     }
+    #[cfg(feature = "AuthenticationExtensionsDevicePublicKeyOutputs")]
+    #[deprecated = "Use `set_device_pub_key()` instead."]
+    pub fn device_pub_key(
+        &mut self,
+        val: &AuthenticationExtensionsDevicePublicKeyOutputs,
+    ) -> &mut Self {
+        self.set_device_pub_key(val);
+        self
+    }
     #[cfg(feature = "AuthenticationExtensionsLargeBlobOutputs")]
     #[deprecated = "Use `set_large_blob()` instead."]
     pub fn large_blob(&mut self, val: &AuthenticationExtensionsLargeBlobOutputs) -> &mut Self {
         self.set_large_blob(val);
+        self
+    }
+    #[cfg(feature = "AuthenticationExtensionsPrfOutputs")]
+    #[deprecated = "Use `set_prf()` instead."]
+    pub fn prf(&mut self, val: &AuthenticationExtensionsPrfOutputs) -> &mut Self {
+        self.set_prf(val);
         self
     }
     #[deprecated = "Use `set_uvm()` instead."]

@@ -132,4 +132,30 @@ impl AudioEncoderConfig {
         ret.set_sample_rate(sample_rate);
         ret
     }
+    #[deprecated = "Use `set_bitrate()` instead."]
+    pub fn bitrate(&mut self, val: u32) -> &mut Self {
+        self.set_bitrate(val);
+        self
+    }
+    #[cfg(feature = "BitrateMode")]
+    #[deprecated = "Use `set_bitrate_mode()` instead."]
+    pub fn bitrate_mode(&mut self, val: BitrateMode) -> &mut Self {
+        self.set_bitrate_mode(val);
+        self
+    }
+    #[deprecated = "Use `set_codec()` instead."]
+    pub fn codec(&mut self, val: &str) -> &mut Self {
+        self.set_codec(val);
+        self
+    }
+    #[deprecated = "Use `set_number_of_channels()` instead."]
+    pub fn number_of_channels(&mut self, val: u32) -> &mut Self {
+        self.set_number_of_channels(val);
+        self
+    }
+    #[deprecated = "Use `set_sample_rate()` instead."]
+    pub fn sample_rate(&mut self, val: u32) -> &mut Self {
+        self.set_sample_rate(val);
+        self
+    }
 }

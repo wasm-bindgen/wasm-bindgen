@@ -87,4 +87,20 @@ impl GpuProgrammableStage {
         ret.set_module(module);
         ret
     }
+    #[deprecated = "Use `set_constants()` instead."]
+    pub fn constants(&mut self, val: &::js_sys::Object<::js_sys::Number>) -> &mut Self {
+        self.set_constants(val);
+        self
+    }
+    #[deprecated = "Use `set_entry_point()` instead."]
+    pub fn entry_point(&mut self, val: &str) -> &mut Self {
+        self.set_entry_point(val);
+        self
+    }
+    #[cfg(feature = "GpuShaderModule")]
+    #[deprecated = "Use `set_module()` instead."]
+    pub fn module(&mut self, val: &GpuShaderModule) -> &mut Self {
+        self.set_module(val);
+        self
+    }
 }

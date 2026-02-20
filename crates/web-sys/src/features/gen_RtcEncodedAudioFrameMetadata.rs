@@ -138,6 +138,36 @@ impl RtcEncodedAudioFrameMetadata {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_contributing_sources()` instead."]
+    pub fn contributing_sources(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_contributing_sources(val);
+        self
+    }
+    #[deprecated = "Use `set_mime_type()` instead."]
+    pub fn mime_type(&mut self, val: &str) -> &mut Self {
+        self.set_mime_type(val);
+        self
+    }
+    #[deprecated = "Use `set_payload_type()` instead."]
+    pub fn payload_type(&mut self, val: u8) -> &mut Self {
+        self.set_payload_type(val);
+        self
+    }
+    #[deprecated = "Use `set_rtp_timestamp()` instead."]
+    pub fn rtp_timestamp(&mut self, val: u32) -> &mut Self {
+        self.set_rtp_timestamp(val);
+        self
+    }
+    #[deprecated = "Use `set_sequence_number()` instead."]
+    pub fn sequence_number(&mut self, val: i16) -> &mut Self {
+        self.set_sequence_number(val);
+        self
+    }
+    #[deprecated = "Use `set_synchronization_source()` instead."]
+    pub fn synchronization_source(&mut self, val: u32) -> &mut Self {
+        self.set_synchronization_source(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for RtcEncodedAudioFrameMetadata {

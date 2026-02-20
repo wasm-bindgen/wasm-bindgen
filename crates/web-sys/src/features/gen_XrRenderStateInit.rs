@@ -122,6 +122,33 @@ impl XrRenderStateInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "XrWebGlLayer")]
+    #[deprecated = "Use `set_base_layer()` instead."]
+    pub fn base_layer(&mut self, val: Option<&XrWebGlLayer>) -> &mut Self {
+        self.set_base_layer(val);
+        self
+    }
+    #[deprecated = "Use `set_depth_far()` instead."]
+    pub fn depth_far(&mut self, val: f64) -> &mut Self {
+        self.set_depth_far(val);
+        self
+    }
+    #[deprecated = "Use `set_depth_near()` instead."]
+    pub fn depth_near(&mut self, val: f64) -> &mut Self {
+        self.set_depth_near(val);
+        self
+    }
+    #[deprecated = "Use `set_inline_vertical_field_of_view()` instead."]
+    pub fn inline_vertical_field_of_view(&mut self, val: f64) -> &mut Self {
+        self.set_inline_vertical_field_of_view(val);
+        self
+    }
+    #[cfg(feature = "XrLayer")]
+    #[deprecated = "Use `set_layers()` instead."]
+    pub fn layers(&mut self, val: Option<&[XrLayer]>) -> &mut Self {
+        self.set_layers(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for XrRenderStateInit {

@@ -50,4 +50,10 @@ impl AudioSinkOptions {
         ret.set_type(type_);
         ret
     }
+    #[cfg(feature = "AudioSinkType")]
+    #[deprecated = "Use `set_type()` instead."]
+    pub fn type_(&mut self, val: AudioSinkType) -> &mut Self {
+        self.set_type(val);
+        self
+    }
 }

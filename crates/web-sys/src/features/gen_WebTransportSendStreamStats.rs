@@ -127,6 +127,26 @@ impl WebTransportSendStreamStats {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_bytes_acknowledged()` instead."]
+    pub fn bytes_acknowledged(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_acknowledged(val);
+        self
+    }
+    #[deprecated = "Use `set_bytes_sent()` instead."]
+    pub fn bytes_sent(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_sent(val);
+        self
+    }
+    #[deprecated = "Use `set_bytes_written()` instead."]
+    pub fn bytes_written(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_written(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: f64) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportSendStreamStats {

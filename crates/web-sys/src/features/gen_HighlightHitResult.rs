@@ -68,6 +68,18 @@ impl HighlightHitResult {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "Highlight")]
+    #[deprecated = "Use `set_highlight()` instead."]
+    pub fn highlight(&mut self, val: &Highlight) -> &mut Self {
+        self.set_highlight(val);
+        self
+    }
+    #[cfg(feature = "AbstractRange")]
+    #[deprecated = "Use `set_ranges()` instead."]
+    pub fn ranges(&mut self, val: &[AbstractRange]) -> &mut Self {
+        self.set_ranges(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for HighlightHitResult {

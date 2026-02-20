@@ -71,6 +71,17 @@ impl GpuComputePassDescriptor {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[cfg(feature = "GpuComputePassTimestampWrites")]
+    #[deprecated = "Use `set_timestamp_writes()` instead."]
+    pub fn timestamp_writes(&mut self, val: &GpuComputePassTimestampWrites) -> &mut Self {
+        self.set_timestamp_writes(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuComputePassDescriptor {

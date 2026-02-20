@@ -268,6 +268,71 @@ impl KeyframeAnimationOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_delay()` instead."]
+    pub fn delay(&mut self, val: f64) -> &mut Self {
+        self.set_delay(val);
+        self
+    }
+    #[cfg(feature = "PlaybackDirection")]
+    #[deprecated = "Use `set_direction()` instead."]
+    pub fn direction(&mut self, val: PlaybackDirection) -> &mut Self {
+        self.set_direction(val);
+        self
+    }
+    #[deprecated = "Use `set_duration()` instead."]
+    pub fn duration(&mut self, val: f64) -> &mut Self {
+        self.set_duration(val);
+        self
+    }
+    #[deprecated = "Use `set_easing()` instead."]
+    pub fn easing(&mut self, val: &str) -> &mut Self {
+        self.set_easing(val);
+        self
+    }
+    #[deprecated = "Use `set_end_delay()` instead."]
+    pub fn end_delay(&mut self, val: f64) -> &mut Self {
+        self.set_end_delay(val);
+        self
+    }
+    #[cfg(feature = "FillMode")]
+    #[deprecated = "Use `set_fill()` instead."]
+    pub fn fill(&mut self, val: FillMode) -> &mut Self {
+        self.set_fill(val);
+        self
+    }
+    #[deprecated = "Use `set_iteration_start()` instead."]
+    pub fn iteration_start(&mut self, val: f64) -> &mut Self {
+        self.set_iteration_start(val);
+        self
+    }
+    #[deprecated = "Use `set_iterations()` instead."]
+    pub fn iterations(&mut self, val: f64) -> &mut Self {
+        self.set_iterations(val);
+        self
+    }
+    #[cfg(feature = "CompositeOperation")]
+    #[deprecated = "Use `set_composite()` instead."]
+    pub fn composite(&mut self, val: CompositeOperation) -> &mut Self {
+        self.set_composite(val);
+        self
+    }
+    #[cfg(feature = "IterationCompositeOperation")]
+    #[deprecated = "Use `set_iteration_composite()` instead."]
+    pub fn iteration_composite(&mut self, val: IterationCompositeOperation) -> &mut Self {
+        self.set_iteration_composite(val);
+        self
+    }
+    #[deprecated = "Use `set_id()` instead."]
+    pub fn id(&mut self, val: &str) -> &mut Self {
+        self.set_id(val);
+        self
+    }
+    #[cfg(feature = "AnimationTimeline")]
+    #[deprecated = "Use `set_timeline()` instead."]
+    pub fn timeline(&mut self, val: Option<&AnimationTimeline>) -> &mut Self {
+        self.set_timeline(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for KeyframeAnimationOptions {

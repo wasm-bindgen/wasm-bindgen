@@ -124,4 +124,24 @@ impl GpuBufferDescriptor {
         ret.set_usage(usage);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[deprecated = "Use `set_mapped_at_creation()` instead."]
+    pub fn mapped_at_creation(&mut self, val: bool) -> &mut Self {
+        self.set_mapped_at_creation(val);
+        self
+    }
+    #[deprecated = "Use `set_size()` instead."]
+    pub fn size(&mut self, val: u32) -> &mut Self {
+        self.set_size(val);
+        self
+    }
+    #[deprecated = "Use `set_usage()` instead."]
+    pub fn usage(&mut self, val: u32) -> &mut Self {
+        self.set_usage(val);
+        self
+    }
 }

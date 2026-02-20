@@ -107,6 +107,23 @@ impl EncodedVideoChunkMetadata {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_alpha_side_data()` instead."]
+    pub fn alpha_side_data(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_alpha_side_data(val);
+        self
+    }
+    #[cfg(feature = "VideoDecoderConfig")]
+    #[deprecated = "Use `set_decoder_config()` instead."]
+    pub fn decoder_config(&mut self, val: &VideoDecoderConfig) -> &mut Self {
+        self.set_decoder_config(val);
+        self
+    }
+    #[cfg(feature = "SvcOutputMetadata")]
+    #[deprecated = "Use `set_svc()` instead."]
+    pub fn svc(&mut self, val: &SvcOutputMetadata) -> &mut Self {
+        self.set_svc(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for EncodedVideoChunkMetadata {

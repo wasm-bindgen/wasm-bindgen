@@ -82,6 +82,21 @@ impl SerialOutputSignals {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_break()` instead."]
+    pub fn break_(&mut self, val: bool) -> &mut Self {
+        self.set_break(val);
+        self
+    }
+    #[deprecated = "Use `set_data_terminal_ready()` instead."]
+    pub fn data_terminal_ready(&mut self, val: bool) -> &mut Self {
+        self.set_data_terminal_ready(val);
+        self
+    }
+    #[deprecated = "Use `set_request_to_send()` instead."]
+    pub fn request_to_send(&mut self, val: bool) -> &mut Self {
+        self.set_request_to_send(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for SerialOutputSignals {

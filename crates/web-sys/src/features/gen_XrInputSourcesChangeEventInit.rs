@@ -146,4 +146,37 @@ impl XrInputSourcesChangeEventInit {
         ret.set_session(session);
         ret
     }
+    #[deprecated = "Use `set_bubbles()` instead."]
+    pub fn bubbles(&mut self, val: bool) -> &mut Self {
+        self.set_bubbles(val);
+        self
+    }
+    #[deprecated = "Use `set_cancelable()` instead."]
+    pub fn cancelable(&mut self, val: bool) -> &mut Self {
+        self.set_cancelable(val);
+        self
+    }
+    #[deprecated = "Use `set_composed()` instead."]
+    pub fn composed(&mut self, val: bool) -> &mut Self {
+        self.set_composed(val);
+        self
+    }
+    #[cfg(feature = "XrInputSource")]
+    #[deprecated = "Use `set_added()` instead."]
+    pub fn added(&mut self, val: &[XrInputSource]) -> &mut Self {
+        self.set_added(val);
+        self
+    }
+    #[cfg(feature = "XrInputSource")]
+    #[deprecated = "Use `set_removed()` instead."]
+    pub fn removed(&mut self, val: &[XrInputSource]) -> &mut Self {
+        self.set_removed(val);
+        self
+    }
+    #[cfg(feature = "XrSession")]
+    #[deprecated = "Use `set_session()` instead."]
+    pub fn session(&mut self, val: &XrSession) -> &mut Self {
+        self.set_session(val);
+        self
+    }
 }

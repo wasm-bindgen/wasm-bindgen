@@ -70,4 +70,16 @@ impl UsbPermissionDescriptor {
         ret.set_name(name);
         ret
     }
+    #[cfg(feature = "PermissionName")]
+    #[deprecated = "Use `set_name()` instead."]
+    pub fn name(&mut self, val: PermissionName) -> &mut Self {
+        self.set_name(val);
+        self
+    }
+    #[cfg(feature = "UsbDeviceFilter")]
+    #[deprecated = "Use `set_filters()` instead."]
+    pub fn filters(&mut self, val: &[UsbDeviceFilter]) -> &mut Self {
+        self.set_filters(val);
+        self
+    }
 }

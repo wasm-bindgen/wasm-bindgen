@@ -236,4 +236,52 @@ impl GpuTextureDescriptor {
         ret.set_usage(usage);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureDimension")]
+    #[deprecated = "Use `set_dimension()` instead."]
+    pub fn dimension(&mut self, val: GpuTextureDimension) -> &mut Self {
+        self.set_dimension(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureFormat")]
+    #[deprecated = "Use `set_format()` instead."]
+    pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
+        self.set_format(val);
+        self
+    }
+    #[deprecated = "Use `set_mip_level_count()` instead."]
+    pub fn mip_level_count(&mut self, val: u32) -> &mut Self {
+        self.set_mip_level_count(val);
+        self
+    }
+    #[deprecated = "Use `set_sample_count()` instead."]
+    pub fn sample_count(&mut self, val: u32) -> &mut Self {
+        self.set_sample_count(val);
+        self
+    }
+    #[deprecated = "Use `set_size()` instead."]
+    pub fn size(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_size(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureViewDimension")]
+    #[deprecated = "Use `set_texture_binding_view_dimension()` instead."]
+    pub fn texture_binding_view_dimension(&mut self, val: GpuTextureViewDimension) -> &mut Self {
+        self.set_texture_binding_view_dimension(val);
+        self
+    }
+    #[deprecated = "Use `set_usage()` instead."]
+    pub fn usage(&mut self, val: u32) -> &mut Self {
+        self.set_usage(val);
+        self
+    }
+    #[deprecated = "Use `set_view_formats()` instead."]
+    pub fn view_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_view_formats(val);
+        self
+    }
 }

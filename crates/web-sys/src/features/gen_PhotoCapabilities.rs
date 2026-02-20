@@ -108,6 +108,29 @@ impl PhotoCapabilities {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_fill_light_mode()` instead."]
+    pub fn fill_light_mode(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_fill_light_mode(val);
+        self
+    }
+    #[cfg(feature = "MediaSettingsRange")]
+    #[deprecated = "Use `set_image_height()` instead."]
+    pub fn image_height(&mut self, val: &MediaSettingsRange) -> &mut Self {
+        self.set_image_height(val);
+        self
+    }
+    #[cfg(feature = "MediaSettingsRange")]
+    #[deprecated = "Use `set_image_width()` instead."]
+    pub fn image_width(&mut self, val: &MediaSettingsRange) -> &mut Self {
+        self.set_image_width(val);
+        self
+    }
+    #[cfg(feature = "RedEyeReduction")]
+    #[deprecated = "Use `set_red_eye_reduction()` instead."]
+    pub fn red_eye_reduction(&mut self, val: RedEyeReduction) -> &mut Self {
+        self.set_red_eye_reduction(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for PhotoCapabilities {

@@ -95,6 +95,22 @@ impl DirectoryPickerOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_id()` instead."]
+    pub fn id(&mut self, val: &str) -> &mut Self {
+        self.set_id(val);
+        self
+    }
+    #[cfg(feature = "FileSystemPermissionMode")]
+    #[deprecated = "Use `set_mode()` instead."]
+    pub fn mode(&mut self, val: FileSystemPermissionMode) -> &mut Self {
+        self.set_mode(val);
+        self
+    }
+    #[deprecated = "Use `set_start_in()` instead."]
+    pub fn start_in(&mut self, val: WellKnownDirectory) -> &mut Self {
+        self.set_start_in(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for DirectoryPickerOptions {

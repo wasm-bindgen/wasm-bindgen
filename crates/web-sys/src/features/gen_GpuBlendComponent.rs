@@ -88,6 +88,24 @@ impl GpuBlendComponent {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "GpuBlendFactor")]
+    #[deprecated = "Use `set_dst_factor()` instead."]
+    pub fn dst_factor(&mut self, val: GpuBlendFactor) -> &mut Self {
+        self.set_dst_factor(val);
+        self
+    }
+    #[cfg(feature = "GpuBlendOperation")]
+    #[deprecated = "Use `set_operation()` instead."]
+    pub fn operation(&mut self, val: GpuBlendOperation) -> &mut Self {
+        self.set_operation(val);
+        self
+    }
+    #[cfg(feature = "GpuBlendFactor")]
+    #[deprecated = "Use `set_src_factor()` instead."]
+    pub fn src_factor(&mut self, val: GpuBlendFactor) -> &mut Self {
+        self.set_src_factor(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuBlendComponent {

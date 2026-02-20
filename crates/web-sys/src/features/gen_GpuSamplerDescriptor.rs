@@ -240,6 +240,68 @@ impl GpuSamplerDescriptor {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[cfg(feature = "GpuAddressMode")]
+    #[deprecated = "Use `set_address_mode_u()` instead."]
+    pub fn address_mode_u(&mut self, val: GpuAddressMode) -> &mut Self {
+        self.set_address_mode_u(val);
+        self
+    }
+    #[cfg(feature = "GpuAddressMode")]
+    #[deprecated = "Use `set_address_mode_v()` instead."]
+    pub fn address_mode_v(&mut self, val: GpuAddressMode) -> &mut Self {
+        self.set_address_mode_v(val);
+        self
+    }
+    #[cfg(feature = "GpuAddressMode")]
+    #[deprecated = "Use `set_address_mode_w()` instead."]
+    pub fn address_mode_w(&mut self, val: GpuAddressMode) -> &mut Self {
+        self.set_address_mode_w(val);
+        self
+    }
+    #[cfg(feature = "GpuCompareFunction")]
+    #[deprecated = "Use `set_compare()` instead."]
+    pub fn compare(&mut self, val: GpuCompareFunction) -> &mut Self {
+        self.set_compare(val);
+        self
+    }
+    #[deprecated = "Use `set_lod_max_clamp()` instead."]
+    pub fn lod_max_clamp(&mut self, val: f32) -> &mut Self {
+        self.set_lod_max_clamp(val);
+        self
+    }
+    #[deprecated = "Use `set_lod_min_clamp()` instead."]
+    pub fn lod_min_clamp(&mut self, val: f32) -> &mut Self {
+        self.set_lod_min_clamp(val);
+        self
+    }
+    #[cfg(feature = "GpuFilterMode")]
+    #[deprecated = "Use `set_mag_filter()` instead."]
+    pub fn mag_filter(&mut self, val: GpuFilterMode) -> &mut Self {
+        self.set_mag_filter(val);
+        self
+    }
+    #[deprecated = "Use `set_max_anisotropy()` instead."]
+    pub fn max_anisotropy(&mut self, val: u16) -> &mut Self {
+        self.set_max_anisotropy(val);
+        self
+    }
+    #[cfg(feature = "GpuFilterMode")]
+    #[deprecated = "Use `set_min_filter()` instead."]
+    pub fn min_filter(&mut self, val: GpuFilterMode) -> &mut Self {
+        self.set_min_filter(val);
+        self
+    }
+    #[cfg(feature = "GpuMipmapFilterMode")]
+    #[deprecated = "Use `set_mipmap_filter()` instead."]
+    pub fn mipmap_filter(&mut self, val: GpuMipmapFilterMode) -> &mut Self {
+        self.set_mipmap_filter(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuSamplerDescriptor {

@@ -78,6 +78,21 @@ impl AuthenticationExtensionsPrfInputs {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "AuthenticationExtensionsPrfValues")]
+    #[deprecated = "Use `set_eval()` instead."]
+    pub fn eval(&mut self, val: &AuthenticationExtensionsPrfValues) -> &mut Self {
+        self.set_eval(val);
+        self
+    }
+    #[cfg(feature = "AuthenticationExtensionsPrfValues")]
+    #[deprecated = "Use `set_eval_by_credential()` instead."]
+    pub fn eval_by_credential(
+        &mut self,
+        val: &::js_sys::Object<AuthenticationExtensionsPrfValues>,
+    ) -> &mut Self {
+        self.set_eval_by_credential(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for AuthenticationExtensionsPrfInputs {

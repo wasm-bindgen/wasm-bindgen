@@ -86,4 +86,20 @@ impl GpuComputePassTimestampWrites {
         ret.set_query_set(query_set);
         ret
     }
+    #[deprecated = "Use `set_beginning_of_pass_write_index()` instead."]
+    pub fn beginning_of_pass_write_index(&mut self, val: u32) -> &mut Self {
+        self.set_beginning_of_pass_write_index(val);
+        self
+    }
+    #[deprecated = "Use `set_end_of_pass_write_index()` instead."]
+    pub fn end_of_pass_write_index(&mut self, val: u32) -> &mut Self {
+        self.set_end_of_pass_write_index(val);
+        self
+    }
+    #[cfg(feature = "GpuQuerySet")]
+    #[deprecated = "Use `set_query_set()` instead."]
+    pub fn query_set(&mut self, val: &GpuQuerySet) -> &mut Self {
+        self.set_query_set(val);
+        self
+    }
 }

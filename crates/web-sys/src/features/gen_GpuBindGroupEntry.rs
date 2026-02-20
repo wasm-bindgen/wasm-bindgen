@@ -188,4 +188,14 @@ impl GpuBindGroupEntry {
         ret.set_resource_gpu_external_texture(resource);
         ret
     }
+    #[deprecated = "Use `set_binding()` instead."]
+    pub fn binding(&mut self, val: u32) -> &mut Self {
+        self.set_binding(val);
+        self
+    }
+    #[deprecated = "Use `set_resource()` instead."]
+    pub fn resource(&mut self, val: &GpuSampler) -> &mut Self {
+        self.set_resource(val);
+        self
+    }
 }

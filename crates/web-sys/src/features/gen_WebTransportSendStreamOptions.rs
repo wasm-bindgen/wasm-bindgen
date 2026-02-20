@@ -55,6 +55,11 @@ impl WebTransportSendStreamOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_send_order()` instead."]
+    pub fn send_order(&mut self, val: Option<i32>) -> &mut Self {
+        self.set_send_order(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportSendStreamOptions {

@@ -113,4 +113,25 @@ impl GpuTexelCopyBufferInfo {
         ret.set_buffer(buffer);
         ret
     }
+    #[deprecated = "Use `set_bytes_per_row()` instead."]
+    pub fn bytes_per_row(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_per_row(val);
+        self
+    }
+    #[deprecated = "Use `set_offset()` instead."]
+    pub fn offset(&mut self, val: u32) -> &mut Self {
+        self.set_offset(val);
+        self
+    }
+    #[deprecated = "Use `set_rows_per_image()` instead."]
+    pub fn rows_per_image(&mut self, val: u32) -> &mut Self {
+        self.set_rows_per_image(val);
+        self
+    }
+    #[cfg(feature = "GpuBuffer")]
+    #[deprecated = "Use `set_buffer()` instead."]
+    pub fn buffer(&mut self, val: &GpuBuffer) -> &mut Self {
+        self.set_buffer(val);
+        self
+    }
 }

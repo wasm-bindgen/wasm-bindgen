@@ -69,4 +69,15 @@ impl ImageDecodeResult {
         ret.set_image(image);
         ret
     }
+    #[deprecated = "Use `set_complete()` instead."]
+    pub fn complete(&mut self, val: bool) -> &mut Self {
+        self.set_complete(val);
+        self
+    }
+    #[cfg(feature = "VideoFrame")]
+    #[deprecated = "Use `set_image()` instead."]
+    pub fn image(&mut self, val: &VideoFrame) -> &mut Self {
+        self.set_image(val);
+        self
+    }
 }

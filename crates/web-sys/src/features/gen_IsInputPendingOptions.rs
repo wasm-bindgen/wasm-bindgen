@@ -46,6 +46,11 @@ impl IsInputPendingOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_include_continuous()` instead."]
+    pub fn include_continuous(&mut self, val: bool) -> &mut Self {
+        self.set_include_continuous(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for IsInputPendingOptions {

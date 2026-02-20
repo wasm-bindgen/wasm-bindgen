@@ -162,4 +162,35 @@ impl SFrameTransformErrorEventInit {
         ret.set_frame(frame);
         ret
     }
+    #[deprecated = "Use `set_bubbles()` instead."]
+    pub fn bubbles(&mut self, val: bool) -> &mut Self {
+        self.set_bubbles(val);
+        self
+    }
+    #[deprecated = "Use `set_cancelable()` instead."]
+    pub fn cancelable(&mut self, val: bool) -> &mut Self {
+        self.set_cancelable(val);
+        self
+    }
+    #[deprecated = "Use `set_composed()` instead."]
+    pub fn composed(&mut self, val: bool) -> &mut Self {
+        self.set_composed(val);
+        self
+    }
+    #[cfg(feature = "SFrameTransformErrorEventType")]
+    #[deprecated = "Use `set_error_type()` instead."]
+    pub fn error_type(&mut self, val: SFrameTransformErrorEventType) -> &mut Self {
+        self.set_error_type(val);
+        self
+    }
+    #[deprecated = "Use `set_frame()` instead."]
+    pub fn frame(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
+        self.set_frame(val);
+        self
+    }
+    #[deprecated = "Use `set_key_id()` instead."]
+    pub fn key_id(&mut self, val: Option<u32>) -> &mut Self {
+        self.set_key_id(val);
+        self
+    }
 }

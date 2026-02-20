@@ -92,6 +92,11 @@ impl AudioContextOptions {
         self.set_sample_rate(val);
         self
     }
+    #[deprecated = "Use `set_sink_id()` instead."]
+    pub fn sink_id(&mut self, val: &str) -> &mut Self {
+        self.set_sink_id(val);
+        self
+    }
 }
 impl Default for AudioContextOptions {
     fn default() -> Self {

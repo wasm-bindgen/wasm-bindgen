@@ -84,6 +84,22 @@ impl UaLowEntropyJson {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "NavigatorUaBrandVersion")]
+    #[deprecated = "Use `set_brands()` instead."]
+    pub fn brands(&mut self, val: &[NavigatorUaBrandVersion]) -> &mut Self {
+        self.set_brands(val);
+        self
+    }
+    #[deprecated = "Use `set_mobile()` instead."]
+    pub fn mobile(&mut self, val: bool) -> &mut Self {
+        self.set_mobile(val);
+        self
+    }
+    #[deprecated = "Use `set_platform()` instead."]
+    pub fn platform(&mut self, val: &str) -> &mut Self {
+        self.set_platform(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for UaLowEntropyJson {

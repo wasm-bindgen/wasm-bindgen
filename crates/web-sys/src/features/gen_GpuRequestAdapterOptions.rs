@@ -102,6 +102,27 @@ impl GpuRequestAdapterOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_feature_level()` instead."]
+    pub fn feature_level(&mut self, val: &str) -> &mut Self {
+        self.set_feature_level(val);
+        self
+    }
+    #[deprecated = "Use `set_force_fallback_adapter()` instead."]
+    pub fn force_fallback_adapter(&mut self, val: bool) -> &mut Self {
+        self.set_force_fallback_adapter(val);
+        self
+    }
+    #[cfg(feature = "GpuPowerPreference")]
+    #[deprecated = "Use `set_power_preference()` instead."]
+    pub fn power_preference(&mut self, val: GpuPowerPreference) -> &mut Self {
+        self.set_power_preference(val);
+        self
+    }
+    #[deprecated = "Use `set_xr_compatible()` instead."]
+    pub fn xr_compatible(&mut self, val: bool) -> &mut Self {
+        self.set_xr_compatible(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuRequestAdapterOptions {

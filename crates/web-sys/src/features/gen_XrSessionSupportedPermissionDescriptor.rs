@@ -70,4 +70,16 @@ impl XrSessionSupportedPermissionDescriptor {
         ret.set_name(name);
         ret
     }
+    #[cfg(feature = "PermissionName")]
+    #[deprecated = "Use `set_name()` instead."]
+    pub fn name(&mut self, val: PermissionName) -> &mut Self {
+        self.set_name(val);
+        self
+    }
+    #[cfg(feature = "XrSessionMode")]
+    #[deprecated = "Use `set_mode()` instead."]
+    pub fn mode(&mut self, val: XrSessionMode) -> &mut Self {
+        self.set_mode(val);
+        self
+    }
 }

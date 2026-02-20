@@ -47,6 +47,11 @@ impl QueryOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_postscript_names()` instead."]
+    pub fn postscript_names(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_postscript_names(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for QueryOptions {

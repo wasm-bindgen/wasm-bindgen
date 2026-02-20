@@ -50,4 +50,10 @@ impl GpuPipelineErrorInit {
         ret.set_reason(reason);
         ret
     }
+    #[cfg(feature = "GpuPipelineErrorReason")]
+    #[deprecated = "Use `set_reason()` instead."]
+    pub fn reason(&mut self, val: GpuPipelineErrorReason) -> &mut Self {
+        self.set_reason(val);
+        self
+    }
 }

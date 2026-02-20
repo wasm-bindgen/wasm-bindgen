@@ -76,6 +76,17 @@ impl MemoryMeasurement {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "MemoryBreakdownEntry")]
+    #[deprecated = "Use `set_breakdown()` instead."]
+    pub fn breakdown(&mut self, val: &[MemoryBreakdownEntry]) -> &mut Self {
+        self.set_breakdown(val);
+        self
+    }
+    #[deprecated = "Use `set_bytes()` instead."]
+    pub fn bytes(&mut self, val: u32) -> &mut Self {
+        self.set_bytes(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MemoryMeasurement {

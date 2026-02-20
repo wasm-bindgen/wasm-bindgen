@@ -218,4 +218,51 @@ impl PublicKeyCredentialRequestOptionsJson {
         ret.set_challenge(challenge);
         ret
     }
+    #[cfg(feature = "PublicKeyCredentialDescriptorJson")]
+    #[deprecated = "Use `set_allow_credentials()` instead."]
+    pub fn allow_credentials(&mut self, val: &[PublicKeyCredentialDescriptorJson]) -> &mut Self {
+        self.set_allow_credentials(val);
+        self
+    }
+    #[deprecated = "Use `set_attestation()` instead."]
+    pub fn attestation(&mut self, val: &str) -> &mut Self {
+        self.set_attestation(val);
+        self
+    }
+    #[deprecated = "Use `set_attestation_formats()` instead."]
+    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_attestation_formats(val);
+        self
+    }
+    #[deprecated = "Use `set_challenge()` instead."]
+    pub fn challenge(&mut self, val: &str) -> &mut Self {
+        self.set_challenge(val);
+        self
+    }
+    #[cfg(feature = "AuthenticationExtensionsClientInputsJson")]
+    #[deprecated = "Use `set_extensions()` instead."]
+    pub fn extensions(&mut self, val: &AuthenticationExtensionsClientInputsJson) -> &mut Self {
+        self.set_extensions(val);
+        self
+    }
+    #[deprecated = "Use `set_hints()` instead."]
+    pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_hints(val);
+        self
+    }
+    #[deprecated = "Use `set_rp_id()` instead."]
+    pub fn rp_id(&mut self, val: &str) -> &mut Self {
+        self.set_rp_id(val);
+        self
+    }
+    #[deprecated = "Use `set_timeout()` instead."]
+    pub fn timeout(&mut self, val: u32) -> &mut Self {
+        self.set_timeout(val);
+        self
+    }
+    #[deprecated = "Use `set_user_verification()` instead."]
+    pub fn user_verification(&mut self, val: &str) -> &mut Self {
+        self.set_user_verification(val);
+        self
+    }
 }

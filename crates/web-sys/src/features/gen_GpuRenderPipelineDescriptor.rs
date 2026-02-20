@@ -198,4 +198,44 @@ impl GpuRenderPipelineDescriptor {
         ret.set_vertex(vertex);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[deprecated = "Use `set_layout()` instead."]
+    pub fn layout(&mut self, val: &GpuPipelineLayout) -> &mut Self {
+        self.set_layout(val);
+        self
+    }
+    #[cfg(feature = "GpuDepthStencilState")]
+    #[deprecated = "Use `set_depth_stencil()` instead."]
+    pub fn depth_stencil(&mut self, val: &GpuDepthStencilState) -> &mut Self {
+        self.set_depth_stencil(val);
+        self
+    }
+    #[cfg(feature = "GpuFragmentState")]
+    #[deprecated = "Use `set_fragment()` instead."]
+    pub fn fragment(&mut self, val: &GpuFragmentState) -> &mut Self {
+        self.set_fragment(val);
+        self
+    }
+    #[cfg(feature = "GpuMultisampleState")]
+    #[deprecated = "Use `set_multisample()` instead."]
+    pub fn multisample(&mut self, val: &GpuMultisampleState) -> &mut Self {
+        self.set_multisample(val);
+        self
+    }
+    #[cfg(feature = "GpuPrimitiveState")]
+    #[deprecated = "Use `set_primitive()` instead."]
+    pub fn primitive(&mut self, val: &GpuPrimitiveState) -> &mut Self {
+        self.set_primitive(val);
+        self
+    }
+    #[cfg(feature = "GpuVertexState")]
+    #[deprecated = "Use `set_vertex()` instead."]
+    pub fn vertex(&mut self, val: &GpuVertexState) -> &mut Self {
+        self.set_vertex(val);
+        self
+    }
 }

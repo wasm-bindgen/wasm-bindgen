@@ -249,4 +249,61 @@ impl VideoDecoderConfig {
         ret.set_codec(codec);
         ret
     }
+    #[deprecated = "Use `set_codec()` instead."]
+    pub fn codec(&mut self, val: &str) -> &mut Self {
+        self.set_codec(val);
+        self
+    }
+    #[deprecated = "Use `set_coded_height()` instead."]
+    pub fn coded_height(&mut self, val: u32) -> &mut Self {
+        self.set_coded_height(val);
+        self
+    }
+    #[deprecated = "Use `set_coded_width()` instead."]
+    pub fn coded_width(&mut self, val: u32) -> &mut Self {
+        self.set_coded_width(val);
+        self
+    }
+    #[cfg(feature = "VideoColorSpaceInit")]
+    #[deprecated = "Use `set_color_space()` instead."]
+    pub fn color_space(&mut self, val: &VideoColorSpaceInit) -> &mut Self {
+        self.set_color_space(val);
+        self
+    }
+    #[deprecated = "Use `set_description()` instead."]
+    pub fn description(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_description(val);
+        self
+    }
+    #[deprecated = "Use `set_display_aspect_height()` instead."]
+    pub fn display_aspect_height(&mut self, val: u32) -> &mut Self {
+        self.set_display_aspect_height(val);
+        self
+    }
+    #[deprecated = "Use `set_display_aspect_width()` instead."]
+    pub fn display_aspect_width(&mut self, val: u32) -> &mut Self {
+        self.set_display_aspect_width(val);
+        self
+    }
+    #[deprecated = "Use `set_flip()` instead."]
+    pub fn flip(&mut self, val: bool) -> &mut Self {
+        self.set_flip(val);
+        self
+    }
+    #[cfg(feature = "HardwareAcceleration")]
+    #[deprecated = "Use `set_hardware_acceleration()` instead."]
+    pub fn hardware_acceleration(&mut self, val: HardwareAcceleration) -> &mut Self {
+        self.set_hardware_acceleration(val);
+        self
+    }
+    #[deprecated = "Use `set_optimize_for_latency()` instead."]
+    pub fn optimize_for_latency(&mut self, val: bool) -> &mut Self {
+        self.set_optimize_for_latency(val);
+        self
+    }
+    #[deprecated = "Use `set_rotation()` instead."]
+    pub fn rotation(&mut self, val: f64) -> &mut Self {
+        self.set_rotation(val);
+        self
+    }
 }

@@ -113,6 +113,27 @@ impl FilePickerOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_exclude_accept_all_option()` instead."]
+    pub fn exclude_accept_all_option(&mut self, val: bool) -> &mut Self {
+        self.set_exclude_accept_all_option(val);
+        self
+    }
+    #[deprecated = "Use `set_id()` instead."]
+    pub fn id(&mut self, val: &str) -> &mut Self {
+        self.set_id(val);
+        self
+    }
+    #[deprecated = "Use `set_start_in()` instead."]
+    pub fn start_in(&mut self, val: WellKnownDirectory) -> &mut Self {
+        self.set_start_in(val);
+        self
+    }
+    #[cfg(feature = "FilePickerAcceptType")]
+    #[deprecated = "Use `set_types()` instead."]
+    pub fn types(&mut self, val: &[FilePickerAcceptType]) -> &mut Self {
+        self.set_types(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for FilePickerOptions {

@@ -108,6 +108,28 @@ impl WebTransportOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_allow_pooling()` instead."]
+    pub fn allow_pooling(&mut self, val: bool) -> &mut Self {
+        self.set_allow_pooling(val);
+        self
+    }
+    #[cfg(feature = "WebTransportCongestionControl")]
+    #[deprecated = "Use `set_congestion_control()` instead."]
+    pub fn congestion_control(&mut self, val: WebTransportCongestionControl) -> &mut Self {
+        self.set_congestion_control(val);
+        self
+    }
+    #[deprecated = "Use `set_require_unreliable()` instead."]
+    pub fn require_unreliable(&mut self, val: bool) -> &mut Self {
+        self.set_require_unreliable(val);
+        self
+    }
+    #[cfg(feature = "WebTransportHash")]
+    #[deprecated = "Use `set_server_certificate_hashes()` instead."]
+    pub fn server_certificate_hashes(&mut self, val: &[WebTransportHash]) -> &mut Self {
+        self.set_server_certificate_hashes(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportOptions {

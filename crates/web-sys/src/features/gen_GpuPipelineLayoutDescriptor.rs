@@ -73,4 +73,18 @@ impl GpuPipelineLayoutDescriptor {
         ret.set_bind_group_layouts(bind_group_layouts);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[cfg(feature = "GpuBindGroupLayout")]
+    #[deprecated = "Use `set_bind_group_layouts()` instead."]
+    pub fn bind_group_layouts(
+        &mut self,
+        val: &[::js_sys::JsOption<GpuBindGroupLayout>],
+    ) -> &mut Self {
+        self.set_bind_group_layouts(val);
+        self
+    }
 }

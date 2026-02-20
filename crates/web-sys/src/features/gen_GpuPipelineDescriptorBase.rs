@@ -93,4 +93,14 @@ impl GpuPipelineDescriptorBase {
         ret.set_layout_gpu_auto_layout_mode(layout);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[deprecated = "Use `set_layout()` instead."]
+    pub fn layout(&mut self, val: &GpuPipelineLayout) -> &mut Self {
+        self.set_layout(val);
+        self
+    }
 }

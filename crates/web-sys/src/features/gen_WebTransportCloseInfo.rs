@@ -64,6 +64,16 @@ impl WebTransportCloseInfo {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_close_code()` instead."]
+    pub fn close_code(&mut self, val: u32) -> &mut Self {
+        self.set_close_code(val);
+        self
+    }
+    #[deprecated = "Use `set_reason()` instead."]
+    pub fn reason(&mut self, val: &str) -> &mut Self {
+        self.set_reason(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportCloseInfo {

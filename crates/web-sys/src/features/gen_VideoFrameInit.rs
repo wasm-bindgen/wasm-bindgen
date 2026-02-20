@@ -214,6 +214,54 @@ impl VideoFrameInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "AlphaOption")]
+    #[deprecated = "Use `set_alpha()` instead."]
+    pub fn alpha(&mut self, val: AlphaOption) -> &mut Self {
+        self.set_alpha(val);
+        self
+    }
+    #[deprecated = "Use `set_display_height()` instead."]
+    pub fn display_height(&mut self, val: u32) -> &mut Self {
+        self.set_display_height(val);
+        self
+    }
+    #[deprecated = "Use `set_display_width()` instead."]
+    pub fn display_width(&mut self, val: u32) -> &mut Self {
+        self.set_display_width(val);
+        self
+    }
+    #[deprecated = "Use `set_duration()` instead."]
+    pub fn duration(&mut self, val: u32) -> &mut Self {
+        self.set_duration(val);
+        self
+    }
+    #[deprecated = "Use `set_flip()` instead."]
+    pub fn flip(&mut self, val: bool) -> &mut Self {
+        self.set_flip(val);
+        self
+    }
+    #[cfg(feature = "VideoFrameMetadata")]
+    #[deprecated = "Use `set_metadata()` instead."]
+    pub fn metadata(&mut self, val: &VideoFrameMetadata) -> &mut Self {
+        self.set_metadata(val);
+        self
+    }
+    #[deprecated = "Use `set_rotation()` instead."]
+    pub fn rotation(&mut self, val: f64) -> &mut Self {
+        self.set_rotation(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: i32) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
+    #[cfg(feature = "DomRectInit")]
+    #[deprecated = "Use `set_visible_rect()` instead."]
+    pub fn visible_rect(&mut self, val: &DomRectInit) -> &mut Self {
+        self.set_visible_rect(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for VideoFrameInit {

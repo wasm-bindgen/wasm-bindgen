@@ -84,4 +84,19 @@ impl AllowedUsbDevice {
         ret.set_vendor_id(vendor_id);
         ret
     }
+    #[deprecated = "Use `set_product_id()` instead."]
+    pub fn product_id(&mut self, val: u8) -> &mut Self {
+        self.set_product_id(val);
+        self
+    }
+    #[deprecated = "Use `set_serial_number()` instead."]
+    pub fn serial_number(&mut self, val: &str) -> &mut Self {
+        self.set_serial_number(val);
+        self
+    }
+    #[deprecated = "Use `set_vendor_id()` instead."]
+    pub fn vendor_id(&mut self, val: u8) -> &mut Self {
+        self.set_vendor_id(val);
+        self
+    }
 }

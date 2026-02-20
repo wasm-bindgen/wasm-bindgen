@@ -142,4 +142,35 @@ impl HidInputReportEventInit {
         ret.set_report_id(report_id);
         ret
     }
+    #[deprecated = "Use `set_bubbles()` instead."]
+    pub fn bubbles(&mut self, val: bool) -> &mut Self {
+        self.set_bubbles(val);
+        self
+    }
+    #[deprecated = "Use `set_cancelable()` instead."]
+    pub fn cancelable(&mut self, val: bool) -> &mut Self {
+        self.set_cancelable(val);
+        self
+    }
+    #[deprecated = "Use `set_composed()` instead."]
+    pub fn composed(&mut self, val: bool) -> &mut Self {
+        self.set_composed(val);
+        self
+    }
+    #[deprecated = "Use `set_data()` instead."]
+    pub fn data(&mut self, val: &::js_sys::DataView) -> &mut Self {
+        self.set_data(val);
+        self
+    }
+    #[cfg(feature = "HidDevice")]
+    #[deprecated = "Use `set_device()` instead."]
+    pub fn device(&mut self, val: &HidDevice) -> &mut Self {
+        self.set_device(val);
+        self
+    }
+    #[deprecated = "Use `set_report_id()` instead."]
+    pub fn report_id(&mut self, val: u8) -> &mut Self {
+        self.set_report_id(val);
+        self
+    }
 }

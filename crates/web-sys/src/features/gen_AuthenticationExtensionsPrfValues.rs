@@ -128,4 +128,14 @@ impl AuthenticationExtensionsPrfValues {
         ret.set_first_u8_array(first);
         ret
     }
+    #[deprecated = "Use `set_first()` instead."]
+    pub fn first(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_first(val);
+        self
+    }
+    #[deprecated = "Use `set_second()` instead."]
+    pub fn second(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_second(val);
+        self
+    }
 }

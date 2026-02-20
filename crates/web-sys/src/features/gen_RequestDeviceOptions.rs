@@ -98,6 +98,22 @@ impl RequestDeviceOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_accept_all_devices()` instead."]
+    pub fn accept_all_devices(&mut self, val: bool) -> &mut Self {
+        self.set_accept_all_devices(val);
+        self
+    }
+    #[cfg(feature = "BluetoothLeScanFilterInit")]
+    #[deprecated = "Use `set_filters()` instead."]
+    pub fn filters(&mut self, val: &[BluetoothLeScanFilterInit]) -> &mut Self {
+        self.set_filters(val);
+        self
+    }
+    #[deprecated = "Use `set_optional_services()` instead."]
+    pub fn optional_services(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_optional_services(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for RequestDeviceOptions {

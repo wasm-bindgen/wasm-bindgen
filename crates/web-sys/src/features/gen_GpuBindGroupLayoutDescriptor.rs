@@ -70,4 +70,15 @@ impl GpuBindGroupLayoutDescriptor {
         ret.set_entries(entries);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[cfg(feature = "GpuBindGroupLayoutEntry")]
+    #[deprecated = "Use `set_entries()` instead."]
+    pub fn entries(&mut self, val: &[GpuBindGroupLayoutEntry]) -> &mut Self {
+        self.set_entries(val);
+        self
+    }
 }

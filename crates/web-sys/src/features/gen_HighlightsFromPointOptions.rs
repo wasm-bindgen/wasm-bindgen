@@ -50,6 +50,12 @@ impl HighlightsFromPointOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "ShadowRoot")]
+    #[deprecated = "Use `set_shadow_roots()` instead."]
+    pub fn shadow_roots(&mut self, val: &[ShadowRoot]) -> &mut Self {
+        self.set_shadow_roots(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for HighlightsFromPointOptions {

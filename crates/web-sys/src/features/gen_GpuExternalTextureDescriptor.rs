@@ -90,4 +90,14 @@ impl GpuExternalTextureDescriptor {
         ret.set_source_video_frame(source);
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[deprecated = "Use `set_source()` instead."]
+    pub fn source(&mut self, val: &HtmlVideoElement) -> &mut Self {
+        self.set_source(val);
+        self
+    }
 }

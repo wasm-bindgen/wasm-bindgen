@@ -154,6 +154,36 @@ impl GamepadEffectParameters {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_duration()` instead."]
+    pub fn duration(&mut self, val: u32) -> &mut Self {
+        self.set_duration(val);
+        self
+    }
+    #[deprecated = "Use `set_left_trigger()` instead."]
+    pub fn left_trigger(&mut self, val: f64) -> &mut Self {
+        self.set_left_trigger(val);
+        self
+    }
+    #[deprecated = "Use `set_right_trigger()` instead."]
+    pub fn right_trigger(&mut self, val: f64) -> &mut Self {
+        self.set_right_trigger(val);
+        self
+    }
+    #[deprecated = "Use `set_start_delay()` instead."]
+    pub fn start_delay(&mut self, val: u32) -> &mut Self {
+        self.set_start_delay(val);
+        self
+    }
+    #[deprecated = "Use `set_strong_magnitude()` instead."]
+    pub fn strong_magnitude(&mut self, val: f64) -> &mut Self {
+        self.set_strong_magnitude(val);
+        self
+    }
+    #[deprecated = "Use `set_weak_magnitude()` instead."]
+    pub fn weak_magnitude(&mut self, val: f64) -> &mut Self {
+        self.set_weak_magnitude(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GamepadEffectParameters {

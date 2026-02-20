@@ -104,4 +104,20 @@ impl GpuBufferBinding {
         ret.set_buffer(buffer);
         ret
     }
+    #[cfg(feature = "GpuBuffer")]
+    #[deprecated = "Use `set_buffer()` instead."]
+    pub fn buffer(&mut self, val: &GpuBuffer) -> &mut Self {
+        self.set_buffer(val);
+        self
+    }
+    #[deprecated = "Use `set_offset()` instead."]
+    pub fn offset(&mut self, val: u32) -> &mut Self {
+        self.set_offset(val);
+        self
+    }
+    #[deprecated = "Use `set_size()` instead."]
+    pub fn size(&mut self, val: u32) -> &mut Self {
+        self.set_size(val);
+        self
+    }
 }

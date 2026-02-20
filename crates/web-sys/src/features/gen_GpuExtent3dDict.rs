@@ -83,4 +83,19 @@ impl GpuExtent3dDict {
         ret.set_width(width);
         ret
     }
+    #[deprecated = "Use `set_depth_or_array_layers()` instead."]
+    pub fn depth_or_array_layers(&mut self, val: u32) -> &mut Self {
+        self.set_depth_or_array_layers(val);
+        self
+    }
+    #[deprecated = "Use `set_height()` instead."]
+    pub fn height(&mut self, val: u32) -> &mut Self {
+        self.set_height(val);
+        self
+    }
+    #[deprecated = "Use `set_width()` instead."]
+    pub fn width(&mut self, val: u32) -> &mut Self {
+        self.set_width(val);
+        self
+    }
 }

@@ -49,6 +49,12 @@ impl RtcEncodedAudioFrameOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "RtcEncodedAudioFrameMetadata")]
+    #[deprecated = "Use `set_metadata()` instead."]
+    pub fn metadata(&mut self, val: &RtcEncodedAudioFrameMetadata) -> &mut Self {
+        self.set_metadata(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for RtcEncodedAudioFrameOptions {

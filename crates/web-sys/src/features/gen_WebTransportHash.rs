@@ -82,6 +82,16 @@ impl WebTransportHash {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_algorithm()` instead."]
+    pub fn algorithm(&mut self, val: &str) -> &mut Self {
+        self.set_algorithm(val);
+        self
+    }
+    #[deprecated = "Use `set_value()` instead."]
+    pub fn value(&mut self, val: &::js_sys::Object) -> &mut Self {
+        self.set_value(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportHash {

@@ -176,4 +176,44 @@ impl GpuBindGroupLayoutEntry {
         ret.set_visibility(visibility);
         ret
     }
+    #[deprecated = "Use `set_binding()` instead."]
+    pub fn binding(&mut self, val: u32) -> &mut Self {
+        self.set_binding(val);
+        self
+    }
+    #[cfg(feature = "GpuBufferBindingLayout")]
+    #[deprecated = "Use `set_buffer()` instead."]
+    pub fn buffer(&mut self, val: &GpuBufferBindingLayout) -> &mut Self {
+        self.set_buffer(val);
+        self
+    }
+    #[cfg(feature = "GpuExternalTextureBindingLayout")]
+    #[deprecated = "Use `set_external_texture()` instead."]
+    pub fn external_texture(&mut self, val: &GpuExternalTextureBindingLayout) -> &mut Self {
+        self.set_external_texture(val);
+        self
+    }
+    #[cfg(feature = "GpuSamplerBindingLayout")]
+    #[deprecated = "Use `set_sampler()` instead."]
+    pub fn sampler(&mut self, val: &GpuSamplerBindingLayout) -> &mut Self {
+        self.set_sampler(val);
+        self
+    }
+    #[cfg(feature = "GpuStorageTextureBindingLayout")]
+    #[deprecated = "Use `set_storage_texture()` instead."]
+    pub fn storage_texture(&mut self, val: &GpuStorageTextureBindingLayout) -> &mut Self {
+        self.set_storage_texture(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureBindingLayout")]
+    #[deprecated = "Use `set_texture()` instead."]
+    pub fn texture(&mut self, val: &GpuTextureBindingLayout) -> &mut Self {
+        self.set_texture(val);
+        self
+    }
+    #[deprecated = "Use `set_visibility()` instead."]
+    pub fn visibility(&mut self, val: u32) -> &mut Self {
+        self.set_visibility(val);
+        self
+    }
 }

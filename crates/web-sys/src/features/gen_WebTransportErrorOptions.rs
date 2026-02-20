@@ -66,6 +66,17 @@ impl WebTransportErrorOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "WebTransportErrorSource")]
+    #[deprecated = "Use `set_source()` instead."]
+    pub fn source(&mut self, val: WebTransportErrorSource) -> &mut Self {
+        self.set_source(val);
+        self
+    }
+    #[deprecated = "Use `set_stream_error_code()` instead."]
+    pub fn stream_error_code(&mut self, val: Option<u8>) -> &mut Self {
+        self.set_stream_error_code(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportErrorOptions {

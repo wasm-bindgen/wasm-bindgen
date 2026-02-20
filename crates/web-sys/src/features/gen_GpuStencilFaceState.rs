@@ -108,6 +108,30 @@ impl GpuStencilFaceState {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "GpuCompareFunction")]
+    #[deprecated = "Use `set_compare()` instead."]
+    pub fn compare(&mut self, val: GpuCompareFunction) -> &mut Self {
+        self.set_compare(val);
+        self
+    }
+    #[cfg(feature = "GpuStencilOperation")]
+    #[deprecated = "Use `set_depth_fail_op()` instead."]
+    pub fn depth_fail_op(&mut self, val: GpuStencilOperation) -> &mut Self {
+        self.set_depth_fail_op(val);
+        self
+    }
+    #[cfg(feature = "GpuStencilOperation")]
+    #[deprecated = "Use `set_fail_op()` instead."]
+    pub fn fail_op(&mut self, val: GpuStencilOperation) -> &mut Self {
+        self.set_fail_op(val);
+        self
+    }
+    #[cfg(feature = "GpuStencilOperation")]
+    #[deprecated = "Use `set_pass_op()` instead."]
+    pub fn pass_op(&mut self, val: GpuStencilOperation) -> &mut Self {
+        self.set_pass_op(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuStencilFaceState {

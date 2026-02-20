@@ -100,6 +100,21 @@ impl WebTransportReceiveStreamStats {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_bytes_read()` instead."]
+    pub fn bytes_read(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_read(val);
+        self
+    }
+    #[deprecated = "Use `set_bytes_received()` instead."]
+    pub fn bytes_received(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_received(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: f64) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportReceiveStreamStats {

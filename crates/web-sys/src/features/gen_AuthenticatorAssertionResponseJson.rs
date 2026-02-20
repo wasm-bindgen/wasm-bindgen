@@ -129,4 +129,29 @@ impl AuthenticatorAssertionResponseJson {
         ret.set_signature(signature);
         ret
     }
+    #[deprecated = "Use `set_attestation_object()` instead."]
+    pub fn attestation_object(&mut self, val: &str) -> &mut Self {
+        self.set_attestation_object(val);
+        self
+    }
+    #[deprecated = "Use `set_authenticator_data()` instead."]
+    pub fn authenticator_data(&mut self, val: &str) -> &mut Self {
+        self.set_authenticator_data(val);
+        self
+    }
+    #[deprecated = "Use `set_client_data_json()` instead."]
+    pub fn client_data_json(&mut self, val: &str) -> &mut Self {
+        self.set_client_data_json(val);
+        self
+    }
+    #[deprecated = "Use `set_signature()` instead."]
+    pub fn signature(&mut self, val: &str) -> &mut Self {
+        self.set_signature(val);
+        self
+    }
+    #[deprecated = "Use `set_user_handle()` instead."]
+    pub fn user_handle(&mut self, val: &str) -> &mut Self {
+        self.set_user_handle(val);
+        self
+    }
 }

@@ -291,6 +291,67 @@ impl WebTransportStats {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_bytes_received()` instead."]
+    pub fn bytes_received(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_received(val);
+        self
+    }
+    #[deprecated = "Use `set_bytes_sent()` instead."]
+    pub fn bytes_sent(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_sent(val);
+        self
+    }
+    #[cfg(feature = "WebTransportDatagramStats")]
+    #[deprecated = "Use `set_datagrams()` instead."]
+    pub fn datagrams(&mut self, val: &WebTransportDatagramStats) -> &mut Self {
+        self.set_datagrams(val);
+        self
+    }
+    #[deprecated = "Use `set_min_rtt()` instead."]
+    pub fn min_rtt(&mut self, val: f64) -> &mut Self {
+        self.set_min_rtt(val);
+        self
+    }
+    #[deprecated = "Use `set_num_incoming_streams_created()` instead."]
+    pub fn num_incoming_streams_created(&mut self, val: u32) -> &mut Self {
+        self.set_num_incoming_streams_created(val);
+        self
+    }
+    #[deprecated = "Use `set_num_outgoing_streams_created()` instead."]
+    pub fn num_outgoing_streams_created(&mut self, val: u32) -> &mut Self {
+        self.set_num_outgoing_streams_created(val);
+        self
+    }
+    #[deprecated = "Use `set_packets_lost()` instead."]
+    pub fn packets_lost(&mut self, val: u32) -> &mut Self {
+        self.set_packets_lost(val);
+        self
+    }
+    #[deprecated = "Use `set_packets_received()` instead."]
+    pub fn packets_received(&mut self, val: u32) -> &mut Self {
+        self.set_packets_received(val);
+        self
+    }
+    #[deprecated = "Use `set_packets_sent()` instead."]
+    pub fn packets_sent(&mut self, val: u32) -> &mut Self {
+        self.set_packets_sent(val);
+        self
+    }
+    #[deprecated = "Use `set_rtt_variation()` instead."]
+    pub fn rtt_variation(&mut self, val: f64) -> &mut Self {
+        self.set_rtt_variation(val);
+        self
+    }
+    #[deprecated = "Use `set_smoothed_rtt()` instead."]
+    pub fn smoothed_rtt(&mut self, val: f64) -> &mut Self {
+        self.set_smoothed_rtt(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: f64) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportStats {

@@ -214,6 +214,58 @@ impl UaDataValues {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_architecture()` instead."]
+    pub fn architecture(&mut self, val: &str) -> &mut Self {
+        self.set_architecture(val);
+        self
+    }
+    #[deprecated = "Use `set_bitness()` instead."]
+    pub fn bitness(&mut self, val: &str) -> &mut Self {
+        self.set_bitness(val);
+        self
+    }
+    #[cfg(feature = "NavigatorUaBrandVersion")]
+    #[deprecated = "Use `set_brands()` instead."]
+    pub fn brands(&mut self, val: &[NavigatorUaBrandVersion]) -> &mut Self {
+        self.set_brands(val);
+        self
+    }
+    #[deprecated = "Use `set_form_factors()` instead."]
+    pub fn form_factors(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_form_factors(val);
+        self
+    }
+    #[cfg(feature = "NavigatorUaBrandVersion")]
+    #[deprecated = "Use `set_full_version_list()` instead."]
+    pub fn full_version_list(&mut self, val: &[NavigatorUaBrandVersion]) -> &mut Self {
+        self.set_full_version_list(val);
+        self
+    }
+    #[deprecated = "Use `set_mobile()` instead."]
+    pub fn mobile(&mut self, val: bool) -> &mut Self {
+        self.set_mobile(val);
+        self
+    }
+    #[deprecated = "Use `set_model()` instead."]
+    pub fn model(&mut self, val: &str) -> &mut Self {
+        self.set_model(val);
+        self
+    }
+    #[deprecated = "Use `set_platform()` instead."]
+    pub fn platform(&mut self, val: &str) -> &mut Self {
+        self.set_platform(val);
+        self
+    }
+    #[deprecated = "Use `set_platform_version()` instead."]
+    pub fn platform_version(&mut self, val: &str) -> &mut Self {
+        self.set_platform_version(val);
+        self
+    }
+    #[deprecated = "Use `set_wow64()` instead."]
+    pub fn wow64(&mut self, val: bool) -> &mut Self {
+        self.set_wow64(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for UaDataValues {

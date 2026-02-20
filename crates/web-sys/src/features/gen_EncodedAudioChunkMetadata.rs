@@ -48,6 +48,12 @@ impl EncodedAudioChunkMetadata {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "AudioDecoderConfig")]
+    #[deprecated = "Use `set_decoder_config()` instead."]
+    pub fn decoder_config(&mut self, val: &AudioDecoderConfig) -> &mut Self {
+        self.set_decoder_config(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for EncodedAudioChunkMetadata {

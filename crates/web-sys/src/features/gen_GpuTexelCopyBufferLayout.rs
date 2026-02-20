@@ -91,6 +91,21 @@ impl GpuTexelCopyBufferLayout {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_bytes_per_row()` instead."]
+    pub fn bytes_per_row(&mut self, val: u32) -> &mut Self {
+        self.set_bytes_per_row(val);
+        self
+    }
+    #[deprecated = "Use `set_offset()` instead."]
+    pub fn offset(&mut self, val: u32) -> &mut Self {
+        self.set_offset(val);
+        self
+    }
+    #[deprecated = "Use `set_rows_per_image()` instead."]
+    pub fn rows_per_image(&mut self, val: u32) -> &mut Self {
+        self.set_rows_per_image(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuTexelCopyBufferLayout {

@@ -119,6 +119,27 @@ impl GpuDeviceDescriptor {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_label()` instead."]
+    pub fn label(&mut self, val: &str) -> &mut Self {
+        self.set_label(val);
+        self
+    }
+    #[cfg(feature = "GpuQueueDescriptor")]
+    #[deprecated = "Use `set_default_queue()` instead."]
+    pub fn default_queue(&mut self, val: &GpuQueueDescriptor) -> &mut Self {
+        self.set_default_queue(val);
+        self
+    }
+    #[deprecated = "Use `set_required_features()` instead."]
+    pub fn required_features(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_required_features(val);
+        self
+    }
+    #[deprecated = "Use `set_required_limits()` instead."]
+    pub fn required_limits(&mut self, val: &::js_sys::Object<::js_sys::Number>) -> &mut Self {
+        self.set_required_limits(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuDeviceDescriptor {

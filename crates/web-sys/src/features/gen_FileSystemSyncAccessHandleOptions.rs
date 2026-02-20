@@ -50,6 +50,12 @@ impl FileSystemSyncAccessHandleOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "FileSystemSyncAccessHandleMode")]
+    #[deprecated = "Use `set_mode()` instead."]
+    pub fn mode(&mut self, val: FileSystemSyncAccessHandleMode) -> &mut Self {
+        self.set_mode(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for FileSystemSyncAccessHandleOptions {

@@ -71,6 +71,17 @@ impl AuthenticationExtensionsPrfOutputs {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_enabled()` instead."]
+    pub fn enabled(&mut self, val: bool) -> &mut Self {
+        self.set_enabled(val);
+        self
+    }
+    #[cfg(feature = "AuthenticationExtensionsPrfValues")]
+    #[deprecated = "Use `set_results()` instead."]
+    pub fn results(&mut self, val: &AuthenticationExtensionsPrfValues) -> &mut Self {
+        self.set_results(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for AuthenticationExtensionsPrfOutputs {

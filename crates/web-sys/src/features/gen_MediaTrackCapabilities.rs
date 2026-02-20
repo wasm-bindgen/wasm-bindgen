@@ -344,6 +344,94 @@ impl MediaTrackCapabilities {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "DoubleRange")]
+    #[deprecated = "Use `set_aspect_ratio()` instead."]
+    pub fn aspect_ratio(&mut self, val: &DoubleRange) -> &mut Self {
+        self.set_aspect_ratio(val);
+        self
+    }
+    #[deprecated = "Use `set_auto_gain_control()` instead."]
+    pub fn auto_gain_control(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
+        self.set_auto_gain_control(val);
+        self
+    }
+    #[deprecated = "Use `set_background_blur()` instead."]
+    pub fn background_blur(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
+        self.set_background_blur(val);
+        self
+    }
+    #[cfg(feature = "ULongRange")]
+    #[deprecated = "Use `set_channel_count()` instead."]
+    pub fn channel_count(&mut self, val: &ULongRange) -> &mut Self {
+        self.set_channel_count(val);
+        self
+    }
+    #[deprecated = "Use `set_device_id()` instead."]
+    pub fn device_id(&mut self, val: &str) -> &mut Self {
+        self.set_device_id(val);
+        self
+    }
+    #[deprecated = "Use `set_echo_cancellation()` instead."]
+    pub fn echo_cancellation(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
+        self.set_echo_cancellation(val);
+        self
+    }
+    #[deprecated = "Use `set_facing_mode()` instead."]
+    pub fn facing_mode(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_facing_mode(val);
+        self
+    }
+    #[cfg(feature = "DoubleRange")]
+    #[deprecated = "Use `set_frame_rate()` instead."]
+    pub fn frame_rate(&mut self, val: &DoubleRange) -> &mut Self {
+        self.set_frame_rate(val);
+        self
+    }
+    #[deprecated = "Use `set_group_id()` instead."]
+    pub fn group_id(&mut self, val: &str) -> &mut Self {
+        self.set_group_id(val);
+        self
+    }
+    #[cfg(feature = "ULongRange")]
+    #[deprecated = "Use `set_height()` instead."]
+    pub fn height(&mut self, val: &ULongRange) -> &mut Self {
+        self.set_height(val);
+        self
+    }
+    #[cfg(feature = "DoubleRange")]
+    #[deprecated = "Use `set_latency()` instead."]
+    pub fn latency(&mut self, val: &DoubleRange) -> &mut Self {
+        self.set_latency(val);
+        self
+    }
+    #[deprecated = "Use `set_noise_suppression()` instead."]
+    pub fn noise_suppression(&mut self, val: &[::js_sys::Boolean]) -> &mut Self {
+        self.set_noise_suppression(val);
+        self
+    }
+    #[deprecated = "Use `set_resize_mode()` instead."]
+    pub fn resize_mode(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_resize_mode(val);
+        self
+    }
+    #[cfg(feature = "ULongRange")]
+    #[deprecated = "Use `set_sample_rate()` instead."]
+    pub fn sample_rate(&mut self, val: &ULongRange) -> &mut Self {
+        self.set_sample_rate(val);
+        self
+    }
+    #[cfg(feature = "ULongRange")]
+    #[deprecated = "Use `set_sample_size()` instead."]
+    pub fn sample_size(&mut self, val: &ULongRange) -> &mut Self {
+        self.set_sample_size(val);
+        self
+    }
+    #[cfg(feature = "ULongRange")]
+    #[deprecated = "Use `set_width()` instead."]
+    pub fn width(&mut self, val: &ULongRange) -> &mut Self {
+        self.set_width(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for MediaTrackCapabilities {

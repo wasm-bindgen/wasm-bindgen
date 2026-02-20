@@ -71,6 +71,16 @@ impl AuthenticationExtensionsDevicePublicKeyInputs {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_attestation()` instead."]
+    pub fn attestation(&mut self, val: &str) -> &mut Self {
+        self.set_attestation(val);
+        self
+    }
+    #[deprecated = "Use `set_attestation_formats()` instead."]
+    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_attestation_formats(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for AuthenticationExtensionsDevicePublicKeyInputs {

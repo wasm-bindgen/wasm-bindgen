@@ -149,4 +149,38 @@ impl GpuCanvasConfiguration {
         ret.set_format(format);
         ret
     }
+    #[cfg(feature = "GpuCanvasAlphaMode")]
+    #[deprecated = "Use `set_alpha_mode()` instead."]
+    pub fn alpha_mode(&mut self, val: GpuCanvasAlphaMode) -> &mut Self {
+        self.set_alpha_mode(val);
+        self
+    }
+    #[cfg(feature = "GpuDevice")]
+    #[deprecated = "Use `set_device()` instead."]
+    pub fn device(&mut self, val: &GpuDevice) -> &mut Self {
+        self.set_device(val);
+        self
+    }
+    #[cfg(feature = "GpuTextureFormat")]
+    #[deprecated = "Use `set_format()` instead."]
+    pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
+        self.set_format(val);
+        self
+    }
+    #[cfg(feature = "GpuCanvasToneMapping")]
+    #[deprecated = "Use `set_tone_mapping()` instead."]
+    pub fn tone_mapping(&mut self, val: &GpuCanvasToneMapping) -> &mut Self {
+        self.set_tone_mapping(val);
+        self
+    }
+    #[deprecated = "Use `set_usage()` instead."]
+    pub fn usage(&mut self, val: u32) -> &mut Self {
+        self.set_usage(val);
+        self
+    }
+    #[deprecated = "Use `set_view_formats()` instead."]
+    pub fn view_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_view_formats(val);
+        self
+    }
 }

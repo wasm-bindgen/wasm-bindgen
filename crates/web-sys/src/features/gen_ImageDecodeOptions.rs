@@ -64,6 +64,16 @@ impl ImageDecodeOptions {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_complete_frames_only()` instead."]
+    pub fn complete_frames_only(&mut self, val: bool) -> &mut Self {
+        self.set_complete_frames_only(val);
+        self
+    }
+    #[deprecated = "Use `set_frame_index()` instead."]
+    pub fn frame_index(&mut self, val: u32) -> &mut Self {
+        self.set_frame_index(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for ImageDecodeOptions {

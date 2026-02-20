@@ -207,6 +207,16 @@ impl PublicKeyCredentialRequestOptions {
         self.set_allow_credentials(val);
         self
     }
+    #[deprecated = "Use `set_attestation()` instead."]
+    pub fn attestation(&mut self, val: &str) -> &mut Self {
+        self.set_attestation(val);
+        self
+    }
+    #[deprecated = "Use `set_attestation_formats()` instead."]
+    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_attestation_formats(val);
+        self
+    }
     #[deprecated = "Use `set_challenge()` instead."]
     pub fn challenge(&mut self, val: &::js_sys::Object) -> &mut Self {
         self.set_challenge(val);
@@ -216,6 +226,11 @@ impl PublicKeyCredentialRequestOptions {
     #[deprecated = "Use `set_extensions()` instead."]
     pub fn extensions(&mut self, val: &AuthenticationExtensionsClientInputs) -> &mut Self {
         self.set_extensions(val);
+        self
+    }
+    #[deprecated = "Use `set_hints()` instead."]
+    pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_hints(val);
         self
     }
     #[deprecated = "Use `set_rp_id()` instead."]

@@ -66,6 +66,17 @@ impl AudioDecoderSupport {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "AudioDecoderConfig")]
+    #[deprecated = "Use `set_config()` instead."]
+    pub fn config(&mut self, val: &AudioDecoderConfig) -> &mut Self {
+        self.set_config(val);
+        self
+    }
+    #[deprecated = "Use `set_supported()` instead."]
+    pub fn supported(&mut self, val: bool) -> &mut Self {
+        self.set_supported(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for AudioDecoderSupport {

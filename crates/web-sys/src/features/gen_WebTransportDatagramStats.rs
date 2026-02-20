@@ -127,6 +127,26 @@ impl WebTransportDatagramStats {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_dropped_incoming()` instead."]
+    pub fn dropped_incoming(&mut self, val: u32) -> &mut Self {
+        self.set_dropped_incoming(val);
+        self
+    }
+    #[deprecated = "Use `set_expired_outgoing()` instead."]
+    pub fn expired_outgoing(&mut self, val: u32) -> &mut Self {
+        self.set_expired_outgoing(val);
+        self
+    }
+    #[deprecated = "Use `set_lost_outgoing()` instead."]
+    pub fn lost_outgoing(&mut self, val: u32) -> &mut Self {
+        self.set_lost_outgoing(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: f64) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for WebTransportDatagramStats {

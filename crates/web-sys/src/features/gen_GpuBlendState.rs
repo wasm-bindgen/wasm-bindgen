@@ -71,4 +71,16 @@ impl GpuBlendState {
         ret.set_color(color);
         ret
     }
+    #[cfg(feature = "GpuBlendComponent")]
+    #[deprecated = "Use `set_alpha()` instead."]
+    pub fn alpha(&mut self, val: &GpuBlendComponent) -> &mut Self {
+        self.set_alpha(val);
+        self
+    }
+    #[cfg(feature = "GpuBlendComponent")]
+    #[deprecated = "Use `set_color()` instead."]
+    pub fn color(&mut self, val: &GpuBlendComponent) -> &mut Self {
+        self.set_color(val);
+        self
+    }
 }

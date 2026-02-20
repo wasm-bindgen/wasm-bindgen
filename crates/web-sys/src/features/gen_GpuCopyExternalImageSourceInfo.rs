@@ -248,4 +248,19 @@ impl GpuCopyExternalImageSourceInfo {
         ret.set_source_offscreen_canvas(source);
         ret
     }
+    #[deprecated = "Use `set_flip_y()` instead."]
+    pub fn flip_y(&mut self, val: bool) -> &mut Self {
+        self.set_flip_y(val);
+        self
+    }
+    #[deprecated = "Use `set_origin()` instead."]
+    pub fn origin(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_origin(val);
+        self
+    }
+    #[deprecated = "Use `set_source()` instead."]
+    pub fn source(&mut self, val: &ImageBitmap) -> &mut Self {
+        self.set_source(val);
+        self
+    }
 }

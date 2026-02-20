@@ -181,6 +181,11 @@ impl RtcRtpEncodingParameters {
         self.set_rtx(val);
         self
     }
+    #[deprecated = "Use `set_scalability_mode()` instead."]
+    pub fn scalability_mode(&mut self, val: &str) -> &mut Self {
+        self.set_scalability_mode(val);
+        self
+    }
     #[deprecated = "Use `set_scale_resolution_down_by()` instead."]
     pub fn scale_resolution_down_by(&mut self, val: f32) -> &mut Self {
         self.set_scale_resolution_down_by(val);

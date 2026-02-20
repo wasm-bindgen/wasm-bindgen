@@ -202,4 +202,36 @@ impl GpuRenderPassColorAttachment {
         ret.set_view_gpu_texture_view(view);
         ret
     }
+    #[deprecated = "Use `set_clear_value()` instead."]
+    pub fn clear_value(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_clear_value(val);
+        self
+    }
+    #[deprecated = "Use `set_depth_slice()` instead."]
+    pub fn depth_slice(&mut self, val: u32) -> &mut Self {
+        self.set_depth_slice(val);
+        self
+    }
+    #[cfg(feature = "GpuLoadOp")]
+    #[deprecated = "Use `set_load_op()` instead."]
+    pub fn load_op(&mut self, val: GpuLoadOp) -> &mut Self {
+        self.set_load_op(val);
+        self
+    }
+    #[deprecated = "Use `set_resolve_target()` instead."]
+    pub fn resolve_target(&mut self, val: &GpuTexture) -> &mut Self {
+        self.set_resolve_target(val);
+        self
+    }
+    #[cfg(feature = "GpuStoreOp")]
+    #[deprecated = "Use `set_store_op()` instead."]
+    pub fn store_op(&mut self, val: GpuStoreOp) -> &mut Self {
+        self.set_store_op(val);
+        self
+    }
+    #[deprecated = "Use `set_view()` instead."]
+    pub fn view(&mut self, val: &GpuTexture) -> &mut Self {
+        self.set_view(val);
+        self
+    }
 }

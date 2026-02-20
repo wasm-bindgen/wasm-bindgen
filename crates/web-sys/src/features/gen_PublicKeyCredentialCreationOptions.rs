@@ -268,6 +268,11 @@ impl PublicKeyCredentialCreationOptions {
         self.set_attestation(val);
         self
     }
+    #[deprecated = "Use `set_attestation_formats()` instead."]
+    pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_attestation_formats(val);
+        self
+    }
     #[cfg(feature = "AuthenticatorSelectionCriteria")]
     #[deprecated = "Use `set_authenticator_selection()` instead."]
     pub fn authenticator_selection(&mut self, val: &AuthenticatorSelectionCriteria) -> &mut Self {
@@ -288,6 +293,11 @@ impl PublicKeyCredentialCreationOptions {
     #[deprecated = "Use `set_extensions()` instead."]
     pub fn extensions(&mut self, val: &AuthenticationExtensionsClientInputs) -> &mut Self {
         self.set_extensions(val);
+        self
+    }
+    #[deprecated = "Use `set_hints()` instead."]
+    pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_hints(val);
         self
     }
     #[deprecated = "Use `set_pub_key_cred_params()` instead."]

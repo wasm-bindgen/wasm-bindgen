@@ -48,6 +48,12 @@ impl GpuCanvasToneMapping {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[cfg(feature = "GpuCanvasToneMappingMode")]
+    #[deprecated = "Use `set_mode()` instead."]
+    pub fn mode(&mut self, val: GpuCanvasToneMappingMode) -> &mut Self {
+        self.set_mode(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for GpuCanvasToneMapping {

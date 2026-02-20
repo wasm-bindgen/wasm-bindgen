@@ -282,4 +282,73 @@ impl VideoEncoderConfig {
         ret.set_width(width);
         ret
     }
+    #[cfg(feature = "AlphaOption")]
+    #[deprecated = "Use `set_alpha()` instead."]
+    pub fn alpha(&mut self, val: AlphaOption) -> &mut Self {
+        self.set_alpha(val);
+        self
+    }
+    #[deprecated = "Use `set_bitrate()` instead."]
+    pub fn bitrate(&mut self, val: u32) -> &mut Self {
+        self.set_bitrate(val);
+        self
+    }
+    #[cfg(feature = "VideoEncoderBitrateMode")]
+    #[deprecated = "Use `set_bitrate_mode()` instead."]
+    pub fn bitrate_mode(&mut self, val: VideoEncoderBitrateMode) -> &mut Self {
+        self.set_bitrate_mode(val);
+        self
+    }
+    #[deprecated = "Use `set_codec()` instead."]
+    pub fn codec(&mut self, val: &str) -> &mut Self {
+        self.set_codec(val);
+        self
+    }
+    #[deprecated = "Use `set_content_hint()` instead."]
+    pub fn content_hint(&mut self, val: &str) -> &mut Self {
+        self.set_content_hint(val);
+        self
+    }
+    #[deprecated = "Use `set_display_height()` instead."]
+    pub fn display_height(&mut self, val: u32) -> &mut Self {
+        self.set_display_height(val);
+        self
+    }
+    #[deprecated = "Use `set_display_width()` instead."]
+    pub fn display_width(&mut self, val: u32) -> &mut Self {
+        self.set_display_width(val);
+        self
+    }
+    #[deprecated = "Use `set_framerate()` instead."]
+    pub fn framerate(&mut self, val: f64) -> &mut Self {
+        self.set_framerate(val);
+        self
+    }
+    #[cfg(feature = "HardwareAcceleration")]
+    #[deprecated = "Use `set_hardware_acceleration()` instead."]
+    pub fn hardware_acceleration(&mut self, val: HardwareAcceleration) -> &mut Self {
+        self.set_hardware_acceleration(val);
+        self
+    }
+    #[deprecated = "Use `set_height()` instead."]
+    pub fn height(&mut self, val: u32) -> &mut Self {
+        self.set_height(val);
+        self
+    }
+    #[cfg(feature = "LatencyMode")]
+    #[deprecated = "Use `set_latency_mode()` instead."]
+    pub fn latency_mode(&mut self, val: LatencyMode) -> &mut Self {
+        self.set_latency_mode(val);
+        self
+    }
+    #[deprecated = "Use `set_scalability_mode()` instead."]
+    pub fn scalability_mode(&mut self, val: &str) -> &mut Self {
+        self.set_scalability_mode(val);
+        self
+    }
+    #[deprecated = "Use `set_width()` instead."]
+    pub fn width(&mut self, val: u32) -> &mut Self {
+        self.set_width(val);
+        self
+    }
 }

@@ -278,6 +278,66 @@ impl RtcEncodedVideoFrameMetadata {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
+    #[deprecated = "Use `set_contributing_sources()` instead."]
+    pub fn contributing_sources(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_contributing_sources(val);
+        self
+    }
+    #[deprecated = "Use `set_dependencies()` instead."]
+    pub fn dependencies(&mut self, val: &[::js_sys::Number]) -> &mut Self {
+        self.set_dependencies(val);
+        self
+    }
+    #[deprecated = "Use `set_frame_id()` instead."]
+    pub fn frame_id(&mut self, val: u32) -> &mut Self {
+        self.set_frame_id(val);
+        self
+    }
+    #[deprecated = "Use `set_height()` instead."]
+    pub fn height(&mut self, val: u16) -> &mut Self {
+        self.set_height(val);
+        self
+    }
+    #[deprecated = "Use `set_mime_type()` instead."]
+    pub fn mime_type(&mut self, val: &str) -> &mut Self {
+        self.set_mime_type(val);
+        self
+    }
+    #[deprecated = "Use `set_payload_type()` instead."]
+    pub fn payload_type(&mut self, val: u8) -> &mut Self {
+        self.set_payload_type(val);
+        self
+    }
+    #[deprecated = "Use `set_rtp_timestamp()` instead."]
+    pub fn rtp_timestamp(&mut self, val: u32) -> &mut Self {
+        self.set_rtp_timestamp(val);
+        self
+    }
+    #[deprecated = "Use `set_spatial_index()` instead."]
+    pub fn spatial_index(&mut self, val: u32) -> &mut Self {
+        self.set_spatial_index(val);
+        self
+    }
+    #[deprecated = "Use `set_synchronization_source()` instead."]
+    pub fn synchronization_source(&mut self, val: u32) -> &mut Self {
+        self.set_synchronization_source(val);
+        self
+    }
+    #[deprecated = "Use `set_temporal_index()` instead."]
+    pub fn temporal_index(&mut self, val: u32) -> &mut Self {
+        self.set_temporal_index(val);
+        self
+    }
+    #[deprecated = "Use `set_timestamp()` instead."]
+    pub fn timestamp(&mut self, val: i32) -> &mut Self {
+        self.set_timestamp(val);
+        self
+    }
+    #[deprecated = "Use `set_width()` instead."]
+    pub fn width(&mut self, val: u16) -> &mut Self {
+        self.set_width(val);
+        self
+    }
 }
 #[cfg(web_sys_unstable_apis)]
 impl Default for RtcEncodedVideoFrameMetadata {

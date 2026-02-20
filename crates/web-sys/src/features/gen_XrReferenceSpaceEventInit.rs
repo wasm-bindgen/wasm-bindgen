@@ -124,4 +124,31 @@ impl XrReferenceSpaceEventInit {
         ret.set_reference_space(reference_space);
         ret
     }
+    #[deprecated = "Use `set_bubbles()` instead."]
+    pub fn bubbles(&mut self, val: bool) -> &mut Self {
+        self.set_bubbles(val);
+        self
+    }
+    #[deprecated = "Use `set_cancelable()` instead."]
+    pub fn cancelable(&mut self, val: bool) -> &mut Self {
+        self.set_cancelable(val);
+        self
+    }
+    #[deprecated = "Use `set_composed()` instead."]
+    pub fn composed(&mut self, val: bool) -> &mut Self {
+        self.set_composed(val);
+        self
+    }
+    #[cfg(feature = "XrReferenceSpace")]
+    #[deprecated = "Use `set_reference_space()` instead."]
+    pub fn reference_space(&mut self, val: &XrReferenceSpace) -> &mut Self {
+        self.set_reference_space(val);
+        self
+    }
+    #[cfg(feature = "XrRigidTransform")]
+    #[deprecated = "Use `set_transform()` instead."]
+    pub fn transform(&mut self, val: Option<&XrRigidTransform>) -> &mut Self {
+        self.set_transform(val);
+        self
+    }
 }

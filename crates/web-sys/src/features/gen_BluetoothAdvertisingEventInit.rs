@@ -250,4 +250,62 @@ impl BluetoothAdvertisingEventInit {
         ret.set_device(device);
         ret
     }
+    #[deprecated = "Use `set_bubbles()` instead."]
+    pub fn bubbles(&mut self, val: bool) -> &mut Self {
+        self.set_bubbles(val);
+        self
+    }
+    #[deprecated = "Use `set_cancelable()` instead."]
+    pub fn cancelable(&mut self, val: bool) -> &mut Self {
+        self.set_cancelable(val);
+        self
+    }
+    #[deprecated = "Use `set_composed()` instead."]
+    pub fn composed(&mut self, val: bool) -> &mut Self {
+        self.set_composed(val);
+        self
+    }
+    #[deprecated = "Use `set_appearance()` instead."]
+    pub fn appearance(&mut self, val: u16) -> &mut Self {
+        self.set_appearance(val);
+        self
+    }
+    #[cfg(feature = "BluetoothDevice")]
+    #[deprecated = "Use `set_device()` instead."]
+    pub fn device(&mut self, val: &BluetoothDevice) -> &mut Self {
+        self.set_device(val);
+        self
+    }
+    #[cfg(feature = "BluetoothManufacturerDataMap")]
+    #[deprecated = "Use `set_manufacturer_data()` instead."]
+    pub fn manufacturer_data(&mut self, val: &BluetoothManufacturerDataMap) -> &mut Self {
+        self.set_manufacturer_data(val);
+        self
+    }
+    #[deprecated = "Use `set_name()` instead."]
+    pub fn name(&mut self, val: &str) -> &mut Self {
+        self.set_name(val);
+        self
+    }
+    #[deprecated = "Use `set_rssi()` instead."]
+    pub fn rssi(&mut self, val: i8) -> &mut Self {
+        self.set_rssi(val);
+        self
+    }
+    #[cfg(feature = "BluetoothServiceDataMap")]
+    #[deprecated = "Use `set_service_data()` instead."]
+    pub fn service_data(&mut self, val: &BluetoothServiceDataMap) -> &mut Self {
+        self.set_service_data(val);
+        self
+    }
+    #[deprecated = "Use `set_tx_power()` instead."]
+    pub fn tx_power(&mut self, val: i8) -> &mut Self {
+        self.set_tx_power(val);
+        self
+    }
+    #[deprecated = "Use `set_uuids()` instead."]
+    pub fn uuids(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
+        self.set_uuids(val);
+        self
+    }
 }

@@ -112,4 +112,21 @@ impl GpuVertexBufferLayout {
         ret.set_attributes(attributes);
         ret
     }
+    #[deprecated = "Use `set_array_stride()` instead."]
+    pub fn array_stride(&mut self, val: u32) -> &mut Self {
+        self.set_array_stride(val);
+        self
+    }
+    #[cfg(feature = "GpuVertexAttribute")]
+    #[deprecated = "Use `set_attributes()` instead."]
+    pub fn attributes(&mut self, val: &[GpuVertexAttribute]) -> &mut Self {
+        self.set_attributes(val);
+        self
+    }
+    #[cfg(feature = "GpuVertexStepMode")]
+    #[deprecated = "Use `set_step_mode()` instead."]
+    pub fn step_mode(&mut self, val: GpuVertexStepMode) -> &mut Self {
+        self.set_step_mode(val);
+        self
+    }
 }
