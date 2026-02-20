@@ -1852,7 +1852,7 @@ fn test_from_iterable_map() {
 
     let result: Array<Number> = Array::from_iterable_map(
         &source,
-        &ImmediateClosure::wrap_mut_aborting(&mut |val, _idx| {
+        &ImmediateClosure::new_mut_aborting(&mut |val, _idx| {
             Ok(Number::from(val.value_of() * 2.0))
         }),
     )
@@ -1925,7 +1925,7 @@ fn test_array_try_filter_error() {
     arr.push(&TestItem::new(1, &JsString::from("a")));
     arr.push(&TestItem::new(2, &JsString::from("b")));
 
-    let result = arr.try_filter(&ImmediateClosure::wrap_mut_assert_unwind_safe(
+    let result = arr.try_filter(&ImmediateClosure::new_mut_assert_unwind_safe(
         &mut |val, _| {
             if val.id() == 2 {
                 Err(JsError::new("filter error"))
