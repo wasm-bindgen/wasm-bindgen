@@ -3141,6 +3141,27 @@ mod gen_Geolocation;
 #[allow(unused_imports)]
 pub use gen_Geolocation::*;
 
+#[cfg(feature = "GeolocationCoordinates")]
+#[allow(non_snake_case)]
+mod gen_GeolocationCoordinates;
+#[cfg(feature = "GeolocationCoordinates")]
+#[allow(unused_imports)]
+pub use gen_GeolocationCoordinates::*;
+
+#[cfg(feature = "GeolocationPosition")]
+#[allow(non_snake_case)]
+mod gen_GeolocationPosition;
+#[cfg(feature = "GeolocationPosition")]
+#[allow(unused_imports)]
+pub use gen_GeolocationPosition::*;
+
+#[cfg(feature = "GeolocationPositionError")]
+#[allow(non_snake_case)]
+mod gen_GeolocationPositionError;
+#[cfg(feature = "GeolocationPositionError")]
+#[allow(unused_imports)]
+pub use gen_GeolocationPositionError::*;
+
 #[cfg(feature = "GestureEvent")]
 #[allow(non_snake_case)]
 mod gen_GestureEvent;

@@ -5,6 +5,12 @@
 
 ### Added
 
+* Added unstable Geolocation API types per the latest W3C spec: `GeolocationCoordinates`,
+  `GeolocationPosition`, and `GeolocationPositionError`. The `Geolocation` interface now
+  has both stable methods (using the old `Position`/`PositionError` types with `[Throws]`)
+  and unstable methods (using the new types without `[Throws]}`, matching actual browser behavior).
+  [#2578](https://github.com/AbesBend662/AbesBend662.github.io/pull/2578)
+
 * Added support for erasable generic type parameters on imported JavaScript types,
   using sound type erasure in JS bindgen boundary. Includes updated js-sys bindings
   with generic implementations for many standard JS types and functions including
@@ -87,6 +93,13 @@
 
 * Fixed incorrect JS export names when LLVM merges identical functions at `opt-level >= 2`.
   [#4946](https://github.com/wasm-bindgen/wasm-bindgen/issues/4946)
+
+* Added spec-compliant `i32` parameter types for `CanvasRenderingContext2d::get_image_data()`
+  and `put_image_data()` (and `OffscreenCanvasRenderingContext2d` equivalents) behind
+  `web_sys_unstable_apis`. Per the HTML spec, `getImageData` and `putImageData` use `long`
+  (i32) for coordinates, not `double` (f64). The stable API is unchanged for backwards
+  compatibility.
+  [#1920](https://github.com/wasm-bindgen/wasm-bindgen/pull/1920)
 
 * Fixed incorrect `#[cfg(web_sys_unstable_apis)]` gating on stable method signatures that
   share a WebIDL operation with unstable overloads. For example, `Clipboard.read()` (0 args)

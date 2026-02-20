@@ -998,6 +998,7 @@ extern "C" {
         this: &OffscreenCanvasRenderingContext2d,
         imagedata: &ImageData,
     ) -> Result<ImageData, JsValue>;
+    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = getImageData)]
     #[doc = "The `getImageData()` method."]
@@ -1012,6 +1013,25 @@ extern "C" {
         sw: f64,
         sh: f64,
     ) -> Result<ImageData, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ImageData")]
+    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = getImageData)]
+    #[doc = "The `getImageData()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/getImageData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageData`, `OffscreenCanvasRenderingContext2d`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_image_data(
+        this: &OffscreenCanvasRenderingContext2d,
+        sx: i32,
+        sy: i32,
+        sw: i32,
+        sh: i32,
+    ) -> Result<ImageData, JsValue>;
+    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = putImageData)]
     #[doc = "The `putImageData()` method."]
@@ -1025,6 +1045,7 @@ extern "C" {
         dx: f64,
         dy: f64,
     ) -> Result<(), JsValue>;
+    #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = putImageData)]
     #[doc = "The `putImageData()` method."]
@@ -1041,6 +1062,44 @@ extern "C" {
         dirty_y: f64,
         dirty_width: f64,
         dirty_height: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ImageData")]
+    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = putImageData)]
+    #[doc = "The `putImageData()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/putImageData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageData`, `OffscreenCanvasRenderingContext2d`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn put_image_data(
+        this: &OffscreenCanvasRenderingContext2d,
+        imagedata: &ImageData,
+        dx: i32,
+        dy: i32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ImageData")]
+    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = putImageData)]
+    #[doc = "The `putImageData()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvasRenderingContext2D/putImageData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageData`, `OffscreenCanvasRenderingContext2d`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn put_image_data_with_dirty_x_and_dirty_y_and_dirty_width_and_dirty_height(
+        this: &OffscreenCanvasRenderingContext2d,
+        imagedata: &ImageData,
+        dx: i32,
+        dy: i32,
+        dirty_x: i32,
+        dirty_y: i32,
+        dirty_width: i32,
+        dirty_height: i32,
     ) -> Result<(), JsValue>;
     # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvasRenderingContext2D" , js_name = arc)]
     #[doc = "The `arc()` method."]
