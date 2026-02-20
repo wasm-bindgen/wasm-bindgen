@@ -58,13 +58,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn delete(this: &UrlSearchParams, name: &str);
-    # [wasm_bindgen (method , structural , js_class = "URLSearchParams" , js_name = entries)]
-    #[doc = "The `entries()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/entries)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
-    pub fn entries(this: &UrlSearchParams) -> ::js_sys::Iterator;
     # [wasm_bindgen (catch , method , structural , js_class = "URLSearchParams" , js_name = forEach)]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -93,13 +86,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn has(this: &UrlSearchParams, name: &str) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "URLSearchParams" , js_name = keys)]
-    #[doc = "The `keys()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/keys)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
-    pub fn keys(this: &UrlSearchParams) -> ::js_sys::Iterator;
     # [wasm_bindgen (method , structural , js_class = "URLSearchParams" , js_name = set)]
     #[doc = "The `set()` method."]
     #[doc = ""]
@@ -114,6 +100,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn sort(this: &UrlSearchParams) -> Result<(), JsValue>;
+    # [wasm_bindgen (method , structural , js_class = "URLSearchParams" , js_name = entries)]
+    #[doc = "The `entries()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/entries)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn entries(this: &UrlSearchParams) -> ::js_sys::Iterator;
+    # [wasm_bindgen (method , structural , js_class = "URLSearchParams" , js_name = keys)]
+    #[doc = "The `keys()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/keys)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn keys(this: &UrlSearchParams) -> ::js_sys::Iterator;
     # [wasm_bindgen (method , structural , js_class = "URLSearchParams" , js_name = values)]
     #[doc = "The `values()` method."]
     #[doc = ""]

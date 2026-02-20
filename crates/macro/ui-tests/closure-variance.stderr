@@ -1,0 +1,23 @@
+error[E0599]: no method named `upcast_ref` found for struct `ScopedClosure` in the current scope
+ --> ui-tests/closure-variance.rs:7:51
+  |
+7 |     let _bad: &Closure<dyn Fn() -> i32> = closure.upcast_ref();
+  |                                                   ^^^^^^^^^^
+  |
+help: there is a method `as_ref` with a similar name
+  |
+7 -     let _bad: &Closure<dyn Fn() -> i32> = closure.upcast_ref();
+7 +     let _bad: &Closure<dyn Fn() -> i32> = closure.as_ref();
+  |
+
+error[E0599]: no method named `upcast_ref` found for struct `ScopedClosure` in the current scope
+  --> ui-tests/closure-variance.rs:11:52
+   |
+11 |     let _bad2: &Closure<dyn Fn(Number)> = closure2.upcast_ref();
+   |                                                    ^^^^^^^^^^
+   |
+help: there is a method `as_ref` with a similar name
+   |
+11 -     let _bad2: &Closure<dyn Fn(Number)> = closure2.upcast_ref();
+11 +     let _bad2: &Closure<dyn Fn(Number)> = closure2.as_ref();
+   |

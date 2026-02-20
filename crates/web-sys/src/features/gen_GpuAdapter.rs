@@ -64,29 +64,30 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn is_fallback_adapter(this: &GpuAdapter) -> bool;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuDevice")]
     # [wasm_bindgen (method , structural , js_class = "GPUAdapter" , js_name = requestDevice)]
     #[doc = "The `requestDevice()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapter/requestDevice)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuAdapter`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuAdapter`, `GpuDevice`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_device(this: &GpuAdapter) -> ::js_sys::Promise;
+    pub fn request_device(this: &GpuAdapter) -> ::js_sys::Promise<GpuDevice>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuDeviceDescriptor")]
+    #[cfg(all(feature = "GpuDevice", feature = "GpuDeviceDescriptor",))]
     # [wasm_bindgen (method , structural , js_class = "GPUAdapter" , js_name = requestDevice)]
     #[doc = "The `requestDevice()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapter/requestDevice)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuAdapter`, `GpuDeviceDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuAdapter`, `GpuDevice`, `GpuDeviceDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn request_device_with_descriptor(
         this: &GpuAdapter,
         descriptor: &GpuDeviceDescriptor,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<GpuDevice>;
 }

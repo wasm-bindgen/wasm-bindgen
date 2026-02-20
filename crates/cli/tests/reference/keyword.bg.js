@@ -20,25 +20,25 @@ export function exported() {
 export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
 }
-export function __wbg___wbindgen_throw_be289d5034ed271b(arg0, arg1) {
+export function __wbg___wbindgen_throw_87f103313805936e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_await_d6a3b8c6a7818623() {
+export function __wbg_await_4ea226770dbb5814() {
     await();
 }
-export function __wbg_let_6f6af6103d3e2d91(arg0) {
+export function __wbg_let_bd65bc5e4baee9c0(arg0) {
     arg0.let();
 }
-export function __wbg_new_06a005f0311eb839() {
-    const ret = A.new();
-    return ret;
+export function __wbg_new_8ea43830bd92dbd2() {
+    B.new();
 }
-export function __wbg_new_27ac6aec351615ea() {
+export function __wbg_new_aa2b5c77eb49997e() {
     const ret = window.__TAURI__.menu.Menu.new();
     return ret;
 }
-export function __wbg_new_f777371617c89b36() {
-    B.new();
+export function __wbg_new_c882a94b69381309() {
+    const ret = A.new();
+    return ret;
 }
 export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {
     const ret = true;

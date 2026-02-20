@@ -229,3 +229,29 @@ exports.closure_fn_with_call = f => {
 exports.closure_fn_with_call_arg = (f, value) => {
   f(value);
 };
+
+// Test for ImmediateClosure
+exports.immediate_closure_call = f => {
+  f();
+};
+
+exports.immediate_closure_call_arg = (f, value) => {
+  f(value);
+};
+
+exports.immediate_closure_call_ret = (f, value) => {
+  return f(value);
+};
+
+exports.immediate_closure_fn_call = f => {
+  f();
+};
+
+exports.immediate_closure_catches_panic = f => {
+  try {
+    f();
+    return false;
+  } catch (e) {
+    return true;
+  }
+};

@@ -3,7 +3,7 @@
   (type (;1;) (func (param f64 i32 f64)))
   (type (;2;) (func (param f64 f64 f64)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 0)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "all_optional" (func $all_optional))

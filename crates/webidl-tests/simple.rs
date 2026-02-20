@@ -66,7 +66,7 @@ fn one_method_with_an_undefined_import_doesnt_break_all_other_methods() {
 
 #[wasm_bindgen_test]
 fn nullable_method() {
-    let f = NullableMethod::new().unwrap();
+    let f = JsOptionMethod::new().unwrap();
     assert!(f.opt(Some(15)) == Some(16));
     assert!(f.opt(None).is_none());
 }
@@ -137,20 +137,51 @@ fn optional_and_union_arguments() {
     );
 }
 
+/// In stable mode, variadics expand to fn_0, fn_1, ... fn_7 plus a version taking &Array
+#[cfg(not(wbg_next_unstable))]
 #[wasm_bindgen_test]
 fn variadic() {
     let f = Variadic::new().unwrap();
+    // Expanded variant: sum_5 takes 5 individual arguments
     assert_eq!(f.sum_5(1, 2, 3, 4, 5), 15);
+    // Array variant: sum takes &Array
     assert_eq!(
-        f.sum(&::js_sys::Array::of5(
-            &JsValue::from_f64(1f64),
-            &JsValue::from_f64(2f64),
-            &JsValue::from_f64(3f64),
-            &JsValue::from_f64(4f64),
-            &JsValue::from_f64(5f64),
-        )),
+        f.sum(&::js_sys::Array::of(&[
+            JsValue::from_f64(1f64),
+            JsValue::from_f64(2f64),
+            JsValue::from_f64(3f64),
+            JsValue::from_f64(4f64),
+            JsValue::from_f64(5f64),
+        ])),
         15
     );
+}
+
+/// In next_unstable mode, variadics use slice syntax &[T] instead of expansion
+#[cfg(wbg_next_unstable)]
+#[wasm_bindgen_test]
+fn variadic_primitive_slice() {
+    let f = Variadic::new().unwrap();
+    // Slice variant: sum takes &[i16]
+    assert_eq!(f.sum(&[1i16, 2, 3, 4, 5]), 15);
+    // Also test with empty slice
+    assert_eq!(f.sum(&[]), 0);
+    // And single element
+    assert_eq!(f.sum(&[42i16]), 42);
+}
+
+/// In next_unstable mode, variadics with object types use &[Object]
+#[cfg(wbg_next_unstable)]
+#[wasm_bindgen_test]
+fn variadic_object_slice() {
+    let f = Variadic::new().unwrap();
+    // count_objects takes &[Object]
+    let obj1 = js_sys::Object::new();
+    let obj2 = js_sys::Object::new();
+    let obj3 = js_sys::Object::new();
+    assert_eq!(f.count_objects(&[obj1, obj2, obj3]), 3);
+    // Empty slice
+    assert_eq!(f.count_objects(&[]), 0);
 }
 
 #[wasm_bindgen_test]

@@ -196,6 +196,8 @@ pub struct ImportFunction {
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures
     pub wasm_bindgen_futures: Path,
+    /// Generic parameters as validated simple type parameters for this function
+    pub generics: syn::Generics,
 }
 
 /// The type of a function being imported
@@ -332,8 +334,14 @@ pub struct ImportType {
     pub vendor_prefixes: Vec<Ident>,
     /// If present, don't generate a `Deref` impl
     pub no_deref: bool,
+    /// If present, don't generate `Upcast` impls
+    pub no_upcast: bool,
+    /// If present, don't generate a `Promising` impl
+    pub no_promising: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
+    /// Validated generics
+    pub generics: syn::Generics,
 }
 
 /// The metadata for a String Enum

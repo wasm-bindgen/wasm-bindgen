@@ -1,6 +1,9 @@
 {
   "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
   "rust-analyzer.cargo.cfgs": [
-    "panic=unwind",
-  ]
+    "panic=unwind"
+  ],
+  "rust-analyzer.cargo.extraEnv": {
+    // "RUSTFLAGS": "--cfg=js_sys_unstable_apis"
+  }
 }

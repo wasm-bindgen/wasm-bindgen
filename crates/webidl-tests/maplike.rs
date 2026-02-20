@@ -1,4 +1,5 @@
 use crate::generated::*;
+use js_sys::Function;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -24,23 +25,52 @@ macro_rules! read_test_suite {
             assert_eq!(maplike.get("c"), Some(3));
             assert_eq!(maplike.get("d"), None);
 
-            // { "a": 1, "b": 2, "c": 3 }
-            let cb = Closure::wrap(Box::new(|value: u32, key: String| match key.as_str() {
-                "a" => assert_eq!(value, 1),
-                "b" => assert_eq!(value, 2),
-                "c" => assert_eq!(value, 3),
-                _ => panic!("unexpected key"),
-            }) as Box<dyn Fn(u32, String)>);
+            // Test forEach with typed callback under next-unstable
+            #[cfg(wbg_next_unstable)]
+            {
+                let closure = wasm_bindgen::closure::Closure::<
+                    dyn FnMut(js_sys::Number, js_sys::JsString),
+                >::new(|value: js_sys::Number, key: js_sys::JsString| {
+                    let value = value.value_of() as u32;
+                    let key: String = key.into();
+                    match key.as_str() {
+                        "a" => assert_eq!(value, 1),
+                        "b" => assert_eq!(value, 2),
+                        "c" => assert_eq!(value, 3),
+                        _ => panic!("unexpected key: {}", key),
+                    }
+                });
+                let cb: js_sys::Function<
+                    fn(js_sys::Number, js_sys::JsString) -> js_sys::Undefined,
+                > = Function::from_closure(closure);
 
-            maplike.for_each(cb.as_ref().unchecked_ref()).unwrap();
+                maplike.for_each(&cb).unwrap();
+            }
+
+            // Test forEach with untyped Function callback (compat mode)
+            #[cfg(not(wbg_next_unstable))]
+            {
+                let cb = Closure::wrap(Box::new(|value: u32, key: String| match key.as_str() {
+                    "a" => assert_eq!(value, 1),
+                    "b" => assert_eq!(value, 2),
+                    "c" => assert_eq!(value, 3),
+                    _ => panic!("unexpected key"),
+                }) as Box<dyn Fn(u32, String)>);
+                maplike
+                    .for_each(&cb.into_js_value().unchecked_ref::<Function>())
+                    .unwrap();
+            }
 
             let mut entries_vec = vec![];
 
             for entry in maplike.entries().into_iter() {
                 let entry = entry.unwrap();
                 let pair = entry.dyn_into::<js_sys::Array>().unwrap();
-                let key = pair.get(0).as_string().unwrap();
-                let value = pair.get(1).as_f64().unwrap() as u32;
+                let (key, value) = {
+                    let key = pair.get(0).as_string().unwrap();
+                    let value = pair.get(1).as_f64().unwrap() as u32;
+                    (key, value)
+                };
 
                 entries_vec.push((key, value));
             }
@@ -58,6 +88,9 @@ macro_rules! read_test_suite {
 
             for key in maplike.keys().into_iter() {
                 let key = key.unwrap();
+                #[cfg(wbg_next_unstable)]
+                keys_vec.push(key.as_string().unwrap());
+                #[cfg(not(wbg_next_unstable))]
                 keys_vec.push(key.as_string().unwrap());
             }
 
@@ -70,6 +103,9 @@ macro_rules! read_test_suite {
 
             for value in maplike.values().into_iter() {
                 let value = value.unwrap();
+                #[cfg(wbg_next_unstable)]
+                values_vec.push(value.as_f64().unwrap() as u32);
+                #[cfg(not(wbg_next_unstable))]
                 values_vec.push(value.as_f64().unwrap() as u32);
             }
 

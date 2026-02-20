@@ -76,6 +76,32 @@ global.TestArrays = class {
   get octetSequence() {
     return new Uint8Array([3, 4, 5]);
   }
+  sumShorts(values) {
+    return values.reduce((a, b) => a + b, 0);
+  }
+  async sumPromises(promises) {
+    const results = await Promise.all(promises);
+    return results.reduce((a, b) => a + b, 0);
+  }
+  getShorts() {
+    return [1, 2, 3];
+  }
+  getPromises() {
+    return [Promise.resolve(10), Promise.resolve(20), Promise.resolve(30)];
+  }
+  async getAsyncShorts() {
+    return [4, 5, 6];
+  }
+  async getAsyncPromises() {
+    return [Promise.resolve(100), Promise.resolve(200)];
+  }
+  async processShorts(input) {
+    return input.map(x => x * 2);
+  }
+  async processPromises(input) {
+    const results = await Promise.all(input);
+    return results.map(x => Promise.resolve(x * 2));
+  }
 };
 
 global.ArrayBufferTest = class {
@@ -371,7 +397,7 @@ global.UndefinedMethod = class UndefinedMethod {
   }
 };
 
-global.NullableMethod = class NullableMethod {
+global.JsOptionMethod = class JsOptionMethod {
   constructor() { }
   opt(a) {
     if (a == undefined) {
@@ -422,6 +448,9 @@ global.Variadic = class Variadic {
   constructor() { }
   sum(...values) {
     return values.reduce((a, b) => a + b, 0);
+  }
+  countObjects(...items) {
+    return items.length;
   }
 };
 
@@ -517,6 +546,9 @@ global.TestPromises = class {
   stringPromise() {
     return new Promise(r => r("abc"));
   }
+  anyPromise() {
+    return new Promise(r => r({ foo: "bar", num: 42 }));
+  }
 };
 
 global.SignatureStability = class {
@@ -526,5 +558,203 @@ global.SignatureStability = class {
     } else {
       return options.mode || "safe";
     }
+  }
+};
+
+// Mixin override test classes
+global.ImageDataLike = class ImageDataLike {
+  constructor() {
+    this.data = [];
+  }
+};
+
+global.CanvasLike = class CanvasLike {
+  constructor() {}
+  
+  // putImageData accepts both f64 and i32 for dx/dy in JavaScript
+  putImageData(imageData, dx, dy) {
+    // Return the type of dx to verify which binding was used
+    return typeof dx === 'number' ? (Number.isInteger(dx) ? 'integer' : 'float') : 'unknown';
+  }
+};
+
+global.Position = class Position {
+  constructor() {}
+};
+
+global.GeolocationLike = class GeolocationLike {
+  constructor() {}
+  
+  getCurrentPosition(successCallback) {
+    // Just a stub
+  }
+};
+
+global.TextureLike = class TextureLike {
+  constructor() {}
+};
+
+global.UnstableFrame = class UnstableFrame {
+  constructor() {}
+};
+
+global.WebGLLike = class WebGLLike {
+  constructor() {}
+
+  texUpload(texture, arg1, arg2) {
+    if (typeof arg1 === 'number' && Number.isInteger(arg1)) return 'long';
+    if (typeof arg1 === 'number') return 'double';
+    if (typeof arg1 === 'string') return 'string';
+    return 'frame';
+  }
+};
+
+global.TestOptionalUnstableArg = class TestOptionalUnstableArg {
+  constructor() {}
+  
+  read(options) {
+    return Promise.resolve("data");
+  }
+};
+
+global.TestSingleIterable = class {
+  constructor() {
+    this.items = ['item0', 'item1', 'item2'];
+  }
+
+  get length() {
+    return this.items.length;
+  }
+
+  // Indexed property getter
+  [Symbol.for('wasm-bindgen-indexed-getter')](index) {
+    return this.items[index];
+  }
+
+  entries() {
+    return this.items.values();
+  }
+
+  keys() {
+    return this.items.keys();
+  }
+
+  values() {
+    return this.items.values();
+  }
+
+  forEach(callback, thisArg) {
+    return this.items.forEach(callback, thisArg);
+  }
+};
+
+global.TestDoubleIterable = class {
+  constructor() {
+    this.data = new Map([
+      ['key1', 10],
+      ['key2', 20],
+      ['key3', 30]
+    ]);
+  }
+
+  entries() {
+    return this.data.entries();
+  }
+
+  keys() {
+    return this.data.keys();
+  }
+
+  values() {
+    return this.data.values();
+  }
+
+  forEach(callback, thisArg) {
+    return this.data.forEach(callback, thisArg);
+  }
+};
+
+global.TestRecord = class {
+  constructor() {
+    this.lastSetRecord = null;
+  }
+
+  getNumberRecord() {
+    return {
+      a: 1,
+      b: 2,
+      c: 3
+    };
+  }
+
+  getStringRecord() {
+    return {
+      x: 'hello',
+      y: 'world',
+      z: 'test'
+    };
+  }
+
+  setRecord(data) {
+    this.lastSetRecord = data;
+  }
+};
+
+global.TestCallbacks = class {
+  constructor() { }
+
+  invokeVoidCallback(callback) {
+    callback();
+  }
+
+  invokeNumberCallback(callback, value) {
+    callback(value);
+  }
+
+  invokeStringTransformer(callback, input) {
+    return callback(input);
+  }
+
+  invokeBinaryOp(callback, a, b) {
+    return callback(a, b);
+  }
+
+  invokeObjectCallback(callback, data) {
+    callback(data);
+  }
+
+  invokeSequenceCallback(callback, input) {
+    return callback(input);
+  }
+};
+
+// Upcast test classes
+global.BaseType = class BaseType {
+  constructor() {
+    this.value = "";
+  }
+};
+
+global.ChildType = class ChildType extends global.BaseType {
+  constructor() {
+    super();
+    this.childValue = 0;
+  }
+};
+
+global.GrandChildType = class GrandChildType extends global.ChildType {
+  constructor() {
+    super();
+    this.grandChildValue = false;
+  }
+};
+
+global.UpcastTest = class UpcastTest {
+  static processBase(obj) {
+    return obj.value;
+  }
+
+  static processChild(obj) {
+    return obj.value;
   }
 };

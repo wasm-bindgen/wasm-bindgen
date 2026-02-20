@@ -3,7 +3,8 @@ use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
 use crate::describe::*;
-use crate::JsValue;
+use crate::sys::JsOption;
+use crate::{ErasableGeneric, JsValue};
 
 /// A trait for anything that can be converted into a type that can cross the
 /// Wasm ABI directly, eg `u32` or `f64`.
@@ -366,4 +367,174 @@ impl<T: FromWasmAbi> FromWasmAbi for AssertUnwindSafe<T> {
     unsafe fn from_abi(js: Self::Abi) -> Self {
         AssertUnwindSafe(T::from_abi(js))
     }
+}
+
+/// A trait for defining upcast relationships from a source type.
+///
+/// This is the inverse of [`Upcast<T>`] - instead of implementing
+/// `impl Upcast<Target> for Source`, you implement `impl UpcastFrom<Source> for Target`.
+///
+/// # Why UpcastFrom?
+///
+/// This resolves Rust's orphan rule issues: you can implement `UpcastFrom<MyType>`
+/// for external types when `MyType` is local to your crate, whereas implementing
+/// `Upcast<ExternalType>` would be prohibited by orphan rules.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+///
+/// # Relationship to Upcast
+///
+/// `UpcastFrom<S>` provides a blanket implementation of `Upcast<T>`:
+/// ```ignore
+/// impl<S, T> Upcast<T> for S where T: UpcastFrom<S> {}
+/// ```
+///
+/// This means implementing `UpcastFrom<Source> for Target` automatically gives you
+/// `Upcast<Target> for Source`, enabling `source.upcast()` to produce `Target`.
+pub trait UpcastFrom<S: ?Sized> {}
+
+/// A trait for type-safe generic upcasting.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+///
+/// # Note
+///
+/// `Upcast<T>` has a blanket implementation for all types where `T: UpcastFrom<Self>`.
+/// New upcast relationships should typically be defined by implementing `FromUpcast`
+/// rather than `Upcast` directly, to avoid orphan rule issues.
+pub trait Upcast<T: ?Sized> {
+    /// Perform a zero-cost type-safe upcast to a wider ref type within the Wasm
+    /// bindgen generics type system.
+    ///
+    /// This enables proper nested conversions that obey subtyping rules,
+    /// supporting strict API type checking.
+    ///
+    /// The common pattern when passing a narrow type is to call `upcast()`
+    /// or `upcast_into()` to obtain the correct type for the function usage,
+    /// while ensuring safe type checked usage.
+    ///
+    /// For example, if passing `Promise<Number>` as an argument to a function
+    /// where `Promise<JsValue>` is expected, or `Function<JsValue>` as an
+    /// argument where `Function<Number>` is expected.
+    ///
+    /// This is a compile time conversion only by the nature of the erasable
+    /// generics type system.
+    #[inline]
+    fn upcast(&self) -> &T
+    where
+        Self: ErasableGeneric,
+        T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
+    {
+        unsafe { &*(self as *const Self as *const T) }
+    }
+
+    /// Perform a zero-cost type-safe upcast to a wider type within the Wasm
+    /// bindgen generics type system.
+    ///
+    /// This enables proper nested conversions that obey subtyping rules,
+    /// supporting strict API type checking.
+    ///
+    /// The common pattern when passing a narrow type is to call `upcast()`
+    /// or `upcast_into()` to obtain the correct type for the function usage,
+    /// while ensuring safe type checked usage.
+    ///
+    /// For example, if passing `Promise<Number>` as an argument to a function
+    /// where `Promise<JsValue>` is expected, or `FunctionArgs<JsValue>` as an
+    /// argument where `FunctionArgs<Number>` is expected.
+    ///
+    /// This is a compile time conversion only by the nature of the erasable
+    /// generics type system.
+    #[inline]
+    fn upcast_into(self) -> T
+    where
+        Self: Sized + ErasableGeneric,
+        T: Sized + ErasableGeneric<Repr = <Self as ErasableGeneric>::Repr>,
+    {
+        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
+    }
+}
+
+// Blanket impl: UpcastFrom<S> for T implies Upcast<T> for S
+impl<S, T> Upcast<T> for S
+where
+    T: UpcastFrom<S> + ?Sized,
+    S: ?Sized,
+{
+}
+
+// Reference impls using UpcastFrom
+impl<'a, T, Target> UpcastFrom<&'a mut T> for &'a mut Target where Target: UpcastFrom<T> {}
+impl<'a, T, Target> UpcastFrom<&'a T> for &'a Target where Target: UpcastFrom<T> {}
+
+// Tuple upcasts with structural covariance
+macro_rules! impl_tuple_upcast {
+    ([$($T:ident)+] [$($Target:ident)+]) => {
+        // Structural covariance: (T...) -> (Target...)
+        impl<$($T,)+ $($Target,)+> UpcastFrom<($($T,)+)> for ($($Target,)+)
+        where
+            $($Target: JsGeneric + UpcastFrom<$T>,)+
+            $($T: JsGeneric,)+
+        {
+        }
+        impl<$($T: JsGeneric,)+ $($Target: JsGeneric,)+> UpcastFrom<($($T,)+)> for JsOption<($($Target,)+)>
+        where
+            $($Target: JsGeneric + UpcastFrom<$T>,)+
+            $($T: JsGeneric,)+
+        {
+        }
+    };
+}
+impl_tuple_upcast!([T1][Target1]);
+impl_tuple_upcast!([T1 T2] [Target1 Target2]);
+impl_tuple_upcast!([T1 T2 T3] [Target1 Target2 Target3]);
+impl_tuple_upcast!([T1 T2 T3 T4] [Target1 Target2 Target3 Target4]);
+impl_tuple_upcast!([T1 T2 T3 T4 T5] [Target1 Target2 Target3 Target4 Target5]);
+impl_tuple_upcast!([T1 T2 T3 T4 T5 T6] [Target1 Target2 Target3 Target4 Target5 Target6]);
+impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7] [Target1 Target2 Target3 Target4 Target5 Target6 Target7]);
+impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Target5 Target6 Target7 Target8]);
+
+/// A convenience trait for types that erase to [`JsValue`].
+///
+/// This is a shorthand for `ErasableGeneric<Repr = JsValue>`, used as a bound
+/// on generic parameters that must be representable as JavaScript values.
+///
+/// # When to Use
+///
+/// Use `JsGeneric` as a trait bound when you need a generic type that:
+/// - Can be passed to/from JavaScript
+/// - Is type-erased to `JsValue` at the FFI boundary
+///
+/// # Examples
+///
+/// ```ignore
+/// use wasm_bindgen::JsGeneric;
+///
+/// fn process_js_values<T: JsGeneric>(items: &[T]) {
+///     // T can be any JS-compatible type
+/// }
+/// ```
+///
+/// # Implementors
+///
+/// This trait is automatically implemented for all types that implement
+/// `ErasableGeneric<Repr = JsValue>`, including:
+/// - All `js_sys` types (`Object`, `Array`, `Function`, etc.)
+/// - `JsValue` itself
+/// - Custom types imported via `#[wasm_bindgen]`
+pub trait JsGeneric:
+    ErasableGeneric<Repr = JsValue> + UpcastFrom<Self> + Upcast<Self> + Upcast<JsValue> + 'static
+{
+}
+
+impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + 'static> JsGeneric
+    for T
+{
 }

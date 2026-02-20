@@ -25,7 +25,7 @@ pub trait ValueFormatter {
     fn format_value(&self, value: f64) -> String {
         let mut values = [value];
         let unit = self.scale_values(value, &mut values);
-        format!("{:>6} {}", short(values[0]), unit)
+        format!("{:>6} {unit}", short(values[0]))
     }
 
     /// Format the value as a throughput measurement. The value represents the measurement value;
@@ -33,7 +33,7 @@ pub trait ValueFormatter {
     fn format_throughput(&self, throughput: &Throughput, value: f64) -> String {
         let mut values = [value];
         let unit = self.scale_throughputs(value, throughput, &mut values);
-        format!("{:>6} {}", short(values[0]), unit)
+        format!("{:>6} {unit}", short(values[0]))
     }
 
     /// Scale the given values to some appropriate unit and return the unit string.

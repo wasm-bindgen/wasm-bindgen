@@ -6,25 +6,17 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     # [wasm_bindgen (extends = :: js_sys :: Object , js_name = NodeFilter)]
     #[derive(Debug, Clone, PartialEq, Eq)]
-    #[doc = "The `NodeFilter` dictionary."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NodeFilter`*"]
+    #[doc = "The `NodeFilter` dictionary.\n\n*This API requires the following crate features to be activated: `NodeFilter`*"]
     pub type NodeFilter;
-    #[doc = "Get the `acceptNode` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NodeFilter`*"]
+    #[doc = "Get the `acceptNode` field of this object.\n\n*This API requires the following crate features to be activated: `NodeFilter`*"]
     #[wasm_bindgen(method, getter = "acceptNode")]
     pub fn get_accept_node(this: &NodeFilter) -> Option<::js_sys::Function>;
-    #[doc = "Change the `acceptNode` field of this object."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NodeFilter`*"]
+    #[doc = "Change the `acceptNode` field of this object.\n\n*This API requires the following crate features to be activated: `NodeFilter`*"]
     #[wasm_bindgen(method, setter = "acceptNode")]
     pub fn set_accept_node(this: &NodeFilter, val: &::js_sys::Function);
 }
 impl NodeFilter {
-    #[doc = "Construct a new `NodeFilter`."]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NodeFilter`*"]
+    #[doc = "Construct a new `NodeFilter`.\n\n*This API requires the following crate features to be activated: `NodeFilter`*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());

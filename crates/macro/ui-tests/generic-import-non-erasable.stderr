@@ -1,0 +1,66 @@
+error[E0277]: the trait bound `&'static mut wasm_bindgen::JsValue: IntoWasmAbi` is not satisfied
+ --> ui-tests/generic-import-non-erasable.rs:3:1
+  |
+3 | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `&'static mut wasm_bindgen::JsValue`
+  |
+  = help: the following other types implement trait `IntoWasmAbi`:
+            &wasm_bindgen::JsValue
+            wasm_bindgen::JsValue
+  = note: `IntoWasmAbi` is implemented for `&'static wasm_bindgen::JsValue`, but not for `&'static mut wasm_bindgen::JsValue`
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0271]: type mismatch resolving `<u32 as ErasableGeneric>::Repr == JsValue`
+  --> ui-tests/generic-import-non-erasable.rs:20:11
+   |
+20 |     foo::<u32>(42);
+   |           ^^^ expected `JsValue`, found `u32`
+   |
+   = note: required for `u32` to implement `ErasableGenericOwn<wasm_bindgen::JsValue>`
+note: required by a bound in `foo`
+  --> ui-tests/generic-import-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `foo`
+...
+7  |     pub fn foo<T>(a: T) -> bool;
+   |            --- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0271]: type mismatch resolving `<&u32 as ErasableGeneric>::Repr == &JsValue`
+  --> ui-tests/generic-import-non-erasable.rs:24:11
+   |
+24 |     bar::<u32>(&42);
+   |           ^^^ expected `&JsValue`, found `&u32`
+   |
+   = note: expected reference `&'static wasm_bindgen::JsValue`
+              found reference `&'static u32`
+   = note: required for `u32` to implement `ErasableGenericBorrow<wasm_bindgen::JsValue>`
+note: required by a bound in `bar`
+  --> ui-tests/generic-import-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `bar`
+...
+11 |     pub fn bar<T>(a: &T) -> bool;
+   |            --- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0271]: type mismatch resolving `<&mut u32 as ErasableGeneric>::Repr == &mut JsValue`
+  --> ui-tests/generic-import-non-erasable.rs:29:11
+   |
+29 |     baz::<u32>(&mut x);
+   |           ^^^ expected `&mut JsValue`, found `&mut u32`
+   |
+   = note: expected mutable reference `&'static mut wasm_bindgen::JsValue`
+              found mutable reference `&'static mut u32`
+   = note: required for `u32` to implement `ErasableGenericBorrowMut<wasm_bindgen::JsValue>`
+note: required by a bound in `baz`
+  --> ui-tests/generic-import-non-erasable.rs:3:1
+   |
+3  | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ required by this bound in `baz`
+...
+15 |     pub fn baz<T>(a: &mut T) -> bool;
+   |            --- required by a bound in this function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

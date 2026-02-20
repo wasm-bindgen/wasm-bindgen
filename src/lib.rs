@@ -52,6 +52,8 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+use crate::convert::{TryFromJsValue, UpcastFrom, VectorIntoWasmAbi};
+use crate::sys::Promising;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -61,8 +63,6 @@ use core::ops::{
     Add, BitAnd, BitOr, BitXor, Deref, DerefMut, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub,
 };
 use core::ptr::NonNull;
-
-use crate::convert::{TryFromJsValue, VectorIntoWasmAbi};
 
 const _: () = {
     /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
@@ -110,7 +110,8 @@ macro_rules! externs {
 /// use wasm_bindgen::prelude::*;
 /// ```
 pub mod prelude {
-    pub use crate::closure::{Closure, ScopedClosure, StaticClosure};
+    pub use crate::closure::{Closure, ImmediateClosure, ScopedClosure};
+    pub use crate::convert::Upcast; // provides upcast() and upcast_ref()
     pub use crate::JsCast;
     pub use crate::JsValue;
     pub use crate::UnwrapThrowExt;
@@ -127,11 +128,15 @@ pub mod closure;
 pub mod convert;
 pub mod describe;
 mod link;
+pub mod sys;
 
 #[cfg(wbg_reference_types)]
 mod externref;
 #[cfg(wbg_reference_types)]
 use externref::__wbindgen_externref_heap_live_count;
+
+pub use crate::__rt::marker::ErasableGeneric;
+pub use crate::convert::JsGeneric;
 
 mod cast;
 pub use crate::cast::JsCast;
@@ -159,6 +164,14 @@ pub struct JsValue {
 unsafe impl Send for JsValue {}
 #[cfg(not(target_feature = "atomics"))]
 unsafe impl Sync for JsValue {}
+
+unsafe impl ErasableGeneric for JsValue {
+    type Repr = JsValue;
+}
+
+impl Promising for JsValue {
+    type Resolution = JsValue;
+}
 
 impl JsValue {
     /// The `null` JS value constant.
@@ -371,6 +384,7 @@ impl JsValue {
     pub fn is_undefined(&self) -> bool {
         __wbindgen_is_undefined(self)
     }
+
     /// Tests whether this JS value is `null` or `undefined`
     #[inline]
     pub fn is_null_or_undefined(&self) -> bool {
@@ -941,6 +955,8 @@ impl AsRef<JsValue> for JsValue {
         self
     }
 }
+
+impl UpcastFrom<JsValue> for JsValue {}
 
 // Loosely based on toInt32 in ecma-272 for abi semantics
 // with restriction that it only applies for numbers

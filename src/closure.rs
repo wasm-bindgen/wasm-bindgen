@@ -1,23 +1,43 @@
 //! Support for closures in `wasm-bindgen`
 //!
 //! This module defines the [`ScopedClosure`] type which is used to pass Rust closures
-//! to JavaScript. All closures are unwind safe: panics are caught and converted to
+//! to JavaScript. All closures are unwind safe by default: panics are caught and converted to
 //! JavaScript exceptions when built with `panic=unwind`.
 //!
-//! # Choosing a `Closure` API
+//! # Immutable by Default
 //!
-//! | Use Case | API | Lifetime |
-//! |----------|-----|----------|
-//! | Immediate/synchronous callbacks | [`ScopedClosure::borrow`] / [`ScopedClosure::borrow_mut`] | Non-`'static` allowed |
-//! | Long-lived callbacks (events, timers) | [`Closure::new`] / [`ScopedClosure::own`] | `'static` required |
-//! | One-shot callbacks | [`Closure::once`] / [`Closure::once_into_js`] | `'static` required |
-//! | Transfer ownership to JS | Pass `Closure` by value | `'static` required |
+//! The closure API defaults to **immutable** (`Fn`) closures because they are more
+//! likely to satisfy `UnwindSafe` automatically:
+//!
+//! - `&T` where `T: RefUnwindSafe` is `UnwindSafe`
+//! - `&mut T` is **never** `UnwindSafe` regardless of `T`
+//!
+//! This means:
+//! - [`ScopedClosure::borrow`] creates an immutable `Fn` closure
+//! - [`ScopedClosure::borrow_mut`] creates a mutable `FnMut` closure
+//! - [`ImmediateClosure::new`] creates an immutable `Fn` closure
+//! - [`ImmediateClosure::new_mut`] creates a mutable `FnMut` closure
+//!
+//! Immutable closures can be upcasted to mutable closures using [`upcast_ref`](crate::Upcast::upcast_ref).
 //!
 //! # Type Aliases
 //!
 //! - [`ScopedClosure<'a, T>`] — The unified closure type with a lifetime parameter
-//! - [`StaticClosure<T>`] — Alias for `ScopedClosure<'static, T>`
-//! - [`Closure<T>`] — Alias for `StaticClosure<T>` (for backwards compatibility)
+//! - [`Closure<T>`] — Alias for `ScopedClosure<'static, T>` (for backwards compatibility)
+//! - [`ImmediateClosure<'a, T>`] — Lightweight wrapper for immediate callbacks with unwind safety
+//!
+//! # Unwind Safety
+//!
+//! For immediate/synchronous callbacks, you have two options:
+//!
+//! - **[`ImmediateClosure`]**: Recommended when you want panics to be caught and converted
+//!   to JavaScript exceptions. This is safer but has slight overhead.
+//!
+//! - **`&dyn FnMut` / `&dyn Fn`**: Use when you don't need unwind safety and prefer
+//!   panics to abort the process.
+//!
+//! For [`ScopedClosure`], the default constructors (`borrow`, `borrow_mut`, `own`) catch
+//! panics, while the `_aborting` variants (`borrow_aborting`, `borrow_mut_aborting`, etc.) do not.
 //!
 //! # Ownership Model
 //!
@@ -32,17 +52,17 @@
 //! See the [`ScopedClosure`] type documentation for detailed examples.
 
 #![allow(clippy::fn_to_numeric_cast)]
-
-use crate::cast::JsCast;
-use crate::convert::*;
-use crate::describe::*;
-use crate::JsValue;
-use crate::__rt::marker::MaybeUnwindSafe;
 use alloc::boxed::Box;
 use alloc::string::String;
 use core::fmt;
+use core::mem::{self, ManuallyDrop};
+
+use crate::__rt::marker::ErasableGeneric;
+use crate::__rt::marker::MaybeUnwindSafe;
+use crate::describe::*;
+use crate::JsValue;
+use crate::{convert::*, JsCast};
 use core::marker::PhantomData;
-use core::mem;
 use core::panic::AssertUnwindSafe;
 
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
@@ -53,240 +73,23 @@ extern "C" {
     fn _wbg_cb_unref(js: &JsClosure);
 }
 
-/// A handle to both a closure in Rust as well as JS closure which will invoke
-/// the Rust closure.
-///
-/// A `Closure` is the primary way that a `'static` lifetime closure is
-/// transferred from Rust to JS. `Closure` currently requires that the closures
-/// it's created with have the `'static` lifetime in Rust for soundness reasons.
-///
-/// This type is a "handle" in the sense that whenever it is dropped it will
-/// invalidate the JS closure that it refers to. Any usage of the closure in JS
-/// after the `Closure` has been dropped will raise an exception. It's then up
-/// to you to arrange for `Closure` to be properly deallocate at an appropriate
-/// location in your program.
-///
-/// The type parameter on `Closure` is the type of closure that this represents.
-/// Currently this can only be the `Fn` and `FnMut` traits with up to 7
-/// arguments (and an optional return value).
-///
-/// # Examples
-///
-/// Here are a number of examples of using `Closure`.
-///
-/// ## Using the `setInterval` API
-///
-/// Sample usage of `Closure` to invoke the `setInterval` API.
-///
-/// ```rust,no_run
-/// use wasm_bindgen::prelude::*;
-///
-/// #[wasm_bindgen]
-/// extern "C" {
-///     fn setInterval(closure: &Closure<dyn FnMut()>, time: u32) -> i32;
-///     fn clearInterval(id: i32);
-///
-///     #[wasm_bindgen(js_namespace = console)]
-///     fn log(s: &str);
-/// }
-///
-/// #[wasm_bindgen]
-/// pub struct IntervalHandle {
-///     interval_id: i32,
-///     _closure: Closure<dyn FnMut()>,
-/// }
-///
-/// impl Drop for IntervalHandle {
-///     fn drop(&mut self) {
-///         clearInterval(self.interval_id);
-///     }
-/// }
-///
-/// #[wasm_bindgen]
-/// pub fn run() -> IntervalHandle {
-///     // First up we use `Closure::new` to wrap up a Rust closure and create
-///     // a JS closure.
-///     let cb = Closure::new(|| {
-///         log("interval elapsed!");
-///     });
-///
-///     // Next we pass this via reference to the `setInterval` function, and
-///     // `setInterval` gets a handle to the corresponding JS closure.
-///     let interval_id = setInterval(&cb, 1_000);
-///
-///     // If we were to drop `cb` here it would cause an exception to be raised
-///     // whenever the interval elapses. Instead we *return* our handle back to JS
-///     // so JS can decide when to cancel the interval and deallocate the closure.
-///     IntervalHandle {
-///         interval_id,
-///         _closure: cb,
-///     }
-/// }
-/// ```
-///
-/// ## Casting a `Closure` to a `js_sys::Function`
-///
-/// This is the same `setInterval` example as above, except it is using
-/// `web_sys` (which uses `js_sys::Function` for callbacks) instead of manually
-/// writing bindings to `setInterval` and other Web APIs.
-///
-/// ```rust,ignore
-/// use wasm_bindgen::JsCast;
-///
-/// #[wasm_bindgen]
-/// pub struct IntervalHandle {
-///     interval_id: i32,
-///     _closure: Closure<dyn FnMut()>,
-/// }
-///
-/// impl Drop for IntervalHandle {
-///     fn drop(&mut self) {
-///         let window = web_sys::window().unwrap();
-///         window.clear_interval_with_handle(self.interval_id);
-///     }
-/// }
-///
-/// #[wasm_bindgen]
-/// pub fn run() -> Result<IntervalHandle, JsValue> {
-///     let cb = Closure::new(|| {
-///         web_sys::console::log_1(&"interval elapsed!".into());
-///     });
-///
-///     let window = web_sys::window().unwrap();
-///     let interval_id = window.set_interval_with_callback_and_timeout_and_arguments_0(
-///         // Note this method call, which uses `as_ref()` to get a `JsValue`
-///         // from our `Closure` which is then converted to a `&Function`
-///         // using the `JsCast::unchecked_ref` function.
-///         cb.as_ref().unchecked_ref(),
-///         1_000,
-///     )?;
-///
-///     // Same as above.
-///     Ok(IntervalHandle {
-///         interval_id,
-///         _closure: cb,
-///     })
-/// }
-/// ```
-///
-/// ## Using `FnOnce` and `Closure::once` with `requestAnimationFrame`
-///
-/// Because `requestAnimationFrame` only calls its callback once, we can use
-/// `FnOnce` and `Closure::once` with it.
-///
-/// ```rust,no_run
-/// use wasm_bindgen::prelude::*;
-///
-/// #[wasm_bindgen]
-/// extern "C" {
-///     fn requestAnimationFrame(closure: &Closure<dyn FnMut()>) -> u32;
-///     fn cancelAnimationFrame(id: u32);
-///
-///     #[wasm_bindgen(js_namespace = console)]
-///     fn log(s: &str);
-/// }
-///
-/// #[wasm_bindgen]
-/// pub struct AnimationFrameHandle {
-///     animation_id: u32,
-///     _closure: Closure<dyn FnMut()>,
-/// }
-///
-/// impl Drop for AnimationFrameHandle {
-///     fn drop(&mut self) {
-///         cancelAnimationFrame(self.animation_id);
-///     }
-/// }
-///
-/// // A type that will log a message when it is dropped.
-/// struct LogOnDrop(&'static str);
-/// impl Drop for LogOnDrop {
-///     fn drop(&mut self) {
-///         log(self.0);
-///     }
-/// }
-///
-/// #[wasm_bindgen]
-/// pub fn run() -> AnimationFrameHandle {
-///     // We are using `Closure::once` which takes a `FnOnce`, so the function
-///     // can drop and/or move things that it closes over.
-///     let fired = LogOnDrop("animation frame fired or canceled");
-///     let cb = Closure::once(move || drop(fired));
-///
-///     // Schedule the animation frame!
-///     let animation_id = requestAnimationFrame(&cb);
-///
-///     // Again, return a handle to JS, so that the closure is not dropped
-///     // immediately and JS can decide whether to cancel the animation frame.
-///     AnimationFrameHandle {
-///         animation_id,
-///         _closure: cb,
-///     }
-/// }
-/// ```
-///
-/// ## Converting `FnOnce`s directly into JavaScript Functions with `Closure::once_into_js`
-///
-/// If we don't want to allow a `FnOnce` to be eagerly dropped (maybe because we
-/// just want it to drop after it is called and don't care about cancellation)
-/// then we can use the `Closure::once_into_js` function.
-///
-/// This is the same `requestAnimationFrame` example as above, but without
-/// supporting early cancellation.
-///
-/// ```
-/// use wasm_bindgen::prelude::*;
-///
-/// #[wasm_bindgen]
-/// extern "C" {
-///     // We modify the binding to take an untyped `JsValue` since that is what
-///     // is returned by `Closure::once_into_js`.
-///     //
-///     // If we were using the `web_sys` binding for `requestAnimationFrame`,
-///     // then the call sites would cast the `JsValue` into a `&js_sys::Function`
-///     // using `f.unchecked_ref::<js_sys::Function>()`. See the `web_sys`
-///     // example above for details.
-///     fn requestAnimationFrame(callback: JsValue);
-///
-///     #[wasm_bindgen(js_namespace = console)]
-///     fn log(s: &str);
-/// }
-///
-/// // A type that will log a message when it is dropped.
-/// struct LogOnDrop(&'static str);
-/// impl Drop for LogOnDrop {
-///     fn drop(&mut self) {
-///         log(self.0);
-///     }
-/// }
-///
-/// #[wasm_bindgen]
-/// pub fn run() {
-///     // We are using `Closure::once_into_js` which takes a `FnOnce` and
-///     // converts it into a JavaScript function, which is returned as a
-///     // `JsValue`.
-///     let fired = LogOnDrop("animation frame fired");
-///     let cb = Closure::once_into_js(move || drop(fired));
-///
-///     // Schedule the animation frame!
-///     requestAnimationFrame(cb);
-///
-///     // No need to worry about whether or not we drop a `Closure`
-///     // here or return some sort of handle to JS!
-/// }
-/// ```
 /// A closure with a lifetime parameter that represents a Rust closure passed to JavaScript.
 ///
 /// `ScopedClosure<'a, T>` is the unified closure type. The lifetime `'a` indicates
 /// how long the closure is valid:
 ///
-/// - **`ScopedClosure<'static, T>`** (aka [`StaticClosure<T>`] or [`Closure<T>`]) - An owned
-///   closure with heap-allocated data. Requires `'static` captures. Use for long-lived
-///   closures like event listeners and timers. Created with [`Closure::new`] or [`ScopedClosure::own`].
+/// - **`ScopedClosure<'static, T>`** - An owned closure with heap-allocated data. Requires
+///   `'static` captures. Use for long-lived closures like event listeners and timers.
+///   Created with [`Closure::new`] or [`ScopedClosure::own`]. May transfer ownership to the
+///   JS GC using finalizers.
 ///
 /// - **`ScopedClosure<'a, T>`** (non-`'static`) - A borrowed closure referencing stack data.
 ///   Allows non-`'static` captures. Use for immediate/synchronous callbacks. Created with
-///   [`ScopedClosure::borrow`] or [`ScopedClosure::borrow_mut`].
+///   [`ScopedClosure::borrow`] (for `FnMut`) or [`ScopedClosure::borrow_immutable`] (for `Fn`).
+///   Cannot transfer ownership to JS GC.
+///
+/// [`Closure<T>`] is currently a type alias for `ScopedClosure<'static, T>`. In
+/// a future release, a lifetime argument will be added to this alias.
 ///
 /// # Ownership Model
 ///
@@ -308,13 +111,13 @@ extern "C" {
 /// ```ignore
 /// let mut sum = 0;
 /// let mut f = |x: u32| { sum += x; };  // f borrows sum
-/// let closure = ScopedClosure::borrow_mut(&mut f);  // closure borrows f
+/// let closure = ScopedClosure::borrow(&mut f);  // closure borrows f
 /// // closure cannot outlive f, and f cannot outlive sum
 /// ```
 ///
 /// # Examples
 ///
-/// ## Borrowed closures with `ScopedClosure::borrow_mut`
+/// ## Borrowed closures with `ScopedClosure::borrow`
 ///
 /// Use for immediate/synchronous callbacks where JS calls the closure right away:
 ///
@@ -329,7 +132,7 @@ extern "C" {
 /// let mut sum = 0;
 /// {
 ///     let mut f = |x: u32| { sum += x; };
-///     let closure = ScopedClosure::borrow_mut(&mut f);
+///     let closure = ScopedClosure::borrow(&mut f);
 ///     call_immediately(&closure);
 /// }  // closure dropped here, JS function invalidated
 /// assert_eq!(sum, 42);
@@ -357,38 +160,32 @@ extern "C" {
 ///
 /// ## Transferring ownership to JS
 ///
-/// Pass a `Closure` by value to transfer ownership:
+/// Pass a `ScopedClosure<'static, T>` by value to transfer ownership:
 ///
 /// ```ignore
 /// use wasm_bindgen::prelude::*;
 ///
 /// #[wasm_bindgen]
 /// extern "C" {
-///     fn set_one_shot_callback(cb: Closure<dyn FnMut()>);
+///     fn set_one_shot_callback(cb: ScopedClosure<dyn FnMut()>);
 /// }
 ///
-/// let cb = Closure::new(|| { /* ... */ });
+/// let cb = ScopedClosure::own(|| { /* ... */ });
 /// set_one_shot_callback(cb);  // Ownership transferred, no need to store
 /// ```
 pub struct ScopedClosure<'a, T: ?Sized> {
-    js: JsValue,
-    _marker: PhantomData<T>,
+    js: JsClosure,
+    // careful: must be Box<T> not just T because unsized PhantomData
+    // seems to have weird interaction with Pin<>
+    _marker: PhantomData<Box<T>>,
     _lifetime: PhantomData<&'a ()>,
 }
 
-/// A `'static` closure that owns its data on the heap.
+/// Alias for [`ScopedClosure<'static, T>`] for backwards compatibility.
 ///
-/// This is an alias for `ScopedClosure<'static, T>`. Use this for long-lived
-/// closures like event listeners and timers.
-///
-/// See [`ScopedClosure`] for full documentation.
-pub type StaticClosure<T> = ScopedClosure<'static, T>;
-
-/// Alias for [`StaticClosure`] for backwards compatibility.
-///
-/// In a future major version, `Closure` may become `ScopedClosure` with a
+/// In a future major version, `Closure` will become `ScopedClosure<'a, T>` with a
 /// lifetime parameter.
-pub type Closure<T> = StaticClosure<T>;
+pub type Closure<T> = ScopedClosure<'static, T>;
 
 // ScopedClosure is Unpin because it only contains a JsValue (which is just a u32)
 // and PhantomData markers. The closure data is either on the heap (owned) or
@@ -412,7 +209,7 @@ impl<T: ?Sized> Drop for ScopedClosure<'_, T> {
         //
         // For borrowed closures (`ScopedClosure::borrow`/`borrow_mut`), this sets
         // state.a = state.b = 0 to prevent any further calls to the closure.
-        self.js.unchecked_ref::<JsClosure>()._wbg_cb_unref();
+        self.js._wbg_cb_unref();
     }
 }
 
@@ -420,17 +217,133 @@ impl<'a, T> ScopedClosure<'a, T>
 where
     T: ?Sized + WasmClosure,
 {
-    /// Creates a scoped closure by borrowing an immutable `Fn` closure.
+    /// Obtain a `&JsValue` reference for this closure
+    pub fn as_js_value(&self) -> &JsValue {
+        self.js.unchecked_ref()
+    }
+}
+
+/// Methods for creating and managing `'static` closures.
+///
+/// These methods are only available on `ScopedClosure<'static, T>`
+/// not on borrowed `ScopedClosure<'a, T>` where `'a` is not `'static`.
+impl<T> ScopedClosure<'static, T>
+where
+    T: ?Sized + WasmClosure,
+{
+    /// Creates a new owned `'static` closure that aborts on panic.
+    ///
+    /// Alias for [`own_aborting`](Self::own_aborting).
+    ///
+    /// **Note: Not unwind safe. Prefer [`own`](Self::own) or `own` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
+    pub fn new<F>(t: F) -> Self
+    where
+        F: IntoWasmClosure<T> + 'static,
+    {
+        Self::_wrap(Box::new(t).unsize(), false)
+    }
+
+    /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
+    /// Rust function, with panic unwind support.
+    ///
+    /// The type parameter `T` determines whether the closure is `Fn` or `FnMut`.
+    ///
+    /// Supports unwind via its UnwindSafe bound when building with panic=unwind.
+    ///
+    /// When provided to a JS function as an own value, to be managed by the JS GC.
+    ///
+    /// See [`borrow`](Self::borrow) for creating a borrowed `ScopedClosure` with
+    /// an associated lifetime (defaults to immutable `Fn`).
+    pub fn own<F>(t: F) -> Self
+    where
+        F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
+    {
+        Self::_wrap(Box::new(t).unsize(), true)
+    }
+
+    /// Creates a new owned `'static` closure that aborts on panic.
+    ///
+    /// Unlike [`own`](Self::own), this version does NOT catch panics and does NOT
+    /// require `UnwindSafe`. If the closure panics, the process will abort.
+    ///
+    /// The type parameter `T` determines whether the closure is `Fn` or `FnMut`.
+    ///
+    /// When provided to a JS function as an own value, to be managed by the JS GC.
+    ///
+    /// See [`borrow_aborting`](Self::borrow_aborting) for creating a borrowed
+    /// `ScopedClosure` with an associated lifetime.
+    ///
+    /// **Note: Not unwind safe. Prefer [`own`](Self::own) or `own` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
+    pub fn own_aborting<F>(t: F) -> Self
+    where
+        F: IntoWasmClosure<T> + 'static,
+    {
+        Self::_wrap(Box::new(t).unsize(), false)
+    }
+
+    /// A more direct version of `Closure::new` which creates a `Closure` from
+    /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
+    ///
+    /// This version does NOT catch panics. If the closure panics, the process will abort.
+    ///
+    /// **Note: Not unwind safe. Prefer [`wrap_assert_unwind_safe`](Self::wrap_assert_unwind_safe)
+    /// when possible.**
+    pub fn wrap<F>(data: Box<F>) -> Self
+    where
+        F: IntoWasmClosure<T> + ?Sized,
+    {
+        Self::_wrap(data.unsize(), false)
+    }
+
+    /// A more direct version of `Closure::new` which creates a `Closure` from
+    /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
+    ///
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    ///
+    /// This version catches panics when unwinding is available.
+    pub fn wrap_assert_unwind_safe<F>(data: Box<F>) -> Self
+    where
+        F: IntoWasmClosure<T> + ?Sized,
+    {
+        Self::_wrap(data.unsize(), true)
+    }
+
+    #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+    fn _wrap(data: Box<T>, unwind_safe: bool) -> Self {
+        Self {
+            js: crate::__rt::wbg_cast(OwnedClosureUnwind { data, unwind_safe }),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+
+    #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
+    fn _wrap(data: Box<T>, _unwind_safe: bool) -> Self {
+        Self {
+            js: crate::__rt::wbg_cast(OwnedClosure(data)),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+
+    /// Creates a scoped closure by borrowing an immutable `Fn` closure with
+    /// panic unwind support.
     ///
     /// This is the recommended way to pass closures to JavaScript for immediate/
-    /// synchronous use. Unlike [`Closure::new`], this does not require the closure
+    /// synchronous use. Unlike [`Closure::own`], this does not require the closure
     /// to be `'static`, allowing you to capture references to local variables.
+    ///
+    /// Use [`borrow_mut`](Self::borrow_mut) when you need to mutate captured state.
     ///
     /// The returned `ScopedClosure<'a, _>` has lifetime `'a` from the closure
     /// reference, which means it cannot outlive the closure or any data the
     /// closure captures.
     ///
-    /// For closures that need mutable state (`FnMut`), use [`borrow_mut`](Self::borrow_mut).
+    /// Supports unwind via its UnwindSafe bound when building with panic=unwind.
+    /// The resulting closure can be upcasted to `FnMut` using [`upcast_ref`](crate::Upcast::upcast_ref).
     ///
     /// # When to use scoped closures
     ///
@@ -457,19 +370,21 @@ where
     /// #[wasm_bindgen]
     /// extern "C" {
     ///     fn call_with_value(cb: &ScopedClosure<dyn Fn(u32)>, value: u32);
+    ///     fn call_fnmut(cb: &ScopedClosure<dyn FnMut(u32)>, value: u32);
     /// }
     ///
     /// let data = vec![1, 2, 3];
-    /// let f = || {
-    ///     // Can access `data` without moving it
-    ///     println!("data len: {}", data.len());
+    /// let f = |x| {
+    ///     println!("data len: {}, x: {}", data.len(), x);
     /// };
     /// let closure = ScopedClosure::borrow(&f);
     /// call_with_value(&closure, 42);
+    /// // Can also upcast to FnMut
+    /// call_fnmut(closure.upcast_ref(), 42);
     /// ```
-    pub fn borrow<F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
-        F: UnsizeClosureRef<T> + ?Sized,
+        F: IntoWasmClosureRef<'a, T> + MaybeUnwindSafe + ?Sized,
     {
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
@@ -484,10 +399,56 @@ where
         }
     }
 
+    /// Like [`borrow`](Self::borrow), but catches panics without requiring `MaybeUnwindSafe`.
+    ///
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    pub fn borrow_assert_unwind_safe<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    where
+        F: IntoWasmClosureRef<'a, T> + ?Sized,
+    {
+        let t: &T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ScopedClosure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: WasmSlice { ptr, len },
+                unwind_safe: true,
+                _marker: PhantomData,
+            }),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+
+    /// Like [`borrow`](Self::borrow), but does not catch panics.
+    ///
+    /// If the closure panics, the process will abort. This variant does not
+    /// require `UnwindSafe`.
+    ///
+    /// **Note: Not unwind safe. Prefer [`borrow`](Self::borrow) or
+    /// [`borrow_assert_unwind_safe`](Self::borrow_assert_unwind_safe) when possible.**
+    pub fn borrow_aborting<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    where
+        F: IntoWasmClosureRef<'a, T> + ?Sized,
+    {
+        let t: &T = t.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ScopedClosure {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+                data: WasmSlice { ptr, len },
+                unwind_safe: false,
+                _marker: PhantomData,
+            }),
+            _marker: PhantomData,
+            _lifetime: PhantomData,
+        }
+    }
+
     /// Creates a scoped closure by mutably borrowing a `FnMut` closure.
     ///
-    /// This is the most common variant for scoped closures since most closures
-    /// that mutate captured state need `FnMut`.
+    /// Use this for closures that need to mutate captured state. For closures that
+    /// don't need mutation, prefer [`borrow`](Self::borrow) which creates an immutable
+    /// `Fn` closure that is more likely to satisfy `UnwindSafe` automatically.
     ///
     /// See [`borrow`](Self::borrow) for full documentation on scoped closures.
     ///
@@ -509,9 +470,9 @@ where
     /// // closure dropped, `sum` is accessible again
     /// assert_eq!(sum, 6); // 1 + 2 + 3
     /// ```
-    pub fn borrow_mut<F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow_mut<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: UnsizeClosureRefMut<T> + ?Sized,
+        F: IntoWasmClosureRefMut<'a, T> + MaybeUnwindSafe + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
@@ -526,20 +487,20 @@ where
         }
     }
 
-    /// Like [`borrow`](Self::borrow), but does not catch panics.
+    /// Like [`borrow_mut`](Self::borrow_mut), but catches panics without requiring `MaybeUnwindSafe`.
     ///
-    /// If the closure panics, the process will abort. This variant does not
-    /// require `UnwindSafe`.
-    pub fn borrow_aborting<F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    pub fn borrow_mut_assert_unwind_safe<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: UnsizeClosureRef<T> + ?Sized,
+        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
     {
-        let t: &T = t.unsize_closure_ref();
+        let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: false,
+                unwind_safe: true,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -551,9 +512,12 @@ where
     ///
     /// If the closure panics, the process will abort. This variant does not
     /// require `UnwindSafe`.
-    pub fn borrow_mut_aborting<F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    ///
+    /// **Note: Not unwind safe. Prefer [`borrow_mut`](Self::borrow_mut) or
+    /// [`borrow_mut_assert_unwind_safe`](Self::borrow_mut_assert_unwind_safe) when possible.**
+    pub fn borrow_mut_aborting<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: UnsizeClosureRefMut<T> + ?Sized,
+        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
@@ -569,141 +533,10 @@ where
     }
 }
 
-/// Methods for creating and managing `'static` closures.
-///
-/// These methods are only available on `StaticClosure<T>` (aka `Closure<T>`),
-/// not on borrowed `ScopedClosure<'a, T>` where `'a` is not `'static`.
 impl<T> ScopedClosure<'static, T>
 where
     T: ?Sized + WasmClosure,
 {
-    /// Creates a new owned `Closure` from the provided Rust function.
-    ///
-    /// Note that the closure provided here, `F`, has a few requirements
-    /// associated with it:
-    ///
-    /// * It must implement `Fn` or `FnMut` (for `FnOnce` functions see
-    ///   `Closure::once` and `Closure::once_into_js`).
-    ///
-    /// * It must be `'static`, aka no stack references (use the `move`
-    ///   keyword).
-    ///
-    /// * It can have at most 7 arguments.
-    ///
-    /// * Its arguments and return values are all types that can be shared with
-    ///   JS (i.e. have `#[wasm_bindgen]` annotations or are simple numbers,
-    ///   etc.)
-    pub fn new<F>(t: F) -> Self
-    where
-        F: IntoWasmClosure<T> + 'static,
-    {
-        Self::_wrap(Box::new(t).unsize(), true)
-    }
-
-    /// Alias for [`new`](Self::new) — creates an owned `'static` closure.
-    ///
-    /// This name is symmetric with [`borrow`](ScopedClosure::borrow) and
-    /// [`borrow_mut`](ScopedClosure::borrow_mut) for borrowed closures.
-    ///
-    /// See [`new`](Self::new) for full documentation.
-    pub fn own<F>(t: F) -> Self
-    where
-        F: IntoWasmClosure<T> + 'static,
-    {
-        Self::new(t)
-    }
-
-    /// Creates a new instance of `Closure` from the provided Rust function.
-    ///
-    /// Unlike `new`, this version does NOT catch panics and does NOT require `UnwindSafe`.
-    /// If the closure panics, the process will abort.
-    ///
-    /// Use this when:
-    /// - Your closure captures types that aren't `UnwindSafe` (like `Rc<Cell<T>>`)
-    /// - You don't need panic catching across the JS boundary
-    /// - You prefer abort-on-panic behavior
-    ///
-    /// Note that the closure provided here, `F`, has a few requirements
-    /// associated with it:
-    ///
-    /// * It must implement `Fn` or `FnMut` (for `FnOnce` functions see
-    ///   `Closure::once` and `Closure::once_into_js`).
-    ///
-    /// * It must be `'static`, aka no stack references (use the `move`
-    ///   keyword).
-    ///
-    /// * It can have at most 7 arguments.
-    ///
-    /// * Its arguments and return values are all types that can be shared with
-    ///   JS (i.e. have `#[wasm_bindgen]` annotations or are simple numbers,
-    ///   etc.)
-    pub fn new_aborting<F>(t: F) -> Self
-    where
-        F: IntoWasmClosure<T> + 'static,
-    {
-        Self::_wrap(Box::new(t).unsize(), false)
-    }
-
-    /// Alias for [`new_aborting`](Self::new_aborting) — creates an owned `'static` closure
-    /// that aborts on panic.
-    ///
-    /// This name is symmetric with [`borrow_aborting`](ScopedClosure::borrow_aborting) and
-    /// [`borrow_mut_aborting`](ScopedClosure::borrow_mut_aborting) for borrowed closures.
-    ///
-    /// See [`new_aborting`](Self::new_aborting) for full documentation.
-    pub fn own_aborting<F>(t: F) -> Self
-    where
-        F: IntoWasmClosure<T> + 'static,
-    {
-        Self::new_aborting(t)
-    }
-
-    /// A more direct version of `Closure::new` which creates a `Closure` from
-    /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
-    ///
-    /// This version catches panics when unwinding is available.
-    pub fn wrap<F>(data: Box<F>) -> Self
-    where
-        F: MaybeUnwindSafe + IntoWasmClosure<T> + ?Sized,
-    {
-        Self::_wrap(data.unsize(), true)
-    }
-
-    /// A more direct version of `Closure::new` which creates a `Closure` from
-    /// a `Box<dyn Fn>`/`Box<dyn FnMut>`, which is how it's kept internally.
-    ///
-    /// Unlike `wrap`, this version does NOT catch panics and does NOT require `UnwindSafe`.
-    /// If the closure panics, the process will abort.
-    ///
-    /// Use this when:
-    /// - Your closure captures types that aren't `UnwindSafe` (like `Rc<Cell<T>>`)
-    /// - You don't need panic catching across the JS boundary
-    /// - You prefer abort-on-panic behavior
-    pub fn wrap_aborting<F>(data: Box<F>) -> Self
-    where
-        F: IntoWasmClosure<T> + ?Sized,
-    {
-        Self::_wrap(data.unsize(), false)
-    }
-
-    #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-    fn _wrap(data: Box<T>, unwind_safe: bool) -> Self {
-        Self {
-            js: crate::__rt::wbg_cast(OwnedClosureUnwind { data, unwind_safe }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
-    }
-
-    #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
-    fn _wrap(data: Box<T>, _unwind_safe: bool) -> Self {
-        Self {
-            js: crate::__rt::wbg_cast(OwnedClosure(data)),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
-    }
-
     /// Release memory management of this closure from Rust to the JS GC.
     ///
     /// When a `Closure` is dropped it will release the Rust memory and
@@ -721,9 +554,9 @@ where
     ///
     /// # Safety Note
     ///
-    /// This method is only available on `'static` closures (`Closure<T>` /
-    /// `StaticClosure<T>`). Calling it on a borrowed `ScopedClosure` would be
-    /// unsound because the closure data would become invalid when the borrow ends.
+    /// This method is only available on `'static` closures. Calling it on a
+    /// borrowed `ScopedClosure` would be unsound because the closure data
+    /// would become invalid when the borrow ends.
     pub fn into_js_value(self) -> JsValue {
         let idx = self.js.idx;
         mem::forget(self);
@@ -736,9 +569,9 @@ where
     ///
     /// # Safety Note
     ///
-    /// This method is only available on `'static` closures (`Closure<T>` /
-    /// `StaticClosure<T>`). Calling it on a borrowed `ScopedClosure` would be
-    /// unsound because the closure data would become invalid when the borrow ends.
+    /// This method is only available on `'static` closures. Calling it on a borrowed
+    /// `ScopedClosure` would be unsound because the closure data would become invalid
+    /// when the borrow ends.
     pub fn forget(self) {
         mem::forget(self);
     }
@@ -775,8 +608,7 @@ where
     /// and will be removed in the future.
     pub fn once<F, A, R>(fn_once: F) -> Self
     where
-        F: WasmClosureFnOnce<T, A, R>,
-        F: MaybeUnwindSafe,
+        F: WasmClosureFnOnce<T, A, R> + MaybeUnwindSafe,
     {
         Closure::_wrap(fn_once.into_fn_mut(), true)
     }
@@ -796,9 +628,12 @@ where
     /// -> R>` that will dynamically throw a JavaScript error if called more
     /// than once.
     ///
+    /// **Note: Not unwind safe. Prefer [`once`](Self::once) or `once` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
+    ///
     /// Note: the `A` and `R` type parameters are here just for backward compat
     /// and will be removed in the future.
-    pub fn once_aborting<F, A, R>(fn_once: F) -> Self
+    pub fn once_wrap<F, A, R>(fn_once: F) -> Self
     where
         F: WasmClosureFnOnceAbort<T, A, R>,
     {
@@ -830,7 +665,7 @@ where
     /// and will be removed in the future.
     pub fn once_into_js<F, A, R>(fn_once: F) -> JsValue
     where
-        F: WasmClosureFnOnce<T, A, R>,
+        F: WasmClosureFnOnce<T, A, R> + MaybeUnwindSafe,
     {
         fn_once.into_js_function()
     }
@@ -849,13 +684,237 @@ where
     /// function. If the JavaScript function is never called then the `FnOnce`
     /// and everything it closes over will leak.
     ///
+    /// **Note: Not unwind safe. Prefer [`once_into_js`](Self::once_into_js) or `once_into_js` with
+    /// [`AssertUnwindSafe`](core::panic::AssertUnwindSafe) when possible.**
+    ///
     /// Note: the `A` and `R` type parameters are here just for backward compat
     /// and will be removed in the future.
-    pub fn once_into_js_aborting<F, A, R>(fn_once: F) -> JsValue
+    pub fn once_into_js_wrap<F, A, R>(fn_once: F) -> JsValue
     where
         F: WasmClosureFnOnceAbort<T, A, R>,
     {
         fn_once.into_js_function()
+    }
+}
+
+/// A closure wrapper for immediate/synchronous callbacks with unwind safety.
+///
+/// `ImmediateClosure` wraps a borrowed closure for use in synchronous JS callbacks
+/// like `Array.forEach`, `Array.map`, etc. The JS side receives the closure,
+/// calls it immediately, and discards it - no GC tracking is needed.
+///
+/// Panics are caught and converted to JavaScript exceptions (when built with
+/// `panic=unwind`). No `UnwindSafe` bounds are required - the closure is wrapped
+/// internally.
+///
+/// # Unwind Safety
+///
+/// `ImmediateClosure` provides unwind safety by catching panics and converting them
+/// to JavaScript exceptions.
+///
+/// # Example
+///
+/// ```ignore
+/// use wasm_bindgen::prelude::*;
+///
+/// #[wasm_bindgen]
+/// extern "C" {
+///     fn forEach<'a>(cb: &ImmediateClosure<'a, dyn FnMut(JsValue) + 'a>);
+/// }
+///
+/// let mut sum = 0;
+/// let closure = ImmediateClosure::new_mut(&mut |val: JsValue| {
+///     sum += val.as_f64().unwrap() as i32;
+/// });
+/// forEach(&closure);
+/// // sum is now updated
+/// ```
+///
+/// **Note:** To ensure borrowed lifetimes are correctly inferred, make sure to pass
+/// the lifetime to both the ImmediateClosure lifetime parameter AND its dyn FnMut
+/// parameter, as in the example above.
+pub struct ImmediateClosure<'a, T: ?Sized> {
+    data: WasmSlice,
+    unwind_safe: bool,
+    _marker: PhantomData<&'a mut T>,
+}
+
+impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
+    /// Creates an immediate closure from an immutable borrow of a `Fn` closure.
+    ///
+    /// Immutable closures (`Fn`) are preferred because they are more likely to satisfy `UnwindSafe`
+    /// automatically. Use [`new_mut`](Self::new_mut) when you need to mutate captured state.
+    ///
+    /// Note that immutable closures can be `upcast()` to mutable closures on the JS boundary
+    /// when required by function signatures.
+    ///
+    /// Panics are caught as JS exceptions when building with panic=unwind.
+    /// The resulting closure can be upcasted to `FnMut` using [`upcast_ref`](crate::Upcast::upcast_ref).
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let data = vec![1, 2, 3];
+    /// let closure = ImmediateClosure::new(&|| {
+    ///     println!("data len: {}", data.len());
+    /// });
+    /// call_closure(&closure);
+    /// ```
+    pub fn new<F>(f: &'a F) -> ImmediateClosure<'a, F::WithLifetime>
+    where
+        F: IntoWasmClosureRef<'a, T> + ?Sized + MaybeUnwindSafe,
+    {
+        let t: &T = f.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ImmediateClosure {
+            data: WasmSlice { ptr, len },
+            unwind_safe: true,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Creates an immediate closure from a mutable borrow of a `FnMut` closure.
+    ///
+    /// Use this for closures that need to mutate captured state. For closures that
+    /// don't need mutation, [`new`](Self::new) creates an immutable `Fn` closure
+    /// that is more likely to satisfy `UnwindSafe` automatically.
+    ///
+    /// Panics are caught as JS exceptions when building with panic=unwind.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let mut count = 0;
+    /// let closure = ImmediateClosure::new_mut(&mut || { count += 1; });
+    /// call_closure(&closure);
+    /// assert_eq!(count, 1);
+    /// ```
+    pub fn new_mut<F>(f: &'a mut F) -> ImmediateClosure<'a, F::WithLifetime>
+    where
+        F: IntoWasmClosureRefMut<'a, T> + ?Sized + MaybeUnwindSafe,
+    {
+        let t: &mut T = f.unsize_closure_ref();
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        ImmediateClosure {
+            data: WasmSlice { ptr, len },
+            unwind_safe: true,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<'a, T: ?Sized + WasmClosure> ImmediateClosure<'a, T> {
+    /// Like [`new`](Self::new), but does not catch panics.
+    ///
+    /// This variant enables type inference from the expected type, since it
+    /// takes the dyn type directly.
+    ///
+    /// **Note: Not unwind safe. Prefer [`new`](Self::new) or
+    /// [`wrap_assert_unwind_safe`](Self::wrap_assert_unwind_safe) when possible.**
+    pub fn wrap_aborting(f: &'a T) -> Self {
+        ImmediateClosure {
+            data: T::to_wasm_slice(f),
+            unwind_safe: false,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Like [`new_mut`](Self::new_mut), but does not catch panics.
+    ///
+    /// This variant enables type inference from the expected type, since it
+    /// takes the dyn type directly.
+    ///
+    /// **Note: Not unwind safe. Prefer [`new_mut`](Self::new_mut) or
+    /// [`wrap_mut_assert_unwind_safe`](Self::wrap_mut_assert_unwind_safe) when possible.**
+    pub fn wrap_mut_aborting(f: &'a mut T) -> Self {
+        ImmediateClosure {
+            data: T::to_wasm_slice(f),
+            unwind_safe: false,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Like [`wrap_aborting`](Self::wrap_aborting), but catches panics and converts them to JS exceptions.
+    ///
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let data = vec![1, 2, 3];
+    /// // Type is inferred from context
+    /// let closure: ImmediateClosure<dyn Fn()> = ImmediateClosure::wrap_assert_unwind_safe(&|| {
+    ///     println!("data len: {}", data.len());
+    /// });
+    /// ```
+    pub fn wrap_assert_unwind_safe(f: &'a T) -> Self {
+        ImmediateClosure {
+            data: T::to_wasm_slice(f),
+            unwind_safe: true,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Like [`wrap_mut_aborting`](Self::wrap_mut_aborting), but catches panics and converts them to JS exceptions.
+    ///
+    /// **Safety: Unwind safety is assumed when using this function, like using
+    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let mut count = 0;
+    /// // Type of `x` is inferred from context
+    /// let closure: ImmediateClosure<dyn FnMut(u32)> = ImmediateClosure::wrap_mut_assert_unwind_safe(&mut |x| {
+    ///     count += x;
+    /// });
+    /// ```
+    pub fn wrap_mut_assert_unwind_safe(f: &'a mut T) -> Self {
+        ImmediateClosure {
+            data: T::to_wasm_slice(f),
+            unwind_safe: true,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Returns a reference to this closure as a mutable `FnMut` closure.
+    ///
+    /// This is safe because every `Fn` can be called through a `FnMut` interface.
+    /// The fat pointer representation is compatible—`&dyn Fn` can be safely
+    /// reinterpreted as `&dyn FnMut`.
+    ///
+    /// Note: Unlike `ScopedClosure::as_mut`, this only supports the Fn→FnMut conversion
+    /// with the same argument and return types. `ImmediateClosure` stores a Rust fat
+    /// pointer directly, so argument/return type variance is not possible.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use wasm_bindgen::prelude::*;
+    ///
+    /// #[wasm_bindgen]
+    /// extern "C" {
+    ///     fn needs_fnmut(cb: &ImmediateClosure<dyn FnMut(u32)>);
+    /// }
+    ///
+    /// let func: &dyn Fn(u32) = &|x| println!("{}", x);
+    /// let closure: ImmediateClosure<dyn Fn(u32)> = ImmediateClosure::wrap_assert_unwind_safe(func);
+    /// needs_fnmut(closure.as_mut());
+    /// ```
+    pub fn as_mut(&self) -> &ImmediateClosure<'a, T::AsMut> {
+        // SAFETY: ImmediateClosure stores a WasmSlice (fat pointer data) and metadata.
+        // The type parameter T is phantom data. A &dyn Fn fat pointer can be safely
+        // reinterpreted as &dyn FnMut since Fn is a supertrait of FnMut.
+        unsafe {
+            &*(self as *const ImmediateClosure<'a, T> as *const ImmediateClosure<'a, T::AsMut>)
+        }
+    }
+}
+
+impl<T: ?Sized> fmt::Debug for ImmediateClosure<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ImmediateClosure").finish_non_exhaustive()
     }
 }
 
@@ -944,7 +1003,6 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
-        use core::mem::ManuallyDrop;
         let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self)) };
         WasmSlice {
             ptr: a as u32,
@@ -987,7 +1045,6 @@ where
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
-        use core::mem::ManuallyDrop;
         let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self.data)) };
         // Pack unwind_safe into most significant bit (bit 31) of vtable
         let b_with_flag = if self.unwind_safe {
@@ -1073,20 +1130,67 @@ where
     }
 }
 
+impl<T> WasmDescribe for ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        // Delegate to the underlying dyn Fn/FnMut - uses FUNCTION descriptor
+        <T as WasmDescribe>::describe();
+    }
+}
+
+impl<T> IntoWasmAbi for &ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    type Abi = WasmSlice;
+
+    fn into_abi(self) -> WasmSlice {
+        let WasmSlice { ptr, len } = self.data;
+        let len_with_flag = if self.unwind_safe {
+            len | 0x80000000
+        } else {
+            len
+        };
+        WasmSlice {
+            ptr,
+            len: len_with_flag,
+        }
+    }
+}
+
+impl<T> OptionIntoWasmAbi for &ImmediateClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    fn none() -> WasmSlice {
+        WasmSlice { ptr: 0, len: 0 }
+    }
+}
+
 fn _check() {
     fn _assert<T: IntoWasmAbi>() {}
-    // By reference (any lifetime)
+    // ScopedClosure by reference (any lifetime)
     _assert::<&ScopedClosure<dyn Fn()>>();
     _assert::<&ScopedClosure<dyn Fn(String)>>();
     _assert::<&ScopedClosure<dyn Fn() -> String>>();
     _assert::<&ScopedClosure<dyn FnMut()>>();
     _assert::<&ScopedClosure<dyn FnMut(String)>>();
     _assert::<&ScopedClosure<dyn FnMut() -> String>>();
-    // By value (only 'static)
+    // ScopedClosure by value (only 'static)
     _assert::<ScopedClosure<'static, dyn Fn()>>();
     _assert::<ScopedClosure<'static, dyn FnMut()>>();
     _assert::<Closure<dyn Fn()>>();
     _assert::<Closure<dyn FnMut()>>();
+    // ImmediateClosure by reference
+    _assert::<&ImmediateClosure<dyn Fn()>>();
+    _assert::<&ImmediateClosure<dyn Fn(String)>>();
+    _assert::<&ImmediateClosure<dyn Fn() -> String>>();
+    _assert::<&ImmediateClosure<dyn FnMut()>>();
+    _assert::<&ImmediateClosure<dyn FnMut(String)>>();
+    _assert::<&ImmediateClosure<dyn FnMut() -> String>>();
 }
 
 impl<T> fmt::Debug for ScopedClosure<'_, T>
@@ -1105,10 +1209,20 @@ where
 #[doc(hidden)]
 pub unsafe trait WasmClosure: WasmDescribe {
     const IS_MUT: bool;
+    /// The mutable version of this closure type.
+    /// For `dyn Fn(...) -> R` this is `dyn FnMut(...) -> R`.
+    /// For `dyn FnMut(...) -> R` this is itself.
+    type AsMut: ?Sized;
+    fn to_wasm_slice(r: &Self) -> WasmSlice;
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     const IS_MUT: bool = T::IS_MUT;
+    type AsMut = T::AsMut;
+    fn to_wasm_slice(r: &Self) -> WasmSlice {
+        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
+        WasmSlice { ptr, len }
+    }
 }
 
 /// An internal trait for the `Closure` type.
@@ -1131,11 +1245,11 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub trait UnsizeClosureRef<T: ?Sized> {
+pub trait IntoWasmClosureRef<'a, T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn Fn() + 'a`,
     /// then `Static` is `dyn Fn()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;
-
+    type WithLifetime: ?Sized + WasmClosure + 'a;
     fn unsize_closure_ref(&self) -> &T;
 }
 
@@ -1144,10 +1258,39 @@ pub trait UnsizeClosureRef<T: ?Sized> {
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub trait UnsizeClosureRefMut<T: ?Sized> {
+pub trait IntoWasmClosureRefMut<'a, T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn FnMut() + 'a`,
     /// then `Static` is `dyn FnMut()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;
-
+    type WithLifetime: ?Sized + WasmClosure + 'a;
     fn unsize_closure_ref(&mut self) -> &mut T;
+}
+
+// Blanket impl for AssertUnwindSafe - delegates to inner type
+impl<'a, T: ?Sized, F> IntoWasmClosureRef<'a, T> for AssertUnwindSafe<F>
+where
+    F: IntoWasmClosureRef<'a, T>,
+{
+    type Static = F::Static;
+    type WithLifetime = F::WithLifetime;
+    fn unsize_closure_ref(&self) -> &T {
+        self.0.unsize_closure_ref()
+    }
+}
+
+impl<'a, T: ?Sized, F> IntoWasmClosureRefMut<'a, T> for AssertUnwindSafe<F>
+where
+    F: IntoWasmClosureRefMut<'a, T>,
+{
+    type Static = F::Static;
+    type WithLifetime = F::WithLifetime;
+    fn unsize_closure_ref(&mut self) -> &mut T {
+        self.0.unsize_closure_ref()
+    }
+}
+
+// In ScopedClosure, the Rust closure type is the phantom type that erases,
+// unlike ImmedateClosure which is the reverse.
+unsafe impl<T: ?Sized + WasmClosure> ErasableGeneric for ScopedClosure<'_, T> {
+    type Repr = ScopedClosure<'static, dyn FnMut()>;
 }

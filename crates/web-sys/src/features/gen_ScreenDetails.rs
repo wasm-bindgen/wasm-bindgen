@@ -17,16 +17,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type ScreenDetails;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ScreenDetailed")]
     # [wasm_bindgen (structural , method , getter , js_class = "ScreenDetails" , js_name = screens)]
     #[doc = "Getter for the `screens` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScreenDetails/screens)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ScreenDetails`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ScreenDetailed`, `ScreenDetails`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn screens(this: &ScreenDetails) -> ::js_sys::Array;
+    pub fn screens(this: &ScreenDetails) -> ::js_sys::Array<ScreenDetailed>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ScreenDetailed")]
     # [wasm_bindgen (structural , method , getter , js_class = "ScreenDetails" , js_name = currentScreen)]

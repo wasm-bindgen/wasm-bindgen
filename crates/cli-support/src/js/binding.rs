@@ -274,10 +274,6 @@ impl<'a, 'b> Builder<'a, 'b> {
             js.pre_try + &js.prelude
         };
 
-        if self.catch {
-            js.cx.expose_handle_error()?;
-        }
-
         // Generate a try/catch block in debug mode which handles unexpected and
         // unhandled exceptions, typically used on imports. This currently just
         // logs what happened, but keeps the exception being thrown to propagate
@@ -1458,9 +1454,9 @@ fn instruction(
 
                 match dtor {
                     ClosureDtor::OwnClosure(_) => unreachable!(),
-                    ClosureDtor::RefLegacy => {
-                        // Wrapper for a raw FnMut or Fn closure used as an
-                        // argument to a JS function. Make sure to null out our
+                    ClosureDtor::Immediate => {
+                        // Wrapper for ImmediateClosure or raw &dyn FnMut/&dyn Fn closure
+                        // used as an argument to a JS function. Make sure to null out our
                         // internal pointers when we return back to Rust to
                         // ensure that any lingering references to the closure
                         // will fail immediately due to null pointers passed in

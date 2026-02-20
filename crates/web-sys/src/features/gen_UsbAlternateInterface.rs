@@ -72,16 +72,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn interface_name(this: &UsbAlternateInterface) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "UsbEndpoint")]
     # [wasm_bindgen (structural , method , getter , js_class = "USBAlternateInterface" , js_name = endpoints)]
     #[doc = "Getter for the `endpoints` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBAlternateInterface/endpoints)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `UsbAlternateInterface`*"]
+    #[doc = "*This API requires the following crate features to be activated: `UsbAlternateInterface`, `UsbEndpoint`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn endpoints(this: &UsbAlternateInterface) -> ::js_sys::Array;
+    pub fn endpoints(this: &UsbAlternateInterface) -> ::js_sys::Array<UsbEndpoint>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbInterface")]
     #[wasm_bindgen(catch, constructor, js_class = "USBAlternateInterface")]

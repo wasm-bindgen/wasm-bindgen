@@ -76,7 +76,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "added")]
-    pub fn get_added(this: &XrInputSourcesChangeEventInit) -> ::js_sys::Array;
+    pub fn get_added(this: &XrInputSourcesChangeEventInit) -> ::js_sys::Array<XrInputSource>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `added` field of this object."]
     #[doc = ""]
@@ -94,7 +94,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "removed")]
-    pub fn get_removed(this: &XrInputSourcesChangeEventInit) -> ::js_sys::Array;
+    pub fn get_removed(this: &XrInputSourcesChangeEventInit) -> ::js_sys::Array<XrInputSource>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `removed` field of this object."]
     #[doc = ""]

@@ -17,14 +17,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type XrBoundedReferenceSpace;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "DomPointReadOnly")]
     # [wasm_bindgen (structural , method , getter , js_class = "XRBoundedReferenceSpace" , js_name = boundsGeometry)]
     #[doc = "Getter for the `boundsGeometry` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRBoundedReferenceSpace/boundsGeometry)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `XrBoundedReferenceSpace`*"]
+    #[doc = "*This API requires the following crate features to be activated: `DomPointReadOnly`, `XrBoundedReferenceSpace`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn bounds_geometry(this: &XrBoundedReferenceSpace) -> ::js_sys::Array;
+    pub fn bounds_geometry(this: &XrBoundedReferenceSpace) -> ::js_sys::Array<DomPointReadOnly>;
 }

@@ -12,9 +12,9 @@ fn new() {
 #[wasm_bindgen_test]
 fn new_with_cause() {
     let options = Object::new();
-    Reflect::set(
+    Reflect::set_str(
         options.as_ref(),
-        &JsValue::from("cause"),
+        &"cause".into(),
         &JsValue::from("some cause"),
     )
     .unwrap();
@@ -55,6 +55,7 @@ fn set_name() {
     assert_eq!(JsValue::from(error.name()), "different");
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn to_string() {
     let error = Error::new("error message 1");

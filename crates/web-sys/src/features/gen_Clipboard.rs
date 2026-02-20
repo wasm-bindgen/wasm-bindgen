@@ -20,20 +20,20 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Clipboard`*"]
     pub fn read(this: &Clipboard) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "ClipboardUnsanitizedFormats")]
+    #[cfg(all(feature = "ClipboardItem", feature = "ClipboardUnsanitizedFormats",))]
     # [wasm_bindgen (method , structural , js_class = "Clipboard" , js_name = read)]
     #[doc = "The `read()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/read)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Clipboard`, `ClipboardUnsanitizedFormats`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Clipboard`, `ClipboardItem`, `ClipboardUnsanitizedFormats`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn read_with_formats(
         this: &Clipboard,
         formats: &ClipboardUnsanitizedFormats,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Array<ClipboardItem>>;
     # [wasm_bindgen (method , structural , js_class = "Clipboard" , js_name = readText)]
     #[doc = "The `readText()` method."]
     #[doc = ""]

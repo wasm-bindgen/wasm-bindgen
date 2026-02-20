@@ -13,8 +13,10 @@ extern "C" {
     #[wasm_bindgen(js_name = Rectangle2)]
     static RECTANGLE2_CLASS: Function;
 
+    #[wasm_bindgen(extends = Object)]
     #[derive(Clone)]
     type Rectangle;
+
     #[wasm_bindgen(constructor)]
     fn new() -> Rectangle;
     #[wasm_bindgen(method, getter, structural)]
@@ -55,10 +57,13 @@ fn apply() {
 
 #[wasm_bindgen_test]
 fn construct() {
-    let args = Array::new();
+    let args: Array = Array::new();
     args.push(&10.into());
     args.push(&10.into());
+    #[cfg(not(js_sys_unstable_apis))]
     let instance = Reflect::construct(&RECTANGLE_CLASS, &args).unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    let instance = Reflect::construct(&RECTANGLE_CLASS, args.upcast()).unwrap();
     assert_eq!(Rectangle::from(instance).x(), 10);
 }
 
@@ -67,8 +72,16 @@ fn construct_with_new_target() {
     let args = Array::new();
     args.push(&10.into());
     args.push(&10.into());
+    #[cfg(not(js_sys_unstable_apis))]
     let instance =
         Reflect::construct_with_new_target(&RECTANGLE_CLASS, &args, &RECTANGLE2_CLASS).unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    let instance = Reflect::construct_with_new_target(
+        RECTANGLE_CLASS.unchecked_ref(),
+        &args,
+        RECTANGLE2_CLASS.unchecked_ref(),
+    )
+    .unwrap();
     assert_eq!(Rectangle::from(instance).x(), 10);
 }
 
@@ -77,7 +90,10 @@ fn define_property() {
     let value = DefinePropertyAttrs::from(JsValue::from(Object::new()));
     value.set_value(&42.into());
     let obj = Object::from(JsValue::from(value));
+    #[cfg(not(js_sys_unstable_apis))]
     assert!(Reflect::define_property(&obj, &"key".into(), &obj).unwrap());
+    #[cfg(js_sys_unstable_apis)]
+    assert!(Reflect::define_property(&obj, &JsString::from("key"), obj.unchecked_ref()).unwrap());
 }
 
 #[wasm_bindgen_test]
@@ -89,22 +105,26 @@ fn delete_property() {
     Reflect::delete_property(&obj, &"x".into()).unwrap();
     assert!(r.x_jsval().is_undefined());
 
-    let array = Array::new();
+    let array: Array<JsValue> = Array::new();
     array.push(&1.into());
-    let obj = Object::from(JsValue::from(array));
+    let obj = Object::from(JsValue::from(array.clone()));
     Reflect::delete_property(&obj, &0.into()).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
     let array = Array::from(&JsValue::from(obj));
+    #[cfg(js_sys_unstable_apis)]
+    let array = Array::from(&array).unwrap();
     assert!(array.length() == 1);
-    array.for_each(&mut |x, _, _| assert!(x.is_undefined()));
+    array.for_each(&mut |x: JsValue, _, _| assert!(x.is_undefined()));
 }
 
 #[wasm_bindgen_test]
 fn get() {
     let r = Rectangle::new();
     r.set_x(10);
-
-    let obj = JsValue::from(r.clone());
-    assert_eq!(Reflect::get(&obj, &"x".into()).unwrap(), 10);
+    assert_eq!(
+        Reflect::get_str(r.upcast(), &"x".into()).unwrap().unwrap(),
+        10
+    );
 }
 
 #[wasm_bindgen_test]
@@ -137,17 +157,20 @@ fn get_own_property_descriptor() {
 
 #[wasm_bindgen_test]
 fn get_prototype_of() {
+    #[cfg(not(js_sys_unstable_apis))]
     let proto = JsValue::from(Reflect::get_prototype_of(&Object::new().into()).unwrap());
+    #[cfg(js_sys_unstable_apis)]
+    let proto = JsValue::from(Reflect::get_prototype_of(&Object::new()).unwrap());
     assert_eq!(proto, *OBJECT_PROTOTYPE);
-    let proto = JsValue::from(Reflect::get_prototype_of(&Array::new().into()).unwrap());
+    let proto = JsValue::from(Reflect::get_prototype_of(&Array::<JsValue>::new().into()).unwrap());
     assert_eq!(proto, *ARRAY_PROTOTYPE);
 }
 
 #[wasm_bindgen_test]
 fn has() {
-    let obj = JsValue::from(Rectangle::new());
-    assert!(Reflect::has(&obj, &"x".into()).unwrap());
-    assert!(!Reflect::has(&obj, &"foo".into()).unwrap());
+    let obj = Rectangle::new();
+    assert!(Reflect::has_str(&obj, &"x".into()).unwrap());
+    assert!(!Reflect::has_str(&obj, &"foo".into()).unwrap());
 }
 
 #[wasm_bindgen_test]
@@ -179,9 +202,18 @@ fn prevent_extensions() {
 
 #[wasm_bindgen_test]
 fn set() {
-    let obj = JsValue::from(Object::new());
-    assert!(Reflect::set(&obj, &"key".into(), &"value".into()).unwrap());
-    assert_eq!(Reflect::get(&obj, &"key".into()).unwrap(), "value");
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let obj = JsValue::from(Object::new());
+        assert!(Reflect::set(&obj, &"key".into(), &"value".into()).unwrap());
+        assert_eq!(Reflect::get(&obj, &"key".into()).unwrap(), "value");
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let obj = Object::new();
+        assert!(Reflect::set(&obj, &"key".into(), &"value".into()).unwrap());
+        assert_eq!(Reflect::get(&obj, &"key".into()).unwrap().unwrap(), "value");
+    }
 }
 
 #[wasm_bindgen_test]
@@ -213,20 +245,28 @@ fn set_u32() {
 
 #[wasm_bindgen_test]
 fn set_with_receiver() {
-    let obj1 = JsValue::from(Object::new());
-    let obj2 = JsValue::from(Object::new());
+    let obj1 = Object::new();
+    let obj2 = Object::new();
     assert!(Reflect::set_with_receiver(&obj2, &"key".into(), &"value".into(), &obj2).unwrap());
-    assert!(Reflect::get(&obj1, &"key".into()).unwrap().is_undefined());
-    assert_eq!(Reflect::get(&obj2, &"key".into()).unwrap(), "value");
+    assert!(Reflect::get_str(&obj1, &"key".into()).unwrap().is_none());
+    assert_eq!(
+        Reflect::get_str(&obj2, &"key".into()).unwrap().unwrap(),
+        "value"
+    );
 }
 
 #[wasm_bindgen_test]
 fn set_prototype_of() {
     let obj = Object::new();
     assert!(Reflect::set_prototype_of(&obj, &JsValue::null()).unwrap());
-    let obj = JsValue::from(obj);
+    #[cfg(not(js_sys_unstable_apis))]
     assert_eq!(
         JsValue::from(Reflect::get_prototype_of(&obj).unwrap()),
+        JsValue::null()
+    );
+    #[cfg(js_sys_unstable_apis)]
+    assert_eq!(
+        JsValue::from(Reflect::get_prototype_of(obj.upcast()).unwrap()),
         JsValue::null()
     );
 }
@@ -237,7 +277,10 @@ fn reflect_bindings_handle_proxies_that_just_throw_for_everything() {
 
     let desc = Object::new();
     Reflect::set(desc.as_ref(), &"value".into(), &1.into()).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
     assert!(Reflect::define_property(&p, &"a".into(), &desc).is_err());
+    #[cfg(js_sys_unstable_apis)]
+    assert!(Reflect::define_property(&p, &JsString::from("a"), desc.unchecked_ref()).is_err());
 
     assert!(Reflect::delete_property(&p, &"a".into()).is_err());
 
@@ -249,7 +292,7 @@ fn reflect_bindings_handle_proxies_that_just_throw_for_everything() {
 
     assert!(Reflect::get_prototype_of(p.as_ref()).is_err());
 
-    assert!(Reflect::has(p.as_ref(), &"a".into()).is_err());
+    assert!(Reflect::has_str(p.as_ref(), &"a".into()).is_err());
 
     assert!(Reflect::is_extensible(&p).is_err());
 

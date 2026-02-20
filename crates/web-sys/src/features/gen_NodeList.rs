@@ -19,13 +19,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NodeList`*"]
     pub fn length(this: &NodeList) -> u32;
-    # [wasm_bindgen (method , structural , js_class = "NodeList" , js_name = entries)]
-    #[doc = "The `entries()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NodeList/entries)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NodeList`*"]
-    pub fn entries(this: &NodeList) -> ::js_sys::Iterator;
     # [wasm_bindgen (catch , method , structural , js_class = "NodeList" , js_name = forEach)]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -41,6 +34,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`, `NodeList`*"]
     pub fn item(this: &NodeList, index: u32) -> Option<Node>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(method, structural, js_class = "NodeList", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`, `NodeList`*"]
+    pub fn get(this: &NodeList, index: u32) -> Option<Node>;
+    # [wasm_bindgen (method , structural , js_class = "NodeList" , js_name = entries)]
+    #[doc = "The `entries()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NodeList/entries)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NodeList`*"]
+    pub fn entries(this: &NodeList) -> ::js_sys::Iterator;
     # [wasm_bindgen (method , structural , js_class = "NodeList" , js_name = keys)]
     #[doc = "The `keys()` method."]
     #[doc = ""]
@@ -55,12 +63,4 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NodeList`*"]
     pub fn values(this: &NodeList) -> ::js_sys::Iterator;
-    #[cfg(feature = "Node")]
-    #[wasm_bindgen(method, structural, js_class = "NodeList", indexing_getter)]
-    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
-    #[doc = ""]
-    #[doc = ""]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Node`, `NodeList`*"]
-    pub fn get(this: &NodeList, index: u32) -> Option<Node>;
 }

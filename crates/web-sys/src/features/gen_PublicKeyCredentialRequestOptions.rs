@@ -55,7 +55,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "attestationFormats")]
     pub fn get_attestation_formats(
         this: &PublicKeyCredentialRequestOptions,
-    ) -> Option<::js_sys::Array>;
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attestationFormats` field of this object."]
     #[doc = ""]
@@ -103,7 +103,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "hints")]
-    pub fn get_hints(this: &PublicKeyCredentialRequestOptions) -> Option<::js_sys::Array>;
+    pub fn get_hints(
+        this: &PublicKeyCredentialRequestOptions,
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `hints` field of this object."]
     #[doc = ""]

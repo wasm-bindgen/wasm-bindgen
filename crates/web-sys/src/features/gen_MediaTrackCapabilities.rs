@@ -42,7 +42,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "autoGainControl")]
-    pub fn get_auto_gain_control(this: &MediaTrackCapabilities) -> Option<::js_sys::Array>;
+    pub fn get_auto_gain_control(
+        this: &MediaTrackCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::Boolean>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `autoGainControl` field of this object."]
     #[doc = ""]
@@ -60,7 +62,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "backgroundBlur")]
-    pub fn get_background_blur(this: &MediaTrackCapabilities) -> Option<::js_sys::Array>;
+    pub fn get_background_blur(
+        this: &MediaTrackCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::Boolean>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `backgroundBlur` field of this object."]
     #[doc = ""]
@@ -116,7 +120,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "echoCancellation")]
-    pub fn get_echo_cancellation(this: &MediaTrackCapabilities) -> Option<::js_sys::Array>;
+    pub fn get_echo_cancellation(
+        this: &MediaTrackCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::Boolean>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `echoCancellation` field of this object."]
     #[doc = ""]
@@ -134,7 +140,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "facingMode")]
-    pub fn get_facing_mode(this: &MediaTrackCapabilities) -> Option<::js_sys::Array>;
+    pub fn get_facing_mode(
+        this: &MediaTrackCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `facingMode` field of this object."]
     #[doc = ""]
@@ -230,7 +238,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "noiseSuppression")]
-    pub fn get_noise_suppression(this: &MediaTrackCapabilities) -> Option<::js_sys::Array>;
+    pub fn get_noise_suppression(
+        this: &MediaTrackCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::Boolean>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `noiseSuppression` field of this object."]
     #[doc = ""]
@@ -248,7 +258,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "resizeMode")]
-    pub fn get_resize_mode(this: &MediaTrackCapabilities) -> Option<::js_sys::Array>;
+    pub fn get_resize_mode(
+        this: &MediaTrackCapabilities,
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `resizeMode` field of this object."]
     #[doc = ""]

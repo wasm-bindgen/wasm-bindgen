@@ -7,7 +7,11 @@ use wasm_bindgen_test::*;
 #[wasm_bindgen(module = "tests/wasm/JsString.js")]
 extern "C" {
     fn new_string_object() -> JsValue;
+    #[cfg(not(js_sys_unstable_apis))]
     fn get_replacer_function() -> Function;
+    // Replacer signature: (match, offset, string) -> JsString
+    #[cfg(js_sys_unstable_apis)]
+    fn get_replacer_function() -> Function<fn(JsString) -> JsString>;
 }
 
 #[wasm_bindgen_test]
@@ -45,24 +49,70 @@ fn char_code_at() {
 
 #[wasm_bindgen_test]
 fn code_point_at() {
-    assert_eq!(JsString::from("ABC").code_point_at(1), b'B');
-    assert!(JsString::from("ABC").code_point_at(42).is_undefined());
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(JsString::from("ABC").code_point_at(1), b'B');
+        assert!(JsString::from("ABC").code_point_at(42).is_undefined());
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(JsString::from("ABC").code_point_at(1).unwrap(), b'B' as u32);
+        assert!(JsString::from("ABC").code_point_at(42).is_none());
+    }
+}
+
+#[wasm_bindgen_test]
+fn try_code_point_at() {
+    assert_eq!(JsString::from("ABC").try_code_point_at(0), Some(65)); // 'A'
+    assert_eq!(JsString::from("ABC").try_code_point_at(1), Some(66)); // 'B'
+    assert_eq!(JsString::from("ABC").try_code_point_at(2), Some(67)); // 'C'
+    assert_eq!(JsString::from("ABC").try_code_point_at(42), None);
 }
 
 #[wasm_bindgen_test]
 fn concat() {
-    // TODO: Implement ability to receive multiple optional arguments
     let s = JsString::from("Hello ").concat(&"World".into());
     assert_eq!(JsValue::from(s), "Hello World");
     let foo = JsString::from("foo");
-    assert_eq!(
-        JsValue::from(foo.concat(&Object::new().into())),
-        "foo[object Object]"
-    );
-    assert_eq!(JsValue::from(foo.concat(&Array::new().into())), "foo");
-    assert_eq!(JsValue::from(foo.concat(&JsValue::null())), "foonull");
-    assert_eq!(JsValue::from(foo.concat(&true.into())), "footrue");
-    assert_eq!(JsValue::from(foo.concat(&1234.into())), "foo1234");
+
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(
+            JsValue::from(foo.concat(&Object::new().into())),
+            "foo[object Object]"
+        );
+        assert_eq!(
+            JsValue::from(foo.concat(&Array::<JsString>::new_typed().into())),
+            "foo"
+        );
+        assert_eq!(JsValue::from(foo.concat(&JsValue::null())), "foonull");
+        assert_eq!(JsValue::from(foo.concat(&true.into())), "footrue");
+        assert_eq!(JsValue::from(foo.concat(&1234.into())), "foo1234");
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(
+            JsValue::from(foo.concat(&Object::new().to_js_string())),
+            "foo[object Object]"
+        );
+        assert_eq!(
+            JsValue::from(foo.concat(&Array::<JsString>::new_typed().to_js_string())),
+            "foo"
+        );
+        assert_eq!(
+            JsValue::from(foo.concat(&JsValue::null().into())),
+            "foonull"
+        );
+
+        assert_eq!(
+            JsValue::from(foo.concat(&Boolean::from(true).to_js_string())),
+            "footrue"
+        );
+        assert_eq!(
+            JsValue::from(foo.concat(&Number::from(1234).to_js_string())),
+            "foo1234"
+        );
+    }
 }
 
 #[wasm_bindgen_test]
@@ -70,16 +120,26 @@ fn ends_with() {
     let s = "To be, or not to be, that is the question.";
     let js = JsString::from(s);
 
-    // TODO: remove third parameter once we have optional parameters
-    assert!(js.ends_with("question.", s.len() as i32));
-    assert!(!js.ends_with("to be", s.len() as i32));
-    assert!(js.ends_with("to be", 19));
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert!(js.ends_with("question.", s.len() as i32));
+        assert!(!js.ends_with("to be", s.len() as i32));
+        assert!(js.ends_with("to be", 19));
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert!(js.ends_with("question."));
+        assert!(!js.ends_with("to be"));
+    }
 }
 
 #[wasm_bindgen_test]
 fn from_char_code() {
     let s = "½+¾=";
+    #[cfg(not(js_sys_unstable_apis))]
     let codes: Vec<u32> = s.chars().map(|char| char as u32).collect();
+    #[cfg(js_sys_unstable_apis)]
+    let codes: Vec<u16> = s.chars().map(|char| char as u16).collect();
 
     assert_eq!(JsString::from_char_code1(codes[0]), "½");
     assert_eq!(JsString::from_char_code2(codes[0], codes[1]), "½+");
@@ -92,6 +152,7 @@ fn from_char_code() {
         "½+¾="
     );
 
+    #[cfg(not(js_sys_unstable_apis))]
     let codes_u16: Vec<u16> = codes
         .into_iter()
         .map(|code| {
@@ -99,6 +160,8 @@ fn from_char_code() {
             code as u16
         })
         .collect();
+    #[cfg(js_sys_unstable_apis)]
+    let codes_u16 = codes;
 
     assert_eq!(JsString::from_char_code(&codes_u16), "½+¾=");
 }
@@ -185,15 +248,35 @@ fn match_() {
     let result = JsString::from(s).match_(&re);
     let obj = result.unwrap();
 
-    assert_eq!(Reflect::get(obj.as_ref(), &"0".into()).unwrap(), "T");
-    assert_eq!(Reflect::get(obj.as_ref(), &"1".into()).unwrap(), "I");
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"0".into())
+            .unwrap()
+            .unwrap(),
+        "T"
+    );
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"1".into())
+            .unwrap()
+            .unwrap(),
+        "I"
+    );
 
     let re = RegExp::new("[A-Z]([a-z]*)", "g");
     let result = JsString::from(s).match_(&re);
     let obj = result.unwrap();
 
-    assert_eq!(Reflect::get(obj.as_ref(), &"0".into()).unwrap(), "The");
-    assert_eq!(Reflect::get(obj.as_ref(), &"1".into()).unwrap(), "It");
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"0".into())
+            .unwrap()
+            .unwrap(),
+        "The"
+    );
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"1".into())
+            .unwrap()
+            .unwrap(),
+        "It"
+    );
 
     let result = JsString::from("foo").match_(&re);
     assert!(result.is_none());
@@ -204,67 +287,142 @@ fn match_() {
     let obj = result.unwrap();
 
     assert_eq!(
-        Reflect::get(obj.as_ref(), &"0".into()).unwrap(),
+        Reflect::get_str(obj.as_ref(), &"0".into())
+            .unwrap()
+            .unwrap(),
         "see Chapter 3.4.5.1"
     );
     assert_eq!(
-        Reflect::get(obj.as_ref(), &"1".into()).unwrap(),
+        Reflect::get_str(obj.as_ref(), &"1".into())
+            .unwrap()
+            .unwrap(),
         "Chapter 3.4.5.1"
     );
-    assert_eq!(Reflect::get(obj.as_ref(), &"2".into()).unwrap(), ".1");
-    assert_eq!(Reflect::get(obj.as_ref(), &"index".into()).unwrap(), 22);
-    assert_eq!(Reflect::get(obj.as_ref(), &"input".into()).unwrap(), s);
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"2".into())
+            .unwrap()
+            .unwrap(),
+        ".1"
+    );
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"index".into())
+            .unwrap()
+            .unwrap(),
+        22
+    );
+    assert_eq!(
+        Reflect::get_str(obj.as_ref(), &"input".into())
+            .unwrap()
+            .unwrap(),
+        s
+    );
 }
 
 #[wasm_bindgen_test]
 fn match_all() {
-    let s = "The quick brown fox jumped over the lazy dog. It barked.";
-    let re = RegExp::new("[A-Z]([a-z]*)", "g");
-    let result: Vec<_> = JsString::from(s)
-        .match_all(&re)
-        .into_iter()
-        .collect::<Result<_, _>>()
-        .unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let s = "The quick brown fox jumped over the lazy dog. It barked.";
+        let re = RegExp::new("[A-Z]([a-z]*)", "g");
+        let result: Vec<_> = JsString::from(s)
+            .match_all(&re)
+            .into_iter()
+            .collect::<Result<_, _>>()
+            .unwrap();
 
-    let obj = &result[0];
-    assert_eq!(Reflect::get(obj, &"0".into()).unwrap(), "The");
-    assert_eq!(Reflect::get(obj, &"1".into()).unwrap(), "he");
+        let obj = &result[0];
+        assert_eq!(Reflect::get(&obj, &"0".into()).unwrap(), "The");
+        assert_eq!(Reflect::get(&obj, &"1".into()).unwrap(), "he");
 
-    let obj = &result[1];
-    assert_eq!(Reflect::get(obj, &"0".into()).unwrap(), "It");
-    assert_eq!(Reflect::get(obj, &"1".into()).unwrap(), "t");
+        let obj = &result[1];
+        assert_eq!(Reflect::get(&obj, &"0".into()).unwrap(), "It");
+        assert_eq!(Reflect::get(&obj, &"1".into()).unwrap(), "t");
 
-    let result: Vec<_> = JsString::from("foo")
-        .match_all(&re)
-        .into_iter()
-        .collect::<Result<_, _>>()
-        .unwrap();
-    assert_eq!(result.len(), 0);
+        let result: Vec<_> = JsString::from("foo")
+            .match_all(&re)
+            .into_iter()
+            .collect::<Result<_, _>>()
+            .unwrap();
+        assert_eq!(result.len(), 0);
 
-    let s = "For more information, see Chapter 3.4.5.1. Also see Chapter 3.1.4";
-    let re = RegExp::new("see (chapter \\d+(\\.\\d)*)", "gi");
-    let result: Vec<_> = JsString::from(s)
-        .match_all(&re)
-        .into_iter()
-        .collect::<Result<_, _>>()
-        .unwrap();
+        let s = "For more information, see Chapter 3.4.5.1. Also see Chapter 3.1.4";
+        let re = RegExp::new("see (chapter \\d+(\\.\\d)*)", "gi");
+        let result: Vec<_> = JsString::from(s)
+            .match_all(&re)
+            .into_iter()
+            .collect::<Result<_, _>>()
+            .unwrap();
 
-    let obj = &result[0];
-    assert_eq!(
-        Reflect::get(obj, &"0".into()).unwrap(),
-        "see Chapter 3.4.5.1"
-    );
-    assert_eq!(Reflect::get(obj, &"1".into()).unwrap(), "Chapter 3.4.5.1");
-    assert_eq!(Reflect::get(obj, &"2".into()).unwrap(), ".1");
-    assert_eq!(Reflect::get(obj, &"index".into()).unwrap(), 22);
-    assert_eq!(Reflect::get(obj, &"input".into()).unwrap(), s);
+        let obj = &result[0];
+        assert_eq!(
+            Reflect::get(obj, &"0".into()).unwrap(),
+            "see Chapter 3.4.5.1"
+        );
+        assert_eq!(Reflect::get(obj, &"1".into()).unwrap(), "Chapter 3.4.5.1");
+        assert_eq!(Reflect::get(obj, &"2".into()).unwrap(), ".1");
+        assert_eq!(Reflect::get(obj, &"index".into()).unwrap(), 22);
+        assert_eq!(Reflect::get(obj, &"input".into()).unwrap(), s);
 
-    let obj = &result[1];
-    assert_eq!(Reflect::get(obj, &"0".into()).unwrap(), "see Chapter 3.1.4");
-    assert_eq!(Reflect::get(obj, &"1".into()).unwrap(), "Chapter 3.1.4");
-    assert_eq!(Reflect::get(obj, &"2".into()).unwrap(), ".4");
-    assert_eq!(Reflect::get(obj, &"index".into()).unwrap(), 48);
-    assert_eq!(Reflect::get(obj, &"input".into()).unwrap(), s);
+        let obj = &result[1];
+        assert_eq!(Reflect::get(obj, &"0".into()).unwrap(), "see Chapter 3.1.4");
+        assert_eq!(Reflect::get(obj, &"1".into()).unwrap(), "Chapter 3.1.4");
+        assert_eq!(Reflect::get(obj, &"2".into()).unwrap(), ".4");
+        assert_eq!(Reflect::get(obj, &"index".into()).unwrap(), 48);
+        assert_eq!(Reflect::get(obj, &"input".into()).unwrap(), s);
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let s = "The quick brown fox jumped over the lazy dog. It barked.";
+        let re = RegExp::new("[A-Z]([a-z]*)", "g");
+        let result: Vec<RegExpMatchArray> = JsString::from(s)
+            .match_all(&re)
+            .into_iter()
+            .collect::<Result<_, _>>()
+            .unwrap();
+
+        let m = &result[0];
+        assert_eq!(m.get(0).unwrap(), "The");
+        assert_eq!(m.get(1).unwrap(), "he");
+        assert_eq!(m.index(), 0);
+        assert_eq!(m.input(), s);
+
+        let m = &result[1];
+        assert_eq!(m.get(0).unwrap(), "It");
+        assert_eq!(m.get(1).unwrap(), "t");
+        assert_eq!(m.index(), 46);
+        assert_eq!(m.input(), s);
+
+        let result: Vec<RegExpMatchArray> = JsString::from("foo")
+            .match_all(&re)
+            .into_iter()
+            .collect::<Result<_, _>>()
+            .unwrap();
+        assert_eq!(result.len(), 0);
+
+        let s = "For more information, see Chapter 3.4.5.1. Also see Chapter 3.1.4";
+        let re = RegExp::new("see (chapter \\d+(\\.\\d)*)", "gi");
+        let result: Vec<RegExpMatchArray> = JsString::from(s)
+            .match_all(&re)
+            .into_iter()
+            .collect::<Result<_, _>>()
+            .unwrap();
+
+        let m = &result[0];
+        assert_eq!(m.get(0).unwrap(), "see Chapter 3.4.5.1");
+        assert_eq!(m.get(1).unwrap(), "Chapter 3.4.5.1");
+        assert_eq!(m.get(2).unwrap(), ".1");
+        assert_eq!(m.index(), 22);
+        assert_eq!(m.input(), s);
+        // No named groups in this regex
+        assert!(m.groups().is_none());
+
+        let m = &result[1];
+        assert_eq!(m.get(0).unwrap(), "see Chapter 3.1.4");
+        assert_eq!(m.get(1).unwrap(), "Chapter 3.1.4");
+        assert_eq!(m.get(2).unwrap(), ".4");
+        assert_eq!(m.index(), 48);
+        assert_eq!(m.input(), s);
+    }
 }
 
 #[wasm_bindgen_test]
@@ -329,7 +487,10 @@ fn replace() {
     );
 
     let js = JsString::from("borderTop");
+    #[cfg(not(js_sys_unstable_apis))]
     let result = js.replace_with_function("T", &get_replacer_function());
+    #[cfg(js_sys_unstable_apis)]
+    let result = js.replace_with_function("T", get_replacer_function().upcast());
 
     assert_eq!(result, "border-top");
 
@@ -343,7 +504,10 @@ fn replace() {
 
     let js = JsString::from("borderTop");
     let re = RegExp::new("[A-Z]", "g");
+    #[cfg(not(js_sys_unstable_apis))]
     let result = js.replace_by_pattern_with_function(&re, &get_replacer_function());
+    #[cfg(js_sys_unstable_apis)]
+    let result = js.replace_by_pattern_with_function(&re, &get_replacer_function().upcast());
 
     assert_eq!(result, "border-top");
 }
@@ -361,7 +525,10 @@ fn replace_all() {
     );
 
     let js = JsString::from("borderTopTest");
+    #[cfg(not(js_sys_unstable_apis))]
     let result = js.replace_all_with_function("T", &get_replacer_function());
+    #[cfg(js_sys_unstable_apis)]
+    let result = js.replace_all_with_function("T", &get_replacer_function().upcast());
 
     assert_eq!(result, "border-top-test");
 
@@ -375,7 +542,10 @@ fn replace_all() {
 
     let js = JsString::from("borderTopTest");
     let re = RegExp::new("[A-Z]", "g");
+    #[cfg(not(js_sys_unstable_apis))]
     let result = js.replace_all_by_pattern_with_function(&re, &get_replacer_function());
+    #[cfg(js_sys_unstable_apis)]
+    let result = js.replace_all_by_pattern_with_function(&re, &get_replacer_function().upcast());
 
     assert_eq!(result, "border-top-test");
 }
@@ -565,13 +735,13 @@ fn value_of() {
 #[wasm_bindgen_test]
 fn raw() {
     let call_site = Object::new();
-    let raw = Array::of3(&"foo".into(), &"bar".into(), &"123".into());
+    let raw: Array<JsValue> = Array::of(&["foo".into(), "bar".into(), "123".into()]);
     Reflect::set(call_site.as_ref(), &"raw".into(), &raw.into()).unwrap();
     assert_eq!(
         JsString::raw_2(&call_site, "5", "JavaScript").unwrap(),
         "foo5barJavaScript123"
     );
-    let substitutions = Array::of2(&"5".into(), &"JavaScript".into());
+    let substitutions: Array<JsValue> = Array::of(&["5".into(), "JavaScript".into()]);
     assert_eq!(
         JsString::raw(&call_site, &substitutions).unwrap(),
         "foo5barJavaScript123"

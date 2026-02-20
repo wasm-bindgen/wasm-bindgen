@@ -17,12 +17,12 @@ fn some_value() -> Object {
 
 #[wasm_bindgen_test]
 fn new() {
-    assert!(JsValue::from(WeakSet::new()).is_object())
+    assert!(JsValue::from(WeakSet::<Object>::new()).is_object())
 }
 
 #[wasm_bindgen_test]
 fn has() {
-    let set = WeakSet::new();
+    let set: WeakSet<Object> = WeakSet::new();
     let value = some_value();
     assert!(!set.has(&value));
     set.add(&value);
@@ -32,7 +32,7 @@ fn has() {
 
 #[wasm_bindgen_test]
 fn delete() {
-    let set = WeakSet::new();
+    let set: WeakSet<Object> = WeakSet::new();
     let value = some_value();
     set.add(&value);
     assert!(set.has(&value));
@@ -43,8 +43,43 @@ fn delete() {
 
 #[wasm_bindgen_test]
 fn weakset_inheritance() {
-    let set = WeakSet::new();
+    let set: WeakSet<Object> = WeakSet::new();
     assert!(set.is_instance_of::<WeakSet>());
     assert!(set.is_instance_of::<Object>());
     let _: &Object = set.as_ref();
+}
+
+// Typed WeakSet tests
+#[wasm_bindgen_test]
+fn new_typed() {
+    let set: WeakSet<Object> = WeakSet::new_typed();
+    assert!(JsValue::from(set).is_object());
+}
+
+#[wasm_bindgen_test]
+fn typed_add_has() {
+    let set: WeakSet<Object> = WeakSet::new_typed();
+    let value = some_value();
+    assert!(!set.has(&value));
+    set.add(&value);
+    assert!(set.has(&value));
+}
+
+#[wasm_bindgen_test]
+fn typed_delete() {
+    let set: WeakSet<Object> = WeakSet::new_typed();
+    let value = some_value();
+    set.add(&value);
+    assert!(set.has(&value));
+    assert!(set.delete(&value));
+    assert!(!set.has(&value));
+    assert!(!set.delete(&value));
+}
+
+#[wasm_bindgen_test]
+fn default() {
+    let set = WeakSet::default();
+    let value = some_value();
+    set.add(&value);
+    assert!(set.has(&value));
 }

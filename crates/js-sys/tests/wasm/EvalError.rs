@@ -36,6 +36,7 @@ fn set_name() {
     assert_eq!(JsValue::from(base_error.name()), "different");
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn to_string() {
     let error = EvalError::new("error message 1");

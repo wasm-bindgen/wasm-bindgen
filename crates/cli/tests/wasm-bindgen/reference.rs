@@ -291,7 +291,7 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
     }
     for table in module.tables.iter_mut() {
         // The function table comes from LLVM and has different size between platforms.
-        if table.element_ty == walrus::RefType::Funcref {
+        if table.element_ty == walrus::RefType::FUNCREF {
             table.initial = 0;
             table.maximum = None;
         }

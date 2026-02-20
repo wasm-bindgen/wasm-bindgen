@@ -14,7 +14,7 @@
   (type (;0;) (func (result i32)))
   (type (;1;) (func (result externref)))
   (type (;2;) (func (param i32)))
-  (table $__wbindgen_externrefs (;0;) 128 externref)
+  (table $__wbindgen_externrefs (;0;) 1024 externref)
   (export "foo" (func $"foo externref shim"))
   (func $"foo externref shim" (;0;) (type 1) (result externref)
     (local i32)

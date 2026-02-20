@@ -1,0 +1,84 @@
+error[E0107]: struct takes at most 1 generic argument but 2 generic arguments were supplied
+ --> ui-tests/function-typed-call-mismatch.rs:6:15
+  |
+6 |     let func: Function<JsValue, i32> = unsafe { std::mem::zeroed() };
+  |               ^^^^^^^^        ----- help: remove the unnecessary generic argument
+  |               |
+  |               expected at most 1 generic argument
+  |
+note: struct defined here, with at most 1 generic parameter: `T`
+ --> $WORKSPACE/crates/js-sys/src/lib.rs
+  |
+  |       pub type Function<
+  |                ^^^^^^^^
+  | /         T: JsFunction = fn(
+  | |             JsValue,
+  | |             JsValue,
+  | |             JsValue,
+... |
+  | |             JsValue,
+  | |         ) -> JsValue,
+  | |____________________-
+
+error[E0277]: the trait bound `wasm_bindgen::JsValue: JsFunction` is not satisfied
+ --> ui-tests/function-typed-call-mismatch.rs:6:15
+  |
+6 |     let func: Function<JsValue, i32> = unsafe { std::mem::zeroed() };
+  |               ^^^^^^^^^^^^^^^^^^^^^^ the trait `JsFunction` is not implemented for `wasm_bindgen::JsValue`
+  |
+  = help: the following other types implement trait `JsFunction`:
+            fn() -> Ret
+            fn(Arg1) -> Ret
+            fn(Arg1, Arg2) -> Ret
+            fn(Arg1, Arg2, Arg3) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8) -> Ret
+note: required by a bound in `Function`
+ --> $WORKSPACE/crates/js-sys/src/lib.rs
+  |
+  |     pub type Function<
+  |              -------- required by a bound in this struct
+  |         T: JsFunction = fn(
+  |            ^^^^^^^^^^ required by this bound in `Function`
+
+error[E0599]: the method `call1` exists for struct `Function<JsValue>`, but its trait bounds were not satisfied
+ --> ui-tests/function-typed-call-mismatch.rs:9:24
+  |
+9 |     let _result = func.call1(&JsValue::undefined(), &42);
+  |                        ^^^^^ method cannot be called on `Function<JsValue>` due to unsatisfied trait bounds
+  |
+ ::: $WORKSPACE/src/lib.rs
+  |
+  | pub struct JsValue {
+  | ------------------ doesn't satisfy `wasm_bindgen::JsValue: JsFunction1` or `wasm_bindgen::JsValue: JsFunction`
+  |
+  = note: the following trait bounds were not satisfied:
+          `wasm_bindgen::JsValue: JsFunction`
+          `wasm_bindgen::JsValue: JsFunction1`
+
+error[E0277]: the trait bound `wasm_bindgen::JsValue: JsFunction` is not satisfied
+ --> ui-tests/function-typed-call-mismatch.rs:6:49
+  |
+6 |     let func: Function<JsValue, i32> = unsafe { std::mem::zeroed() };
+  |                                                 ^^^^^^^^^^^^^^^^ the trait `JsFunction` is not implemented for `wasm_bindgen::JsValue`
+  |
+  = help: the following other types implement trait `JsFunction`:
+            fn() -> Ret
+            fn(Arg1) -> Ret
+            fn(Arg1, Arg2) -> Ret
+            fn(Arg1, Arg2, Arg3) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7) -> Ret
+            fn(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8) -> Ret
+note: required by a bound in `Function`
+ --> $WORKSPACE/crates/js-sys/src/lib.rs
+  |
+  |     pub type Function<
+  |              -------- required by a bound in this struct
+  |         T: JsFunction = fn(
+  |            ^^^^^^^^^^ required by this bound in `Function`

@@ -143,14 +143,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `VideoPlaybackQuality`*"]
     pub fn get_video_playback_quality(this: &HtmlVideoElement) -> VideoPlaybackQuality;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PictureInPictureWindow")]
     # [wasm_bindgen (method , structural , js_class = "HTMLVideoElement" , js_name = requestPictureInPicture)]
     #[doc = "The `requestPictureInPicture()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestPictureInPicture)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `PictureInPictureWindow`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_picture_in_picture(this: &HtmlVideoElement) -> ::js_sys::Promise;
+    pub fn request_picture_in_picture(
+        this: &HtmlVideoElement,
+    ) -> ::js_sys::Promise<PictureInPictureWindow>;
 }

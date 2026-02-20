@@ -56,13 +56,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn delete(this: &Headers, name: &str) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = entries)]
-    #[doc = "The `entries()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/entries)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
-    pub fn entries(this: &Headers) -> ::js_sys::Iterator;
     # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = forEach)]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -84,13 +77,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn has(this: &Headers, name: &str) -> Result<bool, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = keys)]
-    #[doc = "The `keys()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/keys)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
-    pub fn keys(this: &Headers) -> ::js_sys::Iterator;
     # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = set)]
     #[doc = "The `set()` method."]
     #[doc = ""]
@@ -98,6 +84,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn set(this: &Headers, name: &str, value: &str) -> Result<(), JsValue>;
+    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = entries)]
+    #[doc = "The `entries()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/entries)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn entries(this: &Headers) -> ::js_sys::Iterator;
+    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = keys)]
+    #[doc = "The `keys()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/keys)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn keys(this: &Headers) -> ::js_sys::Iterator;
     # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = values)]
     #[doc = "The `values()` method."]
     #[doc = ""]

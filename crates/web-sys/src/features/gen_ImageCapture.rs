@@ -41,47 +41,66 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(video_track: &MediaStreamTrack) -> Result<ImageCapture, JsValue>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PhotoCapabilities")]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = getPhotoCapabilities)]
     #[doc = "The `getPhotoCapabilities()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/getPhotoCapabilities)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageCapture`, `PhotoCapabilities`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_photo_capabilities(this: &ImageCapture) -> ::js_sys::Promise;
+    pub fn get_photo_capabilities(this: &ImageCapture) -> ::js_sys::Promise<PhotoCapabilities>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PhotoSettings")]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = getPhotoSettings)]
     #[doc = "The `getPhotoSettings()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/getPhotoSettings)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageCapture`, `PhotoSettings`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_photo_settings(this: &ImageCapture) -> ::js_sys::Promise;
+    pub fn get_photo_settings(this: &ImageCapture) -> ::js_sys::Promise<PhotoSettings>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = grabFrame)]
     #[doc = "The `grabFrame()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/grabFrame)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn grab_frame(this: &ImageCapture) -> ::js_sys::Promise;
+    pub fn grab_frame(this: &ImageCapture) -> ::js_sys::Promise<ImageBitmap>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "Blob")]
     # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = takePhoto)]
     #[doc = "The `takePhoto()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/takePhoto)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageCapture`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageCapture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn take_photo(this: &ImageCapture) -> ::js_sys::Promise;
+    pub fn take_photo(this: &ImageCapture) -> ::js_sys::Promise<Blob>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "Blob", feature = "PhotoSettings",))]
+    # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = takePhoto)]
+    #[doc = "The `takePhoto()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/takePhoto)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageCapture`, `PhotoSettings`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn take_photo_with_photo_settings(
+        this: &ImageCapture,
+        photo_settings: &PhotoSettings,
+    ) -> ::js_sys::Promise<Blob>;
 }

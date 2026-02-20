@@ -1,0 +1,23 @@
+error[E0599]: no method named `upcast_ref` found for struct `wasm_bindgen::prelude::ImmediateClosure` in the current scope
+  --> ui-tests/immediate-closure-variance.rs:11:68
+   |
+11 |     let _bad: &ImmediateClosure<dyn FnMut() -> Number> = immediate.upcast_ref();
+   |                                                                    ^^^^^^^^^^
+   |
+help: there is a method `upcast` with a similar name
+   |
+11 -     let _bad: &ImmediateClosure<dyn FnMut() -> Number> = immediate.upcast_ref();
+11 +     let _bad: &ImmediateClosure<dyn FnMut() -> Number> = immediate.upcast();
+   |
+
+error[E0599]: no method named `upcast_ref` found for struct `wasm_bindgen::prelude::ImmediateClosure` in the current scope
+  --> ui-tests/immediate-closure-variance.rs:17:63
+   |
+17 |     let _bad2: &ImmediateClosure<dyn FnMut(u32)> = immediate2.upcast_ref();
+   |                                                               ^^^^^^^^^^
+   |
+help: there is a method `upcast` with a similar name
+   |
+17 -     let _bad2: &ImmediateClosure<dyn FnMut(u32)> = immediate2.upcast_ref();
+17 +     let _bad2: &ImmediateClosure<dyn FnMut(u32)> = immediate2.upcast();
+   |

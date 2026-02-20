@@ -7,10 +7,10 @@ use std::collections::BTreeSet;
 use syn::{Ident, Type};
 
 use crate::constants::{BUILTIN_IDENTS, POLYFILL_INTERFACES};
-use crate::idl_type::IdlType;
 use crate::traverse::TraverseType;
 use crate::util::shared_ref;
 use crate::util::{get_cfg_features, mdn_doc, required_doc_string};
+use crate::wbg_type::WbgType;
 use crate::Options;
 
 fn add_features(features: &mut BTreeSet<String>, ty: &impl TraverseType) {
@@ -64,20 +64,63 @@ fn maybe_unstable_docs(unstable: bool) -> Option<proc_macro2::TokenStream> {
 }
 
 fn generate_arguments(
-    arguments: &[(Ident, IdlType<'_>, Type)],
+    arguments: &[(Ident, WbgType<'_>)],
     variadic: bool,
-) -> Vec<TokenStream> {
-    arguments
-        .iter()
-        .enumerate()
-        .map(|(i, (name, _, ty))| {
-            if variadic && i + 1 == arguments.len() {
-                quote!( #name: &::js_sys::Array )
-            } else {
-                quote!( #name: #ty )
+    variadic_type: Option<&WbgType<'_>>,
+    generics_compat: bool,
+) -> Option<Vec<TokenStream>> {
+    let mut output = Vec::with_capacity(arguments.len());
+    for (i, (name, wbg_ty)) in arguments.iter().enumerate() {
+        if variadic && i + 1 == arguments.len() {
+            // In next_unstable mode (generics_compat=false), use typed slice &[T]
+            if !generics_compat {
+                if let Some(vt) = variadic_type {
+                    // For slice elements:
+                    // - Primitives (i16, f32, etc.) use Rust types directly (efficient IntoWasmAbi)
+                    // - Non-primitives (Object, interfaces) use JS types without & prefix
+                    let elem_ty = if vt.is_slice_primitive() {
+                        // Use top-level argument conversion for primitives (gives i16, f32, etc.)
+                        vt.to_syn_type(crate::util::TypePosition::ARGUMENT, false, false)
+                    } else {
+                        // Use inner conversion for non-primitives (gives Object, etc. without &)
+                        vt.to_syn_type(crate::util::TypePosition::ARGUMENT.to_inner(), false, false)
+                    };
+                    if let Ok(Some(elem_ty)) = elem_ty {
+                        output.push(quote!( #name: &[#elem_ty] ));
+                        continue;
+                    }
+                }
             }
-        })
-        .collect::<Vec<_>>()
+            // Fallback to untyped Array
+            output.push(quote!( #name: &::js_sys::Array ));
+        } else {
+            let ty = match wbg_ty.to_syn_type(
+                crate::util::TypePosition::ARGUMENT,
+                false,
+                generics_compat,
+            ) {
+                Ok(Some(ty)) => ty,
+                Ok(None) => {
+                    if !generics_compat {
+                        log::warn!(
+                            "generate_arguments: arg {name} returned None, wbg_ty={wbg_ty:?}"
+                        );
+                    }
+                    return None;
+                }
+                Err(e) => {
+                    if !generics_compat {
+                        log::warn!(
+                            "generate_arguments: arg {name} failed: {e:?}, wbg_ty={wbg_ty:?}"
+                        );
+                    }
+                    return None;
+                }
+            };
+            output.push(quote!( #name: #ty ));
+        }
+    }
+    Some(output)
 }
 
 fn generate_variadic(variadic: bool) -> Option<TokenStream> {
@@ -395,47 +438,109 @@ pub enum InterfaceMethodKind {
     IndexingDeleter,
 }
 
+#[derive(Clone)]
 pub struct InterfaceMethod<'a> {
     pub name: Ident,
     pub js_name: String,
     pub deprecated: Option<Option<String>>,
-    pub arguments: Vec<(Ident, IdlType<'a>, Type)>,
-    pub variadic_type: Option<IdlType<'a>>,
-    pub ret_ty: Option<Type>,
+    pub arguments: Vec<(Ident, WbgType<'a>)>,
+    pub variadic_type: Option<WbgType<'a>>,
+    pub ret_wbg_ty: Option<WbgType<'a>>,
     pub kind: InterfaceMethodKind,
     pub is_static: bool,
     pub structural: bool,
     pub catch: bool,
     pub variadic: bool,
     pub unstable: bool,
+    /// True if this is a stable method that has an unstable override with
+    /// the same name/signature but different return type. When true, this method
+    /// is gated behind `#[cfg(not(web_sys_unstable_apis))]`.
+    pub has_unstable_override: bool,
+}
+
+impl<'a> InterfaceMethod<'a> {
+    /// Returns true if this method has the same effective signature as `other`.
+    ///
+    /// Two methods have the same signature when they would produce the same Rust
+    /// binding: same JS name, same argument types, same return type, and same
+    /// throws behavior. Used for both deduplication (across operations) and
+    /// merge detection (stable/unstable gating).
+    pub fn same_signature(&self, other: &InterfaceMethod<'_>) -> bool {
+        self.js_name == other.js_name
+            && self.variadic == other.variadic
+            && self.variadic_type == other.variadic_type
+            && self.ret_wbg_ty == other.ret_wbg_ty
+            && self.catch == other.catch
+            && self
+                .arguments
+                .iter()
+                .map(|(_, wbg_ty)| wbg_ty)
+                .eq(other.arguments.iter().map(|(_, wbg_ty)| wbg_ty))
+    }
 }
 
 impl InterfaceMethod<'_> {
-    fn generate(
+    pub(crate) fn generate(
         &self,
         options: &Options,
         parent_name: &Ident,
         parent_js_name: String,
         parents: &[Ident],
         parent_deprecated: &Option<Option<String>>,
-    ) -> TokenStream {
+    ) -> Option<TokenStream> {
         let InterfaceMethod {
             name,
             js_name,
             deprecated,
             arguments,
-            variadic_type: _,
-            ret_ty,
+            variadic_type,
+            ret_wbg_ty,
             kind,
             is_static,
             structural,
             catch,
             variadic,
             unstable,
+            has_unstable_override,
         } = self;
 
-        let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
+        // If this is a stable method that has an unstable override,
+        // gate it behind `not(web_sys_unstable_apis)` so it's excluded
+        // when the unstable version is enabled.
+        let unstable_attr = if *has_unstable_override {
+            Some(quote! {
+                #[cfg(not(web_sys_unstable_apis))]
+            })
+        } else {
+            maybe_unstable_attr(*unstable)
+        };
+        let unstable_docs = if *has_unstable_override {
+            None
+        } else {
+            maybe_unstable_docs(*unstable)
+        };
+        // Unstable APIs always use typed generics (generics_compat=false).
+        // Stable APIs use legacy types by default, typed generics if next_unstable is set.
+        let generics_compat = if *unstable {
+            false
+        } else {
+            !options.next_unstable.get()
+        };
+
+        // Convert WbgType to syn::Type during code generation
+        use crate::util::TypePosition;
+        let ret_ty = match ret_wbg_ty {
+            Some(wbg_ty) => {
+                match wbg_ty.to_syn_type(TypePosition::RETURN, false, generics_compat) {
+                    Ok(ty) => ty,
+                    Err(e) => {
+                        log::warn!("SKIP {name} on {parent_name}: ret type failed: {e:?}");
+                        return None;
+                    }
+                }
+            }
+            None => None,
+        };
 
         let mut is_constructor = false;
 
@@ -482,16 +587,24 @@ impl InterfaceMethod<'_> {
             }
         };
 
+        // Compute feature set for the generated variant
         let mut features = BTreeSet::new();
 
-        for (_, _, ty) in arguments.iter() {
+        // Add features from argument types
+        for (_, wbg_ty) in arguments.iter() {
+            if let Ok(Some(ty)) =
+                wbg_ty.to_syn_type(crate::util::TypePosition::ARGUMENT, false, generics_compat)
+            {
+                add_features(&mut features, &ty);
+            }
+        }
+
+        // Add features from return type
+        if let Some(ref ty) = ret_ty {
             add_features(&mut features, ty);
         }
 
-        if let Some(ty) = ret_ty {
-            add_features(&mut features, ty);
-        }
-
+        // Remove parent types from feature set
         for parent in parents {
             features.remove(&parent.to_string());
         }
@@ -500,9 +613,11 @@ impl InterfaceMethod<'_> {
 
         let cfg_features = get_cfg_features(options, &features);
 
-        features.insert(parent_name.to_string());
+        // For documentation
+        let mut features_doc = features.clone();
+        features_doc.insert(parent_name.to_string());
 
-        let doc_comment = comment(doc_comment, &required_doc_string(options, &features));
+        let doc_comment = comment(doc_comment, &required_doc_string(options, &features_doc));
 
         let deprecated = deprecated
             .as_ref()
@@ -512,18 +627,7 @@ impl InterfaceMethod<'_> {
                 None => quote!( #[deprecated] ),
             });
 
-        let ret = ret_ty.as_ref().map(|ret| quote!( #ret ));
-
-        let ret = if *catch {
-            let ret = ret.unwrap_or_else(|| quote!(()));
-            Some(quote!( Result<#ret, JsValue> ))
-        } else {
-            ret
-        };
-
-        let ret = ret.as_ref().map(|ret| quote!( -> #ret ));
-
-        let catch = if *catch { Some(quote!(catch,)) } else { None };
+        let catch_attr = if *catch { Some(quote!(catch,)) } else { None };
 
         let (method, this) = if is_constructor {
             assert!(!is_static);
@@ -544,23 +648,50 @@ impl InterfaceMethod<'_> {
             )
         };
 
-        let arguments = generate_arguments(arguments, *variadic);
-        let variadic = generate_variadic(*variadic);
+        let variadic_attr = generate_variadic(*variadic);
 
-        quote! {
+        // Generate arguments
+        let arguments = match generate_arguments(
+            arguments,
+            *variadic,
+            variadic_type.as_ref(),
+            generics_compat,
+        ) {
+            Some(args) => args,
+            None => {
+                log::warn!(
+                    "SKIPPING method {name} on {parent_name}: args failed, args: {arguments:?}"
+                );
+                return None;
+            }
+        };
+
+        // Build the return type token
+        let ret = {
+            let ret = ret_ty.as_ref().map(|ret| quote!( #ret ));
+            let ret = if *catch {
+                let ret = ret.unwrap_or_else(|| quote!(()));
+                Some(quote!( Result<#ret, JsValue> ))
+            } else {
+                ret
+            };
+            ret.as_ref().map(|ret| quote!( -> #ret ))
+        };
+
+        Some(quote! {
             #unstable_attr
             #cfg_features
             #[wasm_bindgen(
-                #catch
+                #catch_attr
                 #method
-                #variadic
+                #variadic_attr
                 #(#extra_args),*
             )]
             #doc_comment
             #unstable_docs
             #deprecated
             pub fn #name(#this #(#arguments),*) #ret;
-        }
+        })
     }
 }
 
@@ -638,7 +769,7 @@ impl Interface<'_> {
 
         let methods = methods
             .iter()
-            .map(|x| x.generate(options, name, js_name.to_string(), parents, deprecated))
+            .filter_map(|x| x.generate(options, name, js_name.to_string(), parents, deprecated))
             .collect::<Vec<_>>();
 
         let deprecated = deprecated.as_ref().map(|msg| match msg {
@@ -1054,29 +1185,51 @@ impl NamespaceAttribute {
 pub struct Function<'a> {
     pub name: Ident,
     pub js_name: String,
-    pub arguments: Vec<(Ident, IdlType<'a>, Type)>,
-    pub ret_ty: Option<Type>,
+    pub arguments: Vec<(Ident, WbgType<'a>)>,
+    pub variadic_type: Option<WbgType<'a>>,
+    pub ret_wbg_ty: Option<WbgType<'a>>,
     pub catch: bool,
     pub variadic: bool,
     pub unstable: bool,
 }
 
 impl Function<'_> {
-    fn generate(
+    pub(crate) fn generate(
         &self,
         options: &Options,
         parent_name: &Ident,
         parent_js_name: String,
-    ) -> TokenStream {
+    ) -> Option<TokenStream> {
         let Function {
             name,
             js_name,
             arguments,
-            ret_ty,
+            variadic_type,
+            ret_wbg_ty,
             catch,
             variadic,
             unstable,
         } = self;
+
+        // Unstable APIs always use typed generics (generics_compat=false).
+        // Stable APIs use legacy types by default, typed generics if next_unstable is set.
+        let generics_compat = if *unstable {
+            false
+        } else {
+            !options.next_unstable.get()
+        };
+
+        // Convert WbgType to syn::Type during code generation
+        use crate::util::TypePosition;
+        let ret_ty = match ret_wbg_ty {
+            Some(wbg_ty) => {
+                match wbg_ty.to_syn_type(TypePosition::RETURN, false, generics_compat) {
+                    Ok(ty) => ty,
+                    Err(_) => return None,
+                }
+            }
+            None => None,
+        };
 
         let unstable_attr = maybe_unstable_attr(*unstable);
         let unstable_docs = maybe_unstable_docs(*unstable);
@@ -1088,13 +1241,20 @@ impl Function<'_> {
             mdn_doc(&parent_js_name, Some(js_name))
         );
 
+        // Compute feature set
         let mut features = BTreeSet::new();
 
-        for (_, _, ty) in arguments.iter() {
-            add_features(&mut features, ty);
+        // Add features from argument types
+        for (_, wbg_ty) in arguments.iter() {
+            if let Ok(Some(ty)) =
+                wbg_ty.to_syn_type(crate::util::TypePosition::ARGUMENT, false, generics_compat)
+            {
+                add_features(&mut features, &ty);
+            }
         }
 
-        if let Some(ty) = ret_ty {
+        // Add features from return type
+        if let Some(ref ty) = ret_ty {
             add_features(&mut features, ty);
         }
 
@@ -1102,41 +1262,51 @@ impl Function<'_> {
 
         let cfg_features = get_cfg_features(options, &features);
 
-        features.insert(parent_name.to_string());
+        // For documentation
+        let mut features_doc = features.clone();
+        features_doc.insert(parent_name.to_string());
 
-        let doc_comment = comment(doc_comment, &required_doc_string(options, &features));
+        let doc_comment = comment(doc_comment, &required_doc_string(options, &features_doc));
 
-        let ret = ret_ty.as_ref().map(|ret| quote!( #ret ));
+        let catch_attr = if *catch { Some(quote!(catch,)) } else { None };
 
-        let ret = if *catch {
-            let ret = ret.unwrap_or_else(|| quote!(()));
-            Some(quote!( Result<#ret, JsValue> ))
-        } else {
-            ret
+        let variadic_attr = generate_variadic(*variadic);
+
+        let js_name_ident = raw_ident(js_name);
+
+        // Generate arguments
+        let arguments = generate_arguments(
+            arguments,
+            *variadic,
+            variadic_type.as_ref(),
+            generics_compat,
+        )?;
+
+        // Build the return type token
+        let ret = {
+            let ret = ret_ty.as_ref().map(|ret| quote!( #ret ));
+            let ret = if *catch {
+                let ret = ret.unwrap_or_else(|| quote!(()));
+                Some(quote!( Result<#ret, JsValue> ))
+            } else {
+                ret
+            };
+            ret.as_ref().map(|ret| quote!( -> #ret ))
         };
 
-        let ret = ret.as_ref().map(|ret| quote!( -> #ret ));
-
-        let catch = if *catch { Some(quote!(catch,)) } else { None };
-
-        let arguments = generate_arguments(arguments, *variadic);
-        let variadic = generate_variadic(*variadic);
-
-        let js_name = raw_ident(js_name);
-
-        quote! {
+        Some(quote! {
             #unstable_attr
             #cfg_features
             #[wasm_bindgen(
-                #catch
-                #variadic
+                #catch_attr
+                #variadic_attr
                 js_namespace = #js_namespace,
-                js_name = #js_name
+                js_name = #js_name_ident
             )]
             #doc_comment
             #unstable_docs
             pub fn #name(#(#arguments),*) #ret;
-        }
+        })
     }
 }
 
@@ -1165,7 +1335,7 @@ impl Namespace<'_> {
 
         let functions = functions
             .iter()
-            .map(|x| x.generate(options, name, js_name.to_string()))
+            .filter_map(|x| x.generate(options, name, js_name.to_string()))
             .collect::<Vec<_>>();
 
         // For namespace attributes, we need a type binding that represents the namespace

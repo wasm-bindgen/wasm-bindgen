@@ -118,19 +118,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn flush(this: &AudioEncoder) -> ::js_sys::Promise;
+    pub fn flush(this: &AudioEncoder) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "AudioEncoderConfig")]
+    #[cfg(all(feature = "AudioEncoderConfig", feature = "AudioEncoderSupport",))]
     # [wasm_bindgen (static_method_of = AudioEncoder , js_class = "AudioEncoder" , js_name = isConfigSupported)]
     #[doc = "The `isConfigSupported()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/isConfigSupported_static)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioEncoder`, `AudioEncoderConfig`*"]
+    #[doc = "*This API requires the following crate features to be activated: `AudioEncoder`, `AudioEncoderConfig`, `AudioEncoderSupport`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn is_config_supported(config: &AudioEncoderConfig) -> ::js_sys::Promise;
+    pub fn is_config_supported(
+        config: &AudioEncoderConfig,
+    ) -> ::js_sys::Promise<AudioEncoderSupport>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "AudioEncoder" , js_name = reset)]
     #[doc = "The `reset()` method."]

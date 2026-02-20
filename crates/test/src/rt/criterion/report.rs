@@ -115,9 +115,7 @@ impl WasmReport {
         console_log!(
             "{}",
             self.yellow(&format!(
-                "Found {} outliers among {} measurements ({:.2}%)",
-                noutliers,
-                sample_size,
+                "Found {noutliers} outliers among {sample_size} measurements ({:.2}%)",
                 percent(noutliers)
             ))
         );
@@ -150,10 +148,8 @@ impl Report for WasmReport {
         let iter_string = format::iter_count(iter_count);
 
         self.print(format!(
-            "Collecting {} samples in estimated {} ({})",
-            sample_count,
-            format::time(estimate_ns),
-            iter_string
+            "Collecting {sample_count} samples in estimated {} ({iter_string})",
+            format::time(estimate_ns)
         ));
     }
 

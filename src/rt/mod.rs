@@ -104,7 +104,7 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
     unsafe { To::from_abi(breaks_if_inlined::<From, To>(prim1, prim2, prim3, prim4).join()) }
 }
 
-pub(crate) const JSIDX_OFFSET: u32 = 128; // keep in sync with js/mod.rs
+pub(crate) const JSIDX_OFFSET: u32 = 1024; // keep in sync with js/mod.rs
 pub(crate) const JSIDX_UNDEFINED: u32 = JSIDX_OFFSET;
 pub(crate) const JSIDX_NULL: u32 = JSIDX_OFFSET + 1;
 pub(crate) const JSIDX_TRUE: u32 = JSIDX_OFFSET + 2;

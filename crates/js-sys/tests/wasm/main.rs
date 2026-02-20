@@ -4,6 +4,7 @@
 pub mod Array;
 pub mod ArrayBuffer;
 pub mod ArrayIterator;
+pub mod ArrayTuple;
 pub mod BigInt;
 pub mod Boolean;
 pub mod DataView;
@@ -34,6 +35,7 @@ pub mod Symbol;
 pub mod SyntaxError;
 #[cfg(js_sys_unstable_apis)]
 pub mod Temporal;
+pub mod Thenable;
 pub mod TypeError;
 pub mod TypedArray;
 pub mod UriError;

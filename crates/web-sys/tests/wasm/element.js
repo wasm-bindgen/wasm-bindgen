@@ -50,6 +50,10 @@ export function new_html() {
   return document.createElement("html");
 }
 
+export function attach_element(element) {
+  document.body.appendChild(element);
+}
+
 export function new_input() {
     return document.createElement("input");
 }

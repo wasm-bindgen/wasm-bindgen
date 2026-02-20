@@ -92,7 +92,7 @@ fn setup_clock(window: &Window, document: &Document) -> Result<(), JsValue> {
 
 // Demonstrate ScopedClosure for immediate/synchronous callbacks.
 //
-// Use ScopedClosure::borrow (for Fn) or ScopedClosure::borrow_mut (for FnMut) when
+// Use ScopedClosure::borrow (for FnMut) or ScopedClosure::borrow_immutable (for Fn) when
 // JavaScript will call the closure immediately and won't retain it. Benefits:
 // - Can capture non-'static references (like &mut local_var)
 // - Automatic cleanup when ScopedClosure is dropped
@@ -111,7 +111,7 @@ fn demonstrate_scoped_closure() {
         fn callThreeTimes(cb: &ScopedClosure<dyn FnMut(u32)>);
     }
 
-    // Example: Using ScopedClosure::borrow_mut to sum values
+    // Example: Using ScopedClosure::borrow to sum values
     // The closure captures &mut sum without requiring 'static
     let mut sum = 0u32;
 

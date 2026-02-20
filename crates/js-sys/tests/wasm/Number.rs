@@ -59,6 +59,7 @@ fn is_safe_integer() {
     assert!(!Number::is_safe_integer(&f64::INFINITY.into()));
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 #[allow(deprecated)]
 #[wasm_bindgen_test]
 fn new() {
@@ -96,10 +97,33 @@ fn parse_int_float() {
 #[wasm_bindgen_test]
 fn to_locale_string() {
     let number = Number::from(1234.45);
-    assert_eq!(number.to_locale_string("en-US"), "1,234.45");
-    // TODO: these tests seems to be system dependent, disable for now
-    // assert_eq!(wasm.to_locale_string(number, "de-DE"), "1,234.45");
-    // assert_eq!(wasm.to_locale_string(number, "zh-Hans-CN-u-nu-hanidec"), "1,234.45");
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(number.to_locale_string("en-US"), "1,234.45");
+        assert_eq!(number.to_locale_string("de-DE"), "1.234,45");
+        assert_eq!(
+            number.to_locale_string("zh-Hans-CN-u-nu-hanidec"),
+            "一,二三四.四五"
+        );
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(
+            number.to_locale_string(&[JsString::from("en-US")], &Default::default()),
+            "1,234.45"
+        );
+        assert_eq!(
+            number.to_locale_string(&[JsString::from("de-DE")], &Default::default()),
+            "1.234,45"
+        );
+        assert_eq!(
+            number.to_locale_string(
+                &[JsString::from("zh-Hans-CN-u-nu-hanidec")],
+                &Default::default()
+            ),
+            "一,二三四.四五"
+        );
+    }
 }
 
 #[wasm_bindgen_test]
@@ -110,9 +134,19 @@ fn to_precision() {
 
 #[wasm_bindgen_test]
 fn to_string() {
-    assert_eq!(Number::from(42).to_string(10).unwrap(), "42");
-    assert_eq!(Number::from(233).to_string(16).unwrap(), "e9");
-    assert!(Number::from(100).to_string(100).is_err());
+    #[cfg(not(js_sys_unstable_apis))]
+    #[allow(deprecated)]
+    {
+        assert_eq!(Number::from(42).to_string(10).unwrap(), "42");
+        assert_eq!(Number::from(233).to_string(16).unwrap(), "e9");
+        assert!(Number::from(100).to_string(100).is_err());
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(Number::from(42).to_string(), "42");
+        assert_eq!(Number::from(233).to_string_with_radix(16).unwrap(), "e9");
+        assert!(Number::from(100).to_string_with_radix(100).is_err());
+    }
 }
 
 #[wasm_bindgen_test]
@@ -132,6 +166,7 @@ fn to_exponential() {
     assert!(Number::from(10).to_exponential(101).is_err());
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 #[allow(deprecated)]
 #[wasm_bindgen_test]
 fn number_inheritance() {
@@ -139,6 +174,16 @@ fn number_inheritance() {
     assert!(n.is_instance_of::<Number>());
     assert!(n.is_instance_of::<Object>());
     let _: &Object = n.as_ref();
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn number_inheritance_unstable() {
+    let n = Number::from(42);
+    assert!(!n.is_instance_of::<Number>());
+    assert!(!n.is_instance_of::<Object>());
+    assert_eq!(n.js_typeof(), "number");
+    assert_eq!(n.value_of(), 42f64);
 }
 
 #[wasm_bindgen_test]

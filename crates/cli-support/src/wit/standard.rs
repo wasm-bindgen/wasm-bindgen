@@ -104,7 +104,7 @@ pub enum ClosureDtor {
     OwnClosure(walrus::ExportId),
     /// Borrowed closure called from JS (e.g., `forEach` callback). The closure
     /// is invalidated after the JS call returns by calling `_wbg_cb_unref`.
-    RefLegacy,
+    Immediate,
     /// Borrowed closure (`ScopedClosure`) passed to a Rust async import. The closure's lifetime
     /// is tied to the async call and cleanup is handled on the Rust side.
     Borrowed,
@@ -383,7 +383,7 @@ impl AdapterType {
             walrus::ValType::I64 => AdapterType::I64,
             walrus::ValType::F32 => AdapterType::F32,
             walrus::ValType::F64 => AdapterType::F64,
-            walrus::ValType::Ref(RefType::Externref) => AdapterType::Externref,
+            walrus::ValType::Ref(RefType::EXTERNREF) => AdapterType::Externref,
             walrus::ValType::Ref(_) | walrus::ValType::V128 => return None,
         })
     }
@@ -396,7 +396,7 @@ impl AdapterType {
             AdapterType::F64 => walrus::ValType::F64,
             AdapterType::Enum(_) => walrus::ValType::I32,
             AdapterType::Externref | AdapterType::NamedExternref(_) => {
-                walrus::ValType::Ref(RefType::Externref)
+                walrus::ValType::Ref(RefType::EXTERNREF)
             }
             _ => return None,
         })

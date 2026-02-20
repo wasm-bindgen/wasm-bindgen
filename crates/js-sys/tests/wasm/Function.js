@@ -18,15 +18,22 @@ exports.call_function_arg =  function(f, arg1) {
   return f(arg1);
 };
 exports.sum_many_arguments = function() {
-    return function(a, b, c, d, e, f, g, h, i) {
-        return (a || 0) + (b || 0) + (c || 0) + (d || 0) + (e || 0) + (f || 0) + (g || 0) + (h || 0) + (i || 0);
+    return function(a, b, c, d, e, f, g, h) {
+        return (a || 0) + (b || 0) + (c || 0) + (d || 0) + (e || 0) + (f || 0) + (g || 0) + (h || 0)
     };
 };
 exports.test_context = function() {
     return { multiplier: 10 };
 };
 exports.multiply_sum = function() {
-    return function(a, b, c, d, e, f, g, h, i) {
-        return this.multiplier * ((a || 0) + (b || 0) + (c || 0) + (d || 0) + (e || 0) + (f || 0) + (g || 0) + (h || 0) + (i || 0));
+    return function(a, b, c, d, e, f, g, h) {
+        return this.multiplier * ((a || 0) + (b || 0) + (c || 0) + (d || 0) + (e || 0) + (f || 0) + (g || 0) + (h || 0));
     };
+};
+// Simulates a for_each method that calls a callback with (string, index) pairs
+// Similar to DOMTokenList.forEach or Array.forEach
+exports.invoke_for_each_callback = function(callback, items) {
+    items.forEach(function(item, index) {
+        callback(item, index);
+    });
 };

@@ -4,6 +4,8 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Yes | Yes | No | Yes | Yes | Yes | Instances of the extern `Whatever` JavaScript class / prototype constructor |
 
+Imported JavaScript types support [generic type parameters](./js-sys.md) for working with typed JavaScript collections and APIs.
+
 ## Example Rust Usage
 
 ```rust

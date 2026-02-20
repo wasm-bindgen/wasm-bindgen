@@ -3,3 +3,5 @@
 This section provides an overview of all the types that `wasm-bindgen` can send
 and receive across the WebAssembly ABI boundary, and how they translate into
 JavaScript.
+
+Many core JavaScript types support [generic type parameters](./types/js-sys.md) using type erasure, allowing you to work with typed collections like `Array<T>`, `Promise<T>`, `Map<K, V>`, and more.

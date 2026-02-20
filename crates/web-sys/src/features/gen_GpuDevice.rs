@@ -65,16 +65,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn queue(this: &GpuDevice) -> GpuQueue;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuDeviceLostInfo")]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUDevice" , js_name = lost)]
     #[doc = "Getter for the `lost` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/lost)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`, `GpuDeviceLostInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn lost(this: &GpuDevice) -> ::js_sys::Promise;
+    pub fn lost(this: &GpuDevice) -> ::js_sys::Promise<GpuDeviceLostInfo>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "GPUDevice" , js_name = onuncapturederror)]
     #[doc = "Getter for the `onuncapturederror` field of this object."]
@@ -211,20 +212,23 @@ extern "C" {
         descriptor: &GpuComputePipelineDescriptor,
     ) -> GpuComputePipeline;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuComputePipelineDescriptor")]
+    #[cfg(all(
+        feature = "GpuComputePipeline",
+        feature = "GpuComputePipelineDescriptor",
+    ))]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = createComputePipelineAsync)]
     #[doc = "The `createComputePipelineAsync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createComputePipelineAsync)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuComputePipelineDescriptor`, `GpuDevice`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePipeline`, `GpuComputePipelineDescriptor`, `GpuDevice`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_compute_pipeline_async(
         this: &GpuDevice,
         descriptor: &GpuComputePipelineDescriptor,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<GpuComputePipeline>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "GpuPipelineLayout", feature = "GpuPipelineLayoutDescriptor",))]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = createPipelineLayout)]
@@ -289,20 +293,20 @@ extern "C" {
         descriptor: &GpuRenderPipelineDescriptor,
     ) -> Result<GpuRenderPipeline, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuRenderPipelineDescriptor")]
+    #[cfg(all(feature = "GpuRenderPipeline", feature = "GpuRenderPipelineDescriptor",))]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = createRenderPipelineAsync)]
     #[doc = "The `createRenderPipelineAsync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createRenderPipelineAsync)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`, `GpuRenderPipelineDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`, `GpuRenderPipeline`, `GpuRenderPipelineDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_render_pipeline_async(
         this: &GpuDevice,
         descriptor: &GpuRenderPipelineDescriptor,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<GpuRenderPipeline>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuSampler")]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = createSampler)]
@@ -390,16 +394,17 @@ extern "C" {
         descriptor: &GpuExternalTextureDescriptor,
     ) -> Result<GpuExternalTexture, JsValue>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "GpuError", feature = "JsOption",))]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = popErrorScope)]
     #[doc = "The `popErrorScope()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/popErrorScope)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuDevice`, `GpuError`, `JsOption`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn pop_error_scope(this: &GpuDevice) -> ::js_sys::Promise;
+    pub fn pop_error_scope(this: &GpuDevice) -> ::js_sys::Promise<::js_sys::JsOption<GpuError>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuErrorFilter")]
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = pushErrorScope)]

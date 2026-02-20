@@ -22,7 +22,8 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "breakdown")]
-    pub fn get_breakdown(this: &MemoryMeasurement) -> Option<::js_sys::Array>;
+    pub fn get_breakdown(this: &MemoryMeasurement)
+        -> Option<::js_sys::Array<MemoryBreakdownEntry>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `breakdown` field of this object."]
     #[doc = ""]

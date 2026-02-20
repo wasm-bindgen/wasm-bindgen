@@ -469,33 +469,48 @@ fn to_json() {
 #[wasm_bindgen_test]
 fn to_locale_date_string() {
     let date = Date::new(&"August 19, 1975 23:15:30 UTC".into());
+    #[cfg(not(js_sys_unstable_apis))]
     let s = date.to_locale_date_string("de-DE", &JsValue::undefined());
+    #[cfg(js_sys_unstable_apis)]
+    let s = date.to_locale_date_string(&[JsString::from("de-DE")], &Default::default());
     assert!(s.length() > 0);
 }
 
 #[wasm_bindgen_test]
 fn to_locale_string() {
     let date = Date::new(&"August 19, 1975 23:15:30 UTC".into());
+    #[cfg(not(js_sys_unstable_apis))]
     let s = date.to_locale_string("de-DE", &JsValue::undefined());
+    #[cfg(js_sys_unstable_apis)]
+    let s = date.to_locale_string(&[JsString::from("de-DE")], &Default::default());
     assert!(s.length() > 0);
 }
 
 #[wasm_bindgen_test]
 fn to_locale_time_string() {
     let date = Date::new(&"August 19, 1975 23:15:30".into());
-    assert_eq!(
-        JsValue::from(date.to_locale_time_string("en-US")),
-        "11:15:30 PM",
-    );
-    assert_eq!(
-        JsValue::from(date.to_locale_time_string_with_options("en-US", &JsValue::undefined())),
-        "11:15:30 PM",
-    );
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(
+            JsValue::from(date.to_locale_time_string("en-US")),
+            "11:15:30 PM",
+        );
+        assert_eq!(
+            JsValue::from(date.to_locale_time_string_with_options("en-US", &JsValue::undefined())),
+            "11:15:30 PM",
+        );
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let s = date.to_locale_time_string(&[JsString::from("en-US")], &Default::default());
+        assert!(s.length() > 0);
+    }
 }
 
 #[wasm_bindgen_test]
 fn to_string() {
     let date = Date::new(&"August 19, 1975 23:15:30".into());
+    #[allow(deprecated)]
     let s = JsValue::from(date.to_string()).as_string().unwrap();
     assert_eq!(&s[0..15], "Tue Aug 19 1975");
 }

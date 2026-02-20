@@ -13,6 +13,8 @@ fn pass_jsvalue_slice_to_js() {
     let arr: Vec<JsValue> = vec![1.into(), 2.into(), 3.into()];
     let len = js_receive_slice(&arr);
     assert_eq!(len, 3);
+    let len = js_receive_slice(&arr);
+    assert_eq!(len, 3);
 }
 
 #[wasm_bindgen_test]

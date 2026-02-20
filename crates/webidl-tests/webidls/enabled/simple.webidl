@@ -31,7 +31,7 @@ interface UndefinedMethod {
 };
 
 [Constructor()]
-interface NullableMethod {
+interface JsOptionMethod {
   octet? opt(short? a);
 };
 
@@ -60,6 +60,7 @@ interface OptionalAndUnionArguments {
 [Constructor()]
 interface Variadic {
   short sum(short... values);
+  long countObjects(object... items);
 };
 
 [Constructor()]

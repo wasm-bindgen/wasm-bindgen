@@ -88,12 +88,12 @@ async fn try_promise_all() {
     let promise = Promise::new(&mut |resolve, _reject| {
         resolve_ = resolve;
     });
-    let closure1 = Closure::new(|_v| {
+    let closure1 = Closure::own(|_v| {
         panic!("CLOSURE PANIC");
     });
     let promise2 = promise.then(&closure1);
     let future = JsFuture::from(promise2);
-    let closure2 = Closure::new(move || {
+    let closure2 = Closure::own(move || {
         resolve_
             .call1(&JsValue::undefined(), &JsValue::undefined())
             .unwrap();
@@ -112,7 +112,7 @@ fn try_every() {
     Reflect::set(&global(), &"dropped".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"food".into(), &JsValue::FALSE).unwrap();
     assert!(even
-        .try_every_result_closure(&Closure::new(|_, _, _| {
+        .try_every_result_closure(&Closure::own(|_, _, _| {
             struct Foo {}
             impl Drop for Foo {
                 fn drop(&mut self) {

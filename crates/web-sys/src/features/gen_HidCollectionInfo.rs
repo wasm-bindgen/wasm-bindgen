@@ -22,7 +22,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "children")]
-    pub fn get_children(this: &HidCollectionInfo) -> Option<::js_sys::Array>;
+    pub fn get_children(this: &HidCollectionInfo) -> Option<::js_sys::Array<HidCollectionInfo>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `children` field of this object."]
     #[doc = ""]
@@ -40,7 +40,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "featureReports")]
-    pub fn get_feature_reports(this: &HidCollectionInfo) -> Option<::js_sys::Array>;
+    pub fn get_feature_reports(this: &HidCollectionInfo) -> Option<::js_sys::Array<HidReportInfo>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `featureReports` field of this object."]
     #[doc = ""]
@@ -58,7 +58,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "inputReports")]
-    pub fn get_input_reports(this: &HidCollectionInfo) -> Option<::js_sys::Array>;
+    pub fn get_input_reports(this: &HidCollectionInfo) -> Option<::js_sys::Array<HidReportInfo>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `inputReports` field of this object."]
     #[doc = ""]
@@ -76,7 +76,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "outputReports")]
-    pub fn get_output_reports(this: &HidCollectionInfo) -> Option<::js_sys::Array>;
+    pub fn get_output_reports(this: &HidCollectionInfo) -> Option<::js_sys::Array<HidReportInfo>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `outputReports` field of this object."]
     #[doc = ""]

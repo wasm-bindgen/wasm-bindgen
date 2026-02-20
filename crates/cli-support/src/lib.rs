@@ -452,6 +452,11 @@ impl Bindgen {
                 .context("failed to transform return pointers into multi-value Wasm")?;
         }
 
+        // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
+        // This runs after externref processing so that we have access to the
+        // externref table and allocation function.
+        generate_wasm_catch_wrappers(&mut module)?;
+
         // We've done a whole bunch of transformations to the Wasm module, many
         // of which leave "garbage" lying around, so let's prune out all our
         // unnecessary things here.
@@ -768,6 +773,49 @@ impl Output {
 
         Ok(())
     }
+}
+
+/// Generate Wasm catch wrappers for imports marked with `#[wasm_bindgen(catch)]`.
+///
+/// When exception handling instructions are available in the module, this generates
+/// Wasm wrapper functions that catch JavaScript exceptions using `WebAssembly.JSTag`
+/// instead of relying on JS `handleError` wrappers.
+fn generate_wasm_catch_wrappers(module: &mut Module) -> Result<(), Error> {
+    let eh_version = transforms::detect_exception_handling_version(module);
+    log::debug!("Exception handling version: {eh_version:?}");
+
+    if eh_version == transforms::ExceptionHandlingVersion::None {
+        return Ok(());
+    }
+
+    // We need to temporarily remove the custom sections to avoid borrow issues
+    let mut aux = module
+        .customs
+        .delete_typed::<wit::WasmBindgenAux>()
+        .expect("aux section should exist");
+    let wit = module
+        .customs
+        .delete_typed::<wit::NonstandardWitSection>()
+        .expect("wit section should exist");
+
+    log::debug!(
+        "Running catch handler: imports_with_catch={}, externref_table={:?}, externref_alloc={:?}, exn_store={:?}",
+        aux.imports_with_catch.len(),
+        aux.externref_table,
+        aux.externref_alloc,
+        aux.exn_store
+    );
+
+    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version)
+        .context("failed to generate catch wrappers");
+
+    // Re-add the custom sections
+    module.customs.add(*wit);
+    module.customs.add(*aux);
+
+    result?;
+
+    Ok(())
 }
 
 fn gc_module_and_adapters(module: &mut Module) {

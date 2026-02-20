@@ -20,20 +20,23 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemFileHandle`*"]
     pub fn create_sync_access_handle(this: &FileSystemFileHandle) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "FileSystemSyncAccessHandleOptions")]
+    #[cfg(all(
+        feature = "FileSystemSyncAccessHandle",
+        feature = "FileSystemSyncAccessHandleOptions",
+    ))]
     # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = createSyncAccessHandle)]
     #[doc = "The `createSyncAccessHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/createSyncAccessHandle)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FileSystemFileHandle`, `FileSystemSyncAccessHandleOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemFileHandle`, `FileSystemSyncAccessHandle`, `FileSystemSyncAccessHandleOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_sync_access_handle_with_options(
         this: &FileSystemFileHandle,
         options: &FileSystemSyncAccessHandleOptions,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<FileSystemSyncAccessHandle>;
     # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = createWritable)]
     #[doc = "The `createWritable()` method."]
     #[doc = ""]

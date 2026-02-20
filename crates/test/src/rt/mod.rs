@@ -99,7 +99,7 @@ use core::future::Future;
 use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{self, Poll};
-use js_sys::{Array, Function, Promise};
+use js_sys::{Array, Function, Number, Promise, Undefined};
 pub use wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
@@ -231,7 +231,7 @@ impl Display for TestResult {
             TestResult::Ok => write!(f, "ok"),
             TestResult::Err(_) => write!(f, "FAIL"),
             TestResult::Ignored(None) => write!(f, "ignored"),
-            TestResult::Ignored(Some(reason)) => write!(f, "ignored, {}", reason),
+            TestResult::Ignored(Some(reason)) => write!(f, "ignored, {reason}"),
         }
     }
 }
@@ -243,7 +243,7 @@ trait Formatter {
     /// Log the result of a test, either passing or failing.
     fn log_test(&self, is_bench: bool, name: &str, result: &TestResult) {
         if !is_bench {
-            self.writeln(&format!("test {} ... {}", name, result));
+            self.writeln(&format!("test {name} ... {result}"));
         }
     }
 
@@ -394,16 +394,19 @@ impl Context {
             let noun = if tests.len() == 1 { "test" } else { "tests" };
             self.state
                 .formatter
-                .writeln(&format!("running {} {}", tests.len(), noun));
+                .writeln(&format!("running {} {noun}", tests.len()));
         }
 
         // Execute all our test functions through their Wasm shims (unclear how
         // to pass native function pointers around here). Each test will
         // execute one of the `execute_*` tests below which will push a
         // future onto our `remaining` list, which we'll process later.
-        let cx_arg = (self as *const Context as u32).into();
+        let cx_arg = Number::from(self as *const Context as u32);
         for test in tests {
-            match Function::from(test).call1(&JsValue::null(), &cx_arg) {
+            match test
+                .unchecked_into::<Function<fn(Number) -> Undefined>>()
+                .call(&JsValue::null(), (&cx_arg,))
+            {
                 Ok(_) => {}
                 Err(e) => {
                     panic!(
@@ -500,7 +503,7 @@ impl Termination for () {
 
 impl<E: core::fmt::Debug> Termination for Result<(), E> {
     fn into_js_result(self) -> Result<(), JsValue> {
-        self.map_err(|e| JsError::new(&format!("{:?}", e)).into())
+        self.map_err(|e| JsError::new(&format!("{e:?}")).into())
     }
 }
 
@@ -704,13 +707,12 @@ impl State {
              {} failed; \
              {} ignored; \
              {} filtered out\
-             {}\n",
+             {finished_in}\n",
             if failures.is_empty() { "ok" } else { "FAILED" },
             self.succeeded_count.get(),
             failures.len(),
             self.ignored_count.get(),
-            self.filtered_count.get(),
-            finished_in,
+            self.filtered_count.get()
         ));
     }
 
@@ -816,7 +818,7 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
             };
-            let closure = ScopedClosure::borrow_mut(&mut func);
+            let closure = ScopedClosure::borrow_mut_assert_unwind_safe(&mut func);
             __wbg_test_invoke(&closure)
         });
         match (result, future_output) {

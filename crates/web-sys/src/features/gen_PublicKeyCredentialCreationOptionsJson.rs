@@ -44,7 +44,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "attestationFormats")]
     pub fn get_attestation_formats(
         this: &PublicKeyCredentialCreationOptionsJson,
-    ) -> Option<::js_sys::Array>;
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attestationFormats` field of this object."]
     #[doc = ""]
@@ -110,7 +110,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "excludeCredentials")]
     pub fn get_exclude_credentials(
         this: &PublicKeyCredentialCreationOptionsJson,
-    ) -> Option<::js_sys::Array>;
+    ) -> Option<::js_sys::Array<PublicKeyCredentialDescriptorJson>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `excludeCredentials` field of this object."]
     #[doc = ""]
@@ -156,7 +156,9 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "hints")]
-    pub fn get_hints(this: &PublicKeyCredentialCreationOptionsJson) -> Option<::js_sys::Array>;
+    pub fn get_hints(
+        this: &PublicKeyCredentialCreationOptionsJson,
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `hints` field of this object."]
     #[doc = ""]
@@ -176,7 +178,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "pubKeyCredParams")]
     pub fn get_pub_key_cred_params(
         this: &PublicKeyCredentialCreationOptionsJson,
-    ) -> ::js_sys::Array;
+    ) -> ::js_sys::Array<PublicKeyCredentialParameters>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `pubKeyCredParams` field of this object."]
     #[doc = ""]

@@ -490,7 +490,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_image_2d_with_u32_and_u32_and_video_frame(
+    pub fn tex_image_2d(
         this: &WebGlRenderingContext,
         target: u32,
         level: i32,
@@ -649,7 +649,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_sub_image_2d_with_u32_and_u32_and_video_frame(
+    pub fn tex_sub_image_2d(
         this: &WebGlRenderingContext,
         target: u32,
         level: i32,
@@ -1869,7 +1869,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn make_xr_compatible(this: &WebGlRenderingContext) -> ::js_sys::Promise;
+    pub fn make_xr_compatible(
+        this: &WebGlRenderingContext,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
     # [wasm_bindgen (method , structural , js_class = "WebGLRenderingContext" , js_name = pixelStorei)]
     #[doc = "The `pixelStorei()` method."]
     #[doc = ""]

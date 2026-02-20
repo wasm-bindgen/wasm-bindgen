@@ -44,7 +44,7 @@ impl super::Formatter for Worker {
         let err = WorkerError::from(err.clone());
         let stack = err.stack();
 
-        let header = format!("{}: {}", name, message);
+        let header = format!("{name}: {message}");
         let stack = match stack.as_string() {
             Some(stack) => stack,
             None => return header,
@@ -58,6 +58,6 @@ impl super::Formatter for Worker {
         }
 
         // Fallback to make sure we don't lose any info
-        format!("{}\n{}", header, stack)
+        format!("{header}\n{stack}")
     }
 }

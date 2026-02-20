@@ -20,6 +20,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEvent`, `Window`*"]
     pub fn requesting_window(this: &PopupBlockedEvent) -> Option<Window>;
+    # [wasm_bindgen (structural , method , getter , js_class = "PopupBlockedEvent" , js_name = popupWindowURI)]
+    #[doc = "Getter for the `popupWindowURI` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PopupBlockedEvent/popupWindowURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEvent`*"]
+    pub fn popup_window_uri(this: &PopupBlockedEvent) -> Option<::alloc::string::String>;
     # [wasm_bindgen (structural , method , getter , js_class = "PopupBlockedEvent" , js_name = popupWindowName)]
     #[doc = "Getter for the `popupWindowName` field of this object."]
     #[doc = ""]

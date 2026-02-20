@@ -27,7 +27,12 @@ extern "C" {
 #[wasm_bindgen(module = "tests/wasm/Object.js")]
 extern "C" {
     fn map_with_symbol_key() -> Object;
+
+    #[cfg(not(js_sys_unstable_apis))]
     fn symbol_key() -> JsValue;
+
+    #[cfg(js_sys_unstable_apis)]
+    fn symbol_key() -> Symbol;
 
     type Foo;
     #[wasm_bindgen(constructor)]
@@ -39,10 +44,18 @@ extern "C" {
     static BAR_PROTOTYPE: Object;
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 fn foo_42() -> Object {
     let foo = Foo42::from(JsValue::from(Object::new()));
     foo.set_foo(42.into());
     JsValue::from(foo).into()
+}
+
+#[cfg(js_sys_unstable_apis)]
+fn foo_42() -> Object<Number> {
+    let foo = Foo42::from(JsValue::from(Object::new()));
+    foo.set_foo(42.into());
+    JsValue::from(foo).unchecked_into()
 }
 
 #[wasm_bindgen_test]
@@ -52,9 +65,9 @@ fn new() {
 
 #[wasm_bindgen_test]
 fn assign() {
-    let a = JsValue::from("a");
-    let b = JsValue::from("b");
-    let c = JsValue::from("c");
+    let a = JsString::from("a");
+    let b = JsString::from("b");
+    let c = JsString::from("c");
 
     let target = Object::new();
     Reflect::set(target.as_ref(), a.as_ref(), a.as_ref()).unwrap();
@@ -68,12 +81,27 @@ fn assign() {
     let src3 = Object::new();
     Reflect::set(src3.as_ref(), &c, &c).unwrap();
 
+    #[cfg(not(js_sys_unstable_apis))]
+    #[allow(deprecated)]
     let res = Object::assign3(&target, &src1, &src2, &src3);
 
+    #[cfg(js_sys_unstable_apis)]
+    #[allow(deprecated)]
+    let res = Object::assign_many(&target, &[src1, src2, src3]).unwrap();
+
     assert!(Object::is(target.as_ref(), res.as_ref()));
-    assert_eq!(Reflect::get(target.as_ref(), &a).unwrap(), c);
-    assert_eq!(Reflect::get(target.as_ref(), &b).unwrap(), b);
-    assert_eq!(Reflect::get(target.as_ref(), &c).unwrap(), c);
+    assert_eq!(
+        Reflect::get_str(target.as_ref(), &a).unwrap().unwrap(),
+        JsValue::from(&c)
+    );
+    assert_eq!(
+        Reflect::get_str(target.as_ref(), &b).unwrap().unwrap(),
+        JsValue::from(&b)
+    );
+    assert_eq!(
+        Reflect::get_str(target.as_ref(), &c).unwrap().unwrap(),
+        JsValue::from(&c)
+    );
 }
 
 #[wasm_bindgen_test]
@@ -86,24 +114,92 @@ fn create() {
     assert!(my_array.is_instance_of::<Array>());
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn define_property() {
-    let value = DefinePropertyAttrs::from(JsValue::from(Object::new()));
-    value.set_value(&43.into());
-    let descriptor = Object::from(JsValue::from(value));
-    let foo = foo_42();
-    let foo = Object::define_property(&foo, &"bar".into(), &descriptor);
-    assert!(foo.has_own_property(&"bar".into()));
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let value = DefinePropertyAttrs::from(JsValue::from(Object::new()));
+        value.set_value(&43.into());
+        let descriptor = Object::from(JsValue::from(value));
+        let foo = foo_42();
+        let foo = Object::define_property(&foo, &"bar".into(), &descriptor);
+        assert!(foo.has_own_property(&"bar".into()));
+    }
+
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let descriptor = js_sys::PropertyDescriptor::new_value::<Number>(&43.into());
+        let foo = foo_42();
+        let foo = Object::define_property(&foo, &"bar".into(), &descriptor).unwrap();
+        assert!(foo.has_own_property(&"bar".into()));
+    }
 }
 
+#[allow(deprecated)]
+#[wasm_bindgen_test]
+fn define_property_str_with_string() {
+    let foo: Object<JsValue> = foo_42().unchecked_into();
+    let descriptor = js_sys::PropertyDescriptor::new_value(&JsValue::from(99));
+
+    let result = Object::define_property_str(&foo, &JsString::from("bar"), &descriptor);
+    assert!(result.is_ok());
+    let obj = result.unwrap();
+    assert!(obj.has_own_property(&"bar".into()));
+    assert_eq!(Reflect::get_str(&obj, &"bar".into()).unwrap().unwrap(), 99);
+}
+
+#[allow(deprecated)]
+#[wasm_bindgen_test]
+fn define_property_symbol() {
+    let foo: Object<JsValue> = foo_42().unchecked_into();
+    let sym = Symbol::for_("test_symbol");
+    let descriptor = js_sys::PropertyDescriptor::new_value(&JsValue::from(42));
+
+    let result = Object::define_property_symbol(&foo, &sym, &descriptor);
+    assert!(result.is_ok());
+    let obj = result.unwrap();
+
+    assert!(obj.has_own_property(&sym));
+    assert_eq!(Reflect::get_symbol(&obj, &sym).unwrap(), 42);
+}
+
+#[wasm_bindgen_test]
+fn define_property_str_on_frozen_object() {
+    let foo: Object<JsValue> = foo_42().unchecked_into();
+    Object::freeze(&foo);
+
+    let descriptor = js_sys::PropertyDescriptor::new_value(&JsValue::from(100));
+    let result = Object::define_property_str(&foo, &JsString::from("newProp"), &descriptor);
+
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert!(err.is_instance_of::<TypeError>());
+}
+
+#[wasm_bindgen_test]
+fn define_property_str_typed() {
+    let foo: Object<Number> = Object::new_typed();
+    let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(3.14));
+
+    let result = Object::define_property_str(&foo, &JsString::from("pi"), &descriptor);
+    assert!(result.is_ok());
+    let obj = result.unwrap();
+
+    let value = Reflect::get_str(&obj, &"pi".into()).unwrap().unwrap();
+    let num: Number = value.unchecked_into();
+    assert_eq!(num.value_of(), 3.14);
+}
+
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn define_properties() {
     let props = Object::new();
     let descriptor = DefinePropertyAttrs::from(JsValue::from(Object::new()));
     descriptor.set_value(&42.into());
     let descriptor = JsValue::from(descriptor);
-    Reflect::set(props.as_ref(), &JsValue::from("bar"), &descriptor).unwrap();
-    Reflect::set(props.as_ref(), &JsValue::from("car"), &descriptor).unwrap();
+    Reflect::set(props.as_ref(), &"bar".into(), &descriptor).unwrap();
+    Reflect::set(props.as_ref(), &"car".into(), &descriptor).unwrap();
     let foo = foo_42();
     let foo = Object::define_properties(&foo, &props);
     assert!(foo.has_own_property(&"bar".into()));
@@ -112,13 +208,16 @@ fn define_properties() {
 
 #[wasm_bindgen_test]
 fn entries() {
+    #[cfg(not(js_sys_unstable_apis))]
     let entries = Object::entries(&foo_42());
+    #[cfg(js_sys_unstable_apis)]
+    let entries = Object::entries(&foo_42()).unwrap();
     assert_eq!(entries.length(), 1);
     entries.for_each(&mut |x, _, _| {
         assert!(x.is_object());
-        let array: Array = x.into();
-        assert_eq!(array.shift(), "foo");
-        assert_eq!(array.shift(), 42);
+        let array: Array = x.unchecked_into();
+        assert_eq!(array.shift_checked().unwrap(), "foo");
+        assert_eq!(array.shift_checked().unwrap(), 42);
         assert_eq!(array.length(), 0);
     });
 }
@@ -126,44 +225,98 @@ fn entries() {
 #[wasm_bindgen_test]
 fn from_entries() {
     let array = Array::new();
-    let entry_one = Array::new();
-    let entry_two = Array::new();
-    entry_one.push(&"foo".into());
-    entry_one.push(&"bar".into());
-    entry_two.push(&"baz".into());
-    entry_two.push(&42.into());
+    let entry_one = ArrayTuple::<(JsString, Number)>::new(&"foo".into(), &42.into());
+    let entry_two = ArrayTuple::<(JsString, Number)>::new(&"baz".into(), &43.into());
     array.push(&entry_one);
     array.push(&entry_two);
     let object = Object::from_entries(&array).unwrap();
 
-    assert_eq!(Reflect::get(object.as_ref(), &"foo".into()).unwrap(), "bar");
-    assert_eq!(Reflect::get(object.as_ref(), &"baz".into()).unwrap(), 42);
+    assert_eq!(
+        Reflect::get_str(&object, &"foo".into()).unwrap().unwrap(),
+        42
+    );
+    assert_eq!(
+        Reflect::get_str(&object, &"baz".into()).unwrap().unwrap(),
+        43
+    );
 
-    let not_iterable = Object::new();
-    let error = Object::from_entries(&not_iterable).unwrap_err();
-    assert!(error.is_instance_of::<TypeError>());
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let not_iterable = Object::new();
+        let error = Object::from_entries(&not_iterable).unwrap_err();
+        assert!(error.is_instance_of::<TypeError>());
+    }
 }
 
 #[wasm_bindgen_test]
 fn get_own_property_descriptor() {
     let foo = foo_42();
-    let desc = Object::get_own_property_descriptor(&foo, &"foo".into());
-    assert_eq!(PropertyDescriptor::from(desc).value(), 42);
-    let desc = Object::get_own_property_descriptor(&foo, &"bar".into());
-    assert!(desc.is_undefined());
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let desc = Object::get_own_property_descriptor(&foo, &"foo".into());
+        assert_eq!(PropertyDescriptor::from(desc).value(), 42);
+        let desc = Object::get_own_property_descriptor(&foo, &"bar".into());
+        assert!(desc.is_undefined());
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let desc = Object::get_own_property_descriptor(&foo, &"foo".into()).unwrap();
+        assert_eq!(desc.get_value().unwrap(), 42);
+        let desc = Object::get_own_property_descriptor(&foo, &"bar".into()).unwrap();
+        assert!(desc.is_undefined());
+    }
 }
 
 #[wasm_bindgen_test]
 fn get_own_property_descriptors() {
     let foo = foo_42();
-    let descriptors = Object::get_own_property_descriptors(&foo);
-    let foo_desc = Reflect::get(&descriptors, &"foo".into()).unwrap();
-    assert_eq!(PropertyDescriptor::from(foo_desc).value(), 42);
+
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let descriptors = Object::get_own_property_descriptors(&foo);
+        let foo_desc = Reflect::get(&descriptors, &"foo".into()).unwrap();
+        assert_eq!(PropertyDescriptor::from(foo_desc).value(), 42);
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let descriptors = Object::get_own_property_descriptors(&foo).unwrap();
+        let foo_desc = Reflect::get(&descriptors, &"foo".into()).unwrap().unwrap();
+        assert_eq!(foo_desc.get_value().unwrap(), 42);
+    }
+}
+
+#[wasm_bindgen_test]
+fn property_descriptor_get_value() {
+    let desc: js_sys::PropertyDescriptor<Number> =
+        js_sys::PropertyDescriptor::new_value(&Number::from(42));
+    let value: Option<Number> = desc.get_value();
+    assert!(value.is_some());
+    assert_eq!(value.unwrap().value_of(), 42.0);
+}
+
+#[wasm_bindgen_test]
+fn property_descriptor_get_set() {
+    let desc: js_sys::PropertyDescriptor<Number> = js_sys::PropertyDescriptor::new();
+
+    // Create and set a getter function
+    let getter: Function<fn() -> Number> = Function::new_no_args_typed("return 123");
+    desc.set_get(getter.clone());
+    let retrieved_getter = desc.get_get();
+    assert!(retrieved_getter.is_some());
+
+    // Create and set a setter function
+    let setter: Function<fn(Number) -> Undefined> = Function::new_with_args_typed("x", "");
+    desc.set_set(setter.clone().upcast_into());
+    let retrieved_setter = desc.get_set();
+    assert!(retrieved_setter.is_some());
 }
 
 #[wasm_bindgen_test]
 fn get_own_property_names() {
+    #[cfg(not(js_sys_unstable_apis))]
     let names = Object::get_own_property_names(&foo_42());
+    #[cfg(js_sys_unstable_apis)]
+    let names = Object::get_own_property_names(&foo_42()).unwrap();
     assert_eq!(names.length(), 1);
     names.for_each(&mut |x, _, _| {
         assert_eq!(x, "foo");
@@ -172,7 +325,10 @@ fn get_own_property_names() {
 
 #[wasm_bindgen_test]
 fn get_own_property_symbols() {
+    #[cfg(not(js_sys_unstable_apis))]
     let symbols = Object::get_own_property_symbols(&map_with_symbol_key());
+    #[cfg(js_sys_unstable_apis)]
+    let symbols = Object::get_own_property_symbols(&map_with_symbol_key()).unwrap();
     assert_eq!(symbols.length(), 1);
 }
 
@@ -180,10 +336,12 @@ fn get_own_property_symbols() {
 fn get_prototype_of() {
     let proto = JsValue::from(Object::get_prototype_of(&Object::new().into()));
     OBJECT_PROTOTYPE.with(|op| assert_eq!(proto, *op));
-    let proto = JsValue::from(Object::get_prototype_of(&Array::new().into()));
+    let arr: Array = Array::new();
+    let proto = JsValue::from(Object::get_prototype_of(&arr.into()));
     ARRAY_PROTOTYPE.with(|ap| assert_eq!(proto, *ap));
 }
 
+#[allow(deprecated)]
 #[wasm_bindgen_test]
 fn has_own_property() {
     assert!(foo_42().has_own_property(&"foo".into()));
@@ -193,9 +351,19 @@ fn has_own_property() {
 
 #[wasm_bindgen_test]
 fn has_own() {
-    assert!(Object::has_own(&foo_42(), &"foo".into()));
-    assert!(!Object::has_own(&foo_42(), &"bar".into()));
-    assert!(Object::has_own(&map_with_symbol_key(), &symbol_key()));
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert!(Object::has_own(&foo_42(), &"foo".into()));
+        assert!(!Object::has_own(&foo_42(), &"bar".into()));
+        assert!(Object::has_own(&map_with_symbol_key(), &symbol_key()));
+    }
+
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert!(Object::has_own(&foo_42(), &"foo".into()).unwrap());
+        assert!(!Object::has_own(&foo_42(), &"bar".into()).unwrap());
+        assert!(Object::has_own_symbol(&map_with_symbol_key(), &symbol_key()).unwrap());
+    }
 }
 
 #[wasm_bindgen_test]
@@ -268,7 +436,10 @@ fn keys() {
 
 #[wasm_bindgen_test]
 fn values() {
+    #[cfg(not(js_sys_unstable_apis))]
     let values = Object::values(&foo_42());
+    #[cfg(js_sys_unstable_apis)]
+    let values = Object::values(&foo_42()).unwrap();
     assert_eq!(values.length(), 1);
     values.for_each(&mut |x, _, _| {
         assert_eq!(x, 42);
@@ -286,7 +457,7 @@ fn property_is_enumerable() {
 fn set_prototype_of() {
     let a = foo_42();
     let b = foo_42();
-    Object::set_prototype_of(&a, &b);
+    Object::set_prototype_of(&a, b.upcast());
     assert!(b.is_prototype_of(&a.into()));
 }
 
@@ -307,4 +478,46 @@ fn value_of() {
     assert_eq!(a, a2);
     assert_ne!(a, b);
     assert_ne!(a2, b);
+}
+
+#[wasm_bindgen_test]
+fn entries_typed() {
+    let arr: Array = Array::new();
+    let func: Function = Function::new_no_args("");
+    let obj: Object<JsString> = Reflect::construct(&func, arr.upcast())
+        .unwrap()
+        .unchecked_into();
+    Reflect::set(&obj, &"a".into(), &JsString::from("1").into()).unwrap();
+    Reflect::set(&obj, &"b".into(), &JsString::from("2").into()).unwrap();
+
+    // entries_typed returns Array<ArrayTuple<JsString, T>>
+    let entries = Object::entries_typed(&obj).unwrap();
+    assert_eq!(entries.length(), 2);
+
+    // Each entry is [key, value] array
+    let first: Array = entries.get_checked(0).unwrap().unchecked_into();
+    assert_eq!(first.length(), 2);
+}
+
+#[wasm_bindgen_test]
+fn from_entries_typed() {
+    let entries: Array<ArrayTuple<(JsString, JsString)>> = Array::new_typed();
+    entries.push(&ArrayTuple::<(JsString, JsString)>::new(
+        &"foo".into(),
+        &"bar".into(),
+    ));
+    entries.push(&ArrayTuple::<(JsString, JsString)>::new(
+        &"baz".into(),
+        &"qux".into(),
+    ));
+
+    let obj: Object<JsString> = Object::from_entries_typed(&entries).unwrap();
+    assert_eq!(
+        Reflect::get_str(&obj, &"foo".into()).unwrap().unwrap(),
+        "bar"
+    );
+    assert_eq!(
+        Reflect::get_str(&obj, &"baz".into()).unwrap().unwrap(),
+        "qux"
+    );
 }

@@ -58,7 +58,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn is_conditional_mediation_available() -> ::js_sys::Promise;
+    pub fn is_conditional_mediation_available() -> ::js_sys::Promise<::js_sys::Boolean>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (static_method_of = PublicKeyCredential , js_class = "PublicKeyCredential" , js_name = isPasskeyPlatformAuthenticatorAvailable)]
     #[doc = "The `isPasskeyPlatformAuthenticatorAvailable()` method."]
@@ -69,7 +69,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn is_passkey_platform_authenticator_available() -> ::js_sys::Promise;
+    pub fn is_passkey_platform_authenticator_available() -> ::js_sys::Promise<::js_sys::Boolean>;
     # [wasm_bindgen (static_method_of = PublicKeyCredential , js_class = "PublicKeyCredential" , js_name = isUserVerifyingPlatformAuthenticatorAvailable)]
     #[doc = "The `isUserVerifyingPlatformAuthenticatorAvailable()` method."]
     #[doc = ""]

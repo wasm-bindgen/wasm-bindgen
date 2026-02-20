@@ -13,7 +13,7 @@
  */
 
 [Constructor]
-interface Range {
+interface Range : AbstractRange {
   [Throws]
   readonly attribute Node startContainer;
   [Throws]

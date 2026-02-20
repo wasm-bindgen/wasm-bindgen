@@ -30,9 +30,11 @@ impl Timeout {
             .unwrap() as f64; // TODO: checked cast
 
         let mut id = None;
-        let promise = Promise::new(&mut |resolve, _reject| {
-            id = Some(set_timeout(resolve.into(), millis));
-        });
+        let promise = Promise::new_typed(&ImmediateClosure::wrap_mut_aborting(
+            &mut |resolve, _reject| {
+                id = Some(set_timeout(resolve.into(), millis));
+            },
+        ));
 
         Timeout {
             id: id.unwrap(),

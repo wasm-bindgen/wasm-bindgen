@@ -2133,7 +2133,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn exit_picture_in_picture(this: &Document) -> ::js_sys::Promise;
+    pub fn exit_picture_in_picture(this: &Document) -> ::js_sys::Promise<::js_sys::Undefined>;
     # [wasm_bindgen (method , structural , js_class = "Document" , js_name = exitPointerLock)]
     #[doc = "The `exitPointerLock()` method."]
     #[doc = ""]
@@ -2270,7 +2270,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn start_view_transition_with_update_callback(
         this: &Document,
-        update_callback: Option<&::js_sys::Function>,
+        update_callback: Option<&::js_sys::Function<fn() -> ::js_sys::Promise>>,
     ) -> Result<ViewTransition, JsValue>;
     #[cfg(feature = "Element")]
     # [wasm_bindgen (method , structural , js_class = "Document" , js_name = elementFromPoint)]

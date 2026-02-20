@@ -708,31 +708,32 @@ extern "C" {
         options: &KeyframeAnimationOptions,
     ) -> Animation;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "Animation")]
     # [wasm_bindgen (method , structural , js_class = "Element" , js_name = getAnimations)]
     #[doc = "The `getAnimations()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAnimations)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Animation`, `Element`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_animations(this: &Element) -> ::js_sys::Array;
+    pub fn get_animations(this: &Element) -> ::js_sys::Array<Animation>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GetAnimationsOptions")]
+    #[cfg(all(feature = "Animation", feature = "GetAnimationsOptions",))]
     # [wasm_bindgen (method , structural , js_class = "Element" , js_name = getAnimations)]
     #[doc = "The `getAnimations()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAnimations)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Element`, `GetAnimationsOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Animation`, `Element`, `GetAnimationsOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_animations_with_options(
         this: &Element,
         options: &GetAnimationsOptions,
-    ) -> ::js_sys::Array;
+    ) -> ::js_sys::Array<Animation>;
     # [wasm_bindgen (catch , method , structural , variadic , js_class = "Element" , js_name = after)]
     #[doc = "The `after()` method."]
     #[doc = ""]

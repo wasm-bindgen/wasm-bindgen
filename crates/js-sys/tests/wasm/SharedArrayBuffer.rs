@@ -32,7 +32,10 @@ fn slice() {
         return;
     }
     let buf = SharedArrayBuffer::new(4);
+    #[cfg(not(js_sys_unstable_apis))]
     let slice = buf.slice(2);
+    #[cfg(js_sys_unstable_apis)]
+    let slice = buf.slice(2, 4);
     assert!(JsValue::from(slice).is_object());
 }
 
@@ -55,4 +58,28 @@ fn sharedarraybuffer_inheritance() {
     assert!(buf.is_instance_of::<SharedArrayBuffer>());
     assert!(buf.is_instance_of::<Object>());
     let _: &Object = buf.as_ref();
+}
+
+#[wasm_bindgen_test]
+fn new_with_options() {
+    if !is_shared_array_buffer_supported() {
+        return;
+    }
+    let options = ArrayBufferOptions::new(100);
+    let buf = SharedArrayBuffer::new_with_options(50, &options);
+    assert_eq!(buf.byte_length(), 50);
+    assert_eq!(buf.max_byte_length(), 100);
+}
+
+#[wasm_bindgen_test]
+fn growable() {
+    if !is_shared_array_buffer_supported() {
+        return;
+    }
+    let options = ArrayBufferOptions::new(100);
+    let buf = SharedArrayBuffer::new_with_options(50, &options);
+    assert!(buf.growable());
+
+    let fixed = SharedArrayBuffer::new(50);
+    assert!(!fixed.growable());
 }

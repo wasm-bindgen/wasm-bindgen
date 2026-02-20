@@ -28,17 +28,6 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn size(this: &GpuSupportedFeatures) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "GPUSupportedFeatures" , js_name = entries)]
-    #[doc = "The `entries()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUSupportedFeatures/entries)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuSupportedFeatures`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn entries(this: &GpuSupportedFeatures) -> ::js_sys::Iterator;
-    #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (catch , method , structural , js_class = "GPUSupportedFeatures" , js_name = forEach)]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -50,7 +39,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn for_each(
         this: &GpuSupportedFeatures,
-        callback: &::js_sys::Function,
+        callback: &::js_sys::Function<fn(::js_sys::JsString) -> ::js_sys::Undefined>,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUSupportedFeatures" , js_name = has)]
@@ -64,6 +53,19 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn has(this: &GpuSupportedFeatures, value: &str) -> bool;
     #[cfg(web_sys_unstable_apis)]
+    # [wasm_bindgen (method , structural , js_class = "GPUSupportedFeatures" , js_name = entries)]
+    #[doc = "The `entries()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUSupportedFeatures/entries)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuSupportedFeatures`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn entries(
+        this: &GpuSupportedFeatures,
+    ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::JsString, ::js_sys::JsString)>>;
+    #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUSupportedFeatures" , js_name = keys)]
     #[doc = "The `keys()` method."]
     #[doc = ""]
@@ -73,7 +75,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn keys(this: &GpuSupportedFeatures) -> ::js_sys::Iterator;
+    pub fn keys(this: &GpuSupportedFeatures) -> ::js_sys::Iterator<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "GPUSupportedFeatures" , js_name = values)]
     #[doc = "The `values()` method."]
@@ -84,5 +86,5 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn values(this: &GpuSupportedFeatures) -> ::js_sys::Iterator;
+    pub fn values(this: &GpuSupportedFeatures) -> ::js_sys::Iterator<::js_sys::JsString>;
 }

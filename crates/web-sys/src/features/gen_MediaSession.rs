@@ -65,20 +65,20 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_playback_state(this: &MediaSession, value: MediaSessionPlaybackState);
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "MediaSessionAction")]
+    #[cfg(all(feature = "MediaSessionAction", feature = "MediaSessionActionDetails",))]
     # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setActionHandler)]
     #[doc = "The `setActionHandler()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/setActionHandler)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaSession`, `MediaSessionAction`*"]
+    #[doc = "*This API requires the following crate features to be activated: `MediaSession`, `MediaSessionAction`, `MediaSessionActionDetails`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_action_handler(
         this: &MediaSession,
         action: MediaSessionAction,
-        handler: Option<&::js_sys::Function>,
+        handler: Option<&::js_sys::Function<fn(MediaSessionActionDetails) -> ::js_sys::Undefined>>,
     );
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setCameraActive)]

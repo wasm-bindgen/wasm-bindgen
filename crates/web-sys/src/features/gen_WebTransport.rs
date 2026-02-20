@@ -26,7 +26,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn ready(this: &WebTransport) -> ::js_sys::Promise;
+    pub fn ready(this: &WebTransport) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WebTransportReliabilityMode")]
     # [wasm_bindgen (structural , method , getter , js_class = "WebTransport" , js_name = reliability)]
@@ -52,16 +52,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn congestion_control(this: &WebTransport) -> WebTransportCongestionControl;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WebTransportCloseInfo")]
     # [wasm_bindgen (structural , method , getter , js_class = "WebTransport" , js_name = closed)]
     #[doc = "Getter for the `closed` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/closed)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransport`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportCloseInfo`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn closed(this: &WebTransport) -> ::js_sys::Promise;
+    pub fn closed(this: &WebTransport) -> ::js_sys::Promise<WebTransportCloseInfo>;
     #[cfg(web_sys_unstable_apis)]
     # [wasm_bindgen (structural , method , getter , js_class = "WebTransport" , js_name = draining)]
     #[doc = "Getter for the `draining` field of this object."]
@@ -72,7 +73,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn draining(this: &WebTransport) -> ::js_sys::Promise;
+    pub fn draining(this: &WebTransport) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WebTransportDatagramDuplexStream")]
     # [wasm_bindgen (structural , method , getter , js_class = "WebTransport" , js_name = datagrams)]
@@ -159,66 +160,79 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn close_with_close_info(this: &WebTransport, close_info: &WebTransportCloseInfo);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WebTransportBidirectionalStream")]
     # [wasm_bindgen (method , structural , js_class = "WebTransport" , js_name = createBidirectionalStream)]
     #[doc = "The `createBidirectionalStream()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/createBidirectionalStream)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransport`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportBidirectionalStream`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn create_bidirectional_stream(this: &WebTransport) -> ::js_sys::Promise;
+    pub fn create_bidirectional_stream(
+        this: &WebTransport,
+    ) -> ::js_sys::Promise<WebTransportBidirectionalStream>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "WebTransportSendStreamOptions")]
+    #[cfg(all(
+        feature = "WebTransportBidirectionalStream",
+        feature = "WebTransportSendStreamOptions",
+    ))]
     # [wasm_bindgen (method , structural , js_class = "WebTransport" , js_name = createBidirectionalStream)]
     #[doc = "The `createBidirectionalStream()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/createBidirectionalStream)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportSendStreamOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportBidirectionalStream`, `WebTransportSendStreamOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_bidirectional_stream_with_options(
         this: &WebTransport,
         options: &WebTransportSendStreamOptions,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<WebTransportBidirectionalStream>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WebTransportSendStream")]
     # [wasm_bindgen (method , structural , js_class = "WebTransport" , js_name = createUnidirectionalStream)]
     #[doc = "The `createUnidirectionalStream()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/createUnidirectionalStream)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransport`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportSendStream`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn create_unidirectional_stream(this: &WebTransport) -> ::js_sys::Promise;
+    pub fn create_unidirectional_stream(
+        this: &WebTransport,
+    ) -> ::js_sys::Promise<WebTransportSendStream>;
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "WebTransportSendStreamOptions")]
+    #[cfg(all(
+        feature = "WebTransportSendStream",
+        feature = "WebTransportSendStreamOptions",
+    ))]
     # [wasm_bindgen (method , structural , js_class = "WebTransport" , js_name = createUnidirectionalStream)]
     #[doc = "The `createUnidirectionalStream()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/createUnidirectionalStream)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportSendStreamOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportSendStream`, `WebTransportSendStreamOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn create_unidirectional_stream_with_options(
         this: &WebTransport,
         options: &WebTransportSendStreamOptions,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<WebTransportSendStream>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WebTransportStats")]
     # [wasm_bindgen (method , structural , js_class = "WebTransport" , js_name = getStats)]
     #[doc = "The `getStats()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/getStats)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WebTransport`*"]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransport`, `WebTransportStats`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_stats(this: &WebTransport) -> ::js_sys::Promise;
+    pub fn get_stats(this: &WebTransport) -> ::js_sys::Promise<WebTransportStats>;
 }
