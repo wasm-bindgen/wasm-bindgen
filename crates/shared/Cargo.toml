@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-shared"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/shared"
 rust-version = "1.71"
-version = "0.2.108"
+version = "0.2.109"
 
 # Because only a single `wasm_bindgen` version can be used in a dependency
 # graph, pretend we link a native library so that `cargo` will provide better

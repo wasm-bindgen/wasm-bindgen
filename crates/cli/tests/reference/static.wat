@@ -3,7 +3,7 @@
   (type (;1;) (func (result i32)))
   (type (;2;) (func (result externref)))
   (type (;3;) (func (param i32 i32)))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_87f103313805936e" (func (;0;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_f1861aae416df39d" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_NAMESPACE_OPTIONAL_2e93032090b95d76" (func (;1;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_NAMESPACE_PLAIN_996cfe92d41df43c" (func (;2;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_c736ff66b2fdaa43" (func (;3;) (type 1)))

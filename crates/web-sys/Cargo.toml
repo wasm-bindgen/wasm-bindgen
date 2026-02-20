@@ -12,7 +12,7 @@ name = "web-sys"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/web-sys"
 rust-version = "1.71"
-version = "0.3.85"
+version = "0.3.86"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -23,8 +23,8 @@ doctest = false
 test = false
 
 [dependencies]
-js-sys = { path = '../js-sys', version = '=0.3.85', default-features = false }
-wasm-bindgen = { path = "../..", version = "=0.2.108", default-features = false }
+js-sys = { path = '../js-sys', version = '=0.3.86', default-features = false }
+wasm-bindgen = { path = "../..", version = "=0.2.109", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 futures = "0.3"

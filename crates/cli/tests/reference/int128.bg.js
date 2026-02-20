@@ -44,7 +44,7 @@ export function throw_i128() {
     }
     return (BigInt.asUintN(64, ret[0]) | (ret[1] << BigInt(64)));
 }
-export function __wbg___wbindgen_throw_87f103313805936e(arg0, arg1) {
+export function __wbg___wbindgen_throw_f1861aae416df39d(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

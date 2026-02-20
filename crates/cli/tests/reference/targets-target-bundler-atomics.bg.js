@@ -7,7 +7,7 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-export function __wbg___wbindgen_throw_87f103313805936e(arg0, arg1) {
+export function __wbg___wbindgen_throw_f1861aae416df39d(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_random_6e647071acda68e7() {
