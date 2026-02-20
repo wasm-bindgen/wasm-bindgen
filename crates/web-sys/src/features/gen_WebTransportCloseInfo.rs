@@ -66,18 +66,12 @@ impl WebTransportCloseInfo {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_close_code()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn close_code(&mut self, val: u32) -> &mut Self {
         self.set_close_code(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_reason()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn reason(&mut self, val: &str) -> &mut Self {
         self.set_reason(val);
         self

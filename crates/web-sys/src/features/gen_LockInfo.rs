@@ -86,9 +86,6 @@ impl LockInfo {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_client_id()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn client_id(&mut self, val: &str) -> &mut Self {
         self.set_client_id(val);
         self
@@ -96,18 +93,12 @@ impl LockInfo {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "LockMode")]
     #[deprecated = "Use `set_mode()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn mode(&mut self, val: LockMode) -> &mut Self {
         self.set_mode(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_name()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn name(&mut self, val: &str) -> &mut Self {
         self.set_name(val);
         self

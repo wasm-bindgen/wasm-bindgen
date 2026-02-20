@@ -162,9 +162,6 @@ impl HidCollectionInfo {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_children()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn children(&mut self, val: &[HidCollectionInfo]) -> &mut Self {
         self.set_children(val);
         self
@@ -172,9 +169,6 @@ impl HidCollectionInfo {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HidReportInfo")]
     #[deprecated = "Use `set_feature_reports()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn feature_reports(&mut self, val: &[HidReportInfo]) -> &mut Self {
         self.set_feature_reports(val);
         self
@@ -182,9 +176,6 @@ impl HidCollectionInfo {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HidReportInfo")]
     #[deprecated = "Use `set_input_reports()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn input_reports(&mut self, val: &[HidReportInfo]) -> &mut Self {
         self.set_input_reports(val);
         self
@@ -192,36 +183,24 @@ impl HidCollectionInfo {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HidReportInfo")]
     #[deprecated = "Use `set_output_reports()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn output_reports(&mut self, val: &[HidReportInfo]) -> &mut Self {
         self.set_output_reports(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_type()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(&mut self, val: u8) -> &mut Self {
         self.set_type(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_usage()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn usage(&mut self, val: u16) -> &mut Self {
         self.set_usage(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_usage_page()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn usage_page(&mut self, val: u16) -> &mut Self {
         self.set_usage_page(val);
         self

@@ -69,18 +69,12 @@ impl WebTransportErrorOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WebTransportErrorSource")]
     #[deprecated = "Use `set_source()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn source(&mut self, val: WebTransportErrorSource) -> &mut Self {
         self.set_source(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_stream_error_code()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn stream_error_code(&mut self, val: Option<u8>) -> &mut Self {
         self.set_stream_error_code(val);
         self

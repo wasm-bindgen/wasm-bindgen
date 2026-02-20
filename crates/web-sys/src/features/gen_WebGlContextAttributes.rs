@@ -163,9 +163,6 @@ impl WebGlContextAttributes {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_xr_compatible()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn xr_compatible(&mut self, val: bool) -> &mut Self {
         self.set_xr_compatible(val);
         self

@@ -66,18 +66,12 @@ impl NavigatorUaBrandVersion {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_brand()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn brand(&mut self, val: &str) -> &mut Self {
         self.set_brand(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_version()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn version(&mut self, val: &str) -> &mut Self {
         self.set_version(val);
         self

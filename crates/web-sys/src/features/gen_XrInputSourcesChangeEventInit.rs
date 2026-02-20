@@ -148,27 +148,18 @@ impl XrInputSourcesChangeEventInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_bubbles()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bubbles(&mut self, val: bool) -> &mut Self {
         self.set_bubbles(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_cancelable()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn cancelable(&mut self, val: bool) -> &mut Self {
         self.set_cancelable(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_composed()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn composed(&mut self, val: bool) -> &mut Self {
         self.set_composed(val);
         self
@@ -176,9 +167,6 @@ impl XrInputSourcesChangeEventInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrInputSource")]
     #[deprecated = "Use `set_added()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn added(&mut self, val: &[XrInputSource]) -> &mut Self {
         self.set_added(val);
         self
@@ -186,9 +174,6 @@ impl XrInputSourcesChangeEventInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrInputSource")]
     #[deprecated = "Use `set_removed()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn removed(&mut self, val: &[XrInputSource]) -> &mut Self {
         self.set_removed(val);
         self
@@ -196,9 +181,6 @@ impl XrInputSourcesChangeEventInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrSession")]
     #[deprecated = "Use `set_session()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn session(&mut self, val: &XrSession) -> &mut Self {
         self.set_session(val);
         self

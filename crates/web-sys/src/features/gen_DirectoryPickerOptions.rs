@@ -97,9 +97,6 @@ impl DirectoryPickerOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_id()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn id(&mut self, val: &str) -> &mut Self {
         self.set_id(val);
         self
@@ -107,18 +104,12 @@ impl DirectoryPickerOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FileSystemPermissionMode")]
     #[deprecated = "Use `set_mode()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn mode(&mut self, val: FileSystemPermissionMode) -> &mut Self {
         self.set_mode(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_start_in()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn start_in(&mut self, val: WellKnownDirectory) -> &mut Self {
         self.set_start_in(val);
         self

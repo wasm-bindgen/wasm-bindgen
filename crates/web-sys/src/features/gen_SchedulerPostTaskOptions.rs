@@ -97,9 +97,6 @@ impl SchedulerPostTaskOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_delay()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn delay(&mut self, val: u32) -> &mut Self {
         self.set_delay(val);
         self
@@ -107,9 +104,6 @@ impl SchedulerPostTaskOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "TaskPriority")]
     #[deprecated = "Use `set_priority()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn priority(&mut self, val: TaskPriority) -> &mut Self {
         self.set_priority(val);
         self
@@ -117,9 +111,6 @@ impl SchedulerPostTaskOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AbortSignal")]
     #[deprecated = "Use `set_signal()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn signal(&mut self, val: &AbortSignal) -> &mut Self {
         self.set_signal(val);
         self

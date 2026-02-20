@@ -111,9 +111,6 @@ impl GpuStencilFaceState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCompareFunction")]
     #[deprecated = "Use `set_compare()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn compare(&mut self, val: GpuCompareFunction) -> &mut Self {
         self.set_compare(val);
         self
@@ -121,9 +118,6 @@ impl GpuStencilFaceState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuStencilOperation")]
     #[deprecated = "Use `set_depth_fail_op()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn depth_fail_op(&mut self, val: GpuStencilOperation) -> &mut Self {
         self.set_depth_fail_op(val);
         self
@@ -131,9 +125,6 @@ impl GpuStencilFaceState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuStencilOperation")]
     #[deprecated = "Use `set_fail_op()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn fail_op(&mut self, val: GpuStencilOperation) -> &mut Self {
         self.set_fail_op(val);
         self
@@ -141,9 +132,6 @@ impl GpuStencilFaceState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuStencilOperation")]
     #[deprecated = "Use `set_pass_op()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn pass_op(&mut self, val: GpuStencilOperation) -> &mut Self {
         self.set_pass_op(val);
         self

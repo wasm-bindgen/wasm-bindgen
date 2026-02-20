@@ -141,27 +141,18 @@ impl BluetoothPermissionDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PermissionName")]
     #[deprecated = "Use `set_name()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn name(&mut self, val: PermissionName) -> &mut Self {
         self.set_name(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_accept_all_devices()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn accept_all_devices(&mut self, val: bool) -> &mut Self {
         self.set_accept_all_devices(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_device_id()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device_id(&mut self, val: &str) -> &mut Self {
         self.set_device_id(val);
         self
@@ -169,18 +160,12 @@ impl BluetoothPermissionDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothLeScanFilterInit")]
     #[deprecated = "Use `set_filters()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn filters(&mut self, val: &[BluetoothLeScanFilterInit]) -> &mut Self {
         self.set_filters(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_optional_services()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn optional_services(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_optional_services(val);
         self

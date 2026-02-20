@@ -88,18 +88,12 @@ impl GpuComputePassTimestampWrites {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_beginning_of_pass_write_index()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn beginning_of_pass_write_index(&mut self, val: u32) -> &mut Self {
         self.set_beginning_of_pass_write_index(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_end_of_pass_write_index()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn end_of_pass_write_index(&mut self, val: u32) -> &mut Self {
         self.set_end_of_pass_write_index(val);
         self
@@ -107,9 +101,6 @@ impl GpuComputePassTimestampWrites {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuQuerySet")]
     #[deprecated = "Use `set_query_set()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn query_set(&mut self, val: &GpuQuerySet) -> &mut Self {
         self.set_query_set(val);
         self

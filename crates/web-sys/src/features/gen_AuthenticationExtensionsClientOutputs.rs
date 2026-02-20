@@ -153,9 +153,6 @@ impl AuthenticationExtensionsClientOutputs {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsDevicePublicKeyOutputs")]
     #[deprecated = "Use `set_device_pub_key()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device_pub_key(
         &mut self,
         val: &AuthenticationExtensionsDevicePublicKeyOutputs,
@@ -172,9 +169,6 @@ impl AuthenticationExtensionsClientOutputs {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsPrfOutputs")]
     #[deprecated = "Use `set_prf()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn prf(&mut self, val: &AuthenticationExtensionsPrfOutputs) -> &mut Self {
         self.set_prf(val);
         self

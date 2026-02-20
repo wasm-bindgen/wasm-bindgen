@@ -242,9 +242,6 @@ impl GpuSamplerDescriptor {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_label()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(&mut self, val: &str) -> &mut Self {
         self.set_label(val);
         self
@@ -252,9 +249,6 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuAddressMode")]
     #[deprecated = "Use `set_address_mode_u()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn address_mode_u(&mut self, val: GpuAddressMode) -> &mut Self {
         self.set_address_mode_u(val);
         self
@@ -262,9 +256,6 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuAddressMode")]
     #[deprecated = "Use `set_address_mode_v()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn address_mode_v(&mut self, val: GpuAddressMode) -> &mut Self {
         self.set_address_mode_v(val);
         self
@@ -272,9 +263,6 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuAddressMode")]
     #[deprecated = "Use `set_address_mode_w()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn address_mode_w(&mut self, val: GpuAddressMode) -> &mut Self {
         self.set_address_mode_w(val);
         self
@@ -282,27 +270,18 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCompareFunction")]
     #[deprecated = "Use `set_compare()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn compare(&mut self, val: GpuCompareFunction) -> &mut Self {
         self.set_compare(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_lod_max_clamp()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn lod_max_clamp(&mut self, val: f32) -> &mut Self {
         self.set_lod_max_clamp(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_lod_min_clamp()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn lod_min_clamp(&mut self, val: f32) -> &mut Self {
         self.set_lod_min_clamp(val);
         self
@@ -310,18 +289,12 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuFilterMode")]
     #[deprecated = "Use `set_mag_filter()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn mag_filter(&mut self, val: GpuFilterMode) -> &mut Self {
         self.set_mag_filter(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_max_anisotropy()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn max_anisotropy(&mut self, val: u16) -> &mut Self {
         self.set_max_anisotropy(val);
         self
@@ -329,9 +302,6 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuFilterMode")]
     #[deprecated = "Use `set_min_filter()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn min_filter(&mut self, val: GpuFilterMode) -> &mut Self {
         self.set_min_filter(val);
         self
@@ -339,9 +309,6 @@ impl GpuSamplerDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuMipmapFilterMode")]
     #[deprecated = "Use `set_mipmap_filter()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn mipmap_filter(&mut self, val: GpuMipmapFilterMode) -> &mut Self {
         self.set_mipmap_filter(val);
         self

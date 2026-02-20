@@ -68,18 +68,12 @@ impl VideoEncoderInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_error()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn error(&mut self, val: &::js_sys::Function) -> &mut Self {
         self.set_error(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_output()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn output(&mut self, val: &::js_sys::Function) -> &mut Self {
         self.set_output(val);
         self

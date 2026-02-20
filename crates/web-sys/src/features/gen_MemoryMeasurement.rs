@@ -79,18 +79,12 @@ impl MemoryMeasurement {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MemoryBreakdownEntry")]
     #[deprecated = "Use `set_breakdown()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn breakdown(&mut self, val: &[MemoryBreakdownEntry]) -> &mut Self {
         self.set_breakdown(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_bytes()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn bytes(&mut self, val: u32) -> &mut Self {
         self.set_bytes(val);
         self

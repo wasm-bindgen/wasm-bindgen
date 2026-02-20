@@ -104,18 +104,12 @@ impl GpuRequestAdapterOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_feature_level()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn feature_level(&mut self, val: &str) -> &mut Self {
         self.set_feature_level(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_force_fallback_adapter()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn force_fallback_adapter(&mut self, val: bool) -> &mut Self {
         self.set_force_fallback_adapter(val);
         self
@@ -123,18 +117,12 @@ impl GpuRequestAdapterOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuPowerPreference")]
     #[deprecated = "Use `set_power_preference()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn power_preference(&mut self, val: GpuPowerPreference) -> &mut Self {
         self.set_power_preference(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_xr_compatible()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn xr_compatible(&mut self, val: bool) -> &mut Self {
         self.set_xr_compatible(val);
         self

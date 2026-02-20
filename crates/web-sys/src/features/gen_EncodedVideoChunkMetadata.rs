@@ -109,9 +109,6 @@ impl EncodedVideoChunkMetadata {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_alpha_side_data()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn alpha_side_data(&mut self, val: &::js_sys::Object) -> &mut Self {
         self.set_alpha_side_data(val);
         self
@@ -119,9 +116,6 @@ impl EncodedVideoChunkMetadata {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoDecoderConfig")]
     #[deprecated = "Use `set_decoder_config()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn decoder_config(&mut self, val: &VideoDecoderConfig) -> &mut Self {
         self.set_decoder_config(val);
         self
@@ -129,9 +123,6 @@ impl EncodedVideoChunkMetadata {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SvcOutputMetadata")]
     #[deprecated = "Use `set_svc()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn svc(&mut self, val: &SvcOutputMetadata) -> &mut Self {
         self.set_svc(val);
         self

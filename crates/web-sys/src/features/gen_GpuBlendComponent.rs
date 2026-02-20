@@ -91,9 +91,6 @@ impl GpuBlendComponent {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBlendFactor")]
     #[deprecated = "Use `set_dst_factor()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn dst_factor(&mut self, val: GpuBlendFactor) -> &mut Self {
         self.set_dst_factor(val);
         self
@@ -101,9 +98,6 @@ impl GpuBlendComponent {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBlendOperation")]
     #[deprecated = "Use `set_operation()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn operation(&mut self, val: GpuBlendOperation) -> &mut Self {
         self.set_operation(val);
         self
@@ -111,9 +105,6 @@ impl GpuBlendComponent {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuBlendFactor")]
     #[deprecated = "Use `set_src_factor()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn src_factor(&mut self, val: GpuBlendFactor) -> &mut Self {
         self.set_src_factor(val);
         self

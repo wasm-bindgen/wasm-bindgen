@@ -114,9 +114,6 @@ impl GpuVertexBufferLayout {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_array_stride()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn array_stride(&mut self, val: u32) -> &mut Self {
         self.set_array_stride(val);
         self
@@ -124,9 +121,6 @@ impl GpuVertexBufferLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuVertexAttribute")]
     #[deprecated = "Use `set_attributes()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn attributes(&mut self, val: &[GpuVertexAttribute]) -> &mut Self {
         self.set_attributes(val);
         self
@@ -134,9 +128,6 @@ impl GpuVertexBufferLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuVertexStepMode")]
     #[deprecated = "Use `set_step_mode()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn step_mode(&mut self, val: GpuVertexStepMode) -> &mut Self {
         self.set_step_mode(val);
         self

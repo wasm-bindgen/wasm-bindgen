@@ -88,9 +88,6 @@ impl GpuTextureBindingLayout {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_multisampled()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn multisampled(&mut self, val: bool) -> &mut Self {
         self.set_multisampled(val);
         self
@@ -98,9 +95,6 @@ impl GpuTextureBindingLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureSampleType")]
     #[deprecated = "Use `set_sample_type()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn sample_type(&mut self, val: GpuTextureSampleType) -> &mut Self {
         self.set_sample_type(val);
         self
@@ -108,9 +102,6 @@ impl GpuTextureBindingLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureViewDimension")]
     #[deprecated = "Use `set_view_dimension()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn view_dimension(&mut self, val: GpuTextureViewDimension) -> &mut Self {
         self.set_view_dimension(val);
         self

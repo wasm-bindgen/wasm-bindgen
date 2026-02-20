@@ -108,9 +108,6 @@ impl VideoColorSpaceInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_full_range()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn full_range(&mut self, val: Option<bool>) -> &mut Self {
         self.set_full_range(val);
         self
@@ -118,9 +115,6 @@ impl VideoColorSpaceInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoMatrixCoefficients")]
     #[deprecated = "Use `set_matrix()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn matrix(&mut self, val: Option<VideoMatrixCoefficients>) -> &mut Self {
         self.set_matrix(val);
         self
@@ -128,9 +122,6 @@ impl VideoColorSpaceInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoColorPrimaries")]
     #[deprecated = "Use `set_primaries()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn primaries(&mut self, val: Option<VideoColorPrimaries>) -> &mut Self {
         self.set_primaries(val);
         self
@@ -138,9 +129,6 @@ impl VideoColorSpaceInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoTransferCharacteristics")]
     #[deprecated = "Use `set_transfer()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn transfer(&mut self, val: Option<VideoTransferCharacteristics>) -> &mut Self {
         self.set_transfer(val);
         self

@@ -51,9 +51,6 @@ impl IdbTransactionOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "IdbTransactionDurability")]
     #[deprecated = "Use `set_durability()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn durability(&mut self, val: IdbTransactionDurability) -> &mut Self {
         self.set_durability(val);
         self

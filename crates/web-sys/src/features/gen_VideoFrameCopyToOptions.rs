@@ -91,9 +91,6 @@ impl VideoFrameCopyToOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoPixelFormat")]
     #[deprecated = "Use `set_format()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn format(&mut self, val: VideoPixelFormat) -> &mut Self {
         self.set_format(val);
         self
@@ -101,9 +98,6 @@ impl VideoFrameCopyToOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PlaneLayout")]
     #[deprecated = "Use `set_layout()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn layout(&mut self, val: &[PlaneLayout]) -> &mut Self {
         self.set_layout(val);
         self
@@ -111,9 +105,6 @@ impl VideoFrameCopyToOptions {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomRectInit")]
     #[deprecated = "Use `set_rect()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn rect(&mut self, val: &DomRectInit) -> &mut Self {
         self.set_rect(val);
         self

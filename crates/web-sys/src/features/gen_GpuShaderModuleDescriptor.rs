@@ -92,18 +92,12 @@ impl GpuShaderModuleDescriptor {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_label()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(&mut self, val: &str) -> &mut Self {
         self.set_label(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_code()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn code(&mut self, val: &str) -> &mut Self {
         self.set_code(val);
         self
@@ -111,9 +105,6 @@ impl GpuShaderModuleDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuShaderModuleCompilationHint")]
     #[deprecated = "Use `set_compilation_hints()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn compilation_hints(&mut self, val: &[GpuShaderModuleCompilationHint]) -> &mut Self {
         self.set_compilation_hints(val);
         self

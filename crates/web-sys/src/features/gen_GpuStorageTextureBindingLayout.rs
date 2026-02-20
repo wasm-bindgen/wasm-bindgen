@@ -95,9 +95,6 @@ impl GpuStorageTextureBindingLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuStorageTextureAccess")]
     #[deprecated = "Use `set_access()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn access(&mut self, val: GpuStorageTextureAccess) -> &mut Self {
         self.set_access(val);
         self
@@ -105,9 +102,6 @@ impl GpuStorageTextureBindingLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureFormat")]
     #[deprecated = "Use `set_format()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
         self.set_format(val);
         self
@@ -115,9 +109,6 @@ impl GpuStorageTextureBindingLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureViewDimension")]
     #[deprecated = "Use `set_view_dimension()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn view_dimension(&mut self, val: GpuTextureViewDimension) -> &mut Self {
         self.set_view_dimension(val);
         self

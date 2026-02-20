@@ -53,9 +53,6 @@ impl GpuPipelineErrorInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuPipelineErrorReason")]
     #[deprecated = "Use `set_reason()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn reason(&mut self, val: GpuPipelineErrorReason) -> &mut Self {
         self.set_reason(val);
         self

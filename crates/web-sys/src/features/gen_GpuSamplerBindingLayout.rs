@@ -51,9 +51,6 @@ impl GpuSamplerBindingLayout {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuSamplerBindingType")]
     #[deprecated = "Use `set_type()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(&mut self, val: GpuSamplerBindingType) -> &mut Self {
         self.set_type(val);
         self

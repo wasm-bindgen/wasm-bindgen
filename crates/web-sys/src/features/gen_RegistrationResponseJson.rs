@@ -167,9 +167,6 @@ impl RegistrationResponseJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_authenticator_attachment()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn authenticator_attachment(&mut self, val: &str) -> &mut Self {
         self.set_authenticator_attachment(val);
         self
@@ -177,9 +174,6 @@ impl RegistrationResponseJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsClientOutputsJson")]
     #[deprecated = "Use `set_client_extension_results()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn client_extension_results(
         &mut self,
         val: &AuthenticationExtensionsClientOutputsJson,
@@ -189,18 +183,12 @@ impl RegistrationResponseJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_id()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn id(&mut self, val: &str) -> &mut Self {
         self.set_id(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_raw_id()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn raw_id(&mut self, val: &str) -> &mut Self {
         self.set_raw_id(val);
         self
@@ -208,18 +196,12 @@ impl RegistrationResponseJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticatorAttestationResponseJson")]
     #[deprecated = "Use `set_response()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn response(&mut self, val: &AuthenticatorAttestationResponseJson) -> &mut Self {
         self.set_response(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_type()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(&mut self, val: &str) -> &mut Self {
         self.set_type(val);
         self

@@ -152,9 +152,6 @@ impl GpuCanvasConfiguration {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCanvasAlphaMode")]
     #[deprecated = "Use `set_alpha_mode()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn alpha_mode(&mut self, val: GpuCanvasAlphaMode) -> &mut Self {
         self.set_alpha_mode(val);
         self
@@ -162,9 +159,6 @@ impl GpuCanvasConfiguration {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuDevice")]
     #[deprecated = "Use `set_device()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device(&mut self, val: &GpuDevice) -> &mut Self {
         self.set_device(val);
         self
@@ -172,9 +166,6 @@ impl GpuCanvasConfiguration {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureFormat")]
     #[deprecated = "Use `set_format()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn format(&mut self, val: GpuTextureFormat) -> &mut Self {
         self.set_format(val);
         self
@@ -182,27 +173,18 @@ impl GpuCanvasConfiguration {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCanvasToneMapping")]
     #[deprecated = "Use `set_tone_mapping()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn tone_mapping(&mut self, val: &GpuCanvasToneMapping) -> &mut Self {
         self.set_tone_mapping(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_usage()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn usage(&mut self, val: u32) -> &mut Self {
         self.set_usage(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_view_formats()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn view_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_view_formats(val);
         self

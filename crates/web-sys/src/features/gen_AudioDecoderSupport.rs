@@ -69,18 +69,12 @@ impl AudioDecoderSupport {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioDecoderConfig")]
     #[deprecated = "Use `set_config()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn config(&mut self, val: &AudioDecoderConfig) -> &mut Self {
         self.set_config(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_supported()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn supported(&mut self, val: bool) -> &mut Self {
         self.set_supported(val);
         self

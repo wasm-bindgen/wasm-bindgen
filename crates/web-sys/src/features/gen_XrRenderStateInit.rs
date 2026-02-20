@@ -125,36 +125,24 @@ impl XrRenderStateInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrWebGlLayer")]
     #[deprecated = "Use `set_base_layer()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn base_layer(&mut self, val: Option<&XrWebGlLayer>) -> &mut Self {
         self.set_base_layer(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_depth_far()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn depth_far(&mut self, val: f64) -> &mut Self {
         self.set_depth_far(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_depth_near()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn depth_near(&mut self, val: f64) -> &mut Self {
         self.set_depth_near(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_inline_vertical_field_of_view()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn inline_vertical_field_of_view(&mut self, val: f64) -> &mut Self {
         self.set_inline_vertical_field_of_view(val);
         self
@@ -162,9 +150,6 @@ impl XrRenderStateInit {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrLayer")]
     #[deprecated = "Use `set_layers()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn layers(&mut self, val: Option<&[XrLayer]>) -> &mut Self {
         self.set_layers(val);
         self

@@ -81,18 +81,12 @@ impl GpuShaderModuleCompilationHint {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_entry_point()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn entry_point(&mut self, val: &str) -> &mut Self {
         self.set_entry_point(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_layout()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn layout(&mut self, val: &GpuPipelineLayout) -> &mut Self {
         self.set_layout(val);
         self

@@ -73,9 +73,6 @@ impl UsbPermissionDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PermissionName")]
     #[deprecated = "Use `set_name()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn name(&mut self, val: PermissionName) -> &mut Self {
         self.set_name(val);
         self
@@ -83,9 +80,6 @@ impl UsbPermissionDescriptor {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbDeviceFilter")]
     #[deprecated = "Use `set_filters()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn filters(&mut self, val: &[UsbDeviceFilter]) -> &mut Self {
         self.set_filters(val);
         self

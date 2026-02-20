@@ -288,18 +288,12 @@ impl PublicKeyCredentialCreationOptionsJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_attestation()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn attestation(&mut self, val: &str) -> &mut Self {
         self.set_attestation(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_attestation_formats()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn attestation_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_attestation_formats(val);
         self
@@ -307,18 +301,12 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticatorSelectionCriteria")]
     #[deprecated = "Use `set_authenticator_selection()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn authenticator_selection(&mut self, val: &AuthenticatorSelectionCriteria) -> &mut Self {
         self.set_authenticator_selection(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_challenge()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn challenge(&mut self, val: &str) -> &mut Self {
         self.set_challenge(val);
         self
@@ -326,9 +314,6 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PublicKeyCredentialDescriptorJson")]
     #[deprecated = "Use `set_exclude_credentials()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn exclude_credentials(&mut self, val: &[PublicKeyCredentialDescriptorJson]) -> &mut Self {
         self.set_exclude_credentials(val);
         self
@@ -336,18 +321,12 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsClientInputsJson")]
     #[deprecated = "Use `set_extensions()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn extensions(&mut self, val: &AuthenticationExtensionsClientInputsJson) -> &mut Self {
         self.set_extensions(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_hints()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn hints(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_hints(val);
         self
@@ -355,9 +334,6 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PublicKeyCredentialParameters")]
     #[deprecated = "Use `set_pub_key_cred_params()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn pub_key_cred_params(&mut self, val: &[PublicKeyCredentialParameters]) -> &mut Self {
         self.set_pub_key_cred_params(val);
         self
@@ -365,18 +341,12 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PublicKeyCredentialRpEntity")]
     #[deprecated = "Use `set_rp()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn rp(&mut self, val: &PublicKeyCredentialRpEntity) -> &mut Self {
         self.set_rp(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_timeout()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn timeout(&mut self, val: u32) -> &mut Self {
         self.set_timeout(val);
         self
@@ -384,9 +354,6 @@ impl PublicKeyCredentialCreationOptionsJson {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PublicKeyCredentialUserEntityJson")]
     #[deprecated = "Use `set_user()` instead."]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn user(&mut self, val: &PublicKeyCredentialUserEntityJson) -> &mut Self {
         self.set_user(val);
         self
