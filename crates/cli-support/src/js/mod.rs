@@ -1392,7 +1392,7 @@ if (require('worker_threads').isMainThread) {{
         }
 
         let mut free = format!("wasm.{}(ptr, 0)", wasm_bindgen_shared::free_function(name));
-        free = binding::wrap_try_catch(&free, self.config.abort_reinit);
+        free = binding::maybe_wrap_try_catch(&free, self.config.abort_reinit);
         dst.push_str(&format!(
             "\
             __destroy_into_raw() {{

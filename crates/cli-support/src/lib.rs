@@ -90,7 +90,7 @@ impl Bindgen {
         let externref =
             env::var("WASM_BINDGEN_ANYREF").is_ok() || env::var("WASM_BINDGEN_EXTERNREF").is_ok();
         let multi_value = env::var("WASM_BINDGEN_MULTI_VALUE").is_ok();
-        let abort_reinit = env::var("WASM_BINDGEN_EXPERIMENTAL_ABORT_REINIT").is_ok();
+        let abort_reinit = env::var("WASM_BINDGEN_ABORT_REINIT").is_ok();
         Bindgen {
             input: Input::None,
             out_name: None,

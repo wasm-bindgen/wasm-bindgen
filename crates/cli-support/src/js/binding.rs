@@ -95,20 +95,24 @@ pub enum TsReference {
     StringEnum(String),
 }
 
-pub fn wrap_try_catch(call: &str, should_check_aborted: bool) -> String {
-    if should_check_aborted {
-        format!(
-            "\
-            try {{
-                {call};
-            }} catch(e) {{
-                if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
-                    throw e.getArg(__wbindgen_wrapped_jstag, 0);
-                }}
-                throw e;
+pub fn wrap_try_catch(call: &str) -> String {
+    format!(
+        "\
+        try {{
+            {call};
+        }} catch(e) {{
+            if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
+                throw e.getArg(__wbindgen_wrapped_jstag, 0);
             }}
-            "
-        )
+            throw e;
+        }}
+        "
+    )
+}
+
+pub fn maybe_wrap_try_catch(call: &str, should_check_aborted: bool) -> String {
+    if should_check_aborted {
+        wrap_try_catch(call)
     } else {
         format!("{call};")
     }
@@ -862,17 +866,22 @@ fn instruction(
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    js.finally(&wrap_try_catch(&call, should_check_aborted));
+                    js.finally(&maybe_wrap_try_catch(&call, should_check_aborted));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => js.prelude(&wrap_try_catch(&call, should_check_aborted)),
+                (false, 0) => js.prelude(&maybe_wrap_try_catch(&call, should_check_aborted)),
                 (false, n) => {
-                    js.prelude(&format!(
-                        "\
-                        let ret;
-                        {}",
-                        &wrap_try_catch(&format!("ret = {call};"), should_check_aborted)
-                    ));
+                    let body = if should_check_aborted {
+                        format!(
+                            "\
+                            let ret;
+                            {}",
+                            &wrap_try_catch(&format!("ret = {call};"))
+                        )
+                    } else {
+                        format!("const ret = {call};")
+                    };
+                    js.prelude(&body);
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {
