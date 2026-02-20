@@ -19,8 +19,9 @@ mod wbg_type;
 use crate::first_pass::OperationData;
 use crate::first_pass::{FirstPass, FirstPassRecord, InterfaceData, OperationId};
 use crate::generator::{
-    Const, Dictionary, DictionaryField, Enum, EnumVariant, Function, Interface, InterfaceAttribute,
-    InterfaceAttributeKind, InterfaceMethod, Namespace, NamespaceAttribute, NamespaceAttributeKind,
+    Const, Dictionary, DictionaryField, DictionaryFieldSetter, Enum, EnumVariant, Function,
+    Interface, InterfaceAttribute, InterfaceAttributeKind, InterfaceMethod, Namespace,
+    NamespaceAttribute, NamespaceAttributeKind,
 };
 use crate::traverse::TraverseType;
 use crate::util::{
@@ -554,10 +555,75 @@ impl<'src> FirstPassRecord<'src> {
         } else {
             !self.options.next_unstable.get()
         };
-        let ty = wbg_type
-            .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
-            .ok()
-            .flatten()?;
+
+        // Flatten union types to create multiple setter variants
+        let flattened_types = wbg_type.flatten(None);
+        let has_multiple_setters = flattened_types.len() > 1;
+
+        let mut setter_types = Vec::new();
+        for flattened_wbg_type in &flattened_types {
+            let setter_ty = flattened_wbg_type
+                .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
+                .ok()
+                .flatten();
+
+            if let Some(setter_ty) = setter_ty {
+                // Check for unsupported types (slices, i64/u64)
+                let is_slice = match &setter_ty {
+                    syn::Type::Reference(i) => matches!(&*i.elem, syn::Type::Slice(_)),
+                    syn::Type::Path(path) => path.path.segments.iter().any(|seg| {
+                        if let syn::PathArguments::AngleBracketed(ref arg) = seg.arguments {
+                            arg.args.iter().any(|elem| {
+                                matches!(
+                                    elem,
+                                    syn::GenericArgument::Type(syn::Type::Reference(i))
+                                        if matches!(&*i.elem, syn::Type::Slice(_))
+                                )
+                            })
+                        } else {
+                            false
+                        }
+                    }),
+                    _ => false,
+                };
+
+                let mut any_64bit = false;
+                setter_ty.traverse_type(&mut |ident| {
+                    if !any_64bit && (ident == "u64" || ident == "i64") {
+                        any_64bit = true;
+                    }
+                });
+
+                if !is_slice && !any_64bit {
+                    // For backward compatibility:
+                    // - First setter keeps the original name (no suffix), but deprecated if there are multiple
+                    // - Additional setters get type-based suffixes
+                    let (name_suffix, deprecated) = if setter_types.is_empty() {
+                        // First setter: no suffix, deprecated if there will be more
+                        (None, has_multiple_setters)
+                    } else {
+                        // Additional setters: add suffix, not deprecated
+                        let mut suffix = String::new();
+                        flattened_wbg_type.push_snake_case_name(&mut suffix);
+                        (Some(suffix), false)
+                    };
+
+                    setter_types.push(DictionaryFieldSetter {
+                        ty: setter_ty,
+                        name_suffix,
+                        deprecated,
+                    });
+                }
+            }
+        }
+
+        // If no setter types were valid, we can't support this field
+        if setter_types.is_empty() {
+            return None;
+        }
+
+        // Use the first setter type as the primary type (for backward compat)
+        let ty = setter_types[0].ty.clone();
 
         let mut return_ty = wbg_type
             .to_syn_type(TypePosition::RETURN, false, generics_compat)
@@ -568,48 +634,13 @@ impl<'src> FirstPassRecord<'src> {
             return_ty = optional_return_ty(return_ty);
         }
 
-        // Slice types aren't supported because they don't implement
-        // `Into<JsValue>`
-        match ty {
-            syn::Type::Reference(ref i) if matches!(&*i.elem, syn::Type::Slice(_)) => return None,
-            syn::Type::Path(ref path, ..) =>
-            // check that our inner don't contains slices either
-            {
-                for seg in path.path.segments.iter() {
-                    if let syn::PathArguments::AngleBracketed(ref arg) = seg.arguments {
-                        for elem in &arg.args {
-                            if let syn::GenericArgument::Type(syn::Type::Reference(ref i)) = elem {
-                                if matches!(&*i.elem, syn::Type::Slice(_)) {
-                                    return None;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            _ => (),
-        };
-
-        // Similarly i64/u64 aren't supported because they don't
-        // implement `Into<JsValue>`
-        let mut any_64bit = false;
-
-        ty.traverse_type(&mut |ident| {
-            if !any_64bit && (ident == "u64" || ident == "i64") {
-                any_64bit = true;
-            }
-        });
-
-        if any_64bit {
-            return None;
-        }
-
         Some(DictionaryField {
             required: field.required.is_some(),
             name: snake_case_ident(field.identifier.0),
             js_name: field.identifier.0.to_string(),
             ty,
             return_ty,
+            setter_types,
             is_js_value_ref_option_type,
             unstable: unstable_override,
             deprecated: get_rust_deprecated(&field.attributes)
