@@ -103,6 +103,11 @@
 
 ### Fixed
 
+* Removed incorrect `#[deprecated]` from `AudioBufferSourceNode::stop()` and `onended`.
+  These methods are inherited from `AudioScheduledSourceNode` and are not deprecated
+  in the Web API spec.
+  [#4546](https://github.com/wasm-bindgen/wasm-bindgen/issues/4546)
+
 * Fixed incorrect JS export names when LLVM merges identical functions at `opt-level >= 2`.
   [#4946](https://github.com/wasm-bindgen/wasm-bindgen/issues/4946)
 
