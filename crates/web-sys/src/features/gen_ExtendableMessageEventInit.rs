@@ -80,15 +80,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "ports")]
     pub fn set_ports(this: &ExtendableMessageEventInit, val: &::wasm_bindgen::JsValue);
-    #[cfg(all(feature = "Client", feature = "MessagePort", feature = "ServiceWorker",))]
     #[doc = "Get the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Client`, `ExtendableMessageEventInit`, `MessagePort`, `ServiceWorker`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, getter = "source")]
     pub fn get_source(this: &ExtendableMessageEventInit) -> Option<::js_sys::Object>;
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Client`, `ExtendableMessageEventInit`, `MessagePort`, `ServiceWorker`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[deprecated(
         note = "Use `set_source_opt_client()` or `set_source_opt_service_worker()` or `set_source_opt_message_port()` instead."
     )]
@@ -97,13 +96,13 @@ extern "C" {
     #[cfg(feature = "Client")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Client`, `ExtendableMessageEventInit`, `MessagePort`, `ServiceWorker`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "source")]
     pub fn set_source_opt_client(this: &ExtendableMessageEventInit, val: Option<&Client>);
     #[cfg(feature = "ServiceWorker")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Client`, `ExtendableMessageEventInit`, `MessagePort`, `ServiceWorker`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "source")]
     pub fn set_source_opt_service_worker(
         this: &ExtendableMessageEventInit,
@@ -112,7 +111,7 @@ extern "C" {
     #[cfg(feature = "MessagePort")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Client`, `ExtendableMessageEventInit`, `MessagePort`, `ServiceWorker`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "source")]
     pub fn set_source_opt_message_port(
         this: &ExtendableMessageEventInit,
@@ -163,7 +162,6 @@ impl ExtendableMessageEventInit {
         self.set_ports(val);
         self
     }
-    #[cfg(all(feature = "Client", feature = "MessagePort", feature = "ServiceWorker",))]
     #[deprecated = "Use `set_source()` instead."]
     pub fn source(&mut self, val: Option<&::js_sys::Object>) -> &mut Self {
         self.set_source(val);

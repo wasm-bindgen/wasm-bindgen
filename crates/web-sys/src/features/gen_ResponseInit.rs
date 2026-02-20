@@ -10,15 +10,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     pub type ResponseInit;
-    #[cfg(feature = "Headers")]
     #[doc = "Get the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`, `ResponseInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[wasm_bindgen(method, getter = "headers")]
     pub fn get_headers(this: &ResponseInit) -> ::wasm_bindgen::JsValue;
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`, `ResponseInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[deprecated(
         note = "Use `set_headers_headers()` or `set_headers_str_sequence_sequence()` or `set_headers_record_from_str_to_str()` instead."
     )]
@@ -27,17 +26,17 @@ extern "C" {
     #[cfg(feature = "Headers")]
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`, `ResponseInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers_headers(this: &ResponseInit, val: &Headers);
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`, `ResponseInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers_str_sequence_sequence(this: &ResponseInit, val: &::wasm_bindgen::JsValue);
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Headers`, `ResponseInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers_record_from_str_to_str(this: &ResponseInit, val: &::js_sys::Object);
     #[doc = "Get the `status` field of this object."]
@@ -70,7 +69,6 @@ impl ResponseInit {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(feature = "Headers")]
     #[deprecated = "Use `set_headers()` instead."]
     pub fn headers(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_headers(val);

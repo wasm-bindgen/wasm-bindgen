@@ -33,10 +33,9 @@ extern "C" {
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &GpuExternalTextureDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "HtmlVideoElement", feature = "VideoFrame",))]
     #[doc = "Get the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `HtmlVideoElement`, `VideoFrame`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -45,7 +44,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `HtmlVideoElement`, `VideoFrame`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -58,7 +57,7 @@ extern "C" {
     #[cfg(feature = "HtmlVideoElement")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `HtmlVideoElement`, `VideoFrame`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -71,7 +70,7 @@ extern "C" {
     #[cfg(feature = "VideoFrame")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `HtmlVideoElement`, `VideoFrame`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -99,7 +98,6 @@ impl GpuExternalTextureDescriptor {
         self
     }
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "HtmlVideoElement", feature = "VideoFrame",))]
     #[deprecated = "Use `set_source()` instead."]
     pub fn source(&mut self, val: &::js_sys::Object) -> &mut Self {
         self.set_source(val);

@@ -109,10 +109,9 @@ extern "C" {
     #[wasm_bindgen(method, setter = "sampleCount")]
     pub fn set_sample_count(this: &GpuTextureDescriptor, val: u32);
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuExtent3dDict")]
     #[doc = "Get the `size` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -121,7 +120,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `size` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -133,7 +132,7 @@ extern "C" {
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `size` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -143,7 +142,7 @@ extern "C" {
     #[cfg(feature = "GpuExtent3dDict")]
     #[doc = "Change the `size` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExtent3dDict`, `GpuTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureDescriptor`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -263,7 +262,6 @@ impl GpuTextureDescriptor {
         self
     }
     #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "GpuExtent3dDict")]
     #[deprecated = "Use `set_size()` instead."]
     pub fn size(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_size(val);

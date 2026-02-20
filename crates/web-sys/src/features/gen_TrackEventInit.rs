@@ -40,15 +40,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
     #[wasm_bindgen(method, setter = "composed")]
     pub fn set_composed(this: &TrackEventInit, val: bool);
-    #[cfg(all(feature = "AudioTrack", feature = "TextTrack", feature = "VideoTrack",))]
     #[doc = "Get the `track` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioTrack`, `TextTrack`, `TrackEventInit`, `VideoTrack`*"]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
     #[wasm_bindgen(method, getter = "track")]
     pub fn get_track(this: &TrackEventInit) -> Option<::js_sys::Object>;
     #[doc = "Change the `track` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioTrack`, `TextTrack`, `TrackEventInit`, `VideoTrack`*"]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
     #[deprecated(
         note = "Use `set_track_opt_video_track()` or `set_track_opt_audio_track()` or `set_track_opt_text_track()` instead."
     )]
@@ -57,19 +56,19 @@ extern "C" {
     #[cfg(feature = "VideoTrack")]
     #[doc = "Change the `track` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioTrack`, `TextTrack`, `TrackEventInit`, `VideoTrack`*"]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
     #[wasm_bindgen(method, setter = "track")]
     pub fn set_track_opt_video_track(this: &TrackEventInit, val: Option<&VideoTrack>);
     #[cfg(feature = "AudioTrack")]
     #[doc = "Change the `track` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioTrack`, `TextTrack`, `TrackEventInit`, `VideoTrack`*"]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
     #[wasm_bindgen(method, setter = "track")]
     pub fn set_track_opt_audio_track(this: &TrackEventInit, val: Option<&AudioTrack>);
     #[cfg(feature = "TextTrack")]
     #[doc = "Change the `track` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioTrack`, `TextTrack`, `TrackEventInit`, `VideoTrack`*"]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEventInit`*"]
     #[wasm_bindgen(method, setter = "track")]
     pub fn set_track_opt_text_track(this: &TrackEventInit, val: Option<&TextTrack>);
 }
@@ -97,7 +96,6 @@ impl TrackEventInit {
         self.set_composed(val);
         self
     }
-    #[cfg(all(feature = "AudioTrack", feature = "TextTrack", feature = "VideoTrack",))]
     #[deprecated = "Use `set_track()` instead."]
     pub fn track(&mut self, val: Option<&::js_sys::Object>) -> &mut Self {
         self.set_track(val);

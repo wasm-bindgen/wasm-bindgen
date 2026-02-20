@@ -10,15 +10,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
     pub type BasePropertyIndexedKeyframe;
-    #[cfg(feature = "CompositeOperation")]
     #[doc = "Get the `composite` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`, `CompositeOperation`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
     #[wasm_bindgen(method, getter = "composite")]
     pub fn get_composite(this: &BasePropertyIndexedKeyframe) -> ::wasm_bindgen::JsValue;
     #[doc = "Change the `composite` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`, `CompositeOperation`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
     #[deprecated(
         note = "Use `set_composite_opt_composite_operation()` or `set_composite_opt_composite_operation_sequence()` instead."
     )]
@@ -27,7 +26,7 @@ extern "C" {
     #[cfg(feature = "CompositeOperation")]
     #[doc = "Change the `composite` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`, `CompositeOperation`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
     #[wasm_bindgen(method, setter = "composite")]
     pub fn set_composite_opt_composite_operation(
         this: &BasePropertyIndexedKeyframe,
@@ -35,7 +34,7 @@ extern "C" {
     );
     #[doc = "Change the `composite` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`, `CompositeOperation`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
     #[wasm_bindgen(method, setter = "composite")]
     pub fn set_composite_opt_composite_operation_sequence(
         this: &BasePropertyIndexedKeyframe,
@@ -99,7 +98,6 @@ impl BasePropertyIndexedKeyframe {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[cfg(feature = "CompositeOperation")]
     #[deprecated = "Use `set_composite()` instead."]
     pub fn composite(&mut self, val: &::wasm_bindgen::JsValue) -> &mut Self {
         self.set_composite(val);
