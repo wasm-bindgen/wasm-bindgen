@@ -10,7 +10,7 @@ name = "wasm-bindgen-futures"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures"
 rust-version = "1.71"
-version = "0.4.59"
+version = "0.4.60"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -20,9 +20,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 cfg-if = "1.0.0"
 futures-core = { version = '0.3.8', default-features = false, optional = true }
 futures-util = { version = '0.3.31', default-features = false, features = ["std"], optional = true }
-js-sys = { path = "../js-sys", version = '=0.3.86', default-features = false }
+js-sys = { path = "../js-sys", version = '=0.3.87', default-features = false }
 once_cell = { version = "1.12", default-features = false }
-wasm-bindgen = { path = "../..", version = '=0.2.109', default-features = false }
+wasm-bindgen = { path = "../..", version = '=0.2.110', default-features = false }
 
 [features]
 default = ["std"]
@@ -30,7 +30,7 @@ futures-core-03-stream = ['futures-core']
 std = ["wasm-bindgen/std", "js-sys/std", "web-sys/std", "futures-util"]
 
 [target.'cfg(target_feature = "atomics")'.dependencies]
-web-sys = { path = "../web-sys", version = "=0.3.86", default-features = false, features = [
+web-sys = { path = "../web-sys", version = "=0.3.87", default-features = false, features = [
   "MessageEvent",
   "Worker",
 ] }

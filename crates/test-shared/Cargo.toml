@@ -13,7 +13,7 @@ name = "wasm-bindgen-test-shared"
 repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/test-shared"
 rust-version = "1.71"
 
-version = "0.2.109"
+version = "0.2.110"
 
 [lints]
 workspace = true

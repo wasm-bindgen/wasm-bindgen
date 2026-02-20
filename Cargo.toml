@@ -13,7 +13,7 @@ name = "wasm-bindgen"
 readme = "README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.71"
-version = "0.2.109"
+version = "0.2.110"
 
 [package.metadata.docs.rs]
 features = ["serde-serialize"]
@@ -46,8 +46,8 @@ cfg-if = "1.0.0"
 once_cell = { version = "1.12", default-features = false }
 serde = { version = "1.0", optional = true }
 serde_json = { version = "1.0", optional = true }
-wasm-bindgen-macro = { path = "crates/macro", version = "=0.2.109" }
-wasm-bindgen-shared = { path = "crates/shared", version = "=0.2.109" }
+wasm-bindgen-macro = { path = "crates/macro", version = "=0.2.110" }
+wasm-bindgen-shared = { path = "crates/shared", version = "=0.2.110" }
 
 [build-dependencies]
 # In older MSRVs, dependencies and crate features can't have the same name.
