@@ -10,7 +10,7 @@
 * Refactor new closure methods - ensures that all closure constructor functions have the variants `Closure::foo()`, `Closure::foo_aborting()` and
   `Closure::foo_assert_unwind_safe()` this then fully allows switching from the UnwindSafe bound now being applies on foo() to use one of the
   alternatives, given these limitations of AssertUnwindSafe. The same applies to `ImmediateClosure`. In addition, mutable reentrancy guards are
-  added for `ImmediateClosure`, and it is updated to support pass-by-value as well.
+  added for `ImmediateClosure`, and it is updated to be pass-by-value as well.
   [#4975](https://github.com/wasm-bindgen/wasm-bindgen/pull/4975)
 
 ### Fixed

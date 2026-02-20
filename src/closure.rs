@@ -767,14 +767,13 @@ where
 ///
 /// #[wasm_bindgen]
 /// extern "C" {
-///     fn forEach<'a>(cb: &ImmediateClosure<'a, dyn FnMut(JsValue) + 'a>);
+///     fn forEach<'a>(cb: ImmediateClosure<'a, dyn FnMut(JsValue) + 'a>);
 /// }
 ///
 /// let mut sum = 0;
-/// let closure = ImmediateClosure::new_mut(&mut |val: JsValue| {
+/// forEach(ImmediateClosure::new_mut(&mut |val: JsValue| {
 ///     sum += val.as_f64().unwrap() as i32;
-/// });
-/// forEach(&closure);
+/// }));
 /// // sum is now updated
 /// ```
 ///

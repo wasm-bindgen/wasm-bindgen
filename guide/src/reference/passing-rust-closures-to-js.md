@@ -12,17 +12,17 @@ closures are caught and converted to JavaScript `PanicError` exceptions. See
 
 | Use case | Import function signature | Accepts |
 | -------- | ------------------------- | ------- |
-| Immediate/synchronous callbacks | `ImmediateClosure<C>` or `&ImmediateClosure<C>` | `ImmediateClosure` (by value or reference) |
-| Known-lifetime callbacks | `&ScopedClosure<'lifetime, C>` | `&ScopedClosure<'a>`, `&ScopedClosure<'static>`, and `&From<ImmediateClosure>` by conversion |
+| Immediate/synchronous callbacks | `ImmediateClosure<C>` | `ImmediateClosure` only |
+| Known-lifetime callbacks | `&ScopedClosure<'lifetime, C>` | `&ScopedClosure<'a>`, `&ScopedClosure<'static>` |
 | Indeterminate lifetime | `ScopedClosure<'static, C>` | `ScopedClosure<'static>` only |
 
-While direct `&dyn Fn` and `&mut dyn FnMut` closures [are still supported](#legacy-dyn-fn-and-mut-dyn-fnmut), `&ImmediateClosure` is now recommended instead for unwind support.
+While direct `&dyn Fn` and `&mut dyn FnMut` closures [are still supported](#legacy-dyn-fn-and-mut-dyn-fnmut), `ImmediateClosure` is now recommended instead for unwind support.
 
 ### Constructor Patterns
 
 | Type | Constructor | Aborting Constructor | Assert Unwind Safe |
 | ---- | ----------- | -------------------- | ------------------ |
-| [`&ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` (Fn) / `new_mut` (FnMut) | `new_aborting` / `new_mut_aborting` | `new_assert_unwind_safe` / `new_mut_assert_unwind_safe` |
+| [`ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` (Fn) / `new_mut` (FnMut) | `new_aborting` / `new_mut_aborting` | `new_assert_unwind_safe` / `new_mut_assert_unwind_safe` |
 | [`&ScopedClosure<'a, C>`](#known-lifetime-callbacks-with-scopedclosure) | `Closure::borrow` (Fn) / `borrow_mut` (FnMut) | `borrow_aborting` / `borrow_mut_aborting` | `borrow_assert_unwind_safe` / `borrow_mut_assert_unwind_safe` |
 | [`ScopedClosure<'static, C>`](#static-lifetimes-with-closuret--scopedclosurestatic-t) | `Closure::own` (`Closure::new`) | `own_aborting` | `own_assert_unwind_safe` |
 | [`ScopedClosure<'static, C>` (one-shot)](#one-shot-static-closures-with-scopedclosurestatic-tonce) | `Closure::once` | `Closure::once_aborting` | `once_assert_unwind_safe` |
@@ -47,7 +47,7 @@ let closure = Closure::own(AssertUnwindSafe(move || {
 }));
 ```
 
-This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `&ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new_mut` (verified unwind-safe), `new_mut_assert_unwind_safe` (asserted unwind-safe with inference), or `new_mut_aborting` (aborts on panic).
+This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new_mut` (verified unwind-safe), `new_mut_assert_unwind_safe` (asserted unwind-safe with inference), or `new_mut_aborting` (aborts on panic).
 
 ## Immediate/Synchronous Callbacks with `ImmediateClosure`
 
@@ -61,11 +61,11 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    fn forEach<'a>(f: &ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
+    fn forEach<'a>(f: ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
 }
 
 let mut sum = 0;
-forEach(&ImmediateClosure::new_mut(&mut |x| {
+forEach(ImmediateClosure::new_mut(&mut |x| {
     sum += x;
 }));
 ```
@@ -86,10 +86,10 @@ defaults to `+ 'static`, which prevents closures from borrowing local variables:
 #[wasm_bindgen]
 extern "C" {
     // ✓ Correct: trait object lifetime tied to ImmediateClosure lifetime
-    fn forEach<'a>(f: &ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
+    fn forEach<'a>(f: ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
     
     // ✗ Wrong: missing + 'a defaults to 'static, rejecting borrowed closures
-    fn forEach_bad<'a>(f: &ImmediateClosure<'a, dyn FnMut(u32)>);
+    fn forEach_bad<'a>(f: ImmediateClosure<'a, dyn FnMut(u32)>);
 }
 ```
 
@@ -114,19 +114,19 @@ use std::rc::Rc;
 
 #[wasm_bindgen]
 extern "C" {
-    fn forEach<'a>(f: &ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
+    fn forEach<'a>(f: ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
 }
 
 // RefCell is not UnwindSafe, but these variants don't require it
 let data = Rc::new(RefCell::new(0));
 
 // Option 1: Abort on panic
-forEach(&ImmediateClosure::new_mut_aborting(&mut |x| {
+forEach(ImmediateClosure::new_mut_aborting(&mut |x| {
     *data.borrow_mut() += x;
 }));
 
 // Option 2: Catch panics (caller asserts unwind safety)
-forEach(&ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
+forEach(ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
     *data.borrow_mut() += x;
 }));
 ```

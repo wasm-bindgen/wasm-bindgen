@@ -163,7 +163,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
             Descriptor::Function(descriptor) => {
-                // By-value ImmediateClosure: same ABI as &ImmediateClosure
+                // By-value ImmediateClosure<dyn Fn(...)> (immutable)
                 self.outgoing_function(false, descriptor, None)?;
             }
 
