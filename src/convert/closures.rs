@@ -291,7 +291,8 @@ macro_rules! closures {
                 let rc1 = Rc::new(WasmRefCell::new(None));
                 let rc2 = rc1.clone();
 
-                let closure = Closure::once_wrap(closures!(@closure $FnArgs $($var)* {
+                // TODO: Unwind safety for FnOnce
+                let closure = Closure::once_aborting(closures!(@closure $FnArgs $($var)* {
                     let result = self($($var),*);
 
                     // And then drop the `Rc` holding this function's `Closure`

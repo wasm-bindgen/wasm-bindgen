@@ -814,11 +814,11 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
         let mut future_output = None;
         let result = CURRENT_OUTPUT.set(&output, || {
             let mut test = Some(test);
-            let mut func = || {
+            let mut func = AssertUnwindSafe(|| {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
-            };
-            let closure = ScopedClosure::borrow_mut_assert_unwind_safe(&mut func);
+            });
+            let closure = ScopedClosure::borrow_mut(&mut func);
             __wbg_test_invoke(&closure)
         });
         match (result, future_output) {

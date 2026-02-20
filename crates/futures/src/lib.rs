@@ -249,7 +249,7 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&ImmediateClosure::wrap_mut_aborting(
+    Promise::new_typed(&ImmediateClosure::new_mut_aborting(
         &mut move |resolve, reject| {
             let future = future.take().unwrap_throw();
 
@@ -337,7 +337,7 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&ImmediateClosure::wrap_mut_aborting(
+    Promise::new_typed(&ImmediateClosure::new_mut_aborting(
         &mut move |resolve, reject| {
             let future = future.take().unwrap_throw();
             spawn_local(async move {
