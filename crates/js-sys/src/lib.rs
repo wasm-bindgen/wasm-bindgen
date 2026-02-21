@@ -13038,7 +13038,6 @@ extern "C" {
     /// Same as `then`, only with both arguments provided.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
-    #[deprecated(note = "Use `then_with_reject` instead.")]
     #[wasm_bindgen(method, js_name = then)]
     pub fn then2(
         this: &Promise,
