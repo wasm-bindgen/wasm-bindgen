@@ -1,7 +1,7 @@
 export function exported() {
     wasm.exported();
 }
-export function __wbg___wbindgen_throw_83ebd457a191bc2a(arg0, arg1) {
+export function __wbg___wbindgen_throw_df03e93053e0f4bc(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_static_accessor_NAMESPACE_OPTIONAL_2e93032090b95d76() {

@@ -81,7 +81,7 @@ export function option_string_enum_echo(color) {
     const ret = wasm.option_string_enum_echo(isLikeNone(color) ? 4 : ((__wbindgen_enum_ColorName.indexOf(color) + 1 || 4) - 1));
     return __wbindgen_enum_ColorName[ret];
 }
-export function __wbg___wbindgen_throw_83ebd457a191bc2a(arg0, arg1) {
+export function __wbg___wbindgen_throw_df03e93053e0f4bc(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

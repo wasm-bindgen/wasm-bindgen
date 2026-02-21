@@ -13,7 +13,7 @@ export function add_that_might_fail(a, b) {
 function __wbg_get_imports(memory) {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_83ebd457a191bc2a: function(arg0, arg1) {
+        __wbg___wbindgen_throw_df03e93053e0f4bc: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_random_6e647071acda68e7: function() {

@@ -34,7 +34,7 @@ export function example_128(a) {
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_83ebd457a191bc2a: function(arg0, arg1) {
+        __wbg___wbindgen_throw_df03e93053e0f4bc: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbindgen_init_externref_table: function() {

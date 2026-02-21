@@ -13,17 +13,17 @@ export function get_url() {
     const ret = wasm.get_url();
     return ret;
 }
-export function __wbg___wbindgen_debug_string_a1b3fd0656850da8(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_43c7ccb034739216(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 }
-export function __wbg___wbindgen_throw_83ebd457a191bc2a(arg0, arg1) {
+export function __wbg___wbindgen_throw_df03e93053e0f4bc(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_new_c28d12cd5cd04757() { return handleError(function (arg0, arg1) {
+export function __wbg_new_9c39b08dfcd79724() { return handleError(function (arg0, arg1) {
     const ret = new URL(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments); }
