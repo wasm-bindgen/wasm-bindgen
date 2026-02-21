@@ -231,8 +231,12 @@ pub struct AuxStringEnum {
 
 #[derive(Debug)]
 pub struct AuxStruct {
-    /// The name of this struct
+    /// The JS name of this struct (used for JS output)
     pub name: String,
+    /// The Rust name of this struct (used as internal key, matches js_class on exports)
+    pub rust_name: String,
+    /// The namespace-qualified name (used for wasm symbol generation)
+    pub qualified_name: String,
     /// The copied Rust comments to forward to JS
     pub comments: String,
     /// Whether to generate helper methods for inspecting the class

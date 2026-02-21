@@ -15,7 +15,7 @@ export { MY_CONSTANT }
 export { OriginalName as RenamedClass }
 
 function foo() {
-    wasm.Snippet_foo();
+    wasm.Snippet__foo();
 }
 
 

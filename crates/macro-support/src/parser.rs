@@ -494,6 +494,8 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
 
         let is_inspectable = attrs.inspectable().is_some();
         let getter_with_clone = attrs.getter_with_clone();
+        let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
+        let qualified_name = wasm_bindgen_shared::qualified_name(js_namespace.as_deref(), &js_name);
         for (i, field) in self.fields.iter_mut().enumerate() {
             match field.vis {
                 syn::Visibility::Public(..) => {}
@@ -516,8 +518,8 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             };
 
             let comments = extract_doc_comments(&field.attrs);
-            let getter = wasm_bindgen_shared::struct_field_get(&js_name, &js_field_name);
-            let setter = wasm_bindgen_shared::struct_field_set(&js_name, &js_field_name);
+            let getter = wasm_bindgen_shared::struct_field_get(&qualified_name, &js_field_name);
+            let setter = wasm_bindgen_shared::struct_field_set(&qualified_name, &js_field_name);
 
             fields.push(ast::StructField {
                 rust_name: member,
@@ -538,11 +540,11 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         let generate_typescript = attrs.skip_typescript().is_none();
         let private = attrs.private().is_some();
         let comments: Vec<String> = extract_doc_comments(&self.attrs);
-        let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
         attrs.check_used();
         Ok(ast::Struct {
             rust_name: self.ident.clone(),
             js_name,
+            qualified_name,
             fields,
             comments,
             is_inspectable,

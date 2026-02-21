@@ -432,6 +432,9 @@ pub struct Struct {
     pub rust_name: Ident,
     /// The export name of the struct in JS code
     pub js_name: String,
+    /// The namespace-qualified internal name used for wasm symbol generation.
+    /// When a namespace is present, this is `ns1_ns2_JsName`; otherwise it equals `js_name`.
+    pub qualified_name: String,
     /// All the fields of this struct to export
     pub fields: Vec<StructField>,
     /// The doc comments on this struct, if provided
@@ -556,7 +559,7 @@ impl Export {
         };
 
         if let Some(ns) = &self.js_namespace {
-            format!("{}_{base_name}", ns.join("_"))
+            format!("{}__{base_name}", ns.join("__"))
         } else {
             base_name
         }

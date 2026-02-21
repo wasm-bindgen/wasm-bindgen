@@ -11,7 +11,7 @@ use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
 use anyhow::{bail, Error};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use walrus::{Module, ValType};
 
@@ -400,11 +400,23 @@ impl<'a, 'b> Builder<'a, 'b> {
                     AdapterType::Option(ty) if omittable => {
                         // e.g. `foo?: string | null`
                         arg.push_str("?: ");
-                        adapter2ts(ty, TypePosition::Argument, &mut ts, Some(&mut ts_refs));
+                        adapter2ts(
+                            ty,
+                            TypePosition::Argument,
+                            &mut ts,
+                            Some(&mut ts_refs),
+                            &self.cx.qualified_to_js_name,
+                        );
                         ts.push_str(" | null");
                     }
                     ty => {
-                        adapter2ts(ty, TypePosition::Argument, &mut ts, Some(&mut ts_refs));
+                        adapter2ts(
+                            ty,
+                            TypePosition::Argument,
+                            &mut ts,
+                            Some(&mut ts_refs),
+                            &self.cx.qualified_to_js_name,
+                        );
                         omittable = false;
                         arg.push_str(": ");
                     }
@@ -451,6 +463,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                         TypePosition::Return,
                         &mut ret,
                         Some(&mut ts_refs),
+                        &self.cx.qualified_to_js_name,
                     ),
                     _ => ret.push_str("[any]"),
                 }
@@ -502,7 +515,13 @@ impl<'a, 'b> Builder<'a, 'b> {
             } else {
                 match ty {
                     AdapterType::Option(ty) if omittable => {
-                        adapter2ts(ty, TypePosition::Argument, &mut arg, None);
+                        adapter2ts(
+                            ty,
+                            TypePosition::Argument,
+                            &mut arg,
+                            None,
+                            &self.cx.qualified_to_js_name,
+                        );
                         arg.push_str(" | null} ");
                         arg.push('[');
                         arg.push_str(name);
@@ -510,7 +529,13 @@ impl<'a, 'b> Builder<'a, 'b> {
                     }
                     _ => {
                         omittable = false;
-                        adapter2ts(ty, TypePosition::Argument, &mut arg, None);
+                        adapter2ts(
+                            ty,
+                            TypePosition::Argument,
+                            &mut arg,
+                            None,
+                            &self.cx.qualified_to_js_name,
+                        );
                         arg.push_str("} ");
                         arg.push_str(name);
                     }
@@ -540,7 +565,13 @@ impl<'a, 'b> Builder<'a, 'b> {
             if let Some(v) = ty_override {
                 ret.push_str(v);
             } else {
-                adapter2ts(ty, TypePosition::Argument, &mut ret, None);
+                adapter2ts(
+                    ty,
+                    TypePosition::Argument,
+                    &mut ret,
+                    None,
+                    &self.cx.qualified_to_js_name,
+                );
             }
             ret.push_str("} ");
             ret.push_str(name);
@@ -651,7 +682,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn assert_class(&mut self, arg: &str, class: &str) {
         self.cx.expose_assert_class();
-        self.prelude(&format!("_assertClass({arg}, {class});"));
+        let identifier = self.cx.require_class_identifier(class);
+        self.prelude(&format!("_assertClass({arg}, {identifier});"));
     }
 
     fn assert_number(&mut self, arg: &str) {
@@ -1366,8 +1398,12 @@ fn instruction(
 
         Instruction::RustFromI32 { class } => {
             let val = js.pop();
+            // Resolve both the descriptor class and the constructor class to
+            // rust_name for comparison, since they may use different naming
+            // (qualified_name vs js_class vs rust_name).
+            let resolved_class = js.cx.resolve_class_name(class);
             match constructor {
-                Some(name) if name == class => {
+                Some(name) if js.cx.resolve_class_name(name) == resolved_class => {
                     // Get the JS identifier for the class, which may be aliased
                     // if the name conflicts with a JS builtin (e.g., `Array` -> `Array2`)
                     let identifier = js.cx.require_class_identifier(class);
@@ -1748,6 +1784,7 @@ fn adapter2ts(
     position: TypePosition,
     dst: &mut String,
     refs: Option<&mut HashSet<TsReference>>,
+    name_map: &HashMap<String, String>,
 ) {
     match ty {
         AdapterType::I32
@@ -1770,14 +1807,17 @@ fn adapter2ts(
         AdapterType::Bool => dst.push_str("boolean"),
         AdapterType::Vector(kind) => dst.push_str(&kind.js_ty()),
         AdapterType::Option(ty) => {
-            adapter2ts(ty, position, dst, refs);
+            adapter2ts(ty, position, dst, refs, name_map);
             dst.push_str(match position {
                 TypePosition::Argument => " | null | undefined",
                 TypePosition::Return => " | undefined",
             });
         }
         AdapterType::NamedExternref(name) => dst.push_str(name),
-        AdapterType::Struct(name) => dst.push_str(name),
+        AdapterType::Struct(name) => {
+            let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
+            dst.push_str(resolved);
+        }
         AdapterType::Enum(name) => dst.push_str(name),
         AdapterType::StringEnum(name) => {
             if let Some(refs) = refs {

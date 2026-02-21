@@ -102,6 +102,12 @@ pub struct Context<'a> {
 
     /// If exception handling / unwinding is enabled.
     unwind_enabled: bool,
+
+    /// Mapping from qualified name (used in WasmDescribe) to rust_name (used as exported_classes key).
+    pub(crate) qualified_to_rust_name: HashMap<String, String>,
+
+    /// Mapping from qualified name (used in WasmDescribe) to js_name (used for TypeScript output).
+    pub(crate) qualified_to_js_name: HashMap<String, String>,
 }
 
 /// Definition of a module export
@@ -158,6 +164,10 @@ struct ExportedClass {
     typescript_fields: HashMap<FieldLocation, FieldInfo>,
     /// The namespace to export the class through, if any
     js_namespace: Option<Vec<String>>,
+    /// The JS-facing name of this class (used for JS output)
+    js_name: Option<String>,
+    /// The namespace-qualified name (used for wasm symbol references)
+    qualified_name: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -216,6 +226,8 @@ impl<'a> Context<'a> {
             memories: Default::default(),
             table_indices: Default::default(),
             stack_pointer_shim_injected: false,
+            qualified_to_rust_name: Default::default(),
+            qualified_to_js_name: Default::default(),
         })
     }
 
@@ -1233,19 +1245,44 @@ if (require('worker_threads').isMainThread) {{
         }
     }
 
+    /// Resolve a class name to the key used in `exported_classes`.
+    /// The name could be a `rust_name` (direct key) or a `qualified_name`
+    /// (from WasmDescribe), which needs to be mapped to the `rust_name`.
+    pub(crate) fn resolve_class_name<'b>(&'b self, name: &'b str) -> &'b str {
+        if self.exported_classes.contains_key(name) {
+            return name;
+        }
+        if let Some(rust_name) = self.qualified_to_rust_name.get(name) {
+            return rust_name;
+        }
+        name
+    }
+
     fn require_class<'b>(&'b mut self, name: &str) -> &'b mut ExportedClass {
+        // Resolve qualified_name to rust_name if needed
+        let key = if let Some(rust_name) = self.qualified_to_rust_name.get(name) {
+            rust_name.clone()
+        } else {
+            name.to_string()
+        };
         if self
             .exported_classes
-            .get(name)
+            .get(&key)
             .is_none_or(|cls| cls.identifier.is_empty())
         {
-            let identifier = self.generate_identifier(name);
+            // Use js_name for the identifier if available, otherwise use the key
+            let js_name = self
+                .exported_classes
+                .get(&key)
+                .and_then(|cls| cls.js_name.clone())
+                .unwrap_or_else(|| key.clone());
+            let identifier = self.generate_identifier(&js_name);
             self.exported_classes
-                .entry(name.to_string())
+                .entry(key.clone())
                 .or_default()
                 .identifier = identifier;
         }
-        self.exported_classes.get_mut(name).unwrap()
+        self.exported_classes.get_mut(&key).unwrap()
     }
 
     fn write_classes(&mut self) -> Result<(), Error> {
@@ -1258,6 +1295,10 @@ if (require('worker_threads').isMainThread) {{
 
     fn write_class(&mut self, name: &str, class: ExportedClass) -> Result<(), Error> {
         let identifier = &class.identifier;
+        // Use js_name for JS output, falling back to the key name
+        let js_name = class.js_name.as_deref().unwrap_or(name);
+        // Use qualified_name for wasm symbol references, falling back to js_name
+        let qualified = class.qualified_name.as_deref().unwrap_or(js_name);
         let mut dst = format!("class {identifier} {{\n");
         let mut ts_dst = dst.clone();
 
@@ -1320,12 +1361,12 @@ if (require('worker_threads').isMainThread) {{
                 "({{ ptr, instance }}) => {{
                 if (instance === __wbg_instance_id) wasm.{}(ptr >>> 0, 1);
             }}",
-                wasm_bindgen_shared::free_function(name)
+                wasm_bindgen_shared::free_function(qualified)
             )
         } else {
             format!(
                 "ptr => wasm.{}(ptr >>> 0, 1)",
-                wasm_bindgen_shared::free_function(name)
+                wasm_bindgen_shared::free_function(qualified)
             )
         };
 
@@ -1391,7 +1432,10 @@ if (require('worker_threads').isMainThread) {{
             }
         }
 
-        let mut free = format!("wasm.{}(ptr, 0)", wasm_bindgen_shared::free_function(name));
+        let mut free = format!(
+            "wasm.{}(ptr, 0)",
+            wasm_bindgen_shared::free_function(qualified)
+        );
         free = binding::maybe_wrap_try_catch(&free, self.config.abort_reinit);
         dst.push_str(&format!(
             "\
@@ -1419,7 +1463,7 @@ if (require('worker_threads').isMainThread) {{
 
         // For hidden classes, add export type statement
         if class.private {
-            ts_dst.push_str(&format!("export type {{ {name} }};\n"));
+            ts_dst.push_str(&format!("export type {{ {js_name} }};\n"));
         }
 
         dst.push_str(&format!(
@@ -1434,7 +1478,7 @@ if (require('worker_threads').isMainThread) {{
 
         define_export(
             &mut self.exports,
-            name,
+            js_name,
             class.js_namespace.as_deref().unwrap_or_default(),
             ExportEntry::Definition(ExportDefinition {
                 identifier: class.identifier,
@@ -3160,6 +3204,26 @@ if (require('worker_threads').isMainThread) {{
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
 
+        // Set up qualified_name → rust_name and qualified_name → js_name mappings
+        // before processing adapters, so that WasmDescribe lookups (which use
+        // qualified_name) can resolve to the correct exported class.
+        for s in self.aux.structs.iter() {
+            self.qualified_to_rust_name
+                .insert(s.qualified_name.clone(), s.rust_name.clone());
+            self.qualified_to_js_name
+                .insert(s.qualified_name.clone(), s.name.clone());
+            if s.name != s.rust_name {
+                self.qualified_to_rust_name
+                    .insert(s.name.clone(), s.rust_name.clone());
+            }
+            // Pre-populate js_name so require_class can generate the correct
+            // identifier before generate_struct runs.
+            self.exported_classes
+                .entry(s.rust_name.clone())
+                .or_default()
+                .js_name = Some(s.name.clone());
+        }
+
         self.generate_jstag_import();
         self.generate_wrapped_jstag_import();
 
@@ -4554,12 +4618,14 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn generate_struct(&mut self, struct_: &AuxStruct) -> Result<(), Error> {
-        let class = self.require_class(&struct_.name);
+        let class = self.require_class(&struct_.rust_name);
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
         class.private = struct_.private;
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
+        class.js_name = Some(struct_.name.clone());
+        class.qualified_name = Some(struct_.qualified_name.clone());
         Ok(())
     }
 
@@ -4752,10 +4818,20 @@ if (require('worker_threads').isMainThread) {{
             .entry(name.to_string())
             .or_insert(0);
         *cnt += 1;
-        if *cnt == 1 {
+        let mut suffix = *cnt;
+        if suffix == 1 {
             name.to_string()
         } else {
-            format!("{name}{cnt}")
+            // Keep incrementing until we find an identifier that isn't already taken
+            let mut candidate = format!("{name}{suffix}");
+            while self.defined_identifiers.contains_key(&candidate) {
+                suffix += 1;
+                candidate = format!("{name}{suffix}");
+            }
+            // Update the counter and reserve the candidate
+            *self.defined_identifiers.get_mut(&*name).unwrap() = suffix;
+            self.defined_identifiers.insert(candidate.clone(), 1);
+            candidate
         }
     }
 

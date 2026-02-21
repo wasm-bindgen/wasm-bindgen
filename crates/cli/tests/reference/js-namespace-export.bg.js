@@ -56,7 +56,7 @@ class Counter {
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_counter_free(ptr, 0);
+        wasm.__wbg_default__counter_free(ptr, 0);
     }
     increment() {
         wasm.counter_increment(this.__wbg_ptr);
@@ -99,7 +99,7 @@ function concat(a, b) {
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(b, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.default_concat(ptr0, len0, ptr1, len1);
+        const ret = wasm.default__concat(ptr0, len0, ptr1, len1);
         deferred3_0 = ret[0];
         deferred3_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -118,7 +118,7 @@ function uppercase(s) {
     try {
         const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.default_uppercase_uppercase(ptr0, len0);
+        const ret = wasm.default__uppercase__uppercase(ptr0, len0);
         deferred2_0 = ret[0];
         deferred2_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -140,7 +140,7 @@ export { _default as default }
  * @returns {number}
  */
 function add(a, b) {
-    const ret = wasm.math_add(a, b);
+    const ret = wasm.math__add(a, b);
     return ret;
 }
 
@@ -150,7 +150,7 @@ function add(a, b) {
  * @returns {number}
  */
 function divide(a, b) {
-    const ret = wasm.math_divide(a, b);
+    const ret = wasm.math__divide(a, b);
     return ret;
 }
 
@@ -160,7 +160,7 @@ function divide(a, b) {
  * @returns {number}
  */
 function multiply(a, b) {
-    const ret = wasm.math_multiply(a, b);
+    const ret = wasm.math__multiply(a, b);
     return ret;
 }
 
@@ -178,46 +178,46 @@ class Point3D {
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_point3d_free(ptr, 0);
+        wasm.__wbg_models__3d__point3d_free(ptr, 0);
     }
     /**
      * @returns {number}
      */
     get x() {
-        const ret = wasm.__wbg_get_point3d_x(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_models__3d__point3d_x(this.__wbg_ptr);
         return ret;
     }
     /**
      * @returns {number}
      */
     get y() {
-        const ret = wasm.__wbg_get_point3d_y(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_models__3d__point3d_y(this.__wbg_ptr);
         return ret;
     }
     /**
      * @returns {number}
      */
     get z() {
-        const ret = wasm.__wbg_get_point3d_z(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_models__3d__point3d_z(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set x(arg0) {
-        wasm.__wbg_set_point3d_x(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_models__3d__point3d_x(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
     set y(arg0) {
-        wasm.__wbg_set_point3d_y(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_models__3d__point3d_y(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
     set z(arg0) {
-        wasm.__wbg_set_point3d_z(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_models__3d__point3d_z(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) Point3D.prototype[Symbol.dispose] = Point3D.prototype.free;
@@ -231,33 +231,33 @@ class Point {
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_point_free(ptr, 0);
+        wasm.__wbg_models__point_free(ptr, 0);
     }
     /**
      * @returns {number}
      */
     get x() {
-        const ret = wasm.__wbg_get_point_x(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_models__point_x(this.__wbg_ptr);
         return ret;
     }
     /**
      * @returns {number}
      */
     get y() {
-        const ret = wasm.__wbg_get_point_y(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_models__point_y(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set x(arg0) {
-        wasm.__wbg_set_point_x(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_models__point_x(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
     set y(arg0) {
-        wasm.__wbg_set_point_y(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_models__point_y(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
@@ -308,7 +308,7 @@ function uppercase2(s) {
     try {
         const ptr0 = passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.utils_string_uppercase(ptr0, len0);
+        const ret = wasm.utils__string__uppercase(ptr0, len0);
         deferred2_0 = ret[0];
         deferred2_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -334,13 +334,13 @@ export function __wbindgen_init_externref_table() {
 }
 const CounterFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_counter_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_default__counter_free(ptr >>> 0, 1));
 const PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_models__point_free(ptr >>> 0, 1));
 const Point3DFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_point3d_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_models__3d__point3d_free(ptr >>> 0, 1));
 const RectangleFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_rectangle_free(ptr >>> 0, 1));

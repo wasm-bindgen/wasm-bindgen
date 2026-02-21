@@ -219,7 +219,7 @@ impl TryToTokens for ast::LinkToModule {
 impl ToTokens for ast::Struct {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = &self.rust_name;
-        let name_str = self.js_name.to_string();
+        let name_str = self.qualified_name.to_string();
         let name_len = name_str.len() as u32;
         let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
         let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());

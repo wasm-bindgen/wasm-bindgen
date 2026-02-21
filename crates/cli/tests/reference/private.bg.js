@@ -108,20 +108,20 @@ class NamespacedHidden {
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_namespacedhidden_free(ptr, 0);
+        wasm.__wbg_internal__namespacedhidden_free(ptr, 0);
     }
     /**
      * @returns {number}
      */
     get data() {
-        const ret = wasm.__wbg_get_namespacedhidden_data(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_internal__namespacedhidden_data(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set data(arg0) {
-        wasm.__wbg_set_namespacedhidden_data(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_internal__namespacedhidden_data(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) NamespacedHidden.prototype[Symbol.dispose] = NamespacedHidden.prototype.free;
@@ -130,7 +130,7 @@ if (Symbol.dispose) NamespacedHidden.prototype[Symbol.dispose] = NamespacedHidde
  * @returns {NamespacedHidden}
  */
 function create_namespaced() {
-    const ret = wasm.internal_create_namespaced();
+    const ret = wasm.internal__create_namespaced();
     return NamespacedHidden.__wrap(ret);
 }
 
@@ -176,7 +176,7 @@ const HiddenStructFinalization = (typeof FinalizationRegistry === 'undefined')
     : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr >>> 0, 1));
 const NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_namespacedhidden_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_internal__namespacedhidden_free(ptr >>> 0, 1));
 const PublicStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_publicstruct_free(ptr >>> 0, 1));
