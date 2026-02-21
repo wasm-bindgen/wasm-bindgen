@@ -41,10 +41,12 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
             #[wasm_bindgen(#attr)]
             #s
         };
+
         return Ok(item);
     }
 
-    let opts = syn::parse2(attr)?;
+    let opts: BindgenAttrs = syn::parse2(attr)?;
+
     let mut tokens = proc_macro2::TokenStream::new();
     let mut program = ast::Program::default();
     item.macro_parse(&mut program, (Some(opts), &mut tokens))?;
@@ -193,12 +195,12 @@ pub fn expand_struct_marker(item: TokenStream) -> Result<TokenStream, Diagnostic
     let mut s: syn::ItemStruct = syn::parse2(item)?;
 
     let mut program = ast::Program::default();
-    program.structs.push((&mut s).convert(&program)?);
+    program.structs.extend((&mut s).convert(&program)?);
 
     let mut tokens = proc_macro2::TokenStream::new();
     program.try_to_tokens(&mut tokens)?;
 
-    parser::check_unused_attrs(&mut tokens);
+    // parser::check_unused_attrs(&mut tokens);
 
     Ok(tokens)
 }
