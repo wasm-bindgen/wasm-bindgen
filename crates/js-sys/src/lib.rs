@@ -1754,7 +1754,7 @@ impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsOption<JsValue> {}
 
 /// Iterator returned by `Array::into_iter`
 #[derive(Debug, Clone)]
-pub struct ArrayIntoIter<T: JsGeneric> {
+pub struct ArrayIntoIter<T: JsGeneric = JsValue> {
     range: core::ops::Range<u32>,
     array: Array<T>,
 }
@@ -1865,7 +1865,7 @@ impl<T: JsGeneric> core::iter::ExactSizeIterator for ArrayIntoIter<T> {}
 
 /// Iterator returned by `Array::iter`
 #[derive(Debug, Clone)]
-pub struct ArrayIter<'a, T: JsGeneric> {
+pub struct ArrayIter<'a, T: JsGeneric = JsValue> {
     range: core::ops::Range<u32>,
     array: &'a Array<T>,
 }
@@ -5145,7 +5145,7 @@ impl<T> AsyncIterable for AsyncIterator<T> {
 /// An iterator over the JS `Symbol.iterator` iteration protocol.
 ///
 /// Use the `IntoIterator for &js_sys::Iterator` implementation to create this.
-pub struct Iter<'a, T> {
+pub struct Iter<'a, T = JsValue> {
     js: &'a Iterator<T>,
     state: IterState,
 }
@@ -12833,7 +12833,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Promise, js_name = allSettled)]
-    pub fn all_settled(obj: Object) -> Promise;
+    pub fn all_settled(obj: &JsValue) -> Promise;
 
     /// The `Promise.allSettled(iterable)` method returns a single `Promise` that
     /// resolves when all of the promises in the iterable argument have either
@@ -13034,6 +13034,16 @@ extern "C" {
         this: &Promise<T>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
+
+    /// Same as `then`, only with both arguments provided.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
+    #[wasm_bindgen(method, js_name = then)]
+    pub fn then2(
+        this: &Promise,
+        resolve: &ScopedClosure<dyn FnMut(JsValue)>,
+        reject: &ScopedClosure<dyn FnMut(JsValue)>,
+    ) -> Promise;
 
     /// The `finally()` method returns a `Promise`. When the promise is settled,
     /// whether fulfilled or rejected, the specified callback function is

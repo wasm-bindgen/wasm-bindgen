@@ -9,6 +9,13 @@
 
 ### Fixed
 
+* Restored backwards compatibility for breaking changes introduced in 0.2.110:
+  re-added deprecated `Promise::then2` binding, reverted `Promise::all_settled`
+  stable signature to take `&JsValue` instead of owned `Object`, and added
+  default type parameters (`= JsValue`) to `ArrayIntoIter`, `ArrayIter`, and
+  `Iter` structs.
+  [#4979](https://github.com/wasm-bindgen/wasm-bindgen/pull/4979)
+
 ### Removed
 
 ## [0.2.109](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.108...0.2.109)
