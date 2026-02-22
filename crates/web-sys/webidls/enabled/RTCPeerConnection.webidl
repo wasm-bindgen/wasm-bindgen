@@ -121,8 +121,7 @@ interface RTCPeerConnection : EventTarget  {
   // indicate which particular streams should be referenced in signaling
 
   RTCRtpSender addTrack(MediaStreamTrack track,
-                        MediaStream stream,
-                        MediaStream... moreStreams);
+                        MediaStream... streams);
   undefined removeTrack(RTCRtpSender sender);
 
   RTCRtpTransceiver addTransceiver((MediaStreamTrack or DOMString) trackOrKind,

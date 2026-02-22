@@ -16,6 +16,9 @@
   `Iter` structs.
   [#4979](https://github.com/wasm-bindgen/wasm-bindgen/pull/4979)
 
+* updated the `RTCPeerConnection::add_track` bindings to match the current
+  WebIDL specification.
+
 ### Removed
 
 ## [0.2.109](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.108...0.2.109)

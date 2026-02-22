@@ -361,25 +361,16 @@ extern "C" {
     pub fn add_track(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams: &::js_sys::Array,
+        streams: &::js_sys::Array,
     ) -> RtcRtpSender;
-    #[cfg(all(
-        feature = "MediaStream",
-        feature = "MediaStreamTrack",
-        feature = "RtcRtpSender",
-    ))]
+    #[cfg(all(feature = "MediaStreamTrack", feature = "RtcRtpSender",))]
     # [wasm_bindgen (method , structural , js_class = "RTCPeerConnection" , js_name = addTrack)]
     #[doc = "The `addTrack()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaStream`, `MediaStreamTrack`, `RtcPeerConnection`, `RtcRtpSender`*"]
-    pub fn add_track_0(
-        this: &RtcPeerConnection,
-        track: &MediaStreamTrack,
-        stream: &MediaStream,
-    ) -> RtcRtpSender;
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`, `RtcPeerConnection`, `RtcRtpSender`*"]
+    pub fn add_track_0(this: &RtcPeerConnection, track: &MediaStreamTrack) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
         feature = "MediaStreamTrack",
@@ -394,8 +385,7 @@ extern "C" {
     pub fn add_track_1(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
+        streams_1: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
@@ -411,9 +401,8 @@ extern "C" {
     pub fn add_track_2(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
-        more_streams_2: &MediaStream,
+        streams_1: &MediaStream,
+        streams_2: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
@@ -429,10 +418,9 @@ extern "C" {
     pub fn add_track_3(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
-        more_streams_2: &MediaStream,
-        more_streams_3: &MediaStream,
+        streams_1: &MediaStream,
+        streams_2: &MediaStream,
+        streams_3: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
@@ -448,11 +436,10 @@ extern "C" {
     pub fn add_track_4(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
-        more_streams_2: &MediaStream,
-        more_streams_3: &MediaStream,
-        more_streams_4: &MediaStream,
+        streams_1: &MediaStream,
+        streams_2: &MediaStream,
+        streams_3: &MediaStream,
+        streams_4: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
@@ -468,12 +455,11 @@ extern "C" {
     pub fn add_track_5(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
-        more_streams_2: &MediaStream,
-        more_streams_3: &MediaStream,
-        more_streams_4: &MediaStream,
-        more_streams_5: &MediaStream,
+        streams_1: &MediaStream,
+        streams_2: &MediaStream,
+        streams_3: &MediaStream,
+        streams_4: &MediaStream,
+        streams_5: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
@@ -489,13 +475,12 @@ extern "C" {
     pub fn add_track_6(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
-        more_streams_2: &MediaStream,
-        more_streams_3: &MediaStream,
-        more_streams_4: &MediaStream,
-        more_streams_5: &MediaStream,
-        more_streams_6: &MediaStream,
+        streams_1: &MediaStream,
+        streams_2: &MediaStream,
+        streams_3: &MediaStream,
+        streams_4: &MediaStream,
+        streams_5: &MediaStream,
+        streams_6: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(
         feature = "MediaStream",
@@ -511,14 +496,13 @@ extern "C" {
     pub fn add_track_7(
         this: &RtcPeerConnection,
         track: &MediaStreamTrack,
-        stream: &MediaStream,
-        more_streams_1: &MediaStream,
-        more_streams_2: &MediaStream,
-        more_streams_3: &MediaStream,
-        more_streams_4: &MediaStream,
-        more_streams_5: &MediaStream,
-        more_streams_6: &MediaStream,
-        more_streams_7: &MediaStream,
+        streams_1: &MediaStream,
+        streams_2: &MediaStream,
+        streams_3: &MediaStream,
+        streams_4: &MediaStream,
+        streams_5: &MediaStream,
+        streams_6: &MediaStream,
+        streams_7: &MediaStream,
     ) -> RtcRtpSender;
     #[cfg(all(feature = "MediaStreamTrack", feature = "RtcRtpTransceiver",))]
     # [wasm_bindgen (method , structural , js_class = "RTCPeerConnection" , js_name = addTransceiver)]
