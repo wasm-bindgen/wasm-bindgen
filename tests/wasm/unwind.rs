@@ -142,41 +142,49 @@ fn try_every() {
         .unwrap());
 }
 
-// #[wasm_bindgen_test]
-// fn try_every_aborting() {
-//     let even = js_array![2, 4, 6, 8];
-//     Reflect::set(&global(), &"dropped".into(), &JsValue::FALSE).unwrap();
-//     Reflect::set(&global(), &"food".into(), &JsValue::FALSE).unwrap();
-//     assert!(even
-//         .try_every_result_aborting(&mut |_, _, _| {
-//             struct Foo {}
-//             impl Drop for Foo {
-//                 fn drop(&mut self) {
-//                     Reflect::set(&global(), &"dropped".into(), &JsValue::TRUE).unwrap();
-//                 }
-//             }
-//             impl Foo {
-//                 fn foo(&self) {
-//                     let _ = Reflect::set(&global(), &"food".into(), &JsValue::TRUE);
-//                 }
-//             }
-//             let foo = Foo {};
-//             if std::hint::black_box(true) {
-//                 panic!("PANIC");
-//             }
-//             foo.foo();
-//             Ok(true)
-//         })
-//         .is_err());
-//     assert!(!Reflect::get(&global(), &"food".into())
-//         .unwrap()
-//         .as_bool()
-//         .unwrap());
-//     assert!(Reflect::get(&global(), &"dropped".into())
-//         .unwrap()
-//         .as_bool()
-//         .unwrap());
-// }
+/// Test that `&mut dyn FnMut` closures ("yolo" closures) are unwind safe by
+/// default. These stack-borrowed closures set the unwind-safe bit unconditionally,
+/// so panics are caught and converted to JS exceptions with proper unwinding
+/// (destructors run, no abort).
+#[cfg(panic = "unwind")]
+#[wasm_bindgen_test]
+fn dyn_fnmut_unwind_safe_by_default() {
+    Reflect::set(&global(), &"yolo_dropped".into(), &JsValue::FALSE).unwrap();
+    Reflect::set(&global(), &"yolo_continued".into(), &JsValue::FALSE).unwrap();
+    let result = js_array![2, 4, 6, 8]
+        .try_every_result_aborting(&mut |_, _, _| {
+            struct DropGuard;
+            impl Drop for DropGuard {
+                fn drop(&mut self) {
+                    Reflect::set(&global(), &"yolo_dropped".into(), &JsValue::TRUE).unwrap();
+                }
+            }
+            let _guard = DropGuard;
+            if std::hint::black_box(true) {
+                panic!("yolo closure panic");
+            }
+            Reflect::set(&global(), &"yolo_continued".into(), &JsValue::TRUE).unwrap();
+            Ok(true)
+        });
+    // Panic should propagate as a JS error, not abort
+    assert!(result.is_err(), "panic in &mut dyn FnMut should be caught");
+    // Destructors should have run during unwind
+    assert!(
+        Reflect::get(&global(), &"yolo_dropped".into())
+            .unwrap()
+            .as_bool()
+            .unwrap(),
+        "Drop should run during unwind of &mut dyn FnMut"
+    );
+    // Should not have continued past the panic
+    assert!(
+        !Reflect::get(&global(), &"yolo_continued".into())
+            .unwrap()
+            .as_bool()
+            .unwrap(),
+        "should not continue past panic"
+    );
+}
 
 #[cfg(panic = "unwind")]
 #[wasm_bindgen_test]

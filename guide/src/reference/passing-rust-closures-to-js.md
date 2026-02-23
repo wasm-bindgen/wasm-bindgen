@@ -1,7 +1,7 @@
 # Passing Rust Closures to Imported JavaScript Functions
 
-The `ScopedClosure` (with static lifetime alias `Closure`) and `ImmediateClosure` type are the way to
-pass Rust closures to JavaScript. It is defined in the `wasm_bindgen` crate and
+The `ScopedClosure` (with static lifetime alias `Closure`) and `dyn FnMut` types are the way to
+pass Rust closures to JavaScript. `Closure` and `ScopedClosure` are defined in the `wasm_bindgen` crate and
 exported in `wasm_bindgen::prelude`.
 
 Closures are **unwind safe** by default: when built with `panic=unwind`, panics inside
@@ -12,17 +12,15 @@ closures are caught and converted to JavaScript `PanicError` exceptions. See
 
 | Use case | Import function signature | Accepts |
 | -------- | ------------------------- | ------- |
-| Immediate/synchronous callbacks | `ImmediateClosure<C>` | `ImmediateClosure` only |
+| Immediate/synchronous callbacks | `&dyn Fn` / `&mut dyn FnMut` | `&dyn Fn` / `&mut dyn FnMut` only |
 | Known-lifetime callbacks | `&ScopedClosure<'lifetime, C>` | `&ScopedClosure<'a>`, `&ScopedClosure<'static>` |
 | Indeterminate lifetime | `ScopedClosure<'static, C>` | `ScopedClosure<'static>` only |
-
-While direct `&dyn Fn` and `&mut dyn FnMut` closures [are still supported](#legacy-dyn-fn-and-mut-dyn-fnmut), `ImmediateClosure` is now recommended instead for unwind support.
 
 ### Constructor Patterns
 
 | Type | Constructor | Aborting Constructor | Assert Unwind Safe |
 | ---- | ----------- | -------------------- | ------------------ |
-| [`ImmediateClosure<C>`](#immediatesynchronous-callbacks-with-immediateclosure) | `ImmediateClosure::new` (Fn) / `new_mut` (FnMut) | `new_aborting` / `new_mut_aborting` | `new_assert_unwind_safe` / `new_mut_assert_unwind_safe` |
+| [`&dyn Fn` / `&mut dyn FnMut`](#dyn-fn-and-mut-dyn-fnmut) | `&dyn Fn` (Fn) / `&mut dyn FnMut` (FnMut) | **None** | **None** |
 | [`&ScopedClosure<'a, C>`](#known-lifetime-callbacks-with-scopedclosure) | `Closure::borrow` (Fn) / `borrow_mut` (FnMut) | `borrow_aborting` / `borrow_mut_aborting` | `borrow_assert_unwind_safe` / `borrow_mut_assert_unwind_safe` |
 | [`ScopedClosure<'static, C>`](#static-lifetimes-with-closuret--scopedclosurestatic-t) | `Closure::own` (`Closure::new`) | `own_aborting` | `own_assert_unwind_safe` |
 | [`ScopedClosure<'static, C>` (one-shot)](#one-shot-static-closures-with-scopedclosurestatic-tonce) | `Closure::once` | `Closure::once_aborting` | `once_assert_unwind_safe` |
@@ -47,92 +45,24 @@ let closure = Closure::own(AssertUnwindSafe(move || {
 }));
 ```
 
-This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `ImmediateClosure<dyn FnMut(u32)>` can be called with closures created via `new_mut` (verified unwind-safe), `new_mut_assert_unwind_safe` (asserted unwind-safe with inference), or `new_mut_aborting` (aborts on panic).
+This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting `ScopedClosure <dyn FnMut(u32)>` can be called with closures created via with or without unwind safety, with varying or static lifetimes, and with optional once semantics.
 
-## Immediate/Synchronous Callbacks with `ImmediateClosure`
+## `&dyn Fn` and `&mut dyn FnMut`
 
-Use `ImmediateClosure` for callbacks that JavaScript calls immediately and does
-not retain, such as `Array.forEach`, `Array.map`, sorting comparators, and
-similar synchronous APIs. This is the recommended lightweight option with the same ABI
-as `&dyn FnMut`, while providing unwind safety.
+The `#[wasm_bindgen]` attribute supports passing closures as `&dyn Fn` or
+`&mut dyn FnMut` trait object references directly.
 
-```rust
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    fn forEach<'a>(f: ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
-}
-
-let mut sum = 0;
-forEach(ImmediateClosure::new_mut(&mut |x| {
-    sum += x;
-}));
-```
-
-Type inference works automatically—no need to annotate closure parameter types
-when the target type is known from context.
-
-Use `ImmediateClosure::new` for immutable `Fn` closures (easier to satisfy unwind safety) or
-`ImmediateClosure::new_mut` for mutable `FnMut` closures when you need to mutate captured state.
-
-### Lifetime Bounds in Extern Declarations
-
-When declaring imported JavaScript functions that take `ImmediateClosure`, always
-add the `+ 'a` lifetime bound to the trait object. Without it, the trait object
-defaults to `+ 'static`, which prevents closures from borrowing local variables:
+When using this pattern, _unwind safety is assumed_. It is therefore up to the user to ensure that they are using this pattern with unwind safe function usage.
 
 ```rust
 #[wasm_bindgen]
 extern "C" {
-    // ✓ Correct: trait object lifetime tied to ImmediateClosure lifetime
-    fn forEach<'a>(f: ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
-    
-    // ✗ Wrong: missing + 'a defaults to 'static, rejecting borrowed closures
-    fn forEach_bad<'a>(f: ImmediateClosure<'a, dyn FnMut(u32)>);
+    fn takes_closure(f: &dyn Fn());
+    fn takes_mut_closure(f: &mut dyn FnMut());
 }
 ```
 
-> **Note:** This lifetime annotation is specific to `ImmediateClosure`. For
-> `ScopedClosure`, the dyn type is a phantom type that gets erased, so the
-> direct `ScopedClosure<'a, dyn FnMut(u32)>` signature works directly.
-
-### Aborting and Assert Unwind Safe Variants
-
-By default `ImmediateClosure::new` and `new_mut` enforce unwind safety via `MaybeUnwindSafe`.
-When you need to capture types that aren't `UnwindSafe` (like `Rc<RefCell<T>>`),
-you have two options:
-
-1. **`new_aborting` / `new_mut_aborting`** — Aborts on panic instead of catching. Use when you prefer abort-on-panic behavior.
-
-2. **`new_assert_unwind_safe` / `new_mut_assert_unwind_safe`** — Catches panics but doesn't verify `MaybeUnwindSafe`. Use when you want panic catching and are confident the closure is unwind-safe.
-
-```rust
-use wasm_bindgen::prelude::*;
-use std::cell::RefCell;
-use std::rc::Rc;
-
-#[wasm_bindgen]
-extern "C" {
-    fn forEach<'a>(f: ImmediateClosure<'a, dyn FnMut(u32) + 'a>);
-}
-
-// RefCell is not UnwindSafe, but these variants don't require it
-let data = Rc::new(RefCell::new(0));
-
-// Option 1: Abort on panic
-forEach(ImmediateClosure::new_mut_aborting(&mut |x| {
-    *data.borrow_mut() += x;
-}));
-
-// Option 2: Catch panics (caller asserts unwind safety)
-forEach(ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
-    *data.borrow_mut() += x;
-}));
-```
-
-These variants also enable type inference from the expected type, since they
-take the dyn type directly.
+For longer-lived closures, or for closures that support checking unwind safety, use `ScopedClosure` instead.
 
 ## Known-Lifetime Callbacks with `ScopedClosure`
 
@@ -304,69 +234,9 @@ let callback = Closure::once_into_js(move || {
 // callback is a JsValue containing a JS function
 ```
 
-## Mutability Conversions
-
-`ImmediateClosure` provides an `as_mut()` method to convert an immutable `Fn` 
-closure reference to a mutable `FnMut` closure reference.
-
-This is possible since `dyn FnMut` mutability tracking for JS types does not guard multiple
-references being held (since this is impossible in JS), but rather, function reentrancy. And
-banning reentrancy for `dyn Fn` closures is a safe addition, whereas the converse would
-not be.
-
-### `as_mut()` Method
-
-```rust
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    fn needs_fnmut_immediate(cb: ImmediateClosure<dyn FnMut(u32)>);
-}
-
-// ImmediateClosure
-let func: &dyn Fn(u32) = &|x| println!("{}", x);
-let closure = ImmediateClosure::new_assert_unwind_safe(func);
-needs_fnmut_immediate(closure.as_mut());
-```
-
-## Legacy `&dyn Fn` and `&mut dyn FnMut`
-
-> Raw `&dyn Fn` and `&mut dyn FnMut` may be deprecated in a future release,
-> use `ImmediateClosure` instead, or via `wrap` if you do not need
-> unwind safety.
-
-The `#[wasm_bindgen]` attribute also supports passing closures as `&dyn Fn` or
-`&mut dyn FnMut` trait object references directly. However, this pattern is
-deprecated because:
-
-1. **No unwind safety**: If a panic occurs, the process will abort
-2. **Confusing semantics**: The `dyn` syntax suggests heap allocation but these are stack-borrowed
-
-Prefer `ImmediateClosure` for all new code:
-
-```rust
-// Deprecated:
-#[wasm_bindgen]
-extern "C" {
-    fn takes_closure(f: &dyn Fn());
-    fn takes_mut_closure(f: &mut dyn FnMut());
-}
-
-// Preferred:
-#[wasm_bindgen]
-extern "C" {
-    fn takes_closure(f: ImmediateClosure<dyn Fn()>);
-    fn takes_mut_closure(f: ImmediateClosure<dyn FnMut()>);
-}
-```
-
-`ImmediateClosure` can then support taking both unwind safe and non-unwind safe variants,
-with the usage being consumer defined.
-
 ## Panic Handling
 
-When built with `panic=unwind`, all `ScopedClosure` and `ImmediateClosure` variants
+When built with `panic=unwind`, all `ScopedClosure` and `dyn Fn` variants
 catch panics and convert them to JavaScript `PanicError` exceptions. This requires
 the closure to satisfy Rust's `UnwindSafe` trait.
 
@@ -375,7 +245,7 @@ Panics](./catch-unwind.md).
 
 ### UnwindSafe Requirement
 
-The closure constructors for `ImmediateClosure` and `ScopedClosure` all require that
+The closure constructors for `ScopedClosure` all require that
 closures be `UnwindSafe`. They act as marker traits that indicates a type is safe to
 use across panic boundaries.
 
@@ -390,8 +260,7 @@ The compiler error will indicate which captured type is problematic.
 #### Fix 1: Use aborting variants
 
 If you don't need panic catching, use the `*_aborting` variants (`own_aborting`,
-`once_aborting`, `Closure::borrow_aborting`, `Closure::borrow_mut_aborting`,
-`ImmediateClosure::new_aborting`, `ImmediateClosure::new_mut_aborting`) which do not require `UnwindSafe`:
+`once_aborting`, `Closure::borrow_aborting`, `Closure::borrow_mut_aborting`) which do not require `UnwindSafe`:
 
 ```rust
 use std::cell::RefCell;
@@ -432,15 +301,6 @@ let closure: Closure<dyn FnMut()> = Closure::wrap_assert_unwind_safe(Box::new(mo
 }));
 ```
 
-For `ImmediateClosure`, use `new_mut_assert_unwind_safe` directly:
-
-```rust
-let data = Rc::new(RefCell::new(0));
-forEach(ImmediateClosure::new_mut_assert_unwind_safe(&mut |x| {
-    *data.borrow_mut() += x;
-}));
-```
-
 #### Fix 2: Assert unwind safety
 
 If you need panic catching and are confident your closure is safe to use across
@@ -459,7 +319,7 @@ let closure = Closure::new(AssertUnwindSafe(move || {
 
 `ScopedClosure` supports full JS type variance within the erasable generic type system via `upcast()`
 and `upcast_into()`. This is possible since it eagerly moves the Rust function to a JS function on
-construction, in contrast to `ImmediateClosure` whose `Repr` is its Rust fat pointer and not its
+construction, in contrast to `dyn FnMut` whose `Repr` is its Rust fat pointer and not its
 `JsValue` representation.
 
 This enables covariance and contravariance on argument and return types:

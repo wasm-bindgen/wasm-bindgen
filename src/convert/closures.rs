@@ -4,7 +4,7 @@ use core::mem;
 #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
 use crate::__rt::maybe_catch_unwind;
 use crate::closure::{
-    Closure, ImmediateClosure, IntoWasmClosure, IntoWasmClosureRef, IntoWasmClosureRefMut,
+    Closure, IntoWasmClosure, IntoWasmClosureRef, IntoWasmClosureRefMut,
     ScopedClosure, WasmClosure, WasmClosureFnOnce, WasmClosureFnOnceAbort,
 };
 use crate::convert::slices::WasmSlice;
@@ -60,7 +60,8 @@ macro_rules! closures {
 
             fn into_abi(self) -> WasmSlice {
                 unsafe {
-                    let (a, b): (usize, usize) = mem::transmute(self);
+                    let (a, mut b): (usize, usize) = mem::transmute(self);
+                    b |= 0x80000000; // dyn Fn / dyn FnMut are unwind safe by default
                     WasmSlice { ptr: a as u32, len: b as u32 }
                 }
             }
@@ -72,14 +73,6 @@ macro_rules! closures {
             R: ErasableGeneric
         {
             type Repr = &'static (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'static);
-        }
-
-        unsafe impl<'a, 'b, $($var,)* R> ErasableGeneric for ImmediateClosure<'a, dyn $Fn $FnArgs -> R + 'b>
-        where
-            $($var: ErasableGeneric,)*
-            R: ErasableGeneric,
-        {
-            type Repr = ImmediateClosure<'static, dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'static>;
         }
 
         // Generate invoke function that checks unwind_safe flag when unwinding is available
@@ -537,16 +530,5 @@ impl<'a, 'b, T1, T2> UpcastFrom<ScopedClosure<'a, T1>> for ScopedClosure<'b, T2>
 where
     T1: ?Sized + WasmClosure,
     T2: ?Sized + WasmClosure + UpcastFrom<T1>,
-{
-}
-
-// UpcastFrom impl for ImmediateClosure.
-// ImmediateClosure<T2> upcasts from ImmediateClosure<T1> when T2's dyn type upcasts from T1's dyn type.
-// Since ImmediateClosure stores a WasmSlice (fat pointer) with phantom type, this is a zero-cost transmute.
-impl<'a, 'b, T1, T2> UpcastFrom<ImmediateClosure<'a, T1>> for ImmediateClosure<'b, T2>
-where
-    T1: ?Sized + WasmClosure,
-    T2: ?Sized + WasmClosure,
-    T2: UpcastFrom<T1>,
 {
 }

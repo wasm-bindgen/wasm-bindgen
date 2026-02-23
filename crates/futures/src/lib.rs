@@ -249,22 +249,20 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(ImmediateClosure::new_mut_aborting(
-        &mut move |resolve, reject| {
-            let future = future.take().unwrap_throw();
+    Promise::new_typed(&mut move |resolve, reject| {
+        let future = future.take().unwrap_throw();
 
-            spawn_local(async move {
-                match future.await {
-                    Ok(val) => {
-                        resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
-                    }
-                    Err(val) => {
-                        reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
-                    }
+        spawn_local(async move {
+            match future.await {
+                Ok(val) => {
+                    resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
                 }
-            });
-        },
-    ))
+                Err(val) => {
+                    reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                }
+            }
+        });
+    })
 }
 
 /// Converts a Rust `Future` into a JavaScript `Promise`.
@@ -337,19 +335,17 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(ImmediateClosure::new_mut_aborting(
-        &mut move |resolve, reject| {
-            let future = future.take().unwrap_throw();
-            spawn_local(async move {
-                match future.await {
-                    Ok(val) => {
-                        resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
-                    }
-                    Err(val) => {
-                        reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
-                    }
+    Promise::new_typed(&mut move |resolve, reject| {
+        let future = future.take().unwrap_throw();
+        spawn_local(async move {
+            match future.await {
+                Ok(val) => {
+                    resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
                 }
-            });
-        },
-    ))
+                Err(val) => {
+                    reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                }
+            }
+        });
+    })
 }
