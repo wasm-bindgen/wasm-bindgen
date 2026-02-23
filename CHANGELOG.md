@@ -7,6 +7,12 @@
 
 ### Changed
 
+* Removed `ImmediateClosure` type introduced in 0.2.109. Stack-borrowed `&dyn Fn` / `&mut dyn FnMut`
+  closures are now treated as unwind safe by default (panics are caught and converted to JS exceptions
+  with proper unwinding). `Closure::new` no longer requires `MaybeUnwindSafe`. A unified
+  `ScopedClosure::immediate` approach may be revisited in a future release.
+  [#4986](https://github.com/wasm-bindgen/wasm-bindgen/pull/4986)
+
 ### Fixed
 
 * Restored backwards compatibility for breaking changes introduced in 0.2.110:

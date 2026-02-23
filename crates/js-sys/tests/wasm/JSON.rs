@@ -183,9 +183,7 @@ fn stringify_with_replacer_error() {
     {
         result = JSON::stringify_with_replacer(
             &JsValue::from(arr),
-            &mut |_: JsString, _: JsValue| {
-                Err(JsError::new("rust really rocks"))
-            },
+            &mut |_: JsString, _: JsValue| Err(JsError::new("rust really rocks")),
             None,
         );
     }

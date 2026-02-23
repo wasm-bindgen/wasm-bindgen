@@ -232,7 +232,7 @@ where
     /// Alternatively, pass `Closure::own(AssertUnwindSafe(...))` to assert unwind
     /// safety, or use [`own_assert_unwind_safe`](Self::own_assert_unwind_safe) or
     /// [`own_aborting`](Self::own_aborting).
-    /// 
+    ///
     /// **Safety: Unwind safety is assumed when using this function, like using
     /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
     ///

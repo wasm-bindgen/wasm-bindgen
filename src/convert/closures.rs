@@ -4,8 +4,8 @@ use core::mem;
 #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
 use crate::__rt::maybe_catch_unwind;
 use crate::closure::{
-    Closure, IntoWasmClosure, IntoWasmClosureRef, IntoWasmClosureRefMut,
-    ScopedClosure, WasmClosure, WasmClosureFnOnce, WasmClosureFnOnceAbort,
+    Closure, IntoWasmClosure, IntoWasmClosureRef, IntoWasmClosureRefMut, ScopedClosure,
+    WasmClosure, WasmClosureFnOnce, WasmClosureFnOnceAbort,
 };
 use crate::convert::slices::WasmSlice;
 use crate::convert::traits::UpcastFrom;

@@ -151,21 +151,20 @@ fn try_every() {
 fn dyn_fnmut_unwind_safe_by_default() {
     Reflect::set(&global(), &"yolo_dropped".into(), &JsValue::FALSE).unwrap();
     Reflect::set(&global(), &"yolo_continued".into(), &JsValue::FALSE).unwrap();
-    let result = js_array![2, 4, 6, 8]
-        .try_every_result_aborting(&mut |_, _, _| {
-            struct DropGuard;
-            impl Drop for DropGuard {
-                fn drop(&mut self) {
-                    Reflect::set(&global(), &"yolo_dropped".into(), &JsValue::TRUE).unwrap();
-                }
+    let result = js_array![2, 4, 6, 8].try_every_result_aborting(&mut |_, _, _| {
+        struct DropGuard;
+        impl Drop for DropGuard {
+            fn drop(&mut self) {
+                Reflect::set(&global(), &"yolo_dropped".into(), &JsValue::TRUE).unwrap();
             }
-            let _guard = DropGuard;
-            if std::hint::black_box(true) {
-                panic!("yolo closure panic");
-            }
-            Reflect::set(&global(), &"yolo_continued".into(), &JsValue::TRUE).unwrap();
-            Ok(true)
-        });
+        }
+        let _guard = DropGuard;
+        if std::hint::black_box(true) {
+            panic!("yolo closure panic");
+        }
+        Reflect::set(&global(), &"yolo_continued".into(), &JsValue::TRUE).unwrap();
+        Ok(true)
+    });
     // Panic should propagate as a JS error, not abort
     assert!(result.is_err(), "panic in &mut dyn FnMut should be caught");
     // Destructors should have run during unwind
