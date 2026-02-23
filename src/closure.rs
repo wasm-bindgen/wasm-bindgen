@@ -223,6 +223,8 @@ impl<T> ScopedClosure<'static, T>
 where
     T: ?Sized + WasmClosure,
 {
+    /// Alias for [`Closure::own`].
+    ///
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
     /// Rust function, with panic unwind support.
     ///
@@ -233,16 +235,13 @@ where
     /// safety, or use [`own_assert_unwind_safe`](Self::own_assert_unwind_safe) or
     /// [`own_aborting`](Self::own_aborting).
     ///
-    /// **Safety: Unwind safety is assumed when using this function, like using
-    /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
-    ///
     /// When provided to a JS function as an own value, to be managed by the JS GC.
     ///
     /// See [`borrow`](Self::borrow) for creating a borrowed `ScopedClosure` with
     /// an associated lifetime (defaults to immutable `Fn`).
     pub fn new<F>(t: F) -> Self
     where
-        F: IntoWasmClosure<T> + 'static,
+        F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
         Self::_wrap(Box::new(t).unsize(), true)
     }

@@ -34,7 +34,7 @@ export function __wbg_createTask_535c3d20358eb563() { return handleError(functio
     const ret = console.createTask(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments); }
-export function __wbg_new_typed_893dbec5fe999814(arg0, arg1) {
+export function __wbg_new_typed_709f35bd2a55e469(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {
