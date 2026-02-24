@@ -9,6 +9,16 @@
 
 ### Fixed
 
+* Fixed incorrect method naming for stable web-sys methods that reference unstable
+  types (e.g. `texImage2D` taking a `VideoFrame` parameter). These methods were
+  being named in a separate unstable expansion namespace, producing overly-short
+  names like `tex_image_2d` instead of the correct
+  `tex_image_2d_with_u32_and_u32_and_video_frame`. The fix separates the signature
+  classification to distinguish "from unstable IDL" (authoritative overrides) from
+  "stable method using an unstable type", ensuring the latter is named as part of
+  the stable expansion.
+  [#4991](https://github.com/wasm-bindgen/wasm-bindgen/pull/4991)
+
 ### Removed
 
 ## [0.2.112](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.111...0.2.112)
