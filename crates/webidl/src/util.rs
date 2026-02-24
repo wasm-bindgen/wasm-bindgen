@@ -491,42 +491,60 @@ impl<'src> FirstPassRecord<'src> {
             }
         };
 
-        // Classify each expanded signature as stable or unstable.
-        let mut stable_signatures: Vec<usize> = Vec::new();
-        let mut unstable_signatures: Vec<usize> = Vec::new();
+        // Classify each expanded signature into three categories:
+        //
+        // 1. "stable_only" — from stable IDL, no unstable type args. Always emitted.
+        // 2. "stable_using_unstable_types" — from stable IDL but uses a type defined
+        //    in unstable IDL (e.g. VideoFrame). Gated behind cfg(web_sys_unstable_apis)
+        //    but named as part of the stable expansion since the *method* is stable.
+        // 3. "from_unstable_idl" — the signature itself comes from an unstable IDL file
+        //    (the interface is unstable, or an unstable partial interface overrides a
+        //    stable one). These get their own naming namespace (authoritative override).
+        let mut stable_only_sigs: Vec<usize> = Vec::new();
+        let mut stable_using_unstable_type_sigs: Vec<usize> = Vec::new();
+        let mut from_unstable_idl_sigs: Vec<usize> = Vec::new();
 
         for (idx, signature) in actual_signatures.iter().enumerate() {
-            let has_unstable_args = signature.args.iter().any(|arg| {
-                arg.as_ref()
-                    .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
-            });
-            let sig_unstable =
-                unstable || signature.orig.stability.is_unstable() || has_unstable_args;
+            let from_unstable_idl = unstable || signature.orig.stability.is_unstable();
 
-            if sig_unstable {
-                unstable_signatures.push(idx);
+            if from_unstable_idl {
+                from_unstable_idl_sigs.push(idx);
             } else {
-                stable_signatures.push(idx);
+                let has_unstable_type_args = signature.args.iter().any(|arg| {
+                    arg.as_ref()
+                        .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
+                });
+                if has_unstable_type_args {
+                    stable_using_unstable_type_sigs.push(idx);
+                } else {
+                    stable_only_sigs.push(idx);
+                }
             }
         }
 
-        // For signatures from the SAME original definition as an unstable signature,
-        // include them in the unstable set too. This handles optional unstable args:
-        // e.g. `read(optional UnstableType x = {})` expands to `read()` and `read(x)`.
-        // `read()` is stable, but it's a sibling of the unstable `read(x)` (same orig),
-        // so it should appear in both sets.
+        // For signatures from the SAME original definition as an "from unstable IDL"
+        // signature, include them in the unstable IDL set too. This handles optional
+        // unstable args: e.g. `read(optional UnstableType x = {})` expands to `read()`
+        // and `read(x)`. `read()` is stable, but it's a sibling of the unstable `read(x)`
+        // (same orig), so it should appear in the unstable IDL set.
         //
-        // This does NOT apply across different definitions: e.g. stable `put(f64)`
-        // and unstable `put(i32)` come from different definitions, so the stable version
-        // is NOT added to the unstable set.
+        // This does NOT apply across different definitions: e.g. stable `put(f64)` and
+        // unstable `put(i32)` come from different definitions, so the stable version is
+        // NOT added to the unstable IDL set.
+        //
+        // Importantly, this sibling promotion only applies to the "from unstable IDL"
+        // category — NOT to "stable using unstable types" (those are stable methods that
+        // merely reference an unstable type, they don't have authoritative overrides).
         {
-            let unstable_origs: HashSet<&Signature<'_>> = unstable_signatures
+            let unstable_idl_origs: HashSet<&Signature<'_>> = from_unstable_idl_sigs
                 .iter()
                 .map(|&idx| actual_signatures[idx].orig)
                 .collect();
             for (idx, signature) in actual_signatures.iter().enumerate() {
-                if !unstable_signatures.contains(&idx) && unstable_origs.contains(signature.orig) {
-                    unstable_signatures.push(idx);
+                if !from_unstable_idl_sigs.contains(&idx)
+                    && unstable_idl_origs.contains(signature.orig)
+                {
+                    from_unstable_idl_sigs.push(idx);
                 }
             }
         }
@@ -697,14 +715,39 @@ impl<'src> FirstPassRecord<'src> {
         }
 
         // Helper to build a method set from signature indices, with variadic expansion.
+        //
+        // `sig_indices`: the signatures to build methods for.
+        // `disambiguate_against`: the signatures to compare against when computing
+        //   Rust names (may be a superset of `sig_indices`).
+        // `unstable_flag`: whether methods should be gated with cfg(web_sys_unstable_apis).
+        // `deconflict_names`: optional set of names already taken by another expansion
+        //   that these names must not collide with. If a collision is found, a numeric
+        //   suffix is appended.
         let build_method_set = |sig_indices: &[usize],
-                                unstable_flag: bool|
+                                disambiguate_against: &[usize],
+                                unstable_flag: bool,
+                                deconflict_names: &HashSet<String>|
          -> Vec<InterfaceMethod<'_>> {
             let mut methods = Vec::new();
             for &sig_idx in sig_indices {
                 let signature = &actual_signatures[sig_idx];
-                let rust_name =
-                    compute_rust_name(signature, sig_indices, &actual_signatures, js_name);
+                let mut rust_name =
+                    compute_rust_name(signature, disambiguate_against, &actual_signatures, js_name);
+
+                // If the computed name collides with a name from another expansion
+                // (e.g. a stable expansion name colliding with an unstable IDL override
+                // name), disambiguate by appending a suffix.
+                if deconflict_names.contains(&rust_name) {
+                    let base = rust_name.clone();
+                    let mut counter = 1u32;
+                    loop {
+                        rust_name = format!("{base}_{counter}");
+                        if !deconflict_names.contains(&rust_name) {
+                            break;
+                        }
+                        counter += 1;
+                    }
+                }
 
                 if let Some(method) = create_method(
                     self,
@@ -763,53 +806,95 @@ impl<'src> FirstPassRecord<'src> {
             methods
         };
 
-        // Check if any unstable signature comes from an actual unstable IDL definition
-        // (as opposed to a stable definition that merely uses an unstable type).
-        // The authoritative expansion model only applies when there's a real IDL override.
-        let has_unstable_idl_override = unstable_signatures.iter().any(|&idx| {
-            let sig = &actual_signatures[idx];
-            unstable || sig.orig.stability.is_unstable()
-        });
+        let has_unstable_idl_override = !from_unstable_idl_sigs.is_empty();
+        let no_deconflict: HashSet<String> = HashSet::new();
 
-        let stable_methods = build_method_set(&stable_signatures, false);
+        // The "stable expansion" always includes stable_only + stable_using_unstable_type
+        // signatures. These are all from stable IDL and must be named together so they
+        // disambiguate against each other correctly.
+        let all_stable_expansion_sigs: Vec<usize> = stable_only_sigs
+            .iter()
+            .chain(stable_using_unstable_type_sigs.iter())
+            .copied()
+            .collect();
 
-        // Unstable IDL signatures use typed generics for return type conversion.
-        if has_unstable_idl_override {
+        // Build the stable expansion methods. Both stable-only and
+        // stable-using-unstable-types are named against the full stable expansion.
+        let stable_only_methods = build_method_set(
+            &stable_only_sigs,
+            &all_stable_expansion_sigs,
+            false,
+            &no_deconflict,
+        );
+        let stable_using_unstable_type_methods = build_method_set(
+            &stable_using_unstable_type_sigs,
+            &all_stable_expansion_sigs,
+            true,
+            &no_deconflict,
+        );
+
+        // Collect all names from the stable expansion for cross-deconflicting with
+        // the unstable IDL override expansion. But EXCLUDE stable names that share
+        // the same JS method name, since those will be gated behind
+        // cfg(not(web_sys_unstable_apis)) and won't coexist with the overrides.
+        let stable_expansion_names_for_deconflict: HashSet<String> = if has_unstable_idl_override {
+            stable_only_methods
+                .iter()
+                .chain(stable_using_unstable_type_methods.iter())
+                .filter(|m| m.js_name != js_name)
+                .map(|m| m.name.to_string())
+                .collect()
+        } else {
+            HashSet::new()
+        };
+
+        // Build the unstable IDL override expansion (authoritative overrides).
+        // These get their own naming namespace but deconflict against stable names
+        // (excluding same-JS-name stable methods that will be cfg(not(unstable))).
+        let from_unstable_idl_methods = if has_unstable_idl_override {
             self.options.next_unstable.set(true);
-        }
-        let unstable_methods = build_method_set(&unstable_signatures, true);
-        self.options.next_unstable.set(saved_next_unstable);
+            let methods = build_method_set(
+                &from_unstable_idl_sigs,
+                &from_unstable_idl_sigs,
+                true,
+                &stable_expansion_names_for_deconflict,
+            );
+            self.options.next_unstable.set(saved_next_unstable);
+            methods
+        } else {
+            Vec::new()
+        };
 
-        // If only one set has methods, no gating needed
-        if unstable_methods.is_empty() {
-            return stable_methods;
-        }
-        if stable_methods.is_empty() {
-            return unstable_methods;
-        }
+        // Now merge everything into the final output.
 
+        // If there's no unstable IDL override, emit stable + unstable-type methods.
         if !has_unstable_idl_override {
-            // No actual IDL override — just stable methods that happen to use unstable types.
-            // Emit stable methods with no gate, unstable-type methods with unstable gate.
-            let mut ret = stable_methods;
-            ret.extend(unstable_methods);
+            let mut ret = stable_only_methods;
+            ret.extend(stable_using_unstable_type_methods);
             return ret;
         }
 
-        // Both sets have methods from an actual IDL override - determine gating by comparing
+        // There IS an authoritative unstable IDL override.
+        // Stable expansion methods that share a signature with an unstable IDL method
+        // are "merged" (emitted once, no gate). Others get cfg(not(unstable)).
         let mut ret: Vec<InterfaceMethod<'_>> = Vec::new();
 
-        for mut method in stable_methods {
-            let merged = unstable_methods.iter().any(|um| method.same_signature(um));
+        for mut method in stable_only_methods
+            .into_iter()
+            .chain(stable_using_unstable_type_methods)
+        {
+            let merged = from_unstable_idl_methods
+                .iter()
+                .any(|um| method.same_signature(um));
             // Merged = in both sets, no gate. Otherwise gate with not(unstable).
             method.has_unstable_override = !merged;
             ret.push(method);
         }
 
-        for method in unstable_methods {
+        for method in from_unstable_idl_methods {
             let merged = ret.iter().any(|sm| sm.same_signature(&method));
             if !merged {
-                // Only in unstable set - emit with unstable gate
+                // Only in unstable IDL set - emit with unstable gate
                 ret.push(method);
             }
         }

@@ -2952,7 +2952,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_image_2d_with_format_and_type_and_source(
+    pub fn tex_image_2d_with_u32_and_u32_and_video_frame(
         this: &WebGl2RenderingContext,
         target: u32,
         level: i32,
@@ -2972,7 +2972,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_image_2d_with_width_and_height_and_border_and_format_and_type_and_source(
+    pub fn tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_video_frame(
         this: &WebGl2RenderingContext,
         target: u32,
         level: i32,
@@ -3250,7 +3250,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_image_3d(
+    pub fn tex_image_3d_with_video_frame(
         this: &WebGl2RenderingContext,
         target: u32,
         level: i32,
@@ -3630,7 +3630,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_sub_image_2d_with_format_and_type_and_source(
+    pub fn tex_sub_image_2d_with_u32_and_u32_and_video_frame(
         this: &WebGl2RenderingContext,
         target: u32,
         level: i32,
@@ -3651,7 +3651,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_sub_image_2d_with_width_and_height_and_format_and_type_and_source(
+    pub fn tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_video_frame(
         this: &WebGl2RenderingContext,
         target: u32,
         level: i32,
@@ -3942,7 +3942,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn tex_sub_image_3d(
+    pub fn tex_sub_image_3d_with_video_frame(
         this: &WebGl2RenderingContext,
         target: u32,
         level: i32,
