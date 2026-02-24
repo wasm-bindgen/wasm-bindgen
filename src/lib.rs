@@ -388,7 +388,7 @@ impl JsValue {
     /// Tests whether this JS value is `null` or `undefined`
     #[inline]
     pub fn is_null_or_undefined(&self) -> bool {
-        __wbindgen_is_null_or_undefined(self)
+        __wbindgen_object_is_null_or_undefined(self)
     }
 
     /// Tests whether the type of this JS value is `symbol`
@@ -1217,7 +1217,8 @@ extern "C" {
 
     fn __wbindgen_is_null(js: &JsValue) -> bool;
     fn __wbindgen_is_undefined(js: &JsValue) -> bool;
-    fn __wbindgen_is_null_or_undefined(js: &JsValue) -> bool;
+    // TODO: rename to `__wbindgen_is_null_or_undefined` on next schema bump
+    fn __wbindgen_object_is_null_or_undefined(js: &JsValue) -> bool;
     fn __wbindgen_is_symbol(js: &JsValue) -> bool;
     fn __wbindgen_is_object(js: &JsValue) -> bool;
     fn __wbindgen_is_function(js: &JsValue) -> bool;

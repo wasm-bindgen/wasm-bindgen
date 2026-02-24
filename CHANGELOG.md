@@ -17,8 +17,7 @@
 * Reduced usage of `unsafe` code: replaced `transmute`/`transmute_copy` with safe
   alternatives for `Boolean`/`Null`/`Undefined` constants and `ArrayTuple` conversions,
   unified duplicated `AsRef`/`From` impls for generic imported types, and removed the
-  `__wbindgen_object_is_null_or_undefined` and `__wbindgen_object_is_undefined` intrinsics
-  in favor of safe Rust-side equivalents.
+  `__wbindgen_object_is_undefined` intrinsic in favor of a safe Rust-side equivalent.
   [#4993](https://github.com/wasm-bindgen/wasm-bindgen/pull/4993)
 
 ### Fixed

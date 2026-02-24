@@ -42,7 +42,10 @@ intrinsics! {
         IsFunction = "__wbindgen_is_function",
         IsUndefined = "__wbindgen_is_undefined",
         IsNull = "__wbindgen_is_null",
-        IsNullOrUndefined = "__wbindgen_is_null_or_undefined",
+        // TODO: rename to `__wbindgen_is_null_or_undefined` on next schema bump
+        IsNullOrUndefined = "__wbindgen_object_is_null_or_undefined",
+        // TODO: remove on next schema bump
+        ObjectIsUndefined = "__wbindgen_object_is_undefined",
         IsObject = "__wbindgen_is_object",
         IsSymbol = "__wbindgen_is_symbol",
         IsString = "__wbindgen_is_string",

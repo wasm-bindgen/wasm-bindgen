@@ -4065,6 +4065,12 @@ if (require('worker_threads').isMainThread) {{
                 format!("{} == null", args[0])
             }
 
+            // TODO: remove on next schema bump
+            Intrinsic::ObjectIsUndefined => {
+                assert_eq!(args.len(), 1);
+                format!("{} === undefined", args[0])
+            }
+
             Intrinsic::IsObject => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const val = {};\n", args[0]));
