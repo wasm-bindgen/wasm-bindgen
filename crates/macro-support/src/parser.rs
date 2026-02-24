@@ -1880,15 +1880,15 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         if self.variants.is_empty() {
             bail_span!(self, "cannot export empty enums to JS");
         }
-        for variant in self.variants.iter() {
-            match variant.fields {
-                syn::Fields::Unit => (),
-                _ => bail_span!(
-                    variant.fields,
-                    "enum variants with associated data are not supported with #[wasm_bindgen]"
-                ),
-            }
-        }
+        // for variant in self.variants.iter() {
+        //     match variant.fields {
+        //         syn::Fields::Unit => (),
+        //         _ => bail_span!(
+        //             variant.fields,
+        //             "enum variants with associated data are not supported with #[wasm_bindgen]"
+        //         ),
+        //     }
+        // }
 
         let generate_typescript = opts.skip_typescript().is_none();
         let private = opts.private().is_some();

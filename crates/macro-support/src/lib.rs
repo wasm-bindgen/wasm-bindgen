@@ -21,6 +21,7 @@ use quote::quote;
 use quote::ToTokens;
 use quote::TokenStreamExt;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
+use syn::ItemEnum;
 use syn::Token;
 
 /// Takes the parsed input from a `#[wasm_bindgen]` macro and returns the generated bindings
@@ -29,6 +30,25 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     // if struct is encountered, add `derive` attribute and let everything happen there (workaround
     // to help parsing cfg_attr correctly).
     let item = syn::parse2::<syn::Item>(input)?;
+
+
+    if let syn::Item::Enum(s) = item {
+        let opts: BindgenAttrs = syn::parse2(attr.clone())?;
+        let wasm_bindgen = opts
+            .wasm_bindgen()
+            .cloned()
+            .unwrap_or_else(|| syn::parse_quote! { ::wasm_bindgen });
+
+        let item = quote! {
+            #[derive(#wasm_bindgen::__rt::BindgenedStruct)]
+            #[wasm_bindgen(#attr)]
+            #s
+        };
+
+        return Ok(item);
+    }
+
+
     if let syn::Item::Struct(s) = item {
         let opts: BindgenAttrs = syn::parse2(attr.clone())?;
         let wasm_bindgen = opts
@@ -192,7 +212,31 @@ impl Parse for ClassMarker {
 pub fn expand_struct_marker(item: TokenStream) -> Result<TokenStream, Diagnostic> {
     parser::reset_attrs_used();
 
-    let mut s: syn::ItemStruct = syn::parse2(item)?;
+
+    let mut s = if let Ok(ItemEnum {
+        attrs,
+        vis,
+        enum_token: _,
+        ident,
+        generics,
+        brace_token: _,
+        variants: _,
+    }) = syn::parse2::<syn::ItemEnum>(item.clone()) {
+
+        syn::ItemStruct {
+            attrs,
+            vis,
+            struct_token: Default::default(),
+            ident,
+            generics,
+            fields: syn::Fields::Unit,
+            semi_token: None,
+        }
+    } else {
+        syn::parse2::<syn::ItemStruct>(item)?
+    };
+
+
 
     let mut program = ast::Program::default();
     program.structs.extend((&mut s).convert(&program)?);
