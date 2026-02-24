@@ -1651,24 +1651,18 @@ macro_rules! impl_tuple {
 
         impl<$($T: JsGeneric),+> From<($($T,)+)> for ArrayTuple<($($T),+,)> {
             fn from(($($vars,)+): ($($T,)+)) -> Self {
-                let arr = [$(
-                    unsafe { core::mem::transmute_copy::<$T, JsValue>(&$vars) }
+                let arr: [JsValue; _] = [$(
+                    $vars.upcast_into()
                 ),+];
-                core::mem::forget(($($vars,)+));
                 Array::of(&arr).unchecked_into()
             }
         }
 
         impl<$($T: JsGeneric + Default),+> Default for ArrayTuple<($($T),+,)> {
             fn default() -> Self {
-                $(
-                    let $vars: $T = Default::default();
-                )+
-                let arr = [$(
-                    unsafe { core::mem::transmute_copy::<$T, JsValue>(&$vars) }
-                ),+];
-                core::mem::forget(($($vars,)+));
-                Array::of(&arr).unchecked_into()
+                (
+                    $($T::default(),)+
+                ).into()
             }
         }
 
