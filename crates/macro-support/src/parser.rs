@@ -638,10 +638,10 @@ fn convert(
         };
 
         let attrs = BindgenAttrs::find(&mut field.attrs)?;
-        // if attrs.skip().is_some() {
-        //     attrs.check_used();
-        //     continue;
-        // }
+        if attrs.skip().is_some() {
+            // attrs.check_used();
+            continue;
+        }
 
         let js_field_name = match attrs.js_name() {
             Some((name, _)) => name.to_string(),
