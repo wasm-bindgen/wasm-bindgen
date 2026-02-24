@@ -121,6 +121,8 @@ fn stable_overloads_not_gated_by_unstable_type_sibling() {
 }
 
 // The unstable-type overload should only be available in unstable mode.
+// It must be named as part of the stable expansion (disambiguated against all
+// sibling overloads), not in a separate unstable namespace.
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn unstable_type_overload_available_with_flag() {
@@ -128,7 +130,7 @@ fn unstable_type_overload_available_with_flag() {
     let tex = TextureLike::new().unwrap();
     let frame = UnstableFrame::new().unwrap();
 
-    let _ = gl.tex_upload(&tex, &frame);
+    let _ = gl.tex_upload_with_frame(&tex, &frame);
 }
 
 // Test that read() without arguments is available in stable mode.
