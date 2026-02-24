@@ -318,7 +318,7 @@ impl<T: ?Sized> WasmRefCell<T> {
     }
 
     pub fn get_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.value.get() }
+        self.value.get_mut()
     }
 
     pub fn borrow(&self) -> Ref<'_, T> {
