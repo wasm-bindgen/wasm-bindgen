@@ -28,8 +28,9 @@ use super::ExceptionHandlingVersion;
 enum WrapperKind {
     /// A catch wrapper for `#[wasm_bindgen(catch)]` imports.
     CatchWrapper,
-    /// An abort wrapper that rethrows exceptions with a wrapped tag.
-    AbortWrapper { wrapped_js_tag: TagId },
+    /// This rethrows recoverable exceptions with a wrapped tag so that our
+    /// abort machinery will not treat them as fatal errors.
+    NonAbortingWrapper { wrapped_js_tag: TagId },
 }
 
 /// Intrinsics and IDs needed to generate catch wrappers.
@@ -90,7 +91,7 @@ pub fn run(
         let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
             WrapperKind::CatchWrapper
         } else if let Some(wrapped_js_tag) = wrapped_js_tag {
-            WrapperKind::AbortWrapper { wrapped_js_tag }
+            WrapperKind::NonAbortingWrapper { wrapped_js_tag }
         } else {
             continue;
         };
@@ -347,14 +348,18 @@ fn generate_legacy_eh_wrapper(
 /// Expects the caught externref to be on the stack.
 ///
 /// For `CatchWrapper`: stores the exception and returns default values.
-/// For `AbortWrapper`: rethrows the exception with the wrapped tag.
+///
+/// For `NonAbortingWrapper`: rethrows the exception with the wrapped tag.
+/// Foreign exceptions will unwind the stack and so they are recoverable.
+/// However, they cannot be caught with `catch_unwind`. The `throw` and
+/// `rethrow` intrinsics also wrap their error in this tag.
 fn emit_catch_handler(
     builder: &mut walrus::InstrSeqBuilder,
     ctx: CatchContext,
     results: &[ValType],
 ) {
     match ctx.wrapper_kind {
-        WrapperKind::AbortWrapper { wrapped_js_tag } => {
+        WrapperKind::NonAbortingWrapper { wrapped_js_tag } => {
             // Rethrow the exception with the wrapped tag
             builder.instr(Throw {
                 tag: wrapped_js_tag,

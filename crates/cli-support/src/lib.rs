@@ -788,6 +788,9 @@ fn generate_wasm_catch_wrappers(module: &mut Module, abort_reinit: bool) -> Resu
     log::debug!("Exception handling version: {eh_version:?}");
 
     if eh_version == transforms::ExceptionHandlingVersion::None {
+        if abort_reinit {
+            bail!("abort_reinit requires panic=unwind");
+        }
         return Ok(());
     }
 
