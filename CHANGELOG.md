@@ -5,7 +5,21 @@
 
 ### Added
 
+* Added experimental abort-reinit mode (`WASM_BINDGEN_ABORT_REINIT=1`) that wraps expected
+  exceptions in a custom `WebAssembly.Tag`, allowing foreign/unexpected exceptions to abort
+  and unwind the stack while intentional errors (from `throw`/`rethrow` intrinsics and `catch`
+  wrappers) remain distinguishable. This enables treating uncaught foreign exceptions as
+  non-recoverable aborts.
+  [#4963](https://github.com/wasm-bindgen/wasm-bindgen/pull/4963)
+
 ### Changed
+
+* Reduced usage of `unsafe` code: replaced `transmute`/`transmute_copy` with safe
+  alternatives for `Boolean`/`Null`/`Undefined` constants and `ArrayTuple` conversions,
+  unified duplicated `AsRef`/`From` impls for generic imported types, and removed the
+  `__wbindgen_object_is_null_or_undefined` and `__wbindgen_object_is_undefined` intrinsics
+  in favor of safe Rust-side equivalents.
+  [#4993](https://github.com/wasm-bindgen/wasm-bindgen/pull/4993)
 
 ### Fixed
 
