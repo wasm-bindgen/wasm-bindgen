@@ -800,7 +800,7 @@ struct TestFuture<F> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(catch)]
-    fn __wbg_test_invoke(f: &ScopedClosure<dyn FnMut()>) -> Result<(), JsValue>;
+    fn __wbg_test_invoke(f: &mut dyn FnMut()) -> Result<(), JsValue>;
 }
 
 impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
@@ -814,12 +814,10 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
         let mut future_output = None;
         let result = CURRENT_OUTPUT.set(&output, || {
             let mut test = Some(test);
-            let mut func = AssertUnwindSafe(|| {
+            __wbg_test_invoke(&mut || {
                 let test = test.take().unwrap_throw();
                 future_output = Some(test.poll(cx))
-            });
-            let closure = ScopedClosure::borrow_mut(&mut func);
-            __wbg_test_invoke(&closure)
+            })
         });
         match (result, future_output) {
             (_, Some(Poll::Ready(result))) => Poll::Ready(result),
