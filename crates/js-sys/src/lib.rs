@@ -50,6 +50,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
 
 // Re-export sys types as js-sys types
+use std::marker::PhantomData;
 pub use wasm_bindgen::sys::{JsOption, Null, Promising, Undefined};
 pub use wasm_bindgen::JsGeneric;
 
@@ -3148,10 +3149,20 @@ impl UpcastFrom<Boolean> for bool {}
 
 impl Boolean {
     /// Typed Boolean true constant.
-    pub const TRUE: Boolean = unsafe { core::mem::transmute(JsValue::TRUE) };
+    pub const TRUE: Boolean = Self {
+        obj: Object {
+            obj: JsValue::TRUE,
+            generics: PhantomData,
+        },
+    };
 
     /// Typed Boolean false constant.
-    pub const FALSE: Boolean = unsafe { core::mem::transmute(JsValue::FALSE) };
+    pub const FALSE: Boolean = Self {
+        obj: Object {
+            obj: JsValue::FALSE,
+            generics: PhantomData,
+        },
+    };
 }
 
 impl From<bool> for Boolean {

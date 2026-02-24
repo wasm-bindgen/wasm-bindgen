@@ -40,7 +40,9 @@ extern "C" {
 
 impl Undefined {
     /// The undefined constant.
-    pub const UNDEFINED: Undefined = unsafe { core::mem::transmute(JsValue::UNDEFINED) };
+    pub const UNDEFINED: Undefined = Self {
+        obj: JsValue::UNDEFINED,
+    };
 }
 
 impl Eq for Undefined {}
@@ -82,7 +84,7 @@ extern "C" {
 
 impl Null {
     /// The null constant.
-    pub const NULL: Null = unsafe { core::mem::transmute(JsValue::NULL) };
+    pub const NULL: Null = Self { obj: JsValue::NULL };
 }
 
 impl Eq for Null {}
