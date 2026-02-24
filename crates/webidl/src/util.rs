@@ -506,19 +506,17 @@ impl<'src> FirstPassRecord<'src> {
 
         for (idx, signature) in actual_signatures.iter().enumerate() {
             let from_unstable_idl = unstable || signature.orig.stability.is_unstable();
-
-            if from_unstable_idl {
-                from_unstable_idl_sigs.push(idx);
-            } else {
-                let has_unstable_type_args = signature.args.iter().any(|arg| {
-                    arg.as_ref()
-                        .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
-                });
-                if has_unstable_type_args {
-                    stable_using_unstable_type_sigs.push(idx);
-                } else {
-                    stable_only_sigs.push(idx);
-                }
+            let has_unstable_type_args = signature.args.iter().any(|arg| {
+                arg.as_ref()
+                    .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
+            });
+            match (from_unstable_idl, has_unstable_type_args) {
+                // Unstable
+                (true, _) => from_unstable_idl_sigs.push(idx),
+                // Stable method, unstable args
+                (false, true) => stable_using_unstable_type_sigs.push(idx),
+                // Stable method, stable args
+                (false, false) => stable_only_sigs.push(idx),
             }
         }
 
