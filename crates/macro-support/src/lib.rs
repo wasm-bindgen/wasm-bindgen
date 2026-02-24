@@ -21,6 +21,7 @@ use quote::quote;
 use quote::ToTokens;
 use quote::TokenStreamExt;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
+use syn::Fields;
 use syn::ItemEnum;
 use syn::Token;
 
@@ -31,21 +32,22 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     // to help parsing cfg_attr correctly).
     let item = syn::parse2::<syn::Item>(input)?;
 
+    if let syn::Item::Enum(ref s) = item {
+        if !s.variants.iter().all(|v| matches!(v.fields, Fields::Unit)) {
+            let opts: BindgenAttrs = syn::parse2(attr.clone())?;
+            let wasm_bindgen = opts
+                .wasm_bindgen()
+                .cloned()
+                .unwrap_or_else(|| syn::parse_quote! { ::wasm_bindgen });
 
-    if let syn::Item::Enum(s) = item {
-        let opts: BindgenAttrs = syn::parse2(attr.clone())?;
-        let wasm_bindgen = opts
-            .wasm_bindgen()
-            .cloned()
-            .unwrap_or_else(|| syn::parse_quote! { ::wasm_bindgen });
+            let item = quote! {
+                #[derive(#wasm_bindgen::__rt::BindgenedStruct)]
+                #[wasm_bindgen(#attr)]
+                #s
+            };
 
-        let item = quote! {
-            #[derive(#wasm_bindgen::__rt::BindgenedStruct)]
-            #[wasm_bindgen(#attr)]
-            #s
-        };
-
-        return Ok(item);
+            return Ok(item);
+        }
     }
 
 
