@@ -41,7 +41,7 @@ export function test1(test) {
     const ret = wasm.test1(test);
     return ret >>> 0;
 }
-export function __wbg___wbindgen_throw_89ca9e2c67795ec1(arg0, arg1) {
+export function __wbg___wbindgen_throw_39bc967c0e5a9b58(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

@@ -5,12 +5,13 @@
 
 ### Added
 
-* Added experimental abort-reinit mode (`WASM_BINDGEN_ABORT_REINIT=1`) that wraps expected
-  exceptions in a custom `WebAssembly.Tag`, allowing foreign/unexpected exceptions to abort
-  and unwind the stack while intentional errors (from `throw`/`rethrow` intrinsics and `catch`
-  wrappers) remain distinguishable. This enables treating uncaught foreign exceptions as
-  non-recoverable aborts.
-  [#4963](https://github.com/wasm-bindgen/wasm-bindgen/pull/4963)
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.113](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.112...0.2.113)
 
 ### Changed
 
@@ -31,8 +32,6 @@
   "stable method using an unstable type", ensuring the latter is named as part of
   the stable expansion.
   [#4991](https://github.com/wasm-bindgen/wasm-bindgen/pull/4991)
-
-### Removed
 
 ## [0.2.112](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.111...0.2.112)
 

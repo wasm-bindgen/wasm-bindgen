@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-test"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.71"
-version = "0.3.62"
+version = "0.3.63"
 
 [features]
 default = ["std"]
@@ -15,11 +15,11 @@ std = ["wasm-bindgen/std", "js-sys/std", "wasm-bindgen-futures/std"]
 
 [dependencies]
 gg-alloc = { version = "1.0", optional = true }
-js-sys = { path = '../js-sys', version = '=0.3.89', default-features = false }
-wasm-bindgen = { path = '../..', version = '=0.2.112', default-features = false }
-wasm-bindgen-futures = { path = '../futures', version = '=0.4.62', default-features = false }
-wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.62' }
-wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.112" }
+js-sys = { path = '../js-sys', version = '=0.3.90', default-features = false }
+wasm-bindgen = { path = '../..', version = '=0.2.113', default-features = false }
+wasm-bindgen-futures = { path = '../futures', version = '=0.4.63', default-features = false }
+wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.63' }
+wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.113" }
 
 # benchmark required start
 async-trait = "0.1.89"
