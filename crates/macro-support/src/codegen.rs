@@ -1021,57 +1021,14 @@ impl TryToTokens for ast::ImportType {
 
         let phantom;
         let phantom_init;
-        let generic_or_concrete_impls;
         if !class_generic_params.is_empty() {
-            let generic_param_names: Vec<_> = class_generic_params.iter().map(|p| p.0).collect();
+            let generic_param_names = class_generic_params.iter().map(|p| p.0);
 
             phantom = quote! { generics: ::core::marker::PhantomData<(#(#generic_param_names),*)> };
             phantom_init = quote! { generics: ::core::marker::PhantomData };
-
-            // While From is being deprecated anyway, for backwards compat it must be implemented
-            // on the default type without generics, otherwise it requires trait bounds to be
-            // specified, which would be a breaking change for types implementing generics.
-            generic_or_concrete_impls = quote! {
-                #[automatically_derived]
-                impl #impl_generics AsRef<#rust_name #ty_generics> for #rust_name #ty_generics #where_clause {
-                    #[inline]
-                    fn as_ref(&self) -> &#rust_name #ty_generics { self }
-                }
-
-                // TODO: remove this on the next major version
-                #[automatically_derived]
-                impl From<JsValue> for #rust_name {
-                    #[inline]
-                    fn from(obj: JsValue) -> Self {
-                        #rust_name {
-                            obj: obj.into(),
-                            #phantom_init
-                        }
-                    }
-                }
-            };
         } else {
             phantom = quote! {};
             phantom_init = quote! {};
-            generic_or_concrete_impls = quote! {
-                #[automatically_derived]
-                impl AsRef<#rust_name> for #rust_name {
-                    #[inline]
-                    fn as_ref(&self) -> &#rust_name { self }
-                }
-
-                // TODO: remove this on the next major version
-                #[automatically_derived]
-                impl From<JsValue> for #rust_name #where_clause {
-                    #[inline]
-                    fn from(obj: JsValue) -> Self {
-                        #rust_name {
-                            obj: obj.into(),
-                            #phantom_init
-                        }
-                    }
-                }
-            };
         }
 
         (quote! {
@@ -1191,7 +1148,23 @@ impl TryToTokens for ast::ImportType {
                     fn as_ref(&self) -> &JsValue { self.obj.as_ref() }
                 }
 
-                #generic_or_concrete_impls
+                #[automatically_derived]
+                impl #impl_generics AsRef<#rust_name #ty_generics> for #rust_name #ty_generics #where_clause {
+                    #[inline]
+                    fn as_ref(&self) -> &#rust_name #ty_generics { self }
+                }
+
+                // TODO: remove this on the next major version
+                #[automatically_derived]
+                impl From<JsValue> for #rust_name {
+                    #[inline]
+                    fn from(obj: JsValue) -> Self {
+                        #rust_name {
+                            obj: obj.into(),
+                            #phantom_init
+                        }
+                    }
+                }
 
                 #[automatically_derived]
                 impl #impl_generics From<#rust_name #ty_generics> for JsValue #where_clause {
