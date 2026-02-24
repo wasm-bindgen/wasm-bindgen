@@ -1035,9 +1035,7 @@ impl TryToTokens for ast::ImportType {
                 #[automatically_derived]
                 impl #impl_generics AsRef<#rust_name #ty_generics> for #rust_name #ty_generics #where_clause {
                     #[inline]
-                    fn as_ref(&self) -> &#rust_name #ty_generics {
-                        unsafe { core::mem::transmute(self) }
-                    }
+                    fn as_ref(&self) -> &#rust_name #ty_generics { self }
                 }
 
                 // TODO: remove this on the next major version
