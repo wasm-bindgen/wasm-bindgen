@@ -39,6 +39,7 @@ use core::convert::{self, TryFrom};
 use core::f64;
 use core::fmt;
 use core::iter::{self, Product, Sum};
+use core::marker::PhantomData;
 use core::mem::MaybeUninit;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub};
 use core::str;
@@ -50,7 +51,6 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
 
 // Re-export sys types as js-sys types
-use std::marker::PhantomData;
 pub use wasm_bindgen::sys::{JsOption, Null, Promising, Undefined};
 pub use wasm_bindgen::JsGeneric;
 
@@ -1652,10 +1652,8 @@ macro_rules! impl_tuple {
 
         impl<$($T: JsGeneric),+> From<($($T,)+)> for ArrayTuple<($($T),+,)> {
             fn from(($($vars,)+): ($($T,)+)) -> Self {
-                let arr: [JsValue; _] = [$(
-                    $vars.upcast_into()
-                ),+];
-                Array::of(&arr).unchecked_into()
+                $(let $vars: JsValue = $vars.upcast_into();)+
+                Array::of(&[$($vars),+]).unchecked_into()
             }
         }
 
