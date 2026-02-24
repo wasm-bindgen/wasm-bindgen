@@ -12,7 +12,7 @@ use crate::convert::{
 };
 use crate::sys::Promising;
 use crate::sys::{JsOption, Undefined};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt, __wbindgen_object_is_undefined};
+use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -625,7 +625,7 @@ impl OptionIntoWasmAbi for &JsValue {
 impl OptionFromWasmAbi for JsValue {
     #[inline]
     fn is_none(js: &u32) -> bool {
-        unsafe { __wbindgen_object_is_undefined(*js) }
+        unsafe { Self::ref_from_abi(*js) }.is_undefined()
     }
 }
 

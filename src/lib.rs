@@ -388,7 +388,7 @@ impl JsValue {
     /// Tests whether this JS value is `null` or `undefined`
     #[inline]
     pub fn is_null_or_undefined(&self) -> bool {
-        unsafe { __wbindgen_object_is_null_or_undefined(self.idx) }
+        __wbindgen_is_null_or_undefined(self)
     }
 
     /// Tests whether the type of this JS value is `symbol`
@@ -1217,6 +1217,7 @@ extern "C" {
 
     fn __wbindgen_is_null(js: &JsValue) -> bool;
     fn __wbindgen_is_undefined(js: &JsValue) -> bool;
+    fn __wbindgen_is_null_or_undefined(js: &JsValue) -> bool;
     fn __wbindgen_is_symbol(js: &JsValue) -> bool;
     fn __wbindgen_is_object(js: &JsValue) -> bool;
     fn __wbindgen_is_function(js: &JsValue) -> bool;
@@ -1278,8 +1279,6 @@ externs! {
     extern "C" {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
-        fn __wbindgen_object_is_null_or_undefined(idx: u32) -> bool;
-        fn __wbindgen_object_is_undefined(idx: u32) -> bool;
 
         fn __wbindgen_describe(v: u32) -> ();
         fn __wbindgen_describe_cast(func: *const (), prims: *const ()) -> *const ();

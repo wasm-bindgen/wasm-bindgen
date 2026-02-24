@@ -220,18 +220,6 @@ impl<'a> Context<'a> {
             Descriptor::Unit,
             AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
         )?;
-        self.add_aux_import_to_import_map(
-            "__wbindgen_object_is_null_or_undefined",
-            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
-            Descriptor::Boolean,
-            AuxImport::Intrinsic(Intrinsic::ObjectIsNullOrUndefined),
-        )?;
-        self.add_aux_import_to_import_map(
-            "__wbindgen_object_is_undefined",
-            vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
-            Descriptor::Boolean,
-            AuxImport::Intrinsic(Intrinsic::ObjectIsUndefined),
-        )?;
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
