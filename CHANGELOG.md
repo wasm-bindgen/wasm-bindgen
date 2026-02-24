@@ -7,11 +7,21 @@
 
 ### Changed
 
+### Fixed
+
+### Removed
+
+## [0.2.112](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.111...0.2.112)
+
+### Removed
+
 * Removed `ImmediateClosure` type introduced in 0.2.109. Stack-borrowed `&dyn Fn` / `&mut dyn FnMut`
   closures are now treated as unwind safe by default (panics are caught and converted to JS exceptions
   with proper unwinding). `Closure::new` no longer requires `MaybeUnwindSafe`. A unified
   `ScopedClosure::immediate` approach may be revisited in a future release.
   [#4986](https://github.com/wasm-bindgen/wasm-bindgen/pull/4986)
+
+## [0.2.111](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.110...0.2.111)
 
 ### Fixed
 
@@ -22,11 +32,7 @@
   `Iter` structs.
   [#4979](https://github.com/wasm-bindgen/wasm-bindgen/pull/4979)
 
-### Removed
-
-## [0.2.109](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.108...0.2.109)
-
-### Added
+## [0.2.110](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.109...0.2.110)
 
 ### Changed
 
