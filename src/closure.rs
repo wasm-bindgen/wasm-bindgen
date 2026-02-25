@@ -243,7 +243,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::_wrap::<true>(Box::new(t))
+        Self::wrap_maybe_aborting::<true>(Box::new(t))
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
@@ -264,7 +264,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::_wrap::<true>(Box::new(t))
+        Self::wrap_maybe_aborting::<true>(Box::new(t))
     }
 
     /// Creates a new owned `'static` closure that aborts on panic.
@@ -285,7 +285,7 @@ where
     where
         F: IntoWasmClosure<T> + 'static,
     {
-        Self::_wrap::<false>(Box::new(t))
+        Self::wrap_maybe_aborting::<false>(Box::new(t))
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
@@ -304,7 +304,7 @@ where
     where
         F: IntoWasmClosure<T> + 'static,
     {
-        Self::_wrap::<true>(Box::new(t))
+        Self::wrap_maybe_aborting::<true>(Box::new(t))
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -318,7 +318,7 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized + MaybeUnwindSafe,
     {
-        Self::_wrap::<true>(data)
+        Self::wrap_maybe_aborting::<true>(data)
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -329,7 +329,7 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
-        Self::_wrap::<false>(data)
+        Self::wrap_maybe_aborting::<false>(data)
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -343,10 +343,12 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
-        Self::_wrap::<true>(data)
+        Self::wrap_maybe_aborting::<true>(data)
     }
 
-    fn _wrap<const UNWIND_SAFE: bool>(data: Box<impl IntoWasmClosure<T> + ?Sized>) -> Self {
+    fn wrap_maybe_aborting<const UNWIND_SAFE: bool>(
+        data: Box<impl IntoWasmClosure<T> + ?Sized>,
+    ) -> Self {
         Self {
             js: crate::__rt::wbg_cast(OwnedClosure::<T, UNWIND_SAFE>(data.unsize())),
             _marker: PhantomData,
@@ -633,7 +635,7 @@ where
     where
         F: WasmClosureFnOnce<T, A, R> + MaybeUnwindSafe,
     {
-        Closure::_wrap::<true>(fn_once.into_fn_mut())
+        Closure::wrap_maybe_aborting::<true>(fn_once.into_fn_mut())
     }
 
     /// Create a `Closure` from a function that can only be called once.
@@ -660,7 +662,7 @@ where
     where
         F: WasmClosureFnOnceAbort<T, A, R>,
     {
-        Closure::_wrap::<false>(fn_once.into_fn_mut())
+        Closure::wrap_maybe_aborting::<false>(fn_once.into_fn_mut())
     }
 
     /// Create a `Closure` from a function that can only be called once,
@@ -684,7 +686,7 @@ where
     where
         F: WasmClosureFnOnceAbort<T, A, R>,
     {
-        Closure::_wrap::<true>(fn_once.into_fn_mut())
+        Closure::wrap_maybe_aborting::<true>(fn_once.into_fn_mut())
     }
 
     // TODO: Update once closures to be generated on construction as once
