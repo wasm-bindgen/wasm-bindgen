@@ -243,7 +243,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::_wrap::<true>(Box::new(t).unsize())
+        Self::_wrap::<true>(Box::new(t))
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
@@ -264,7 +264,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::_wrap::<true>(Box::new(t).unsize())
+        Self::_wrap::<true>(Box::new(t))
     }
 
     /// Creates a new owned `'static` closure that aborts on panic.
@@ -285,7 +285,7 @@ where
     where
         F: IntoWasmClosure<T> + 'static,
     {
-        Self::_wrap::<false>(Box::new(t).unsize())
+        Self::_wrap::<false>(Box::new(t))
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
@@ -304,7 +304,7 @@ where
     where
         F: IntoWasmClosure<T> + 'static,
     {
-        Self::_wrap::<true>(Box::new(t).unsize())
+        Self::_wrap::<true>(Box::new(t))
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -318,7 +318,7 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized + MaybeUnwindSafe,
     {
-        Self::_wrap::<true>(data.unsize())
+        Self::_wrap::<true>(data)
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -329,7 +329,7 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
-        Self::_wrap::<false>(data.unsize())
+        Self::_wrap::<false>(data)
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -343,12 +343,12 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
-        Self::_wrap::<true>(data.unsize())
+        Self::_wrap::<true>(data)
     }
 
-    fn _wrap<const UNWIND_SAFE: bool>(data: Box<T>) -> Self {
+    fn _wrap<const UNWIND_SAFE: bool>(data: Box<impl IntoWasmClosure<T> + ?Sized>) -> Self {
         Self {
-            js: crate::__rt::wbg_cast(OwnedClosure::<T, UNWIND_SAFE>(data)),
+            js: crate::__rt::wbg_cast(OwnedClosure::<T, UNWIND_SAFE>(data.unsize())),
             _marker: PhantomData,
             _lifetime: PhantomData,
         }
