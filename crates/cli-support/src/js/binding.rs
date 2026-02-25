@@ -96,6 +96,9 @@ pub enum TsReference {
 }
 
 pub fn wrap_try_catch(call: &str) -> String {
+    // TODO: Is it concerning that this still executes drops?
+    // If we raise a WebAssembly.RuntimeError, does that not execute drops? Hard
+    // to guarantee for reentrant calls.
     format!(
         "\
         try {{
@@ -104,6 +107,8 @@ pub fn wrap_try_catch(call: &str) -> String {
             if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
                 throw e.getArg(__wbindgen_wrapped_jstag, 0);
             }}
+            getInt32ArrayMemory0()[wasm.__terminated_address/4] = 1;
+            __wbg_reset_state();
             throw e;
         }}
         "

@@ -59,7 +59,7 @@ pub fn run(
     eh_version: ExceptionHandlingVersion,
     abort_reinit: bool,
 ) -> Result<(), Error> {
-    if aux.imports_with_catch.is_empty() {
+    if aux.imports_with_catch.is_empty() && !abort_reinit {
         return Ok(());
     }
 

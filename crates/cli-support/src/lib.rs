@@ -90,7 +90,6 @@ impl Bindgen {
         let externref =
             env::var("WASM_BINDGEN_ANYREF").is_ok() || env::var("WASM_BINDGEN_EXTERNREF").is_ok();
         let multi_value = env::var("WASM_BINDGEN_MULTI_VALUE").is_ok();
-        let abort_reinit = env::var("WASM_BINDGEN_ABORT_REINIT").is_ok();
         Bindgen {
             input: Input::None,
             out_name: None,
@@ -112,7 +111,7 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             generate_reset_state: false,
-            abort_reinit,
+            abort_reinit: false,
         }
     }
 
@@ -344,6 +343,16 @@ impl Bindgen {
             self.multi_value = true;
         }
 
+        // Enable abort_reinit if __terminated_address is exported
+        if module
+            .exports
+            .iter()
+            .any(|export| export.name == "__terminated_address")
+        {
+            self.abort_reinit = true;
+            self.generate_reset_state = true;
+        }
+
         // Check that no exported symbol is called "default" if we target web.
         if matches!(self.mode, OutputMode::Web)
             && module.exports.iter().any(|export| export.name == "default")
@@ -430,7 +439,7 @@ impl Bindgen {
         // export of all our externref intrinsics which will get cleaned up in the
         // GC pass before JS generation.
         if self.externref {
-            externref::process(&mut module)?;
+            externref::process(&mut module, self.abort_reinit)?;
         } else {
             let ids = module
                 .exports

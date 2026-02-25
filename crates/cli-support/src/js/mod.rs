@@ -3158,6 +3158,9 @@ if (require('worker_threads').isMainThread) {{
     }
 
     pub fn generate(&mut self) -> Result<(), Error> {
+        if self.config.abort_reinit {
+            self.expose_int32_memory(crate::wasm_conventions::get_memory(self.module)?);
+        }
         self.prestore_global_import_identifiers()?;
 
         self.generate_jstag_import();
@@ -3254,7 +3257,15 @@ if (require('worker_threads').isMainThread) {{
             return;
         };
 
-        // Find the import ID for the wrapped JSTag
+        // Create a top-level constant for the wrapped tag. This is needed by
+        // the JS-side try-catch wrappers and the throw/rethrow intrinsics
+        // regardless of whether the wasm import survives GC.
+        self.global(
+            "const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
+        );
+
+        // If the wasm import for the tag still exists (i.e. it's used by catch
+        // wrappers inside wasm), wire it up to the JS constant.
         let import_id = self.module.imports.iter().find_map(|import| {
             let walrus::ImportKind::Tag(tag_id) = import.kind else {
                 return None;
@@ -3266,18 +3277,10 @@ if (require('worker_threads').isMainThread) {{
             }
         });
 
-        let Some(id) = import_id else {
-            return;
-        };
-
-        // Create a top-level constant for the wrapped tag
-        self.global(
-            "const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
-        );
-
-        // Use the constant for the import
-        self.wasm_import_definitions
-            .insert(id, "__wbindgen_wrapped_jstag".to_string());
+        if let Some(id) = import_id {
+            self.wasm_import_definitions
+                .insert(id, "__wbindgen_wrapped_jstag".to_string());
+        }
     }
 
     /// Registers import names for all `Global` imports first before we actually

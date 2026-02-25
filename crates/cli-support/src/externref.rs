@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use walrus::ElementItems;
 use walrus::{ir::Value, ConstExpr, ElementKind, Module};
 
-pub fn process(module: &mut Module) -> Result<()> {
+pub fn process(module: &mut Module, abort_reinit: bool) -> Result<()> {
     let mut cfg = Context::new(module)?;
     let section = module
         .customs
@@ -63,7 +63,7 @@ pub fn process(module: &mut Module) -> Result<()> {
     // slice-related instructions, though, so let's just cop out and only enable
     // these coarsely.
     aux.externref_table = Some(meta.table);
-    if module_needs_externref_metadata(&aux, section) {
+    if abort_reinit || module_needs_externref_metadata(&aux, section) {
         aux.externref_alloc = meta.alloc;
         aux.externref_drop = meta.drop;
         aux.externref_drop_slice = meta.drop_slice;

@@ -22,6 +22,8 @@ features = ["serde-serialize"]
 test = false
 
 [features]
+__all_features = []
+abort-reinit = []
 default = ["std"]
 enable-interning = ["std"]
 serde-serialize = ["serde", "serde_json", "std"]

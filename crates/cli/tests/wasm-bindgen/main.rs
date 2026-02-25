@@ -539,3 +539,189 @@ fn constructor_cannot_return_option_struct() {
         .wasm_bindgen("--target web")
         .unwrap_err();
 }
+
+#[test]
+fn abort_reinit() {
+    let mut project = Project::new("abort_reinit");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                use wasm_bindgen::throw_str;
+
+                #[wasm_bindgen(inline_js = "export function js_throw_error() { throw new Error('JS import threw'); }")]
+                extern "C" {
+                    // No `catch` — a JS throw here should unwind, not abort.
+                    fn js_throw_error();
+                }
+
+                static mut COUNTER: u32 = 0;
+
+                #[wasm_bindgen]
+                pub fn simple_add(a: u32, b: u32) -> u32 {
+                    a + b
+                }
+
+                #[wasm_bindgen]
+                pub fn increment_counter() {
+                    unsafe { COUNTER += 1; }
+                }
+
+                #[wasm_bindgen]
+                pub fn get_counter() -> u32 {
+                    unsafe { COUNTER }
+                }
+
+                #[wasm_bindgen]
+                pub fn trigger_unreachable() {
+                    #[cfg(target_arch = "wasm32")]
+                    unsafe { core::arch::wasm32::unreachable(); }
+                }
+
+                #[wasm_bindgen]
+                pub fn trigger_panic() {
+                    panic!("deliberate panic");
+                }
+
+                #[wasm_bindgen]
+                pub fn trigger_throw_str() {
+                    throw_str("deliberate throw_str");
+                }
+
+                #[wasm_bindgen]
+                pub fn call_throwing_import() {
+                    js_throw_error();
+                }
+            "#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"abort_reinit\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}', features = ['abort-reinit'] }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+                REPO_ROOT.display(),
+            ),
+        );
+
+    // abort-reinit requires panic=unwind and nightly build-std
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+
+    // Write the Node.js test script into the output directory
+    fs::write(
+        out_dir.join("test_abort_reinit.js"),
+        r#"
+const assert = require('node:assert/strict');
+
+// Monkeypatch WebAssembly.Instance to capture the wasm exports (memory and
+// __terminated_address) before the generated JS module hides them.
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+};
+
+const wasm = require('./abort_reinit.js');
+WebAssembly.Instance = OrigInstance;
+
+// Test 1: Basic functionality works
+assert.strictEqual(wasm.simple_add(2, 3), 5);
+console.log('Test 1 passed: basic functionality works');
+
+// Test 2: Recoverable exception (panic) does not trigger reinit, state preserved
+wasm.increment_counter();
+wasm.increment_counter();
+assert.strictEqual(wasm.get_counter(), 2);
+
+assert.throws(() => wasm.trigger_panic(), (e) => {
+    assert(!(e instanceof WebAssembly.RuntimeError), 'panic should not be WebAssembly.RuntimeError');
+    assert.match(e.message || String(e), /deliberate panic/);
+    return true;
+});
+
+assert.strictEqual(wasm.get_counter(), 2, 'counter should be preserved after panic (no reinit)');
+assert.strictEqual(wasm.simple_add(10, 20), 30);
+console.log('Test 2 passed: panic is recoverable, state preserved');
+
+// Test 3: Recoverable exception (throw_str) does not trigger reinit, state preserved
+assert.strictEqual(wasm.get_counter(), 2);
+
+assert.throws(() => wasm.trigger_throw_str(), (e) => {
+    assert(!(e instanceof WebAssembly.RuntimeError), 'throw_str should not be WebAssembly.RuntimeError');
+    const msg = (typeof e === 'string') ? e : (e.message || String(e));
+    assert.match(msg, /deliberate throw_str/);
+    return true;
+});
+
+assert.strictEqual(wasm.get_counter(), 2, 'counter should be preserved after throw_str (no reinit)');
+assert.strictEqual(wasm.simple_add(7, 8), 15);
+console.log('Test 3 passed: throw_str is recoverable, state preserved');
+
+// Test 4: JS throw from non-catch import does not trigger reinit, state preserved
+assert.throws(() => wasm.call_throwing_import(), (e) => {
+    assert(!(e instanceof WebAssembly.RuntimeError), 'JS throw should not be WebAssembly.RuntimeError');
+    assert.match(e.message || String(e), /JS import threw/);
+    return true;
+});
+
+assert.strictEqual(wasm.get_counter(), 2, 'counter should be preserved after import throw (no reinit)');
+console.log('Test 4 passed: import throw is recoverable, state preserved');
+
+// Test 5: Fatal error triggers reinit, state is reset, wasm works after
+wasm.increment_counter();
+assert.strictEqual(wasm.get_counter(), 3);
+
+// Read __terminated_address from the captured wasm exports before abort
+const terminatedAddr = wasmExports.__terminated_address;
+const oldMemory = new Int32Array(wasmExports.memory.buffer);
+assert.strictEqual(oldMemory[terminatedAddr / 4], 0, '__terminated_address should be 0 before abort');
+
+assert.throws(() => wasm.trigger_unreachable(), (e) => {
+    assert(e instanceof WebAssembly.RuntimeError, 'fatal error should be WebAssembly.RuntimeError');
+    return true;
+});
+
+// The old memory view still points at the pre-reinit buffer where
+// __terminated_address was set to 1 by the catch handler.
+assert.strictEqual(oldMemory[terminatedAddr / 4], 1, '__terminated_address should be 1 after abort');
+
+assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset to 0 after reinit');
+assert.strictEqual(wasm.simple_add(100, 200), 300);
+console.log('Test 5 passed: fatal error triggers reinit, state reset, wasm works');
+
+console.log('All abort-reinit tests passed!');
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("test_abort_reinit.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("All abort-reinit tests passed!"));
+}

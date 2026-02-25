@@ -635,6 +635,17 @@ pub fn link_mem_intrinsics() {
 #[cfg_attr(target_feature = "atomics", thread_local)]
 static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(Cell::new([0; 2]));
 
+#[cfg(all(
+    feature = "abort-reinit",
+    panic = "abort",
+    not(feature = "__all_features")
+))]
+compile_error!("the `abort-reinit` feature requires `panic = \"unwind\"`");
+
+#[cfg(all(feature = "abort-reinit", panic = "unwind"))]
+#[no_mangle]
+pub static mut __terminated_address: u32 = 0;
+
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
     debug_assert_eq!(GLOBAL_EXNDATA.0.get()[0], 0);

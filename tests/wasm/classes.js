@@ -242,7 +242,7 @@ exports.js_test_inspectable_classes = () => {
     // Non-inspectable classes in Node.js have no special console.log formatting
     const not_inspectable_output = console_log_to_string(not_inspectable);
     assert.match(not_inspectable_output, new RegExp(
-        `^NotInspectable \\{ __wbg_ptr: ${not_inspectable.__wbg_ptr} \\}$`
+        `^NotInspectable \\{ __wbg_ptr: ${not_inspectable.__wbg_ptr}\(, __wbg_inst: 0\)? \\}$`
     ));
     inspectable.free();
     not_inspectable.free();
