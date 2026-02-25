@@ -4,7 +4,7 @@ use crate::JsValue;
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use core::any::Any;
 use core::borrow::{Borrow, BorrowMut};
-use core::cell::{Cell, UnsafeCell};
+use core::cell::{Cell, RefCell};
 use core::convert::Infallible;
 use core::ops::{Deref, DerefMut};
 use core::panic::{RefUnwindSafe, UnwindSafe};
@@ -281,7 +281,7 @@ fn throw_null() -> ! {
     super::throw_str("null pointer passed to rust");
 }
 
-/// A vendored version of `RefCell` from the standard library.
+/// A wrapper around the `RefCell` from the standard library.
 ///
 /// Now why, you may ask, would we do that? Surely `RefCell` in libstd is
 /// quite good. And you're right, it is indeed quite good! Functionally
@@ -299,8 +299,7 @@ fn throw_null() -> ! {
 /// to not panic in libstd. Instead when it "panics" it calls our `throw`
 /// function in this crate which raises an error in JS.
 pub struct WasmRefCell<T: ?Sized> {
-    borrow: Cell<usize>,
-    value: UnsafeCell<T>,
+    inner: RefCell<T>,
 }
 
 impl<T: ?Sized> UnwindSafe for WasmRefCell<T> {}
@@ -312,38 +311,25 @@ impl<T: ?Sized> WasmRefCell<T> {
         T: Sized,
     {
         WasmRefCell {
-            value: UnsafeCell::new(value),
-            borrow: Cell::new(0),
+            inner: RefCell::new(value),
         }
     }
 
     pub fn get_mut(&mut self) -> &mut T {
-        self.value.get_mut()
+        self.inner.get_mut()
     }
 
     pub fn borrow(&self) -> Ref<'_, T> {
-        unsafe {
-            if self.borrow.get() == usize::MAX {
-                borrow_fail();
-            }
-            self.borrow.set(self.borrow.get() + 1);
-            Ref {
-                value: &*self.value.get(),
-                borrow: &self.borrow,
-            }
+        match self.inner.try_borrow() {
+            Ok(inner) => Ref { inner },
+            Err(_) => borrow_fail(),
         }
     }
 
     pub fn borrow_mut(&self) -> RefMut<'_, T> {
-        unsafe {
-            if self.borrow.get() != 0 {
-                borrow_fail();
-            }
-            self.borrow.set(usize::MAX);
-            RefMut {
-                value: &mut *self.value.get(),
-                borrow: &self.borrow,
-            }
+        match self.inner.try_borrow_mut() {
+            Ok(inner) => RefMut { inner },
+            Err(_) => borrow_fail(),
         }
     }
 
@@ -351,13 +337,12 @@ impl<T: ?Sized> WasmRefCell<T> {
     where
         T: Sized,
     {
-        self.value.into_inner()
+        self.inner.into_inner()
     }
 }
 
 pub struct Ref<'b, T: ?Sized + 'b> {
-    value: &'b T,
-    borrow: &'b Cell<usize>,
+    inner: core::cell::Ref<'b, T>,
 }
 
 impl<T: ?Sized> Deref for Ref<'_, T> {
@@ -365,26 +350,19 @@ impl<T: ?Sized> Deref for Ref<'_, T> {
 
     #[inline]
     fn deref(&self) -> &T {
-        self.value
+        &self.inner
     }
 }
 
 impl<T: ?Sized> Borrow<T> for Ref<'_, T> {
     #[inline]
     fn borrow(&self) -> &T {
-        self.value
-    }
-}
-
-impl<T: ?Sized> Drop for Ref<'_, T> {
-    fn drop(&mut self) {
-        self.borrow.set(self.borrow.get() - 1);
+        self
     }
 }
 
 pub struct RefMut<'b, T: ?Sized + 'b> {
-    value: &'b mut T,
-    borrow: &'b Cell<usize>,
+    inner: core::cell::RefMut<'b, T>,
 }
 
 impl<T: ?Sized> Deref for RefMut<'_, T> {
@@ -392,34 +370,28 @@ impl<T: ?Sized> Deref for RefMut<'_, T> {
 
     #[inline]
     fn deref(&self) -> &T {
-        self.value
+        &self.inner
     }
 }
 
 impl<T: ?Sized> DerefMut for RefMut<'_, T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut T {
-        self.value
+        &mut self.inner
     }
 }
 
 impl<T: ?Sized> Borrow<T> for RefMut<'_, T> {
     #[inline]
     fn borrow(&self) -> &T {
-        self.value
+        self
     }
 }
 
 impl<T: ?Sized> BorrowMut<T> for RefMut<'_, T> {
     #[inline]
     fn borrow_mut(&mut self) -> &mut T {
-        self.value
-    }
-}
-
-impl<T: ?Sized> Drop for RefMut<'_, T> {
-    fn drop(&mut self) {
-        self.borrow.set(0);
+        self
     }
 }
 
