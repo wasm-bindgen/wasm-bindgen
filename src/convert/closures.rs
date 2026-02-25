@@ -1,7 +1,8 @@
 use alloc::boxed::Box;
 use core::mem;
+use core::panic::AssertUnwindSafe;
 
-#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+use crate::__rt::marker::ErasableGeneric;
 use crate::__rt::maybe_catch_unwind;
 use crate::closure::{
     Closure, IntoWasmClosure, IntoWasmClosureRef, IntoWasmClosureRefMut, ScopedClosure,
@@ -13,12 +14,9 @@ use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
 use crate::describe::{inform, WasmDescribe, FUNCTION};
 use crate::sys::Undefined;
+use crate::throw_str;
 use crate::JsValue;
 use crate::UnwrapThrowExt;
-use crate::__rt::marker::ErasableGeneric;
-use crate::throw_str;
-#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-use core::panic::AssertUnwindSafe;
 
 macro_rules! closures {
     // Unwind safe passing
@@ -60,8 +58,7 @@ macro_rules! closures {
 
             fn into_abi(self) -> WasmSlice {
                 unsafe {
-                    let (a, mut b): (usize, usize) = mem::transmute(self);
-                    b |= 0x80000000; // dyn Fn / dyn FnMut are unwind safe by default
+                    let (a, b): (usize, usize) = mem::transmute(self);
                     WasmSlice { ptr: a as u32, len: b as u32 }
                 }
             }
@@ -75,12 +72,12 @@ macro_rules! closures {
             type Repr = &'static (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'static);
         }
 
-        // Generate invoke function that checks unwind_safe flag when unwinding is available
-        // unwind_safe flag is the MSV of the vtable pointer for a closure, distinguishing
-        // closures which are and are not unwind safe
-        #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+        // Invoke shim for closures. The const generic `UNWIND_SAFE` controls
+        // whether panics are caught and converted to JS exceptions (`true`) or
+        // left to unwind/abort (`false`). When `panic=unwind` is not available,
+        // `UNWIND_SAFE` has no effect — panics always abort.
         #[allow(non_snake_case)]
-        unsafe extern "C-unwind" fn invoke<$($var: $FromWasmAbi,)* R: ReturnWasmAbi>(
+        unsafe extern "C-unwind" fn invoke<$($var: $FromWasmAbi,)* R: ReturnWasmAbi, const UNWIND_SAFE: bool>(
             a: usize,
             b: usize,
             $(
@@ -93,45 +90,16 @@ macro_rules! closures {
             if a == 0 {
                 throw_str("closure invoked recursively or after being dropped");
             }
-            let unwind_safe = (b & 0x80000000) != 0;
-            let b = b & 0x7FFFFFFF;
             let ret = {
                 let f: & $($mut)? dyn $Fn $FnArgs -> R = mem::transmute((a, b));
                 $(
                     let $var = $var::Abi::join($arg1, $arg2, $arg3, $arg4);
                 )*
-                if unwind_safe {
+                if UNWIND_SAFE {
                     maybe_catch_unwind(AssertUnwindSafe(|| f($($var_expr),*)))
                 } else {
                     f($($var_expr),*)
                 }
-            };
-            ret.return_abi().into()
-        }
-
-        // When unwinding is not available, generate a simple invoke function
-        #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
-        #[allow(non_snake_case)]
-        unsafe extern "C-unwind" fn invoke<$($var: $FromWasmAbi,)* R: ReturnWasmAbi>(
-            a: usize,
-            b: usize,
-            $(
-            $arg1: <$var::Abi as WasmAbi>::Prim1,
-            $arg2: <$var::Abi as WasmAbi>::Prim2,
-            $arg3: <$var::Abi as WasmAbi>::Prim3,
-            $arg4: <$var::Abi as WasmAbi>::Prim4,
-            )*
-        ) -> WasmRet<R::Abi> {
-            if a == 0 {
-                throw_str("closure invoked recursively or after being dropped");
-            }
-            let b = b & 0x7FFFFFFF;
-            let ret = {
-                let f: & $($mut)? dyn $Fn $FnArgs -> R = mem::transmute((a, b));
-                $(
-                    let $var = $var::Abi::join($arg1, $arg2, $arg3, $arg4);
-                )*
-                f($($var_expr),*)
             };
             ret.return_abi().into()
         }
@@ -144,23 +112,30 @@ macro_rules! closures {
         {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() {
-                inform(FUNCTION);
-                inform(invoke::<$($var,)* R> as *const () as usize as u32);
-                closures!(@describe $FnArgs);
-                R::describe();
-                R::describe();
+                // Raw &dyn Fn/&dyn FnMut passed as arguments use the catching
+                // invoke shim by default, matching the previous runtime behavior.
+                <Self as WasmClosure>::describe_invoke::<true>();
             }
         }
 
         unsafe impl<'__closure, $($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '__closure
         where
-            Self: WasmDescribe,
+            $($var: $FromWasmAbi,)*
+            R: ReturnWasmAbi,
         {
             const IS_MUT: bool = $is_mut;
             type AsMut = dyn FnMut $FnArgs -> R + '__closure;
             fn to_wasm_slice(r: &Self) -> WasmSlice {
                 let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
                 WasmSlice { ptr, len }
+            }
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe_invoke<const UNWIND_SAFE: bool>() {
+                inform(FUNCTION);
+                inform(invoke::<$($var,)* R, UNWIND_SAFE> as *const () as usize as u32);
+                closures!(@describe $FnArgs);
+                R::describe();
+                R::describe();
             }
         }
 

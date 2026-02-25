@@ -243,7 +243,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::_wrap(Box::new(t).unsize(), true)
+        Self::_wrap::<true>(Box::new(t).unsize())
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
@@ -264,7 +264,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::_wrap(Box::new(t).unsize(), true)
+        Self::_wrap::<true>(Box::new(t).unsize())
     }
 
     /// Creates a new owned `'static` closure that aborts on panic.
@@ -285,7 +285,7 @@ where
     where
         F: IntoWasmClosure<T> + 'static,
     {
-        Self::_wrap(Box::new(t).unsize(), false)
+        Self::_wrap::<false>(Box::new(t).unsize())
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
@@ -304,7 +304,7 @@ where
     where
         F: IntoWasmClosure<T> + 'static,
     {
-        Self::_wrap(Box::new(t).unsize(), true)
+        Self::_wrap::<true>(Box::new(t).unsize())
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -318,7 +318,7 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized + MaybeUnwindSafe,
     {
-        Self::_wrap(data.unsize(), true)
+        Self::_wrap::<true>(data.unsize())
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -329,7 +329,7 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
-        Self::_wrap(data.unsize(), false)
+        Self::_wrap::<false>(data.unsize())
     }
 
     /// A more direct version of `Closure::new` which creates a `Closure` from
@@ -343,22 +343,12 @@ where
     where
         F: IntoWasmClosure<T> + ?Sized,
     {
-        Self::_wrap(data.unsize(), true)
+        Self::_wrap::<true>(data.unsize())
     }
 
-    #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-    fn _wrap(data: Box<T>, unwind_safe: bool) -> Self {
+    fn _wrap<const UNWIND_SAFE: bool>(data: Box<T>) -> Self {
         Self {
-            js: crate::__rt::wbg_cast(OwnedClosureUnwind { data, unwind_safe }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
-    }
-
-    #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
-    fn _wrap(data: Box<T>, _unwind_safe: bool) -> Self {
-        Self {
-            js: crate::__rt::wbg_cast(OwnedClosure(data)),
+            js: crate::__rt::wbg_cast(OwnedClosure::<T, UNWIND_SAFE>(data)),
             _marker: PhantomData,
             _lifetime: PhantomData,
         }
@@ -428,9 +418,8 @@ where
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: true,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -452,9 +441,8 @@ where
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, false> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: false,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -473,9 +461,8 @@ where
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: true,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -521,9 +508,8 @@ where
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: true,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -545,9 +531,8 @@ where
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, false> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: false,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -566,9 +551,8 @@ where
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
                 data: WasmSlice { ptr, len },
-                unwind_safe: true,
                 _marker: PhantomData,
             }),
             _marker: PhantomData,
@@ -649,7 +633,7 @@ where
     where
         F: WasmClosureFnOnce<T, A, R> + MaybeUnwindSafe,
     {
-        Closure::_wrap(fn_once.into_fn_mut(), true)
+        Closure::_wrap::<true>(fn_once.into_fn_mut())
     }
 
     /// Create a `Closure` from a function that can only be called once.
@@ -676,7 +660,7 @@ where
     where
         F: WasmClosureFnOnceAbort<T, A, R>,
     {
-        Closure::_wrap(fn_once.into_fn_mut(), false)
+        Closure::_wrap::<false>(fn_once.into_fn_mut())
     }
 
     /// Create a `Closure` from a function that can only be called once,
@@ -700,7 +684,7 @@ where
     where
         F: WasmClosureFnOnceAbort<T, A, R>,
     {
-        Closure::_wrap(fn_once.into_fn_mut(), true)
+        Closure::_wrap::<true>(fn_once.into_fn_mut())
     }
 
     // TODO: Update once closures to be generated on construction as once
@@ -761,35 +745,26 @@ impl<T: ?Sized> AsRef<JsValue> for ScopedClosure<'_, T> {
     }
 }
 
-/// Internal representation of an owned closure that we send to JS.
-/// This is used when panic=abort or when panic=unwind but without the unwind_safe flag.
+/// Internal representation of an owned closure sent to JS.
+/// `UNWIND_SAFE` selects the invoke shim: `true` catches panics, `false` does not.
 #[repr(transparent)]
-struct OwnedClosure<T: ?Sized>(Box<T>);
+struct OwnedClosure<T: ?Sized, const UNWIND_SAFE: bool>(Box<T>);
 
-/// Internal representation of an owned closure with unwind safety flag. Used
-/// when panic=unwind to pass both the closure and the unwind_safe flag to JS.
-#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-struct OwnedClosureUnwind<T: ?Sized> {
-    data: Box<T>,
-    unwind_safe: bool,
-}
-
-struct BorrowedClosure<T: ?Sized> {
+/// Internal representation of a borrowed closure sent to JS.
+/// `UNWIND_SAFE` selects the invoke shim: `true` catches panics, `false` does not.
+struct BorrowedClosure<T: ?Sized, const UNWIND_SAFE: bool> {
     data: WasmSlice,
-    unwind_safe: bool,
     _marker: PhantomData<T>,
 }
 
-unsafe extern "C" fn destroy<T: ?Sized>(a: usize, mut b: usize) {
+unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
     if a == 0 {
         return;
     }
-    // Mask out unwind_safe flag
-    b &= !0x80000000;
     drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
 }
 
-impl<T> WasmDescribe for OwnedClosure<T>
+impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
@@ -798,11 +773,11 @@ where
         inform(CLOSURE);
         inform(destroy::<T> as *const () as usize as u32);
         inform(T::IS_MUT as u32);
-        T::describe();
+        T::describe_invoke::<UNWIND_SAFE>();
     }
 }
 
-impl<T> WasmDescribe for BorrowedClosure<T>
+impl<T, const UNWIND_SAFE: bool> WasmDescribe for BorrowedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
@@ -811,11 +786,11 @@ where
         inform(CLOSURE);
         inform(0);
         inform(T::IS_MUT as u32);
-        T::describe();
+        T::describe_invoke::<UNWIND_SAFE>();
     }
 }
 
-impl<T> IntoWasmAbi for OwnedClosure<T>
+impl<T, const UNWIND_SAFE: bool> IntoWasmAbi for OwnedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
@@ -830,51 +805,13 @@ where
     }
 }
 
-impl<T> IntoWasmAbi for BorrowedClosure<T>
+impl<T, const UNWIND_SAFE: bool> IntoWasmAbi for BorrowedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
     type Abi = WasmSlice;
     fn into_abi(self) -> WasmSlice {
-        let WasmSlice { ptr, mut len } = self.data;
-        if self.unwind_safe {
-            len |= 0x80000000;
-        }
-        WasmSlice { ptr, len }
-    }
-}
-
-#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-impl<T> WasmDescribe for OwnedClosureUnwind<T>
-where
-    T: WasmClosure + ?Sized,
-{
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        // Delegate to the inner closure's descriptor - type info is the same
-        OwnedClosure::<T>::describe();
-    }
-}
-
-#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-impl<T> IntoWasmAbi for OwnedClosureUnwind<T>
-where
-    T: WasmClosure + ?Sized,
-{
-    type Abi = WasmSlice;
-
-    fn into_abi(self) -> WasmSlice {
-        let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self.data)) };
-        // Pack unwind_safe into most significant bit (bit 31) of vtable
-        let b_with_flag = if self.unwind_safe {
-            (b as u32) | 0x80000000
-        } else {
-            b as u32
-        };
-        WasmSlice {
-            ptr: a as u32,
-            len: b_with_flag,
-        }
+        self.data
     }
 }
 
@@ -986,6 +923,10 @@ pub unsafe trait WasmClosure: WasmDescribe {
     /// For `dyn FnMut(...) -> R` this is itself.
     type AsMut: ?Sized;
     fn to_wasm_slice(r: &Self) -> WasmSlice;
+    /// Emit the FUNCTION descriptor with the invoke shim selected by
+    /// `UNWIND_SAFE`: `true` picks the panic-catching shim, `false`
+    /// picks the non-catching shim.
+    fn describe_invoke<const UNWIND_SAFE: bool>();
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
@@ -994,6 +935,9 @@ unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     fn to_wasm_slice(r: &Self) -> WasmSlice {
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
         WasmSlice { ptr, len }
+    }
+    fn describe_invoke<const UNWIND_SAFE: bool>() {
+        T::describe_invoke::<UNWIND_SAFE>();
     }
 }
 
