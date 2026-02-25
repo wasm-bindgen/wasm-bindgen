@@ -125,10 +125,6 @@ macro_rules! closures {
         {
             const IS_MUT: bool = $is_mut;
             type AsMut = dyn FnMut $FnArgs -> R + '__closure;
-            fn to_wasm_slice(r: &Self) -> WasmSlice {
-                let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
-                WasmSlice { ptr, len }
-            }
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe_invoke<const UNWIND_SAFE: bool>() {
                 inform(FUNCTION);

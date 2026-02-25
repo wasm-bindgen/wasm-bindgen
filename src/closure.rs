@@ -922,7 +922,6 @@ pub unsafe trait WasmClosure: WasmDescribe {
     /// For `dyn Fn(...) -> R` this is `dyn FnMut(...) -> R`.
     /// For `dyn FnMut(...) -> R` this is itself.
     type AsMut: ?Sized;
-    fn to_wasm_slice(r: &Self) -> WasmSlice;
     /// Emit the FUNCTION descriptor with the invoke shim selected by
     /// `UNWIND_SAFE`: `true` picks the panic-catching shim, `false`
     /// picks the non-catching shim.
@@ -932,10 +931,6 @@ pub unsafe trait WasmClosure: WasmDescribe {
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     const IS_MUT: bool = T::IS_MUT;
     type AsMut = T::AsMut;
-    fn to_wasm_slice(r: &Self) -> WasmSlice {
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&r) };
-        WasmSlice { ptr, len }
-    }
     fn describe_invoke<const UNWIND_SAFE: bool>() {
         T::describe_invoke::<UNWIND_SAFE>();
     }
