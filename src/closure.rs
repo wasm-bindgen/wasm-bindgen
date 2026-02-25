@@ -417,16 +417,7 @@ where
     where
         F: IntoWasmClosureRef<'a, T> + MaybeUnwindSafe + ?Sized,
     {
-        let t: &T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
-                data: WasmSlice { ptr, len },
-                _marker: PhantomData,
-            }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
+        Self::borrow_assert_unwind_safe(t)
     }
 
     /// Like [`borrow`](Self::borrow), but does not catch panics.
@@ -507,16 +498,7 @@ where
     where
         F: IntoWasmClosureRefMut<'a, T> + MaybeUnwindSafe + ?Sized,
     {
-        let t: &mut T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
-                data: WasmSlice { ptr, len },
-                _marker: PhantomData,
-            }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
+        Self::borrow_mut_assert_unwind_safe(t)
     }
 
     /// Like [`borrow_mut`](Self::borrow_mut), but does not catch panics.
