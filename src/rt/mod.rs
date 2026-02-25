@@ -4,6 +4,8 @@ use crate::JsValue;
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use core::any::Any;
 use core::borrow::{Borrow, BorrowMut};
+#[cfg(target_feature = "atomics")]
+use core::cell::UnsafeCell;
 use core::cell::{Cell, RefCell};
 use core::convert::Infallible;
 use core::ops::{Deref, DerefMut};
