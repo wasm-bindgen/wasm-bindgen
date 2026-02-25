@@ -243,7 +243,7 @@ where
     where
         F: IntoWasmClosure<T> + MaybeUnwindSafe + 'static,
     {
-        Self::wrap_maybe_aborting::<true>(Box::new(t))
+        Self::own(t)
     }
 
     /// Creates a new static owned `ScopedClosure<'static, T>` from the provided
