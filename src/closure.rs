@@ -431,16 +431,7 @@ where
     where
         F: IntoWasmClosureRef<'a, T> + ?Sized,
     {
-        let t: &T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, false> {
-                data: WasmSlice { ptr, len },
-                _marker: PhantomData,
-            }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
+        Self::wrap_borrow::<_, false>(t)
     }
 
     /// Like [`borrow`](Self::borrow), but catches panics without requiring `MaybeUnwindSafe`.
@@ -451,10 +442,17 @@ where
     where
         F: IntoWasmClosureRef<'a, T> + ?Sized,
     {
+        Self::wrap_borrow::<_, true>(t)
+    }
+
+    fn wrap_borrow<'a, F, const UNWIND_SAFE: bool>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    where
+        F: IntoWasmClosureRef<'a, T> + ?Sized,
+    {
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, UNWIND_SAFE> {
                 data: WasmSlice { ptr, len },
                 _marker: PhantomData,
             }),
@@ -512,16 +510,7 @@ where
     where
         F: IntoWasmClosureRefMut<'a, T> + ?Sized,
     {
-        let t: &mut T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
-        ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, false> {
-                data: WasmSlice { ptr, len },
-                _marker: PhantomData,
-            }),
-            _marker: PhantomData,
-            _lifetime: PhantomData,
-        }
+        Self::wrap_borrow_mut::<_, false>(t)
     }
 
     /// Like [`borrow_mut`](Self::borrow_mut), but catches panics without requiring `MaybeUnwindSafe`.
@@ -532,10 +521,17 @@ where
     where
         F: IntoWasmClosureRefMut<'a, T> + ?Sized,
     {
+        Self::wrap_borrow_mut::<_, true>(t)
+    }
+
+    fn wrap_borrow_mut<'a, F, const UNWIND_SAFE: bool>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    where
+        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
+    {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, true> {
+            js: crate::__rt::wbg_cast(BorrowedClosure::<T, UNWIND_SAFE> {
                 data: WasmSlice { ptr, len },
                 _marker: PhantomData,
             }),
