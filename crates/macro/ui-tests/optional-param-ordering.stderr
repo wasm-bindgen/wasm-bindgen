@@ -1,0 +1,5 @@
+error: a required parameter cannot follow an optional parameter
+ --> ui-tests/optional-param-ordering.rs:6:52
+  |
+6 |     #[wasm_bindgen(unchecked_optional_param_type = "string")] name: JsValue,
+  |                                                    ^^^^^^^^

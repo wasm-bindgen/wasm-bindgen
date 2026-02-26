@@ -107,7 +107,7 @@
       - [`skip_typescript`](./reference/attributes/on-rust-exports/skip_typescript.md)
       - [`getter_with_clone`](./reference/attributes/on-rust-exports/getter_with_clone.md)
       - [`private`](./reference/attributes/on-rust-exports/private.md)
-      - [`unchecked_return_type` and `unchecked_param_type`](./reference/attributes/on-rust-exports/unchecked_type.md)
+      - [`unchecked_return_type`, `unchecked_param_type`, and `unchecked_optional_param_type`](./reference/attributes/on-rust-exports/unchecked_type.md)
       - [`return_description` and `param_description`](./reference/attributes/on-rust-exports/description.md)
 
 - [`web-sys`](./web-sys/index.md)

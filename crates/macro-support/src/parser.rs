@@ -1250,6 +1250,7 @@ struct FnArgAttrs {
 /// Extracts function arguments attributes
 fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagnostic> {
     let mut args_attrs = vec![];
+    let mut seen_optional: Option<Span> = None;
     for input in sig.inputs.iter_mut() {
         if let syn::FnArg::Typed(pat_type) = input {
             let attrs = BindgenAttrs::find(&mut pat_type.attrs)?;
@@ -1302,6 +1303,23 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
                     Ok(Some(ty.to_string()))
                 })?;
 
+            let is_optional = optional_param_type.is_some();
+
+            // Check that a non-optional param doesn't follow an optional one
+            if let Some(optional_span) = seen_optional {
+                if !is_optional {
+                    return Err(Diagnostic::span_error(
+                        optional_span,
+                        "a required parameter cannot follow an optional parameter",
+                    ));
+                }
+            }
+            if is_optional {
+                if let Some((_, span)) = optional_param_type {
+                    seen_optional = Some(span);
+                }
+            }
+
             let arg_attrs = FnArgAttrs {
                 js_name: attrs
                     .js_name()
@@ -1312,7 +1330,7 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
                         Ok(Some(js_name_override.to_string()))
                     })?,
                 js_type,
-                optional: optional_param_type.is_some(),
+                optional: is_optional,
                 desc: attrs
                     .param_description()
                     .map_or::<Result<_, Diagnostic>, _>(Ok(None), |(description, span)| {
