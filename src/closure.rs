@@ -413,7 +413,7 @@ where
     /// // Can also upcast to FnMut
     /// call_fnmut(closure.upcast_ref(), 42);
     /// ```
-    pub fn borrow<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow<'a, F>(t: &'a F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRef<T> + MaybeUnwindSafe + ?Sized,
     {
@@ -427,7 +427,7 @@ where
     ///
     /// **Note: Not unwind safe. Prefer [`borrow`](Self::borrow) or
     /// [`borrow_assert_unwind_safe`](Self::borrow_assert_unwind_safe) when possible.**
-    pub fn borrow_aborting<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow_aborting<'a, F>(t: &'a F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRef<T> + ?Sized,
     {
@@ -438,14 +438,14 @@ where
     ///
     /// **Safety: Unwind safety is assumed when using this function, like using
     /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
-    pub fn borrow_assert_unwind_safe<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow_assert_unwind_safe<'a, F>(t: &'a F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRef<T> + ?Sized,
     {
         Self::wrap_borrow::<_, true>(t)
     }
 
-    fn wrap_borrow<'a, F, const UNWIND_SAFE: bool>(t: &'a F) -> ScopedClosure<'a, F::Static>
+    fn wrap_borrow<'a, F, const UNWIND_SAFE: bool>(t: &'a F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRef<T> + ?Sized,
     {
@@ -492,7 +492,7 @@ where
     /// // closure dropped, `sum` is accessible again
     /// assert_eq!(sum, 6); // 1 + 2 + 3
     /// ```
-    pub fn borrow_mut<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow_mut<'a, F>(t: &'a mut F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRefMut<T> + MaybeUnwindSafe + ?Sized,
     {
@@ -506,7 +506,7 @@ where
     ///
     /// **Note: Not unwind safe. Prefer [`borrow_mut`](Self::borrow_mut) or
     /// [`borrow_mut_assert_unwind_safe`](Self::borrow_mut_assert_unwind_safe) when possible.**
-    pub fn borrow_mut_aborting<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow_mut_aborting<'a, F>(t: &'a mut F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRefMut<T> + ?Sized,
     {
@@ -517,14 +517,14 @@ where
     ///
     /// **Safety: Unwind safety is assumed when using this function, like using
     /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
-    pub fn borrow_mut_assert_unwind_safe<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    pub fn borrow_mut_assert_unwind_safe<'a, F>(t: &'a mut F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRefMut<T> + ?Sized,
     {
         Self::wrap_borrow_mut::<_, true>(t)
     }
 
-    fn wrap_borrow_mut<'a, F, const UNWIND_SAFE: bool>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
+    fn wrap_borrow_mut<'a, F, const UNWIND_SAFE: bool>(t: &'a mut F) -> ScopedClosure<'a, T::Static>
     where
         F: IntoWasmClosureRefMut<T> + ?Sized,
     {
@@ -898,6 +898,9 @@ where
 #[doc(hidden)]
 pub unsafe trait WasmClosure: WasmDescribe {
     const IS_MUT: bool;
+    /// The `'static` version of `Self`. For example, if `Self` is `dyn Fn() + 'a`,
+    /// then `Static` is `dyn Fn()` (implicitly `'static`).
+    type Static: ?Sized + WasmClosure;
     /// The mutable version of this closure type.
     /// For `dyn Fn(...) -> R` this is `dyn FnMut(...) -> R`.
     /// For `dyn FnMut(...) -> R` this is itself.
@@ -909,6 +912,7 @@ pub unsafe trait WasmClosure: WasmDescribe {
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
+    type Static = T::Static;
     const IS_MUT: bool = T::IS_MUT;
     type AsMut = T::AsMut;
     fn describe_invoke<const UNWIND_SAFE: bool>() {
@@ -937,9 +941,6 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
 /// implement yourself.
 #[doc(hidden)]
 pub trait IntoWasmClosureRef<T: ?Sized> {
-    /// The `'static` version of `T`. For example, if `T` is `dyn Fn() + 'a`,
-    /// then `Static` is `dyn Fn()` (implicitly `'static`).
-    type Static: ?Sized + WasmClosure;
     fn unsize_closure_ref(&self) -> &T;
 }
 
@@ -949,9 +950,6 @@ pub trait IntoWasmClosureRef<T: ?Sized> {
 /// implement yourself.
 #[doc(hidden)]
 pub trait IntoWasmClosureRefMut<T: ?Sized> {
-    /// The `'static` version of `T`. For example, if `T` is `dyn FnMut() + 'a`,
-    /// then `Static` is `dyn FnMut()` (implicitly `'static`).
-    type Static: ?Sized + WasmClosure;
     fn unsize_closure_ref(&mut self) -> &mut T;
 }
 
@@ -960,7 +958,6 @@ impl<T: ?Sized, F> IntoWasmClosureRef<T> for AssertUnwindSafe<F>
 where
     F: IntoWasmClosureRef<T>,
 {
-    type Static = F::Static;
     fn unsize_closure_ref(&self) -> &T {
         self.0.unsize_closure_ref()
     }
@@ -970,7 +967,6 @@ impl<T: ?Sized, F> IntoWasmClosureRefMut<T> for AssertUnwindSafe<F>
 where
     F: IntoWasmClosureRefMut<T>,
 {
-    type Static = F::Static;
     fn unsize_closure_ref(&mut self) -> &mut T {
         self.0.unsize_closure_ref()
     }

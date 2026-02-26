@@ -124,6 +124,7 @@ macro_rules! closures {
             R: ReturnWasmAbi,
         {
             const IS_MUT: bool = $is_mut;
+            type Static = dyn $Fn $FnArgs -> R;
             type AsMut = dyn FnMut $FnArgs -> R + '__closure;
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe_invoke<const UNWIND_SAFE: bool>() {
@@ -151,7 +152,6 @@ macro_rules! closures {
         where
             T: Fn $FnArgs -> R,
         {
-            type Static = dyn Fn $FnArgs -> R;
             fn unsize_closure_ref(&self) -> &(dyn Fn $FnArgs -> R + 'a) { self }
         }
 
@@ -159,7 +159,6 @@ macro_rules! closures {
         where
             T: FnMut $FnArgs -> R,
         {
-            type Static = dyn FnMut $FnArgs -> R;
             fn unsize_closure_ref(&mut self) -> &mut (dyn FnMut $FnArgs -> R + 'a) { self }
         }
     );
