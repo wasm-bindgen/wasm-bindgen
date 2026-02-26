@@ -3358,7 +3358,7 @@ function __wbg_handle_catch(e) {{
     if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
         throw e.getArg(__wbindgen_wrapped_jstag, 0);
     }}
-    {mem_view}()[wasm.__instance_terminated/4] = 1;
+    {mem_view}()[wasm.__instance_terminated.value / 4] = 1;
     throw e;
 }}"
         ));
