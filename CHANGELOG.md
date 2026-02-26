@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
+  [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
+
 ### Changed
 
 ### Fixed
@@ -14,6 +17,11 @@
 ## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
 
 ### Added
+
+* Added `[WbgGeneric]` WebIDL extended attribute for opting stable dictionary and interface
+  definitions into typed generics (the same signatures unstable APIs use), avoiding legacy
+  `&JsValue` fallbacks. Applied to all new VideoFrame-related types.
+  [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
 * Added `unchecked_optional_param_type` attribute for marking exported function parameters as
   optional in TypeScript (`?:`) and JSDoc (`[paramName]`) output. Mutually exclusive with

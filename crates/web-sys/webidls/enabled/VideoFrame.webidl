@@ -6,7 +6,7 @@ enum AlphaOption {
   "discard",
 };
 
-[Exposed=(Window,DedicatedWorker), Serializable, Transferable]
+[Exposed=(Window,DedicatedWorker), Serializable, Transferable, WbgGeneric]
 interface VideoFrame {
   [Throws] constructor(CanvasImageSource image, optional VideoFrameInit init = {});
   [Throws] constructor(AllowSharedBufferSource data, VideoFrameBufferInit init);
@@ -35,6 +35,7 @@ interface VideoFrame {
   undefined close();
 };
 
+[WbgGeneric]
 dictionary VideoFrameInit {
   unsigned long long duration;  // microseconds
   long long timestamp;          // microseconds
@@ -55,6 +56,7 @@ dictionary VideoFrameInit {
   // VideoFrameMetadata metadata;
 };
 
+[WbgGeneric]
 dictionary VideoFrameBufferInit {
   required VideoPixelFormat format;
   required [EnforceRange] unsigned long codedWidth;
@@ -82,6 +84,7 @@ dictionary VideoFrameBufferInit {
   // VideoFrameMetadata metadata;
 };
 
+[WbgGeneric]
 dictionary VideoFrameCopyToOptions {
   DOMRectInit rect;
   sequence<PlaneLayout> layout;
@@ -89,6 +92,7 @@ dictionary VideoFrameCopyToOptions {
   PredefinedColorSpace colorSpace;
 };
 
+[WbgGeneric]
 dictionary PlaneLayout {
   [EnforceRange] required unsigned long offset;
   [EnforceRange] required unsigned long stride;
@@ -131,7 +135,7 @@ enum VideoPixelFormat {
   "BGRX",
 };
 
-[Exposed=(Window,DedicatedWorker)]
+[Exposed=(Window,DedicatedWorker), WbgGeneric]
 interface VideoColorSpace {
   constructor(optional VideoColorSpaceInit init = {});
 
@@ -143,6 +147,7 @@ interface VideoColorSpace {
   [Default] VideoColorSpaceInit toJSON();
 };
 
+[WbgGeneric]
 dictionary VideoColorSpaceInit {
   VideoColorPrimaries? primaries = null;
   VideoTransferCharacteristics? transfer = null;

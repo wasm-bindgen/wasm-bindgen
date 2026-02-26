@@ -344,6 +344,7 @@ impl<'src> FirstPassRecord<'src> {
         data: &'src OperationData<'src>,
         unstable: bool,
         unstable_types: &HashSet<Identifier>,
+        wbg_generic: bool,
     ) -> Vec<InterfaceMethod<'_>> {
         let is_static = data.is_static;
 
@@ -360,7 +361,8 @@ impl<'src> FirstPassRecord<'src> {
         for signature in data.signatures.iter() {
             // Signatures from unstable IDL definitions always use typed generics
             // for WbgType expansion (callbacks become typed, etc.)
-            if unstable || signature.stability.is_unstable() {
+            // [WbgGeneric] on the definition also opts into typed generics.
+            if unstable || wbg_generic || signature.stability.is_unstable() {
                 self.options.next_unstable.set(true);
             }
 
@@ -981,6 +983,12 @@ fn has_ident_attribute(list: Option<&ExtendedAttributeList>, ident: &str) -> boo
 /// ChromeOnly is for things that are only exposed to privileged code in Firefox.
 pub fn is_chrome_only(ext_attrs: &Option<ExtendedAttributeList>) -> bool {
     has_named_attribute(ext_attrs.as_ref(), "ChromeOnly")
+}
+
+/// Whether a webidl definition is marked with `[WbgGeneric]`, which opts
+/// stable APIs into typed generics (the same signatures that unstable APIs use).
+pub fn is_wbg_generic(ext_attrs: Option<&ExtendedAttributeList>) -> bool {
+    has_named_attribute(ext_attrs, "WbgGeneric")
 }
 
 /// Whether a webidl object is marked as a no interface object.

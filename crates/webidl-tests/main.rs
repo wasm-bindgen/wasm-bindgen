@@ -41,3 +41,4 @@ pub mod simple;
 pub mod throws;
 pub mod unstable;
 pub mod upcast;
+pub mod wbg_generic;
