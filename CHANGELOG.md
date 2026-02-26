@@ -7,6 +7,16 @@
 
 ### Changed
 
+* Replaced runtime `0x80000000` vtable bit-flag for closure unwind safety with a
+  compile-time `const UNWIND_SAFE: bool` generic on the invoke shim, `OwnedClosure`,
+  and `BorrowedClosure`. Removes `OwnedClosureUnwind` and deduplicates internal
+  closure helpers. The public API is unchanged.
+  [#5003](https://github.com/wasm-bindgen/wasm-bindgen/pull/5003)
+* Removed unused `IntoWasmClosureRef*::WithLifetime` types,
+  `WasmClosure::to_wasm_slice`, and a lifetime from
+  `IntoWasmClosureRef*`; moved `Static` associated type into `WasmClosure`.
+  [#5003](https://github.com/wasm-bindgen/wasm-bindgen/pull/5003)
+
 ### Fixed
 
 ### Removed
