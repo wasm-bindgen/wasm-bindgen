@@ -39,9 +39,9 @@ struct CatchContext {
     original_func: FunctionId,
     js_tag: TagId,
     wrapper_kind: WrapperKind,
-    externref_table: TableId,
-    heap_alloc: FunctionId,
-    exn_store: FunctionId,
+    externref_table: Option<TableId>,
+    table_alloc: Option<FunctionId>,
+    exn_store: Option<FunctionId>,
     idx_local: LocalId,
     exn_local: LocalId,
 }
@@ -57,32 +57,26 @@ pub fn run(
     aux: &mut WasmBindgenAux,
     wit: &NonstandardWitSection,
     eh_version: ExceptionHandlingVersion,
-    abort_reinit: bool,
 ) -> Result<(), Error> {
-    if aux.imports_with_catch.is_empty() {
-        return Ok(());
+    // These intrinsics are required when there are catch imports
+    let externref_table = aux.externref_table;
+    let table_alloc = aux.externref_alloc;
+    let exn_store = aux.exn_store;
+    if !aux.imports_with_catch.is_empty() {
+        if externref_table.is_none() {
+            anyhow::bail!("externref table required for catch wrappers");
+        }
+        if table_alloc.is_none() {
+            anyhow::bail!("externref alloc required for catch wrappers");
+        }
+        if exn_store.is_none() {
+            anyhow::bail!("__wbindgen_exn_store required for catch wrappers");
+        }
     }
-
-    // Get required intrinsics
-    let externref_table = aux
-        .externref_table
-        .ok_or_else(|| anyhow::anyhow!("externref table required for catch wrappers"))?;
-
-    let heap_alloc = aux
-        .externref_alloc
-        .ok_or_else(|| anyhow::anyhow!("externref alloc required for catch wrappers"))?;
-
-    let exn_store = aux
-        .exn_store
-        .ok_or_else(|| anyhow::anyhow!("__wbindgen_exn_store required for catch wrappers"))?;
 
     // Import the JSTag
     let js_tag = import_js_tag(module);
-    let wrapped_js_tag = if abort_reinit {
-        Some(import_externref_tag(module, "__wbindgen_wrapped_jstag"))
-    } else {
-        None
-    };
+    let wrapped_js_tag = Some(import_externref_tag(module, "__wbindgen_wrapped_jstag"));
 
     let mut wrappers = HashMap::new();
 
@@ -102,7 +96,7 @@ pub fn run(
             js_tag,
             wrapper_kind,
             externref_table,
-            heap_alloc,
+            table_alloc,
             exn_store,
             eh_version,
         );
@@ -141,9 +135,9 @@ fn generate_catch_wrapper(
     original_func: FunctionId,
     js_tag: TagId,
     wrapper_kind: WrapperKind,
-    externref_table: TableId,
-    heap_alloc: FunctionId,
-    exn_store: FunctionId,
+    externref_table: Option<TableId>,
+    table_alloc: Option<FunctionId>,
+    exn_store: Option<FunctionId>,
     eh_version: ExceptionHandlingVersion,
 ) -> FunctionId {
     // Get the original function's type
@@ -164,7 +158,7 @@ fn generate_catch_wrapper(
         js_tag,
         wrapper_kind,
         externref_table,
-        heap_alloc,
+        table_alloc,
         exn_store,
         idx_local: module.locals.add(ValType::I32),
         exn_local: module.locals.add(ValType::Ref(RefType::EXTERNREF)),
@@ -210,7 +204,7 @@ fn generate_catch_wrapper(
 /// )
 /// ;; Exception path: externref is on stack from catching
 /// local.set $exn_local
-/// call $heap_alloc
+/// call $table_alloc
 /// local.tee $idx_local
 /// local.get $exn_local
 /// table.set $externref_table
@@ -280,7 +274,7 @@ fn generate_modern_eh_wrapper(
 /// catch $jstag
 ///   ;; externref is on stack from catch
 ///   local.set $exn_local
-///   call $heap_alloc
+///   call $table_alloc
 ///   local.tee $idx_local
 ///   local.get $exn_local
 ///   table.set $externref_table
@@ -367,13 +361,17 @@ fn emit_catch_handler(
         }
         WrapperKind::CatchWrapper => {
             // Store the externref in the externref table and call exn_store
+            // We validated at the start of `run` when imports_with_catch is non-empty so just unwrap here
+            let table_alloc = ctx.table_alloc.unwrap();
+            let externref_table = ctx.externref_table.unwrap();
+            let exn_store = ctx.exn_store.unwrap();
             builder.local_set(ctx.exn_local);
-            builder.call(ctx.heap_alloc);
+            builder.call(table_alloc);
             builder.local_tee(ctx.idx_local);
             builder.local_get(ctx.exn_local);
-            builder.table_set(ctx.externref_table);
+            builder.table_set(externref_table);
             builder.local_get(ctx.idx_local);
-            builder.call(ctx.exn_store);
+            builder.call(exn_store);
             push_default_values(builder, results);
         }
     }
@@ -504,7 +502,7 @@ mod tests {
                 (table $externrefs 128 externref)
 
                 ;; Heap alloc function (returns index)
-                (func $heap_alloc (result i32)
+                (func $table_alloc (result i32)
                     i32.const 42
                 )
 
@@ -513,7 +511,7 @@ mod tests {
 
                 (export "my_import" (func $my_import))
                 (export "__externref_table" (table $externrefs))
-                (export "heap_alloc" (func $heap_alloc))
+                (export "table_alloc" (func $table_alloc))
                 (export "exn_store" (func $exn_store))
             )
         "#;
@@ -542,10 +540,10 @@ mod tests {
             .unwrap();
 
         // Get the helper functions
-        let heap_alloc = module
+        let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "heap_alloc")
+            .find(|e| e.name == "table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -574,9 +572,9 @@ mod tests {
             import_func,
             js_tag,
             WrapperKind::CatchWrapper,
-            table,
-            heap_alloc,
-            exn_store,
+            Some(table),
+            Some(table_alloc),
+            Some(exn_store),
             super::super::ExceptionHandlingVersion::Modern,
         );
 
@@ -599,7 +597,7 @@ mod tests {
                 (table $externrefs 128 externref)
 
                 ;; Heap alloc function
-                (func $heap_alloc (result i32)
+                (func $table_alloc (result i32)
                     i32.const 42
                 )
 
@@ -608,7 +606,7 @@ mod tests {
 
                 (export "my_void_import" (func $my_void_import))
                 (export "__externref_table" (table $externrefs))
-                (export "heap_alloc" (func $heap_alloc))
+                (export "table_alloc" (func $table_alloc))
                 (export "exn_store" (func $exn_store))
             )
         "#;
@@ -637,10 +635,10 @@ mod tests {
             .unwrap();
 
         // Get the helper functions
-        let heap_alloc = module
+        let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "heap_alloc")
+            .find(|e| e.name == "table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -669,9 +667,9 @@ mod tests {
             import_func,
             js_tag,
             WrapperKind::CatchWrapper,
-            table,
-            heap_alloc,
-            exn_store,
+            Some(table),
+            Some(table_alloc),
+            Some(exn_store),
             super::super::ExceptionHandlingVersion::Legacy,
         );
 
@@ -698,7 +696,7 @@ mod tests {
                 (table $externrefs 128 externref)
 
                 ;; Heap alloc function
-                (func $heap_alloc (result i32)
+                (func $table_alloc (result i32)
                     i32.const 42
                 )
 
@@ -719,7 +717,7 @@ mod tests {
                     call $might_throw
                 )
 
-                (export "__externref_table_alloc" (func $heap_alloc))
+                (export "__externref_table_alloc" (func $table_alloc))
                 (export "__wbindgen_exn_store" (func $exn_store))
                 (export "caller" (func $caller))
             )
@@ -742,8 +740,8 @@ mod tests {
         // Get the table
         let table = module.tables.iter().next().unwrap().id();
 
-        // Get heap_alloc and exn_store
-        let heap_alloc = module
+        // Get table_alloc and exn_store
+        let table_alloc = module
             .exports
             .iter()
             .find(|e| e.name == "__externref_table_alloc")
@@ -771,7 +769,7 @@ mod tests {
         let mut aux = WasmBindgenAux {
             imports_with_catch,
             externref_table: Some(table),
-            externref_alloc: Some(heap_alloc),
+            externref_alloc: Some(table_alloc),
             exn_store: Some(exn_store),
             ..Default::default()
         };
@@ -785,7 +783,7 @@ mod tests {
         assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
 
         // Run the transform
-        run(&mut module, &mut aux, &wit, eh_version, false).unwrap();
+        run(&mut module, &mut aux, &wit, eh_version).unwrap();
 
         // JSTag should be set in aux
         assert!(aux.js_tag.is_some());
@@ -820,9 +818,10 @@ mod tests {
         let eh_version = super::super::detect_exception_handling_version(&module);
         assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
 
-        // Run should be a no-op since no imports need catching
-        run(&mut module, &mut aux, &wit, eh_version, false).unwrap();
-        assert!(aux.js_tag.is_none());
+        // Run should still import tags but generate no wrappers
+        run(&mut module, &mut aux, &wit, eh_version).unwrap();
+        assert!(aux.js_tag.is_some());
+        assert!(aux.wrapped_js_tag.is_some());
     }
 
     #[test]
@@ -833,11 +832,11 @@ mod tests {
             (module
                 (import "env" "my_import" (func $my_import (param i32) (result i32)))
                 (table $externrefs 128 externref)
-                (func $heap_alloc (result i32) i32.const 42)
+                (func $table_alloc (result i32) i32.const 42)
                 (func $exn_store (param i32))
                 (export "my_import" (func $my_import))
                 (export "__externref_table" (table $externrefs))
-                (export "heap_alloc" (func $heap_alloc))
+                (export "table_alloc" (func $table_alloc))
                 (export "exn_store" (func $exn_store))
             )
         "#;
@@ -863,10 +862,10 @@ mod tests {
             })
             .unwrap();
 
-        let heap_alloc = module
+        let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "heap_alloc")
+            .find(|e| e.name == "table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -890,9 +889,9 @@ mod tests {
             import_func,
             js_tag,
             WrapperKind::CatchWrapper,
-            table,
-            heap_alloc,
-            exn_store,
+            Some(table),
+            Some(table_alloc),
+            Some(exn_store),
             super::super::ExceptionHandlingVersion::Legacy,
         );
 
@@ -924,11 +923,11 @@ mod tests {
             (module
                 (import "env" "my_import" (func $my_import (param i32) (result i32)))
                 (table $externrefs 128 externref)
-                (func $heap_alloc (result i32) i32.const 42)
+                (func $table_alloc (result i32) i32.const 42)
                 (func $exn_store (param i32))
                 (export "my_import" (func $my_import))
                 (export "__externref_table" (table $externrefs))
-                (export "heap_alloc" (func $heap_alloc))
+                (export "table_alloc" (func $table_alloc))
                 (export "exn_store" (func $exn_store))
             )
         "#;
@@ -954,10 +953,10 @@ mod tests {
             })
             .unwrap();
 
-        let heap_alloc = module
+        let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "heap_alloc")
+            .find(|e| e.name == "table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -981,9 +980,9 @@ mod tests {
             import_func,
             js_tag,
             WrapperKind::CatchWrapper,
-            table,
-            heap_alloc,
-            exn_store,
+            Some(table),
+            Some(table_alloc),
+            Some(exn_store),
             super::super::ExceptionHandlingVersion::Modern,
         );
 

@@ -815,8 +815,7 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
-            let mut should_check_aborted = js.cx.config.abort_reinit
-                && js.cx.aux.wrapped_js_tag.is_some()
+            let mut should_check_aborted = js.cx.aux.wrapped_js_tag.is_some()
                 && matches!(
                     instr,
                     Instruction::CallExport(_) | Instruction::DeferFree { .. }

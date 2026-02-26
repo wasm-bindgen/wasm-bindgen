@@ -41,7 +41,6 @@ pub struct Bindgen {
     encode_into: EncodeInto,
     split_linked_modules: bool,
     generate_reset_state: bool,
-    abort_reinit: bool,
 }
 
 pub struct Output {
@@ -90,7 +89,6 @@ impl Bindgen {
         let externref =
             env::var("WASM_BINDGEN_ANYREF").is_ok() || env::var("WASM_BINDGEN_EXTERNREF").is_ok();
         let multi_value = env::var("WASM_BINDGEN_MULTI_VALUE").is_ok();
-        let abort_reinit = env::var("WASM_BINDGEN_ABORT_REINIT").is_ok();
         Bindgen {
             input: Input::None,
             out_name: None,
@@ -112,7 +110,6 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             generate_reset_state: false,
-            abort_reinit,
         }
     }
 
@@ -458,7 +455,7 @@ impl Bindgen {
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
         // externref table and allocation function.
-        generate_wasm_catch_wrappers(&mut module, self.abort_reinit)?;
+        generate_wasm_catch_wrappers(&mut module)?;
 
         // We've done a whole bunch of transformations to the Wasm module, many
         // of which leave "garbage" lying around, so let's prune out all our
@@ -783,14 +780,11 @@ impl Output {
 /// When exception handling instructions are available in the module, this generates
 /// Wasm wrapper functions that catch JavaScript exceptions using `WebAssembly.JSTag`
 /// instead of relying on JS `handleError` wrappers.
-fn generate_wasm_catch_wrappers(module: &mut Module, abort_reinit: bool) -> Result<(), Error> {
+fn generate_wasm_catch_wrappers(module: &mut Module) -> Result<(), Error> {
     let eh_version = transforms::detect_exception_handling_version(module);
     log::debug!("Exception handling version: {eh_version:?}");
 
     if eh_version == transforms::ExceptionHandlingVersion::None {
-        if abort_reinit {
-            bail!("abort_reinit requires panic=unwind");
-        }
         return Ok(());
     }
 
@@ -812,7 +806,7 @@ fn generate_wasm_catch_wrappers(module: &mut Module, abort_reinit: bool) -> Resu
         aux.exn_store
     );
 
-    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version, abort_reinit)
+    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version)
         .context("failed to generate catch wrappers");
 
     // Re-add the custom sections
