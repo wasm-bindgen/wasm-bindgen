@@ -940,7 +940,6 @@ pub trait IntoWasmClosureRef<'a, T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn Fn() + 'a`,
     /// then `Static` is `dyn Fn()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;
-    type WithLifetime: ?Sized + WasmClosure + 'a;
     fn unsize_closure_ref(&self) -> &T;
 }
 
@@ -953,7 +952,6 @@ pub trait IntoWasmClosureRefMut<'a, T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn FnMut() + 'a`,
     /// then `Static` is `dyn FnMut()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;
-    type WithLifetime: ?Sized + WasmClosure + 'a;
     fn unsize_closure_ref(&mut self) -> &mut T;
 }
 
@@ -963,7 +961,6 @@ where
     F: IntoWasmClosureRef<'a, T>,
 {
     type Static = F::Static;
-    type WithLifetime = F::WithLifetime;
     fn unsize_closure_ref(&self) -> &T {
         self.0.unsize_closure_ref()
     }
@@ -974,7 +971,6 @@ where
     F: IntoWasmClosureRefMut<'a, T>,
 {
     type Static = F::Static;
-    type WithLifetime = F::WithLifetime;
     fn unsize_closure_ref(&mut self) -> &mut T {
         self.0.unsize_closure_ref()
     }

@@ -153,7 +153,6 @@ macro_rules! closures {
             T: Fn $FnArgs -> R,
         {
             type Static = dyn Fn $FnArgs -> R;
-            type WithLifetime = dyn Fn $FnArgs -> R + 'b;
             fn unsize_closure_ref(&self) -> &(dyn Fn $FnArgs -> R + 'a) { self }
         }
 
@@ -163,7 +162,6 @@ macro_rules! closures {
             T: FnMut $FnArgs -> R,
         {
             type Static = dyn FnMut $FnArgs -> R;
-            type WithLifetime = dyn FnMut $FnArgs -> R + 'b;
             fn unsize_closure_ref(&mut self) -> &mut (dyn FnMut $FnArgs -> R + 'a) { self }
         }
     );
