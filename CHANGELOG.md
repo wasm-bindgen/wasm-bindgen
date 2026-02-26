@@ -19,6 +19,11 @@
 
 ### Fixed
 
+* Fixed exported structs/enums/functions with the same `js_name` but different
+  `js_namespace` values producing symbol collisions at compile time, by deriving
+  internal wasm symbols from a qualified name that includes the namespace.
+  [#4977](https://github.com/wasm-bindgen/wasm-bindgen/pull/4977)
+
 * Fixed soundness hole in `ScopedClosure`'s `UpcastFrom` that allowed to extend the lifetime after the original `ScopedClosure` was dropped.
   [#5006](https://github.com/wasm-bindgen/wasm-bindgen/pull/5006)
 
