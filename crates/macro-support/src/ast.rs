@@ -425,6 +425,7 @@ pub struct FunctionArgumentData {
 }
 
 /// Information about a Struct being exported
+#[allow(dead_code)]
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Clone)]
 pub struct Struct {
@@ -446,6 +447,8 @@ pub struct Struct {
     pub js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
+    // TODO generiate the type lias
+    pub generate_type_alias: Option<Ident>,
 }
 
 /// The field of a struct

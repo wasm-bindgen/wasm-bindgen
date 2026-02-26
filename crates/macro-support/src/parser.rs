@@ -8,9 +8,11 @@ use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
+use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
-use syn::Token;
+use syn::Type;
+use syn::{parenthesized, Token};
 use syn::{ItemFn, Lit, MacroDelimiter, ReturnType};
 use wasm_bindgen_shared::identifier::{is_js_keyword, is_non_value_js_keyword, is_valid_ident};
 
@@ -70,6 +72,71 @@ pub struct BindgenAttrs {
 #[derive(Clone)]
 pub struct JsNamespace(Vec<String>);
 
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone)]
+pub struct GenericArg {
+    generics: Vec<Type>,
+    type_alias_name: Ident,
+}
+
+impl Parse for GenericArg {
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        let kw_impl: Ident = input.parse()?;
+        if kw_impl != "new" {
+            return Err(syn::Error::new(kw_impl.span(), "expected `new`"));
+        }
+
+        let content;
+        parenthesized!(content in input);
+
+        let kw_generics: Ident = content.parse()?;
+        if kw_generics != "generics" {
+            return Err(syn::Error::new(kw_generics.span(), "expected `generics`"));
+        }
+
+        let generics_content;
+        parenthesized!(generics_content in content);
+
+        let generics: Punctuated<Type, Token![,]> =
+            generics_content.parse_terminated(Type::parse, Token![,])?;
+
+        content.parse::<Token![,]>()?;
+
+        let key: Ident = content.parse()?;
+        if key != "type_alias_name" {
+            return Err(syn::Error::new(key.span(), "expected `type_alias_name`"));
+        }
+
+        content.parse::<Token![=]>()?;
+        let type_alias_name = content.parse::<Ident>()?;
+
+        if !content.is_empty() {
+            let _ = content.parse::<Option<Token![,]>>()?;
+        }
+        Ok(GenericArg {
+            generics: generics.into_iter().collect(),
+            type_alias_name,
+        })
+    }
+}
+
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone)]
+pub struct GenericArgs {
+    pub items: Vec<GenericArg>,
+}
+
+impl Parse for GenericArgs {
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        let content;
+        parenthesized!(content in input);
+
+        let items = Punctuated::<GenericArg, Token![,]>::parse_terminated(&content)?;
+        Ok(GenericArgs {
+            items: items.into_iter().collect(),
+        })
+    }
+}
 macro_rules! attrgen {
     ($mac:ident) => {
         $mac! {
@@ -90,6 +157,7 @@ macro_rules! attrgen {
             (structural, false, Structural(Span)),
             (r#final, false, Final(Span)),
             (readonly, false, Readonly(Span)),
+            (generic, false, Generic(Span, GenericArgs)),
             (js_name, false, JsName(Span, String, Span)),
             (js_class, false, JsClass(Span, String, Span)),
             (reexport, false, Reexport(Span, Option<String>)),
@@ -338,6 +406,11 @@ impl Parse for BindgenAttr {
                 )*
             };
 
+            (@parser $variant:ident(Span, GenericArgs)) => ({
+                input.parse::<Token![=]>()?;
+                return Ok(BindgenAttr::$variant(attr_span, input.parse()?));
+            });
+
             (@parser $variant:ident(Span)) => ({
                 return Ok(BindgenAttr::$variant(attr_span));
             });
@@ -463,94 +536,208 @@ pub(crate) trait ConvertToAst<Ctx> {
     fn convert(self, context: Ctx) -> Result<Self::Target, Diagnostic>;
 }
 
+fn substitute_type(ty: &syn::Type, subs: &[(syn::Ident, syn::Type)]) -> syn::Type {
+    match ty {
+        syn::Type::Path(tp) => {
+            if tp.qself.is_none() && tp.path.segments.len() == 1 {
+                let seg = &tp.path.segments[0];
+                if let Some((_, repl)) = subs.iter().find(|(g, _)| *g == seg.ident) {
+                    return repl.clone();
+                }
+            }
+
+            let mut out = tp.clone();
+            for seg in &mut out.path.segments {
+                if let syn::PathArguments::AngleBracketed(args) = &mut seg.arguments {
+                    for arg in &mut args.args {
+                        if let syn::GenericArgument::Type(inner) = arg {
+                            *inner = substitute_type(inner, subs);
+                        }
+                    }
+                }
+            }
+            syn::Type::Path(out)
+        }
+
+        syn::Type::Tuple(tt) => {
+            let mut out = tt.clone();
+            for elem in &mut out.elems {
+                *elem = substitute_type(elem, subs);
+            }
+            syn::Type::Tuple(out)
+        }
+
+        syn::Type::Paren(tp) => {
+            let mut out = tp.clone();
+            out.elem = Box::new(substitute_type(&out.elem, subs));
+            syn::Type::Paren(out)
+        }
+
+        syn::Type::Group(tg) => {
+            let mut out = tg.clone();
+            out.elem = Box::new(substitute_type(&out.elem, subs));
+            syn::Type::Group(out)
+        }
+
+        syn::Type::Reference(tr) => {
+            let mut out = tr.clone();
+            out.elem = Box::new(substitute_type(&out.elem, subs));
+            syn::Type::Reference(out)
+        }
+
+        syn::Type::Array(ta) => {
+            let mut out = ta.clone();
+            out.elem = Box::new(substitute_type(&out.elem, subs));
+            syn::Type::Array(out)
+        }
+
+        syn::Type::Slice(ts) => {
+            let mut out = ts.clone();
+            out.elem = Box::new(substitute_type(&out.elem, subs));
+            syn::Type::Slice(out)
+        }
+
+        _ => ty.clone(),
+    }
+}
+
+fn convert(
+    self_item_struct: &&mut syn::ItemStruct,
+    self_ident: Ident,
+    attrs: &BindgenAttrs,
+    generic_substitutions: Option<Vec<(Ident, Type)>>,
+    wasm_bindgen: &syn::Path,
+    gen_type_alias: bool,
+) -> Result<ast::Struct, Diagnostic> {
+    let mut fields = Vec::new();
+    let js_name = attrs
+        .js_name()
+        .map(|s| s.0.to_string())
+        .unwrap_or(self_ident.unraw().to_string());
+    if is_js_keyword(&js_name) && js_name != "default" {
+        bail_span!(
+            self_ident,
+            "struct cannot use the JS keyword `{}` as its name",
+            js_name
+        );
+    }
+
+    let is_inspectable = attrs.inspectable().is_some();
+    let getter_with_clone = attrs.getter_with_clone();
+
+    // We can clone here despite the itermut because fields themselves won't have
+    // bindgen args
+    for (i, field) in self_item_struct.fields.clone().iter_mut().enumerate() {
+        match field.vis {
+            syn::Visibility::Public(..) => {}
+            _ => continue,
+        }
+        let (js_field_name, member) = match &field.ident {
+            Some(ident) => (ident.unraw().to_string(), syn::Member::Named(ident.clone())),
+            None => (i.to_string(), syn::Member::Unnamed(i.into())),
+        };
+
+        let attrs = BindgenAttrs::find(&mut field.attrs)?;
+        if attrs.skip().is_some() {
+            // attrs.check_used();
+            continue;
+        }
+
+        let js_field_name = match attrs.js_name() {
+            Some((name, _)) => name.to_string(),
+            None => js_field_name,
+        };
+
+        let comments = extract_doc_comments(&field.attrs);
+        let getter = wasm_bindgen_shared::struct_field_get(&js_name, &js_field_name);
+        let setter = wasm_bindgen_shared::struct_field_set(&js_name, &js_field_name);
+
+        let ty = if let Some(items) = &generic_substitutions {
+            substitute_type(&field.ty, items.as_slice())
+        } else {
+            field.ty.clone()
+        };
+
+        fields.push(ast::StructField {
+            rust_name: member,
+            js_name: js_field_name,
+            struct_name: self_ident.clone(),
+            readonly: attrs.readonly().is_some(),
+            ty,
+            getter: Ident::new(&getter, Span::call_site()),
+            setter: Ident::new(&setter, Span::call_site()),
+            comments,
+            generate_typescript: attrs.skip_typescript().is_none(),
+            generate_jsdoc: attrs.skip_jsdoc().is_none(),
+            getter_with_clone: attrs.getter_with_clone().or(getter_with_clone).copied(),
+            wasm_bindgen: wasm_bindgen.clone(),
+        });
+        // attrs.check_used();
+    }
+    let generate_typescript = attrs.skip_typescript().is_none();
+    let private = attrs.private().is_some();
+    let comments: Vec<String> = extract_doc_comments(&self_item_struct.attrs);
+    let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
+    // attrs.check_used();
+    Ok(ast::Struct {
+        rust_name: self_ident.clone(),
+        js_name,
+        fields,
+        comments,
+        is_inspectable,
+        generate_typescript,
+        private,
+        js_namespace,
+        wasm_bindgen: wasm_bindgen.clone(),
+        generate_type_alias: gen_type_alias.then_some(self_ident),
+    })
+}
+
 impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
-    type Target = ast::Struct;
+    type Target = Vec<ast::Struct>;
 
     fn convert(self, program: &ast::Program) -> Result<Self::Target, Diagnostic> {
-        if !self.generics.params.is_empty() {
-            bail_span!(
-                self.generics,
-                "structs with #[wasm_bindgen] cannot have lifetime or \
-                 type parameters currently"
-            );
-        }
         let attrs = BindgenAttrs::find(&mut self.attrs)?;
 
-        // the `wasm_bindgen` option has been used before
-        let _ = attrs.wasm_bindgen();
+        if let Some(list) = attrs.generic() {
+            let tp = self
+                .generics
+                .type_params()
+                .cloned()
+                .map(|v| v.ident)
+                .collect::<Vec<_>>();
 
-        let mut fields = Vec::new();
-        let js_name = attrs
-            .js_name()
-            .map(|s| s.0.to_string())
-            .unwrap_or(self.ident.unraw().to_string());
-        if is_js_keyword(&js_name) && js_name != "default" {
-            bail_span!(
-                self.ident,
-                "struct cannot use the JS keyword `{}` as its name",
-                js_name
-            );
-        }
+            let mut ret = vec![];
 
-        let is_inspectable = attrs.inspectable().is_some();
-        let getter_with_clone = attrs.getter_with_clone();
-        for (i, field) in self.fields.iter_mut().enumerate() {
-            match field.vis {
-                syn::Visibility::Public(..) => {}
-                _ => continue,
-            }
-            let (js_field_name, member) = match &field.ident {
-                Some(ident) => (ident.unraw().to_string(), syn::Member::Named(ident.clone())),
-                None => (i.to_string(), syn::Member::Unnamed(i.into())),
-            };
+            for first_param in list.items.clone() {
+                let generic_substitutions = tp
+                    .clone()
+                    .into_iter()
+                    .zip(first_param.generics.into_iter())
+                    .collect::<Vec<(Ident, Type)>>();
 
-            let attrs = BindgenAttrs::find(&mut field.attrs)?;
-            if attrs.skip().is_some() {
-                attrs.check_used();
-                continue;
+                ret.push(convert(
+                    &self,
+                    first_param.type_alias_name,
+                    &attrs,
+                    Some(generic_substitutions),
+                    &program.wasm_bindgen,
+                    true,
+                )?);
             }
 
-            let js_field_name = match attrs.js_name() {
-                Some((name, _)) => name.to_string(),
-                None => js_field_name,
-            };
-
-            let comments = extract_doc_comments(&field.attrs);
-            let getter = wasm_bindgen_shared::struct_field_get(&js_name, &js_field_name);
-            let setter = wasm_bindgen_shared::struct_field_set(&js_name, &js_field_name);
-
-            fields.push(ast::StructField {
-                rust_name: member,
-                js_name: js_field_name,
-                struct_name: self.ident.clone(),
-                readonly: attrs.readonly().is_some(),
-                ty: field.ty.clone(),
-                getter: Ident::new(&getter, Span::call_site()),
-                setter: Ident::new(&setter, Span::call_site()),
-                comments,
-                generate_typescript: attrs.skip_typescript().is_none(),
-                generate_jsdoc: attrs.skip_jsdoc().is_none(),
-                getter_with_clone: attrs.getter_with_clone().or(getter_with_clone).copied(),
-                wasm_bindgen: program.wasm_bindgen.clone(),
-            });
-            attrs.check_used();
+            Ok(ret)
+        } else {
+            let ident = self.ident.clone();
+            Ok(vec![convert(
+                &self,
+                ident,
+                &attrs,
+                None,
+                &program.wasm_bindgen,
+                false,
+            )?])
         }
-        let generate_typescript = attrs.skip_typescript().is_none();
-        let private = attrs.private().is_some();
-        let comments: Vec<String> = extract_doc_comments(&self.attrs);
-        let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
-        attrs.check_used();
-        Ok(ast::Struct {
-            rust_name: self.ident.clone(),
-            js_name,
-            fields,
-            comments,
-            is_inspectable,
-            generate_typescript,
-            private,
-            js_namespace,
-            wasm_bindgen: program.wasm_bindgen.clone(),
-        })
     }
 }
 
@@ -1693,15 +1880,15 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         if self.variants.is_empty() {
             bail_span!(self, "cannot export empty enums to JS");
         }
-        for variant in self.variants.iter() {
-            match variant.fields {
-                syn::Fields::Unit => (),
-                _ => bail_span!(
-                    variant.fields,
-                    "enum variants with associated data are not supported with #[wasm_bindgen]"
-                ),
-            }
-        }
+        // for variant in self.variants.iter() {
+        //     match variant.fields {
+        //         syn::Fields::Unit => (),
+        //         _ => bail_span!(
+        //             variant.fields,
+        //             "enum variants with associated data are not supported with #[wasm_bindgen]"
+        //         ),
+        //     }
+        // }
 
         let generate_typescript = opts.skip_typescript().is_none();
         let private = opts.private().is_some();
