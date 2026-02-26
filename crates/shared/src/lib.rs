@@ -161,6 +161,7 @@ macro_rules! shared_api {
         struct FunctionArgumentData<'a> {
             name: String,
             ty_override: Option<&'a str>,
+            optional: bool,
             desc: Option<&'a str>,
         }
 

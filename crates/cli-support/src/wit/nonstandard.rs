@@ -114,6 +114,8 @@ pub struct AuxFunctionArgumentData {
     pub name: String,
     /// Specifies the function argument type override
     pub ty_override: Option<String>,
+    /// Specifies whether the parameter is optional
+    pub optional: bool,
     /// Specifies the argument description
     pub desc: Option<String>,
 }

@@ -212,6 +212,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 None => AuxFunctionArgumentData {
                     name: format!("arg{i}"),
                     ty_override: None,
+                    optional: false,
                     desc: None,
                 },
             };
@@ -379,7 +380,10 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut ts_refs = HashSet::new();
         for (
             AuxFunctionArgumentData {
-                name, ty_override, ..
+                name,
+                ty_override,
+                optional,
+                ..
             },
             ty,
         ) in args_data.iter().zip(arg_tys).rev()
@@ -393,6 +397,9 @@ impl<'a, 'b> Builder<'a, 'b> {
             let mut ts = String::new();
             if let Some(v) = ty_override {
                 omittable = false;
+                if *optional {
+                    arg.push('?');
+                }
                 arg.push_str(": ");
                 ts.push_str(v);
             } else {
@@ -500,6 +507,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             AuxFunctionArgumentData {
                 name,
                 ty_override,
+                optional,
                 desc,
             },
             ty,
@@ -511,7 +519,14 @@ impl<'a, 'b> Builder<'a, 'b> {
                 omittable = false;
                 arg.push_str(v);
                 arg.push_str("} ");
-                arg.push_str(name);
+                if *optional {
+                    // Use [name] syntax for optional parameters
+                    arg.push('[');
+                    arg.push_str(name);
+                    arg.push(']');
+                } else {
+                    arg.push_str(name);
+                }
             } else {
                 match ty {
                     AdapterType::Option(ty) if omittable => {
@@ -556,6 +571,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             Some(AuxFunctionArgumentData {
                 name,
                 ty_override,
+                optional: _,
                 desc,
             }),
             Some(ty),

@@ -647,6 +647,7 @@ impl<'a> Context<'a> {
                 .map(|v| AuxFunctionArgumentData {
                     name: v.name,
                     ty_override: v.ty_override.map(String::from),
+                    optional: v.optional,
                     desc: v.desc.map(String::from),
                 })
                 .collect::<Vec<_>>(),

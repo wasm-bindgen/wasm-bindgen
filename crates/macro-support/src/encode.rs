@@ -234,6 +234,7 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
                     },
                 ),
                 ty_override: arg.js_type.as_deref(),
+                optional: arg.optional,
                 desc: arg.desc.as_deref(),
             })
             .collect::<Vec<_>>();

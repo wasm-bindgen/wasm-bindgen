@@ -69,3 +69,32 @@ impl HoldsNumber {
         }
     }
 }
+
+/// Test function for unchecked_optional_param_type
+#[wasm_bindgen]
+pub fn fn_with_optional_param(
+    #[wasm_bindgen(unchecked_optional_param_type = "string")] name: JsValue,
+) -> JsValue {
+    if name.is_undefined() {
+        "Hello, World!".into()
+    } else {
+        format!("Hello, {}!", name.as_string().unwrap_or_default()).into()
+    }
+}
+
+/// Test function combining optional param with other attributes
+#[wasm_bindgen]
+pub fn fn_with_optional_param_and_attrs(
+    #[wasm_bindgen(
+        js_name = "userName",
+        unchecked_optional_param_type = "string",
+        param_description = "the name to greet"
+    )]
+    name: JsValue,
+) -> JsValue {
+    if name.is_undefined() {
+        "Hello, World!".into()
+    } else {
+        format!("Hello, {}!", name.as_string().unwrap_or_default()).into()
+    }
+}

@@ -1,0 +1,11 @@
+error: cannot use both `unchecked_param_type` and `unchecked_optional_param_type` on the same parameter
+ --> ui-tests/mutually-exclusive-param-type.rs:6:53
+  |
+6 |     #[wasm_bindgen(unchecked_param_type = "string", unchecked_optional_param_type = "string")]
+  |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: cannot use both `unchecked_param_type` and `unchecked_optional_param_type` on the same parameter
+  --> ui-tests/mutually-exclusive-param-type.rs:15:62
+   |
+15 |     #[wasm_bindgen(unchecked_optional_param_type = "string", unchecked_param_type = "string")]
+   |                                                              ^^^^^^^^^^^^^^^^^^^^

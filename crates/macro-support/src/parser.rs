@@ -119,6 +119,7 @@ macro_rules! attrgen {
             (unchecked_return_type, true, ReturnType(Span, String, Span)),
             (return_description, true, ReturnDesc(Span, String, Span)),
             (unchecked_param_type, true, ParamType(Span, String, Span)),
+            (unchecked_optional_param_type, true, OptionalParamType(Span, String, Span)),
             (param_description, true, ParamDesc(Span, String, Span)),
 
             // For testing purposes only.
@@ -1228,6 +1229,7 @@ fn function_from_decl(
                     pat_type,
                     js_name: attrs.js_name,
                     js_type: attrs.js_type,
+                    optional: attrs.optional,
                     desc: attrs.desc,
                 })
                 .collect(),
@@ -1241,6 +1243,7 @@ fn function_from_decl(
 struct FnArgAttrs {
     js_name: Option<String>,
     js_type: Option<String>,
+    optional: bool,
     desc: Option<String>,
 }
 
@@ -1250,6 +1253,55 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
     for input in sig.inputs.iter_mut() {
         if let syn::FnArg::Typed(pat_type) = input {
             let attrs = BindgenAttrs::find(&mut pat_type.attrs)?;
+
+            // Check for mutually exclusive param type attributes
+            let param_type = attrs.unchecked_param_type();
+            let optional_param_type = attrs.unchecked_optional_param_type();
+
+            if param_type.is_some() && optional_param_type.is_some() {
+                // Find the positions and spans of both attributes in the attrs list
+                let mut param_pos_and_span: Option<(usize, Span)> = None;
+                let mut optional_pos_and_span: Option<(usize, Span)> = None;
+                for (pos, (_, attr)) in attrs.attrs.iter().enumerate() {
+                    match attr {
+                        BindgenAttr::ParamType(span, _, _) => {
+                            param_pos_and_span = Some((pos, *span));
+                        }
+                        BindgenAttr::OptionalParamType(span, _, _) => {
+                            optional_pos_and_span = Some((pos, *span));
+                        }
+                        _ => {}
+                    }
+                }
+                // Report error at the position of the attribute that appears later
+                let error_span = match (param_pos_and_span, optional_pos_and_span) {
+                    (Some((p_pos, p_span)), Some((o_pos, o_span))) => {
+                        if p_pos > o_pos {
+                            p_span
+                        } else {
+                            o_span
+                        }
+                    }
+                    (Some((_, p_span)), None) => p_span,
+                    (None, Some((_, o_span))) => o_span,
+                    (None, None) => unreachable!(
+                        "both param_type and optional_param_type are Some, but attrs not found"
+                    ),
+                };
+                return Err(Diagnostic::span_error(
+                    error_span,
+                    "cannot use both `unchecked_param_type` and `unchecked_optional_param_type` on the same parameter",
+                ));
+            }
+
+            // Determine the type and whether it's optional
+            let js_type = param_type
+                .or(optional_param_type)
+                .map_or::<Result<_, Diagnostic>, _>(Ok(None), |(ty, span)| {
+                    check_invalid_type(ty, span)?;
+                    Ok(Some(ty.to_string()))
+                })?;
+
             let arg_attrs = FnArgAttrs {
                 js_name: attrs
                     .js_name()
@@ -1259,12 +1311,8 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
                         }
                         Ok(Some(js_name_override.to_string()))
                     })?,
-                js_type: attrs
-                    .unchecked_param_type()
-                    .map_or::<Result<_, Diagnostic>, _>(Ok(None), |(ty, span)| {
-                        check_invalid_type(ty, span)?;
-                        Ok(Some(ty.to_string()))
-                    })?,
+                js_type,
+                optional: optional_param_type.is_some(),
                 desc: attrs
                     .param_description()
                     .map_or::<Result<_, Diagnostic>, _>(Ok(None), |(description, span)| {
