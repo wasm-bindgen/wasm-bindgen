@@ -5,6 +5,11 @@
 
 ### Added
 
+* Added `unchecked_optional_param_type` attribute for marking exported function parameters as
+  optional in TypeScript (`?:`) and JSDoc (`[paramName]`) output. Mutually exclusive with
+  `unchecked_param_type`. Required parameters after optional parameters are rejected at compile time.
+  [#5002](https://github.com/wasm-bindgen/wasm-bindgen/pull/5002)
+
 ### Changed
 
 * Replaced runtime `0x80000000` vtable bit-flag for closure unwind safety with a
