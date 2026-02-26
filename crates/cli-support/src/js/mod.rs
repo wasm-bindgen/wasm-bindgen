@@ -1432,7 +1432,10 @@ if (require('worker_threads').isMainThread) {{
             }
         }
 
-        let mut free = format!("wasm.{}(ptr, 0)", wasm_bindgen_shared::free_function(qualified));
+        let mut free = format!(
+            "wasm.{}(ptr, 0)",
+            wasm_bindgen_shared::free_function(qualified)
+        );
         free = binding::maybe_wrap_try_catch(&free, self.aux.wrapped_js_tag.is_some());
         dst.push_str(&format!(
             "\
