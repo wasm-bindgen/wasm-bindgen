@@ -415,7 +415,7 @@ where
     /// ```
     pub fn borrow<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRef<'a, T> + MaybeUnwindSafe + ?Sized,
+        F: IntoWasmClosureRef<T> + MaybeUnwindSafe + ?Sized,
     {
         Self::borrow_assert_unwind_safe(t)
     }
@@ -429,7 +429,7 @@ where
     /// [`borrow_assert_unwind_safe`](Self::borrow_assert_unwind_safe) when possible.**
     pub fn borrow_aborting<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRef<'a, T> + ?Sized,
+        F: IntoWasmClosureRef<T> + ?Sized,
     {
         Self::wrap_borrow::<_, false>(t)
     }
@@ -440,14 +440,14 @@ where
     /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
     pub fn borrow_assert_unwind_safe<'a, F>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRef<'a, T> + ?Sized,
+        F: IntoWasmClosureRef<T> + ?Sized,
     {
         Self::wrap_borrow::<_, true>(t)
     }
 
     fn wrap_borrow<'a, F, const UNWIND_SAFE: bool>(t: &'a F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRef<'a, T> + ?Sized,
+        F: IntoWasmClosureRef<T> + ?Sized,
     {
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
@@ -494,7 +494,7 @@ where
     /// ```
     pub fn borrow_mut<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRefMut<'a, T> + MaybeUnwindSafe + ?Sized,
+        F: IntoWasmClosureRefMut<T> + MaybeUnwindSafe + ?Sized,
     {
         Self::borrow_mut_assert_unwind_safe(t)
     }
@@ -508,7 +508,7 @@ where
     /// [`borrow_mut_assert_unwind_safe`](Self::borrow_mut_assert_unwind_safe) when possible.**
     pub fn borrow_mut_aborting<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
+        F: IntoWasmClosureRefMut<T> + ?Sized,
     {
         Self::wrap_borrow_mut::<_, false>(t)
     }
@@ -519,14 +519,14 @@ where
     /// `AssertUnwindSafe(...)`, this must be verified explicitly.**
     pub fn borrow_mut_assert_unwind_safe<'a, F>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
+        F: IntoWasmClosureRefMut<T> + ?Sized,
     {
         Self::wrap_borrow_mut::<_, true>(t)
     }
 
     fn wrap_borrow_mut<'a, F, const UNWIND_SAFE: bool>(t: &'a mut F) -> ScopedClosure<'a, F::Static>
     where
-        F: IntoWasmClosureRefMut<'a, T> + ?Sized,
+        F: IntoWasmClosureRefMut<T> + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
@@ -936,7 +936,7 @@ impl<T: ?Sized + WasmClosure> IntoWasmClosure<T> for T {
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub trait IntoWasmClosureRef<'a, T: ?Sized> {
+pub trait IntoWasmClosureRef<T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn Fn() + 'a`,
     /// then `Static` is `dyn Fn()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;
@@ -948,7 +948,7 @@ pub trait IntoWasmClosureRef<'a, T: ?Sized> {
 /// This trait is not stable and it's not recommended to use this in bounds or
 /// implement yourself.
 #[doc(hidden)]
-pub trait IntoWasmClosureRefMut<'a, T: ?Sized> {
+pub trait IntoWasmClosureRefMut<T: ?Sized> {
     /// The `'static` version of `T`. For example, if `T` is `dyn FnMut() + 'a`,
     /// then `Static` is `dyn FnMut()` (implicitly `'static`).
     type Static: ?Sized + WasmClosure;
@@ -956,9 +956,9 @@ pub trait IntoWasmClosureRefMut<'a, T: ?Sized> {
 }
 
 // Blanket impl for AssertUnwindSafe - delegates to inner type
-impl<'a, T: ?Sized, F> IntoWasmClosureRef<'a, T> for AssertUnwindSafe<F>
+impl<T: ?Sized, F> IntoWasmClosureRef<T> for AssertUnwindSafe<F>
 where
-    F: IntoWasmClosureRef<'a, T>,
+    F: IntoWasmClosureRef<T>,
 {
     type Static = F::Static;
     fn unsize_closure_ref(&self) -> &T {
@@ -966,9 +966,9 @@ where
     }
 }
 
-impl<'a, T: ?Sized, F> IntoWasmClosureRefMut<'a, T> for AssertUnwindSafe<F>
+impl<T: ?Sized, F> IntoWasmClosureRefMut<T> for AssertUnwindSafe<F>
 where
-    F: IntoWasmClosureRefMut<'a, T>,
+    F: IntoWasmClosureRefMut<T>,
 {
     type Static = F::Static;
     fn unsize_closure_ref(&mut self) -> &mut T {

@@ -147,18 +147,16 @@ macro_rules! closures {
     // IntoWasmClosureRefMut is implemented for FnMut.
     // Since Fn: FnMut, any Fn closure can be used as FnMut, so this covers all cases.
     (@impl_unsize_closure_ref $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (
-        impl<'a, 'b, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> IntoWasmClosureRef<'b, dyn Fn $FnArgs -> R + 'a> for T
+        impl<'a, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> IntoWasmClosureRef<dyn Fn $FnArgs -> R + 'a> for T
         where
-            'a: 'b,
             T: Fn $FnArgs -> R,
         {
             type Static = dyn Fn $FnArgs -> R;
             fn unsize_closure_ref(&self) -> &(dyn Fn $FnArgs -> R + 'a) { self }
         }
 
-        impl<'a, 'b, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> IntoWasmClosureRefMut<'b, dyn FnMut $FnArgs -> R + 'a> for T
+        impl<'a, T: 'a, $($var: 'a + $FromWasmAbi,)* R: 'a + ReturnWasmAbi> IntoWasmClosureRefMut<dyn FnMut $FnArgs -> R + 'a> for T
         where
-            'a: 'b,
             T: FnMut $FnArgs -> R,
         {
             type Static = dyn FnMut $FnArgs -> R;
