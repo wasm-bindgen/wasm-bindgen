@@ -430,7 +430,7 @@ impl<'src> FirstPassRecord<'src> {
         let wbg_generic = def
             .attributes
             .as_ref()
-            .map_or(false, |a| is_wbg_generic(Some(a)));
+            .is_some_and(|a| is_wbg_generic(Some(a)));
 
         let mut fields = Vec::new();
 
