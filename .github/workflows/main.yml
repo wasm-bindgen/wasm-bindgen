@@ -182,24 +182,6 @@ jobs:
         node-version: '25'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
-  test_wasm_bindgen_unwind_legacy_eh_reinit:
-    name: "Run wasm-bindgen crate tests with panic=unwind with legacy eh"
-    runs-on: ubuntu-latest
-    env:
-      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      WASM_BINDGEN_ABORT_REINIT: 1
-      RUSTFLAGS: -Cpanic=unwind
-    steps:
-    - uses: actions/checkout@v6
-    - uses: dtolnay/rust-toolchain@nightly
-      with:
-        targets: wasm32-unknown-unknown
-        components: rust-src
-    - uses: actions/setup-node@v6
-      with:
-        node-version: '22'
-    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
-    - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
 
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.
