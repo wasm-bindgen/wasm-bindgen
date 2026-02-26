@@ -269,7 +269,7 @@ impl VideoFrameBufferInit {
         self
     }
     #[deprecated = "Use `set_duration()` instead."]
-    pub fn duration(&mut self, val: f64) -> &mut Self {
+    pub fn duration(&mut self, val: u32) -> &mut Self {
         self.set_duration(val);
         self
     }
@@ -305,7 +305,7 @@ impl VideoFrameBufferInit {
         self
     }
     #[deprecated = "Use `set_timestamp()` instead."]
-    pub fn timestamp(&mut self, val: f64) -> &mut Self {
+    pub fn timestamp(&mut self, val: i32) -> &mut Self {
         self.set_timestamp(val);
         self
     }

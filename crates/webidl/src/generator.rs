@@ -958,14 +958,12 @@ impl DictionaryField {
         let setter_name = self.setter_name();
         let deprecated = format!("Use `{setter_name}()` instead.");
 
-        // In unstable mode the first setter is a typed variant, so the
-        // builder method uses the same type as the first setter. In stable
-        // mode the builder uses the original (broad) type.
-        let builder_ty = if self.unstable {
-            self.setter_types.first().map(|s| &s.ty).unwrap_or(ty)
-        } else {
-            ty
-        };
+        // The builder always calls the first setter (via setter_name()),
+        // so its parameter type must match. In generics mode (unstable or
+        // [WbgGeneric]), the first setter is a typed variant whose type may
+        // differ from the broad field `ty` (e.g. `u32` vs `f64` for
+        // `unsigned long long`).
+        let builder_ty = self.setter_types.first().map(|s| &s.ty).unwrap_or(ty);
 
         // When is_js_value_ref_option_type is set, the first setter takes &JsValue
         // but the builder takes Option<&JsValue>, so unwrap_or bridges the types.
