@@ -1,3 +1,6 @@
+// https://w3c.github.io/webcodecs/#idl-index
+// 29 January 2026
+
 [Exposed=(Window,DedicatedWorker), SecureContext]
 interface AudioDecoder : EventTarget {
   constructor(AudioDecoderInit init);
@@ -319,7 +322,7 @@ interface VideoFrame {
   readonly attribute unsigned long displayWidth;
   readonly attribute unsigned long displayHeight;
   readonly attribute unsigned long long? duration;  // microseconds
-  readonly attribute long long? timestamp;          // microseconds
+  readonly attribute long long timestamp;           // microseconds
   readonly attribute VideoColorSpace colorSpace;
 
   VideoFrameMetadata metadata();
@@ -339,10 +342,10 @@ dictionary VideoFrameInit {
   AlphaOption alpha = "keep";
 
   // Default matches image. May be used to efficiently crop. Will trigger
-  // new computation of displayWidth and displayHeight using image’s pixel
+  // new computation of displayWidth and displayHeight using image's pixel
   // aspect ratio unless an explicit displayWidth and displayHeight are given.
   DOMRectInit visibleRect;
-    
+
   double rotation = 0;
   boolean flip = false;
 
@@ -355,9 +358,9 @@ dictionary VideoFrameInit {
 
 dictionary VideoFrameBufferInit {
   required VideoPixelFormat format;
-  [EnforceRange] required unsigned long codedWidth;
-  [EnforceRange] required unsigned long codedHeight;
-  [EnforceRange] required long long timestamp;  // microseconds
+  required [EnforceRange] unsigned long codedWidth;
+  required [EnforceRange] unsigned long codedHeight;
+  required [EnforceRange] long long timestamp;  // microseconds
   [EnforceRange] unsigned long long duration;  // microseconds
 
   // Default layout is tightly-packed.
@@ -365,7 +368,7 @@ dictionary VideoFrameBufferInit {
 
   // Default visible rect is coded size positioned at (0,0)
   DOMRectInit visibleRect;
-  
+
   double rotation = 0;
   boolean flip = false;
 
