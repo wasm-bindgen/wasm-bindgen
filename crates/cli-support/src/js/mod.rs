@@ -10,7 +10,7 @@ use crate::wit::{
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
 use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
-use crate::{Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
+use crate::{wasm_conventions, Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
 use std::borrow::Cow;
@@ -3338,6 +3338,30 @@ if (require('worker_threads').isMainThread) {{
         self.global(
             "const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
         );
+
+        let memory = wasm_conventions::get_memory(self.module).unwrap();
+        let mem_view = self.expose_int32_memory(memory);
+
+        self.global(&format!(
+            "\
+function __wbg_termination_guard() {{
+    if ({mem_view}()[wasm.__instance_terminated/4]) {{
+        throw new Error('Module terminated');
+    }}
+}}"
+        ));
+
+        // Create a helper function to unwrap and rethrow wrapped JS exceptions
+        self.global(&format!(
+            "\
+function __wbg_handle_catch(e) {{
+    if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
+        throw e.getArg(__wbindgen_wrapped_jstag, 0);
+    }}
+    {mem_view}()[wasm.__instance_terminated/4] = 1;
+    throw e;
+}}"
+        ));
 
         // Use the constant for the import
         self.wasm_import_definitions

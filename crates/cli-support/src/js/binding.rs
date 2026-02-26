@@ -98,13 +98,11 @@ pub enum TsReference {
 pub fn wrap_try_catch(call: &str) -> String {
     format!(
         "\
+        __wbg_termination_guard();
         try {{
             {call};
         }} catch(e) {{
-            if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
-                throw e.getArg(__wbindgen_wrapped_jstag, 0);
-            }}
-            throw e;
+            __wbg_handle_catch(e);
         }}
         "
     )

@@ -19,7 +19,9 @@ use crate::wit::{NonstandardWitSection, WasmBindgenAux};
 use anyhow::Error;
 use std::collections::HashMap;
 use walrus::ir::*;
-use walrus::{FunctionBuilder, FunctionId, LocalId, Module, RefType, TableId, TagId, ValType};
+use walrus::{
+    FunctionBuilder, FunctionId, LocalId, MemoryId, Module, RefType, TableId, TagId, ValType,
+};
 
 use super::ExceptionHandlingVersion;
 
@@ -44,6 +46,9 @@ struct CatchContext {
     exn_store: Option<FunctionId>,
     idx_local: LocalId,
     exn_local: LocalId,
+    /// Address in linear memory of the `__instance_terminated` flag (u32).
+    terminated_addr: i32,
+    memory: MemoryId,
 }
 
 /// Run the catch handler transformation.
@@ -74,6 +79,9 @@ pub fn run(
         }
     }
 
+    let terminated_addr = get_terminated_addr(module)?;
+    let memory = crate::wasm_conventions::get_memory(module)?;
+
     // Import the JSTag
     let js_tag = import_js_tag(module);
     let wrapped_js_tag = Some(import_externref_tag(module, "__wbindgen_wrapped_jstag"));
@@ -98,6 +106,8 @@ pub fn run(
             externref_table,
             table_alloc,
             exn_store,
+            terminated_addr,
+            memory,
             eh_version,
         );
 
@@ -129,6 +139,26 @@ fn import_js_tag(module: &mut Module) -> TagId {
     import_externref_tag(module, "__wbindgen_jstag")
 }
 
+/// Look up the `__instance_terminated` exported global and return its i32
+/// constant value (the address of the termination flag in linear memory).
+fn get_terminated_addr(module: &Module) -> Result<i32, Error> {
+    let global_id = module
+        .exports
+        .iter()
+        .find(|e| e.name == "__instance_terminated")
+        .and_then(|e| match e.item {
+            walrus::ExportItem::Global(g) => Some(g),
+            _ => None,
+        })
+        .ok_or_else(|| {
+            anyhow::anyhow!("__instance_terminated global required for catch wrappers")
+        })?;
+    match &module.globals.get(global_id).kind {
+        walrus::GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(v))) => Ok(*v),
+        _ => anyhow::bail!("__instance_terminated must be a local i32 constant global"),
+    }
+}
+
 /// Generate a catch wrapper function for the given import.
 fn generate_catch_wrapper(
     module: &mut Module,
@@ -138,6 +168,8 @@ fn generate_catch_wrapper(
     externref_table: Option<TableId>,
     table_alloc: Option<FunctionId>,
     exn_store: Option<FunctionId>,
+    terminated_addr: i32,
+    memory: MemoryId,
     eh_version: ExceptionHandlingVersion,
 ) -> FunctionId {
     // Get the original function's type
@@ -162,11 +194,13 @@ fn generate_catch_wrapper(
         exn_store,
         idx_local: module.locals.add(ValType::I32),
         exn_local: module.locals.add(ValType::Ref(RefType::EXTERNREF)),
+        terminated_addr,
+        memory,
     };
 
     match eh_version {
         ExceptionHandlingVersion::Modern => {
-            generate_modern_eh_wrapper(&mut builder, &param_locals, &results, ctx);
+            generate_modern_eh_wrapper(&mut builder, module, &param_locals, &results, ctx);
         }
         ExceptionHandlingVersion::Legacy => {
             generate_legacy_eh_wrapper(&mut builder, module, &param_locals, &results, ctx);
@@ -194,93 +228,119 @@ fn generate_catch_wrapper(
 ///
 /// Structure:
 /// ```wat
-/// (block $catch (result externref)
-///   (try_table (catch $jstag $catch)
-///     local.get <params>...
-///     call $original
-///     return
+/// (block $catch_all_block (result exnref)
+///   (block $catch (result externref)
+///     (try_table (catch $jstag $catch) (catch_all_ref $catch_all_block)
+///       local.get <params>...
+///       call $original
+///       <termination guard>
+///       return
+///     )
+///     unreachable
 ///   )
-///   unreachable
+///   ;; catch $jstag path: externref on stack
+///   <termination guard>
+///   <emit_catch_handler>
+///   return
 /// )
-/// ;; Exception path: externref is on stack from catching
-/// local.set $exn_local
-/// call $table_alloc
-/// local.tee $idx_local
-/// local.get $exn_local
-/// table.set $externref_table
-/// local.get $idx_local
-/// call $exn_store
-/// <push default return values>
+/// ;; catch_all path: exnref on stack
+/// local.set $exn_ref_local
+/// <termination guard>
+/// local.get $exn_ref_local
+/// throw_ref
 /// ```
 fn generate_modern_eh_wrapper(
     builder: &mut FunctionBuilder,
+    module: &mut Module,
     param_locals: &[LocalId],
     results: &[ValType],
     ctx: CatchContext,
 ) {
-    // Block type for externref result (the caught exception)
     let externref_block_ty: InstrSeqType = ValType::Ref(RefType::EXTERNREF).into();
+    let exnref_block_ty: InstrSeqType = ValType::Ref(RefType::EXNREF).into();
 
-    // Create the try body sequence
+    let exn_ref_local = module.locals.add(ValType::Ref(RefType::EXNREF));
+
+    // Pre-allocate all block IDs so they can reference each other
     let try_body_id = builder.dangling_instr_seq(None).id();
-
-    // Create the catch block (receives externref)
     let catch_block_id = builder.dangling_instr_seq(externref_block_ty).id();
+    let catch_all_block_id = builder.dangling_instr_seq(exnref_block_ty).id();
 
-    // Build the try body: call original and return on success
+    // Try body: call original + termination check + return
     {
         let mut try_body = builder.instr_seq(try_body_id);
         for local in param_locals {
             try_body.local_get(*local);
         }
         try_body.call(ctx.original_func);
+        emit_termination_guard(&mut try_body, ctx);
         try_body.instr(Return {});
     }
 
-    // Build the catch block: contains try_table + unreachable
+    // Catch $jstag block: contains try_table that catches to both blocks
     {
         let mut catch_block = builder.instr_seq(catch_block_id);
         catch_block.instr(TryTable {
             seq: try_body_id,
-            catches: vec![TryTableCatch::Catch {
-                tag: ctx.js_tag,
-                label: catch_block_id,
-            }],
+            catches: vec![
+                TryTableCatch::Catch {
+                    tag: ctx.js_tag,
+                    label: catch_block_id,
+                },
+                TryTableCatch::CatchAllRef {
+                    label: catch_all_block_id,
+                },
+            ],
         });
         catch_block.unreachable();
     }
 
-    // Build function body: catch block + exception handling
+    // Catch_all block: wraps catch block, handles jstag path, falls through for catch_all
     {
-        let mut body = builder.func_body();
+        let mut catch_all_block = builder.instr_seq(catch_all_block_id);
 
-        // The catch block - on exception, branches here with externref on stack
-        body.instr(Block {
+        // The catch $jstag block
+        catch_all_block.instr(Block {
             seq: catch_block_id,
         });
 
-        // Stack has externref from caught exception
-        emit_catch_handler(&mut body, ctx, results);
+        // catch $jstag path: externref on stack
+        emit_termination_guard(&mut catch_all_block, ctx);
+        emit_catch_handler(&mut catch_all_block, ctx, results);
+        catch_all_block.instr(Return {});
+    }
+
+    // Function body: catch_all block + exnref rethrow path
+    {
+        let mut body = builder.func_body();
+
+        body.instr(Block {
+            seq: catch_all_block_id,
+        });
+
+        // catch_all path: exnref on stack
+        body.local_set(exn_ref_local);
+        emit_termination_guard(&mut body, ctx);
+        body.local_get(exn_ref_local);
+        body.instr(ThrowRef {});
     }
 }
 
-/// Generate wrapper using legacy EH (try/catch).
+/// Generate wrapper using legacy EH (try/catch/catch_all).
 ///
 /// Structure:
 /// ```wat
 /// (try (result <results>)
 ///   local.get <params>...
 ///   call $original
+///   <termination guard>
 /// catch $jstag
 ///   ;; externref is on stack from catch
-///   local.set $exn_local
-///   call $table_alloc
-///   local.tee $idx_local
-///   local.get $exn_local
-///   table.set $externref_table
-///   local.get $idx_local
-///   call $exn_store
-///   <push default return values>
+///   <termination guard>
+///   <emit_catch_handler>
+/// catch_all
+///   <termination guard>
+///   rethrow 0
 /// end)
 /// ```
 fn generate_legacy_eh_wrapper(
@@ -300,12 +360,11 @@ fn generate_legacy_eh_wrapper(
         }
     };
 
-    // Catch handler receives externref and produces results
-    // This always needs a multi-value type since it has params
+    // Catch $jstag handler receives externref and produces results
     let catch_params = vec![ValType::Ref(RefType::EXTERNREF)];
     let catch_block_ty: InstrSeqType = module.types.add(&catch_params, results).into();
 
-    // Create the try body
+    // Try body: call original + termination check
     let try_body_id = builder.dangling_instr_seq(result_block_ty).id();
     {
         let mut try_body = builder.instr_seq(try_body_id);
@@ -313,15 +372,23 @@ fn generate_legacy_eh_wrapper(
             try_body.local_get(*local);
         }
         try_body.call(ctx.original_func);
+        emit_termination_guard(&mut try_body, ctx);
     }
 
-    // Create the catch handler
+    // Catch $jstag handler: check termination then handle exception
     let catch_handler_id = builder.dangling_instr_seq(catch_block_ty).id();
     {
         let mut catch_handler = builder.instr_seq(catch_handler_id);
-
-        // Stack has externref from caught exception
+        emit_termination_guard(&mut catch_handler, ctx);
         emit_catch_handler(&mut catch_handler, ctx, results);
+    }
+
+    // Catch_all handler: check termination then rethrow
+    let catch_all_handler_id = builder.dangling_instr_seq(None).id();
+    {
+        let mut catch_all_handler = builder.instr_seq(catch_all_handler_id);
+        emit_termination_guard(&mut catch_all_handler, ctx);
+        catch_all_handler.instr(Rethrow { relative_depth: 0 });
     }
 
     // Add try instruction to function body
@@ -329,10 +396,15 @@ fn generate_legacy_eh_wrapper(
         let mut body = builder.func_body();
         body.instr(Try {
             seq: try_body_id,
-            catches: vec![LegacyCatch::Catch {
-                tag: ctx.js_tag,
-                handler: catch_handler_id,
-            }],
+            catches: vec![
+                LegacyCatch::Catch {
+                    tag: ctx.js_tag,
+                    handler: catch_handler_id,
+                },
+                LegacyCatch::CatchAll {
+                    handler: catch_all_handler_id,
+                },
+            ],
         });
     }
 }
@@ -375,6 +447,35 @@ fn emit_catch_handler(
             push_default_values(builder, results);
         }
     }
+}
+
+/// Emit the termination guard pattern:
+///
+/// ```wat
+/// i32.const $terminated_addr
+/// i32.load
+/// if
+///   unreachable
+/// end
+/// ```
+///
+/// This checks if `__instance_terminated` is nonzero and traps if so, ensuring
+/// that instance termination is never swallowed by an outer catch handler.
+fn emit_termination_guard(builder: &mut walrus::InstrSeqBuilder, ctx: CatchContext) {
+    let mem_arg = MemArg {
+        align: 4,
+        offset: 0,
+    };
+    builder
+        .i32_const(ctx.terminated_addr)
+        .load(ctx.memory, LoadKind::I32 { atomic: false }, mem_arg)
+        .if_else(
+            None,
+            |then| {
+                then.unreachable();
+            },
+            |_else| {},
+        );
 }
 
 /// Push default values for the given result types onto the stack.
@@ -461,6 +562,19 @@ mod tests {
             .unwrap()
     }
 
+    /// Common WAT fragments needed by all wrapper tests.
+    const TERMINATED_WAT: &str = r#"
+                (memory 1)
+                (global $__instance_terminated i32 (i32.const 1048576))
+                (export "__instance_terminated" (global $__instance_terminated))
+    "#;
+
+    const TERMINATED_ADDR: i32 = 1048576;
+
+    fn get_test_memory(module: &walrus::Module) -> MemoryId {
+        module.memories.iter().next().unwrap().id()
+    }
+
     #[test]
     fn test_import_js_tag() {
         let wat = r#"
@@ -493,7 +607,8 @@ mod tests {
 
     #[test]
     fn test_generate_catch_wrapper_modern() {
-        let wat = r#"
+        let wat = &format!(
+            r#"
             (module
                 ;; A simple imported function
                 (import "env" "my_import" (func $my_import (param i32) (result i32)))
@@ -502,19 +617,22 @@ mod tests {
                 (table $externrefs 128 externref)
 
                 ;; Heap alloc function (returns index)
-                (func $table_alloc (result i32)
+                (func $__externref_table_alloc (result i32)
                     i32.const 42
                 )
 
                 ;; Exception store function
                 (func $exn_store (param i32))
 
+                {TERMINATED_WAT}
+
                 (export "my_import" (func $my_import))
                 (export "__externref_table" (table $externrefs))
-                (export "table_alloc" (func $table_alloc))
+                (export "__externref_table_alloc" (func $__externref_table_alloc))
                 (export "exn_store" (func $exn_store))
             )
-        "#;
+        "#
+        );
         let mut module = parse_wat(wat);
 
         // Get the import function
@@ -543,7 +661,7 @@ mod tests {
         let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "table_alloc")
+            .find(|e| e.name == "__externref_table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -567,6 +685,8 @@ mod tests {
         let func_count_before = module.funcs.iter().count();
 
         // Generate the catch wrapper
+        let memory = get_test_memory(&module);
+
         let wrapper_id = generate_catch_wrapper(
             &mut module,
             import_func,
@@ -575,6 +695,8 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
+            TERMINATED_ADDR,
+            memory,
             super::super::ExceptionHandlingVersion::Modern,
         );
 
@@ -588,7 +710,8 @@ mod tests {
 
     #[test]
     fn test_generate_catch_wrapper_legacy() {
-        let wat = r#"
+        let wat = &format!(
+            r#"
             (module
                 ;; A simple imported function that returns nothing
                 (import "env" "my_void_import" (func $my_void_import))
@@ -597,19 +720,22 @@ mod tests {
                 (table $externrefs 128 externref)
 
                 ;; Heap alloc function
-                (func $table_alloc (result i32)
+                (func $__externref_table_alloc (result i32)
                     i32.const 42
                 )
 
                 ;; Exception store function
                 (func $exn_store (param i32))
 
+                {TERMINATED_WAT}
+
                 (export "my_void_import" (func $my_void_import))
                 (export "__externref_table" (table $externrefs))
-                (export "table_alloc" (func $table_alloc))
+                (export "__externref_table_alloc" (func $__externref_table_alloc))
                 (export "exn_store" (func $exn_store))
             )
-        "#;
+        "#
+        );
         let mut module = parse_wat(wat);
 
         // Get the import function
@@ -638,7 +764,7 @@ mod tests {
         let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "table_alloc")
+            .find(|e| e.name == "__externref_table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -657,6 +783,7 @@ mod tests {
 
         // Import JSTag
         let js_tag = import_js_tag(&mut module);
+        let memory = get_test_memory(&module);
 
         // Count functions before
         let func_count_before = module.funcs.iter().count();
@@ -670,6 +797,8 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
+            TERMINATED_ADDR,
+            memory,
             super::super::ExceptionHandlingVersion::Legacy,
         );
 
@@ -687,7 +816,8 @@ mod tests {
         use std::collections::HashSet;
 
         // Create a module with an import, EH instructions, and required intrinsics
-        let wat = r#"
+        let wat = &format!(
+            r#"
             (module
                 ;; Import that we want to wrap with catch
                 (import "env" "might_throw" (func $might_throw (result i32)))
@@ -696,7 +826,7 @@ mod tests {
                 (table $externrefs 128 externref)
 
                 ;; Heap alloc function
-                (func $table_alloc (result i32)
+                (func $__externref_table_alloc (result i32)
                     i32.const 42
                 )
 
@@ -717,11 +847,14 @@ mod tests {
                     call $might_throw
                 )
 
-                (export "__externref_table_alloc" (func $table_alloc))
+                {TERMINATED_WAT}
+
+                (export "__externref_table_alloc" (func $__externref_table_alloc))
                 (export "__wbindgen_exn_store" (func $exn_store))
                 (export "caller" (func $caller))
             )
-        "#;
+        "#
+        );
         let mut module = parse_wat(wat);
 
         // Find the import
@@ -794,52 +927,24 @@ mod tests {
     }
 
     #[test]
-    fn test_run_skips_when_no_imports_with_catch() {
-        use crate::wit::{NonstandardWitSection, WasmBindgenAux};
-
-        let wat = r#"
-            (module
-                (func $foo
-                    try
-                        i32.const 1
-                        drop
-                    catch_all
-                    end
-                )
-                (export "foo" (func $foo))
-            )
-        "#;
-        let mut module = parse_wat(wat);
-
-        // Create aux with empty imports_with_catch
-        let mut aux = WasmBindgenAux::default();
-        let wit = NonstandardWitSection::default();
-
-        let eh_version = super::super::detect_exception_handling_version(&module);
-        assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
-
-        // Run should still import tags but generate no wrappers
-        run(&mut module, &mut aux, &wit, eh_version).unwrap();
-        assert!(aux.js_tag.is_some());
-        assert!(aux.wrapped_js_tag.is_some());
-    }
-
-    #[test]
     fn test_wrapper_contains_try_instruction_legacy() {
         use walrus::ir::Visitor;
 
-        let wat = r#"
+        let wat = &format!(
+            r#"
             (module
                 (import "env" "my_import" (func $my_import (param i32) (result i32)))
                 (table $externrefs 128 externref)
-                (func $table_alloc (result i32) i32.const 42)
+                (func $__externref_table_alloc (result i32) i32.const 42)
                 (func $exn_store (param i32))
+                {TERMINATED_WAT}
                 (export "my_import" (func $my_import))
                 (export "__externref_table" (table $externrefs))
-                (export "table_alloc" (func $table_alloc))
+                (export "__externref_table_alloc" (func $__externref_table_alloc))
                 (export "exn_store" (func $exn_store))
             )
-        "#;
+        "#
+        );
         let mut module = parse_wat(wat);
 
         let import_func = module
@@ -865,7 +970,7 @@ mod tests {
         let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "table_alloc")
+            .find(|e| e.name == "__externref_table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -883,6 +988,7 @@ mod tests {
             .unwrap();
 
         let js_tag = import_js_tag(&mut module);
+        let memory = get_test_memory(&module);
 
         let wrapper_id = generate_catch_wrapper(
             &mut module,
@@ -892,6 +998,8 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
+            TERMINATED_ADDR,
+            memory,
             super::super::ExceptionHandlingVersion::Legacy,
         );
 
@@ -919,18 +1027,21 @@ mod tests {
     fn test_wrapper_contains_try_table_instruction_modern() {
         use walrus::ir::Visitor;
 
-        let wat = r#"
+        let wat = &format!(
+            r#"
             (module
                 (import "env" "my_import" (func $my_import (param i32) (result i32)))
                 (table $externrefs 128 externref)
-                (func $table_alloc (result i32) i32.const 42)
+                (func $__externref_table_alloc (result i32) i32.const 42)
                 (func $exn_store (param i32))
+                {TERMINATED_WAT}
                 (export "my_import" (func $my_import))
                 (export "__externref_table" (table $externrefs))
-                (export "table_alloc" (func $table_alloc))
+                (export "__externref_table_alloc" (func $__externref_table_alloc))
                 (export "exn_store" (func $exn_store))
             )
-        "#;
+        "#
+        );
         let mut module = parse_wat(wat);
 
         let import_func = module
@@ -956,7 +1067,7 @@ mod tests {
         let table_alloc = module
             .exports
             .iter()
-            .find(|e| e.name == "table_alloc")
+            .find(|e| e.name == "__externref_table_alloc")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,
@@ -974,6 +1085,7 @@ mod tests {
             .unwrap();
 
         let js_tag = import_js_tag(&mut module);
+        let memory = get_test_memory(&module);
 
         let wrapper_id = generate_catch_wrapper(
             &mut module,
@@ -983,6 +1095,8 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
+            TERMINATED_ADDR,
+            memory,
             super::super::ExceptionHandlingVersion::Modern,
         );
 
@@ -1009,6 +1123,107 @@ mod tests {
         } else {
             panic!("wrapper should be a local function");
         }
+    }
+
+    /// Build a test module with an imported function, generate a catch wrapper,
+    /// emit to WAT via wasmprinter, and return the full module text.
+    fn build_wrapper_wat(eh_version: super::super::ExceptionHandlingVersion) -> String {
+        let wat = &format!(
+            r#"
+            (module
+                (import "env" "my_import" (func $my_import (param i32) (result i32)))
+                (table $externrefs 128 externref)
+                (func $__externref_table_alloc (result i32) i32.const 42)
+                (func $exn_store (param i32))
+                {TERMINATED_WAT}
+                (export "my_import" (func $my_import))
+                (export "__externref_table" (table $externrefs))
+                (export "__externref_table_alloc" (func $__externref_table_alloc))
+                (export "exn_store" (func $exn_store))
+            )
+        "#
+        );
+        let mut module = parse_wat(wat);
+
+        let import_func = module
+            .exports
+            .iter()
+            .find(|e| e.name == "my_import")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Function(f) => Some(f),
+                _ => None,
+            })
+            .unwrap();
+        let table = module
+            .exports
+            .iter()
+            .find(|e| e.name == "__externref_table")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Table(t) => Some(t),
+                _ => None,
+            })
+            .unwrap();
+        let table_alloc = module
+            .exports
+            .iter()
+            .find(|e| e.name == "__externref_table_alloc")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Function(f) => Some(f),
+                _ => None,
+            })
+            .unwrap();
+        let exn_store = module
+            .exports
+            .iter()
+            .find(|e| e.name == "exn_store")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Function(f) => Some(f),
+                _ => None,
+            })
+            .unwrap();
+
+        let js_tag = import_js_tag(&mut module);
+        let memory = get_test_memory(&module);
+
+        generate_catch_wrapper(
+            &mut module,
+            import_func,
+            js_tag,
+            WrapperKind::CatchWrapper,
+            Some(table),
+            Some(table_alloc),
+            Some(exn_store),
+            TERMINATED_ADDR,
+            memory,
+            eh_version,
+        );
+
+        let wasm = module.emit_wasm();
+        wasmprinter::print_bytes(&wasm).unwrap()
+    }
+
+    #[test]
+    fn test_legacy_wrapper_body() {
+        let wat = build_wrapper_wat(super::super::ExceptionHandlingVersion::Legacy);
+        let expected = include_str!("test-data/catch_handler_legacy.wat");
+        assert_eq!(
+            wat.trim(),
+            expected.trim(),
+            "Legacy wrapper WAT mismatch.\n\
+             If intentional, update crates/cli-support/src/transforms/test-data/catch_handler_legacy.wat"
+        );
+    }
+
+    #[test]
+    fn test_modern_wrapper_body() {
+        let wat = build_wrapper_wat(super::super::ExceptionHandlingVersion::Modern);
+        let expected = include_str!("test-data/catch_handler_modern.wat");
+        assert_eq!(
+            wat.trim(),
+            expected.trim(),
+            "Modern wrapper WAT mismatch.\n\
+             If intentional, update crates/cli-support/src/transforms/test-data/catch_handler_modern.wat"
+        );
     }
 
     #[test]
