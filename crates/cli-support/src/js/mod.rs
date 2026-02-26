@@ -3345,7 +3345,7 @@ if (require('worker_threads').isMainThread) {{
         self.global(&format!(
             "\
 function __wbg_termination_guard() {{
-    if ({mem_view}()[wasm.__instance_terminated/4]) {{
+    if ({mem_view}()[wasm.__instance_terminated.value / 4]) {{
         throw new Error('Module terminated');
     }}
 }}"
