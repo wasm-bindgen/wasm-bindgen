@@ -19,6 +19,9 @@
 
 ### Fixed
 
+* Fixed soundness hole in `ScopedClosure`'s `UpcastFrom` that allowed to extend the lifetime after the original `ScopedClosure` was dropped.
+  [#5006](https://github.com/wasm-bindgen/wasm-bindgen/pull/5006)
+
 ### Removed
 
 ## [0.2.113](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.112...0.2.113)

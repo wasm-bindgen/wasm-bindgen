@@ -492,7 +492,11 @@ const _: () = {
 // UpcastFrom impl for ScopedClosure.
 // ScopedClosure<T1> upcasts to ScopedClosure<T2> when the underlying closure type T1 upcasts to T2.
 // The dyn Fn/FnMut UpcastFrom impls above encode correct variance (covariant return, contravariant args).
-impl<'a, 'b, T1, T2> UpcastFrom<ScopedClosure<'a, T1>> for ScopedClosure<'b, T2>
+//
+// The 'a: 'b bound is critical for soundness: it ensures the target lifetime 'b does not
+// exceed the source lifetime 'a. Without it, upcast_into could fabricate a
+// ScopedClosure<'static, _> from a short-lived ScopedClosure, enabling use-after-free.
+impl<'a: 'b, 'b, T1, T2> UpcastFrom<ScopedClosure<'a, T1>> for ScopedClosure<'b, T2>
 where
     T1: ?Sized + WasmClosure,
     T2: ?Sized + WasmClosure + UpcastFrom<T1>,
