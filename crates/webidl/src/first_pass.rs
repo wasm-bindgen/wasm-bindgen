@@ -88,6 +88,7 @@ impl<'src> FirstPassRecord<'src> {
         stability: ApiStability,
     ) {
         let interface_data = self.interfaces.get_mut(interface_name).unwrap();
+        let wbg_generic = crate::util::is_wbg_generic(interface_data.definition_attributes);
         interface_data.custom_methods.insert(
             method_name.to_string().leak(),
             InterfaceMethod {
@@ -104,6 +105,7 @@ impl<'src> FirstPassRecord<'src> {
                 variadic: false,
                 unstable: stability.is_unstable(),
                 has_unstable_override: false,
+                wbg_generic,
             },
         );
     }
@@ -169,6 +171,7 @@ pub(crate) struct NamespaceData<'src> {
     pub(crate) operations: BTreeMap<OperationId<'src>, OperationData<'src>>,
     pub(crate) consts: Vec<ConstNamespaceData<'src>>,
     pub(crate) attributes: Vec<AttributeNamespaceData<'src>>,
+    pub(crate) definition_attributes: Option<&'src ExtendedAttributeList<'src>>,
     pub(crate) stability: ApiStability,
 }
 
@@ -1497,6 +1500,7 @@ impl<'src> FirstPass<'src, ApiStability> for weedle::NamespaceDefinition<'src> {
 
         let namespace = record.namespaces.entry(self.identifier.0).or_default();
         namespace.stability = stability;
+        namespace.definition_attributes = self.attributes.as_ref();
 
         for member in &self.members.body {
             member.first_pass(record, (self.identifier.0, stability))?;

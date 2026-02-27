@@ -455,6 +455,10 @@ pub struct InterfaceMethod<'a> {
     /// the same name/signature but different return type. When true, this method
     /// is gated behind `#[cfg(not(web_sys_unstable_apis))]`.
     pub has_unstable_override: bool,
+    /// True if the parent definition has the `[WbgGeneric]` extended attribute,
+    /// which opts stable APIs into typed generics (e.g. `Promise<T>` instead of
+    /// bare `Promise`).
+    pub wbg_generic: bool,
 }
 
 impl<'a> InterfaceMethod<'a> {
@@ -501,6 +505,7 @@ impl InterfaceMethod<'_> {
             variadic,
             unstable,
             has_unstable_override,
+            wbg_generic,
         } = self;
 
         // If this is a stable method that has an unstable override,
@@ -519,8 +524,9 @@ impl InterfaceMethod<'_> {
             maybe_unstable_docs(*unstable)
         };
         // Unstable APIs always use typed generics (generics_compat=false).
+        // [WbgGeneric] on the parent definition also opts into typed generics.
         // Stable APIs use legacy types by default, typed generics if next_unstable is set.
-        let generics_compat = if *unstable {
+        let generics_compat = if *unstable || *wbg_generic {
             false
         } else {
             !options.next_unstable.get()
@@ -1363,6 +1369,8 @@ pub struct Function<'a> {
     pub catch: bool,
     pub variadic: bool,
     pub unstable: bool,
+    /// True if the parent namespace has the `[WbgGeneric]` extended attribute.
+    pub wbg_generic: bool,
 }
 
 impl Function<'_> {
@@ -1381,11 +1389,13 @@ impl Function<'_> {
             catch,
             variadic,
             unstable,
+            wbg_generic,
         } = self;
 
         // Unstable APIs always use typed generics (generics_compat=false).
+        // [WbgGeneric] on the parent namespace also opts into typed generics.
         // Stable APIs use legacy types by default, typed generics if next_unstable is set.
-        let generics_compat = if *unstable {
+        let generics_compat = if *unstable || *wbg_generic {
             false
         } else {
             !options.next_unstable.get()

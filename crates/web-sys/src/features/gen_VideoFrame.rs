@@ -305,69 +305,75 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn close(this: &VideoFrame);
+    #[cfg(feature = "PlaneLayout")]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrame`*"]
     pub fn copy_to_with_buffer_source(
         this: &VideoFrame,
         destination: &::js_sys::Object,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
+    #[cfg(feature = "PlaneLayout")]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
-    pub fn copy_to_with_u8_slice(this: &VideoFrame, destination: &mut [u8]) -> ::js_sys::Promise;
+    #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrame`*"]
+    pub fn copy_to_with_u8_slice(
+        this: &VideoFrame,
+        destination: &mut [u8],
+    ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
+    #[cfg(feature = "PlaneLayout")]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrame`*"]
     pub fn copy_to_with_u8_array(
         this: &VideoFrame,
         destination: &::js_sys::Uint8Array,
-    ) -> ::js_sys::Promise;
-    #[cfg(feature = "VideoFrameCopyToOptions")]
+    ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
+    #[cfg(all(feature = "PlaneLayout", feature = "VideoFrameCopyToOptions",))]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrame`, `VideoFrameCopyToOptions`*"]
     pub fn copy_to_with_buffer_source_and_options(
         this: &VideoFrame,
         destination: &::js_sys::Object,
         options: &VideoFrameCopyToOptions,
-    ) -> ::js_sys::Promise;
-    #[cfg(feature = "VideoFrameCopyToOptions")]
+    ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
+    #[cfg(all(feature = "PlaneLayout", feature = "VideoFrameCopyToOptions",))]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrame`, `VideoFrameCopyToOptions`*"]
     pub fn copy_to_with_u8_slice_and_options(
         this: &VideoFrame,
         destination: &mut [u8],
         options: &VideoFrameCopyToOptions,
-    ) -> ::js_sys::Promise;
-    #[cfg(feature = "VideoFrameCopyToOptions")]
+    ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
+    #[cfg(all(feature = "PlaneLayout", feature = "VideoFrameCopyToOptions",))]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoFrameCopyToOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `PlaneLayout`, `VideoFrame`, `VideoFrameCopyToOptions`*"]
     pub fn copy_to_with_u8_array_and_options(
         this: &VideoFrame,
         destination: &::js_sys::Uint8Array,
         options: &VideoFrameCopyToOptions,
-    ) -> ::js_sys::Promise;
+    ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoFrameMetadata")]
     # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = metadata)]

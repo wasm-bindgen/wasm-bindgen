@@ -637,6 +637,7 @@ impl<'src> FirstPassRecord<'src> {
             container_attrs: Option<&ExtendedAttributeList<'_>>,
             unstable_flag: bool,
             has_unstable_override: bool,
+            wbg_generic: bool,
         ) -> Option<InterfaceMethod<'a>> {
             let ret_ty = signature.orig.ret.to_wbg_type(first_pass);
             let structural =
@@ -711,6 +712,7 @@ impl<'src> FirstPassRecord<'src> {
                 variadic,
                 unstable: unstable_flag,
                 has_unstable_override,
+                wbg_generic,
             })
         }
 
@@ -763,6 +765,7 @@ impl<'src> FirstPassRecord<'src> {
                     container_attrs,
                     unstable_flag,
                     false,
+                    wbg_generic,
                 ) {
                     methods.push(method.clone());
 

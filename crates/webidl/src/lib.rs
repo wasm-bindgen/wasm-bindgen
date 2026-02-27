@@ -703,21 +703,22 @@ impl<'src> FirstPassRecord<'src> {
         ns: &'src first_pass::NamespaceData<'src>,
     ) {
         let unstable = ns.stability.is_unstable();
+        let wbg_generic = is_wbg_generic(ns.definition_attributes);
 
         let mut consts = vec![];
         let mut attributes = vec![];
         let mut functions = vec![];
 
         for member in ns.consts.iter() {
-            self.append_ns_const(&mut consts, member.clone(), unstable);
+            self.append_ns_const(&mut consts, member.clone(), unstable, wbg_generic);
         }
 
         for member in ns.attributes.iter() {
-            self.append_ns_attribute(&mut attributes, member, unstable);
+            self.append_ns_attribute(&mut attributes, member, unstable, wbg_generic);
         }
 
         for (id, data) in ns.operations.iter() {
-            self.append_ns_operation(&mut functions, &js_name, id, data);
+            self.append_ns_operation(&mut functions, &js_name, id, data, wbg_generic);
         }
 
         if !consts.is_empty() || !attributes.is_empty() || !functions.is_empty() {
@@ -739,9 +740,10 @@ impl<'src> FirstPassRecord<'src> {
         consts: &mut Vec<Const>,
         member: first_pass::ConstNamespaceData<'src>,
         unstable: bool,
+        wbg_generic: bool,
     ) {
         let wbg_type = member.definition.const_type.to_wbg_type(self);
-        let generics_compat = if unstable {
+        let generics_compat = if unstable || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
@@ -770,6 +772,7 @@ impl<'src> FirstPassRecord<'src> {
         js_name: &str,
         id: &'src OperationId<'src>,
         data: &'src OperationData<'src>,
+        wbg_generic: bool,
     ) {
         match id {
             OperationId::Operation(Some(_)) => {}
@@ -784,7 +787,7 @@ impl<'src> FirstPassRecord<'src> {
             }
         }
 
-        for x in self.create_imports(None, None, id, data, false, &HashSet::new(), false) {
+        for x in self.create_imports(None, None, id, data, false, &HashSet::new(), wbg_generic) {
             functions.push(Function {
                 name: x.name,
                 js_name: x.js_name,
@@ -794,6 +797,7 @@ impl<'src> FirstPassRecord<'src> {
                 catch: x.catch,
                 variadic: x.variadic,
                 unstable: false,
+                wbg_generic,
             });
         }
     }
@@ -803,12 +807,13 @@ impl<'src> FirstPassRecord<'src> {
         attributes: &mut Vec<NamespaceAttribute>,
         member: &first_pass::AttributeNamespaceData<'src>,
         unstable: bool,
+        wbg_generic: bool,
     ) {
         let definition = member.definition;
         let catch = throws(&definition.attributes);
         let unstable = unstable || member.stability.is_unstable();
 
-        let generics_compat = if unstable {
+        let generics_compat = if unstable || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
