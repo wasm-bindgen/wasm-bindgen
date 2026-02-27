@@ -10,6 +10,11 @@
   into Wasm will throw a `Module terminated` error instead of re-entering corrupted state.
   [#5005](https://github.com/wasm-bindgen/wasm-bindgen/pull/5005)
 
+* When `--reset-state` is combined with `panic=unwind` builds, the Wasm instance is
+  automatically reset after a fatal termination, allowing subsequent calls to succeed
+  instead of throwing a `Module terminated` error.
+  [#5013](https://github.com/wasm-bindgen/wasm-bindgen/pull/5013)
+
 * Added `unchecked_optional_param_type` attribute for marking exported function parameters as
   optional in TypeScript (`?:`) and JSDoc (`[paramName]`) output. Mutually exclusive with
   `unchecked_param_type`. Required parameters after optional parameters are rejected at compile time.
