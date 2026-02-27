@@ -3344,12 +3344,17 @@ if (require('worker_threads').isMainThread) {{
 
         self.global("let __wbg_terminated_addr;");
 
+        let terminated_action = if self.config.generate_reset_state {
+            "__wbg_reset_state()"
+        } else {
+            "throw new Error('Module terminated')"
+        };
         self.global(&format!(
             "\
 function __wbg_termination_guard() {{
     __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
     if ({mem_view}()[__wbg_terminated_addr]) {{
-        throw new Error('Module terminated');
+        {terminated_action};
     }}
 }}"
         ));

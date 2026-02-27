@@ -540,18 +540,13 @@ fn constructor_cannot_return_option_struct() {
         .unwrap_err();
 }
 
-#[test]
-fn termination() {
-    let mut project = Project::new("termination");
-    project
-        .file(
-            "src/lib.rs",
-            r#"
+/// Shared Rust source for termination / reset-state tests.
+const TERMINATION_LIB_RS: &str = r#"
                 use wasm_bindgen::prelude::*;
                 use wasm_bindgen::throw_str;
 
                 #[wasm_bindgen(inline_js = "
-                    export function js_throw_error() { debugger; throw new Error('JS import threw'); }
+                    export function js_throw_error() { throw new Error('JS import threw'); }
                     export function set_was_dropped(val) { globalThis.was_dropped = val; }
                     let _callback = null;
                     export function register_callback(f) { _callback = f; }
@@ -560,7 +555,6 @@ fn termination() {
                     }
                 ")]
                 extern "C" {
-                    // No `catch` — a JS throw here should unwind, not abort.
                     fn js_throw_error();
                     fn set_was_dropped(val: bool);
                     fn register_callback(f: &JsValue);
@@ -589,6 +583,21 @@ fn termination() {
                     fn drop(&mut self) {
                         set_was_dropped(true);
                     }
+                }
+
+                static mut COUNTER: u32 = 0;
+
+                #[wasm_bindgen]
+                pub fn increment_counter() -> u32 {
+                    unsafe {
+                        COUNTER += 1;
+                        COUNTER
+                    }
+                }
+
+                #[wasm_bindgen]
+                pub fn get_counter() -> u32 {
+                    unsafe { COUNTER }
                 }
 
                 #[wasm_bindgen]
@@ -633,12 +642,15 @@ fn termination() {
                     let _guard = DropGuard::new();
                     js_call_callback_with_catch();
                 }
-            "#,
-        )
-        .file(
-            "Cargo.toml",
-            &format!(
-                "
+            "#;
+
+#[test]
+fn termination() {
+    let mut project = Project::new("termination");
+    project.file("src/lib.rs", TERMINATION_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
                     [package]
                     name = \"termination\"
                     authors = []
@@ -656,9 +668,9 @@ fn termination() {
                     [profile.dev]
                     codegen-units = 1
                 ",
-                REPO_ROOT.display(),
-            ),
-        );
+            REPO_ROOT.display(),
+        ),
+    );
 
     // termination detection requires panic=unwind and nightly build-std
     project
@@ -907,6 +919,216 @@ describe('nested unreachable', () => {
     Command::new("node")
         .arg("--test")
         .arg("test_nested_unreachable.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn termination_reset_state() {
+    let mut project = Project::new("termination_reset_state");
+    project.file("src/lib.rs", TERMINATION_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                    [package]
+                    name = \"termination_reset_state\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    // termination detection requires panic=unwind and nightly build-std
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --experimental-reset-state-function")
+        .unwrap();
+
+    fs::write(
+        out_dir.join("test_reset_state.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+// Monkeypatch WebAssembly.Instance to capture the wasm exports (memory and
+// __instance_terminated) before the generated JS module hides them.
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+};
+
+const wasm = require('./termination_reset_state.js');
+function isTerminated() {
+    const memory = new Int32Array(wasmExports.memory.buffer);
+    const terminatedAddr = wasmExports.__instance_terminated.value;
+    return memory[terminatedAddr / 4];
+}
+
+describe('termination with reset state', () => {
+    it('basic functionality works', () => {
+        assert.strictEqual(wasm.simple_add(2, 3), 5);
+        assert.strictEqual(isTerminated(), 0);
+    });
+
+    it('counter state is preserved across normal calls', () => {
+        assert.strictEqual(wasm.get_counter(), 0);
+        assert.strictEqual(wasm.increment_counter(), 1);
+        assert.strictEqual(wasm.increment_counter(), 2);
+        assert.strictEqual(wasm.get_counter(), 2);
+    });
+
+    it('panic is recoverable and preserves counter state', () => {
+        assert.throws(() => wasm.trigger_panic(), (e) => {
+            assert.match(e.message, /deliberate panic/);
+            return true;
+        });
+        assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(globalThis.was_dropped, true);
+        // Counter preserved across recoverable error.
+        assert.strictEqual(wasm.get_counter(), 2);
+    });
+
+    it('throw_str is recoverable and preserves counter state', () => {
+        assert.strictEqual(wasm.increment_counter(), 3);
+        assert.throws(() => wasm.trigger_throw_str(), (e) => {
+            assert.match(e.message, /deliberate throw_str/);
+            return true;
+        });
+        assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(globalThis.was_dropped, true);
+        assert.strictEqual(wasm.get_counter(), 3);
+    });
+
+    it('JS import throw is recoverable and preserves counter state', () => {
+        assert.throws(() => wasm.call_throwing_import(), (e) => {
+            assert.match(e.message, /JS import threw/);
+            return true;
+        });
+        assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(globalThis.was_dropped, true);
+        assert.strictEqual(wasm.get_counter(), 3);
+    });
+
+    it('JS import throw via indirect call is recoverable and preserves counter state', () => {
+        assert.throws(() => wasm.call_throwing_import_indirect(), (e) => {
+            assert.match(e.message, /JS import threw/);
+            return true;
+        });
+        assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(globalThis.was_dropped, true);
+        assert.strictEqual(wasm.get_counter(), 3);
+    });
+
+    it('fatal error triggers termination without dropping locals', () => {
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert(e instanceof WebAssembly.RuntimeError, 'fatal error should be WebAssembly.RuntimeError');
+            return true;
+        });
+        assert.strictEqual(isTerminated(), 1);
+        assert.strictEqual(globalThis.was_dropped, false);
+    });
+
+    it('after fatal error, next call resets state and counter is zero', () => {
+        assert.strictEqual(isTerminated(), 1);
+        // With --experimental-reset-state-function, calling an export after
+        // termination should auto-reset instead of throwing "Module terminated".
+        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset to zero');
+        assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(wasm.simple_add(2, 3), 5);
+    });
+
+    it('counter works from scratch after reset', () => {
+        assert.strictEqual(wasm.increment_counter(), 1);
+        assert.strictEqual(wasm.increment_counter(), 2);
+        assert.strictEqual(wasm.get_counter(), 2);
+    });
+
+    it('recoverable errors still work after a reset', () => {
+        assert.throws(() => wasm.trigger_panic(), (e) => {
+            assert.match(e.message, /deliberate panic/);
+            return true;
+        });
+        assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(globalThis.was_dropped, true);
+        // Counter preserved across recoverable error after reset.
+        assert.strictEqual(wasm.get_counter(), 2);
+    });
+
+    it('JS-initiated termination resets counter on next call', () => {
+        assert.strictEqual(wasm.increment_counter(), 3);
+
+        // Terminate from JS by writing to the flag.
+        const memory = new Int32Array(wasmExports.memory.buffer);
+        const terminatedAddr = wasmExports.__instance_terminated.value;
+        memory[terminatedAddr / 4] = 1;
+
+        // Next call should reset — counter back to zero.
+        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset after JS-initiated termination');
+        assert.strictEqual(isTerminated(), 0);
+    });
+
+    it('nested unreachable terminates and resets counter on next call', () => {
+        wasm.setup_nested_unreachable();
+        assert.strictEqual(wasm.increment_counter(), 1);
+
+        globalThis.was_dropped = undefined;
+        assert.throws(() => wasm.call_nested_unreachable());
+        assert.strictEqual(globalThis.was_dropped, false,
+            'outer DropGuard must not have been dropped');
+        assert.strictEqual(isTerminated(), 1);
+
+        // Next call should reset — counter back to zero.
+        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset after nested unreachable');
+        assert.strictEqual(isTerminated(), 0);
+    });
+
+    it('multiple fatal-then-reset cycles reset counter each time', () => {
+        for (let i = 0; i < 3; i++) {
+            // Build up counter state.
+            assert.strictEqual(wasm.increment_counter(), 1);
+            assert.strictEqual(wasm.increment_counter(), 2);
+
+            assert.throws(() => wasm.trigger_unreachable(), (e) => {
+                assert(e instanceof WebAssembly.RuntimeError);
+                return true;
+            });
+            assert.strictEqual(isTerminated(), 1);
+
+            // Auto-resets on next call — counter back to zero.
+            assert.strictEqual(wasm.get_counter(), 0, `cycle ${i}: counter should be reset`);
+            assert.strictEqual(isTerminated(), 0);
+        }
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reset_state.js")
         .current_dir(&out_dir)
         .assert()
         .success();
