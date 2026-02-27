@@ -3342,10 +3342,13 @@ if (require('worker_threads').isMainThread) {{
         let memory = wasm_conventions::get_memory(self.module).unwrap();
         let mem_view = self.expose_int32_memory(memory);
 
+        self.global("let __wbg_terminated_addr;");
+
         self.global(&format!(
             "\
 function __wbg_termination_guard() {{
-    if ({mem_view}()[wasm.__instance_terminated.value / 4]) {{
+    __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
+    if ({mem_view}()[__wbg_terminated_addr]) {{
         throw new Error('Module terminated');
     }}
 }}"
@@ -3358,7 +3361,7 @@ function __wbg_handle_catch(e) {{
     if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
         throw e.getArg(__wbindgen_wrapped_jstag, 0);
     }}
-    {mem_view}()[wasm.__instance_terminated.value / 4] = 1;
+    {mem_view}()[__wbg_terminated_addr] = 1;
     throw e;
 }}"
         ));
