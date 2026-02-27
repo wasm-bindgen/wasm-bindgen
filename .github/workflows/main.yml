@@ -235,7 +235,7 @@ jobs:
         targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v6
       with:
-        node-version: '20'
+        node-version: '22'
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli
