@@ -5,6 +5,21 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
+
+### Added
+
+* Added `unchecked_optional_param_type` attribute for marking exported function parameters as
+  optional in TypeScript (`?:`) and JSDoc (`[paramName]`) output. Mutually exclusive with
+  `unchecked_param_type`. Required parameters after optional parameters are rejected at compile time.
+  [#5002](https://github.com/wasm-bindgen/wasm-bindgen/pull/5002)
+
 * Added termination detection for `panic=unwind` builds. When a non-JS exception (e.g. a Rust
   panic) escapes from Wasm, the instance is marked as terminated and subsequent calls from JS
   into Wasm will throw a `Module terminated` error instead of re-entering corrupted state.
@@ -15,11 +30,6 @@
   instead of throwing a `Module terminated` error.
   [#5013](https://github.com/wasm-bindgen/wasm-bindgen/pull/5013)
 
-* Added `unchecked_optional_param_type` attribute for marking exported function parameters as
-  optional in TypeScript (`?:`) and JSDoc (`[paramName]`) output. Mutually exclusive with
-  `unchecked_param_type`. Required parameters after optional parameters are rejected at compile time.
-  [#5002](https://github.com/wasm-bindgen/wasm-bindgen/pull/5002)
-
 ### Changed
 
 * Replaced runtime `0x80000000` vtable bit-flag for closure unwind safety with a
@@ -27,6 +37,7 @@
   and `BorrowedClosure`. Removes `OwnedClosureUnwind` and deduplicates internal
   closure helpers. The public API is unchanged.
   [#5003](https://github.com/wasm-bindgen/wasm-bindgen/pull/5003)
+
 * Removed unused `IntoWasmClosureRef*::WithLifetime` types,
   `WasmClosure::to_wasm_slice`, and a lifetime from
   `IntoWasmClosureRef*`; moved `Static` associated type into `WasmClosure`.
@@ -41,8 +52,6 @@
 
 * Fixed soundness hole in `ScopedClosure`'s `UpcastFrom` that allowed to extend the lifetime after the original `ScopedClosure` was dropped.
   [#5006](https://github.com/wasm-bindgen/wasm-bindgen/pull/5006)
-
-### Removed
 
 ## [0.2.113](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.112...0.2.113)
 

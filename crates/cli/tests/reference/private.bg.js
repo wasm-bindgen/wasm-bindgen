@@ -159,7 +159,7 @@ export function use_hidden_struct(hidden) {
     const ret = wasm.use_hidden_struct(ptr0);
     return ret;
 }
-export function __wbg___wbindgen_throw_39bc967c0e5a9b58(arg0, arg1) {
+export function __wbg___wbindgen_throw_6ddd609b62940d55(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
