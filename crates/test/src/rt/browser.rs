@@ -35,6 +35,46 @@ extern "C" {
     fn stack(this: &BrowserError) -> JsValue;
 }
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = "setTimeout")]
+    fn set_timeout(closure: JsValue, millis: i32);
+}
+
+fn delay_promise(millis: i32) -> js_sys::Promise {
+    js_sys::Promise::new_typed(&mut |resolve, _| {
+        set_timeout(resolve.into(), millis);
+    })
+}
+
+/// Request the test runner to take a screenshot and save it to the given path.
+///
+/// This works by writing the requested filename to a hidden DOM element
+/// (`#__wbgtest_screenshot`). The headless test runner detects this, takes a
+/// screenshot via the WebDriver protocol, saves it, and clears the element.
+/// This function polls until the element is cleared, then returns.
+///
+/// The path is relative to the crate root (where `cargo test` is run).
+///
+/// # Panics
+///
+/// Panics if the `#__wbgtest_screenshot` element is not present in the page
+/// (i.e. when not running under the headless test runner).
+pub async fn screenshot(path: &str) {
+    let el = DOCUMENT.with(|doc| doc.getElementById("__wbgtest_screenshot"));
+    el.set_text_content(path);
+
+    loop {
+        wasm_bindgen_futures::JsFuture::from(delay_promise(50))
+            .await
+            .unwrap_throw();
+
+        if el.text_content().is_empty() {
+            break;
+        }
+    }
+}
+
 impl Browser {
     /// Creates a new instance of `Browser`, assuming that its APIs will work
     /// (requires `Node::new()` to have return `None` first).

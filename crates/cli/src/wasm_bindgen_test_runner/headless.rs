@@ -1,11 +1,12 @@
 use super::shell::Shell;
 use anyhow::{bail, Context, Error};
+use base64::Engine;
 use log::{debug, warn};
 use rouille::url::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value as Json};
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, Cursor, ErrorKind, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
@@ -224,6 +225,40 @@ pub fn run(
                 break;
             }
         }
+
+        if let Ok(val) = client.execute_script(
+            &id,
+            "var el = document.getElementById('__wbgtest_screenshot');\
+             if (!el) return '';\
+             var t = el.textContent;\
+             el.textContent = '';\
+             return t;",
+        ) {
+            let ss_text = val.as_str().unwrap_or_default().to_string();
+            if !ss_text.is_empty() {
+                shell.status(&format!("Taking screenshot: {ss_text}"));
+                match client.screenshot(&id) {
+                    Ok(png_data) => {
+                        let path = Path::new(&ss_text);
+                        if let Some(parent) = path.parent() {
+                            if !parent.as_os_str().is_empty() {
+                                fs::create_dir_all(parent).ok();
+                            }
+                        }
+                        match fs::write(path, &png_data) {
+                            Ok(()) => {
+                                println!("Screenshot saved: {ss_text} ({} bytes)", png_data.len())
+                            }
+                            Err(e) => println!("Failed to save screenshot {ss_text}: {e}"),
+                        }
+                    }
+                    Err(e) => {
+                        println!("Failed to take screenshot: {e}");
+                    }
+                }
+            }
+        }
+
         thread::sleep(Duration::from_millis(100));
     }
     if !shell_cleared {
@@ -654,6 +689,35 @@ impl Client {
             })
             .and_then(|v| v.as_str())
             .map(|s| s.to_string())
+    }
+
+    fn screenshot(&mut self, id: &str) -> Result<Vec<u8>, Error> {
+        #[derive(Deserialize)]
+        struct Response {
+            value: String,
+        }
+        let x: Response = self.get(&format!("/session/{id}/screenshot"))?;
+        base64::engine::general_purpose::STANDARD
+            .decode(&x.value)
+            .map_err(|e| anyhow::anyhow!("failed to decode screenshot base64: {e}"))
+    }
+
+    fn execute_script(&mut self, id: &str, script: &str) -> Result<Json, Error> {
+        #[derive(Serialize)]
+        struct Request {
+            script: String,
+            args: Vec<Json>,
+        }
+        #[derive(Deserialize)]
+        struct Response {
+            value: Json,
+        }
+        let request = Request {
+            script: script.to_string(),
+            args: vec![],
+        };
+        let x: Response = self.post(&format!("/session/{id}/execute/sync"), &request)?;
+        Ok(x.value)
     }
 
     fn get<U>(&mut self, path: &str) -> Result<U, Error>

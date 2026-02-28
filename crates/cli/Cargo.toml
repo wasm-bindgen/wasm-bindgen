@@ -34,6 +34,7 @@ path = "src/bin/wasm2es6js.rs"
 
 [dependencies]
 anyhow = "1.0"
+base64 = "0.22"
 clap = { version = "4", features = ["derive"] }
 env_logger = "0.11.5"
 log = "0.4"
