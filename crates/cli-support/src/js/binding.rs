@@ -1553,15 +1553,13 @@ fn instruction(
                         // ensure that any lingering references to the closure
                         // will fail immediately due to null pointers passed in
                         // to Rust.
-                        js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+                        js.finally(&format!("state{i}.a = 0;"));
                     }
                     ClosureDtor::Borrowed => {
                         // Borrowed closure from ScopedClosure::borrow/borrow_mut. Add
                         // _wbg_cb_unref to invalidate the closure at the end of
                         // the scoped block.
-                        js.prelude(&format!(
-                            "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
-                        ));
+                        js.prelude(&format!("cb{i}._wbg_cb_unref = () => state{i}.a = 0;"));
                     }
                 }
                 js.push(format!("cb{i}"));

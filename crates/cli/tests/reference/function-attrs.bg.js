@@ -108,7 +108,7 @@ export function __wbg_new_typed_aaaeaf29cf802876(arg0, arg1) {
         const ret = new Promise(cb0);
         return ret;
     } finally {
-        state0.a = state0.b = 0;
+        state0.a = 0;
     }
 }
 export function __wbg_queueMicrotask_0c399741342fb10f(arg0) {
@@ -137,7 +137,7 @@ export function __wbg_run_78b7b601add6ed6b(arg0, arg1, arg2) {
         const ret = arg0.run(cb0);
         return ret;
     } finally {
-        state0.a = state0.b = 0;
+        state0.a = 0;
     }
 }
 export function __wbg_static_accessor_GLOBAL_8adb955bd33fac2f() {

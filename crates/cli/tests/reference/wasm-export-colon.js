@@ -210,7 +210,7 @@ function __wbg_get_imports() {
                 };
                 __wbg_test_invoke(cb0);
             } finally {
-                state0.a = state0.b = 0;
+                state0.a = 0;
             }
         }, arguments); },
         __wbg___wbg_test_output_writeln_34f10cba65c3d2e9: function(arg0) {
@@ -277,7 +277,7 @@ function __wbg_get_imports() {
                 };
                 arg0.forEach(cb0);
             } finally {
-                state0.a = state0.b = 0;
+                state0.a = 0;
             }
         },
         __wbg_getElementById_c7ce907969867235: function(arg0, arg1, arg2) {
@@ -321,7 +321,7 @@ function __wbg_get_imports() {
                 const ret = new Promise(cb0);
                 return ret;
             } finally {
-                state0.a = state0.b = 0;
+                state0.a = 0;
             }
         },
         __wbg_now_bededbf0fc26550a: function(arg0) {
@@ -358,7 +358,7 @@ function __wbg_get_imports() {
                 const ret = arg0.run(cb0);
                 return ret;
             } finally {
-                state0.a = state0.b = 0;
+                state0.a = 0;
             }
         },
         __wbg_self_81ecf3f64cd5499b: function(arg0) {

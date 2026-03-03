@@ -42,7 +42,7 @@ export function __wbg_forEach_a2c08d9c3cc0524c(arg0, arg1, arg2) {
         };
         arg0.forEach(cb0);
     } finally {
-        state0.a = state0.b = 0;
+        state0.a = 0;
     }
 }
 export function __wbg_instanceof_Window_23e677d2c6843922(arg0) {
@@ -89,7 +89,7 @@ export function __wbindgen_cast_0000000000000000(arg0, arg1) {
             state0.a = a;
         }
     };
-    cb0._wbg_cb_unref = () => { state0.a = state0.b = 0; };
+    cb0._wbg_cb_unref = () => state0.a = 0;
     // Cast intrinsic for `Closure(Closure { owned: false, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
     const ret = cb0;
     return ret;
