@@ -46,13 +46,14 @@ pub fn get_stack_pointer(module: &Module) -> Option<GlobalId> {
     let candidates = module
         .globals
         .iter()
-        .filter(|g| g.ty == ValType::I32)
+        .filter(|g| g.ty == ValType::I32 || g.ty == ValType::I64)
         .filter(|g| g.mutable)
         // The stack pointer is guaranteed to not be initialized to 0, and it's
-        // guaranteed to have an i32 initializer, so find globals which are
-        // locally defined, are an i32, and have a nonzero initializer
+        // guaranteed to have an i32/i64 initializer, so find globals which are
+        // locally defined and have a nonzero initializer
         .filter(|g| match g.kind {
             GlobalKind::Local(ConstExpr::Value(Value::I32(n))) => n != 0,
+            GlobalKind::Local(ConstExpr::Value(Value::I64(n))) => n != 0,
             _ => false,
         })
         .collect::<Vec<_>>();
@@ -81,7 +82,7 @@ pub fn get_tls_base(module: &Module) -> Option<GlobalId> {
         .filter(|id| {
             let global = module.globals.get(*id);
 
-            global.ty == ValType::I32
+            global.ty == ValType::I32 || global.ty == ValType::I64
         })
         .collect::<Vec<_>>();
 
@@ -103,6 +104,10 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId>
         let offset = match &segment.kind {
             walrus::ElementKind::Active {
                 offset: ConstExpr::Value(Value::I32(n)),
+                ..
+            } => *n as u32,
+            walrus::ElementKind::Active {
+                offset: ConstExpr::Value(Value::I64(n)),
                 ..
             } => *n as u32,
             _ => continue,

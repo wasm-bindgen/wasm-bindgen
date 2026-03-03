@@ -50,6 +50,17 @@ struct InstructionBuilder<'a, 'b> {
     return_position: bool,
 }
 
+impl InstructionBuilder<'_, '_> {
+    /// Returns `AdapterType::I64` for memory64 modules, `AdapterType::I32` for wasm32.
+    fn ptr_ty(&self) -> AdapterType {
+        if self.cx.memory64() {
+            AdapterType::I64
+        } else {
+            AdapterType::I32
+        }
+    }
+}
+
 pub fn process(
     bindgen: &mut Bindgen,
     module: &mut Module,
@@ -1665,6 +1676,13 @@ impl<'a> Context<'a> {
     fn memory(&self) -> Result<MemoryId, Error> {
         self.memory
             .ok_or_else(|| anyhow!("failed to find memory declaration in module"))
+    }
+
+    /// Returns `true` if the module's primary memory is 64-bit.
+    fn memory64(&self) -> bool {
+        self.memory
+            .map(|id| self.module.memories.get(id).memory64)
+            .unwrap_or(false)
     }
 
     /// Removes the export item for all `__wbindgen` intrinsics which are

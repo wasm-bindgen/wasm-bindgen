@@ -233,7 +233,11 @@ impl Frame<'_> {
             match instr {
                 Instr::Const(c) => match c.value {
                     Value::I32(n) => stack.push(n),
-                    _ => bail!("non-i32 constant"),
+                    // For wasm64, truncate i64 constants to i32. The descriptor
+                    // protocol only uses small values, and pointer arithmetic
+                    // in our tiny interpreter fits in i32.
+                    Value::I64(n) => stack.push(n as i32),
+                    _ => bail!("non-integer constant"),
                 },
                 Instr::LocalGet(e) => stack.push(self.locals.get(&e.local).cloned().unwrap_or(0)),
                 Instr::LocalSet(e) => {
@@ -258,9 +262,23 @@ impl Frame<'_> {
                     let rhs = stack.pop().unwrap();
                     let lhs = stack.pop().unwrap();
                     stack.push(match e.op {
-                        BinaryOp::I32Sub => lhs - rhs,
-                        BinaryOp::I32Add => lhs + rhs,
+                        BinaryOp::I32Sub | BinaryOp::I64Sub => lhs - rhs,
+                        BinaryOp::I32Add | BinaryOp::I64Add => lhs + rhs,
+                        BinaryOp::I32And | BinaryOp::I64And => lhs & rhs,
                         op => bail!("invalid binary op {op:?}"),
+                    });
+                }
+
+                // Support unary ops, mainly for wasm64's I32WrapI64 and
+                // I64ExtendI32U (pointer conversions).
+                Instr::Unop(e) => {
+                    let val = stack.pop().unwrap();
+                    stack.push(match e.op {
+                        // i64→i32 wrap: already truncated in our i32 representation
+                        UnaryOp::I32WrapI64 => val,
+                        // i32→i64 extend: already fits in our i32 representation
+                        UnaryOp::I64ExtendUI32 | UnaryOp::I64ExtendSI32 => val,
+                        op => bail!("invalid unary op {op:?}"),
                     });
                 }
 

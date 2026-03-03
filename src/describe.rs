@@ -50,13 +50,26 @@ simple! {
     u64 => U64
     i128 => I128
     u128 => U128
-    isize => I32
-    usize => U32
     f32 => F32
     f64 => F64
     bool => BOOLEAN
     char => CHAR
     JsValue => EXTERNREF
+}
+
+// isize/usize map to I32/U32 on wasm32 and I64/U64 on wasm64
+cfg_if! {
+    if #[cfg(target_pointer_width = "64")] {
+        simple! {
+            isize => I64
+            usize => U64
+        }
+    } else {
+        simple! {
+            isize => I32
+            usize => U32
+        }
+    }
 }
 
 cfg_if! {
@@ -75,14 +88,14 @@ cfg_if! {
 impl<T> WasmDescribe for *const T {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
-        inform(U32)
+        <usize as WasmDescribe>::describe()
     }
 }
 
 impl<T> WasmDescribe for *mut T {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
-        inform(U32)
+        <usize as WasmDescribe>::describe()
     }
 }
 

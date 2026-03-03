@@ -150,8 +150,10 @@ fn xform_one(
     return_pointer_index: usize,
     results: &[walrus::ValType],
 ) -> Result<walrus::FunctionId, anyhow::Error> {
-    if module.globals.get(stack_pointer).ty != walrus::ValType::I32 {
-        anyhow::bail!("stack pointer global does not have type `i32`");
+    let sp_ty = module.globals.get(stack_pointer).ty;
+    let memory64 = sp_ty == walrus::ValType::I64;
+    if sp_ty != walrus::ValType::I32 && sp_ty != walrus::ValType::I64 {
+        anyhow::bail!("stack pointer global has unexpected type `{sp_ty:?}`");
     }
 
     // Compute the total size of all results, potentially with padding to ensure
@@ -187,10 +189,17 @@ fn xform_one(
         );
     }
 
+    let ptr_ty = if memory64 {
+        walrus::ValType::I64
+    } else {
+        walrus::ValType::I32
+    };
     match ty_params.get(return_pointer_index) {
-        Some(walrus::ValType::I32) => {}
+        Some(ty) if *ty == ptr_ty => {}
         None => anyhow::bail!("the return pointer parameter doesn't exist"),
-        Some(_) => anyhow::bail!("the return pointer parameter is not `i32`"),
+        Some(ty) => {
+            anyhow::bail!("the return pointer parameter is not `{ptr_ty:?}` (got `{ty:?}`)")
+        }
     }
 
     let new_params: Vec<_> = ty_params
@@ -210,17 +219,21 @@ fn xform_one(
     let params: Vec<_> = new_params.iter().map(|ty| module.locals.add(*ty)).collect();
 
     // A local to hold our stack-allocated return pointer.
-    let return_pointer = module.locals.add(walrus::ValType::I32);
+    let return_pointer = module.locals.add(ptr_ty);
 
     let mut wrapper = walrus::FunctionBuilder::new(&mut module.types, &new_params, results);
     let mut body = wrapper.func_body();
 
     // Allocate space in the stack for the call.
-    body.global_get(stack_pointer)
-        .i32_const(results_size as i32)
-        .binop(walrus::ir::BinaryOp::I32Sub)
-        .local_tee(return_pointer)
-        .global_set(stack_pointer);
+    body.global_get(stack_pointer);
+    if memory64 {
+        body.i64_const(results_size as i64)
+            .binop(walrus::ir::BinaryOp::I64Sub);
+    } else {
+        body.i32_const(results_size as i32)
+            .binop(walrus::ir::BinaryOp::I32Sub);
+    }
+    body.local_tee(return_pointer).global_set(stack_pointer);
 
     // Push the parameters for calling our wrapped function -- including the
     // return pointer! -- on to the stack.
@@ -293,10 +306,15 @@ fn xform_one(
     }
 
     // Finally, restore the stack pointer.
-    body.local_get(return_pointer)
-        .i32_const(results_size as i32)
-        .binop(walrus::ir::BinaryOp::I32Add)
-        .global_set(stack_pointer);
+    body.local_get(return_pointer);
+    if memory64 {
+        body.i64_const(results_size as i64)
+            .binop(walrus::ir::BinaryOp::I64Add);
+    } else {
+        body.i32_const(results_size as i32)
+            .binop(walrus::ir::BinaryOp::I32Add);
+    }
+    body.global_set(stack_pointer);
 
     let wrapper = wrapper.finish(params, &mut module.funcs);
     if let Some(name) = &module.funcs.get(func).name {

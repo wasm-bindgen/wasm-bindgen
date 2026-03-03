@@ -1,2 +1,5 @@
 [target.'cfg(target_arch = "wasm32")']
 runner = 'cargo run -p wasm-bindgen-cli --bin wasm-bindgen-test-runner --'
+
+[target.'cfg(target_arch = "wasm64")']
+runner = 'cargo run -p wasm-bindgen-cli --bin wasm-bindgen-test-runner --'

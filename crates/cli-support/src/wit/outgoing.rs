@@ -101,8 +101,9 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::RustStruct(class) => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                     Instruction::RustFromI32 {
                         class: class.to_string(),
                     },
@@ -116,8 +117,9 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String => {
                 // fetch the ptr/length ...
-                self.get(AdapterType::I32);
-                self.get(AdapterType::I32);
+                let ptr_ty = self.ptr_ty();
+                self.get(ptr_ty.clone());
+                self.get(ptr_ty);
 
                 // ... then defer a call to `free` to happen later
                 let free = self.cx.free()?;
@@ -148,8 +150,9 @@ impl InstructionBuilder<'_, '_> {
                 })?;
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::VectorLoad {
                         kind: kind.clone(),
                         mem,
@@ -177,7 +180,15 @@ impl InstructionBuilder<'_, '_> {
             // Largely synthetic and can't show up
             Descriptor::ClampedU8 => unreachable!(),
 
-            Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
+            Descriptor::NonNull => {
+                let ptr_ty = self.ptr_ty();
+                let instr = if ptr_ty == AdapterType::I64 {
+                    Instruction::WasmToInt64 { unsigned: true }
+                } else {
+                    Instruction::WasmToInt32 { unsigned_32: true }
+                };
+                self.instruction(&[ptr_ty], instr, &[AdapterType::NonNull]);
+            }
 
             Descriptor::Closure(d) => {
                 self.outgoing_function(d.mutable, &d.function, Some(d.dtor_idx))?
@@ -205,8 +216,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::CachedString => self.cached_string(false)?,
 
             Descriptor::String => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::MemoryToString(self.cx.memory()?),
                     &[AdapterType::String],
                 );
@@ -218,8 +230,9 @@ impl InstructionBuilder<'_, '_> {
                     )
                 })?;
                 let mem = self.cx.memory()?;
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
@@ -278,9 +291,15 @@ impl InstructionBuilder<'_, '_> {
         let mut descriptor = descriptor.clone();
         // synthesize the a/b arguments that aren't present in the
         // signature from wasm-bindgen but are present in the Wasm file.
+        // On wasm64, closure data pointers are i64-sized.
         let nargs = descriptor.arguments.len();
-        descriptor.arguments.insert(0, Descriptor::I32);
-        descriptor.arguments.insert(0, Descriptor::I32);
+        let ptr_descriptor = if self.cx.memory64() {
+            Descriptor::I64
+        } else {
+            Descriptor::I32
+        };
+        descriptor.arguments.insert(0, ptr_descriptor.clone());
+        descriptor.arguments.insert(0, ptr_descriptor);
         let shim = self.export_table_element(descriptor.shim_idx);
         let dtor = match dtor_idx {
             None => ClosureDtor::Immediate,
@@ -288,8 +307,9 @@ impl InstructionBuilder<'_, '_> {
             Some(idx) => ClosureDtor::OwnClosure(self.export_table_element(idx)),
         };
         let adapter = self.cx.export_adapter(shim, descriptor)?;
+        let ptr_ty = self.ptr_ty();
         self.instruction(
-            &[AdapterType::I32, AdapterType::I32],
+            &[ptr_ty.clone(), ptr_ty],
             Instruction::Closure {
                 adapter,
                 nargs,
@@ -376,8 +396,9 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::RustStruct(name) => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                     Instruction::OptionRustFromI32 {
                         class: name.to_string(),
                     },
@@ -397,8 +418,9 @@ impl InstructionBuilder<'_, '_> {
                 })?;
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionVectorLoad {
                         kind: kind.clone(),
                         mem,
@@ -408,11 +430,14 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::NonNull => self.instruction(
-                &[AdapterType::I32],
-                Instruction::OptionNonNullFromI32,
-                &[AdapterType::NonNull.option()],
-            ),
+            Descriptor::NonNull => {
+                let ptr_ty = self.ptr_ty();
+                self.instruction(
+                    &[ptr_ty],
+                    Instruction::OptionNonNullFromI32,
+                    &[AdapterType::NonNull.option()],
+                );
+            }
 
             _ => bail!(
                 "unsupported optional argument type for calling JS function from Rust: {arg:?}"
@@ -501,8 +526,9 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::String => {
                 // fetch the ptr/length ...
-                self.get(AdapterType::I32);
-                self.get(AdapterType::I32);
+                let ptr_ty = self.ptr_ty();
+                self.get(ptr_ty.clone());
+                self.get(ptr_ty);
                 // fetch the err/is_err
                 self.get(AdapterType::I32);
                 self.get(AdapterType::I32);
@@ -582,8 +608,9 @@ impl InstructionBuilder<'_, '_> {
                     )
                 })?;
                 let mem = self.cx.memory()?;
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
@@ -624,8 +651,9 @@ impl InstructionBuilder<'_, '_> {
     fn cached_string(&mut self, owned: bool) -> Result<(), Error> {
         let mem = self.cx.memory()?;
         let free = self.cx.free()?;
+        let ptr_ty = self.ptr_ty();
         self.instruction(
-            &[AdapterType::I32, AdapterType::I32],
+            &[ptr_ty.clone(), ptr_ty],
             Instruction::CachedStringLoad {
                 owned,
                 mem,

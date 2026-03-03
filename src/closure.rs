@@ -450,7 +450,7 @@ where
         F: IntoWasmClosureRef<T> + ?Sized,
     {
         let t: &T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        let (ptr, len): (usize, usize) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T, UNWIND_SAFE> {
                 data: WasmSlice { ptr, len },
@@ -529,7 +529,7 @@ where
         F: IntoWasmClosureRefMut<T> + ?Sized,
     {
         let t: &mut T = t.unsize_closure_ref();
-        let (ptr, len): (u32, u32) = unsafe { mem::transmute_copy(&t) };
+        let (ptr, len): (usize, usize) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
             js: crate::__rt::wbg_cast(BorrowedClosure::<T, UNWIND_SAFE> {
                 data: WasmSlice { ptr, len },
@@ -778,10 +778,7 @@ where
 
     fn into_abi(self) -> WasmSlice {
         let (a, b): (usize, usize) = unsafe { mem::transmute_copy(&ManuallyDrop::new(self)) };
-        WasmSlice {
-            ptr: a as u32,
-            len: b as u32,
-        }
+        WasmSlice { ptr: a, len: b }
     }
 }
 

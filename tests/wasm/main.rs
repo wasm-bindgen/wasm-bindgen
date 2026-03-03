@@ -1,4 +1,5 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
+#![cfg_attr(target_arch = "wasm64", feature(simd_wasm64))]
 #![allow(renamed_and_removed_lints)] // clippy::drop_ref will be renamed to drop_ref
 #![allow(clippy::drop_ref, clippy::drop_non_drop)]
 
@@ -72,6 +73,8 @@ pub mod usize;
 pub mod validate_prt;
 pub mod variadic;
 pub mod vendor_prefix;
+#[cfg(target_arch = "wasm64")]
+pub mod wasm64;
 
 // should not be executed
 #[wasm_bindgen(start)]

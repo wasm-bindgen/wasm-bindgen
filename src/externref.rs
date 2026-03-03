@@ -5,12 +5,15 @@ use alloc::slice;
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::cmp::max;
+use core::convert::TryInto;
 
 externs! {
     #[link(wasm_import_module = "__wbindgen_externref_xform__")]
     extern "C" {
-        fn __wbindgen_externref_table_grow(delta: usize) -> i32;
-        fn __wbindgen_externref_table_set_null(idx: usize) -> ();
+        // These intrinsics are replaced by the CLI with table.grow/table.set
+        // instructions, which always use i32 indices, even on wasm64.
+        fn __wbindgen_externref_table_grow(delta: i32) -> i32;
+        fn __wbindgen_externref_table_set_null(idx: u32) -> ();
     }
 }
 
@@ -35,7 +38,10 @@ impl Slab {
             let curr_len = self.data.len();
             if curr_len == self.data.capacity() {
                 let extra = max(128, curr_len);
-                let r = unsafe { __wbindgen_externref_table_grow(extra) };
+                let extra_i32: i32 = extra
+                    .try_into()
+                    .unwrap_or_else(|_| internal_error("table grow delta overflow"));
+                let r = unsafe { __wbindgen_externref_table_grow(extra_i32) };
                 if r == -1 {
                     internal_error("table grow failure")
                 }
@@ -106,10 +112,10 @@ fn internal_error(_msg: &str) -> ! {
         } else if #[cfg(feature = "std")] {
             std::process::abort();
         } else if #[cfg(all(
-            target_arch = "wasm32",
+            any(target_arch = "wasm32", target_arch = "wasm64"),
             any(target_os = "unknown", target_os = "none")
         ))] {
-            core::arch::wasm32::unreachable();
+            core::arch::wasm::unreachable();
         } else {
             unreachable!()
         }
@@ -123,19 +129,21 @@ static HEAP_SLAB: __rt::ThreadLocalWrapper<RefCell<Slab>> =
     __rt::ThreadLocalWrapper(RefCell::new(Slab::new()));
 
 #[no_mangle]
-pub extern "C" fn __externref_table_alloc() -> usize {
-    HEAP_SLAB.0.borrow_mut().alloc()
+pub extern "C" fn __externref_table_alloc() -> u32 {
+    // Table indices are always 32-bit, even on wasm64.
+    HEAP_SLAB.0.borrow_mut().alloc() as u32
 }
 
 #[no_mangle]
-pub extern "C" fn __externref_table_dealloc(idx: usize) {
+pub extern "C" fn __externref_table_dealloc(idx: u32) {
+    let idx = idx as usize;
     if idx < __rt::JSIDX_RESERVED as usize {
         return;
     }
     // clear this value from the table so while the table slot is un-allocated
     // we don't keep around a strong reference to a potentially large object
     unsafe {
-        __wbindgen_externref_table_set_null(idx);
+        __wbindgen_externref_table_set_null(idx as u32);
     }
     HEAP_SLAB.0.borrow_mut().dealloc(idx)
 }
@@ -143,7 +151,7 @@ pub extern "C" fn __externref_table_dealloc(idx: usize) {
 #[no_mangle]
 pub unsafe extern "C" fn __externref_drop_slice(ptr: *mut JsValue, len: usize) {
     for slot in slice::from_raw_parts_mut(ptr, len) {
-        __externref_table_dealloc(slot.idx as usize);
+        __externref_table_dealloc(slot.idx);
     }
 }
 

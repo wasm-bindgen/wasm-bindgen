@@ -59,7 +59,7 @@ macro_rules! closures {
             fn into_abi(self) -> WasmSlice {
                 unsafe {
                     let (a, b): (usize, usize) = mem::transmute(self);
-                    WasmSlice { ptr: a as u32, len: b as u32 }
+                    WasmSlice { ptr: a, len: b }
                 }
             }
         }
@@ -280,7 +280,11 @@ macro_rules! closures {
     )*);
 }
 
-#[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+#[cfg(all(
+    feature = "std",
+    any(target_arch = "wasm32", target_arch = "wasm64"),
+    panic = "unwind"
+))]
 closures! {
     [T: core::panic::UnwindSafe,]
     ()
@@ -294,7 +298,11 @@ closures! {
     (A a1 a2 a3 a4 B b1 b2 b3 b4 C c1 c2 c3 c4 D d1 d2 d3 d4 E e1 e2 e3 e4 F f1 f2 f3 f4 G g1 g2 g3 g4 H h1 h2 h3 h4)
 }
 
-#[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
+#[cfg(not(all(
+    feature = "std",
+    any(target_arch = "wasm32", target_arch = "wasm64"),
+    panic = "unwind"
+)))]
 closures! {
     []
     ()
@@ -482,10 +490,18 @@ impl_fn_upcasts!();
 // We need to allow coherence leak check just for these traits because we're providing separate implementation for `Fn(&A)` variants when `Fn(A)` one already exists.
 #[allow(coherence_leak_check)]
 const _: () = {
-    #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
+    #[cfg(all(
+        feature = "std",
+        any(target_arch = "wasm32", target_arch = "wasm64"),
+        panic = "unwind"
+    ))]
     closures!(@impl_for_args (&A) RefFromWasmAbi [T: core::panic::UnwindSafe,] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
 
-    #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
+    #[cfg(not(all(
+        feature = "std",
+        any(target_arch = "wasm32", target_arch = "wasm64"),
+        panic = "unwind"
+    )))]
     closures!(@impl_for_args (&A) RefFromWasmAbi [] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
 };
 

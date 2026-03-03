@@ -186,6 +186,7 @@ unsafe impl WasmPrimitive for u64 {}
 unsafe impl WasmPrimitive for i64 {}
 unsafe impl WasmPrimitive for f32 {}
 unsafe impl WasmPrimitive for f64 {}
+unsafe impl WasmPrimitive for usize {}
 unsafe impl WasmPrimitive for () {}
 
 /// A trait which represents types that can be passed across the Wasm ABI

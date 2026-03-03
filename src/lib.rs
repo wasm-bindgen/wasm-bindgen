@@ -88,14 +88,14 @@ const _: () = {
 
 macro_rules! externs {
     ($(#[$attr:meta])* extern "C" { $(fn $name:ident($($args:tt)*) -> $ret:ty;)* }) => (
-        #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
+        #[cfg(all(any(target_arch = "wasm32", target_arch = "wasm64"), any(target_os = "unknown", target_os = "none")))]
         $(#[$attr])*
         extern "C" {
             $(fn $name($($args)*) -> $ret;)*
         }
 
         $(
-            #[cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))]
+            #[cfg(not(all(any(target_arch = "wasm32", target_arch = "wasm64"), any(target_os = "unknown", target_os = "none"))))]
             #[allow(unused_variables)]
             unsafe extern "C" fn $name($($args)*) -> $ret {
                 panic!("function not implemented on non-wasm32 targets")
@@ -1539,7 +1539,10 @@ pub trait UnwrapThrowExt<T>: Sized {
     #[cfg_attr(
         any(
             debug_assertions,
-            not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))
+            not(all(
+                any(target_arch = "wasm32", target_arch = "wasm64"),
+                any(target_os = "unknown", target_os = "none")
+            ))
         ),
         track_caller
     )]
@@ -1547,7 +1550,7 @@ pub trait UnwrapThrowExt<T>: Sized {
         if cfg!(all(
             debug_assertions,
             all(
-                target_arch = "wasm32",
+                any(target_arch = "wasm32", target_arch = "wasm64"),
                 any(target_os = "unknown", target_os = "none")
             )
         )) {
@@ -1571,7 +1574,10 @@ pub trait UnwrapThrowExt<T>: Sized {
     #[cfg_attr(
         any(
             debug_assertions,
-            not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))
+            not(all(
+                any(target_arch = "wasm32", target_arch = "wasm64"),
+                any(target_os = "unknown", target_os = "none")
+            ))
         ),
         track_caller
     )]
@@ -1583,7 +1589,7 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
         const MSG: &str = "called `Option::unwrap_throw()` on a `None` value";
 
         if cfg!(all(
-            target_arch = "wasm32",
+            any(target_arch = "wasm32", target_arch = "wasm64"),
             any(target_os = "unknown", target_os = "none")
         )) {
             if let Some(val) = self {
@@ -1603,7 +1609,7 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
 
     fn expect_throw(self, message: &str) -> T {
         if cfg!(all(
-            target_arch = "wasm32",
+            any(target_arch = "wasm32", target_arch = "wasm64"),
             any(target_os = "unknown", target_os = "none")
         )) {
             if let Some(val) = self {
@@ -1631,7 +1637,7 @@ where
         const MSG: &str = "called `Result::unwrap_throw()` on an `Err` value";
 
         if cfg!(all(
-            target_arch = "wasm32",
+            any(target_arch = "wasm32", target_arch = "wasm64"),
             any(target_os = "unknown", target_os = "none")
         )) {
             match self {
@@ -1659,7 +1665,7 @@ where
 
     fn expect_throw(self, message: &str) -> T {
         if cfg!(all(
-            target_arch = "wasm32",
+            any(target_arch = "wasm32", target_arch = "wasm64"),
             any(target_os = "unknown", target_os = "none")
         )) {
             match self {

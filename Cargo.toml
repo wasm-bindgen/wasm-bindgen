@@ -65,6 +65,14 @@ wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
 wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 
+[target.'cfg(target_arch = "wasm64")'.dev-dependencies]
+js-sys = { path = 'crates/js-sys', features = ["unsafe-eval"] }
+paste = "1"
+serde_derive = "1.0"
+wasm-bindgen-futures = { path = 'crates/futures' }
+wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
+wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
+
 [lints]
 workspace = true
 

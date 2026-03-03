@@ -71,12 +71,13 @@ impl InstructionBuilder<'_, '_> {
                 )
             }
             Descriptor::RustStruct(class) => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::Struct(class.clone())],
                     Instruction::I32FromExternrefRustOwned {
                         class: class.clone(),
                     },
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                 );
             }
             Descriptor::I8 => self.number_i32(AdapterType::S8),
@@ -131,6 +132,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Option(d) => self.incoming_option(d)?,
 
             Descriptor::String | Descriptor::CachedString => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::String],
                     Instruction::StringToMemory {
@@ -138,7 +140,7 @@ impl InstructionBuilder<'_, '_> {
                         realloc: self.cx.realloc(),
                         mem: self.cx.memory()?,
                     },
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                 );
             }
 
@@ -146,6 +148,7 @@ impl InstructionBuilder<'_, '_> {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!("unsupported argument type for calling Rust function from JS {arg:?}")
                 })?;
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::Vector(kind.clone())],
                     Instruction::VectorToMemory {
@@ -153,7 +156,7 @@ impl InstructionBuilder<'_, '_> {
                         malloc: self.cx.malloc()?,
                         mem: self.cx.memory()?,
                     },
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                 );
             }
 
@@ -173,11 +176,14 @@ impl InstructionBuilder<'_, '_> {
             // Largely synthetic and can't show up
             Descriptor::ClampedU8 => unreachable!(),
 
-            Descriptor::NonNull => self.instruction(
-                &[AdapterType::NonNull],
-                Instruction::I32FromNonNull,
-                &[AdapterType::I32],
-            ),
+            Descriptor::NonNull => {
+                let ptr_ty = self.ptr_ty();
+                self.instruction(
+                    &[AdapterType::NonNull],
+                    Instruction::I32FromNonNull,
+                    &[ptr_ty],
+                )
+            }
         }
         Ok(())
     }
@@ -185,12 +191,13 @@ impl InstructionBuilder<'_, '_> {
     fn incoming_ref(&mut self, mutable: bool, arg: &Descriptor) -> Result<(), Error> {
         match arg {
             Descriptor::RustStruct(class) => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::Struct(class.clone())],
                     Instruction::I32FromExternrefRustBorrow {
                         class: class.clone(),
                     },
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                 );
             }
             Descriptor::Externref => {
@@ -209,6 +216,7 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::String | Descriptor::CachedString => {
                 // This allocation is cleaned up once it's received in Rust.
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::String],
                     Instruction::StringToMemory {
@@ -216,7 +224,7 @@ impl InstructionBuilder<'_, '_> {
                         realloc: self.cx.realloc(),
                         mem: self.cx.memory()?,
                     },
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                 );
             }
             Descriptor::Slice(_) => {
@@ -227,6 +235,7 @@ impl InstructionBuilder<'_, '_> {
                         "unsupported argument type for calling Rust function from JS {arg:?}"
                     )
                 })?;
+                let ptr_ty = self.ptr_ty();
                 if mutable {
                     self.instruction(
                         &[AdapterType::Vector(kind.clone())],
@@ -235,7 +244,7 @@ impl InstructionBuilder<'_, '_> {
                             malloc: self.cx.malloc()?,
                             mem: self.cx.memory()?,
                         },
-                        &[AdapterType::I32, AdapterType::I32, AdapterType::Externref],
+                        &[ptr_ty.clone(), ptr_ty, AdapterType::Externref],
                     );
                     self.late_instruction(
                         &[AdapterType::Externref],
@@ -250,7 +259,7 @@ impl InstructionBuilder<'_, '_> {
                             malloc: self.cx.malloc()?,
                             mem: self.cx.memory()?,
                         },
-                        &[AdapterType::I32, AdapterType::I32],
+                        &[ptr_ty.clone(), ptr_ty],
                     );
                 }
             }
@@ -341,12 +350,13 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::RustStruct(name) => {
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::Struct(name.clone()).option()],
                     Instruction::I32FromOptionRust {
                         class: name.to_string(),
                     },
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                 );
             }
 
@@ -354,6 +364,7 @@ impl InstructionBuilder<'_, '_> {
                 let malloc = self.cx.malloc()?;
                 let mem = self.cx.memory()?;
                 let realloc = self.cx.realloc();
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::String.option()],
                     Instruction::OptionString {
@@ -361,7 +372,7 @@ impl InstructionBuilder<'_, '_> {
                         mem,
                         realloc,
                     },
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                 );
             }
 
@@ -373,18 +384,22 @@ impl InstructionBuilder<'_, '_> {
                 })?;
                 let malloc = self.cx.malloc()?;
                 let mem = self.cx.memory()?;
+                let ptr_ty = self.ptr_ty();
                 self.instruction(
                     &[AdapterType::Vector(kind.clone()).option()],
                     Instruction::OptionVector { kind, malloc, mem },
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                 );
             }
 
-            Descriptor::NonNull => self.instruction(
-                &[AdapterType::NonNull.option()],
-                Instruction::I32FromOptionNonNull,
-                &[AdapterType::I32],
-            ),
+            Descriptor::NonNull => {
+                let ptr_ty = self.ptr_ty();
+                self.instruction(
+                    &[AdapterType::NonNull.option()],
+                    Instruction::I32FromOptionNonNull,
+                    &[ptr_ty],
+                )
+            }
 
             _ => bail!(
                 "unsupported optional argument type for calling Rust function from JS: {arg:?}"

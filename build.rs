@@ -34,7 +34,7 @@ fn main() {
     println!("cargo:rustc-check-cfg=cfg(wbg_reference_types)");
 
     if target_features.contains(&"reference-types")
-        || (target_arch == "wasm32"
+        || ((target_arch == "wasm32" || target_arch == "wasm64")
             && target_os == "unknown"
             && rustversion::cfg!(all(since(1.82), before(1.84))))
     {

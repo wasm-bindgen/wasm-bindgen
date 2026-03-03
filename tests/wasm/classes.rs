@@ -483,12 +483,15 @@ fn renamed_field() {
 }
 
 #[cfg_attr(
-    target_arch = "wasm32",
+    any(target_arch = "wasm32", target_arch = "wasm64"),
     wasm_bindgen(inspectable, js_name = "ConditionalSkipClass")
 )]
 pub struct ConditionalSkip {
     /// [u8; 8] cannot be passed to JS, so this won't compile without `skip`
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(skip))]
+    #[cfg_attr(
+        any(target_arch = "wasm32", target_arch = "wasm64"),
+        wasm_bindgen(skip)
+    )]
     pub skipped_field: [u8; 8],
 
     /// this field shouldn't be skipped as predicate is false
@@ -496,7 +499,10 @@ pub struct ConditionalSkip {
     pub not_skipped_field: u32,
 
     /// String struct field requires `getter_with_clone` to compile
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter_with_clone))]
+    #[cfg_attr(
+        any(target_arch = "wasm32", target_arch = "wasm64"),
+        wasm_bindgen(getter_with_clone)
+    )]
     pub needs_clone: String,
 }
 

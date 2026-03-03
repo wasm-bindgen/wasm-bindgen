@@ -63,7 +63,7 @@ macro_rules! wasm_bindgen_test_configure {
     (run_in_browser $($others:tt)*) => (
         const _: () = {
             #[link_section = "__wasm_bindgen_test_unstable"]
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
             pub static __WBG_TEST_RUN_IN_BROWSER: [u8; 1] = [0x01];
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
@@ -71,7 +71,7 @@ macro_rules! wasm_bindgen_test_configure {
     (run_in_worker $($others:tt)*) => (
         const _: () = {
             #[link_section = "__wasm_bindgen_test_unstable"]
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
             pub static __WBG_TEST_RUN_IN_DEDICATED_WORKER: [u8; 1] = [0x02];
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
@@ -79,7 +79,7 @@ macro_rules! wasm_bindgen_test_configure {
     (run_in_dedicated_worker $($others:tt)*) => (
         const _: () = {
             #[link_section = "__wasm_bindgen_test_unstable"]
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
             pub static __WBG_TEST_RUN_IN_DEDICATED_WORKER: [u8; 1] = [0x02];
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
@@ -87,7 +87,7 @@ macro_rules! wasm_bindgen_test_configure {
     (run_in_shared_worker $($others:tt)*) => (
         const _: () = {
             #[link_section = "__wasm_bindgen_test_unstable"]
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
             pub static __WBG_TEST_RUN_IN_SHARED_WORKER: [u8; 1] = [0x03];
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
@@ -95,7 +95,7 @@ macro_rules! wasm_bindgen_test_configure {
     (run_in_service_worker $($others:tt)*) => (
         const _: () = {
             #[link_section = "__wasm_bindgen_test_unstable"]
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
             pub static __WBG_TEST_RUN_IN_SERVICE_WORKER: [u8; 1] = [0x04];
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
@@ -103,7 +103,7 @@ macro_rules! wasm_bindgen_test_configure {
     (run_in_node_experimental $($others:tt)*) => (
         const _: () = {
             #[link_section = "__wasm_bindgen_test_unstable"]
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
             pub static __WBG_TEST_run_in_node_experimental: [u8; 1] = [0x05];
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
@@ -117,7 +117,7 @@ pub mod __rt;
 // Make this only available to wasm32 so that we don't
 // import minicov on other archs.
 // That way you can use normal cargo test without minicov
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 mod coverage;
 

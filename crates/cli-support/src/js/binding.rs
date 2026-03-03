@@ -196,9 +196,9 @@ impl<'a, 'b> Builder<'a, 'b> {
             }
             if consumes_self {
                 js.prelude("const ptr = this.__destroy_into_raw();");
-                js.args.push("ptr".into());
+                js.args.push(js.to_wasm_ptr("ptr"));
             } else {
-                js.args.push("this.__wbg_ptr".into());
+                js.args.push(js.to_wasm_ptr("this.__wbg_ptr"));
             }
         } else if self.classless_this {
             let _ = params.next();
@@ -659,6 +659,24 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         &self.args[idx as usize]
     }
 
+    /// Coerce a wasm return value to an unsigned pointer-sized JS number.
+    /// For wasm32: `val >>> 0` (unsigned zero-extension).
+    /// For wasm64: `Number(val)` (BigInt → JS number).
+    pub fn coerce_ptr(&self, val: &str) -> String {
+        if self.cx.memory64 {
+            format!("Number({val})")
+        } else {
+            format!("{val} >>> 0")
+        }
+    }
+
+    /// Convert a JS number to a wasm pointer argument.
+    /// For wasm32: identity (already a number).
+    /// For wasm64: identity (invoke handles BigInt wrapping at the wasm boundary).
+    pub fn to_wasm_ptr(&self, val: &str) -> String {
+        val.to_string()
+    }
+
     pub fn prelude(&mut self, prelude: &str) {
         for line in prelude.trim().lines().map(|l| l.trim()) {
             if !line.is_empty() {
@@ -927,6 +945,10 @@ fn instruction(
                         format!("const ret = {call};")
                     };
                     js.prelude(&body);
+                    // Push return values to the adapter stack. On memory64,
+                    // i64 returns are BigInts — let downstream instructions
+                    // (WasmToInt64, DeferFree, string readers, etc.) handle
+                    // any Number/BigInt conversion they need.
                     if n == 1 {
                         js.push("ret".to_string());
                     } else {
@@ -1053,10 +1075,18 @@ fn instruction(
 
         Instruction::Retptr { size } => {
             js.cx.inject_stack_pointer_shim()?;
-            js.prelude(&format!(
-                "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{size});"
-            ));
-            js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({size});"));
+            let memory64 = js.cx.memory64;
+            if memory64 {
+                js.prelude(&format!(
+                    "const retptr = Number(wasm.__wbindgen_add_to_stack_pointer(-{size}n));"
+                ));
+                js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({size}n);"));
+            } else {
+                js.prelude(&format!(
+                    "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{size});"
+                ));
+                js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({size});"));
+            }
             js.stack.push("retptr".to_string());
         }
 
@@ -1072,10 +1102,19 @@ fn instruction(
             // Note that we always assume the return pointer is argument 0,
             // which is currently the case for LLVM.
             let val = js.pop();
-            let expr = format!(
-                "{mem}().{method}({} + {size} * {offset}, {val}, true);",
-                js.arg(0),
-            );
+            // On memory64, the retptr (arg0) is a BigInt. DataView offsets
+            // must be Numbers, and setBigInt64 values must be BigInts.
+            let arg0 = if js.cx.memory64 {
+                format!("Number({})", js.arg(0))
+            } else {
+                js.arg(0).to_string()
+            };
+            let val = if js.cx.memory64 && matches!(ty, AdapterType::I64) {
+                format!("BigInt({val})")
+            } else {
+                val
+            };
+            let expr = format!("{mem}().{method}({arg0} + {size} * {offset}, {val}, true);",);
             js.prelude(&expr);
         }
 
@@ -1096,6 +1135,8 @@ fn instruction(
             // it earlier, and we always push the same value, so load that value
             // here
             let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
+            // On memory64, i64 values from retptr are BigInts. Don't
+            // pre-convert to Number — let downstream instructions handle it.
             js.prelude(&format!("var r{offset} = {expr};"));
             js.push(format!("r{offset}"));
         }
@@ -1136,14 +1177,14 @@ fn instruction(
             js.assert_not_moved(&val);
             let i = js.tmp();
             js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
-            js.push(format!("ptr{i}"));
+            js.push(js.to_wasm_ptr(&format!("ptr{i}")));
         }
 
         Instruction::I32FromExternrefRustBorrow { class } => {
             let val = js.pop();
             js.assert_class(&val, class);
             js.assert_not_moved(&val);
-            js.push(format!("{val}.__wbg_ptr"));
+            js.push(js.to_wasm_ptr(&format!("{val}.__wbg_ptr")));
         }
 
         Instruction::I32FromOptionRust { class } => {
@@ -1156,7 +1197,7 @@ fn instruction(
             js.assert_not_moved(&val);
             js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
             js.prelude("}");
-            js.push(format!("ptr{i}"));
+            js.push(js.to_wasm_ptr(&format!("ptr{i}")));
         }
 
         Instruction::I32FromOptionExternref { table_and_alloc } => {
@@ -1420,19 +1461,20 @@ fn instruction(
                     // Get the JS identifier for the class, which may be aliased
                     // if the name conflicts with a JS builtin (e.g., `Array` -> `Array2`)
                     let identifier = js.cx.require_class_identifier(class);
+                    let coerced = js.coerce_ptr(&val);
                     let (ptr_assignment, register_data) = if js.cx.config.generate_reset_state {
                         (
                             format!(
                                 "\
-                                this.__wbg_ptr = {val} >>> 0;
+                                this.__wbg_ptr = {coerced};
                                 this.__wbg_inst = __wbg_instance_id;
                                 "
                             ),
-                            format!("{{ ptr: {val} >>> 0, instance: __wbg_instance_id }}"),
+                            format!("{{ ptr: {coerced}, instance: __wbg_instance_id }}"),
                         )
                     } else {
                         (
-                            format!("this.__wbg_ptr = {val} >>> 0;"),
+                            format!("this.__wbg_ptr = {coerced};"),
                             "this.__wbg_ptr".to_string(),
                         )
                     };
@@ -1477,9 +1519,15 @@ fn instruction(
 
             if *owned {
                 let free = js.cx.export_name_of(*free);
-                js.prelude(&format!(
-                    "if ({ptr} !== 0) {{ wasm.{free}({ptr}, {len}, 1); }}",
-                ));
+                if js.cx.memory64 {
+                    js.prelude(&format!(
+                        "if ({ptr} !== 0n) {{ wasm.{free}({ptr}, {len}, 1n); }}",
+                    ));
+                } else {
+                    js.prelude(&format!(
+                        "if ({ptr} !== 0) {{ wasm.{free}({ptr}, {len}, 1); }}",
+                    ));
+                }
             }
 
             js.push(format!("v{tmp}"));
@@ -1577,10 +1625,17 @@ fn instruction(
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
-            js.prelude(&format!(
-                "wasm.{free}({ptr}, {len} * {size}, {size});",
-                size = kind.size()
-            ));
+            if js.cx.memory64 {
+                js.prelude(&format!(
+                    "wasm.{free}({ptr}, {len} * {size}n, {size}n);",
+                    size = kind.size()
+                ));
+            } else {
+                js.prelude(&format!(
+                    "wasm.{free}({ptr}, {len} * {size}, {size});",
+                    size = kind.size()
+                ));
+            }
             js.push(format!("v{i}"))
         }
 
@@ -1591,12 +1646,23 @@ fn instruction(
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             js.prelude(&format!("let v{i};"));
-            js.prelude(&format!("if ({ptr} !== 0) {{"));
+            if js.cx.memory64 {
+                js.prelude(&format!("if ({ptr} !== 0n) {{"));
+            } else {
+                js.prelude(&format!("if ({ptr} !== 0) {{"));
+            }
             js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
-            js.prelude(&format!(
-                "wasm.{free}({ptr}, {len} * {size}, {size});",
-                size = kind.size()
-            ));
+            if js.cx.memory64 {
+                js.prelude(&format!(
+                    "wasm.{free}({ptr}, {len} * {size}n, {size}n);",
+                    size = kind.size()
+                ));
+            } else {
+                js.prelude(&format!(
+                    "wasm.{free}({ptr}, {len} * {size}, {size});",
+                    size = kind.size()
+                ));
+            }
             js.prelude("}");
             js.push(format!("v{i}"));
         }
@@ -1686,7 +1752,9 @@ fn instruction(
 
         Instruction::OptionNonNullFromI32 => {
             let val = js.pop();
-            js.push(format!("{val} === 0 ? undefined : {val} >>> 0"));
+            let coerced = js.coerce_ptr(&val);
+            let zero = if js.cx.memory64 { "0n" } else { "0" };
+            js.push(format!("{val} === {zero} ? undefined : {coerced}"));
         }
     }
     Ok(())
@@ -1755,7 +1823,25 @@ impl Invocation {
                     Some(eid) => cx.module.exports.get(*eid).name.clone(),
                     None => cx.export_name_of(*id),
                 };
-                Ok(format!("wasm.{name}({})", args.join(", ")))
+                if cx.memory64 {
+                    // On memory64, i64 parameters need BigInt wrapping
+                    let ty = cx.module.funcs.get(*id).ty();
+                    let ty = cx.module.types.get(ty);
+                    let wrapped_args: Vec<String> = args
+                        .iter()
+                        .zip(ty.params().iter())
+                        .map(|(arg, param_ty)| {
+                            if *param_ty == walrus::ValType::I64 {
+                                format!("BigInt({arg})")
+                            } else {
+                                arg.clone()
+                            }
+                        })
+                        .collect();
+                    Ok(format!("wasm.{name}({})", wrapped_args.join(", ")))
+                } else {
+                    Ok(format!("wasm.{name}({})", args.join(", ")))
+                }
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];

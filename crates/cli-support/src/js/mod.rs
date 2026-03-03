@@ -108,6 +108,9 @@ pub struct Context<'a> {
 
     /// Mapping from qualified name (used in WasmDescribe) to js_name (used for TypeScript output).
     pub(crate) qualified_to_js_name: HashMap<String, String>,
+
+    /// If the module uses memory64 (wasm64 target).
+    memory64: bool,
 }
 
 /// Definition of a module export
@@ -202,6 +205,12 @@ impl<'a> Context<'a> {
         wit: &'a NonstandardWitSection,
         aux: &'a WasmBindgenAux,
     ) -> Result<Context<'a>, Error> {
+        let memory64 = module
+            .memories
+            .iter()
+            .next()
+            .map(|m| m.memory64)
+            .unwrap_or(false);
         Ok(Context {
             globals: String::new(),
             intrinsics: Some(Default::default()),
@@ -228,11 +237,52 @@ impl<'a> Context<'a> {
             stack_pointer_shim_injected: false,
             qualified_to_rust_name: Default::default(),
             qualified_to_js_name: Default::default(),
+            memory64,
         })
     }
 
     fn has_intrinsic(&self, name: &str) -> bool {
         self.intrinsics.as_ref().unwrap().contains_key(name)
+    }
+
+    /// Wraps an expression with `Number()` for memory64 (BigInt→Number conversion).
+    #[allow(dead_code)]
+    fn to_number(&self, expr: &str) -> String {
+        if self.memory64 {
+            format!("Number({expr})")
+        } else {
+            expr.to_string()
+        }
+    }
+
+    /// Wraps an expression with `BigInt()` for memory64.
+    #[allow(dead_code)]
+    fn to_wasm_bigint(&self, expr: &str) -> String {
+        if self.memory64 {
+            format!("BigInt({expr})")
+        } else {
+            expr.to_string()
+        }
+    }
+
+    /// Returns `""` for memory64 (values are already BigInt), `" >>> 0"` for wasm32.
+    #[allow(dead_code)]
+    fn ptr_coerce(&self) -> &str {
+        if self.memory64 {
+            ""
+        } else {
+            " >>> 0"
+        }
+    }
+
+    /// Returns `"n"` suffix for BigInt literals in memory64, `""` for wasm32.
+    #[allow(dead_code)]
+    fn wasm_bigint_suffix(&self) -> &str {
+        if self.memory64 {
+            "n"
+        } else {
+            ""
+        }
     }
 
     /// Writes an ExportDefinition to global and typescript buffers.
@@ -1330,10 +1380,15 @@ if (require('worker_threads').isMainThread) {{
                 ("obj.__wbg_ptr = ptr;", "obj.__wbg_ptr")
             };
 
+            let ptr_coerce = if self.memory64 {
+                "ptr = Number(ptr);"
+            } else {
+                "ptr = ptr >>> 0;"
+            };
             dst.push_str(&format!(
                 "\
                 static __wrap(ptr) {{
-                    ptr = ptr >>> 0;
+                    {ptr_coerce}
                     const obj = Object.create({identifier}.prototype);
                     {ptr_assignment}
                     {identifier}Finalization.register(obj, {register_data}, obj);
@@ -1356,7 +1411,18 @@ if (require('worker_threads').isMainThread) {{
             ));
         }
 
-        let finalization_callback = if self.config.generate_reset_state {
+        let free_fn = wasm_bindgen_shared::free_function(name);
+        let finalization_callback = if self.memory64 {
+            if self.config.generate_reset_state {
+                format!(
+                    "({{ ptr, instance }}) => {{
+                    if (instance === __wbg_instance_id) wasm.{free_fn}(BigInt(ptr), 1n);
+                }}"
+                )
+            } else {
+                format!("ptr => wasm.{free_fn}(BigInt(ptr), 1n)")
+            }
+        } else if self.config.generate_reset_state {
             format!(
                 "({{ ptr, instance }}) => {{
                 if (instance === __wbg_instance_id) wasm.{}(ptr >>> 0, 1);
@@ -1432,10 +1498,17 @@ if (require('worker_threads').isMainThread) {{
             }
         }
 
-        let mut free = format!(
-            "wasm.{}(ptr, 0)",
-            wasm_bindgen_shared::free_function(qualified)
-        );
+        let mut free = if self.memory64 {
+            format!(
+                "wasm.{}(BigInt(ptr), 0n)",
+                wasm_bindgen_shared::free_function(qualified)
+            )
+        } else {
+            format!(
+                "wasm.{}(ptr, 0)",
+                wasm_bindgen_shared::free_function(qualified)
+            )
+        };
         free = binding::maybe_wrap_try_catch(&free, self.aux.wrapped_js_tag.is_some());
         dst.push_str(&format!(
             "\
@@ -1818,11 +1891,26 @@ if (require('worker_threads').isMainThread) {{
             num: mem.num,
         };
         self.expose_text_encoder(memory);
+        let memory64 = self.memory64;
+        let debug_mode = self.config.debug;
         intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
-            let debug = if self.config.debug {
+            let debug = if debug_mode {
                 "if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);\n"
             } else {
                 ""
+            };
+
+            // For memory64, malloc/realloc args need BigInt wrapping and
+            // return values need Number() conversion for use as array indices.
+            let malloc_buf = if memory64 {
+                "Number(malloc(BigInt(buf.length), 1n))".to_string()
+            } else {
+                "malloc(buf.length, 1) >>> 0".to_string()
+            };
+            let malloc_len = if memory64 {
+                "Number(malloc(BigInt(len), 1n))".to_string()
+            } else {
+                "malloc(len, 1) >>> 0".to_string()
             };
 
             // A fast path that directly writes char codes into Wasm memory as long
@@ -1838,14 +1926,14 @@ if (require('worker_threads').isMainThread) {{
                 "\
                     if (realloc === undefined) {{
                         const buf = cachedTextEncoder.encode(arg);
-                        const ptr = malloc(buf.length, 1) >>> 0;
+                        const ptr = {malloc_buf};
                         {mem}().subarray(ptr, ptr + buf.length).set(buf);
                         WASM_VECTOR_LEN = buf.length;
                         return ptr;
                     }}
 
                     let len = arg.length;
-                    let ptr = malloc(len, 1) >>> 0;
+                    let ptr = {malloc_len};
 
                     const mem = {mem}();
 
@@ -1859,6 +1947,17 @@ if (require('worker_threads').isMainThread) {{
                 ",
             );
 
+            let realloc1 = if memory64 {
+                "Number(realloc(BigInt(ptr), BigInt(len), BigInt(len = offset + arg.length * 3), 1n))".to_string()
+            } else {
+                "realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0".to_string()
+            };
+            let realloc2 = if memory64 {
+                "Number(realloc(BigInt(ptr), BigInt(len), BigInt(offset), 1n))".to_string()
+            } else {
+                "realloc(ptr, len, offset, 1) >>> 0".to_string()
+            };
+
             format!(
                 "
                 function {ret}(arg, malloc, realloc) {{
@@ -1866,19 +1965,19 @@ if (require('worker_threads').isMainThread) {{
                         if (offset !== 0) {{
                             arg = arg.slice(offset);
                         }}
-                        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+                        ptr = {realloc1};
                         const view = {mem}().subarray(ptr + offset, ptr + len);
                         const ret = cachedTextEncoder.encodeInto(arg, view);
                         {debug_end}
                         offset += ret.written;
-                        ptr = realloc(ptr, len, offset, 1) >>> 0;
+                        ptr = {realloc2};
                     }}
 
                     WASM_VECTOR_LEN = offset;
                     return ptr;
                 }}
                 ",
-                debug_end = if self.config.debug {
+                debug_end = if debug_mode {
                     "if (ret.read !== arg.length) throw new Error('failed to pass whole string');"
                 } else {
                     ""
@@ -1926,16 +2025,22 @@ if (require('worker_threads').isMainThread) {{
             num: mem.num,
         };
         self.expose_wasm_vector_len();
+        let memory64 = self.memory64;
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 // TODO: using `addToExternrefTable` goes back and forth between wasm
                 // and JS a lot, we should have a bulk operation for this.
                 let add = self.expose_add_to_externref_table(table, alloc);
                 intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                    let malloc_expr = if memory64 {
+                        "Number(malloc(BigInt(array.length * 4), 4n))".to_string()
+                    } else {
+                        "malloc(array.length * 4, 4) >>> 0".to_string()
+                    };
                     format!(
                         "
                         function {ret}(array, malloc) {{
-                            const ptr = malloc(array.length * 4, 4) >>> 0;
+                            const ptr = {malloc_expr};
                             for (let i = 0; i < array.length; i++) {{
                                 const add = {add}(array[i]);
                                 {mem}().setUint32(ptr + 4 * i, add, true);
@@ -1951,10 +2056,15 @@ if (require('worker_threads').isMainThread) {{
             _ => {
                 self.expose_add_heap_object();
                 intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+                    let malloc_expr = if memory64 {
+                        "Number(malloc(BigInt(array.length * 4), 4n))".to_string()
+                    } else {
+                        "malloc(array.length * 4, 4) >>> 0".to_string()
+                    };
                     format!(
                         "
                         function {ret}(array, malloc) {{
-                            const ptr = malloc(array.length * 4, 4) >>> 0;
+                            const ptr = {malloc_expr};
                             const mem = {mem}();
                             for (let i = 0; i < array.length; i++) {{
                                 mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);
@@ -1977,11 +2087,17 @@ if (require('worker_threads').isMainThread) {{
             num: view.num,
         };
         self.expose_wasm_vector_len();
+        let memory64 = self.memory64;
         intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
+            let malloc_expr = if memory64 {
+                format!("Number(malloc(BigInt(arg.length * {size}), {size}n))")
+            } else {
+                format!("malloc(arg.length * {size}, {size}) >>> 0")
+            };
             format!(
                 "
                 function {ret}(arg, malloc) {{
-                    const ptr = malloc(arg.length * {size}, {size}) >>> 0;
+                    const ptr = {malloc_expr};
                     {view}().set(arg, ptr / {size});
                     WASM_VECTOR_LEN = arg.length;
                     return ptr;
@@ -2159,11 +2275,16 @@ if (require('worker_threads').isMainThread) {{
             name: "getStringFromWasm".into(),
             num: mem.num,
         };
+        let ptr_fixup = if self.memory64 {
+            "ptr = Number(ptr); len = Number(len);"
+        } else {
+            "ptr = ptr >>> 0;"
+        };
         intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
             format!(
                 "
                 function {ret}(ptr, len) {{
-                    ptr = ptr >>> 0;
+                    {ptr_fixup}
                     return decodeText(ptr, len);
                 }}
                 ",
@@ -2197,10 +2318,16 @@ if (require('worker_threads').isMainThread) {{
         //
         // If `ptr` and `len` are both `0` then that means it's `None`, in that case we rely upon
         // the fact that `getObject(0)` is guaranteed to be `undefined`.
+        let ptr_fixup = if self.memory64 {
+            "ptr = Number(ptr);"
+        } else {
+            ""
+        };
         intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
             format!(
                 "
                 function {ret}(ptr, len) {{
+                    {ptr_fixup}
                     if (ptr === 0) {{
                         return {get_object}(len);
                     }} else {{
@@ -2220,21 +2347,36 @@ if (require('worker_threads').isMainThread) {{
             name: "getArrayJsValueFromWasm".into(),
             num: mem.num,
         };
+        // JsValue.idx is always u32, so we always read with getUint32 / stride 4,
+        // regardless of wasm32 or wasm64. Only ptr/len need BigInt→Number conversion on wasm64.
+        let ptr_fixup = if self.memory64 {
+            "ptr = Number(ptr); len = Number(len);"
+        } else {
+            "ptr = ptr >>> 0;"
+        };
+        let stride = 4;
+        let get_method = "getUint32";
+        let drop_call = if self.memory64 {
+            |drop: &str| format!("wasm.{drop}(BigInt(ptr), BigInt(len));")
+        } else {
+            |drop: &str| format!("wasm.{drop}(ptr, len);")
+        };
         match (self.aux.externref_table, self.aux.externref_drop_slice) {
             (Some(table), Some(drop)) => {
                 let table = self.export_name_of(table);
                 let drop = self.export_name_of(drop);
+                let drop_stmt = drop_call(&drop);
                 intrinsic(&mut self.intrinsics, ret.to_string().into(), || {
                     format!(
                         "
                         function {ret}(ptr, len) {{
-                            ptr = ptr >>> 0;
+                            {ptr_fixup}
                             const mem = {mem}();
                             const result = [];
-                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push(wasm.{table}.get(mem.getUint32(i, true)));
+                            for (let i = ptr; i < ptr + {stride} * len; i += {stride}) {{
+                                result.push(wasm.{table}.get(mem.{get_method}(i, true)));
                             }}
-                            wasm.{drop}(ptr, len);
+                            {drop_stmt}
                             return result;
                         }}
                         ",
@@ -2248,11 +2390,11 @@ if (require('worker_threads').isMainThread) {{
                     format!(
                         "
                         function {ret}(ptr, len) {{
-                            ptr = ptr >>> 0;
+                            {ptr_fixup}
                             const mem = {mem}();
                             const result = [];
-                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push(takeObject(mem.getUint32(i, true)));
+                            for (let i = ptr; i < ptr + {stride} * len; i += {stride}) {{
+                                result.push(takeObject(mem.{get_method}(i, true)));
                             }}
                             return result;
                         }}
@@ -2273,6 +2415,15 @@ if (require('worker_threads').isMainThread) {{
             name: "getArrayJsValueViewFromWasm".into(),
             num: mem.num,
         };
+        // JsValue.idx is always u32, so we always read with getUint32 / stride 4,
+        // regardless of wasm32 or wasm64. Only ptr/len need BigInt→Number conversion on wasm64.
+        let ptr_fixup = if self.memory64 {
+            "ptr = Number(ptr); len = Number(len);"
+        } else {
+            "ptr = ptr >>> 0;"
+        };
+        let stride = 4;
+        let get_method = "getUint32";
         match self.aux.externref_table {
             Some(table) => {
                 let table = self.export_name_of(table);
@@ -2280,11 +2431,11 @@ if (require('worker_threads').isMainThread) {{
                     format!(
                         "
                         function {ret}(ptr, len) {{
-                            ptr = ptr >>> 0;
+                            {ptr_fixup}
                             const mem = {mem}();
                             const result = [];
-                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push(wasm.{table}.get(mem.getUint32(i, true)));
+                            for (let i = ptr; i < ptr + {stride} * len; i += {stride}) {{
+                                result.push(wasm.{table}.get(mem.{get_method}(i, true)));
                             }}
                             return result;
                         }}
@@ -2299,11 +2450,11 @@ if (require('worker_threads').isMainThread) {{
                     format!(
                         "
                         function {ret}(ptr, len) {{
-                            ptr = ptr >>> 0;
+                            {ptr_fixup}
                             const mem = {mem}();
                             const result = [];
-                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push(getObject(mem.getUint32(i, true)));
+                            for (let i = ptr; i < ptr + {stride} * len; i += {stride}) {{
+                                result.push(getObject(mem.{get_method}(i, true)));
                             }}
                             return result;
                         }}
@@ -2376,11 +2527,16 @@ if (require('worker_threads').isMainThread) {{
             name: name.into(),
             num: view.num,
         };
+        let ptr_fixup = if self.memory64 {
+            "ptr = Number(ptr); len = Number(len);"
+        } else {
+            "ptr = ptr >>> 0;"
+        };
         intrinsic(&mut self.intrinsics, name.into(), || {
             format!(
                 "
                 function {ret}(ptr, len) {{
-                    ptr = ptr >>> 0;
+                    {ptr_fixup}
                     return {view}().subarray(ptr / {size}, ptr / {size} + len);
                 }}
                 ",
@@ -2764,12 +2920,22 @@ if (require('worker_threads').isMainThread) {{
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
+        let memory64 = self.memory64;
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let safe_destructor = "\
+            // On wasm64, dtor is a raw wasm export expecting i64 (BigInt) params
+            let safe_destructor = if memory64 {
+                "\
+                state.dtor(BigInt(state.a), BigInt(state.b));
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                "
+            } else {
+                "\
                 state.dtor(state.a, state.b);
                 state.a = 0;
                 CLOSURE_DTORS.unregister(state);\
-                ";
+                "
+            };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2823,12 +2989,22 @@ if (require('worker_threads').isMainThread) {{
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
+        let memory64 = self.memory64;
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let safe_destructor = "\
+            // On wasm64, dtor is a raw wasm export expecting i64 (BigInt) params
+            let safe_destructor = if memory64 {
+                "\
+                state.dtor(BigInt(state.a), BigInt(state.b));
+                state.a = 0;
+                CLOSURE_DTORS.unregister(state);\
+                "
+            } else {
+                "\
                 state.dtor(state.a, state.b);
                 state.a = 0;
                 CLOSURE_DTORS.unregister(state);\
-                ";
+                "
+            };
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
@@ -2872,23 +3048,32 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn expose_closure_finalization(&mut self) {
+        let generate_reset_state = self.config.generate_reset_state;
+        let memory64 = self.memory64;
         intrinsic(&mut self.intrinsics, "closure_finalization".into(), || {
+            let dtor_call = if memory64 {
+                "state.dtor(BigInt(state.a), BigInt(state.b))"
+            } else {
+                "state.dtor(state.a, state.b)"
+            };
             format!(
                 "
                 const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
                     ? {{ register: () => {{}}, unregister: () => {{}} }}
                     : new FinalizationRegistry({});
                 ",
-                if self.config.generate_reset_state {
-                    "\
-                    state => {
-                        if (state.instance === __wbg_instance_id) {
-                            state.dtor(state.a, state.b);
-                        }
-                    }
-                    "
+                if generate_reset_state {
+                    format!(
+                        "\
+                        state => {{
+                            if (state.instance === __wbg_instance_id) {{
+                                {dtor_call};
+                            }}
+                        }}
+                        "
+                    )
                 } else {
-                    "state => state.dtor(state.a, state.b)"
+                    format!("state => {dtor_call}")
                 }
             )
             .into()
@@ -4876,18 +5061,24 @@ function __wbg_handle_catch(e) {{
 
         use walrus::ir::*;
 
+        let (val_type, add_op) = if self.memory64 {
+            (ValType::I64, BinaryOp::I64Add)
+        } else {
+            (ValType::I32, BinaryOp::I32Add)
+        };
+
         let mut builder =
-            walrus::FunctionBuilder::new(&mut self.module.types, &[ValType::I32], &[ValType::I32]);
+            walrus::FunctionBuilder::new(&mut self.module.types, &[val_type], &[val_type]);
         builder.name("__wbindgen_add_to_stack_pointer".to_string());
 
         let mut body = builder.func_body();
-        let arg = self.module.locals.add(ValType::I32);
+        let arg = self.module.locals.add(val_type);
 
         // Create a shim function that mutate the stack pointer
         // to avoid exporting a mutable global.
         body.local_get(arg)
             .global_get(stack_pointer)
-            .binop(BinaryOp::I32Add)
+            .binop(add_op)
             .global_set(stack_pointer)
             .global_get(stack_pointer);
 

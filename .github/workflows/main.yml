@@ -148,6 +148,21 @@ jobs:
         node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
 
+  test_wasm64:
+    name: "Run wasm-bindgen crate tests (wasm64)"
+    runs-on: ubuntu-latest
+    env:
+      WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
+    steps:
+    - uses: actions/checkout@v6
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rust-src
+    - uses: actions/setup-node@v6
+      with:
+        node-version: '20'
+    - run: cargo test --target wasm64-unknown-unknown -Zbuild-std=std,panic_abort
+
   test_wasm_bindgen_unwind_legacy_eh:
     name: "Run wasm-bindgen crate tests with panic=unwind with legacy eh"
     runs-on: ubuntu-latest

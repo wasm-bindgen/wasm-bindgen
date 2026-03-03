@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
 
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
