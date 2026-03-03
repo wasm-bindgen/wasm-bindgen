@@ -737,11 +737,30 @@ struct BorrowedClosure<T: ?Sized, const UNWIND_SAFE: bool> {
     _marker: PhantomData<T>,
 }
 
-unsafe extern "C" fn destroy<T: ?Sized>(a: usize, b: usize) {
+/// Destroys an owned closure by reconstructing and dropping its
+/// `Box<dyn Trait>` representation from the raw pointer data `(a, b)`.
+///
+/// # Safety
+///
+/// `(a, b)` must be a valid pair previously produced by `Box::into_raw` on a
+/// `Box<dyn FnOnce/FnMut/Fn>` closure, or `a` must be zero (in which case this
+/// is a no-op).
+#[no_mangle]
+pub unsafe extern "C" fn __wbindgen_destroy_closure(a: usize, b: usize) {
     if a == 0 {
         return;
     }
-    drop(mem::transmute_copy::<_, Box<T>>(&(a, b)));
+
+    // Usual way to erase any trait details, so we are just left with layout and
+    // drop implementation that any dyn trait has.
+    // See eg https://doc.rust-lang.org/beta/nightly-rustc/rustc_lint/traits/static.DYN_DROP.html#explanation
+    //
+    // This allows to use `destroy` in a non-generic way for any closures.
+    trait ErasedPlaceholderForDrop {}
+
+    drop(mem::transmute_copy::<_, Box<dyn ErasedPlaceholderForDrop>>(
+        &(a, b),
+    ));
 }
 
 impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
@@ -751,7 +770,7 @@ where
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(CLOSURE);
-        inform(destroy::<T> as *const () as usize as u32);
+        inform(1);
         inform(T::IS_MUT as u32);
         T::describe_invoke::<UNWIND_SAFE>();
     }

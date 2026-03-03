@@ -1,6 +1,7 @@
 // DEPENDENCY: js-sys = { path = '{root}/crates/js-sys' }
 // DEPENDENCY: web-sys = { path = '{root}/crates/web-sys', features = ['console', 'Window'] }
 
+use wasm_bindgen::closure::ScopedClosure;
 use wasm_bindgen::prelude::*;
 use web_sys::{console, window};
 
@@ -21,4 +22,19 @@ pub fn delayed_callback() -> Result<(), JsValue> {
     )?;
 
     Ok(())
+}
+
+#[wasm_bindgen]
+extern "C" {
+    fn call_scoped(f: &ScopedClosure<dyn FnMut()>);
+}
+
+#[wasm_bindgen]
+pub fn use_scoped_callback() {
+    let mut called = false;
+    let mut func = || {
+        called = true;
+    };
+    let closure = ScopedClosure::borrow_mut_aborting(&mut func);
+    call_scoped(&closure);
 }

@@ -7,6 +7,10 @@
 
 ### Changed
 
+* Replaced per-closure generic destructors with a single `__wbindgen_destroy_closure`
+  export.
+  [#5019](https://github.com/wasm-bindgen/wasm-bindgen/pull/5019)
+
 ### Fixed
 
 ### Removed

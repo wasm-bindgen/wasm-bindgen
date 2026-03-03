@@ -5,6 +5,10 @@ export function delayed_callback() {
     }
 }
 
+export function use_scoped_callback() {
+    wasm.use_scoped_callback();
+}
+
 /**
  * @param {Array<any>} a
  */
@@ -21,6 +25,9 @@ export function __wbg___wbindgen_throw_6ddd609b62940d55(arg0, arg1) {
 export function __wbg__wbg_cb_unref_6b5b6b8576d35cb1(arg0) {
     arg0._wbg_cb_unref();
 }
+export function __wbg_call_scoped_343c79dd3d3f172b(arg0) {
+    call_scoped(arg0);
+}
 export function __wbg_forEach_a2c08d9c3cc0524c(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
@@ -28,14 +35,14 @@ export function __wbg_forEach_a2c08d9c3cc0524c(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1, arg2);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, arg0, arg1, arg2);
             } finally {
                 state0.a = a;
             }
         };
         arg0.forEach(cb0);
     } finally {
-        state0.a = state0.b = 0;
+        state0.a = 0;
     }
 }
 export function __wbg_instanceof_Window_23e677d2c6843922(arg0) {
@@ -72,11 +79,27 @@ export function __wbg_static_accessor_WINDOW_bb9f1ba69d61b386() {
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
 export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 5, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0000000000000003, wasm_bindgen__convert__closures_____invoke__h0000000000000004);
+    var state0 = {a: arg0, b: arg1};
+    var cb0 = () => {
+        const a = state0.a;
+        state0.a = 0;
+        try {
+            return wasm_bindgen__convert__closures_____invoke__h0000000000000004(a, state0.b, );
+        } finally {
+            state0.a = a;
+        }
+    };
+    cb0._wbg_cb_unref = () => state0.a = 0;
+    // Cast intrinsic for `Closure(Closure { owned: false, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = cb0;
     return ret;
 }
 export function __wbindgen_cast_0000000000000001(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 7, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen__convert__closures_____invoke__h0000000000000005);
+    return ret;
+}
+export function __wbindgen_cast_0000000000000002(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
@@ -94,8 +117,12 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1);
 }
 
-function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3, arg4) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3, arg4);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000005(arg0, arg1);
+}
+
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1, arg2, arg3, arg4);
 }
 
 function addToExternrefTable0(obj) {
@@ -106,7 +133,7 @@ function addToExternrefTable0(obj) {
 
 const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(state => state.dtor(state.a, state.b));
+    : new FinalizationRegistry(state => wasm.__wbindgen_destroy_closure(state.a, state.b));
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
@@ -134,8 +161,8 @@ function isLikeNone(x) {
     return x === undefined || x === null;
 }
 
-function makeMutClosure(arg0, arg1, dtor, f) {
-    const state = { a: arg0, b: arg1, cnt: 1, dtor };
+function makeMutClosure(arg0, arg1, f) {
+    const state = { a: arg0, b: arg1, cnt: 1 };
     const real = (...args) => {
 
         // First up with a closure we increment the internal reference
@@ -153,7 +180,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     };
     real._wbg_cb_unref = () => {
         if (--state.cnt === 0) {
-            state.dtor(state.a, state.b);
+            wasm.__wbindgen_destroy_closure(state.a, state.b);
             state.a = 0;
             CLOSURE_DTORS.unregister(state);
         }
