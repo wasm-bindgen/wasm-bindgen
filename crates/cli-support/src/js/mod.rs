@@ -2887,7 +2887,7 @@ if (require('worker_threads').isMainThread) {{
         let destroy_state = format!("wasm.{dtor}(state.a, state.b)");
         intrinsic(&mut self.intrinsics, "closure_finalization".into(), || {
             let prevent_stale = if self.config.generate_reset_state {
-                format_args!(
+                format!(
                     "state => {{
                         if (state.instance === __wbg_instance_id) {{
                             {destroy_state};
@@ -2895,7 +2895,7 @@ if (require('worker_threads').isMainThread) {{
                     }}"
                 )
             } else {
-                format_args!("state => {destroy_state}")
+                format!("state => {destroy_state}")
             };
             format!(
                 "
