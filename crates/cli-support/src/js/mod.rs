@@ -2765,13 +2765,6 @@ if (require('worker_threads').isMainThread) {{
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let safe_destructor = format!(
-                "\
-                {destroy_state};
-                state.a = 0;
-                CLOSURE_DTORS.unregister(state);\
-                "
-            );
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
@@ -2805,7 +2798,9 @@ if (require('worker_threads').isMainThread) {{
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            {safe_destructor}
+                            {destroy_state};
+                            state.a = 0;
+                            CLOSURE_DTORS.unregister(state);
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2826,13 +2821,6 @@ if (require('worker_threads').isMainThread) {{
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let safe_destructor = format!(
-                "\
-                {destroy_state};
-                state.a = 0;
-                CLOSURE_DTORS.unregister(state);\
-                "
-            );
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
@@ -2863,7 +2851,9 @@ if (require('worker_threads').isMainThread) {{
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            {safe_destructor}
+                            {destroy_state};
+                            state.a = 0;
+                            CLOSURE_DTORS.unregister(state);
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
