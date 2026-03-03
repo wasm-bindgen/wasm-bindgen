@@ -1,6 +1,5 @@
 [book]
 authors = ["Nick Fitzgerald"]
-multilingual = false
 src = "src"
 title = "The `wasm-bindgen` Guide"
 
