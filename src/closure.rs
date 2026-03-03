@@ -737,6 +737,14 @@ struct BorrowedClosure<T: ?Sized, const UNWIND_SAFE: bool> {
     _marker: PhantomData<T>,
 }
 
+/// Destroys an owned closure by reconstructing and dropping its
+/// `Box<dyn Trait>` representation from the raw pointer data `(a, b)`.
+///
+/// # Safety
+///
+/// `(a, b)` must be a valid pair previously produced by `Box::into_raw` on a
+/// `Box<dyn FnOnce/FnMut/Fn>` closure, or `a` must be zero (in which case this
+/// is a no-op).
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_destroy_closure(a: usize, b: usize) {
     if a == 0 {
