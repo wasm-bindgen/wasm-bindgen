@@ -20,6 +20,7 @@ We welcome new members - if you are interested in joining the team, see the [mem
 * [Drew Crawford](https://github.com/drewcrawford)
 * [Magic Akari](https://github.com/magic-akari)
 * [Logan Gatlin](https://github.com/logan-gatlin)
+* [Jesper Håkansson](https://github.com/drager)
 
 ## Former Members
 
