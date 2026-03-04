@@ -13,6 +13,9 @@
 
 ### Fixed
 
+* Fixed `JsOption::new()` to use `undefined` instead of `null`, to be compatible with `Option::None` and JS default parameters.
+  [#5023](https://github.com/wasm-bindgen/wasm-bindgen/pull/5023)
+
 ### Removed
 
 ## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
