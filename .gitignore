@@ -10,7 +10,7 @@ pnpm-lock.yaml
 yarn.lock
 /publish
 /publish.exe
-.vscode
+/.vscode/settings.json
 webdriver.json
 benchmarks/pkg
 /crates/msrv/*/target
