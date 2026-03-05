@@ -4,32 +4,36 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
   </head>
   <body>
-    <pre id="output">Loading scripts...</pre>
-    <pre id="console_debug"></pre>
-    <pre id="console_log"></pre>
-    <pre id="console_info"></pre>
-    <pre id="console_warn"></pre>
-    <pre id="console_error"></pre>
+    <pre id="output" style="visibility:hidden">Loading scripts...</pre>
+    <pre id="console_output" style="visibility:hidden"></pre>
     <script>
+     const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+     const styleMode = hashParams.get("wbg_style") === "display-none"
+         ? "display:none"
+         : "visibility:hidden";
+     for (const id of ["output", "console_output"]) {
+         document.getElementById(id).setAttribute("style", styleMode);
+     }
+
      const orig = id => (...args) => {
          const logs = document.getElementById(id);
-         for (let msg of args) {
-             logs.textContent += `${msg}\n`;
+         for (const msg of args) {
+             logs.appendChild(document.createTextNode(String(msg) + "\n"));
          }
      };
 
      // {NOCAPTURE}
      const wrap = method => {
-         const og = orig(`console_${method}`);
          const on_method = `on_console_${method}`;
          console[method] = function (...args) {
              if (nocapture) {
                  orig("output").apply(this, args);
+             } else {
+                 orig("console_output").apply(this, args);
              }
              if (window[on_method]) {
                  window[on_method](args);
              }
-             og.apply(this, args);
          };
      };
 
