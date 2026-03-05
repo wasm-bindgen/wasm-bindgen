@@ -103,6 +103,10 @@ pub struct Context<'a> {
     /// If exception handling / unwinding is enabled.
     unwind_enabled: bool,
 
+    /// The resolved memory export name for the instance termination
+    /// FinalizationRegistry. `Some` when the registry has been generated.
+    instance_termination_mem: Option<String>,
+
     /// Mapping from qualified name (used in WasmDescribe) to rust_name (used as exported_classes key).
     pub(crate) qualified_to_rust_name: HashMap<String, String>,
 
@@ -219,6 +223,7 @@ impl<'a> Context<'a> {
             config,
             threads_enabled: threads_xform::is_enabled(module),
             unwind_enabled: has_local_exception_tags(module),
+            instance_termination_mem: None,
             module,
             npm_dependencies: Default::default(),
             wit,
@@ -796,10 +801,15 @@ export const __wbg_memory: WebAssembly.Memory;
     }
 
     fn generate_module_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
+        let register_instance = if self.instance_termination_mem.is_some() {
+            "__wbg_register_instance(wasm);\n"
+        } else {
+            ""
+        };
         format!(
             r#"import source wasmModule from "./{module_name}_bg.wasm";
-            const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-            let wasm = wasmInstance.exports;
+            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+            {register_instance}wasm = wasm.exports;
             {start}
             "#,
             start = if needs_manual_start {
@@ -811,13 +821,24 @@ export const __wbg_memory: WebAssembly.Memory;
     }
 
     fn generate_bundler_wasm_loading(&self) -> String {
-        r#"
-        let wasm;
-        export function __wbg_set_wasm(val) {
-            wasm = val;
+        if self.instance_termination_mem.is_some() {
+            r#"
+            let wasm;
+            export function __wbg_set_wasm(val, instance) {
+                wasm = val;
+                if (instance) __wbg_register_instance(instance);
+            }
+            "#
+            .to_string()
+        } else {
+            r#"
+            let wasm;
+            export function __wbg_set_wasm(val) {
+                wasm = val;
+            }
+            "#
+            .to_string()
         }
-        "#
-        .to_string()
     }
 
     fn generate_bundler_start(&self, module_name: &str, needs_manual_start: bool) -> String {
@@ -885,11 +906,16 @@ export const __wbg_memory: WebAssembly.Memory;
                 .unwrap()
             }
         }
+        let register_instance = if self.instance_termination_mem.is_some() {
+            "__wbg_register_instance(instance);\n"
+        } else {
+            ""
+        };
         format!(
             "let wasmModule, wasm;
             function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
                 wasm = instance.exports;
-                wasmModule = module;
+                {register_instance}wasmModule = module;
                 {init_memviews}{init_stack_size_check}{start}return wasm;
             }}
 
@@ -1019,10 +1045,15 @@ export const __wbg_memory: WebAssembly.Memory;
     fn generate_deno_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
         // Deno added support for .wasm imports in 2024 in https://github.com/denoland/deno/issues/2552.
         // It's fairly recent, so use old-school Wasm loading for broader compat for now.
+        let register_instance = if self.instance_termination_mem.is_some() {
+            "__wbg_register_instance(wasm);\n"
+        } else {
+            ""
+        };
         format!(
             "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
-            const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
-            const wasm = wasmInstantiated.instance.exports;
+            let wasm = (await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports())).instance;
+            {register_instance}wasm = wasm.exports;
             {start}",
             start = if needs_manual_start {
                 "wasm.__wbindgen_start();\n"
@@ -1080,7 +1111,7 @@ export function initSync(opts = {{}}) {{
 
     const wasmImports = __wbg_get_imports(mem);
     const instance = new WebAssembly.Instance(wasmModule, wasmImports);
-    wasm = instance.exports;
+    {register_instance}wasm = instance.exports;
     memory = wasmImports['./{module_name}_bg.js'].memory;
 {start_call}
     __initialized = true;
@@ -1094,15 +1125,26 @@ if (isMainThread) {{
 }}
 
 export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memory, __wbg_get_imports }};
-"#
+"#,
+                register_instance = if self.instance_termination_mem.is_some() {
+                    "__wbg_register_instance(instance);\n    "
+                } else {
+                    ""
+                },
             )
         } else {
+            let register_instance = if self.instance_termination_mem.is_some() {
+                "__wbg_register_instance(wasm);\n"
+            } else {
+                ""
+            };
             format!(
                 r#"import {{ readFileSync }} from 'node:fs';
             const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmBytes = readFileSync(wasmUrl);
             const wasmModule = new WebAssembly.Module(wasmBytes);
-            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
+            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+            {register_instance}wasm = wasm.exports;
             {start}"#,
                 start = if needs_manual_start {
                     "wasm.__wbindgen_start();\n"
@@ -1164,7 +1206,7 @@ exports.initSync = function(opts) {{
 
     const wasmImports = __wbg_get_imports(mem);
     const instance = new WebAssembly.Instance(wasmModule, wasmImports);
-    wasm = instance.exports;
+    {register_instance}wasm = instance.exports;
     memory = wasmImports['./{module_name}_bg.js'].memory;
     exports.__wasm = wasm;
     exports.__wbg_wasm_module = wasmModule;
@@ -1179,14 +1221,25 @@ exports.initSync = function(opts) {{
 if (require('worker_threads').isMainThread) {{
     exports.initSync();
 }}
-"#
+"#,
+                register_instance = if self.instance_termination_mem.is_some() {
+                    "__wbg_register_instance(instance);\n    "
+                } else {
+                    ""
+                },
             )
         } else {
+            let register_instance = if self.instance_termination_mem.is_some() {
+                "__wbg_register_instance(wasm);\n"
+            } else {
+                ""
+            };
             format!(
                 r#"const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
             const wasmBytes = require('fs').readFileSync(wasmPath);
             const wasmModule = new WebAssembly.Module(wasmBytes);
-            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
+            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+            {register_instance}wasm = wasm.exports;
             {start}"#,
                 start = if needs_manual_start {
                     "wasm.__wbindgen_start();\n"
@@ -2970,14 +3023,18 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
-        reset_statements.push(
+        let register_instance = if self.instance_termination_mem.is_some() {
+            "\n            __wbg_register_instance(wasm);"
+        } else {
+            ""
+        };
+        reset_statements.push(format!(
             "
-            const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-            wasm = wasmInstance.exports;
+            wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports());{register_instance}
+            wasm = wasm.exports;
             wasm.__wbindgen_start();
             "
-            .to_string(),
-        );
+        ));
 
         let function_body = format!("() {{\n{}}}", reset_statements.join("\n"));
 
@@ -3230,6 +3287,7 @@ if (require('worker_threads').isMainThread) {{
 
         self.generate_jstag_import();
         self.generate_wrapped_jstag_import();
+        self.generate_instance_termination_registry();
 
         for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
@@ -3378,6 +3436,34 @@ function __wbg_handle_catch(e) {{
         // Use the constant for the import
         self.wasm_import_definitions
             .insert(id, "__wbindgen_wrapped_jstag".to_string());
+    }
+
+    /// Generate a `FinalizationRegistry` that marks the instance as terminated
+    /// when the `WebAssembly.Instance` is garbage collected.  This lets external
+    /// code that holds a reference to the linear memory detect that the instance
+    /// is dead and release its memory reference.
+    fn generate_instance_termination_registry(&mut self) {
+        let memory = crate::wasm_conventions::get_memory(self.module).unwrap();
+        let mem_name = self.export_name_of(memory);
+
+        self.global(&format!(
+            "\
+const __wbg_instance_registry = globalThis.__wbg_instance_registry ||
+    (globalThis.__wbg_instance_registry = (typeof FinalizationRegistry === 'undefined')
+        ? {{ register: () => {{}} }}
+        : new FinalizationRegistry(({{ memory, addr }}) => {{
+            new Int32Array(memory.buffer)[addr / 4] = 1;
+        }}));
+
+function __wbg_register_instance(instance) {{
+    __wbg_instance_registry.register(instance, {{
+        memory: instance.exports.{mem_name},
+        addr: instance.exports.__instance_terminated.value,
+    }});
+}}"
+        ));
+
+        self.instance_termination_mem = Some(mem_name);
     }
 
     /// Registers import names for all `Global` imports first before we actually

@@ -1133,3 +1133,119 @@ describe('termination with reset state', () => {
         .assert()
         .success();
 }
+
+#[test]
+fn instance_gc_termination() {
+    let mut project = Project::new("instance_gc_termination");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn simple_add(a: u32, b: u32) -> u32 {
+                    a + b
+                }
+            "#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"instance_gc_termination\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+                ",
+                REPO_ROOT.display(),
+            ),
+        );
+
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+
+    // Verify the generated JS contains the FinalizationRegistry and registration code
+    let generated_js = fs::read_to_string(out_dir.join("instance_gc_termination.js")).unwrap();
+    assert!(
+        generated_js.contains("__wbg_instance_registry"),
+        "generated JS should contain __wbg_instance_registry"
+    );
+    assert!(
+        generated_js.contains("__wbg_register_instance"),
+        "generated JS should contain __wbg_register_instance"
+    );
+    assert!(
+        generated_js.contains("globalThis.__wbg_instance_registry"),
+        "registry should be rooted on globalThis"
+    );
+
+    // Test the GC mechanism directly against the wasm module (avoids CJS
+    // module-scope lifetime issues that prevent the Instance from being
+    // collected when loaded via require()).
+    fs::write(
+        out_dir.join("test_instance_gc.js"),
+        r#"
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert/strict');
+
+function forceGC() {
+    gc();
+    for (let i = 0; i < 100; i++) { new Uint8Array(10 * 1024 * 1024); }
+    gc();
+}
+
+const wasmBytes = fs.readFileSync(path.join(__dirname, 'instance_gc_termination_bg.wasm'));
+const wasmMod = new WebAssembly.Module(wasmBytes);
+
+let instance = new WebAssembly.Instance(wasmMod, {
+    './instance_gc_termination_bg.js': {
+        __wbindgen_init_externref_table: () => {}
+    }
+});
+
+// Read the terminated address from the wasm global — just the integer
+const addr = instance.exports.__instance_terminated.value;
+assert.strictEqual(typeof addr, 'number', '__instance_terminated should be an exported global');
+
+// Keep only the raw memory buffer
+const buf = instance.exports.memory.buffer;
+assert.strictEqual(new Int32Array(buf)[addr / 4], 0, 'flag should start at 0');
+assert.strictEqual(instance.exports.simple_add(2, 3), 5, 'exports should work');
+
+// Set up a FinalizationRegistry (same logic the generated JS uses)
+const registry = new FinalizationRegistry(({ buf, addr }) => {
+    new Int32Array(buf)[addr / 4] = 1;
+});
+registry.register(instance, { buf, addr });
+
+// Drop the instance
+instance = null;
+
+forceGC();
+setTimeout(() => {
+    assert.strictEqual(new Int32Array(buf)[addr / 4], 1,
+        'flag should be 1 after instance GC');
+    assert.ok(new Int32Array(buf).length > 0, 'memory should remain accessible');
+}, 50);
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--expose-gc")
+        .arg("test_instance_gc.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}

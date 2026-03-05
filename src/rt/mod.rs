@@ -609,7 +609,6 @@ pub fn link_mem_intrinsics() {
 #[cfg_attr(target_feature = "atomics", thread_local)]
 static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(Cell::new([0; 2]));
 
-#[cfg(panic = "unwind")]
 #[no_mangle]
 pub static mut __instance_terminated: u32 = 0;
 
