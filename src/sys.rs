@@ -131,10 +131,10 @@ extern "C" {
 }
 
 impl<T> JsOption<T> {
-    /// Creates an empty `JsOption<T>` representing `null`.
+    /// Creates an empty `JsOption<T>` representing `undefined`.
     #[inline]
     pub fn new() -> Self {
-        Null::NULL.unchecked_into()
+        Undefined::UNDEFINED.unchecked_into()
     }
 
     /// Wraps a value in a `JsOption<T>`.

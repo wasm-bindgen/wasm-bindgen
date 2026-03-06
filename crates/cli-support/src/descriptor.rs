@@ -56,7 +56,7 @@ pub struct Function {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Closure {
-    pub dtor_idx: u32,
+    pub owned: bool,
     pub function: Function,
     pub mutable: bool,
 }
@@ -210,15 +210,14 @@ fn get_string(data: &mut &[u32]) -> String {
 
 impl Closure {
     fn decode(data: &mut &[u32]) -> Closure {
-        let dtor_idx = get(data);
-        let mutable = match get(data) {
+        let [owned, mutable] = std::array::from_fn(|_| match get(data) {
             0 => false,
             1 => true,
             other => panic!("expected bool value, got {other}"),
-        };
+        });
         assert_eq!(get(data), FUNCTION);
         Closure {
-            dtor_idx,
+            owned,
             mutable,
             function: Function::decode(data),
         }

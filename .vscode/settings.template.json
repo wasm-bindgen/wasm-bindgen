@@ -1,0 +1,12 @@
+// This is a template you can use as a starting point for your own settings.json file.
+// Note that wasm32-unknown-unknown target is not compatible with all crates in the repo,
+// so you might have to adjust these depending on what you are workign on.
+{
+  "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+  "rust-analyzer.cargo.cfgs": [
+    "panic=unwind"
+  ],
+  "rust-analyzer.cargo.extraEnv": {
+    // "RUSTFLAGS": "--cfg=js_sys_unstable_apis"
+  }
+}

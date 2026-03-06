@@ -1504,7 +1504,7 @@ fn instruction(
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership
             // integration.
-            if let ClosureDtor::OwnClosure(dtor_export) = dtor {
+            if let ClosureDtor::OwnClosure = dtor {
                 // Persistent/owned closure with destructor
                 let make_closure = if *mutable {
                     js.cx.expose_make_mut_closure();
@@ -1514,9 +1514,7 @@ fn instruction(
                     "makeClosure"
                 };
 
-                let dtor = &js.cx.module.exports.get(*dtor_export).name;
-
-                js.push(format!("{make_closure}({a}, {b}, wasm.{dtor}, {wrapper})"));
+                js.push(format!("{make_closure}({a}, {b}, {wrapper})"));
             } else {
                 // Borrowed closure without destructor
                 let i = js.tmp();
@@ -1547,7 +1545,7 @@ fn instruction(
                 }
 
                 match dtor {
-                    ClosureDtor::OwnClosure(_) => unreachable!(),
+                    ClosureDtor::OwnClosure => unreachable!(),
                     ClosureDtor::Immediate => {
                         // Wrapper for ImmediateClosure or raw &dyn FnMut/&dyn Fn closure
                         // used as an argument to a JS function. Make sure to null out our
@@ -1555,15 +1553,13 @@ fn instruction(
                         // ensure that any lingering references to the closure
                         // will fail immediately due to null pointers passed in
                         // to Rust.
-                        js.finally(&format!("state{i}.a = state{i}.b = 0;"));
+                        js.finally(&format!("state{i}.a = 0;"));
                     }
                     ClosureDtor::Borrowed => {
                         // Borrowed closure from ScopedClosure::borrow/borrow_mut. Add
                         // _wbg_cb_unref to invalidate the closure at the end of
                         // the scoped block.
-                        js.prelude(&format!(
-                            "cb{i}._wbg_cb_unref = () => {{ state{i}.a = state{i}.b = 0; }};",
-                        ));
+                        js.prelude(&format!("cb{i}._wbg_cb_unref = () => state{i}.a = 0;"));
                     }
                 }
                 js.push(format!("cb{i}"));

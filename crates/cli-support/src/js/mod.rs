@@ -2757,7 +2757,7 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn expose_make_mut_closure(&mut self) {
-        self.expose_closure_finalization();
+        let destroy_state = self.expose_closure_finalization();
 
         // For mutable closures they can't be invoked recursively.
         // To handle that we swap out the `this.a` pointer with zero
@@ -2765,26 +2765,21 @@ if (require('worker_threads').isMainThread) {{
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         intrinsic(&mut self.intrinsics, "make_mut_closure".into(), || {
-            let safe_destructor = "\
-                state.dtor(state.a, state.b);
-                state.a = 0;
-                CLOSURE_DTORS.unregister(state);\
-                ";
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                    "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
-                    "
+                    ",
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                ("const state = { a: arg0, b: arg1, cnt: 1 };", "")
             };
             format!(
                 "
-                function makeMutClosure(arg0, arg1, dtor, f) {{
+                function makeMutClosure(arg0, arg1, f) {{
                     {state_init}
                     const real = (...args) => {{
                         {instance_check}
@@ -2803,7 +2798,9 @@ if (require('worker_threads').isMainThread) {{
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            {safe_destructor}
+                            {destroy_state};
+                            state.a = 0;
+                            CLOSURE_DTORS.unregister(state);
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2816,7 +2813,7 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn expose_make_closure(&mut self) {
-        self.expose_closure_finalization();
+        let destroy_state = self.expose_closure_finalization();
 
         // For shared closures they can be invoked recursively so we
         // just immediately pass through `this.a`. If we end up
@@ -2824,26 +2821,21 @@ if (require('worker_threads').isMainThread) {{
         // `this.a` pointer to prevent it being used again the
         // future.
         intrinsic(&mut self.intrinsics, "make_closure".into(), || {
-            let safe_destructor = "\
-                state.dtor(state.a, state.b);
-                state.a = 0;
-                CLOSURE_DTORS.unregister(state);\
-                ";
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
-                    "const state = { a: arg0, b: arg1, cnt: 1, dtor, instance: __wbg_instance_id };",
+                    "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
-                    "
+                    ",
                 )
             } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1, dtor };", "")
+                ("const state = { a: arg0, b: arg1, cnt: 1 };", "")
             };
             format!(
                 "
-                function makeClosure(arg0, arg1, dtor, f) {{
+                function makeClosure(arg0, arg1, f) {{
                     {state_init}
                     const real = (...args) => {{
                         {instance_check}
@@ -2859,7 +2851,9 @@ if (require('worker_threads').isMainThread) {{
                     }};
                     real._wbg_cb_unref = () => {{
                         if (--state.cnt === 0) {{
-                            {safe_destructor}
+                            {destroy_state};
+                            state.a = 0;
+                            CLOSURE_DTORS.unregister(state);
                         }}
                     }};
                     CLOSURE_DTORS.register(real, state, state);
@@ -2871,28 +2865,38 @@ if (require('worker_threads').isMainThread) {{
         });
     }
 
-    fn expose_closure_finalization(&mut self) {
+    /// Exposes the `CLOSURE_DTORS` finalization registry and returns a JS
+    /// expression like `wasm.__wbindgen_destroy_closure(state.a, state.b)` for
+    /// use in closure destructor code.
+    fn expose_closure_finalization(&mut self) -> String {
+        let func_id = self
+            .aux
+            .destroy_closure
+            .expect("failed to find `__wbindgen_destroy_closure` intrinsic");
+        let dtor = self.export_name_of(func_id);
+        let destroy_state = format!("wasm.{dtor}(state.a, state.b)");
         intrinsic(&mut self.intrinsics, "closure_finalization".into(), || {
+            let prevent_stale = if self.config.generate_reset_state {
+                format!(
+                    "state => {{
+                        if (state.instance === __wbg_instance_id) {{
+                            {destroy_state};
+                        }}
+                    }}"
+                )
+            } else {
+                format!("state => {destroy_state}")
+            };
             format!(
                 "
                 const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
                     ? {{ register: () => {{}}, unregister: () => {{}} }}
-                    : new FinalizationRegistry({});
-                ",
-                if self.config.generate_reset_state {
-                    "\
-                    state => {
-                        if (state.instance === __wbg_instance_id) {
-                            state.dtor(state.a, state.b);
-                        }
-                    }
-                    "
-                } else {
-                    "state => state.dtor(state.a, state.b)"
-                }
+                    : new FinalizationRegistry({prevent_stale});
+                "
             )
             .into()
         });
+        destroy_state
     }
 
     fn expose_panic_error(&mut self) {

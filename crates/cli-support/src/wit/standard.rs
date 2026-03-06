@@ -101,7 +101,7 @@ pub enum AdapterType {
 pub enum ClosureDtor {
     /// Persistent/owned closure with a destructor function that will be called
     /// when the closure is dropped on the JS side.
-    OwnClosure(walrus::ExportId),
+    OwnClosure,
     /// Borrowed closure called from JS (e.g., `forEach` callback). The closure
     /// is invalidated after the JS call returns by calling `_wbg_cb_unref`.
     Immediate,

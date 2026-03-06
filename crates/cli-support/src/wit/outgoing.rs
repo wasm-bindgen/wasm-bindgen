@@ -180,7 +180,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
 
             Descriptor::Closure(d) => {
-                self.outgoing_function(d.mutable, &d.function, Some(d.dtor_idx))?
+                self.outgoing_function(d.mutable, &d.function, Some(d.owned))?
             }
         }
         Ok(())
@@ -273,7 +273,7 @@ impl InstructionBuilder<'_, '_> {
         &mut self,
         mutable: bool,
         descriptor: &Function,
-        dtor_idx: Option<u32>,
+        owned_closure: Option<bool>,
     ) -> Result<(), Error> {
         let mut descriptor = descriptor.clone();
         // synthesize the a/b arguments that aren't present in the
@@ -282,10 +282,10 @@ impl InstructionBuilder<'_, '_> {
         descriptor.arguments.insert(0, Descriptor::I32);
         descriptor.arguments.insert(0, Descriptor::I32);
         let shim = self.export_table_element(descriptor.shim_idx);
-        let dtor = match dtor_idx {
+        let dtor = match owned_closure {
             None => ClosureDtor::Immediate,
-            Some(0) => ClosureDtor::Borrowed,
-            Some(idx) => ClosureDtor::OwnClosure(self.export_table_element(idx)),
+            Some(false) => ClosureDtor::Borrowed,
+            Some(true) => ClosureDtor::OwnClosure,
         };
         let adapter = self.cx.export_adapter(shim, descriptor)?;
         self.instruction(

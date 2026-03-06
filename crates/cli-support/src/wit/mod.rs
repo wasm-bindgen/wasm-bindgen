@@ -83,6 +83,7 @@ pub fn process(
         cx.discover_main()?;
     }
     cx.find_exn_store();
+    cx.find_destroy_closure();
 
     cx.verify()?;
 
@@ -1700,6 +1701,18 @@ impl<'a> Context<'a> {
             .exports
             .iter()
             .find(|e| e.name == "__wbindgen_exn_store")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Function(f) => Some(f),
+                _ => None,
+            });
+    }
+
+    fn find_destroy_closure(&mut self) {
+        self.aux.destroy_closure = self
+            .module
+            .exports
+            .iter()
+            .find(|e| e.name == "__wbindgen_destroy_closure")
             .and_then(|e| match e.item {
                 walrus::ExportItem::Function(f) => Some(f),
                 _ => None,

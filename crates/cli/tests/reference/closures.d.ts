@@ -3,4 +3,6 @@
 
 export function delayed_callback(): void;
 
+export function use_scoped_callback(): void;
+
 export function use_stack_callback(a: Array<any>): void;

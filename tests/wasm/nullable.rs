@@ -4,6 +4,20 @@ use wasm_bindgen::convert::Upcast;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
+#[wasm_bindgen(inline_js = "
+export const js_optional_default = (value = 42) => value;
+")]
+extern "C" {
+    // Imported with an erasable generic param.
+    #[wasm_bindgen(js_name = js_optional_default)]
+    fn js_optional_default_generic<T>(value: JsOption<T>) -> T;
+
+    // Same JS function but with a concrete Option<i32> param.
+    // Both should have the same observable behaviour.
+    #[wasm_bindgen(js_name = js_optional_default)]
+    fn js_optional_default_concrete(value: Option<i32>) -> i32;
+}
+
 #[wasm_bindgen(module = "tests/wasm/nullable.js")]
 extern "C" {
     fn return_null() -> JsOption<Number>;
@@ -338,4 +352,23 @@ fn test_upcast_with_helper_function() {
     // Pass Undefined via upcast
     let result = accepts_nullable_number(Undefined::UNDEFINED.upcast_into());
     assert_eq!(result, None);
+}
+
+#[wasm_bindgen_test]
+fn test_option_vs_js_option_compat() {
+    // A helper to ensure that concrete and generic options behave the same when passed to JS.
+    fn test_value(option: Option<i32>, expected_result: i32) {
+        let result_option = js_optional_default_concrete(option);
+        assert_eq!(result_option, expected_result);
+
+        let js_opt = JsOption::from_option(option.map(Number::from));
+        let result_js_option = js_optional_default_generic(js_opt);
+        assert_eq!(result_js_option, expected_result);
+    }
+
+    // Option<i32> None -> `undefined` -> triggers JS default (42).
+    test_value(None, 42);
+
+    // Option<i32> Some(7) -> passes 7 to JS, no default.
+    test_value(Some(7), 7);
 }

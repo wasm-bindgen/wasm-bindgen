@@ -18,7 +18,7 @@
     <span> | </span>
     <a href="https://docs.rs/wasm-bindgen">API Docs</a>
     <span> | </span>
-    <a href="https://github.com/wasm-bindgen/wasm-bindgen/blob/master/CONTRIBUTING.md">Contributing</a>
+    <a href="https://github.com/wasm-bindgen/wasm-bindgen/blob/main/CONTRIBUTING.md">Contributing</a>
     <span> | </span>
     <a href="https://discord.gg/xMZ7CCY">Chat</a>
   </h3>
