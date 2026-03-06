@@ -455,6 +455,10 @@ pub struct InterfaceMethod<'a> {
     /// the same name/signature but different return type. When true, this method
     /// is gated behind `#[cfg(not(web_sys_unstable_apis))]`.
     pub has_unstable_override: bool,
+    /// True if the parent definition has the `[WbgGeneric]` extended attribute,
+    /// which opts stable APIs into typed generics (e.g. `Promise<T>` instead of
+    /// bare `Promise`).
+    pub wbg_generic: bool,
 }
 
 impl<'a> InterfaceMethod<'a> {
@@ -501,6 +505,7 @@ impl InterfaceMethod<'_> {
             variadic,
             unstable,
             has_unstable_override,
+            wbg_generic,
         } = self;
 
         // If this is a stable method that has an unstable override,
@@ -519,8 +524,9 @@ impl InterfaceMethod<'_> {
             maybe_unstable_docs(*unstable)
         };
         // Unstable APIs always use typed generics (generics_compat=false).
+        // [WbgGeneric] on the parent definition also opts into typed generics.
         // Stable APIs use legacy types by default, typed generics if next_unstable is set.
-        let generics_compat = if *unstable {
+        let generics_compat = if *unstable || *wbg_generic {
             false
         } else {
             !options.next_unstable.get()
@@ -958,14 +964,12 @@ impl DictionaryField {
         let setter_name = self.setter_name();
         let deprecated = format!("Use `{setter_name}()` instead.");
 
-        // In unstable mode the first setter is a typed variant, so the
-        // builder method uses the same type as the first setter. In stable
-        // mode the builder uses the original (broad) type.
-        let builder_ty = if self.unstable {
-            self.setter_types.first().map(|s| &s.ty).unwrap_or(ty)
-        } else {
-            ty
-        };
+        // The builder always calls the first setter (via setter_name()),
+        // so its parameter type must match. In generics mode (unstable or
+        // [WbgGeneric]), the first setter is a typed variant whose type may
+        // differ from the broad field `ty` (e.g. `u32` vs `f64` for
+        // `unsigned long long`).
+        let builder_ty = self.setter_types.first().map(|s| &s.ty).unwrap_or(ty);
 
         // When is_js_value_ref_option_type is set, the first setter takes &JsValue
         // but the builder takes Option<&JsValue>, so unwrap_or bridges the types.
@@ -1365,6 +1369,8 @@ pub struct Function<'a> {
     pub catch: bool,
     pub variadic: bool,
     pub unstable: bool,
+    /// True if the parent namespace has the `[WbgGeneric]` extended attribute.
+    pub wbg_generic: bool,
 }
 
 impl Function<'_> {
@@ -1383,11 +1389,13 @@ impl Function<'_> {
             catch,
             variadic,
             unstable,
+            wbg_generic,
         } = self;
 
         // Unstable APIs always use typed generics (generics_compat=false).
+        // [WbgGeneric] on the parent namespace also opts into typed generics.
         // Stable APIs use legacy types by default, typed generics if next_unstable is set.
-        let generics_compat = if *unstable {
+        let generics_compat = if *unstable || *wbg_generic {
             false
         } else {
             !options.next_unstable.get()

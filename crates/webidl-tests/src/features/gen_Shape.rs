@@ -1,0 +1,68 @@
+#![allow(unused_imports)]
+#![allow(clippy::all)]
+use super::*;
+use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
+extern "C" {
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = Shape , typescript_type = "Shape")]
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[doc = "The `Shape` class."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`*"]
+    pub type Shape;
+    #[cfg(feature = "ShapeType")]
+    # [wasm_bindgen (structural , method , getter , js_class = "Shape" , js_name = shapeTypeNone)]
+    #[doc = "Getter for the `shapeTypeNone` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/shapeTypeNone)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`, `ShapeType`*"]
+    pub fn shape_type_none(this: &Shape) -> Option<ShapeType>;
+    #[cfg(feature = "ShapeType")]
+    # [wasm_bindgen (structural , method , getter , js_class = "Shape" , js_name = shapeTypeSome)]
+    #[doc = "Getter for the `shapeTypeSome` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/shapeTypeSome)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`, `ShapeType`*"]
+    pub fn shape_type_some(this: &Shape) -> Option<ShapeType>;
+    #[cfg(feature = "ShapeType")]
+    #[wasm_bindgen(catch, constructor, js_class = "Shape")]
+    #[doc = "The `new Shape(..)` constructor, creating a new instance of `Shape`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/Shape)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`, `ShapeType`*"]
+    pub fn new(kind: ShapeType) -> Result<Shape, JsValue>;
+    #[cfg(feature = "ShapeType")]
+    # [wasm_bindgen (method , structural , js_class = "Shape" , js_name = getShape)]
+    #[doc = "The `getShape()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/getShape)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`, `ShapeType`*"]
+    pub fn get_shape(this: &Shape) -> ShapeType;
+    # [wasm_bindgen (method , structural , js_class = "Shape" , js_name = isCircle)]
+    #[doc = "The `isCircle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/isCircle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`*"]
+    pub fn is_circle(this: &Shape) -> bool;
+    # [wasm_bindgen (method , structural , js_class = "Shape" , js_name = isSquare)]
+    #[doc = "The `isSquare()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/isSquare)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`*"]
+    pub fn is_square(this: &Shape) -> bool;
+    # [wasm_bindgen (static_method_of = Shape , js_class = "Shape" , js_name = triangle)]
+    #[doc = "The `triangle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Shape/triangle_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Shape`*"]
+    pub fn triangle() -> Shape;
+}

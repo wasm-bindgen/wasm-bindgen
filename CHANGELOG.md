@@ -5,9 +5,8 @@
 
 ### Added
 
-* Added `bench_console_log_10mb` benchmark alongside the existing 1MB benchmark for the
-  headless test runner. The main branch cannot complete this benchmark at any volume.
-  [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
+* Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
+  [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
 ### Changed
 
@@ -24,6 +23,10 @@
 
 * TTY-gated status/clear output in the test runner shell to avoid `\r` control-character
   artifacts in non-interactive (CI) environments.
+  [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
+  
+* Added `bench_console_log_10mb` benchmark alongside the existing 1MB benchmark for the
+  headless test runner. The main branch cannot complete this benchmark at any volume.
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
 
 ### Fixed
@@ -47,6 +50,11 @@
 ## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
 
 ### Added
+
+* Added `[WbgGeneric]` WebIDL extended attribute for opting stable dictionary and interface
+  definitions into typed generics (the same signatures unstable APIs use), avoiding legacy
+  `&JsValue` fallbacks. Applied to all new VideoFrame-related types.
+  [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
 * Added `unchecked_optional_param_type` attribute for marking exported function parameters as
   optional in TypeScript (`?:`) and JSDoc (`[paramName]`) output. Mutually exclusive with

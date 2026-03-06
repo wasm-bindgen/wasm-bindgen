@@ -2650,6 +2650,17 @@ extern "C" {
         this: &Window,
         a_image: &OffscreenCanvas,
     ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "VideoFrame")]
+    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
+    #[doc = "The `createImageBitmap()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `Window`*"]
+    pub fn create_image_bitmap_with_video_frame(
+        this: &Window,
+        a_image: &VideoFrame,
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "Blob")]
     # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -2742,6 +2753,18 @@ extern "C" {
     pub fn create_image_bitmap_with_offscreen_canvas_and_image_bitmap_options(
         this: &Window,
         a_image: &OffscreenCanvas,
+        a_options: &ImageBitmapOptions,
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "VideoFrame",))]
+    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
+    #[doc = "The `createImageBitmap()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `Window`*"]
+    pub fn create_image_bitmap_with_video_frame_and_image_bitmap_options(
+        this: &Window,
+        a_image: &VideoFrame,
         a_options: &ImageBitmapOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(feature = "Blob", feature = "ImageBitmapOptions",))]
@@ -2853,6 +2876,21 @@ extern "C" {
     pub fn create_image_bitmap_with_offscreen_canvas_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &Window,
         a_image: &OffscreenCanvas,
+        a_sx: i32,
+        a_sy: i32,
+        a_sw: i32,
+        a_sh: i32,
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "VideoFrame")]
+    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
+    #[doc = "The `createImageBitmap()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `Window`*"]
+    pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
+        this: &Window,
+        a_image: &VideoFrame,
         a_sx: i32,
         a_sy: i32,
         a_sw: i32,
@@ -2984,6 +3022,22 @@ extern "C" {
         a_sh: i32,
         a_options: &ImageBitmapOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "VideoFrame",))]
+    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
+    #[doc = "The `createImageBitmap()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `VideoFrame`, `Window`*"]
+    pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
+        this: &Window,
+        a_image: &VideoFrame,
+        a_sx: i32,
+        a_sy: i32,
+        a_sw: i32,
+        a_sh: i32,
+        a_options: &ImageBitmapOptions,
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(feature = "Blob", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -3016,84 +3070,6 @@ extern "C" {
         a_sh: i32,
         a_options: &ImageBitmapOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "ImageBitmap", feature = "VideoFrame",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
-    #[doc = "The `createImageBitmap()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `VideoFrame`, `Window`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn create_image_bitmap_with_video_frame(
-        this: &Window,
-        a_image: &VideoFrame,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "VideoFrame",
-    ))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
-    #[doc = "The `createImageBitmap()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `VideoFrame`, `Window`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn create_image_bitmap_with_video_frame_and_image_bitmap_options(
-        this: &Window,
-        a_image: &VideoFrame,
-        a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(feature = "ImageBitmap", feature = "VideoFrame",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
-    #[doc = "The `createImageBitmap()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `VideoFrame`, `Window`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
-        this: &Window,
-        a_image: &VideoFrame,
-        a_sx: i32,
-        a_sy: i32,
-        a_sw: i32,
-        a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "VideoFrame",
-    ))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Window" , js_name = createImageBitmap)]
-    #[doc = "The `createImageBitmap()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `VideoFrame`, `Window`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn create_image_bitmap_with_video_frame_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
-        this: &Window,
-        a_image: &VideoFrame,
-        a_sx: i32,
-        a_sy: i32,
-        a_sw: i32,
-        a_sh: i32,
-        a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
     #[cfg(feature = "Request")]
     # [wasm_bindgen (method , structural , js_class = "Window" , js_name = fetch)]
     #[doc = "The `fetch()` method."]
