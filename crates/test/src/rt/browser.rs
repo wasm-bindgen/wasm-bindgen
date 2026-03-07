@@ -22,7 +22,7 @@ extern "C" {
     #[wasm_bindgen(thread_local_v2, js_name = document)]
     static DOCUMENT: HTMLDocument;
     #[wasm_bindgen(method, structural)]
-    fn getElementById(this: &HTMLDocument, id: &str) -> Element;
+    fn getElementById(this: &HTMLDocument, id: &str) -> Option<Element>;
 
     type Element;
     #[wasm_bindgen(method, getter = textContent, structural)]
@@ -61,7 +61,9 @@ fn delay_promise(millis: i32) -> js_sys::Promise {
 /// Panics if the `#__wbgtest_screenshot` element is not present in the page
 /// (i.e. when not running under the headless test runner).
 pub async fn screenshot(path: &str) {
-    let el = DOCUMENT.with(|doc| doc.getElementById("__wbgtest_screenshot"));
+    let el = DOCUMENT
+        .with(|doc| doc.getElementById("__wbgtest_screenshot"))
+        .expect("#__wbgtest_screenshot element not found; are you running under the headless test runner?");
     el.set_text_content(path);
 
     loop {
@@ -79,7 +81,9 @@ impl Browser {
     /// Creates a new instance of `Browser`, assuming that its APIs will work
     /// (requires `Node::new()` to have return `None` first).
     pub fn new() -> Browser {
-        let pre = DOCUMENT.with(|document| document.getElementById("output"));
+        let pre = DOCUMENT
+            .with(|document| document.getElementById("output"))
+            .expect("#output element not found");
         // Append a newline to separate any existing content (e.g., "Loading Wasm module...")
         // from the test output. This matches the worker behavior and allows the headless
         // runner to stream output correctly.
