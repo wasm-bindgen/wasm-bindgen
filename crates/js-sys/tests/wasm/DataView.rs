@@ -3,6 +3,22 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
 
+fn has_float16_methods() -> bool {
+    let data_view = match Reflect::get(global().as_ref(), &"DataView".into()) {
+        Ok(data_view) => data_view,
+        Err(_) => return false,
+    };
+    let prototype = match Reflect::get(&data_view, &"prototype".into()) {
+        Ok(prototype) => prototype,
+        Err(_) => return false,
+    };
+
+    let prototype = prototype.unchecked_ref::<Object>();
+
+    Reflect::has_str(prototype, &"getFloat16".into()).unwrap_or(false)
+        && Reflect::has_str(prototype, &"setFloat16".into()).unwrap_or(false)
+}
+
 #[wasm_bindgen_test]
 fn test() {
     let bytes = Int8Array::new(&JsValue::from(10));
@@ -47,6 +63,14 @@ fn test() {
     v.set_float32_endian(0, f32::from_bits(0x11223344), true);
     assert_eq!(v.get_float32_endian(0, true), f32::from_bits(0x11223344));
     assert_eq!(v.get_float32_endian(0, false), f32::from_bits(0x44332211));
+
+    if has_float16_methods() {
+        v.set_float16(0, 1.5);
+        assert_eq!(v.get_float16(0), 1.5);
+        v.set_float16_endian(0, 1.0, true);
+        assert_eq!(v.get_float16_endian(0, true), 1.0);
+        assert_eq!(v.get_uint16_endian(0, true), 0x3c00);
+    }
 
     v.set_float64(0, 123456789.123456);
     assert_eq!(v.get_float64(0), 123456789.123456);

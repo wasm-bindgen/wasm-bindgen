@@ -3346,6 +3346,20 @@ extern "C" {
     #[wasm_bindgen(method, js_name = getFloat32)]
     pub fn get_float32_endian(this: &DataView, byte_offset: usize, little_endian: bool) -> f32;
 
+    /// The `getFloat16()` method gets a signed 16-bit float at the specified
+    /// byte offset from the start of the DataView.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat16)
+    #[wasm_bindgen(method, js_name = getFloat16)]
+    pub fn get_float16(this: &DataView, byte_offset: usize) -> f64;
+
+    /// The `getFloat16()` method gets a signed 16-bit float at the specified
+    /// byte offset from the start of the DataView.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat16)
+    #[wasm_bindgen(method, js_name = getFloat16)]
+    pub fn get_float16_endian(this: &DataView, byte_offset: usize, little_endian: bool) -> f64;
+
     /// The `getFloat64()` method gets a signed 64-bit float (double) at the specified
     /// byte offset from the start of the DataView.
     ///
@@ -3443,6 +3457,20 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat32)
     #[wasm_bindgen(method, js_name = setFloat32)]
     pub fn set_float32_endian(this: &DataView, byte_offset: usize, value: f32, little_endian: bool);
+
+    /// The `setFloat16()` method stores a signed 16-bit float value at the
+    /// specified byte offset from the start of the DataView.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat16)
+    #[wasm_bindgen(method, js_name = setFloat16)]
+    pub fn set_float16(this: &DataView, byte_offset: usize, value: f64);
+
+    /// The `setFloat16()` method stores a signed 16-bit float value at the
+    /// specified byte offset from the start of the DataView.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat16)
+    #[wasm_bindgen(method, js_name = setFloat16)]
+    pub fn set_float16_endian(this: &DataView, byte_offset: usize, value: f64, little_endian: bool);
 
     /// The `setFloat64()` method stores a signed 64-bit float (double) value at the
     /// specified byte offset from the start of the DataView.
@@ -13118,6 +13146,128 @@ pub fn global() -> Object {
         JsValue::undefined().unchecked_into()
     }
 }
+
+// Float16Array
+//
+// Rust does not yet have a stable builtin `f16`, so the raw JS bindings live
+// here and any Rust-side helper APIs use explicit `u16` / `f64` naming.
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Object, typescript_type = "Float16Array")]
+    #[derive(Clone, Debug)]
+    pub type Float16Array;
+
+    /// The `Float16Array()` constructor creates a new array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)
+    #[wasm_bindgen(constructor)]
+    pub fn new(constructor_arg: &JsValue) -> Float16Array;
+
+    /// The `Float16Array()` constructor creates an array with an internal
+    /// buffer large enough for `length` elements.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_length(length: u32) -> Float16Array;
+
+    /// The `Float16Array()` constructor creates an array with the given
+    /// buffer but is a view starting at `byte_offset`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_byte_offset(buffer: &JsValue, byte_offset: u32) -> Float16Array;
+
+    /// The `Float16Array()` constructor creates an array with the given
+    /// buffer but is a view starting at `byte_offset` for `length` elements.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_byte_offset_and_length(
+        buffer: &JsValue,
+        byte_offset: u32,
+        length: u32,
+    ) -> Float16Array;
+
+    /// The `fill()` method fills all elements from a start index to an end
+    /// index with a static value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill)
+    #[wasm_bindgen(method)]
+    pub fn fill(this: &Float16Array, value: f64, start: u32, end: u32) -> Float16Array;
+
+    /// The buffer accessor property represents the `ArrayBuffer` referenced
+    /// by a `TypedArray` at construction time.
+    #[wasm_bindgen(getter, method)]
+    pub fn buffer(this: &Float16Array) -> ArrayBuffer;
+
+    /// The `subarray()` method returns a new `TypedArray` on the same
+    /// `ArrayBuffer` store and with the same element types as this array.
+    #[wasm_bindgen(method)]
+    pub fn subarray(this: &Float16Array, begin: u32, end: u32) -> Float16Array;
+
+    /// The `slice()` method returns a shallow copy of a portion of a typed
+    /// array into a new typed array object.
+    #[wasm_bindgen(method)]
+    pub fn slice(this: &Float16Array, begin: u32, end: u32) -> Float16Array;
+
+    /// The `forEach()` method executes a provided function once per array element.
+    #[wasm_bindgen(method, js_name = forEach)]
+    pub fn for_each(this: &Float16Array, callback: &mut dyn FnMut(f64, u32, Float16Array));
+
+    /// The `forEach()` method executes a provided function once per array element.
+    #[wasm_bindgen(method, js_name = forEach, catch)]
+    pub fn try_for_each(
+        this: &Float16Array,
+        callback: &mut dyn FnMut(f64, u32, Float16Array) -> Result<(), JsError>,
+    ) -> Result<(), JsValue>;
+
+    /// The length accessor property represents the length (in elements) of a
+    /// typed array.
+    #[wasm_bindgen(method, getter)]
+    pub fn length(this: &Float16Array) -> u32;
+
+    /// The byteLength accessor property represents the length (in bytes) of a
+    /// typed array.
+    #[wasm_bindgen(method, getter, js_name = byteLength)]
+    pub fn byte_length(this: &Float16Array) -> u32;
+
+    /// The byteOffset accessor property represents the offset (in bytes) of a
+    /// typed array from the start of its `ArrayBuffer`.
+    #[wasm_bindgen(method, getter, js_name = byteOffset)]
+    pub fn byte_offset(this: &Float16Array) -> u32;
+
+    /// The `set()` method stores multiple values in the typed array, reading
+    /// input values from a specified array.
+    #[wasm_bindgen(method)]
+    pub fn set(this: &Float16Array, src: &JsValue, offset: u32);
+
+    /// Gets the value at `idx`, counting from the end if negative.
+    #[wasm_bindgen(method, js_name = at)]
+    pub fn at_as_f64(this: &Float16Array, idx: i32) -> Option<f64>;
+
+    /// The `copyWithin()` method shallow copies part of a typed array to another
+    /// location in the same typed array and returns it, without modifying its size.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin)
+    #[wasm_bindgen(method, js_name = copyWithin)]
+    pub fn copy_within(this: &Float16Array, target: i32, start: i32, end: i32) -> Float16Array;
+
+    /// Gets the value at `idx`, equivalent to JavaScript `arr[idx]`.
+    #[wasm_bindgen(method, indexing_getter)]
+    pub fn get_index_as_f64(this: &Float16Array, idx: u32) -> f64;
+
+    /// Sets the value at `idx`, equivalent to JavaScript `arr[idx] = value`.
+    #[wasm_bindgen(method, indexing_setter)]
+    pub fn set_index_from_f64(this: &Float16Array, idx: u32, value: f64);
+}
+
+impl Default for Float16Array {
+    fn default() -> Self {
+        Self::new(&JsValue::UNDEFINED.unchecked_into())
+    }
+}
+
+impl TypedArray for Float16Array {}
 
 macro_rules! arrays {
     ($(#[doc = $ctor:literal] #[doc = $mdn:literal] $name:ident: $ty:ident,)*) => ($(
