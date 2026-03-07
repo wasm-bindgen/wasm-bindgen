@@ -31,6 +31,12 @@
 
 ### Fixed
 
+* Added support for per-operation `[WbgGeneric]` in WebIDL, restoring typed
+  generic return types (e.g. `Promise<ImageBitmap>`) for `createImageBitmap` on
+  `Window` and `WorkerGlobalScope` that were lost after the `VideoFrame`
+  stabilization.
+  [#5026](https://github.com/wasm-bindgen/wasm-bindgen/pull/5026)
+
 * Fixed `JsOption::new()` to use `undefined` instead of `null`, to be compatible with `Option::None` and JS default parameters.
   [#5023](https://github.com/wasm-bindgen/wasm-bindgen/pull/5023)
 
