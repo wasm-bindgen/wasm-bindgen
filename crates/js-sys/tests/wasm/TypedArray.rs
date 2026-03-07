@@ -193,6 +193,27 @@ fn float16array_basic_methods() {
 }
 
 #[wasm_bindgen_test]
+fn float16array_u16_helpers() {
+    if !has_float16_array() {
+        return;
+    }
+
+    let initial = [0x3c00, 0xc000, 0x3555];
+    let arr = Float16Array::new_from_u16_slice(&initial);
+    assert_eq!(arr.get_index_as_f64(0), 1.0);
+    assert_eq!(arr.get_index_as_f64(1), -2.0);
+
+    let mut copied = [0; 3];
+    arr.copy_to_u16_slice(&mut copied);
+    assert_eq!(copied, initial);
+    assert_eq!(arr.to_u16_vec(), initial);
+
+    let replacement = [0x0001, 0x7bff, 0xfc00];
+    arr.copy_from_u16_slice(&replacement);
+    assert_eq!(arr.to_u16_vec(), replacement);
+}
+
+#[wasm_bindgen_test]
 fn view() {
     let x = [1, 2, 3];
     let array = unsafe { Int32Array::view(&x) };

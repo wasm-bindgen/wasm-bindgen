@@ -13269,6 +13269,52 @@ impl Default for Float16Array {
 
 impl TypedArray for Float16Array {}
 
+impl Float16Array {
+    fn as_uint16_view(&self) -> Uint16Array {
+        let buffer = self.buffer();
+        Uint16Array::new_with_byte_offset_and_length(
+            buffer.as_ref(),
+            self.byte_offset(),
+            self.length(),
+        )
+    }
+
+    /// Creates an array from raw IEEE 754 binary16 bit patterns.
+    pub fn new_from_u16_slice(slice: &[u16]) -> Float16Array {
+        let array = Float16Array::new_with_length(slice.len() as u32);
+        array.copy_from_u16_slice(slice);
+        array
+    }
+
+    /// Copy the raw IEEE 754 binary16 bit patterns from this JS typed array
+    /// into the destination Rust slice.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if this typed array's length is different than
+    /// the length of the provided `dst` array.
+    pub fn copy_to_u16_slice(&self, dst: &mut [u16]) {
+        self.as_uint16_view().copy_to(dst);
+    }
+
+    /// Copy raw IEEE 754 binary16 bit patterns from the source Rust slice into
+    /// this JS typed array.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if this typed array's length is different than
+    /// the length of the provided `src` array.
+    pub fn copy_from_u16_slice(&self, src: &[u16]) {
+        self.as_uint16_view().copy_from(src);
+    }
+
+    /// Efficiently copies the contents of this JS typed array into a new Vec of
+    /// raw IEEE 754 binary16 bit patterns.
+    pub fn to_u16_vec(&self) -> Vec<u16> {
+        self.as_uint16_view().to_vec()
+    }
+}
+
 macro_rules! arrays {
     ($(#[doc = $ctor:literal] #[doc = $mdn:literal] $name:ident: $ty:ident,)*) => ($(
         #[wasm_bindgen]
