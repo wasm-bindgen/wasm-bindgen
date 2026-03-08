@@ -100,6 +100,11 @@ pub(crate) enum WbgType<'a> {
     ArrayTuple(Box<WbgType<'a>>, Box<WbgType<'a>>),
     Union(Vec<WbgType<'a>>),
 
+    /// The "canonical" form of an overloaded argument. Delegates to the inner
+    /// type for type conversion, but pushes nothing in `push_snake_case_name`
+    /// so the canonical variant gets the unsuffixed method name.
+    CanonicalValue(Box<WbgType<'a>>),
+
     Any,
     Undefined,
 
@@ -643,6 +648,8 @@ impl<'a> WbgType<'a> {
                 }
             }
 
+            WbgType::CanonicalValue(_) => {}
+
             WbgType::Any => dst.push_str("any"),
             WbgType::Undefined => dst.push_str("undefined"),
 
@@ -1139,6 +1146,7 @@ impl<'a> WbgType<'a> {
                 }
             }
             WbgType::Identifier { ty, .. } => ty.to_syn_type(pos, legacy, no_generics),
+            WbgType::CanonicalValue(inner) => inner.to_syn_type(pos, legacy, no_generics),
             WbgType::UnknownIdentifier(name) => {
                 log::warn!("Cannot convert unknown identifier: {name}");
                 Err(TypeError::CannotConvert)
@@ -1156,42 +1164,56 @@ impl<'a> WbgType<'a> {
     /// the typed callback, not the dict type).
     ///
     /// [flattened union member types]: https://heycam.github.io/webidl/#dfn-flattened-union-member-types
-    pub(crate) fn flatten(&self, attrs: Option<&ExtendedAttributeList<'_>>) -> Vec<Self> {
+    pub(crate) fn flatten(
+        &self,
+        attrs: Option<&ExtendedAttributeList<'_>>,
+        wbg_generic: bool,
+    ) -> Vec<Self> {
         match self {
             WbgType::JsOption(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten(attrs, wbg_generic)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::JsOption)
                 .collect(),
             WbgType::FrozenArray(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten(attrs, wbg_generic)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::FrozenArray)
                 .collect(),
             WbgType::Sequence(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten(attrs, wbg_generic)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::Sequence)
                 .collect(),
-            WbgType::Promise(wbg_type) => wbg_type
-                .flatten(attrs)
-                .into_iter()
-                .map(Box::new)
-                .map(WbgType::Promise)
-                .collect(),
+            WbgType::Promise(wbg_type) => {
+                let mut wbg_types = Vec::new();
+                for ty in wbg_type.flatten(attrs, wbg_generic) {
+                    if wbg_generic {
+                        // Canonical form (Promise<T>) gets unsuffixed name;
+                        // value form (T) gets suffixed via normal disambiguation.
+                        wbg_types.push(WbgType::CanonicalValue(Box::new(WbgType::Promise(
+                            Box::new(ty.clone()),
+                        ))));
+                        wbg_types.push(ty);
+                    } else {
+                        wbg_types.push(WbgType::Promise(Box::new(ty)));
+                    }
+                }
+                wbg_types
+            }
             WbgType::Iterator(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten(attrs, wbg_generic)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::Iterator)
                 .collect(),
             WbgType::ArrayTuple(wbg_type_a, wbg_type_b) => {
                 let mut wbg_types = Vec::new();
-                for wbg_type_a in wbg_type_a.flatten(attrs) {
-                    for wbg_type_b in wbg_type_b.flatten(attrs) {
+                for wbg_type_a in wbg_type_a.flatten(attrs, wbg_generic) {
+                    for wbg_type_b in wbg_type_b.flatten(attrs, wbg_generic) {
                         wbg_types.push(WbgType::ArrayTuple(
                             Box::new(wbg_type_a.clone()),
                             Box::new(wbg_type_b.clone()),
@@ -1202,8 +1224,8 @@ impl<'a> WbgType<'a> {
             }
             WbgType::Record(wbg_type_from, wbg_type_to) => {
                 let mut wbg_types = Vec::new();
-                for wbg_type_from in wbg_type_from.flatten(attrs) {
-                    for wbg_type_to in wbg_type_to.flatten(attrs) {
+                for wbg_type_from in wbg_type_from.flatten(attrs, wbg_generic) {
+                    for wbg_type_to in wbg_type_to.flatten(attrs, wbg_generic) {
                         wbg_types.push(WbgType::Record(
                             Box::new(wbg_type_from.clone()),
                             Box::new(wbg_type_to.clone()),
@@ -1214,7 +1236,7 @@ impl<'a> WbgType<'a> {
             }
             WbgType::Union(wbg_types) => wbg_types
                 .iter()
-                .flat_map(|wbg_type| wbg_type.flatten(attrs))
+                .flat_map(|wbg_type| wbg_type.flatten(attrs, wbg_generic))
                 .collect(),
             WbgType::ArrayBufferView {
                 allow_shared,
@@ -1444,13 +1466,15 @@ impl<'a> WbgType<'a> {
                             },
                         ]
                     }
-                    IdentifierType::UnsignedLongLong => WbgType::UnsignedLongLong.flatten(attrs),
+                    IdentifierType::UnsignedLongLong => {
+                        WbgType::UnsignedLongLong.flatten(attrs, wbg_generic)
+                    }
                     IdentifierType::AllowSharedBufferSource { immutable } => {
                         WbgType::BufferSource {
                             allow_shared: true,
                             immutable: *immutable,
                         }
-                        .flatten(attrs)
+                        .flatten(attrs, wbg_generic)
                     }
                     _ => vec![wbg_type.clone()],
                 }
@@ -1562,7 +1586,7 @@ fn wbg_type_flatten_test() {
                 WbgType::id("NodeList", Interface("NodeList")),
             ])),),
         ])
-        .flatten(None),
+        .flatten(None, false),
         vec![
             WbgType::id("Node", Interface("Node")),
             Sequence(Box::new(Long)),
