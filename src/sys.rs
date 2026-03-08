@@ -130,7 +130,7 @@ extern "C" {
     pub type JsOption<T>;
 }
 
-impl<T> JsOption<T> {
+impl<T: JsGeneric> JsOption<T> {
     /// Creates an empty `JsOption<T>` representing `undefined`.
     #[inline]
     pub fn new() -> Self {
