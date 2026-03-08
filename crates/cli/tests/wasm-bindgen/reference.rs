@@ -159,6 +159,43 @@ fn runtest_targets_atomics() -> Result<()> {
 }
 
 #[test]
+fn no_duplicate_wasm_export_in_node_esm_atomics_debug() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("targets.rs");
+
+    let mut project = Project::new("targets_reftest_atomics_debug_no_duplicate_wasm_export");
+    project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env(
+            "RUSTFLAGS",
+            "-Ctarget-feature=+atomics \
+            -Clink-args=--shared-memory \
+            -Clink-args=--max-memory=1073741824 \
+            -Clink-args=--import-memory \
+            -Clink-args=--export=__wasm_init_tls \
+            -Clink-args=--export=__tls_size \
+            -Clink-args=--export=__tls_align \
+            -Clink-args=--export=__tls_base",
+        )
+        .arg("-Zbuild-std=std,panic_abort");
+    project.file_link("src/lib.rs", &test);
+
+    let out_dir = project
+        .wasm_bindgen("--target=experimental-nodejs-module --debug --out-name reference_test")?;
+    let js = fs::read_to_string(out_dir.join("reference_test.js"))?;
+    let export_count = js.matches("export { wasm as __wasm").count();
+    assert_eq!(
+        export_count, 1,
+        "expected exactly one ESM __wasm export, found {export_count}"
+    );
+    Ok(())
+}
+
+#[test]
 fn runtest_targets_mvp() -> Result<()> {
     let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test.push("tests");
