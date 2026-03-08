@@ -30,7 +30,7 @@ use crate::util::{
     shouty_snake_case_ident, snake_case_ident, throws, webidl_const_v_to_backend_const_v,
     TypePosition,
 };
-use crate::wbg_type::ToWbgType;
+use crate::wbg_type::{ToWbgType, WbgType};
 use anyhow::Context;
 use anyhow::Result;
 use constants::UNFLATTENED_ATTRIBUTES;
@@ -887,9 +887,16 @@ impl<'src> FirstPassRecord<'src> {
         let parents = self
             .all_superclasses(&js_name)
             .map(|parent| {
-                let ident = rust_ident(&camel_case_ident(&parent));
-                program.required_features.insert(parent);
-                ident
+                if let Some(&js_sys_path) = crate::constants::BUILTIN_EXTENDS.get(parent.as_str()) {
+                    // JS built-in type — use the full js_sys path
+                    let path: syn::Path = syn::parse_str(js_sys_path).unwrap();
+                    quote::quote!(#path)
+                } else {
+                    // Web-sys interface — bare ident, and add as required feature
+                    let ident = rust_ident(&camel_case_ident(&parent));
+                    program.required_features.insert(parent);
+                    quote::quote!(#ident)
+                }
             })
             .collect::<Vec<_>>();
 
@@ -985,12 +992,37 @@ impl<'src> FirstPassRecord<'src> {
             methods.push(method.clone());
         }
 
+        // If this interface extends Promise (directly or transitively),
+        // determine the resolution type from the `then` method's return type.
+        let extends_promise = self.extends_promise(&js_name);
+        let promising_resolution = if extends_promise {
+            let resolution = data
+                .operations
+                .get(&OperationId::Operation(Some("then")))
+                .and_then(|op| op.signatures.first())
+                .map(|sig| sig.ret.to_wbg_type(self))
+                .and_then(|wbg_ty| {
+                    if let WbgType::Promise(inner) = wbg_ty {
+                        inner
+                            .to_syn_type(crate::util::TypePosition::RETURN, false, false)
+                            .ok()
+                            .flatten()
+                    } else {
+                        None
+                    }
+                });
+            Some(resolution.unwrap_or_else(|| syn::parse_str("::wasm_bindgen::JsValue").unwrap()))
+        } else {
+            None
+        };
+
         Interface {
             name: name.clone(),
             js_name: js_name.clone(),
             deprecated: deprecated.clone(),
             has_interface,
             parents: parents.clone(),
+            promising_resolution,
             consts,
             attributes,
             methods,

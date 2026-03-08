@@ -1741,7 +1741,30 @@ impl<'a> FirstPassRecord<'a> {
         if self.interfaces.contains_key(superclass) && set.insert(superclass) {
             list.push(camel_case_ident(superclass));
             self.fill_superclasses(superclass, set, list);
+        } else if crate::constants::BUILTIN_EXTENDS.contains_key(superclass) {
+            // The superclass is a JS built-in type (e.g. Promise, Error).
+            // Push the raw name so the caller can resolve it to a js_sys path.
+            list.push(superclass.to_string());
         }
+    }
+
+    /// Returns true if this interface extends Promise (directly or transitively).
+    pub fn extends_promise(&self, interface: &str) -> bool {
+        let data = match self.interfaces.get(interface) {
+            Some(data) => data,
+            None => return false,
+        };
+        let superclass = match &data.superclass {
+            Some(class) => *class,
+            None => return false,
+        };
+        if superclass == "Promise" {
+            return true;
+        }
+        if self.interfaces.contains_key(superclass) {
+            return self.extends_promise(superclass);
+        }
+        false
     }
 
     pub fn all_mixins<'me>(

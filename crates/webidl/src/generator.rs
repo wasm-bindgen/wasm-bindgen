@@ -297,7 +297,7 @@ impl InterfaceAttribute {
         options: &Options,
         parent_name: &Ident,
         parent_js_name: &str,
-        parents: &[Ident],
+        parents: &[TokenStream],
         parent_deprecated: &Option<Option<String>>,
     ) -> TokenStream {
         let InterfaceAttribute {
@@ -488,7 +488,7 @@ impl InterfaceMethod<'_> {
         options: &Options,
         parent_name: &Ident,
         parent_js_name: String,
-        parents: &[Ident],
+        parents: &[TokenStream],
         parent_deprecated: &Option<Option<String>>,
     ) -> Option<TokenStream> {
         let InterfaceMethod {
@@ -705,7 +705,11 @@ pub struct Interface<'a> {
     pub js_name: String,
     pub deprecated: Option<Option<String>>,
     pub has_interface: bool,
-    pub parents: Vec<Ident>,
+    pub parents: Vec<TokenStream>,
+    /// If this interface is a thenable (extends Promise), the resolution type
+    /// for the `Promising` trait impl. Determined from the `then` method's
+    /// return type, or defaults to `JsValue`.
+    pub promising_resolution: Option<syn::Type>,
     pub consts: Vec<Const>,
     pub attributes: Vec<InterfaceAttribute>,
     pub methods: Vec<InterfaceMethod<'a>>,
@@ -720,6 +724,7 @@ impl Interface<'_> {
             deprecated,
             has_interface,
             parents,
+            promising_resolution,
             consts,
             attributes,
             methods,
@@ -783,6 +788,20 @@ impl Interface<'_> {
         });
         let js_ident = raw_ident(js_name);
 
+        let promising_impl = promising_resolution.as_ref().map(|resolution| {
+            quote! {
+                impl ::wasm_bindgen::sys::Promising for #name {
+                    type Resolution = #resolution;
+                }
+            }
+        });
+
+        let no_promising_attr = if promising_resolution.is_some() {
+            Some(quote!(no_promising,))
+        } else {
+            None
+        };
+
         quote! {
             #![allow(unused_imports)]
             #![allow(clippy::all)]
@@ -794,6 +813,7 @@ impl Interface<'_> {
             extern "C" {
                 #[wasm_bindgen(
                     #is_type_of
+                    #no_promising_attr
                     #prefixes
                     #(#extends)*
                     extends = ::js_sys::Object,
@@ -811,6 +831,8 @@ impl Interface<'_> {
             }
 
             #consts
+
+            #promising_impl
         }
     }
 }

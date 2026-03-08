@@ -111,7 +111,7 @@ macro_rules! externs {
 /// ```
 pub mod prelude {
     pub use crate::closure::{Closure, ScopedClosure};
-    pub use crate::convert::Upcast; // provides upcast() and upcast_ref()
+    pub use crate::convert::Upcast; // provides upcast() and upcast_into()
     pub use crate::JsCast;
     pub use crate::JsValue;
     pub use crate::UnwrapThrowExt;
@@ -550,6 +550,8 @@ impl PartialEq for JsValue {
         __wbindgen_jsval_eq(self, other)
     }
 }
+
+impl Eq for JsValue {}
 
 impl PartialEq<bool> for JsValue {
     #[inline]

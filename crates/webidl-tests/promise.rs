@@ -38,3 +38,17 @@ async fn return_any_promise() {
     let num = js_sys::Reflect::get(&v, &"num".into()).unwrap();
     assert_eq!(num.as_f64().unwrap(), 42.0);
 }
+
+/// Test that an interface extending a JS built-in (Promise) generates
+/// `extends = ::js_sys::Promise`, allowing AsRef<Promise> to work.
+#[wasm_bindgen_test]
+fn interface_extends_js_builtin() {
+    let sub = PromiseSubclass::new().unwrap();
+
+    // Should be usable as a Promise via AsRef
+    let _promise: &Promise = sub.as_ref();
+
+    // Should also have its own methods
+    let label = sub.label();
+    assert_eq!(label, "test-subclass");
+}
