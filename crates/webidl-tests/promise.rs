@@ -52,3 +52,15 @@ fn interface_extends_js_builtin() {
     let label = sub.label();
     assert_eq!(label, "test-subclass");
 }
+
+/// Test that the Promising trait is implemented for a Promise subclass,
+/// and that it can be used in a generic context requiring Promising.
+#[wasm_bindgen_test]
+fn promise_subclass_satisfies_promising_bound() {
+    use wasm_bindgen::sys::Promising;
+
+    fn accepts_promising<T: Promising<Resolution = wasm_bindgen::JsValue>>(_val: &T) {}
+
+    let sub = PromiseSubclass::new().unwrap();
+    accepts_promising(&sub);
+}
