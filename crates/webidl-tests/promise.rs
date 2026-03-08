@@ -38,3 +38,38 @@ async fn return_any_promise() {
     let num = js_sys::Reflect::get(&v, &"num".into()).unwrap();
     assert_eq!(num.as_f64().unwrap(), 42.0);
 }
+
+/// Test that Promise<DOMString> as an argument generates two overloads:
+/// one accepting a Promise (unsuffixed) and one accepting the resolved type directly.
+#[wasm_bindgen_test]
+fn promise_arg_overload_with_promise() {
+    let f = TestPromises::new().unwrap();
+
+    // The canonical overload: pass a Promise<JsString>
+    let p: Promise<js_sys::JsString> = Promise::resolve(&js_sys::JsString::from("hello"));
+    f.wait_for_string(&p);
+}
+
+#[wasm_bindgen_test]
+fn promise_arg_overload_with_value() {
+    let f = TestPromises::new().unwrap();
+
+    // The value overload: pass a &str directly
+    f.wait_for_string_with_str("hello");
+}
+
+/// Test that Promise<any> as an argument generates two overloads.
+#[wasm_bindgen_test]
+fn promise_any_arg_overload_with_promise() {
+    let f = TestPromises::new().unwrap();
+
+    let p: Promise = Promise::resolve::<wasm_bindgen::JsValue>(&42.into());
+    f.wait_for_any(&p);
+}
+
+#[wasm_bindgen_test]
+fn promise_any_arg_overload_with_value() {
+    let f = TestPromises::new().unwrap();
+
+    f.wait_for_any_with_any(&42.into());
+}
