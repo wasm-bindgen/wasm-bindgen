@@ -47,7 +47,7 @@
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
   
 * Fixed a duplciate wasm export in node ESM atomics, when compiled in debug mode
-  [#xxxx]()
+  [#5028](https://github.com/wasm-bindgen/wasm-bindgen/pull/5028)
   
 ### Removed
 
