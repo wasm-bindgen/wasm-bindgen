@@ -2,8 +2,8 @@ use core::borrow::Borrow;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
-use crate::describe::*;
 use crate::sys::JsOption;
+use crate::{describe::*, JsCast};
 use crate::{ErasableGeneric, JsValue};
 
 /// A trait for anything that can be converted into a type that can cross the
@@ -530,11 +530,16 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// - `JsValue` itself
 /// - Custom types imported via `#[wasm_bindgen]`
 pub trait JsGeneric:
-    ErasableGeneric<Repr = JsValue> + UpcastFrom<Self> + Upcast<Self> + Upcast<JsValue> + 'static
+    ErasableGeneric<Repr = JsValue>
+    + UpcastFrom<Self>
+    + Upcast<Self>
+    + Upcast<JsValue>
+    + JsCast
+    + 'static
 {
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + 'static> JsGeneric
-    for T
+impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
+    JsGeneric for T
 {
 }
