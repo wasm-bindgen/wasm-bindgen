@@ -2114,8 +2114,12 @@ if (require('worker_threads').isMainThread) {{
         // This might be not very intuitive, but such calls are usually more
         // expensive in mainstream engines than staying in the JS, and
         // charCodeAt on ASCII strings is usually optimised to raw bytes.
+        //
+        // We also normalize the arg passed in in case tools like Google
+        // Input Tools or input prediction mess up the string.
         let encode_as_ascii = format!(
             "\
+                arg = arg ?? \"\";
                 if (realloc === undefined) {{
                     const buf = cachedTextEncoder.encode(arg);
                     const ptr = malloc(buf.length, 1) >>> 0;
