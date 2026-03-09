@@ -26,8 +26,9 @@ use crate::generator::{
 use crate::traverse::TraverseType;
 use crate::util::{
     camel_case_ident, get_rust_deprecated, getter_throws, is_structural, is_type_unstable,
-    optional_return_ty, read_dir, rust_ident, setter_throws, shouty_snake_case_ident,
-    snake_case_ident, throws, webidl_const_v_to_backend_const_v, TypePosition,
+    is_wbg_generic, optional_return_ty, read_dir, rust_ident, setter_throws,
+    shouty_snake_case_ident, snake_case_ident, throws, webidl_const_v_to_backend_const_v,
+    TypePosition,
 };
 use crate::wbg_type::ToWbgType;
 use anyhow::Context;
@@ -426,6 +427,10 @@ impl<'src> FirstPassRecord<'src> {
         assert_eq!(js_name, def.identifier.0);
 
         let unstable = data.stability.is_unstable();
+        let wbg_generic = def
+            .attributes
+            .as_ref()
+            .is_some_and(|a| is_wbg_generic(Some(a)));
 
         let mut fields = Vec::new();
 
@@ -437,6 +442,7 @@ impl<'src> FirstPassRecord<'src> {
             &js_name,
             &mut fields,
             unstable,
+            wbg_generic,
             unstable_types,
             &deprecated,
         ) {
@@ -459,6 +465,7 @@ impl<'src> FirstPassRecord<'src> {
         dict: &'src str,
         dst: &mut Vec<DictionaryField>,
         unstable: bool,
+        wbg_generic: bool,
         unstable_types: &HashSet<Identifier>,
         parent_deprecated: &Option<Option<String>>,
     ) -> bool {
@@ -473,6 +480,7 @@ impl<'src> FirstPassRecord<'src> {
                 parent.identifier.0,
                 dst,
                 unstable,
+                wbg_generic,
                 unstable_types,
                 parent_deprecated,
             ) {
@@ -494,7 +502,13 @@ impl<'src> FirstPassRecord<'src> {
                 .zip(iter::repeat(unstable || d.stability.is_unstable()))
         });
         for (member, unstable) in members.zip(iter::repeat(unstable)).chain(partials) {
-            match self.dictionary_field(member, unstable, unstable_types, parent_deprecated) {
+            match self.dictionary_field(
+                member,
+                unstable,
+                wbg_generic,
+                unstable_types,
+                parent_deprecated,
+            ) {
                 Some(f) => dst.push(f),
                 None => {
                     log::warn!(
@@ -520,6 +534,7 @@ impl<'src> FirstPassRecord<'src> {
         &self,
         field: &'src DictionaryMember<'src>,
         unstable: bool,
+        wbg_generic: bool,
         unstable_types: &HashSet<Identifier>,
         parent_deprecated: &Option<Option<String>>,
     ) -> Option<DictionaryField> {
@@ -532,7 +547,8 @@ impl<'src> FirstPassRecord<'src> {
 
         // use argument position now as we're just binding setters
         // Unstable APIs always use typed generics; stable uses legacy by default.
-        let generics_compat = if unstable_override {
+        // [WbgGeneric] on the dictionary definition opts into typed generics.
+        let generics_compat = if unstable_override || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
@@ -687,21 +703,22 @@ impl<'src> FirstPassRecord<'src> {
         ns: &'src first_pass::NamespaceData<'src>,
     ) {
         let unstable = ns.stability.is_unstable();
+        let wbg_generic = is_wbg_generic(ns.definition_attributes);
 
         let mut consts = vec![];
         let mut attributes = vec![];
         let mut functions = vec![];
 
         for member in ns.consts.iter() {
-            self.append_ns_const(&mut consts, member.clone(), unstable);
+            self.append_ns_const(&mut consts, member.clone(), unstable, wbg_generic);
         }
 
         for member in ns.attributes.iter() {
-            self.append_ns_attribute(&mut attributes, member, unstable);
+            self.append_ns_attribute(&mut attributes, member, unstable, wbg_generic);
         }
 
         for (id, data) in ns.operations.iter() {
-            self.append_ns_operation(&mut functions, &js_name, id, data);
+            self.append_ns_operation(&mut functions, &js_name, id, data, wbg_generic);
         }
 
         if !consts.is_empty() || !attributes.is_empty() || !functions.is_empty() {
@@ -723,9 +740,10 @@ impl<'src> FirstPassRecord<'src> {
         consts: &mut Vec<Const>,
         member: first_pass::ConstNamespaceData<'src>,
         unstable: bool,
+        wbg_generic: bool,
     ) {
         let wbg_type = member.definition.const_type.to_wbg_type(self);
-        let generics_compat = if unstable {
+        let generics_compat = if unstable || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
@@ -754,6 +772,7 @@ impl<'src> FirstPassRecord<'src> {
         js_name: &str,
         id: &'src OperationId<'src>,
         data: &'src OperationData<'src>,
+        wbg_generic: bool,
     ) {
         match id {
             OperationId::Operation(Some(_)) => {}
@@ -768,7 +787,7 @@ impl<'src> FirstPassRecord<'src> {
             }
         }
 
-        for x in self.create_imports(None, None, id, data, false, &HashSet::new()) {
+        for x in self.create_imports(None, None, id, data, false, &HashSet::new(), wbg_generic) {
             functions.push(Function {
                 name: x.name,
                 js_name: x.js_name,
@@ -778,6 +797,7 @@ impl<'src> FirstPassRecord<'src> {
                 catch: x.catch,
                 variadic: x.variadic,
                 unstable: false,
+                wbg_generic,
             });
         }
     }
@@ -787,12 +807,13 @@ impl<'src> FirstPassRecord<'src> {
         attributes: &mut Vec<NamespaceAttribute>,
         member: &first_pass::AttributeNamespaceData<'src>,
         unstable: bool,
+        wbg_generic: bool,
     ) {
         let definition = member.definition;
         let catch = throws(&definition.attributes);
         let unstable = unstable || member.stability.is_unstable();
 
-        let generics_compat = if unstable {
+        let generics_compat = if unstable || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
@@ -823,9 +844,10 @@ impl<'src> FirstPassRecord<'src> {
         consts: &mut Vec<Const>,
         member: &'src weedle::interface::ConstMember<'src>,
         unstable: bool,
+        wbg_generic: bool,
     ) {
         let wbg_type = member.const_type.to_wbg_type(self);
-        let generics_compat = if unstable {
+        let generics_compat = if unstable || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
@@ -857,6 +879,7 @@ impl<'src> FirstPassRecord<'src> {
         data: &InterfaceData<'src>,
     ) {
         let unstable = data.stability.is_unstable();
+        let wbg_generic = is_wbg_generic(data.definition_attributes);
         let has_interface = data.has_interface;
 
         let deprecated = data.deprecated.clone();
@@ -877,7 +900,7 @@ impl<'src> FirstPassRecord<'src> {
         for member in data.consts.iter() {
             let unstable = unstable || member.stability.is_unstable();
             let member = member.definition;
-            self.append_interface_const(&mut consts, member, unstable);
+            self.append_interface_const(&mut consts, member, unstable, wbg_generic);
         }
 
         for member in data.attributes.iter() {
@@ -893,6 +916,7 @@ impl<'src> FirstPassRecord<'src> {
                 data.definition_attributes,
                 &js_name,
                 unstable,
+                wbg_generic,
             );
         }
 
@@ -904,12 +928,13 @@ impl<'src> FirstPassRecord<'src> {
                 id,
                 op_data,
                 unstable_types,
+                wbg_generic,
             );
         }
 
         for mixin_data in self.all_mixins(&js_name) {
             for member in &mixin_data.consts {
-                self.append_interface_const(&mut consts, member, unstable);
+                self.append_interface_const(&mut consts, member, unstable, wbg_generic);
             }
 
             for member in &mixin_data.attributes {
@@ -927,6 +952,7 @@ impl<'src> FirstPassRecord<'src> {
                     data.definition_attributes,
                     &js_name,
                     unstable,
+                    wbg_generic,
                 );
             }
 
@@ -938,6 +964,7 @@ impl<'src> FirstPassRecord<'src> {
                     id,
                     op_data,
                     unstable_types,
+                    wbg_generic,
                 );
             }
         }
@@ -984,6 +1011,7 @@ impl<'src> FirstPassRecord<'src> {
         container_attrs: Option<&'src ExtendedAttributeList<'src>>,
         parent_js_name: &str,
         unstable: bool,
+        wbg_generic: bool,
     ) {
         use weedle::interface::StringifierOrInheritOrStatic::*;
 
@@ -999,7 +1027,7 @@ impl<'src> FirstPassRecord<'src> {
         let catch = throws(attrs);
         let deprecated: Option<Option<String>> = get_rust_deprecated(attrs);
 
-        let generics_compat = if unstable {
+        let generics_compat = if unstable || wbg_generic {
             false
         } else {
             !self.options.next_unstable.get()
@@ -1099,6 +1127,7 @@ impl<'src> FirstPassRecord<'src> {
         id: &'src OperationId<'src>,
         op_data: &'src OperationData<'src>,
         unstable_types: &HashSet<Identifier>,
+        wbg_generic: bool,
     ) {
         let attrs = data.definition_attributes;
         let unstable = data.stability.is_unstable();
@@ -1110,6 +1139,7 @@ impl<'src> FirstPassRecord<'src> {
             op_data,
             unstable,
             unstable_types,
+            wbg_generic,
         ) {
             // Check if this method would be a duplicate of an existing method.
             // We allow both stable and unstable versions of the same method signature

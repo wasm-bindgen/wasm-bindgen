@@ -8,7 +8,6 @@ use crate::JsCast;
 use crate::JsGeneric;
 use crate::JsValue;
 use core::fmt;
-use core::mem::ManuallyDrop;
 use core::ops::Deref;
 use wasm_bindgen_macro::wasm_bindgen;
 
@@ -130,7 +129,7 @@ extern "C" {
     pub type JsOption<T>;
 }
 
-impl<T> JsOption<T> {
+impl<T: JsGeneric> JsOption<T> {
     /// Creates an empty `JsOption<T>` representing `undefined`.
     #[inline]
     pub fn new() -> Self {
@@ -140,7 +139,7 @@ impl<T> JsOption<T> {
     /// Wraps a value in a `JsOption<T>`.
     #[inline]
     pub fn wrap(val: T) -> Self {
-        unsafe { core::mem::transmute_copy(&ManuallyDrop::new(val)) }
+        val.unchecked_into()
     }
 
     /// Creates a `JsOption<T>` from an `Option<T>`.
@@ -170,7 +169,7 @@ impl<T> JsOption<T> {
             None
         } else {
             let cloned = self.deref().clone();
-            Some(unsafe { core::mem::transmute_copy(&ManuallyDrop::new(cloned)) })
+            Some(cloned.unchecked_into())
         }
     }
 
@@ -183,7 +182,7 @@ impl<T> JsOption<T> {
         if JsValue::is_null_or_undefined(&self) {
             None
         } else {
-            Some(unsafe { core::mem::transmute_copy(&ManuallyDrop::new(self)) })
+            Some(self.unchecked_into())
         }
     }
 

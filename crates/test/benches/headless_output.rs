@@ -70,3 +70,37 @@ async fn bench_console_log_1mb(c: &mut Criterion) {
     })
     .await;
 }
+
+#[wasm_bindgen_bench]
+async fn bench_console_log_10mb(c: &mut Criterion) {
+    use std::time::Duration;
+
+    let msg: wasm_bindgen::JsValue = "y".repeat(100).into();
+    prewarm(10_000).await;
+    c.bench_async_function("console_log_after_10mb", |b| {
+        let msg = msg.clone();
+        Box::pin(async move {
+            b.iter_custom_future(|iters| {
+                let msg = msg.clone();
+                let mut value = 0;
+                async move {
+                    let mut elapsed = Duration::ZERO;
+                    for _ in 0..iters {
+                        let start = std::hint::black_box(performance_now());
+                        std::hint::black_box(web_sys::console::log_1(&msg));
+                        let elapsed_ms = std::hint::black_box(performance_now()) - start;
+                        elapsed += Duration::from_secs_f64(elapsed_ms / 1000.0);
+                        // Track iterations to yield periodically, letting the browser process events
+                        value += 1;
+                        if value % 100 == 0 {
+                            sleep_ms(0).await;
+                        }
+                    }
+                    elapsed
+                }
+            })
+            .await;
+        })
+    })
+    .await;
+}
