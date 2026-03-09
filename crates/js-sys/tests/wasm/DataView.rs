@@ -4,19 +4,18 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
 
 fn has_float16_methods() -> bool {
-    let data_view = match Reflect::get(global().as_ref(), &"DataView".into()) {
-        Ok(data_view) => data_view,
-        Err(_) => return false,
-    };
-    let prototype = match Reflect::get(&data_view, &"prototype".into()) {
-        Ok(prototype) => prototype,
-        Err(_) => return false,
-    };
+    let prototype: Option<Object> = Reflect::get_str(global().as_ref(), &"DataView".into())
+        .unwrap()
+        .and_then(|data_view| {
+            Reflect::get_str(data_view.unchecked_ref(), &"prototype".into()).unwrap()
+        });
 
-    let prototype = prototype.unchecked_ref::<Object>();
-
-    Reflect::has_str(prototype, &"getFloat16".into()).unwrap_or(false)
-        && Reflect::has_str(prototype, &"setFloat16".into()).unwrap_or(false)
+    if let Some(proto) = prototype {
+        Reflect::has_str(&proto, &"getFloat16".into()).unwrap_or(false)
+            && Reflect::has_str(&proto, &"setFloat16".into()).unwrap_or(false)
+    } else {
+        false
+    }
 }
 
 #[wasm_bindgen_test]
