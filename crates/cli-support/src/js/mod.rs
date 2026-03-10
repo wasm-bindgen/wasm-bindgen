@@ -2772,7 +2772,7 @@ if (require('worker_threads').isMainThread) {{
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
                     if (state.instance !== __wbg_instance_id) {
-                        throw new Error('Cannot invoke closure from previous WASM instance');
+                        throw new StaleObjectError('Cannot invoke closure from previous WASM instance');
                     }
                     ",
                 )
@@ -2828,7 +2828,7 @@ if (require('worker_threads').isMainThread) {{
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
                     if (state.instance !== __wbg_instance_id) {
-                        throw new Error('Cannot invoke closure from previous WASM instance');
+                        throw new StaleObjectError('Cannot invoke closure from previous WASM instance');
                     }
                     ",
                 )
@@ -2914,6 +2914,27 @@ if (require('worker_threads').isMainThread) {{
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
+
+        // Export a typed error class so callers can catch stale-object errors
+        // specifically (e.g. via `instanceof StaleObjectError`).
+        define_export(
+            &mut self.exports,
+            "StaleObjectError",
+            &[],
+            ExportEntry::Definition(ExportDefinition {
+                comments: None,
+                identifier: "StaleObjectError".to_string(),
+                definition: "\
+                    class StaleObjectError extends Error {}\n\
+                    Object.defineProperty(StaleObjectError.prototype, 'name', {\n\
+                        value: StaleObjectError.name,\n\
+                    });\n"
+                    .to_string(),
+                ts_definition: "class StaleObjectError extends Error {}\n".to_string(),
+                ts_comments: None,
+                private: false,
+            }),
+        )?;
 
         let mut reset_statements = Vec::new();
         reset_statements.push("__wbg_instance_id++;".to_string());

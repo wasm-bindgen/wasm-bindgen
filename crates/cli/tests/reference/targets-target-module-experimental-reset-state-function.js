@@ -1,5 +1,10 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
+export class StaleObjectError extends Error {}
+Object.defineProperty(StaleObjectError.prototype, 'name', {
+    value: StaleObjectError.name,
+});
+
 export function __wbg_reset_state () {
     __wbg_instance_id++;
 
