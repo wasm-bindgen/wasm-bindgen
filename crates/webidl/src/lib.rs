@@ -797,7 +797,7 @@ impl<'src> FirstPassRecord<'src> {
                 catch: x.catch,
                 variadic: x.variadic,
                 unstable: false,
-                wbg_generic,
+                wbg_generic: x.wbg_generic,
             });
         }
     }
