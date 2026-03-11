@@ -184,7 +184,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 js.prelude(
                     "
                     if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
-                        throw new StaleObjectError('Invalid stale object from previous Wasm instance');
+                        throw new __wbg_StaleObjectError('Invalid stale object from previous Wasm instance');
                     }
                     ",
                 );
@@ -770,7 +770,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             self.prelude(&format!(
                 "\
                 if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
-                    throw new StaleObjectError('Invalid stale object from previous Wasm instance');
+                    throw new __wbg_StaleObjectError('Invalid stale object from previous Wasm instance');
                 }}
                 "
             ));

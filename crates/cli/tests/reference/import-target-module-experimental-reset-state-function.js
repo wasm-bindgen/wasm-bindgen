@@ -1,9 +1,9 @@
 /* @ts-self-types="./reference_test.d.ts" */
 import { default as _default } from 'tests/wasm/import_class.js';
 
-export class StaleObjectError extends Error {}
-Object.defineProperty(StaleObjectError.prototype, 'name', {
-    value: StaleObjectError.name,
+export class __wbg_StaleObjectError extends Error {}
+Object.defineProperty(__wbg_StaleObjectError.prototype, 'name', {
+    value: __wbg_StaleObjectError.name,
 });
 
 export function __wbg_reset_state () {

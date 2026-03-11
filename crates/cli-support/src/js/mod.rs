@@ -2772,7 +2772,7 @@ if (require('worker_threads').isMainThread) {{
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
                     if (state.instance !== __wbg_instance_id) {
-                        throw new StaleObjectError('Cannot invoke closure from previous WASM instance');
+                        throw new __wbg_StaleObjectError('Cannot invoke closure from previous WASM instance');
                     }
                     ",
                 )
@@ -2828,7 +2828,7 @@ if (require('worker_threads').isMainThread) {{
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
                     if (state.instance !== __wbg_instance_id) {
-                        throw new StaleObjectError('Cannot invoke closure from previous WASM instance');
+                        throw new __wbg_StaleObjectError('Cannot invoke closure from previous WASM instance');
                     }
                     ",
                 )
@@ -2916,21 +2916,21 @@ if (require('worker_threads').isMainThread) {{
         self.global("let __wbg_instance_id = 0;");
 
         // Export a typed error class so callers can catch stale-object errors
-        // specifically (e.g. via `instanceof StaleObjectError`).
+        // specifically (e.g. via `instanceof __wbg_StaleObjectError`).
         define_export(
             &mut self.exports,
-            "StaleObjectError",
+            "__wbg_StaleObjectError",
             &[],
             ExportEntry::Definition(ExportDefinition {
                 comments: None,
-                identifier: "StaleObjectError".to_string(),
+                identifier: "__wbg_StaleObjectError".to_string(),
                 definition: "\
-                    class StaleObjectError extends Error {}\n\
-                    Object.defineProperty(StaleObjectError.prototype, 'name', {\n\
-                        value: StaleObjectError.name,\n\
+                    class __wbg_StaleObjectError extends Error {}\n\
+                    Object.defineProperty(__wbg_StaleObjectError.prototype, 'name', {\n\
+                        value: __wbg_StaleObjectError.name,\n\
                     });\n"
                     .to_string(),
-                ts_definition: "class StaleObjectError extends Error {}\n".to_string(),
+                ts_definition: "class __wbg_StaleObjectError extends Error {}\n".to_string(),
                 ts_comments: None,
                 private: false,
             }),
