@@ -1206,40 +1206,61 @@ describe('__wbg_set_reinit_hook', () => {
 describe('reinit hook invocation', () => {
     it('is called after explicit __wbg_reset_state', () => {
         let called = false;
-        let receivedInstance = null;
-        wasm.__wbg_set_reinit_hook((instance) => {
+        let receivedNew = null;
+        let receivedOld = null;
+        wasm.__wbg_set_reinit_hook((newInstance, oldInstance) => {
             called = true;
-            receivedInstance = instance;
+            receivedNew = newInstance;
+            receivedOld = oldInstance;
         });
 
         wasm.__wbg_reset_state();
 
         assert.strictEqual(called, true, 'hook should have been called');
-        assert.notStrictEqual(receivedInstance, null, 'hook should receive the wasm instance');
+        assert.notStrictEqual(receivedNew, null, 'hook should receive the new instance');
+        assert.notStrictEqual(receivedOld, null, 'hook should receive the old instance');
+        assert.notStrictEqual(receivedNew, receivedOld, 'new and old instances should differ');
         wasm.__wbg_set_reinit_hook(null);
     });
 
     it('receives the new wasm instance with valid exports', () => {
-        let receivedInstance = null;
-        wasm.__wbg_set_reinit_hook((instance) => {
-            receivedInstance = instance;
+        let receivedNew = null;
+        wasm.__wbg_set_reinit_hook((newInstance) => {
+            receivedNew = newInstance;
         });
 
         wasm.__wbg_reset_state();
 
         // The instance should have the exported functions from our Rust code.
-        assert.strictEqual(typeof receivedInstance.simple_add, 'function',
-            'instance should have simple_add export');
-        assert.strictEqual(typeof receivedInstance.get_counter, 'function',
-            'instance should have get_counter export');
-        assert.strictEqual(typeof receivedInstance.memory, 'object',
-            'instance should have memory export');
+        assert.strictEqual(typeof receivedNew.simple_add, 'function',
+            'new instance should have simple_add export');
+        assert.strictEqual(typeof receivedNew.get_counter, 'function',
+            'new instance should have get_counter export');
+        assert.strictEqual(typeof receivedNew.memory, 'object',
+            'new instance should have memory export');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('receives the old wasm instance with valid exports', () => {
+        let receivedOld = null;
+        wasm.__wbg_set_reinit_hook((newInstance, oldInstance) => {
+            receivedOld = oldInstance;
+        });
+
+        wasm.__wbg_reset_state();
+
+        assert.strictEqual(typeof receivedOld.simple_add, 'function',
+            'old instance should have simple_add export');
+        assert.strictEqual(typeof receivedOld.get_counter, 'function',
+            'old instance should have get_counter export');
+        assert.strictEqual(typeof receivedOld.memory, 'object',
+            'old instance should have memory export');
         wasm.__wbg_set_reinit_hook(null);
     });
 
     it('fires after the new instance is fully initialized', () => {
         let counterValueInHook = null;
-        wasm.__wbg_set_reinit_hook((instance) => {
+        wasm.__wbg_set_reinit_hook(() => {
             // The instance should be ready — calling get_counter via the
             // module's public API should work and return the reset value.
             counterValueInHook = wasm.get_counter();
@@ -1286,10 +1307,12 @@ describe('reinit hook invocation', () => {
 
     it('is called on auto-reset after fatal error', () => {
         let hookCallCount = 0;
-        let receivedInstance = null;
-        wasm.__wbg_set_reinit_hook((instance) => {
+        let receivedNew = null;
+        let receivedOld = null;
+        wasm.__wbg_set_reinit_hook((newInstance, oldInstance) => {
             hookCallCount++;
-            receivedInstance = instance;
+            receivedNew = newInstance;
+            receivedOld = oldInstance;
         });
 
         // Trigger a fatal error (unreachable).
@@ -1302,8 +1325,12 @@ describe('reinit hook invocation', () => {
         const counter = wasm.get_counter();
         assert.strictEqual(counter, 0, 'counter should be reset');
         assert.strictEqual(hookCallCount, 1, 'hook should have been called once');
-        assert.notStrictEqual(receivedInstance, null,
+        assert.notStrictEqual(receivedNew, null,
             'hook should have received the new instance');
+        assert.notStrictEqual(receivedOld, null,
+            'hook should have received the old instance');
+        assert.notStrictEqual(receivedNew, receivedOld,
+            'new and old instances should differ');
         wasm.__wbg_set_reinit_hook(null);
     });
 

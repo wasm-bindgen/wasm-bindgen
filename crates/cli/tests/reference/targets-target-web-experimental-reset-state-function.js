@@ -3,11 +3,12 @@
 export function __wbg_reset_state () {
     __wbg_instance_id++;
 
+    const oldExports = wasm;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
     if (__wbg_reinit_hook !== null) {
-        __wbg_reinit_hook(wasm);
+        __wbg_reinit_hook(wasm, oldExports);
     }
 }
 

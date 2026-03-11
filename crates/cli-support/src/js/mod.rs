@@ -2975,11 +2975,12 @@ if (require('worker_threads').isMainThread) {{
 
         reset_statements.push(
             "
+            const oldExports = wasm;
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
             if (__wbg_reinit_hook !== null) {
-                __wbg_reinit_hook(wasm);
+                __wbg_reinit_hook(wasm, oldExports);
             }
             "
             .to_string(),
@@ -3024,7 +3025,7 @@ if (require('worker_threads').isMainThread) {{
                 identifier: hook_identifier,
                 definition: hook_definition,
                 ts_definition:
-                    "function __wbg_set_reinit_hook(callback: ((instance: InitOutput) => void) | null): void;\n"
+                    "function __wbg_set_reinit_hook(callback: ((newInstance: InitOutput, oldInstance: InitOutput) => void) | null): void;\n"
                         .to_string(),
                 ts_comments: None,
                 private: false,
