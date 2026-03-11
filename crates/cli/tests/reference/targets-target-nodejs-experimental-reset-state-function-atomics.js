@@ -5,11 +5,12 @@ function __wbg_reset_state () {
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
 
+    const oldExports = wasm;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
     if (__wbg_reinit_hook !== null) {
-        __wbg_reinit_hook(wasm);
+        __wbg_reinit_hook(wasm, oldExports);
     }
 }
 exports.__wbg_reset_state = __wbg_reset_state;
