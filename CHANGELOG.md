@@ -6,9 +6,9 @@
 ### Added
 
 * Added `wasm_bindgen_test::screenshot(path)` for taking WebDriver screenshots from
-  browser tests. Tests write a file path to a hidden DOM element; the headless test
-  runner detects it, captures a PNG via the WebDriver screenshot endpoint, saves it,
-  and signals back so the async test can continue.
+  browser tests. Returns `Result<(), ScreenshotError>`, allowing callers to use `?`
+  to fail on error or `.ok()` for portability across headless and non-headless
+  environments.
 
 * Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
   [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)

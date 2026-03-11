@@ -1896,7 +1896,7 @@ fn test_browser_screenshot() {
 
             #[wasm_bindgen_test]
             async fn test_take_screenshot() {
-                wasm_bindgen_test::screenshot("test_output.png").await;
+                wasm_bindgen_test::screenshot("test_output.png").await.unwrap();
             }
         "#,
     );
@@ -1962,7 +1962,7 @@ fn test_browser_screenshot_creates_file() {
 
             #[wasm_bindgen_test]
             async fn test_screenshot_file() {{
-                wasm_bindgen_test::screenshot("{screenshot_path_str}").await;
+                wasm_bindgen_test::screenshot("{screenshot_path_str}").await.unwrap();
             }}
         "#,
         ),

@@ -231,31 +231,44 @@ pub fn run(
             "var el = document.getElementById('__wbgtest_screenshot');\
              if (!el) return '';\
              var t = el.textContent;\
-             el.textContent = '';\
+             if (t === '' || t === 'ok' || t.startsWith('err:')) return '';\
              return t;",
         ) {
             let ss_text = val.as_str().unwrap_or_default().to_string();
             if !ss_text.is_empty() {
                 shell.status(&format!("Taking screenshot: {ss_text}"));
-                match client.screenshot(&id) {
-                    Ok(png_data) => {
-                        let path = Path::new(&ss_text);
-                        if let Some(parent) = path.parent() {
-                            if !parent.as_os_str().is_empty() {
-                                fs::create_dir_all(parent).ok();
-                            }
-                        }
-                        match fs::write(path, &png_data) {
-                            Ok(()) => {
-                                println!("Screenshot saved: {ss_text} ({} bytes)", png_data.len())
-                            }
-                            Err(e) => println!("Failed to save screenshot {ss_text}: {e}"),
+                let response = match (|| -> Result<usize, String> {
+                    let png_data = client
+                        .screenshot(&id)
+                        .map_err(|e| format!("failed to capture: {e}"))?;
+                    let path = Path::new(&ss_text);
+                    if let Some(parent) = path.parent() {
+                        if !parent.as_os_str().is_empty() {
+                            fs::create_dir_all(parent)
+                                .map_err(|e| format!("failed to create directory: {e}"))?;
                         }
                     }
-                    Err(e) => {
-                        println!("Failed to take screenshot: {e}");
+                    fs::write(path, &png_data)
+                        .map_err(|e| format!("failed to write: {e}"))?;
+                    Ok(png_data.len())
+                })() {
+                    Ok(len) => {
+                        println!("Screenshot saved: {ss_text} ({len} bytes)");
+                        "\"ok\"".to_string()
                     }
-                }
+                    Err(msg) => {
+                        println!("Screenshot failed for {ss_text}: {msg}");
+                        serde_json::to_string(&format!("err:{msg}")).unwrap()
+                    }
+                };
+                client
+                    .execute_script(
+                        &id,
+                        &format!(
+                            "document.getElementById('__wbgtest_screenshot').textContent = {response};"
+                        ),
+                    )
+                    .ok();
             }
         }
 

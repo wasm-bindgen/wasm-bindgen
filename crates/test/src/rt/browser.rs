@@ -47,23 +47,46 @@ fn delay_promise(millis: i32) -> js_sys::Promise {
     })
 }
 
+/// Error returned by [`screenshot`].
+#[derive(Debug)]
+pub enum ScreenshotError {
+    /// The headless test runner is not available (e.g. running in a real
+    /// browser or in Node.js without the `#__wbgtest_screenshot` element).
+    NotSupported,
+    /// The runner attempted the screenshot but it failed.
+    Failed(String),
+}
+
+impl core::fmt::Display for ScreenshotError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ScreenshotError::NotSupported => {
+                f.write_str("screenshots are not supported in this environment")
+            }
+            ScreenshotError::Failed(msg) => write!(f, "screenshot failed: {msg}"),
+        }
+    }
+}
+
 /// Request the test runner to take a screenshot and save it to the given path.
 ///
 /// This works by writing the requested filename to a hidden DOM element
 /// (`#__wbgtest_screenshot`). The headless test runner detects this, takes a
-/// screenshot via the WebDriver protocol, saves it, and clears the element.
-/// This function polls until the element is cleared, then returns.
+/// screenshot via the WebDriver protocol, saves it, and signals back by
+/// writing `ok` or `err:<message>` to the element. This function polls until
+/// the runner responds, then clears the element and returns the result.
 ///
 /// The path is relative to the crate root (where `cargo test` is run).
 ///
-/// # Panics
-///
-/// Panics if the `#__wbgtest_screenshot` element is not present in the page
-/// (i.e. when not running under the headless test runner).
-pub async fn screenshot(path: &str) {
-    let el = DOCUMENT
-        .with(|doc| doc.getElementById("__wbgtest_screenshot"))
-        .expect("#__wbgtest_screenshot element not found; are you running under the headless test runner?");
+/// Returns [`ScreenshotError::NotSupported`] if the `#__wbgtest_screenshot`
+/// element is not present (i.e. not running under the headless test runner).
+/// Callers that want screenshots to be optional can simply call `.ok()` on
+/// the result.
+pub async fn screenshot(path: &str) -> Result<(), ScreenshotError> {
+    let el = match DOCUMENT.with(|doc| doc.getElementById("__wbgtest_screenshot")) {
+        Some(el) => el,
+        None => return Err(ScreenshotError::NotSupported),
+    };
     el.set_text_content(path);
 
     loop {
@@ -71,9 +94,20 @@ pub async fn screenshot(path: &str) {
             .await
             .unwrap_throw();
 
-        if el.text_content().is_empty() {
-            break;
+        let content = el.text_content();
+        if content == path {
+            continue;
         }
+
+        el.set_text_content("");
+
+        if content == "ok" {
+            return Ok(());
+        }
+        if let Some(msg) = content.strip_prefix("err:") {
+            return Err(ScreenshotError::Failed(msg.into()));
+        }
+        return Ok(());
     }
 }
 
