@@ -264,7 +264,7 @@ impl<'a> Context<'a> {
         self.emscripten_library(&content);
 
         if !content.contains("addToLibrary") {
-            self.emscripten_library(&format!("addToLibrary({{ '${}': {} }});", js_name, js_name));
+            self.emscripten_library(&format!("addToLibrary({{ '${js_name}': {js_name} }});"));
         }
     }
 
@@ -280,17 +280,14 @@ impl<'a> Context<'a> {
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             let actual_js_name: &str = js_name.unwrap_or(&name);
-            self.adapter_deps.insert(format!("{actual_js_name}"));
+            self.adapter_deps.insert(actual_js_name.to_string());
 
             self.export_to_emscripten(actual_js_name, &val);
 
             // Register empty string so standard generation skips this key
-            self.intrinsics
-                .as_mut()
-                .unwrap()
-                .insert(name.into(), "".into());
+            self.intrinsics.as_mut().unwrap().insert(name, "".into());
         } else {
-            self.intrinsics.as_mut().unwrap().insert(name.into(), val);
+            self.intrinsics.as_mut().unwrap().insert(name, val);
         }
     }
     /// Writes an ExportDefinition to global and typescript buffers.
@@ -374,14 +371,14 @@ impl<'a> Context<'a> {
 
                     if decl.trim_start().starts_with("const") {
                         self.globals.push_str("export ");
-                        self.globals.push_str(&decl);
+                        self.globals.push_str(decl);
                     } else {
-                        self.globals.push_str(&decl);
+                        self.globals.push_str(decl);
 
                         if export_name == id {
-                            self.global(&format!("Module.{} = {};\n", export_name, id));
+                            self.global(&format!("Module.{export_name} = {id};\n"));
                         } else {
-                            self.global(&format!("export {{ {} as {} }};\n", id, export_name));
+                            self.global(&format!("export {{ {id} as {export_name} }};\n"));
                         }
                     }
                 }
@@ -531,7 +528,7 @@ impl<'a> Context<'a> {
         let needs_manual_start = unstart_start_function(self.module);
         region!(self, "wasm loading", {
             let wrapped_content = if matches!(self.config.mode, OutputMode::Emscripten) {
-                format!("{}\n{}", emscripten_classes_out, emscripten_exports_out)
+                format!("{emscripten_classes_out}\n{emscripten_exports_out}")
             } else {
                 String::new()
             };
@@ -727,12 +724,11 @@ impl<'a> Context<'a> {
                 imports.push_str("$cachedTextDecoder: \"new TextDecoder()\",\n");
             } else if global_dep == "heap" {
                 imports.push_str(&format!(
-                    "$heap: \"new Array({}).fill(undefined)\",\n\"heap.push({})\",\n",
-                    INITIAL_HEAP_OFFSET,
+                    "$heap: \"new Array({INITIAL_HEAP_OFFSET}).fill(undefined)\",\n\"heap.push({})\",\n",
                     INITIAL_HEAP_VALUES.join(", ")
                 ));
             } else if global_dep == "stack_pointer" {
-                imports.push_str(&format!("$stack_pointer : \"{}\",\n", INITIAL_HEAP_OFFSET));
+                imports.push_str(&format!("$stack_pointer : \"{INITIAL_HEAP_OFFSET}\",\n"));
             }
         }
         imports.push_str("});\n\n");
@@ -748,7 +744,7 @@ impl<'a> Context<'a> {
 
             if let Some(deps) = self.emscripten_import_deps.get(id) {
                 let formatted_deps: Vec<String> =
-                    deps.iter().map(|dep| format!("'${}'", dep)).collect();
+                    deps.iter().map(|dep| format!("'${dep}'")).collect();
 
                 imports.push_str(&format!(
                     "  {name}__deps: [{}],\n",
@@ -1381,7 +1377,7 @@ if (require('worker_threads').isMainThread) {{
         let formatted_deps: Vec<String> = self
             .emscripten_global_deps
             .iter()
-            .map(|dep| format!("'${}'", dep))
+            .map(|dep| format!("'${dep}'"))
             .collect();
 
         let start_logic = if needs_manual_start {
@@ -1684,7 +1680,7 @@ if (require('worker_threads').isMainThread) {{
                 self.typescript_emscripten_classes.push('\n');
 
                 self.typescript
-                    .push_str(&format!("{}: typeof {};\n", js_name, js_name));
+                    .push_str(&format!("{js_name}: typeof {js_name};\n"));
 
                 String::new()
             } else {
@@ -1716,7 +1712,7 @@ if (require('worker_threads').isMainThread) {{
                 identifier: class.identifier,
                 comments: Some(class.comments),
                 definition: dst,
-                ts_definition: ts_definition,
+                ts_definition,
                 ts_comments,
                 private: class.private,
             }),
@@ -2821,7 +2817,7 @@ if (require('worker_threads').isMainThread) {{
         kinds.insert(kind);
         if matches!(self.config.mode, OutputMode::Emscripten) {
             MemView {
-                name: format!("{kind}").into(),
+                name: kind.to_string().into(),
                 num,
             }
         } else {
@@ -3281,7 +3277,6 @@ if (require('worker_threads').isMainThread) {{
                         $CLOSURE_DTORS__postset: \"CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined') ? {{ register: () => {{}}, unregister: () => {{}} }} : new FinalizationRegistry({prevent_stale});\"
                     }});\n"
                 )
-                .into()
             } else {
                 format!(
                     "
@@ -4015,7 +4010,7 @@ function __wbg_handle_catch(e) {{
                                 identifier,
                                 comments: Some(js_docs),
                                 definition,
-                                ts_definition: ts_definition,
+                                ts_definition,
                                 ts_comments,
                                 private: false,
                             }),
@@ -4380,7 +4375,7 @@ function __wbg_handle_catch(e) {{
             let re = Regex::new(r"([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(").unwrap();
             for arg in args {
                 if let Some(result) = re.captures(arg) {
-                    self.adapter_deps.insert(format!("{}", &result[1]));
+                    self.adapter_deps.insert(result[1].to_string());
                 }
             }
         }
@@ -4951,7 +4946,7 @@ function __wbg_handle_catch(e) {{
                 }
                 drop(memories);
                 match self.config.mode {
-                    OutputMode::Emscripten { .. } => "HEAPU8".to_string(),
+                    OutputMode::Emscripten => "HEAPU8".to_string(),
                     _ => format!("wasm.{}", self.export_name_of(memory)),
                 }
             }

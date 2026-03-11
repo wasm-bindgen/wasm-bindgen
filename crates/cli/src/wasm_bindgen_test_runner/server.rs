@@ -439,7 +439,7 @@ pub(crate) fn spawn(
         }
         response
     })
-    .map_err(|e| anyhow!("{}", e))?;
+    .map_err(|e| anyhow!("{e}"))?;
     Ok(srv)
 }
 
@@ -476,7 +476,7 @@ pub(crate) fn spawn_emscripten(
         }
         response
     })
-    .map_err(|e| anyhow!("{}", e))?;
+    .map_err(|e| anyhow!("{e}"))?;
     Ok(srv)
 }
 

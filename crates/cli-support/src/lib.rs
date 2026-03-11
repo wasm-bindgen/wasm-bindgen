@@ -646,7 +646,7 @@ impl OutputMode {
     }
 
     fn emscripten(&self) -> bool {
-        matches!(self, OutputMode::Emscripten { .. })
+        matches!(self, OutputMode::Emscripten)
     }
 }
 

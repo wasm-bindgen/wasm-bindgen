@@ -129,7 +129,7 @@ where
 }
 
 fn rmain(cli: Cli) -> anyhow::Result<()> {
-    let mut file_name_buf = PathBuf::from(cli.file.clone());
+    let mut file_name_buf = cli.file.clone();
 
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
     // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
@@ -393,7 +393,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             )
             .context("failed to spawn server")?;
             let addr = srv.server_addr();
-            println!("Tests are now available at http://{}", addr);
+            println!("Tests are now available at http://{addr}");
             thread::spawn(|| srv.run());
             headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
         }
@@ -479,7 +479,7 @@ impl TestMode {
             TestMode::DedicatedWorker { .. } => "WASM_BINDGEN_USE_DEDICATED_WORKER",
             TestMode::SharedWorker { .. } => "WASM_BINDGEN_USE_SHARED_WORKER",
             TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
-            TestMode::Emscripten { .. } => "WASM_BINDGEN_USE_EMSCRIPTEN",
+            TestMode::Emscripten => "WASM_BINDGEN_USE_EMSCRIPTEN",
         }
     }
 }
