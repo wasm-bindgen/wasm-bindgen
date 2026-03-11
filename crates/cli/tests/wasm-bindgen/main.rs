@@ -1133,3 +1133,234 @@ describe('termination with reset state', () => {
         .assert()
         .success();
 }
+
+#[test]
+fn reinit_hook() {
+    let mut project = Project::new("reinit_hook");
+    project.file("src/lib.rs", TERMINATION_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                    [package]
+                    name = \"reinit_hook\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    // termination detection requires panic=unwind and nightly build-std
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --experimental-reset-state-function")
+        .unwrap();
+
+    fs::write(
+        out_dir.join("test_reinit_hook.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+const wasm = require('./reinit_hook.js');
+
+describe('__wbg_set_reinit_hook', () => {
+    it('is exported and callable', () => {
+        assert.strictEqual(typeof wasm.__wbg_set_reinit_hook, 'function');
+    });
+
+    it('accepts a function without throwing', () => {
+        assert.doesNotThrow(() => wasm.__wbg_set_reinit_hook(() => {}));
+        // Clean up.
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('accepts null to unregister', () => {
+        assert.doesNotThrow(() => wasm.__wbg_set_reinit_hook(null));
+    });
+
+    it('throws on non-function, non-null values', () => {
+        assert.throws(() => wasm.__wbg_set_reinit_hook(42), /expected function or null/);
+        assert.throws(() => wasm.__wbg_set_reinit_hook('not a function'), /expected function or null/);
+        assert.throws(() => wasm.__wbg_set_reinit_hook(undefined), /expected function or null/);
+    });
+});
+
+describe('reinit hook invocation', () => {
+    it('is called after explicit __wbg_reset_state', () => {
+        let called = false;
+        let receivedInstance = null;
+        wasm.__wbg_set_reinit_hook((instance) => {
+            called = true;
+            receivedInstance = instance;
+        });
+
+        wasm.__wbg_reset_state();
+
+        assert.strictEqual(called, true, 'hook should have been called');
+        assert.notStrictEqual(receivedInstance, null, 'hook should receive the wasm instance');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('receives the new wasm instance with valid exports', () => {
+        let receivedInstance = null;
+        wasm.__wbg_set_reinit_hook((instance) => {
+            receivedInstance = instance;
+        });
+
+        wasm.__wbg_reset_state();
+
+        // The instance should have the exported functions from our Rust code.
+        assert.strictEqual(typeof receivedInstance.simple_add, 'function',
+            'instance should have simple_add export');
+        assert.strictEqual(typeof receivedInstance.get_counter, 'function',
+            'instance should have get_counter export');
+        assert.strictEqual(typeof receivedInstance.memory, 'object',
+            'instance should have memory export');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('fires after the new instance is fully initialized', () => {
+        let counterValueInHook = null;
+        wasm.__wbg_set_reinit_hook((instance) => {
+            // The instance should be ready — calling get_counter via the
+            // module's public API should work and return the reset value.
+            counterValueInHook = wasm.get_counter();
+        });
+
+        // Build up some counter state, then reset.
+        wasm.increment_counter();
+        wasm.increment_counter();
+        assert.strictEqual(wasm.get_counter(), 2);
+
+        wasm.__wbg_reset_state();
+
+        // Counter should have been 0 when the hook observed it (post-reinit).
+        assert.strictEqual(counterValueInHook, 0,
+            'hook should see counter at 0 after reinit');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('is not called on first init (only on reinit)', () => {
+        // The hook is registered after the module is already loaded via
+        // require(), so it should not have been retroactively called.
+        let called = false;
+        wasm.__wbg_set_reinit_hook(() => { called = true; });
+
+        // No reset — just normal usage.
+        wasm.simple_add(1, 2);
+
+        assert.strictEqual(called, false,
+            'hook should not fire during normal usage');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('is not called when hook is null', () => {
+        // Register then unregister.
+        let called = false;
+        wasm.__wbg_set_reinit_hook(() => { called = true; });
+        wasm.__wbg_set_reinit_hook(null);
+
+        wasm.__wbg_reset_state();
+
+        assert.strictEqual(called, false,
+            'hook should not fire after being unregistered');
+    });
+
+    it('is called on auto-reset after fatal error', () => {
+        let hookCallCount = 0;
+        let receivedInstance = null;
+        wasm.__wbg_set_reinit_hook((instance) => {
+            hookCallCount++;
+            receivedInstance = instance;
+        });
+
+        // Trigger a fatal error (unreachable).
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
+
+        // The next call should auto-reset, which should trigger the hook.
+        const counter = wasm.get_counter();
+        assert.strictEqual(counter, 0, 'counter should be reset');
+        assert.strictEqual(hookCallCount, 1, 'hook should have been called once');
+        assert.notStrictEqual(receivedInstance, null,
+            'hook should have received the new instance');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('persists across multiple resets', () => {
+        let hookCallCount = 0;
+        wasm.__wbg_set_reinit_hook(() => { hookCallCount++; });
+
+        wasm.__wbg_reset_state();
+        wasm.__wbg_reset_state();
+        wasm.__wbg_reset_state();
+
+        assert.strictEqual(hookCallCount, 3,
+            'hook should fire on every reset');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('can be replaced with a different hook', () => {
+        let firstCalled = false;
+        let secondCalled = false;
+
+        wasm.__wbg_set_reinit_hook(() => { firstCalled = true; });
+        wasm.__wbg_set_reinit_hook(() => { secondCalled = true; });
+
+        wasm.__wbg_reset_state();
+
+        assert.strictEqual(firstCalled, false,
+            'old hook should not fire');
+        assert.strictEqual(secondCalled, true,
+            'new hook should fire');
+        wasm.__wbg_set_reinit_hook(null);
+    });
+
+    it('hook errors propagate to the caller', () => {
+        wasm.__wbg_set_reinit_hook(() => {
+            throw new Error('hook error');
+        });
+
+        assert.throws(() => wasm.__wbg_reset_state(), (e) => {
+            assert.match(e.message, /hook error/);
+            return true;
+        });
+
+        wasm.__wbg_set_reinit_hook(null);
+        // Module should still be usable after a hook error during explicit
+        // reset — the new instance was already created before the hook ran.
+        wasm.__wbg_reset_state();
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reinit_hook.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
