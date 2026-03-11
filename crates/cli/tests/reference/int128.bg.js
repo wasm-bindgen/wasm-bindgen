@@ -7,10 +7,6 @@ export function echo_i128(a) {
     return (BigInt.asUintN(64, ret[0]) | (ret[1] << BigInt(64)));
 }
 
-function isLikeNone(x) {
-    return x == null;
-}
-
 /**
  * @param {bigint | null} [a]
  * @returns {bigint | undefined}

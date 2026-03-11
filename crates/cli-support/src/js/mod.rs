@@ -413,7 +413,13 @@ impl<'a> Context<'a> {
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
         self.write_classes()?;
-        let classes_out = std::mem::take(&mut self.globals);
+        let emscripten_classes_out = if matches!(self.config.mode, OutputMode::Emscripten) {
+            // EMSCRIPTEN-only: classes and exports are written inside of $initBindgen,
+            // via generate_wasm_loading.
+            std::mem::take(&mut self.globals)
+        } else {
+            String::new()
+        };
 
         // Process reexports
         for (export_name, js_import) in self.aux.reexports.clone() {
@@ -449,7 +455,6 @@ impl<'a> Context<'a> {
                 self.globals.push_str(&imports);
             });
         }
-        let imports_out = std::mem::take(&mut self.globals);
 
         if !self.exports.is_empty() {
             // Write out all exports
@@ -457,17 +462,11 @@ impl<'a> Context<'a> {
                 self.write_exports()?;
             });
         }
-        let exports_out = std::mem::take(&mut self.globals);
-
-        if matches!(self.config.mode, OutputMode::Emscripten) {
-            // EMSCRIPTEN-only: classes and exports are written inside of $initBindgen,
-            // via generate_wasm_loading.
-            self.globals.push_str(&imports_out);
+        let emscripten_exports_out = if matches!(self.config.mode, OutputMode::Emscripten) {
+            std::mem::take(&mut self.globals)
         } else {
-            self.globals.push_str(&classes_out);
-            self.globals.push_str(&imports_out);
-            self.globals.push_str(&exports_out);
-        }
+            String::new()
+        };
 
         if let Some(mem) = self.module.memories.iter().next() {
             if let Some(id) = mem.import {
@@ -532,7 +531,7 @@ impl<'a> Context<'a> {
         let needs_manual_start = unstart_start_function(self.module);
         region!(self, "wasm loading", {
             let wrapped_content = if matches!(self.config.mode, OutputMode::Emscripten) {
-                format!("{}\n{}", classes_out, exports_out)
+                format!("{}\n{}", emscripten_classes_out, emscripten_exports_out)
             } else {
                 String::new()
             };
@@ -2109,32 +2108,34 @@ if (require('worker_threads').isMainThread) {{
         // expensive in mainstream engines than staying in the JS, and
         // charCodeAt on ASCII strings is usually optimised to raw bytes.
         let encode_as_ascii = format!(
-            "
-            if (realloc === undefined) {{
-                const buf = cachedTextEncoder.encode(arg);
-                const ptr = malloc(buf.length, 1) >>> 0;
-                {mem_formatted}.subarray(ptr, ptr + buf.length).set(buf);
-                WASM_VECTOR_LEN = buf.length;
-                return ptr;
-            }}
+            "\
+                if (realloc === undefined) {{
+                    const buf = cachedTextEncoder.encode(arg);
+                    const ptr = malloc(buf.length, 1) >>> 0;
+                    {mem_formatted}.subarray(ptr, ptr + buf.length).set(buf);
+                    WASM_VECTOR_LEN = buf.length;
+                    return ptr;
+                }}
 
-            let len = arg.length;
-            let ptr = malloc(len, 1) >>> 0;
-            const mem = {mem_formatted};
-            let offset = 0;
+                let len = arg.length;
+                let ptr = malloc(len, 1) >>> 0;
 
-            for (; offset < len; offset++) {{
-                const code = arg.charCodeAt(offset);
-                if (code > 0x7F) break;
-                mem[ptr + offset] = code;
-            }}
-            ");
+                const mem = {mem_formatted};
+
+                let offset = 0;
+
+                for (; offset < len; offset++) {{
+                    const code = arg.charCodeAt(offset);
+                    if (code > 0x7F) break;
+                    mem[ptr + offset] = code;
+                }}
+            ",
+        );
 
         let func_decl = format!(
-                "function {ret}(arg, malloc, realloc) {{
-                    {debug}
-                    {encode_as_ascii}
-                    if (offset !== len) {{
+                "
+                function {ret}(arg, malloc, realloc) {{
+                    {debug}{encode_as_ascii}if (offset !== len) {{
                         if (offset !== 0) {{
                             arg = arg.slice(offset);
                         }}
@@ -2145,9 +2146,11 @@ if (require('worker_threads').isMainThread) {{
                         offset += ret.written;
                         ptr = realloc(ptr, len, offset, 1) >>> 0;
                     }}
+
                     WASM_VECTOR_LEN = offset;
                     return ptr;
-                }}",
+                }}
+                ",
             );
 
 
@@ -2217,15 +2220,13 @@ if (require('worker_threads').isMainThread) {{
                 }
 
                 self.intrinsic(ret.to_string().into(), None, {
-                    let loop_body = format!(
-                            "const add = {add}(array[i]); {mem_formatted}.setUint32(ptr + 4 * i, add, true);"
-                    );
                     format!(
                         "
                         function {ret}(array, malloc) {{
                             const ptr = malloc(array.length * 4, 4) >>> 0;
                             for (let i = 0; i < array.length; i++) {{
-                                {loop_body}
+                                const add = {add}(array[i]);
+                                {mem_formatted}.setUint32(ptr + 4 * i, add, true);
                             }}
                             WASM_VECTOR_LEN = array.length;
                             return ptr;
@@ -2238,18 +2239,13 @@ if (require('worker_threads').isMainThread) {{
             _ => {
                 self.expose_add_heap_object();
                 self.intrinsic(ret.to_string().into(), None, {
-                    let (setup, loop_body) = (
-                        format!("const mem = {mem_formatted};"),
-                        "mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);".to_string(),
-                    );
-
                     format!(
                         "
                         function {ret}(array, malloc) {{
                             const ptr = malloc(array.length * 4, 4) >>> 0;
-                            {setup}
+                            const mem = {mem_formatted};
                             for (let i = 0; i < array.length; i++) {{
-                                {loop_body}
+                                mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);
                             }}
                             WASM_VECTOR_LEN = array.length;
                             return ptr;
