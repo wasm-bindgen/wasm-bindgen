@@ -248,8 +248,7 @@ pub fn run(
                                 .map_err(|e| format!("failed to create directory: {e}"))?;
                         }
                     }
-                    fs::write(path, &png_data)
-                        .map_err(|e| format!("failed to write: {e}"))?;
+                    fs::write(path, &png_data).map_err(|e| format!("failed to write: {e}"))?;
                     Ok(png_data.len())
                 })() {
                     Ok(len) => {
