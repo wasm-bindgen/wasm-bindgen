@@ -441,7 +441,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = Array::is_array, typescript_type = "Array<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Array<T = JsValue>;
 
     /// Creates a new empty array.
@@ -1286,7 +1286,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, js_name = Array, is_type_of = Array::is_array, no_upcast, typescript_type = "Array<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type ArrayTuple<T: JsTuple = (JsValue,)>;
 
     /// Creates a new JS array typed as a 1-tuple.
@@ -2002,9 +2002,27 @@ impl<T> Iterable for Array<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for Array<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Array<T> {}
+
 impl<T: JsTuple> Iterable for ArrayTuple<T> {
     type Item = JsValue;
 }
+
+impl<T: JsTuple> PartialEq for ArrayTuple<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T: JsTuple> Eq for ArrayTuple<T> {}
 
 // ArrayBufferOptions
 #[wasm_bindgen]
@@ -4724,7 +4742,7 @@ impl Default for Function {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Generator<any, any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Generator<T = JsValue>;
 
     /// The `next()` method returns an object with two properties done and value.
@@ -4817,11 +4835,20 @@ impl<T: FromWasmAbi> Iterable for Generator<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for Generator<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Generator<T> {}
+
 // AsyncGenerator
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "AsyncGenerator<any, any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type AsyncGenerator<T = JsValue>;
 
     /// The `next()` method returns an object with two properties done and value.
@@ -4858,11 +4885,20 @@ impl<T: FromWasmAbi> AsyncIterable for AsyncGenerator<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for AsyncGenerator<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for AsyncGenerator<T> {}
+
 // Map
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Map<any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Map<K = JsValue, V = JsValue>;
 
     /// The Map object holds key-value pairs. Any value (both objects and
@@ -5051,6 +5087,15 @@ extern "C" {
 impl<K, V> Iterable for Map<K, V> {
     type Item = ArrayTuple<(K, V)>;
 }
+
+impl<K, V> PartialEq for Map<K, V> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<K, V> Eq for Map<K, V> {}
 
 // Iterator
 #[wasm_bindgen]
@@ -5359,7 +5404,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
     #[wasm_bindgen(extends = Object, typescript_type = "IteratorResult<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type IteratorNext<T = JsValue>;
 
     /// Has the value `true` if the iterator is past the end of the iterated
@@ -5377,6 +5422,15 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn value<T>(this: &IteratorNext<T>) -> T;
 }
+
+impl<T> PartialEq for IteratorNext<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for IteratorNext<T> {}
 
 #[allow(non_snake_case)]
 pub mod Math {
@@ -6488,7 +6542,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PropertyDescriptor<T = JsValue>;
 
     #[wasm_bindgen(method, getter = writable)]
@@ -6561,6 +6615,15 @@ impl Default for PropertyDescriptor {
         PropertyDescriptor::new()
     }
 }
+
+impl<T> PartialEq for PropertyDescriptor<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for PropertyDescriptor<T> {}
 
 // Object.
 #[wasm_bindgen]
@@ -7762,7 +7825,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Set<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Set<T = JsValue>;
 
     /// The [`Set`] object lets you store unique values of any type, whether
@@ -7932,6 +7995,15 @@ impl<T> Iterable for Set<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for Set<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Set<T> {}
+
 // SetIterator
 #[wasm_bindgen]
 extern "C" {
@@ -8047,7 +8119,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakMap<object, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type WeakMap<K = Object, V = JsValue>;
 
     /// The [`WeakMap`] object is a collection of key/value pairs in which the
@@ -8132,11 +8204,20 @@ impl Default for WeakMap {
     }
 }
 
+impl<K, V> PartialEq for WeakMap<K, V> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<K, V> Eq for WeakMap<K, V> {}
+
 // WeakSet
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakSet<object>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type WeakSet<T = Object>;
 
     /// The `WeakSet` object lets you store weakly held objects in a collection.
@@ -8189,11 +8270,20 @@ impl Default for WeakSet {
     }
 }
 
+impl<T> PartialEq for WeakSet<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for WeakSet<T> {}
+
 // WeakRef
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakRef<object>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type WeakRef<T = Object>;
 
     /// The `WeakRef` object contains a weak reference to an object. A weak
@@ -8211,6 +8301,15 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn deref<T>(this: &WeakRef<T>) -> Option<T>;
 }
+
+impl<T> PartialEq for WeakRef<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for WeakRef<T> {}
 
 #[cfg(js_sys_unstable_apis)]
 #[allow(non_snake_case)]
@@ -12694,7 +12793,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "any")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PromiseState<T = JsValue>;
 
     /// A string, either "fulfilled" or "rejected", indicating the eventual state of the promise.
@@ -12720,6 +12819,15 @@ impl<T> PromiseState<T> {
     }
 }
 
+impl<T> PartialEq for PromiseState<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for PromiseState<T> {}
+
 // Promise
 #[wasm_bindgen]
 extern "C" {
@@ -12729,7 +12837,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>", no_promising)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Promise<T = JsValue>;
 
     /// Creates a new `Promise` with the provided executor `cb`
@@ -13049,6 +13157,15 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn finally<T>(this: &Promise<T>, cb: &ScopedClosure<dyn FnMut()>) -> Promise<JsValue>;
 }
+
+impl<T> PartialEq for Promise<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Promise<T> {}
 
 impl<T: JsGeneric> Promising for Promise<T> {
     type Resolution = T;

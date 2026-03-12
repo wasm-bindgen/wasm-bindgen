@@ -30,7 +30,7 @@ use crate::util::{
     shouty_snake_case_ident, snake_case_ident, throws, webidl_const_v_to_backend_const_v,
     TypePosition,
 };
-use crate::wbg_type::{ToWbgType, WbgType};
+use crate::wbg_type::ToWbgType;
 use anyhow::Context;
 use anyhow::Result;
 use constants::UNFLATTENED_ATTRIBUTES;
@@ -993,24 +993,23 @@ impl<'src> FirstPassRecord<'src> {
         }
 
         // If this interface extends Promise (directly or transitively),
-        // determine the resolution type from the `then` method's return type.
+        // implement the `Promising` trait. The resolution type is determined
+        // from the first parameter of the `onfulfilled` callback in the
+        // `then()` method — that parameter is the type the promise passes to
+        // the callback when it resolves. We walk up the interface hierarchy
+        // to find the `then` method if it is only defined on a parent.
+        //
+        // Falls back to `JsValue` if no `then` method or callback is found.
         let extends_promise = self.extends_promise(&js_name);
         let promising_resolution = if extends_promise {
-            let resolution = data
-                .operations
-                .get(&OperationId::Operation(Some("then")))
-                .and_then(|op| op.signatures.first())
-                .map(|sig| sig.ret.to_wbg_type(self))
-                .and_then(|wbg_ty| {
-                    if let WbgType::Promise(inner) = wbg_ty {
-                        inner
-                            .to_syn_type(crate::util::TypePosition::RETURN, false, false)
-                            .ok()
-                            .flatten()
-                    } else {
-                        None
-                    }
-                });
+            let resolution = self.promise_resolution_type(&js_name).and_then(|wbg_ty| {
+                // Use inner position to get JS-compatible types (e.g.,
+                // JsString instead of String) since Resolution is a JsGeneric.
+                wbg_ty
+                    .to_syn_type(crate::util::TypePosition::RETURN.to_inner(), false, false)
+                    .ok()
+                    .flatten()
+            });
             Some(resolution.unwrap_or_else(|| syn::parse_str("::wasm_bindgen::JsValue").unwrap()))
         } else {
             None

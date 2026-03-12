@@ -551,8 +551,6 @@ impl PartialEq for JsValue {
     }
 }
 
-impl Eq for JsValue {}
-
 impl PartialEq<bool> for JsValue {
     #[inline]
     fn eq(&self, other: &bool) -> bool {

@@ -1767,6 +1767,53 @@ impl<'a> FirstPassRecord<'a> {
         false
     }
 
+    /// Finds the `then` operation for a Promise-extending interface,
+    /// walking up the interface hierarchy if the operation is not defined
+    /// directly on the given interface.
+    pub fn find_then_operation(&self, interface: &str) -> Option<&OperationData<'a>> {
+        let data = self.interfaces.get(interface)?;
+        if let Some(op) = data.operations.get(&OperationId::Operation(Some("then"))) {
+            return Some(op);
+        }
+        // Walk up to the parent interface (stop before Promise itself,
+        // which is a built-in and not in self.interfaces).
+        let superclass = data.superclass?;
+        if superclass == "Promise" {
+            return None;
+        }
+        self.find_then_operation(superclass)
+    }
+
+    /// Determines the resolution type of a Promise-extending interface by
+    /// inspecting the first parameter of the `onfulfilled` callback in its
+    /// `then` method. This is the type the promise passes to the callback
+    /// when it resolves.
+    ///
+    /// Returns `None` if the resolution type cannot be determined (e.g., no
+    /// `then` method, no callback argument, or callback not found).
+    pub fn promise_resolution_type(&self, interface: &str) -> Option<WbgType<'a>> {
+        let then_op = self.find_then_operation(interface)?;
+        let sig = then_op.signatures.first()?;
+        // The first argument of then() is the onfulfilled callback
+        let onfulfilled_arg = sig.args.first()?;
+        // Resolve the argument type to find the callback name
+        let arg_type_name = Self::extract_identifier_name(onfulfilled_arg.ty)?;
+        // Look up the callback definition
+        let callback_data = self.callbacks.get(arg_type_name)?;
+        // The callback's first parameter is what the promise resolves to
+        callback_data.params.first().cloned()
+    }
+
+    /// Extracts the identifier name from a weedle type, if it is a simple
+    /// identifier type (e.g., `ParseInt` in `then(ParseInt onfulfilled)`).
+    fn extract_identifier_name<'b>(ty: &'b weedle::types::Type<'b>) -> Option<&'b str> {
+        use weedle::types::*;
+        match ty {
+            Type::Single(SingleType::NonAny(NonAnyType::Identifier(id))) => Some(id.type_.0),
+            _ => None,
+        }
+    }
+
     pub fn all_mixins<'me>(
         &'me self,
         interface: &str,

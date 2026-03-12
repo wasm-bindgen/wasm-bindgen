@@ -64,3 +64,31 @@ fn promise_subclass_satisfies_promising_bound() {
     let sub = PromiseSubclass::new().unwrap();
     accepts_promising(&sub);
 }
+
+/// Test that the resolution type is inferred from the onfulfilled callback's
+/// first parameter (DOMString -> JsString), not from then()'s return type.
+#[wasm_bindgen_test]
+fn typed_promise_resolution_from_callback() {
+    use wasm_bindgen::sys::Promising;
+
+    fn accepts_string_promising<T: Promising<Resolution = js_sys::JsString>>(_val: &T) {}
+
+    let p = TypedTextPromise::new().unwrap();
+    accepts_string_promising(&p);
+}
+
+/// Test that a child interface inherits the resolution type from
+/// its parent's then() method.
+#[wasm_bindgen_test]
+fn child_inherits_parent_resolution_type() {
+    use wasm_bindgen::sys::Promising;
+
+    fn accepts_string_promising<T: Promising<Resolution = js_sys::JsString>>(_val: &T) {}
+
+    let child = ChildTextPromise::new().unwrap();
+    accepts_string_promising(&child);
+
+    // Should also have its own methods
+    let label = child.child_label();
+    assert_eq!(label, "child-label");
+}
