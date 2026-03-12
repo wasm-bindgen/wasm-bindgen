@@ -548,7 +548,8 @@ impl<'src> FirstPassRecord<'src> {
         // use argument position now as we're just binding setters
         // Unstable APIs always use typed generics; stable uses legacy by default.
         // [WbgGeneric] on the dictionary definition opts into typed generics.
-        let generics = unstable_override || wbg_generic;
+        // next_unstable opts everything into the generics path.
+        let generics = unstable_override || wbg_generic || self.options.next_unstable.get();
 
         // In legacy mode (no generics), nullable sequences/arrays collapse to &JsValue
         // for the setter, with the builder using unwrap_or(&JsValue::NULL).
