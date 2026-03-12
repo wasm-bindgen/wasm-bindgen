@@ -3016,6 +3016,11 @@ if (require('worker_threads').isMainThread) {{
                 __wbg_reinit_hook = callback;\n\
             }}\n"
         );
+        let instance_type = match self.config.mode {
+            OutputMode::Web | OutputMode::NoModules { .. } => "InitOutput",
+            OutputMode::Node { .. } if self.threads_enabled => "InitOutput",
+            _ => "WebAssembly.Exports",
+        };
         define_export(
             &mut self.exports,
             "__wbg_set_reinit_hook",
@@ -3024,9 +3029,9 @@ if (require('worker_threads').isMainThread) {{
                 comments: None,
                 identifier: hook_identifier,
                 definition: hook_definition,
-                ts_definition:
-                    "function __wbg_set_reinit_hook(callback: ((newInstance: InitOutput, oldInstance: InitOutput) => void) | null): void;\n"
-                        .to_string(),
+                ts_definition: format!(
+                    "function __wbg_set_reinit_hook(callback: ((newInstance: {instance_type}, oldInstance: {instance_type}) => void) | null): void;\n"
+                ),
                 ts_comments: None,
                 private: false,
             }),
