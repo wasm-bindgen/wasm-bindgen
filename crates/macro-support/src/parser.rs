@@ -1250,12 +1250,12 @@ fn function_from_decl(
     }
 
     // For imported functions (Extern position), generics are supported and validated.
-    if !matches!(position, FunctionPosition::Extern) && !sig.generics.params.is_empty() {
-        bail_span!(
-            sig.generics,
-            "can't #[wasm_bindgen] functions with lifetime or type parameters"
-        );
-    }
+    // if !matches!(position, FunctionPosition::Extern) && !sig.generics.params.is_empty() {
+    //     bail_span!(
+    //         sig.generics,
+    //         "can't #[wasm_bindgen] functions with lifetime or type parameters"
+    //     );
+    // }
 
     let syn::Signature { inputs, output, .. } = sig;
 
@@ -1606,12 +1606,14 @@ impl MacroParse<BindgenAttrs> for &mut syn::ItemImpl {
         if let Some((_, path, _)) = &self.trait_ {
             bail_span!(path, "#[wasm_bindgen] trait impls are not supported");
         }
+
         if !self.generics.params.is_empty() {
             bail_span!(
                 self.generics,
                 "#[wasm_bindgen] generic impls aren't supported"
             );
         }
+
         let name = match get_ty(&self.self_ty) {
             syn::Type::Path(syn::TypePath {
                 qself: None,

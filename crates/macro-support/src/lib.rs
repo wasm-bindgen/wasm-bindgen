@@ -7,7 +7,7 @@ mod error;
 
 mod ast;
 mod codegen;
-mod encode;
+pub mod encode;
 mod generics;
 mod hash;
 mod parser;
@@ -49,7 +49,6 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
             return Ok(item);
         }
     }
-
 
     if let syn::Item::Struct(s) = item {
         let opts: BindgenAttrs = syn::parse2(attr.clone())?;
@@ -214,7 +213,6 @@ impl Parse for ClassMarker {
 pub fn expand_struct_marker(item: TokenStream) -> Result<TokenStream, Diagnostic> {
     parser::reset_attrs_used();
 
-
     let mut s = if let Ok(ItemEnum {
         attrs,
         vis,
@@ -223,8 +221,8 @@ pub fn expand_struct_marker(item: TokenStream) -> Result<TokenStream, Diagnostic
         generics,
         brace_token: _,
         variants: _,
-    }) = syn::parse2::<syn::ItemEnum>(item.clone()) {
-
+    }) = syn::parse2::<syn::ItemEnum>(item.clone())
+    {
         syn::ItemStruct {
             attrs,
             vis,
@@ -237,8 +235,6 @@ pub fn expand_struct_marker(item: TokenStream) -> Result<TokenStream, Diagnostic
     } else {
         syn::parse2::<syn::ItemStruct>(item)?
     };
-
-
 
     let mut program = ast::Program::default();
     program.structs.extend((&mut s).convert(&program)?);

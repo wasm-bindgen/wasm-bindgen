@@ -1,5 +1,6 @@
-use crate::ast;
-use crate::encode;
+use crate::ast::Import;
+use crate::ast::{self, ImportFunction, ImportStatic, ImportString, ImportType, StringEnum};
+use crate::encode::{self, shared_export, Encode, Encoder, Interner};
 use crate::encode::EncodeChunk;
 use crate::generics::{self, generic_to_concrete};
 use crate::Diagnostic;

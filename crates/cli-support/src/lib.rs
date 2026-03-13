@@ -9,9 +9,9 @@ use walrus::Module;
 
 pub(crate) const PLACEHOLDER_MODULE: &str = "__wbindgen_placeholder__";
 
-mod decode;
-mod descriptor;
-mod descriptors;
+pub mod decode;
+pub mod descriptor;
+pub mod descriptors;
 mod externref;
 mod interpreter;
 mod intrinsic;
