@@ -1789,19 +1789,38 @@ impl<'a> FirstPassRecord<'a> {
     /// `then` method. This is the type the promise passes to the callback
     /// when it resolves.
     ///
+    /// Scans all overloaded signatures of `then()` to find one with an
+    /// `onfulfilled` callback argument. Looks up both plain `callback` and
+    /// `callback interface` definitions.
+    ///
     /// Returns `None` if the resolution type cannot be determined (e.g., no
     /// `then` method, no callback argument, or callback not found).
     pub fn promise_resolution_type(&self, interface: &str) -> Option<WbgType<'a>> {
         let then_op = self.find_then_operation(interface)?;
-        let sig = then_op.signatures.first()?;
-        // The first argument of then() is the onfulfilled callback
-        let onfulfilled_arg = sig.args.first()?;
-        // Resolve the argument type to find the callback name
-        let arg_type_name = Self::extract_identifier_name(onfulfilled_arg.ty)?;
-        // Look up the callback definition
-        let callback_data = self.callbacks.get(arg_type_name)?;
-        // The callback's first parameter is what the promise resolves to
-        callback_data.params.first().cloned()
+        // Scan all overloaded signatures to find one with an onfulfilled
+        // callback argument (some overloads may have zero args).
+        for sig in &then_op.signatures {
+            let onfulfilled_arg = match sig.args.first() {
+                Some(arg) => arg,
+                None => continue,
+            };
+            let arg_type_name = match Self::extract_identifier_name(onfulfilled_arg.ty) {
+                Some(name) => name,
+                None => continue,
+            };
+            // Look up plain callbacks first, then callback interfaces
+            if let Some(callback_data) = self.callbacks.get(arg_type_name) {
+                if let Some(param) = callback_data.params.first() {
+                    return Some(param.clone());
+                }
+            }
+            if let Some(cb_iface) = self.callback_interfaces.get(arg_type_name) {
+                if let Some(param) = cb_iface.params.first() {
+                    return Some(param.clone());
+                }
+            }
+        }
+        None
     }
 
     /// Extracts the identifier name from a weedle type, if it is a simple

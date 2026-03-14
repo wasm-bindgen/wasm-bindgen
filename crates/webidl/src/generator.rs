@@ -790,6 +790,7 @@ impl Interface<'_> {
 
         let promising_impl = promising_resolution.as_ref().map(|resolution| {
             quote! {
+                #unstable_attr
                 impl ::wasm_bindgen::sys::Promising for #name {
                     type Resolution = #resolution;
                 }
