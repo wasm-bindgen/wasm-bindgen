@@ -588,11 +588,7 @@ impl<'src> FirstPassRecord<'src> {
                 .enumerate()
                 .filter_map(|(i, ty)| ty.as_ref().map(|ty| (i, ty)))
             {
-                // CanonicalValue args are the "primary" overload form and never
-                // contribute to the method name suffix.
-                if matches!(arg, WbgType::CanonicalValue(_)) {
-                    continue;
-                }
+                let is_canonical = matches!(arg, WbgType::CanonicalValue(_));
 
                 let mut any_same_name = false;
                 let mut any_different_type = false;
@@ -620,6 +616,33 @@ impl<'src> FirstPassRecord<'src> {
                 if !any_different {
                     continue;
                 }
+
+                // CanonicalValue args are the "primary" overload form and
+                // don't contribute to the method name suffix unless a
+                // shorter signature exists (e.g. from optional params
+                // producing a no-arg variant) that would collide.
+                // When they do need disambiguation, always use the arg name
+                // since their type name is intentionally empty.
+                if is_canonical {
+                    // Only need suffix if there's a shorter signature that
+                    // would produce the same unsuffixed name.
+                    let any_shorter = disambiguate_against.iter().any(|&idx| {
+                        let other = &all_signatures[idx];
+                        signature != other && other.args.get(i).is_none()
+                    });
+                    if !any_shorter {
+                        continue;
+                    }
+                    if first {
+                        rust_name.push_str("_with_");
+                        first = false;
+                    } else {
+                        rust_name.push_str("_and_");
+                    }
+                    rust_name.push_str(&snake_case_ident(arg_name));
+                    continue;
+                }
+
                 if first {
                     rust_name.push_str("_with_");
                     first = false;

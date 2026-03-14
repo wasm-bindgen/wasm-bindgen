@@ -1095,8 +1095,10 @@ impl<'src> FirstPassRecord<'src> {
                 if any_different_type {
                     let mut ext = String::new();
                     idl.push_snake_case_name(&mut ext);
-                    rust_name.push('_');
-                    rust_name.push_str(&snake_case_ident(&ext));
+                    if !ext.is_empty() {
+                        rust_name.push('_');
+                        rust_name.push_str(&snake_case_ident(&ext));
+                    }
                 }
 
                 attributes.push(InterfaceAttribute {

@@ -73,3 +73,49 @@ fn promise_any_arg_overload_with_value() {
 
     f.wait_for_any_with_any(&42.into());
 }
+
+/// Test that optional Promise<DOMString> generates three overloads:
+/// no-arg, promise (suffixed with arg name), and value.
+#[wasm_bindgen_test]
+fn optional_promise_arg_no_arg() {
+    let f = TestPromises::new().unwrap();
+
+    // No-arg overload (unsuffixed)
+    f.maybe_wait_for_string();
+}
+
+#[wasm_bindgen_test]
+fn optional_promise_arg_with_promise() {
+    let f = TestPromises::new().unwrap();
+
+    // Promise overload (suffixed with arg name since no-arg takes the canonical name)
+    let p: Promise<js_sys::JsString> = Promise::resolve(&js_sys::JsString::from("hello"));
+    f.maybe_wait_for_string_with_p(&p);
+}
+
+#[wasm_bindgen_test]
+fn optional_promise_arg_with_value() {
+    let f = TestPromises::new().unwrap();
+
+    // Value overload
+    f.maybe_wait_for_string_with_str("hello");
+}
+
+/// Test that Promise<DOMString> attribute generates a getter and typed setters
+/// without trailing underscores.
+#[wasm_bindgen_test]
+fn promise_attribute_setter_with_promise() {
+    let f = TestPromises::new().unwrap();
+
+    // The canonical setter (unsuffixed) takes a Promise
+    let p: Promise<js_sys::JsString> = Promise::resolve(&js_sys::JsString::from("hello"));
+    f.set_promise_value(&p);
+}
+
+#[wasm_bindgen_test]
+fn promise_attribute_setter_with_value() {
+    let f = TestPromises::new().unwrap();
+
+    // The value setter (suffixed with type name)
+    f.set_promise_value_str("hello");
+}

@@ -556,6 +556,15 @@ global.TestPromises = class {
   waitForAny(p) {
     return Promise.resolve(p);
   }
+  maybeWaitForString(p) {
+    return Promise.resolve(p);
+  }
+  get promiseValue() {
+    return Promise.resolve("stored");
+  }
+  set promiseValue(v) {
+    this._promiseValue = v;
+  }
 };
 
 global.SignatureStability = class {
