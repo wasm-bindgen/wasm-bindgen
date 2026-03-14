@@ -677,6 +677,89 @@ impl<'a> WbgType<'a> {
         }
     }
 
+    /// Returns true if this type maps to a JS string type in inner position
+    /// (i.e., `js_sys::JsString`). This includes DOMString, ByteString,
+    /// USVString, and enum identifiers.
+    fn is_js_string_type(&self) -> bool {
+        matches!(
+            self,
+            WbgType::DomString
+                | WbgType::ByteString
+                | WbgType::UsvString
+                | WbgType::Identifier {
+                    ty: IdentifierType::Enum(..),
+                    ..
+                }
+        )
+    }
+
+    /// Returns true if this type maps to `js_sys::Number` in inner position.
+    fn is_js_number_type(&self) -> bool {
+        matches!(
+            self,
+            WbgType::Byte
+                | WbgType::Octet
+                | WbgType::Short
+                | WbgType::UnsignedShort
+                | WbgType::Long
+                | WbgType::UnsignedLong
+                | WbgType::LongLong
+                | WbgType::UnsignedLongLong
+                | WbgType::Float
+                | WbgType::UnrestrictedFloat
+                | WbgType::Double
+                | WbgType::UnrestrictedDouble
+        )
+    }
+
+    /// Returns true if this type maps to a JS interface / `js_sys::Object`
+    /// in inner position.
+    fn is_js_interface_type(&self) -> bool {
+        matches!(
+            self,
+            WbgType::Identifier {
+                ty: IdentifierType::Interface(..),
+                ..
+            }
+        )
+    }
+
+    /// Reduces a collection of types to a single best common base type.
+    ///
+    /// This is used when multiple overloaded signatures produce different
+    /// candidate types and we need a single type that can represent all of
+    /// them. The strategy is:
+    ///
+    /// - If all types are identical after dedup, return that type.
+    /// - If all types map to the same JS base type in inner position (e.g.,
+    ///   all strings -> `DomString`/`JsString`, all numbers -> `Double`/`Number`,
+    ///   all interfaces -> `Object`), return the common base.
+    /// - Otherwise, return `Any` (which maps to `JsValue`).
+    pub(crate) fn singular_union(types: Vec<WbgType<'a>>) -> WbgType<'a> {
+        // Dedup while preserving order
+        let mut seen = Vec::new();
+        for ty in types {
+            if !seen.contains(&ty) {
+                seen.push(ty);
+            }
+        }
+        match seen.len() {
+            0 => WbgType::Any,
+            1 => seen.into_iter().next().unwrap(),
+            _ => {
+                if seen.iter().all(|t| t.is_js_string_type()) {
+                    WbgType::DomString
+                } else if seen.iter().all(|t| t.is_js_number_type()) {
+                    WbgType::Double
+                } else if seen.iter().all(|t| t.is_js_interface_type()) {
+                    WbgType::Object
+                } else {
+                    WbgType::Any
+                }
+            }
+        }
+    }
+
     /// Returns true if this type is a primitive that can be used directly in a Rust slice.
     /// These types have efficient `IntoWasmAbi` implementations for `&[T]`.
     pub(crate) fn is_slice_primitive(&self) -> bool {

@@ -1791,14 +1791,17 @@ impl<'a> FirstPassRecord<'a> {
     ///
     /// Scans all overloaded signatures of `then()` to find one with an
     /// `onfulfilled` callback argument. Looks up both plain `callback` and
-    /// `callback interface` definitions.
+    /// `callback interface` definitions. When multiple overloads produce
+    /// different resolution types, uses `singular_union` to find the best
+    /// common base type.
     ///
     /// Returns `None` if the resolution type cannot be determined (e.g., no
     /// `then` method, no callback argument, or callback not found).
     pub fn promise_resolution_type(&self, interface: &str) -> Option<WbgType<'a>> {
         let then_op = self.find_then_operation(interface)?;
-        // Scan all overloaded signatures to find one with an onfulfilled
-        // callback argument (some overloads may have zero args).
+        // Collect resolution types from all overloaded signatures that have
+        // an onfulfilled callback argument.
+        let mut candidates = Vec::new();
         for sig in &then_op.signatures {
             let onfulfilled_arg = match sig.args.first() {
                 Some(arg) => arg,
@@ -1811,16 +1814,20 @@ impl<'a> FirstPassRecord<'a> {
             // Look up plain callbacks first, then callback interfaces
             if let Some(callback_data) = self.callbacks.get(arg_type_name) {
                 if let Some(param) = callback_data.params.first() {
-                    return Some(param.clone());
+                    candidates.push(param.clone());
+                    continue;
                 }
             }
             if let Some(cb_iface) = self.callback_interfaces.get(arg_type_name) {
                 if let Some(param) = cb_iface.params.first() {
-                    return Some(param.clone());
+                    candidates.push(param.clone());
                 }
             }
         }
-        None
+        if candidates.is_empty() {
+            return None;
+        }
+        Some(WbgType::singular_union(candidates))
     }
 
     /// Extracts the identifier name from a weedle type, if it is a simple
