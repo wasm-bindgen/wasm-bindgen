@@ -9,4 +9,10 @@ interface TestPromises {
 
   [WbgGeneric]
   undefined waitForAny(Promise<any> p);
+
+  [WbgGeneric]
+  undefined maybeWaitForString(optional Promise<DOMString> p);
+
+  [WbgGeneric]
+  attribute Promise<DOMString> promiseValue;
 };
