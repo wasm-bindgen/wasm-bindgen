@@ -47,8 +47,13 @@ fn delay_promise(millis: i32) -> js_sys::Promise {
     })
 }
 
+/// Successful result of a [`screenshot`] call.
+#[derive(Debug)]
+pub struct Screenshot;
+
 /// Error returned by [`screenshot`].
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum ScreenshotError {
     /// The headless test runner is not available (e.g. running in a real
     /// browser or in Node.js without the `#__wbgtest_screenshot` element).
@@ -70,11 +75,13 @@ impl core::fmt::Display for ScreenshotError {
 
 /// Request the test runner to take a screenshot and save it to the given path.
 ///
-/// This works by writing the requested filename to a hidden DOM element
-/// (`#__wbgtest_screenshot`). The headless test runner detects this, takes a
-/// screenshot via the WebDriver protocol, saves it, and signals back by
-/// writing `ok` or `err:<message>` to the element. This function polls until
-/// the runner responds, then clears the element and returns the result.
+/// This works by writing `filename:<path>` to a hidden DOM element
+/// (`#__wbgtest_screenshot`). The `filename:` prefix distinguishes requests
+/// from protocol responses, avoiding collisions with filenames like `ok`.
+/// The headless test runner detects this, takes a screenshot via the WebDriver
+/// protocol, saves it, and signals back by writing `ok` or `err:<message>` to
+/// the element. This function polls until the runner responds, then clears the
+/// element and returns the result.
 ///
 /// The path is relative to the crate root (where `cargo test` is run).
 ///
@@ -82,12 +89,13 @@ impl core::fmt::Display for ScreenshotError {
 /// element is not present (i.e. not running under the headless test runner).
 /// Callers that want screenshots to be optional can simply call `.ok()` on
 /// the result.
-pub async fn screenshot(path: &str) -> Result<(), ScreenshotError> {
+pub async fn screenshot(path: &str) -> Result<Screenshot, ScreenshotError> {
     let el = match DOCUMENT.with(|doc| doc.getElementById("__wbgtest_screenshot")) {
         Some(el) => el,
         None => return Err(ScreenshotError::NotSupported),
     };
-    el.set_text_content(path);
+    let request = format!("filename:{path}");
+    el.set_text_content(&request);
 
     loop {
         wasm_bindgen_futures::JsFuture::from(delay_promise(50))
@@ -95,19 +103,19 @@ pub async fn screenshot(path: &str) -> Result<(), ScreenshotError> {
             .unwrap_throw();
 
         let content = el.text_content();
-        if content == path {
+        if content == request {
             continue;
         }
 
         el.set_text_content("");
 
         if content == "ok" {
-            return Ok(());
+            return Ok(Screenshot);
         }
         if let Some(msg) = content.strip_prefix("err:") {
             return Err(ScreenshotError::Failed(msg.into()));
         }
-        return Ok(());
+        return Ok(Screenshot);
     }
 }
 

@@ -231,8 +231,8 @@ pub fn run(
             "var el = document.getElementById('__wbgtest_screenshot');\
              if (!el) return '';\
              var t = el.textContent;\
-             if (t === '' || t === 'ok' || t.startsWith('err:')) return '';\
-             return t;",
+             if (!t.startsWith('filename:')) return '';\
+             return t.substring(9);",
         ) {
             let ss_text = val.as_str().unwrap_or_default().to_string();
             if !ss_text.is_empty() {
