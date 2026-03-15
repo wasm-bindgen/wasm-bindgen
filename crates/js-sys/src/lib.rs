@@ -441,7 +441,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, is_type_of = Array::is_array, typescript_type = "Array<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Array<T = JsValue>;
 
     /// Creates a new empty array.
@@ -2002,9 +2002,27 @@ impl<T> Iterable for Array<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for Array<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Array<T> {}
+
 impl<T: JsTuple> Iterable for ArrayTuple<T> {
     type Item = JsValue;
 }
+
+impl<T: JsTuple> PartialEq for ArrayTuple<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T: JsTuple> Eq for ArrayTuple<T> {}
 
 // ArrayBufferOptions
 #[wasm_bindgen]
@@ -2221,7 +2239,7 @@ impl UpcastFrom<&[u8]> for ArrayBuffer {}
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "SharedArrayBuffer")]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type SharedArrayBuffer;
 
     /// The `SharedArrayBuffer` object is used to represent a generic,
@@ -4724,7 +4742,7 @@ impl Default for Function {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Generator<any, any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Generator<T = JsValue>;
 
     /// The `next()` method returns an object with two properties done and value.
@@ -4817,11 +4835,20 @@ impl<T: FromWasmAbi> Iterable for Generator<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for Generator<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Generator<T> {}
+
 // AsyncGenerator
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "AsyncGenerator<any, any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type AsyncGenerator<T = JsValue>;
 
     /// The `next()` method returns an object with two properties done and value.
@@ -4858,11 +4885,20 @@ impl<T: FromWasmAbi> AsyncIterable for AsyncGenerator<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for AsyncGenerator<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for AsyncGenerator<T> {}
+
 // Map
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Map<any, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Map<K = JsValue, V = JsValue>;
 
     /// The Map object holds key-value pairs. Any value (both objects and
@@ -5052,6 +5088,15 @@ impl<K, V> Iterable for Map<K, V> {
     type Item = ArrayTuple<(K, V)>;
 }
 
+impl<K, V> PartialEq for Map<K, V> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<K, V> Eq for Map<K, V> {}
+
 // Iterator
 #[wasm_bindgen]
 extern "C" {
@@ -5059,7 +5104,7 @@ extern "C" {
     /// something returned by `myArray[Symbol.iterator]()`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     #[wasm_bindgen(is_type_of = Iterator::looks_like_iterator, typescript_type = "Iterator<any>")]
     pub type Iterator<T = JsValue>;
 
@@ -5105,7 +5150,7 @@ extern "C" {
     /// something returned by `myObject[Symbol.asyncIterator]()`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of)
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     #[wasm_bindgen(is_type_of = Iterator::looks_like_iterator, typescript_type = "AsyncIterator<any>")]
     pub type AsyncIterator<T = JsValue>;
 
@@ -5359,7 +5404,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
     #[wasm_bindgen(extends = Object, typescript_type = "IteratorResult<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type IteratorNext<T = JsValue>;
 
     /// Has the value `true` if the iterator is past the end of the iterated
@@ -5377,6 +5422,15 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn value<T>(this: &IteratorNext<T>) -> T;
 }
+
+impl<T> PartialEq for IteratorNext<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for IteratorNext<T> {}
 
 #[allow(non_snake_case)]
 pub mod Math {
@@ -6562,6 +6616,15 @@ impl Default for PropertyDescriptor {
     }
 }
 
+impl<T> PartialEq for PropertyDescriptor<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for PropertyDescriptor<T> {}
+
 // Object.
 #[wasm_bindgen]
 extern "C" {
@@ -7147,7 +7210,7 @@ impl Default for Object<JsValue> {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "ProxyConstructor")]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     pub type Proxy;
 
     /// The [`Proxy`] object is used to define custom behavior for fundamental
@@ -7762,7 +7825,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Set<any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Set<T = JsValue>;
 
     /// The [`Set`] object lets you store unique values of any type, whether
@@ -7932,6 +7995,15 @@ impl<T> Iterable for Set<T> {
     type Item = T;
 }
 
+impl<T> PartialEq for Set<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Set<T> {}
+
 // SetIterator
 #[wasm_bindgen]
 extern "C" {
@@ -8047,7 +8119,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakMap<object, any>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type WeakMap<K = Object, V = JsValue>;
 
     /// The [`WeakMap`] object is a collection of key/value pairs in which the
@@ -8132,11 +8204,20 @@ impl Default for WeakMap {
     }
 }
 
+impl<K, V> PartialEq for WeakMap<K, V> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<K, V> Eq for WeakMap<K, V> {}
+
 // WeakSet
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakSet<object>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type WeakSet<T = Object>;
 
     /// The `WeakSet` object lets you store weakly held objects in a collection.
@@ -8189,11 +8270,20 @@ impl Default for WeakSet {
     }
 }
 
+impl<T> PartialEq for WeakSet<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for WeakSet<T> {}
+
 // WeakRef
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "WeakRef<object>")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type WeakRef<T = Object>;
 
     /// The `WeakRef` object contains a weak reference to an object. A weak
@@ -8211,6 +8301,15 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn deref<T>(this: &WeakRef<T>) -> Option<T>;
 }
+
+impl<T> PartialEq for WeakRef<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for WeakRef<T> {}
 
 #[cfg(js_sys_unstable_apis)]
 #[allow(non_snake_case)]
@@ -10306,7 +10405,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat/RelativeTimeFormat#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type RelativeTimeFormatOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -10344,7 +10443,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat/resolvedOptions)
         #[wasm_bindgen(extends = RelativeTimeFormatOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedRelativeTimeFormatOptions;
 
         /// The resolved locale string.
@@ -10363,7 +10462,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat/formatToParts)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type RelativeTimeFormatPart;
 
         /// The type of this part.
@@ -10384,7 +10483,7 @@ pub mod Intl {
     extern "C" {
         /// Options for `supportedLocalesOf` methods.
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type LocaleMatcherOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -10413,7 +10512,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type CollatorOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -10477,7 +10576,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.Collator")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Collator;
 
         /// The `Intl.Collator` object is a constructor for collators, objects
@@ -10585,7 +10684,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DateTimeFormatOptions;
 
         // Locale matching
@@ -10709,7 +10808,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/resolvedOptions)
         #[wasm_bindgen(extends = DateTimeFormatOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedDateTimeFormatOptions;
 
         /// The resolved locale string.
@@ -10724,7 +10823,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/formatToParts)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DateTimeFormatPart;
 
         /// The type of the part (e.g., "day", "month", "year", "literal", etc.)
@@ -10746,7 +10845,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/formatRangeToParts)
         #[wasm_bindgen(extends = DateTimeFormatPart)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DateTimeRangeFormatPart;
 
         /// The source of the part: "startRange", "endRange", or "shared".
@@ -10762,7 +10861,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.DateTimeFormat")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DateTimeFormat;
 
         /// The `Intl.DateTimeFormat` object is a constructor for objects
@@ -10915,7 +11014,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type NumberFormatOptions;
 
         // Locale matching
@@ -11054,7 +11153,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/resolvedOptions)
         #[wasm_bindgen(extends = NumberFormatOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedNumberFormatOptions;
 
         /// The resolved locale string.
@@ -11069,7 +11168,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/formatToParts)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type NumberFormatPart;
 
         /// The type of the part (e.g., "integer", "decimal", "fraction", "currency", etc.)
@@ -11091,7 +11190,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/formatRangeToParts)
         #[wasm_bindgen(extends = NumberFormatPart)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type NumberRangeFormatPart;
 
         /// The source of the part: "startRange", "endRange", or "shared".
@@ -11107,7 +11206,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.NumberFormat")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type NumberFormat;
 
         /// The `Intl.NumberFormat` object is a constructor for objects
@@ -11268,7 +11367,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/PluralRules/PluralRules#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type PluralRulesOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -11346,7 +11445,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/PluralRules/resolvedOptions)
         #[wasm_bindgen(extends = PluralRulesOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedPluralRulesOptions;
 
         /// The resolved locale string.
@@ -11366,7 +11465,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.PluralRules")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type PluralRules;
 
         /// The `Intl.PluralRules` object is a constructor for objects
@@ -11489,7 +11588,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.RelativeTimeFormat")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type RelativeTimeFormat;
 
         /// The `Intl.RelativeTimeFormat` object is a constructor for objects
@@ -11631,7 +11730,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/ListFormat#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ListFormatOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -11669,7 +11768,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/resolvedOptions)
         #[wasm_bindgen(extends = ListFormatOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedListFormatOptions;
 
         /// The resolved locale string.
@@ -11684,7 +11783,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/formatToParts)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ListFormatPart;
 
         /// The type of the part ("element" or "literal").
@@ -11703,7 +11802,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.ListFormat")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ListFormat;
 
         /// Creates a new `Intl.ListFormat` object.
@@ -11811,7 +11910,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/Segmenter#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type SegmenterOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -11844,7 +11943,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/resolvedOptions)
         #[wasm_bindgen(extends = SegmenterOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedSegmenterOptions;
 
         /// The resolved locale string.
@@ -11859,7 +11958,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/segment/Segments#segment_data)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type SegmentData;
 
         /// The segment string.
@@ -11886,7 +11985,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/segment/Segments)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Segments;
 
         /// Returns segment data for the segment containing the character at the given index.
@@ -11903,7 +12002,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.Segmenter")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Segmenter;
 
         /// Creates a new `Intl.Segmenter` object.
@@ -11986,7 +12085,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames/DisplayNames#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DisplayNamesOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -12036,7 +12135,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames/resolvedOptions)
         #[wasm_bindgen(extends = DisplayNamesOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedDisplayNamesOptions;
 
         /// The resolved locale string.
@@ -12052,7 +12151,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.DisplayNames")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DisplayNames;
 
         /// Creates a new `Intl.DisplayNames` object.
@@ -12124,7 +12223,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.Locale")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Locale;
 
         /// Creates a new `Intl.Locale` object.
@@ -12265,7 +12364,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getWeekInfo)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type WeekInfo;
 
         /// The first day of the week (1 = Monday, 7 = Sunday).
@@ -12288,7 +12387,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getTextInfo)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type TextInfo;
 
         /// The text direction ("ltr" or "rtl").
@@ -12374,7 +12473,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/DurationFormat#options)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DurationFormatOptions;
 
         #[wasm_bindgen(method, getter = localeMatcher)]
@@ -12517,7 +12616,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/resolvedOptions)
         #[wasm_bindgen(extends = DurationFormatOptions)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type ResolvedDurationFormatOptions;
 
         /// The resolved locale string.
@@ -12536,7 +12635,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/format#duration)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type Duration;
 
         #[wasm_bindgen(method, getter)]
@@ -12609,7 +12708,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/formatToParts)
         #[wasm_bindgen(extends = Object)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DurationFormatPart;
 
         /// The type of the part.
@@ -12632,7 +12731,7 @@ pub mod Intl {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat)
         #[wasm_bindgen(extends = Object, js_namespace = Intl, typescript_type = "Intl.DurationFormat")]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub type DurationFormat;
 
         /// Creates a new `Intl.DurationFormat` object.
@@ -12719,6 +12818,15 @@ impl<T> PromiseState<T> {
         self.get_status() == "rejected"
     }
 }
+
+impl<T> PartialEq for PromiseState<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for PromiseState<T> {}
 
 // Promise
 #[wasm_bindgen]
@@ -13050,6 +13158,15 @@ extern "C" {
     pub fn finally<T>(this: &Promise<T>, cb: &ScopedClosure<dyn FnMut()>) -> Promise<JsValue>;
 }
 
+impl<T> PartialEq for Promise<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        JsValue::eq(self.as_ref(), <Self as AsRef<JsValue>>::as_ref(other))
+    }
+}
+
+impl<T> Eq for Promise<T> {}
+
 impl<T: JsGeneric> Promising for Promise<T> {
     type Resolution = T;
 }
@@ -13124,7 +13241,7 @@ macro_rules! arrays {
         #[wasm_bindgen]
         extern "C" {
             #[wasm_bindgen(extends = Object, typescript_type = $name)]
-            #[derive(Clone, Debug)]
+            #[derive(Clone, Debug, PartialEq, Eq)]
             pub type $name;
 
             /// The

@@ -59,6 +59,37 @@ pub(crate) static BUILTIN_IDENTS: Lazy<BTreeSet<&'static str>> = Lazy::new(|| {
     ])
 });
 
+/// Maps WebIDL built-in type names to their `js_sys` paths for use in
+/// `extends` attributes. When an interface inherits from one of these,
+/// the generated code should emit `extends = ::js_sys::Type` instead of
+/// treating it as a missing web-sys interface.
+pub(crate) static BUILTIN_EXTENDS: Lazy<BTreeMap<&'static str, &'static str>> = Lazy::new(|| {
+    BTreeMap::from_iter(vec![
+        ("Promise", "::js_sys::Promise"),
+        ("Array", "::js_sys::Array"),
+        ("ArrayBuffer", "::js_sys::ArrayBuffer"),
+        ("Error", "::js_sys::Error"),
+        ("Function", "::js_sys::Function"),
+        ("Object", "::js_sys::Object"),
+        ("Date", "::js_sys::Date"),
+        ("Symbol", "::js_sys::Symbol"),
+        ("BigInt", "::js_sys::BigInt"),
+        ("Map", "::js_sys::Map"),
+        ("Set", "::js_sys::Set"),
+        ("RegExp", "::js_sys::RegExp"),
+        ("DataView", "::js_sys::DataView"),
+        ("Int8Array", "::js_sys::Int8Array"),
+        ("Uint8Array", "::js_sys::Uint8Array"),
+        ("Uint8ClampedArray", "::js_sys::Uint8ClampedArray"),
+        ("Int16Array", "::js_sys::Int16Array"),
+        ("Uint16Array", "::js_sys::Uint16Array"),
+        ("Int32Array", "::js_sys::Int32Array"),
+        ("Uint32Array", "::js_sys::Uint32Array"),
+        ("Float32Array", "::js_sys::Float32Array"),
+        ("Float64Array", "::js_sys::Float64Array"),
+    ])
+});
+
 // whitelist a few names that have known polyfills
 pub(crate) static POLYFILL_INTERFACES: Lazy<BTreeSet<&'static str>> =
     Lazy::new(|| BTreeSet::from_iter(vec!["AudioContext", "OfflineAudioContext"]));

@@ -887,9 +887,16 @@ impl<'src> FirstPassRecord<'src> {
         let parents = self
             .all_superclasses(&js_name)
             .map(|parent| {
-                let ident = rust_ident(&camel_case_ident(&parent));
-                program.required_features.insert(parent);
-                ident
+                if let Some(&js_sys_path) = crate::constants::BUILTIN_EXTENDS.get(parent.as_str()) {
+                    // JS built-in type — use the full js_sys path
+                    let path: syn::Path = syn::parse_str(js_sys_path).unwrap();
+                    quote::quote!(#path)
+                } else {
+                    // Web-sys interface — bare ident, and add as required feature
+                    let ident = rust_ident(&camel_case_ident(&parent));
+                    program.required_features.insert(parent);
+                    quote::quote!(#ident)
+                }
             })
             .collect::<Vec<_>>();
 
@@ -985,12 +992,36 @@ impl<'src> FirstPassRecord<'src> {
             methods.push(method.clone());
         }
 
+        // If this interface extends Promise (directly or transitively),
+        // implement the `Promising` trait. The resolution type is determined
+        // from the first parameter of the `onfulfilled` callback in the
+        // `then()` method — that parameter is the type the promise passes to
+        // the callback when it resolves. We walk up the interface hierarchy
+        // to find the `then` method if it is only defined on a parent.
+        //
+        // Falls back to `JsValue` if no `then` method or callback is found.
+        let extends_promise = self.extends_promise(&js_name);
+        let promising_resolution = if extends_promise {
+            let resolution = self.promise_resolution_type(&js_name).and_then(|wbg_ty| {
+                // Use inner position to get JS-compatible types (e.g.,
+                // JsString instead of String) since Resolution is a JsGeneric.
+                wbg_ty
+                    .to_syn_type(crate::util::TypePosition::RETURN.to_inner(), false, false)
+                    .ok()
+                    .flatten()
+            });
+            Some(resolution.unwrap_or_else(|| syn::parse_str("::wasm_bindgen::JsValue").unwrap()))
+        } else {
+            None
+        };
+
         Interface {
             name: name.clone(),
             js_name: js_name.clone(),
             deprecated: deprecated.clone(),
             has_interface,
             parents: parents.clone(),
+            promising_resolution,
             consts,
             attributes,
             methods,
