@@ -22,6 +22,131 @@ pub(crate) fn spawn(
 ) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
     let mut js_to_execute = String::new();
 
+    // Console shim to inject into user-spawned dedicated workers.
+    // Logs to worker's own DevTools, then forwards to main page for CLI capture.
+    let worker_console_shim = r#"
+["debug","log","info","warn","error"].forEach(m => {
+    const og = console[m];
+    console[m] = function(...a) {
+        og.apply(this, a);
+        postMessage(["__wbgtest_" + m, a]);
+    };
+});
+"#;
+
+    // Console shim for SharedWorkers - needs to track ports from connections
+    let shared_worker_console_shim = r#"
+const __wbg_ports = [];
+self.addEventListener('connect', e => {
+    __wbg_ports.push(e.ports[0]);
+});
+["debug","log","info","warn","error"].forEach(m => {
+    const og = console[m];
+    console[m] = function(...a) {
+        og.apply(this, a);
+        __wbg_ports.forEach(p => p.postMessage(["__wbgtest_" + m, a]));
+    };
+});
+"#;
+
+    // Patch Worker and SharedWorker constructors to inject console shim.
+    // This captures logs from user-spawned workers for CLI output.
+    let worker_constructor_patch = format!(
+        r#"
+const __wbg_worker_console_shim = {shim};
+const __wbg_shared_worker_console_shim = {shared_shim};
+
+function __wbg_worker_message_handler(e) {{
+    if (e.data && Array.isArray(e.data) &&
+        typeof e.data[0] === 'string' &&
+        e.data[0].startsWith('__wbgtest_')) {{
+        const method = e.data[0].slice(10);
+        const args = e.data[1];
+        if (['debug','log','info','warn','error'].includes(method)) {{
+            // Write to the appropriate element based on capture mode
+            const targetId = (typeof nocapture !== 'undefined' && nocapture) ? 'output' : 'console_output';
+            const el = document.getElementById(targetId);
+            if (el) {{
+                for (const msg of args) {{
+                    el.appendChild(document.createTextNode(String(msg) + '\n'));
+                }}
+            }}
+        }}
+        e.stopImmediatePropagation();
+    }}
+}}
+
+const __wbg_OriginalWorker = Worker;
+Worker = function(url, options) {{
+    let scriptUrl = url;
+    if (typeof url === 'string' && !url.startsWith('blob:')) {{
+        scriptUrl = new URL(url, location.href).href;
+    }}
+    if (typeof scriptUrl === 'string' && scriptUrl.startsWith('blob:')) {{
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', scriptUrl, false);
+        xhr.send();
+        if (xhr.status === 200 || xhr.status === 0) {{
+            const shimmed = __wbg_worker_console_shim + xhr.responseText;
+            const blob = new Blob([shimmed], {{type: 'application/javascript'}});
+            scriptUrl = URL.createObjectURL(blob);
+        }}
+    }} else if (typeof scriptUrl === 'string') {{
+        const isModule = options?.type === 'module';
+        const wrapper = isModule
+            ? __wbg_worker_console_shim + 'await import("' + scriptUrl + '");'
+            : __wbg_worker_console_shim + 'importScripts("' + scriptUrl + '");';
+        const blob = new Blob([wrapper], {{type: 'application/javascript'}});
+        scriptUrl = URL.createObjectURL(blob);
+        if (isModule) {{
+            options = {{...options, type: 'module'}};
+        }}
+    }}
+    const worker = new __wbg_OriginalWorker(scriptUrl, options);
+    worker.addEventListener('message', __wbg_worker_message_handler);
+    return worker;
+}};
+Worker.prototype = __wbg_OriginalWorker.prototype;
+
+const __wbg_OriginalSharedWorker = SharedWorker;
+SharedWorker = function(url, options) {{
+    let scriptUrl = url;
+    if (typeof url === 'string' && !url.startsWith('blob:')) {{
+        scriptUrl = new URL(url, location.href).href;
+    }}
+    if (typeof scriptUrl === 'string' && scriptUrl.startsWith('blob:')) {{
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', scriptUrl, false);
+        xhr.send();
+        if (xhr.status === 200 || xhr.status === 0) {{
+            const shimmed = __wbg_shared_worker_console_shim + xhr.responseText;
+            const blob = new Blob([shimmed], {{type: 'application/javascript'}});
+            scriptUrl = URL.createObjectURL(blob);
+        }}
+    }} else if (typeof scriptUrl === 'string') {{
+        const isModule = options?.type === 'module';
+        const wrapper = isModule
+            ? __wbg_shared_worker_console_shim + 'await import("' + scriptUrl + '");'
+            : __wbg_shared_worker_console_shim + 'importScripts("' + scriptUrl + '");';
+        const blob = new Blob([wrapper], {{type: 'application/javascript'}});
+        scriptUrl = URL.createObjectURL(blob);
+        if (isModule) {{
+            options = {{...options, type: 'module'}};
+        }}
+    }}
+    const worker = new __wbg_OriginalSharedWorker(scriptUrl, options);
+    worker.port.addEventListener('message', __wbg_worker_message_handler);
+    return worker;
+}};
+SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
+"#,
+        shim = serde_json::to_string(worker_console_shim).unwrap(),
+        shared_shim = serde_json::to_string(shared_worker_console_shim).unwrap()
+    );
+
+    // Add the worker constructor patch at the start
+    js_to_execute.push_str(&worker_constructor_patch);
+
     let cov_import = if test_mode.no_modules() {
         "let __wbgtest_cov_dump = wasm_bindgen.__wbgtest_cov_dump;\n\
          let __wbgtest_module_signature = wasm_bindgen.__wbgtest_module_signature;"
@@ -263,7 +388,7 @@ pub(crate) fn spawn(
                 match test_mode {
                     TestMode::DedicatedWorker { .. } => {
                         format!(
-                            r#"const port = new Worker('worker.js', {{type: '{module}'}});
+                            r#"const port = new __wbg_OriginalWorker('worker.js', {{type: '{module}'}});
                             port.onerror = function(e) {{
                                 console.error('Worker error:', e.message, e.filename, e.lineno);
                                 document.getElementById('output').textContent += '\nWorker error: ' + e.message;
@@ -274,7 +399,7 @@ pub(crate) fn spawn(
                     TestMode::SharedWorker { .. } => {
                         format!(
                             r#"
-                            const worker = new SharedWorker("worker.js?random=" + crypto.randomUUID(), {{type: "{module}"}});
+                            const worker = new __wbg_OriginalSharedWorker("worker.js?random=" + crypto.randomUUID(), {{type: "{module}"}});
                             worker.onerror = function(e) {{
                                 console.error('Worker error:', e.message, e.filename, e.lineno);
                                 document.getElementById('output').textContent += '\nWorker error: ' + e.message;
