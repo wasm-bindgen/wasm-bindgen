@@ -145,6 +145,7 @@ impl OpenFilePickerOptions {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WellKnownDirectory")]
     #[deprecated = "Use `set_start_in()` instead."]
     pub fn start_in(&mut self, val: WellKnownDirectory) -> &mut Self {
         self.set_start_in(val);
