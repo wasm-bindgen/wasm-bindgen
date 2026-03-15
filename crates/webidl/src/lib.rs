@@ -548,16 +548,13 @@ impl<'src> FirstPassRecord<'src> {
         // use argument position now as we're just binding setters
         // Unstable APIs always use typed generics; stable uses legacy by default.
         // [WbgGeneric] on the dictionary definition opts into typed generics.
-        let generics_compat = if unstable_override || wbg_generic {
-            false
-        } else {
-            !self.options.next_unstable.get()
-        };
+        // next_unstable opts everything into the generics path.
+        let generics = unstable_override || wbg_generic || self.options.next_unstable.get();
 
         // In legacy mode (no generics), nullable sequences/arrays collapse to &JsValue
         // for the setter, with the builder using unwrap_or(&JsValue::NULL).
         // With generics enabled, the types are precise (e.g. Option<&[T]>) so no collapse needed.
-        let is_js_value_ref_option_type = generics_compat
+        let is_js_value_ref_option_type = !generics
             && match &wbg_type {
                 wbg_type::WbgType::JsOption(ty) => match **ty {
                     wbg_type::WbgType::Any => true,
@@ -577,12 +574,12 @@ impl<'src> FirstPassRecord<'src> {
             };
 
         let ty = wbg_type
-            .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
+            .to_syn_type(TypePosition::ARGUMENT, false, !generics)
             .ok()
             .flatten()?;
 
         let mut return_ty = wbg_type
-            .to_syn_type(TypePosition::RETURN, false, generics_compat)
+            .to_syn_type(TypePosition::RETURN, false, !generics)
             .ok()
             .flatten()?;
 
@@ -593,7 +590,7 @@ impl<'src> FirstPassRecord<'src> {
         // In legacy mode (no generics), slice types aren't supported because
         // they don't implement `Into<JsValue>`. With generics enabled,
         // &[T] where T: ErasableGeneric is supported via IntoWasmAbi.
-        if generics_compat {
+        if !generics {
             match ty {
                 syn::Type::Reference(ref i) if matches!(&*i.elem, syn::Type::Slice(_)) => {
                     return None
@@ -638,12 +635,12 @@ impl<'src> FirstPassRecord<'src> {
         //   typed variants get suffixes.
         // In unstable mode: no JsValue fallback, first typed variant is unsuffixed,
         //   remaining typed variants get suffixes.
-        let flattened_types = wbg_type.flatten(None);
+        let flattened_types = wbg_type.flatten(None, generics);
         let setter_types = if flattened_types.len() > 1 {
             let mut setters = Vec::new();
 
             // In stable mode, add the JsValue fallback as the unsuffixed setter
-            if generics_compat {
+            if !generics {
                 setters.push(DictionaryFieldSetter {
                     ty: ty.clone(),
                     name_suffix: None,
@@ -653,14 +650,14 @@ impl<'src> FirstPassRecord<'src> {
 
             for flattened in &flattened_types {
                 if let Some(setter_ty) = flattened
-                    .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
+                    .to_syn_type(TypePosition::ARGUMENT, false, !generics)
                     .ok()
                     .flatten()
                 {
                     let mut suffix = String::new();
                     flattened.push_snake_case_name(&mut suffix);
                     // In unstable mode, the first typed setter gets the unsuffixed name
-                    let name_suffix = if !generics_compat && setters.is_empty() {
+                    let name_suffix = if generics && setters.is_empty() {
                         None
                     } else {
                         Some(suffix)
@@ -1027,15 +1024,14 @@ impl<'src> FirstPassRecord<'src> {
         let catch = throws(attrs);
         let deprecated: Option<Option<String>> = get_rust_deprecated(attrs);
 
-        let generics_compat = if unstable || wbg_generic {
-            false
-        } else {
-            !self.options.next_unstable.get()
-        };
+        let generics = unstable
+            || wbg_generic
+            || is_wbg_generic(attrs.as_ref())
+            || self.options.next_unstable.get();
         let ty = type_
             .type_
             .to_wbg_type(self)
-            .to_syn_type(TypePosition::RETURN, false, generics_compat)
+            .to_syn_type(TypePosition::RETURN, false, !generics)
             .unwrap_or(None);
 
         // Skip types which can't be converted
@@ -1056,7 +1052,10 @@ impl<'src> FirstPassRecord<'src> {
         }
 
         if !readonly {
-            let idls = type_.type_.to_wbg_type(self).flatten(attrs.as_ref());
+            let idls = type_
+                .type_
+                .to_wbg_type(self)
+                .flatten(attrs.as_ref(), generics);
             let any_different_type = idls.len() > 1;
 
             if any_different_type
@@ -1068,7 +1067,7 @@ impl<'src> FirstPassRecord<'src> {
                 let ty = type_
                     .type_
                     .to_wbg_type(self)
-                    .to_syn_type(TypePosition::ARGUMENT, true, generics_compat)
+                    .to_syn_type(TypePosition::ARGUMENT, true, !generics)
                     .unwrap_or(None);
 
                 // Skip types which can't be converted
@@ -1089,7 +1088,7 @@ impl<'src> FirstPassRecord<'src> {
             }
 
             for (idl, ty) in idls.into_iter().filter_map(|idl| {
-                idl.to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
+                idl.to_syn_type(TypePosition::ARGUMENT, false, !generics)
                     .ok()
                     .flatten()
                     .map(|ty| (idl, ty))
@@ -1099,8 +1098,10 @@ impl<'src> FirstPassRecord<'src> {
                 if any_different_type {
                     let mut ext = String::new();
                     idl.push_snake_case_name(&mut ext);
-                    rust_name.push('_');
-                    rust_name.push_str(&snake_case_ident(&ext));
+                    if !ext.is_empty() {
+                        rust_name.push('_');
+                        rust_name.push_str(&snake_case_ident(&ext));
+                    }
                 }
 
                 attributes.push(InterfaceAttribute {

@@ -549,6 +549,22 @@ global.TestPromises = class {
   anyPromise() {
     return new Promise(r => r({ foo: "bar", num: 42 }));
   }
+  waitForString(p) {
+    // Accepts any Promising value (Promise or direct value)
+    return Promise.resolve(p);
+  }
+  waitForAny(p) {
+    return Promise.resolve(p);
+  }
+  maybeWaitForString(p) {
+    return Promise.resolve(p);
+  }
+  get promiseValue() {
+    return Promise.resolve("stored");
+  }
+  set promiseValue(v) {
+    this._promiseValue = v;
+  }
 };
 
 global.SignatureStability = class {

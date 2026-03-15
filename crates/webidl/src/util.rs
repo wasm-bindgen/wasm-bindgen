@@ -362,11 +362,11 @@ impl<'src> FirstPassRecord<'src> {
             // Signatures from unstable IDL definitions always use typed generics
             // for WbgType expansion (callbacks become typed, etc.)
             // [WbgGeneric] on the definition or operation also opts into typed generics.
-            if unstable
+            let generic = unstable
                 || wbg_generic
                 || signature.stability.is_unstable()
-                || is_wbg_generic(signature.attrs.as_ref())
-            {
+                || is_wbg_generic(signature.attrs.as_ref());
+            if generic {
                 self.options.next_unstable.set(true);
             }
 
@@ -416,6 +416,10 @@ impl<'src> FirstPassRecord<'src> {
 
         let mut actual_signatures = Vec::new();
         for (signature, idl_args) in signatures.iter() {
+            let generic = unstable
+                || wbg_generic
+                || signature.stability.is_unstable()
+                || is_wbg_generic(signature.attrs.as_ref());
             let start = actual_signatures.len();
 
             // Start off with an empty signature, this'll handle zero-argument
@@ -436,7 +440,7 @@ impl<'src> FirstPassRecord<'src> {
 
                 if let Some(idl_type) = idl_type {
                     for (j, idl_type) in idl_type
-                        .flatten(signature.attrs.as_ref())
+                        .flatten(signature.attrs.as_ref(), generic)
                         .into_iter()
                         .enumerate()
                     {
@@ -584,6 +588,8 @@ impl<'src> FirstPassRecord<'src> {
                 .enumerate()
                 .filter_map(|(i, ty)| ty.as_ref().map(|ty| (i, ty)))
             {
+                let is_canonical = matches!(arg, WbgType::CanonicalValue(_));
+
                 let mut any_same_name = false;
                 let mut any_different_type = false;
                 let mut any_different = false;
@@ -610,6 +616,33 @@ impl<'src> FirstPassRecord<'src> {
                 if !any_different {
                     continue;
                 }
+
+                // CanonicalValue args are the "primary" overload form and
+                // don't contribute to the method name suffix unless a
+                // shorter signature exists (e.g. from optional params
+                // producing a no-arg variant) that would collide.
+                // When they do need disambiguation, always use the arg name
+                // since their type name is intentionally empty.
+                if is_canonical {
+                    // Only need suffix if there's a shorter signature that
+                    // would produce the same unsuffixed name.
+                    let any_shorter = disambiguate_against.iter().any(|&idx| {
+                        let other = &all_signatures[idx];
+                        signature != other && other.args.get(i).is_none()
+                    });
+                    if !any_shorter {
+                        continue;
+                    }
+                    if first {
+                        rust_name.push_str("_with_");
+                        first = false;
+                    } else {
+                        rust_name.push_str("_and_");
+                    }
+                    rust_name.push_str(&snake_case_ident(arg_name));
+                    continue;
+                }
+
                 if first {
                     rust_name.push_str("_with_");
                     first = false;
