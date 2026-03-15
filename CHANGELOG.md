@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added support for `Promise<T>` argument expansion as `T | Promise<T>` unions under
+  generic expansion, matching WebIDL promise coercion semantics.
+  [#5031](https://github.com/wasm-bindgen/wasm-bindgen/pull/5031)
+
 * Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
   [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
