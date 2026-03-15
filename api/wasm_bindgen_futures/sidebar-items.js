@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"attr":["wasm_bindgen"],"fn":["future_to_promise","future_to_promise_typed","spawn_local"],"mod":["stream"],"struct":["JsFuture"]};

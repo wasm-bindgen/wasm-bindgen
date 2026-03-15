@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["__wbindgen_destroy_closure"],"struct":["ScopedClosure"],"type":["Closure"]};

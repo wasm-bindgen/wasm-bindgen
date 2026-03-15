@@ -1,0 +1,620 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Passing Rust Closures to JS - The &#x60;wasm-bindgen&#x60; Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-2b346328.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-985ce3bd.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The &#x60;wasm-bindgen&#x60; Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="passing-rust-closures-to-imported-javascript-functions"><a class="header" href="#passing-rust-closures-to-imported-javascript-functions">Passing Rust Closures to Imported JavaScript Functions</a></h1>
+<p>The <code>ScopedClosure</code> (with static lifetime alias <code>Closure</code>) and <code>dyn FnMut</code> types are the way to
+pass Rust closures to JavaScript. <code>Closure</code> and <code>ScopedClosure</code> are defined in the <code>wasm_bindgen</code> crate and
+exported in <code>wasm_bindgen::prelude</code>.</p>
+<p>Closures are <strong>unwind safe</strong> by default: when built with <code>panic=unwind</code>, panics inside
+closures are caught and converted to JavaScript <code>PanicError</code> exceptions. See
+<a href="./catch-unwind.html">Catching Panics</a> for details.</p>
+<h2 id="choosing-a-closure-api"><a class="header" href="#choosing-a-closure-api">Choosing a <code>Closure</code> API</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Use case</th><th>Import function signature</th><th>Accepts</th></tr>
+</thead>
+<tbody>
+<tr><td>Immediate/synchronous callbacks</td><td><code>&amp;dyn Fn</code> / <code>&amp;mut dyn FnMut</code></td><td><code>&amp;dyn Fn</code> / <code>&amp;mut dyn FnMut</code> only</td></tr>
+<tr><td>Known-lifetime callbacks</td><td><code>&amp;ScopedClosure&lt;'lifetime, C&gt;</code></td><td><code>&amp;ScopedClosure&lt;'a&gt;</code>, <code>&amp;ScopedClosure&lt;'static&gt;</code></td></tr>
+<tr><td>Indeterminate lifetime</td><td><code>ScopedClosure&lt;'static, C&gt;</code></td><td><code>ScopedClosure&lt;'static&gt;</code> only</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="constructor-patterns"><a class="header" href="#constructor-patterns">Constructor Patterns</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Constructor</th><th>Aborting Constructor</th><th>Assert Unwind Safe</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="#dyn-fn-and-mut-dyn-fnmut"><code>&amp;dyn Fn</code> / <code>&amp;mut dyn FnMut</code></a></td><td><code>&amp;dyn Fn</code> (Fn) / <code>&amp;mut dyn FnMut</code> (FnMut)</td><td><strong>None</strong></td><td><strong>None</strong></td></tr>
+<tr><td><a href="#known-lifetime-callbacks-with-scopedclosure"><code>&amp;ScopedClosure&lt;'a, C&gt;</code></a></td><td><code>Closure::borrow</code> (Fn) / <code>borrow_mut</code> (FnMut)</td><td><code>borrow_aborting</code> / <code>borrow_mut_aborting</code></td><td><code>borrow_assert_unwind_safe</code> / <code>borrow_mut_assert_unwind_safe</code></td></tr>
+<tr><td><a href="#static-lifetimes-with-closuret--scopedclosurestatic-t"><code>ScopedClosure&lt;'static, C&gt;</code></a></td><td><code>Closure::own</code> (<code>Closure::new</code>)</td><td><code>own_aborting</code></td><td><code>own_assert_unwind_safe</code></td></tr>
+<tr><td><a href="#one-shot-static-closures-with-scopedclosurestatic-tonce"><code>ScopedClosure&lt;'static, C&gt;</code> (one-shot)</a></td><td><code>Closure::once</code></td><td><code>Closure::once_aborting</code></td><td><code>once_assert_unwind_safe</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Closure&lt;C&gt;</code> is a backwards compatible alias for <code>ScopedClosure&lt;'static, C&gt;</code>, while providing constructors for arbitrary lifetimes.</p>
+<p>The default constructors require <code>UnwindSafe</code> when building with <code>panic=unwind</code>, and catch panics, converting them to JavaScript <code>PanicError</code> exceptions.
+The <code>_aborting</code> variants do NOT require <code>UnwindSafe</code> and do NOT catch panics—if the closure panics, the process will abort.
+See <a href="./catch-unwind.html">Catching Panics</a> for details.</p>
+<p>The <code>_assert_unwind_safe</code> variants catch panics but don’t require <code>MaybeUnwindSafe</code>, enabling type inference with inline closures while still catching panics. Use these when you need inference and are confident the closure is unwind-safe.</p>
+<p>Alternatively, you can wrap your closure with <code>std::panic::AssertUnwindSafe</code> and use the regular constructors (<code>new</code>, <code>new_mut</code>, <code>own</code>, <code>borrow</code>, <code>borrow_mut</code>). This is useful when you want to keep using the coercion-based constructors:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::panic::AssertUnwindSafe;
+use wasm_bindgen::prelude::*;
+
+let data = Rc::new(RefCell::new(0));
+let closure = Closure::own(AssertUnwindSafe(move || {
+    *data.borrow_mut() += 1;
+}));
+<span class="boring">}</span></code></pre>
+<p>This constructor flexibility allows API consumers to decide on unwind safety behavior at the call site, rather than having it fixed by the function signature. A single function accepting <code>ScopedClosure &lt;dyn FnMut(u32)&gt;</code> can be called with closures created via with or without unwind safety, with varying or static lifetimes, and with optional once semantics.</p>
+<h2 id="dyn-fn-and-mut-dyn-fnmut"><a class="header" href="#dyn-fn-and-mut-dyn-fnmut"><code>&amp;dyn Fn</code> and <code>&amp;mut dyn FnMut</code></a></h2>
+<p>The <code>#[wasm_bindgen]</code> attribute supports passing closures as <code>&amp;dyn Fn</code> or
+<code>&amp;mut dyn FnMut</code> trait object references directly.</p>
+<p>When using this pattern, <em>unwind safety is assumed</em>. It is therefore up to the user to ensure that they are using this pattern with unwind safe function usage.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[wasm_bindgen]
+extern "C" {
+    fn takes_closure(f: &amp;dyn Fn());
+    fn takes_mut_closure(f: &amp;mut dyn FnMut());
+}
+<span class="boring">}</span></code></pre>
+<p>For longer-lived closures, or for closures that support checking unwind safety, use <code>ScopedClosure</code> instead.</p>
+<h2 id="known-lifetime-callbacks-with-scopedclosure"><a class="header" href="#known-lifetime-callbacks-with-scopedclosure">Known-Lifetime Callbacks with <code>ScopedClosure</code></a></h2>
+<p>For longer lived closures, use <code>ScopedClosure</code>, which operates in two separate modes
+depending on whether it uses a static lifetime or a known lifetime.</p>
+<p>When typing a JS function from Rust taking a closure argument there are two modes of operation:</p>
+<ol>
+<li>
+<p><strong><code>&amp;ScopedClosure&lt;'a, T&gt;</code> (pass by ref)</strong>: The closure is borrowed out to JS, while retaining
+ownership in Rust. There is no JS GC finalizer integration. It is disposed by Rust when
+dropped. Works with any lifetime.</p>
+</li>
+<li>
+<p><strong><code>ScopedClosure&lt;'static, T&gt;</code> by value (pass by value)</strong>: The closure is passed to JS
+ownership and integrated with JS GC finalizers. It is disposed entirely by JS. Only
+works with <code>'static</code> closures.</p>
+</li>
+</ol>
+<p>Note that <code>ScopedClosure&lt;'static, T&gt;</code> can also be passed by reference (<code>&amp;ScopedClosure&lt;'static, T&gt;</code>)
+if you want Rust to retain ownership of a static closure.</p>
+<h3 id="non-static-lifetimes-pass-by-reference-only"><a class="header" href="#non-static-lifetimes-pass-by-reference-only">Non-Static Lifetimes (Pass by Reference Only)</a></h3>
+<p>For creating a <code>ScopedClosure&lt;'a, T&gt;</code> from a non-static lifetime, use <code>Closure::borrow</code> (for immutable <code>Fn</code>)
+or <code>Closure::borrow_mut</code> (for mutable <code>FnMut</code>) when JavaScript may store the callback temporarily but
+you control when it becomes invalid. The closure is invalidated when the <code>ScopedClosure</code> is dropped.</p>
+<p><strong>Non-static closures can only be passed by reference</strong> since the underlying closure data
+may live on the stack.</p>
+<p>These are unwind safe. For non-unwind-safe closures, use <code>Closure::borrow_aborting</code> and
+<code>Closure::borrow_mut_aborting</code> (aborts on panic), or use <code>Closure::borrow_assert_unwind_safe</code>
+to assert unwind safety while still catching panics.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    fn register_callback(cb: &amp;ScopedClosure&lt;dyn FnMut(u32)&gt;);
+    fn trigger_callbacks();
+}
+
+let mut result = 0;
+{
+    let mut func = |value: u32| {
+        result += value;
+    };
+    let closure = Closure::borrow_mut(&amp;mut func);
+    register_callback(&amp;closure);
+    trigger_callbacks();  // Calls our closure
+    // closure dropped here, invalidating the JS reference
+}
+<span class="boring">}</span></code></pre>
+<p>The validity of the JavaScript function is tied to the lifetime of the <code>ScopedClosure</code>
+in Rust. <strong>Once a <code>ScopedClosure</code> is dropped, it will deallocate its internal memory
+and invalidate the corresponding JavaScript function so that any further
+attempts to invoke it raise an exception.</strong></p>
+<p>If JavaScript calls the closure after the <code>ScopedClosure</code> is dropped, it will
+throw: “closure invoked recursively or after being dropped”.</p>
+<h3 id="static-lifetimes-with-closuret--scopedclosurestatic-t"><a class="header" href="#static-lifetimes-with-closuret--scopedclosurestatic-t">Static Lifetimes with <code>Closure&lt;T&gt; = ScopedClosure&lt;'static, T&gt;</code></a></h3>
+<p>For <code>'static</code> closures, use <code>Closure::own()</code> when JavaScript needs to retain the
+closure for an indeterminate period, such as for event listeners, timers, or
+callbacks that outlive the current function call.</p>
+<blockquote>
+<p>Note: It is recommended in function signatures to use <code>ScopedClosure</code> and not
+<code>Closure</code>, as it can accept both short-lived and static closures <code>Closure</code>. This
+is because  <code>Closure&lt;T&gt;</code> is an alias for <code>ScopedClosure&lt;'static, T&gt;</code>. In a future
+release, <code>Closure</code> will be directly aliased to <code>ScopedClosure</code> instead._</p>
+</blockquote>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    fn setInterval(closure: &amp;Closure&lt;dyn FnMut()&gt;, millis: u32) -&gt; f64;
+    fn clearInterval(token: f64);
+
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &amp;str);
+}
+
+#[wasm_bindgen]
+pub struct Interval {
+    closure: Closure&lt;dyn FnMut()&gt;,
+    token: f64,
+}
+
+impl Interval {
+    pub fn new&lt;F: 'static&gt;(millis: u32, f: F) -&gt; Interval
+    where
+        F: FnMut()
+    {
+        // Construct a new closure.
+        let closure = Closure::new(f);
+
+        // Pass the closure to JS, to run every n milliseconds.
+        let token = setInterval(&amp;closure, millis);
+
+        Interval { closure, token }
+    }
+}
+
+// When the Interval is destroyed, clear its `setInterval` timer.
+impl Drop for Interval {
+    fn drop(&amp;mut self) {
+        clearInterval(self.token);
+    }
+}
+
+// Keep logging "hello" every second until the resulting `Interval` is dropped.
+#[wasm_bindgen]
+pub fn hello() -&gt; Interval {
+    Interval::new(1_000, || log("hello"))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="transferring-ownership-to-javascript"><a class="header" href="#transferring-ownership-to-javascript">Transferring Ownership to JavaScript</a></h3>
+<p>You can pass a <code>ScopedClosure</code> by value to transfer ownership to JavaScript. This is
+useful for one-shot callbacks where you don’t need to retain a handle in Rust:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    fn set_one_shot_callback(cb: ScopedClosure&lt;dyn FnMut()&gt;);
+}
+
+let cb = Closure::own(|| {
+    // This closure must be 'static
+});
+set_one_shot_callback(cb);  // Ownership transferred to JS GC, no need to store or forget
+<span class="boring">}</span></code></pre>
+<p>Note that only <code>'static</code> closures (<code>ScopedClosure&lt;'static, T&gt;</code>) can be passed
+by value. Borrowed closures must be passed by reference.</p>
+<h2 id="one-shot-static-closures-with-scopedclosurestatic-tonce"><a class="header" href="#one-shot-static-closures-with-scopedclosurestatic-tonce">One-Shot Static Closures with <code>ScopedClosure&lt;'static, T&gt;::once</code></a></h2>
+<p>Use <code>Closure::once</code> (or <code>Closure::once</code> alias) for closures that should only be
+called once, such as Promise handlers. This allows using <code>FnOnce</code> closures that
+consume captured values.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen::prelude::*;
+
+// Create a closure that consumes a String
+let message = String::from("Hello!");
+let closure: Closure&lt;dyn FnMut()&gt; = Closure::once(move || {
+    // message is moved and consumed here
+    web_sys::console::log_1(&amp;message.into());
+});
+<span class="boring">}</span></code></pre>
+<p>If you don’t need to cancel the closure early, use <code>Closure::once_into_js</code> to
+convert directly to a <code>JsValue</code>. Note that if the JavaScript function is never
+called, the <code>FnOnce</code> and everything it closes over will leak.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen::prelude::*;
+
+let callback = Closure::once_into_js(move || {
+    // This runs when called from JS
+});
+// callback is a JsValue containing a JS function
+<span class="boring">}</span></code></pre>
+<h2 id="panic-handling"><a class="header" href="#panic-handling">Panic Handling</a></h2>
+<p>When built with <code>panic=unwind</code>, all <code>ScopedClosure</code> and <code>dyn Fn</code> variants
+catch panics and convert them to JavaScript <code>PanicError</code> exceptions. This requires
+the closure to satisfy Rust’s <code>UnwindSafe</code> trait.</p>
+<p>For more information on enabling panic catching, see <a href="./catch-unwind.html">Catching
+Panics</a>.</p>
+<h3 id="unwindsafe-requirement"><a class="header" href="#unwindsafe-requirement">UnwindSafe Requirement</a></h3>
+<p>The closure constructors for <code>ScopedClosure</code> all require that
+closures be <code>UnwindSafe</code>. They act as marker traits that indicates a type is safe to
+use across panic boundaries.</p>
+<p>Common “not unwind safe” compiler errors are caused by capturing types with
+interior mutability:</p>
+<ul>
+<li><code>Rc&lt;Cell&lt;_&gt;&gt;</code>, <code>Rc&lt;RefCell&lt;_&gt;&gt;</code></li>
+<li>Other interior mutability types</li>
+</ul>
+<p>The compiler error will indicate which captured type is problematic.</p>
+<h4 id="fix-1-use-aborting-variants"><a class="header" href="#fix-1-use-aborting-variants">Fix 1: Use aborting variants</a></h4>
+<p>If you don’t need panic catching, use the <code>*_aborting</code> variants (<code>own_aborting</code>,
+<code>once_aborting</code>, <code>Closure::borrow_aborting</code>, <code>Closure::borrow_mut_aborting</code>) which do not require <code>UnwindSafe</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+use std::rc::Rc;
+use wasm_bindgen::prelude::*;
+
+let data = Rc::new(RefCell::new(0));
+
+// No UnwindSafe requirement — aborts on panic instead of catching
+let closure = Closure::own_aborting(move || {
+    *data.borrow_mut() += 1;
+});
+<span class="boring">}</span></code></pre>
+<h4 id="fix-1b-use-assert_unwind_safe-variants"><a class="header" href="#fix-1b-use-assert_unwind_safe-variants">Fix 1b: Use assert_unwind_safe variants</a></h4>
+<p>For <code>ScopedClosure</code>, you can use <code>Closure::own_assert_unwind_safe</code> directly:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::RefCell;
+use std::rc::Rc;
+use wasm_bindgen::prelude::*;
+
+let data = Rc::new(RefCell::new(0));
+
+// No UnwindSafe requirement — catches panics, caller asserts safety
+let closure: Closure&lt;dyn FnMut()&gt; = Closure::own_assert_unwind_safe(move || {
+    *data.borrow_mut() += 1;
+});
+<span class="boring">}</span></code></pre>
+<p>Or use <code>Closure::wrap_assert_unwind_safe</code> with a boxed closure:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let data = Rc::new(RefCell::new(0));
+let closure: Closure&lt;dyn FnMut()&gt; = Closure::wrap_assert_unwind_safe(Box::new(move || {
+    *data.borrow_mut() += 1;
+}));
+<span class="boring">}</span></code></pre>
+<h4 id="fix-2-assert-unwind-safety"><a class="header" href="#fix-2-assert-unwind-safety">Fix 2: Assert unwind safety</a></h4>
+<p>If you need panic catching and are confident your closure is safe to use across
+panic boundaries, you can use <code>AssertUnwindSafe</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::panic::AssertUnwindSafe;
+use wasm_bindgen::prelude::*;
+
+let closure = Closure::new(AssertUnwindSafe(move || {
+    // you're asserting this is safe across panics
+}));
+<span class="boring">}</span></code></pre>
+<h2 id="upcasting-scopedclosure"><a class="header" href="#upcasting-scopedclosure">Upcasting <code>ScopedClosure</code></a></h2>
+<p><code>ScopedClosure</code> supports full JS type variance within the erasable generic type system via <code>upcast()</code>
+and <code>upcast_into()</code>. This is possible since it eagerly moves the Rust function to a JS function on
+construction, in contrast to <code>dyn FnMut</code> whose <code>Repr</code> is its Rust fat pointer and not its
+<code>JsValue</code> representation.</p>
+<p>This enables covariance and contravariance on argument and return types:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen::prelude::*;
+use js_sys::Number;
+
+// Return type covariance: i32 -&gt; Number -&gt; JsValue
+let closure: Closure&lt;dyn Fn() -&gt; i32&gt; = Closure::own(|| 42i32);
+let _wider: &amp;Closure&lt;dyn Fn() -&gt; JsValue&gt; = closure.upcast_ref();
+
+// Argument contravariance: JsValue -&gt; Number -&gt; i32
+let closure: Closure&lt;dyn Fn(JsValue)&gt; = Closure::own(|_: JsValue| {});
+let _narrower: &amp;Closure&lt;dyn Fn(i32)&gt; = closure.upcast_ref();
+<span class="boring">}</span></code></pre>
+<p>This works because the JavaScript function doesn’t care about Rust’s type distinctions—the
+conversion between <code>i32</code>, <code>Number</code>, and <code>JsValue</code> happens at the JS-Wasm boundary,
+not inside the closure itself.</p>
+<h2 id="converting-closures-to-typed-functions"><a class="header" href="#converting-closures-to-typed-functions">Converting Closures to Typed Functions</a></h2>
+<p>The <code>js_sys::Function</code> type provides methods for type-safe conversion from <code>Closure</code>/<code>ScopedClosure</code> to typed <code>Function</code> with comprehensive covariance support:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>Input</th><th>Output</th><th>Use Case</th></tr>
+</thead>
+<tbody>
+<tr><td><code>from_closure</code></td><td><code>ScopedClosure&lt;'static, C&gt;</code></td><td><code>Function&lt;F&gt;</code></td><td>Owned closures (transfers ownership to JS)</td></tr>
+<tr><td><code>closure_ref</code></td><td><code>&amp;ScopedClosure&lt;C&gt;</code></td><td><code>&amp;Function&lt;F&gt;</code></td><td>Borrowed closures</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Function, Number, JsString};
+use wasm_bindgen::prelude::*;
+
+// Owned static conversion - transfers ownership to JS
+let closure: Closure&lt;dyn FnMut() -&gt; u32&gt; = Closure::new(|| 42);
+let func: Function&lt;fn() -&gt; Number&gt; = Function::from_closure(closure);
+
+// Borrowed ScopedClosure conversion
+let mut val: u32 = 5;
+let mut func = || { val += 1; val };
+let closure = ScopedClosure::borrow_mut(&amp;mut func);
+let func_ref: &amp;Function&lt;fn() -&gt; Number&gt; = Function::closure_ref(&amp;closure);
+<span class="boring">}</span></code></pre>
+<h3 id="passing-closures-to-typed-callback-apis"><a class="header" href="#passing-closures-to-typed-callback-apis">Passing Closures to Typed Callback APIs</a></h3>
+<p>Many JavaScript APIs like <code>DOMTokenList.forEach</code> or <code>Array.forEach</code> accept typed callback
+functions. You can pass Rust closures to these APIs using <code>Function::closure_ref</code> with
+<code>ScopedClosure::borrow_mut</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Array, Function, JsString, Number, Undefined};
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    // Simulates APIs like DOMTokenList.forEach that take typed callbacks
+    fn invoke_for_each_callback(
+        callback: &amp;Function&lt;fn(JsString, Number) -&gt; Undefined&gt;,
+        items: &amp;Array&lt;JsString&gt;,
+    );
+}
+
+let items: Array&lt;JsString&gt; = Array::new_typed();
+items.push(&amp;JsString::from("apple"));
+items.push(&amp;JsString::from("banana"));
+
+let mut results = Vec::new();
+
+// Rust closure borrowing local data
+let mut func = |value: JsString, index: Number| {
+    results.push((value.as_string().unwrap(), index.value_of() as u32));
+};
+
+// ScopedClosure borrows the Rust closure, Function::closure_ref provides
+// a typed &amp;Function reference for the JS callback parameter
+invoke_for_each_callback(
+    Function::closure_ref(&amp;ScopedClosure::borrow_mut(&amp;mut func)),
+    &amp;items
+);
+
+// After the call, results contains: [("apple", 0), ("banana", 1)]
+<span class="boring">}</span></code></pre>
+<p>This pattern works with any API expecting a typed <code>&amp;Function&lt;fn(...) -&gt; ...&gt;</code> callback,
+such as the generated <code>web-sys</code> bindings for <code>DOMTokenList::for_each</code>, <code>NodeList::for_each</code>,
+and similar iteration methods.</p>
+<blockquote>
+<p><strong>Future improvement:</strong> If <code>js-sys</code> is migrated into <code>wasm-bindgen</code> core in a future
+release, it will be possible to implement <code>Deref&lt;Target = Function&lt;F&gt;&gt;</code> for <code>ScopedClosure</code>,
+enabling automatic dereferencing and Rust-to-JS type conversions. This would simplify
+the above pattern to just <code>invoke_for_each_callback(&amp;ScopedClosure::borrow_mut(&amp;mut func), &amp;items)</code>.</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/static-js-objects.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/receiving-js-closures-in-rust.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/static-js-objects.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/receiving-js-closures-in-rust.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
