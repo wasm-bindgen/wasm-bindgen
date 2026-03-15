@@ -4,6 +4,10 @@ use js_sys::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
+fn has_float16_array() -> bool {
+    Reflect::has_str(global().as_ref(), &"Float16Array".into()).unwrap_or(false)
+}
+
 macro_rules! each {
     ($m:ident) => {
         $m!(Uint8Array);
@@ -143,6 +147,70 @@ macro_rules! test_slice {
 #[wasm_bindgen_test]
 fn new_slice() {
     each!(test_slice);
+}
+
+#[wasm_bindgen_test]
+fn float16array_inheritance() {
+    if !has_float16_array() {
+        return;
+    }
+
+    let arr = Float16Array::new(&JsValue::undefined());
+    assert!(arr.is_instance_of::<Float16Array>());
+    let _: &Object = arr.as_ref();
+    assert!(arr.is_instance_of::<Object>());
+}
+
+#[wasm_bindgen_test]
+fn float16array_basic_methods() {
+    if !has_float16_array() {
+        return;
+    }
+
+    let arr = Float16Array::new(&4.into());
+    assert_eq!(arr.length(), 4);
+    assert_eq!(arr.byte_length(), 8);
+    assert_eq!(arr.byte_offset(), 0);
+    assert!(JsValue::from(arr.buffer()).is_object());
+
+    arr.fill(1.0, 0, 2);
+    assert_eq!(arr.get_index_as_f64(0), 1.0);
+    assert_eq!(arr.get_index_as_f64(1), 1.0);
+    assert_eq!(arr.get_index_as_f64(2), 0.0);
+
+    arr.set_index_from_f64(2, -2.0);
+    assert_eq!(arr.at_as_f64(-2).unwrap(), -2.0);
+
+    arr.copy_within(3, 0, 1);
+    assert_eq!(arr.get_index_as_f64(3), 1.0);
+
+    assert_eq!(arr.subarray(1, 3).length(), 2);
+    assert_eq!(arr.slice(1, 3).length(), 2);
+
+    let mut seen = Vec::new();
+    arr.for_each(&mut |value, _, _| seen.push(value));
+    assert_eq!(seen, vec![1.0, 1.0, -2.0, 1.0]);
+}
+
+#[wasm_bindgen_test]
+fn float16array_u16_helpers() {
+    if !has_float16_array() {
+        return;
+    }
+
+    let initial = [0x3c00, 0xc000, 0x3555];
+    let arr = Float16Array::new_from_u16_slice(&initial);
+    assert_eq!(arr.get_index_as_f64(0), 1.0);
+    assert_eq!(arr.get_index_as_f64(1), -2.0);
+
+    let mut copied = [0; 3];
+    arr.copy_to_u16_slice(&mut copied);
+    assert_eq!(copied, initial);
+    assert_eq!(arr.to_u16_vec(), initial);
+
+    let replacement = [0x0001, 0x7bff, 0xfc00];
+    arr.copy_from_u16_slice(&replacement);
+    assert_eq!(arr.to_u16_vec(), replacement);
 }
 
 #[wasm_bindgen_test]
