@@ -2914,6 +2914,7 @@ if (require('worker_threads').isMainThread) {{
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
+        self.global("let __wbg_reinit_hook = null;");
 
         let mut reset_statements = Vec::new();
         reset_statements.push("__wbg_instance_id++;".to_string());
@@ -2974,9 +2975,13 @@ if (require('worker_threads').isMainThread) {{
 
         reset_statements.push(
             "
+            const oldExports = wasm;
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
+            if (__wbg_reinit_hook !== null) {
+                __wbg_reinit_hook(wasm, oldExports);
+            }
             "
             .to_string(),
         );
@@ -2996,6 +3001,39 @@ if (require('worker_threads').isMainThread) {{
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
                 private: !self.config.generate_reset_state,
+            }),
+        )?;
+
+        // Generate the reinit hook setter (always public so users can register
+        // hooks even when __wbg_reset_state itself is private / called only by
+        // the termination guard).
+        let hook_identifier = self.generate_identifier("__wbg_set_reinit_hook");
+        let hook_definition = format!(
+            "function {hook_identifier} (callback) {{\n\
+                if (callback !== null && typeof callback !== 'function') {{\n\
+                    throw new Error('expected function or null, got ' + typeof callback);\n\
+                }}\n\
+                __wbg_reinit_hook = callback;\n\
+            }}\n"
+        );
+        let instance_type = match self.config.mode {
+            OutputMode::Web | OutputMode::NoModules { .. } => "InitOutput",
+            OutputMode::Node { .. } if self.threads_enabled => "InitOutput",
+            _ => "WebAssembly.Exports",
+        };
+        define_export(
+            &mut self.exports,
+            "__wbg_set_reinit_hook",
+            &[],
+            ExportEntry::Definition(ExportDefinition {
+                comments: None,
+                identifier: hook_identifier,
+                definition: hook_definition,
+                ts_definition: format!(
+                    "function __wbg_set_reinit_hook(callback: ((newInstance: {instance_type}, oldInstance: {instance_type}) => void) | null): void;\n"
+                ),
+                ts_comments: None,
+                private: false,
             }),
         )?;
 

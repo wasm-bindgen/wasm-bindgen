@@ -3,9 +3,20 @@
 export function __wbg_reset_state () {
     __wbg_instance_id++;
 
+    const oldExports = wasm;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
+    if (__wbg_reinit_hook !== null) {
+        __wbg_reinit_hook(wasm, oldExports);
+    }
+}
+
+export function __wbg_set_reinit_hook (callback) {
+    if (callback !== null && typeof callback !== 'function') {
+        throw new Error('expected function or null, got ' + typeof callback);
+    }
+    __wbg_reinit_hook = callback;
 }
 
 /**
@@ -33,6 +44,9 @@ function __wbg_get_imports() {
 }
 
 let __wbg_instance_id = 0;
+
+
+let __wbg_reinit_hook = null;
 
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {
