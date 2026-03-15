@@ -1878,3 +1878,137 @@ fn test_service_worker_no_carriage_return_in_output() {
 // ============================================================================
 // Node.js worker_threads log capture tests
 // ============================================================================
+
+#[test]
+fn test_browser_screenshot() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_browser_screenshot");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_take_screenshot() {
+                wasm_bindgen_test::screenshot("test_output.png").await.unwrap();
+            }
+        "#,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{stdout}{stderr}");
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+
+    assert!(
+        combined.contains("Screenshot saved: test_output.png"),
+        "Expected screenshot save message in output.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+
+    assert!(
+        combined.contains("bytes)"),
+        "Expected byte count in screenshot message.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+}
+
+#[test]
+fn test_browser_screenshot_creates_file() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_browser_screenshot_creates_file");
+
+    let screenshot_path = project.root.join("my_screenshot.png");
+    let screenshot_path_str = screenshot_path.to_str().unwrap().replace('\\', "/");
+
+    project.file(
+        "src/lib.rs",
+        &format!(
+            r#"
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_screenshot_file() {{
+                wasm_bindgen_test::screenshot("{screenshot_path_str}").await.unwrap();
+            }}
+        "#,
+        ),
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        output.status.success(),
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+
+    assert!(
+        screenshot_path.exists(),
+        "Screenshot file should exist at {screenshot_path_str}.\nstdout:\n{stdout}\nstderr:\n{stderr}",
+    );
+
+    let data = fs::read(&screenshot_path).unwrap();
+    assert!(
+        data.len() > 8,
+        "Screenshot file should not be empty ({} bytes)",
+        data.len()
+    );
+    assert_eq!(
+        &data[..8],
+        b"\x89PNG\r\n\x1a\n",
+        "Screenshot file should be a valid PNG"
+    );
+}

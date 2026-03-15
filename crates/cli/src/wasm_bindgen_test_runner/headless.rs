@@ -1,11 +1,12 @@
 use super::shell::Shell;
 use anyhow::{bail, Context, Error};
+use base64::Engine;
 use log::{debug, warn};
 use rouille::url::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value as Json};
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, Cursor, ErrorKind, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
@@ -224,6 +225,52 @@ pub fn run(
                 break;
             }
         }
+
+        if let Ok(val) = client.execute_script(
+            &id,
+            "var el = document.getElementById('__wbgtest_screenshot');\
+             if (!el) return '';\
+             var t = el.textContent;\
+             if (!t.startsWith('filename:')) return '';\
+             return t.substring(9);",
+        ) {
+            let ss_text = val.as_str().unwrap_or_default().to_string();
+            if !ss_text.is_empty() {
+                shell.status(&format!("Taking screenshot: {ss_text}"));
+                let response = match (|| -> Result<usize, String> {
+                    let png_data = client
+                        .screenshot(&id)
+                        .map_err(|e| format!("failed to capture: {e}"))?;
+                    let path = Path::new(&ss_text);
+                    if let Some(parent) = path.parent() {
+                        if !parent.as_os_str().is_empty() {
+                            fs::create_dir_all(parent)
+                                .map_err(|e| format!("failed to create directory: {e}"))?;
+                        }
+                    }
+                    fs::write(path, &png_data).map_err(|e| format!("failed to write: {e}"))?;
+                    Ok(png_data.len())
+                })() {
+                    Ok(len) => {
+                        println!("Screenshot saved: {ss_text} ({len} bytes)");
+                        "\"ok\"".to_string()
+                    }
+                    Err(msg) => {
+                        println!("Screenshot failed for {ss_text}: {msg}");
+                        serde_json::to_string(&format!("err:{msg}")).unwrap()
+                    }
+                };
+                client
+                    .execute_script(
+                        &id,
+                        &format!(
+                            "document.getElementById('__wbgtest_screenshot').textContent = {response};"
+                        ),
+                    )
+                    .ok();
+            }
+        }
+
         thread::sleep(Duration::from_millis(100));
     }
     if !shell_cleared {
@@ -654,6 +701,35 @@ impl Client {
             })
             .and_then(|v| v.as_str())
             .map(|s| s.to_string())
+    }
+
+    fn screenshot(&mut self, id: &str) -> Result<Vec<u8>, Error> {
+        #[derive(Deserialize)]
+        struct Response {
+            value: String,
+        }
+        let x: Response = self.get(&format!("/session/{id}/screenshot"))?;
+        base64::engine::general_purpose::STANDARD
+            .decode(&x.value)
+            .map_err(|e| anyhow::anyhow!("failed to decode screenshot base64: {e}"))
+    }
+
+    fn execute_script(&mut self, id: &str, script: &str) -> Result<Json, Error> {
+        #[derive(Serialize)]
+        struct Request {
+            script: String,
+            args: Vec<Json>,
+        }
+        #[derive(Deserialize)]
+        struct Response {
+            value: Json,
+        }
+        let request = Request {
+            script: script.to_string(),
+            args: vec![],
+        };
+        let x: Response = self.post(&format!("/session/{id}/execute/sync"), &request)?;
+        Ok(x.value)
     }
 
     fn get<U>(&mut self, path: &str) -> Result<U, Error>
