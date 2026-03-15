@@ -53,9 +53,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "mode")]
     pub fn set_mode(this: &DirectoryPickerOptions, val: FileSystemPermissionMode);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WellKnownDirectory")]
     #[doc = "Get the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`, `WellKnownDirectory`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -65,7 +66,7 @@ extern "C" {
     #[cfg(feature = "WellKnownDirectory")]
     #[doc = "Change the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`, `WellKnownDirectory`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -75,7 +76,7 @@ extern "C" {
     #[cfg(feature = "FileSystemHandle")]
     #[doc = "Change the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `DirectoryPickerOptions`, `FileSystemHandle`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -109,6 +110,7 @@ impl DirectoryPickerOptions {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WellKnownDirectory")]
     #[deprecated = "Use `set_start_in()` instead."]
     pub fn start_in(&mut self, val: WellKnownDirectory) -> &mut Self {
         self.set_start_in(val);

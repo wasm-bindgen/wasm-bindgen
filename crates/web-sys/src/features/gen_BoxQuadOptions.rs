@@ -35,19 +35,19 @@ extern "C" {
     #[cfg(feature = "Text")]
     #[doc = "Change the `relativeTo` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Text`*"]
     #[wasm_bindgen(method, setter = "relativeTo")]
     pub fn set_relative_to_text(this: &BoxQuadOptions, val: &Text);
     #[cfg(feature = "Element")]
     #[doc = "Change the `relativeTo` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Element`*"]
     #[wasm_bindgen(method, setter = "relativeTo")]
     pub fn set_relative_to_element(this: &BoxQuadOptions, val: &Element);
     #[cfg(feature = "Document")]
     #[doc = "Change the `relativeTo` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BoxQuadOptions`, `Document`*"]
     #[wasm_bindgen(method, setter = "relativeTo")]
     pub fn set_relative_to_document(this: &BoxQuadOptions, val: &Document);
 }

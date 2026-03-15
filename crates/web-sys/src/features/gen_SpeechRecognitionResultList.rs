@@ -37,7 +37,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionResult`, `SpeechRecognitionResultList`*"]
     pub fn get(this: &SpeechRecognitionResultList, index: u32) -> Option<SpeechRecognitionResult>;
 }

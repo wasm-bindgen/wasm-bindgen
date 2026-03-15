@@ -51,9 +51,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &FilePickerOptions, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WellKnownDirectory")]
     #[doc = "Get the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `WellKnownDirectory`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -63,7 +64,7 @@ extern "C" {
     #[cfg(feature = "WellKnownDirectory")]
     #[doc = "Change the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `WellKnownDirectory`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -73,7 +74,7 @@ extern "C" {
     #[cfg(feature = "FileSystemHandle")]
     #[doc = "Change the `startIn` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`, `FileSystemHandle`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -126,6 +127,7 @@ impl FilePickerOptions {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "WellKnownDirectory")]
     #[deprecated = "Use `set_start_in()` instead."]
     pub fn start_in(&mut self, val: WellKnownDirectory) -> &mut Self {
         self.set_start_in(val);
