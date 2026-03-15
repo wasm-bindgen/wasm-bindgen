@@ -1024,7 +1024,10 @@ impl<'src> FirstPassRecord<'src> {
         let catch = throws(attrs);
         let deprecated: Option<Option<String>> = get_rust_deprecated(attrs);
 
-        let generics = unstable || wbg_generic || self.options.next_unstable.get();
+        let generics = unstable
+            || wbg_generic
+            || is_wbg_generic(attrs.as_ref())
+            || self.options.next_unstable.get();
         let ty = type_
             .type_
             .to_wbg_type(self)
