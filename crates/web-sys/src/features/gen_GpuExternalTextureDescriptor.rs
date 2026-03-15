@@ -33,9 +33,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &GpuExternalTextureDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "HtmlVideoElement")]
     #[doc = "Get the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `HtmlVideoElement`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -45,7 +46,7 @@ extern "C" {
     #[cfg(feature = "HtmlVideoElement")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `HtmlVideoElement`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -55,7 +56,7 @@ extern "C" {
     #[cfg(feature = "VideoFrame")]
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuExternalTextureDescriptor`, `VideoFrame`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -97,6 +98,7 @@ impl GpuExternalTextureDescriptor {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "HtmlVideoElement")]
     #[deprecated = "Use `set_source()` instead."]
     pub fn source(&mut self, val: &HtmlVideoElement) -> &mut Self {
         self.set_source(val);

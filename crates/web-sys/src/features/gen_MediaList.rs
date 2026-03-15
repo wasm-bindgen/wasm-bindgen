@@ -58,7 +58,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn get(this: &MediaList, index: u32) -> Option<::alloc::string::String>;
 }

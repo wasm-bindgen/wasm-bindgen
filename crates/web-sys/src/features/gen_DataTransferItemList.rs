@@ -61,7 +61,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DataTransferItem`, `DataTransferItemList`*"]
     pub fn get(this: &DataTransferItemList, index: u32) -> Option<DataTransferItem>;
 }

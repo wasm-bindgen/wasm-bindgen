@@ -87,7 +87,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgPoint`, `SvgPointList`*"]
     pub fn get(this: &SvgPointList, index: u32) -> Result<SvgPoint, JsValue>;
 }
