@@ -36,7 +36,17 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 minicov = "0.3.8"
 
 [dev-dependencies]
-web-sys = { path = '../web-sys', features = ['console', 'Window', 'Performance'] }
+web-sys = { path = "../web-sys", features = [
+  "Blob",
+  "BlobPropertyBag",
+  "ErrorEvent",
+  "MessageEvent",
+  "Performance",
+  "Url",
+  "Window",
+  "Worker",
+  "console",
+] }
 
 [[bench]]
 name = "headless_output"

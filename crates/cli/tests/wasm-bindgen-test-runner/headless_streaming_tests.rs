@@ -1903,7 +1903,7 @@ fn test_user_spawned_dedicated_worker_logs_browser() {
         r#"
 [dependencies.web-sys]
 path = '{root}/crates/web-sys'
-features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"]
 "#,
     );
 
@@ -1911,6 +1911,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
         "src/lib.rs",
         r##"
             use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
             use wasm_bindgen_test::*;
 
             wasm_bindgen_test_configure!(run_in_browser);
@@ -1918,7 +1919,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
             #[wasm_bindgen_test]
             async fn test_spawned_worker_logs() {
                 use js_sys::Array;
-                use web_sys::{Blob, BlobPropertyBag, Url, Worker};
+                use web_sys::{Blob, BlobPropertyBag, MessageEvent, Url, Worker};
 
                 // Create a worker script that logs all 5 console levels
                 let script = r#"
@@ -1927,6 +1928,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
                     console.info("DEDICATED_WORKER_INFO_MARKER_7X9K2");
                     console.warn("DEDICATED_WORKER_WARN_MARKER_7X9K2");
                     console.error("DEDICATED_WORKER_ERROR_MARKER_7X9K2");
+                    postMessage("done");
                 "#;
                 let arr = Array::new();
                 arr.push(&JsValue::from_str(script));
@@ -1936,11 +1938,35 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
                 let url = Url::create_object_url_with_blob(&blob).unwrap();
                 let worker = Worker::new(&url).unwrap();
 
-                // Wait for worker to execute
-                wasm_bindgen_futures::JsFuture::from(js_sys::Promise::new(&mut |resolve, _| {
-                    web_sys::window().unwrap()
-                        .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 200).unwrap();
-                })).await.unwrap();
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
 
                 worker.terminate();
                 Url::revoke_object_url(&url).unwrap();
@@ -2006,6 +2032,139 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
     );
 }
 
+/// Test that a user-installed `addEventListener("message", ...)` handler
+/// coexists with console forwarding for a spawned dedicated worker.
+#[test]
+fn test_user_spawned_worker_add_event_listener_coexists_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_user_spawned_worker_add_event_listener_coexists_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_spawned_worker_add_event_listener_coexists() {
+                use js_sys::Array;
+                use web_sys::{Blob, BlobPropertyBag, MessageEvent, Url, Worker};
+
+                let script = r#"
+                    console.log("DEDICATED_WORKER_ADD_EVENT_LISTENER_MARKER_5J3R8");
+                    postMessage("done");
+                "#;
+                let arr = Array::new();
+                arr.push(&JsValue::from_str(script));
+                let opts = BlobPropertyBag::new();
+                opts.set_type("application/javascript");
+                let blob = Blob::new_with_str_sequence_and_options(&arr, &opts).unwrap();
+                let url = Url::create_object_url_with_blob(&blob).unwrap();
+                let worker = Worker::new(&url).unwrap();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.add_event_listener_with_callback(
+                        "message",
+                        onmessage.unchecked_ref(),
+                    ).unwrap();
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
+
+                worker.terminate();
+                Url::revoke_object_url(&url).unwrap();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    let count = combined
+        .matches("DEDICATED_WORKER_ADD_EVENT_LISTENER_MARKER_5J3R8")
+        .count();
+
+    assert_eq!(
+        count, 1,
+        "Expected dedicated worker log marker to appear exactly once, but it appeared {} times.\n\
+         This test verifies that user addEventListener(message) handling coexists with console forwarding.\n\
+         stdout:\n{}\nstderr:\n{}",
+        count, stdout, stderr
+    );
+}
+
 /// Test that console.log from a user-spawned module worker (type: 'module') is captured.
 #[test]
 fn test_user_spawned_module_worker_logs_browser() {
@@ -2027,7 +2186,7 @@ fn test_user_spawned_module_worker_logs_browser() {
         r#"
 [dependencies.web-sys]
 path = '{root}/crates/web-sys'
-features = ["Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "WorkerType", "Window"]
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "WorkerOptions", "WorkerType", "Window"]
 "#,
     );
 
@@ -2035,6 +2194,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "Worker
         "src/lib.rs",
         r##"
             use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
             use wasm_bindgen_test::*;
 
             wasm_bindgen_test_configure!(run_in_browser);
@@ -2042,7 +2202,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "Worker
             #[wasm_bindgen_test]
             async fn test_spawned_module_worker_logs() {
                 use js_sys::Array;
-                use web_sys::{Blob, BlobPropertyBag, Url, Worker, WorkerOptions, WorkerType};
+                use web_sys::{Blob, BlobPropertyBag, MessageEvent, Url, Worker, WorkerOptions, WorkerType};
 
                 // Create a module worker script that logs all 5 console levels
                 let script = r#"
@@ -2051,6 +2211,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "Worker
                     console.info("MODULE_WORKER_INFO_MARKER_4M8N3");
                     console.warn("MODULE_WORKER_WARN_MARKER_4M8N3");
                     console.error("MODULE_WORKER_ERROR_MARKER_4M8N3");
+                    postMessage("done");
                 "#;
                 let arr = Array::new();
                 arr.push(&JsValue::from_str(script));
@@ -2064,11 +2225,35 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "Worker
                 worker_opts.set_type(WorkerType::Module);
                 let worker = Worker::new_with_options(&url, &worker_opts).unwrap();
 
-                // Wait for worker to execute
-                wasm_bindgen_futures::JsFuture::from(js_sys::Promise::new(&mut |resolve, _| {
-                    web_sys::window().unwrap()
-                        .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 200).unwrap();
-                })).await.unwrap();
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for module worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
 
                 worker.terminate();
                 Url::revoke_object_url(&url).unwrap();
@@ -2134,6 +2319,282 @@ features = ["Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "Worker
     );
 }
 
+/// Test that console.log from a user-spawned module worker created from a URL
+/// (not a blob URL) is captured. This exercises the `await import(...)`
+/// wrapper path for module workers.
+#[test]
+fn test_user_spawned_url_module_worker_logs_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_user_spawned_url_module_worker_logs_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["MessageEvent", "Worker", "WorkerOptions", "WorkerType", "Window"]
+"#,
+    );
+
+    project.file(
+        "worker_script.js",
+        r#"
+console.debug("URL_MODULE_WORKER_DEBUG_MARKER_1Z8V4");
+console.log("URL_MODULE_WORKER_LOG_MARKER_1Z8V4");
+console.info("URL_MODULE_WORKER_INFO_MARKER_1Z8V4");
+console.warn("URL_MODULE_WORKER_WARN_MARKER_1Z8V4");
+console.error("URL_MODULE_WORKER_ERROR_MARKER_1Z8V4");
+postMessage("done");
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_spawned_url_module_worker_logs() {
+                use web_sys::{MessageEvent, Worker, WorkerOptions, WorkerType};
+
+                let worker_opts = WorkerOptions::new();
+                worker_opts.set_type(WorkerType::Module);
+                let worker =
+                    Worker::new_with_options("worker_script.js", &worker_opts).unwrap();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for URL module worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
+
+                worker.terminate();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    let levels = [
+        ("debug", "URL_MODULE_WORKER_DEBUG_MARKER_1Z8V4"),
+        ("log", "URL_MODULE_WORKER_LOG_MARKER_1Z8V4"),
+        ("info", "URL_MODULE_WORKER_INFO_MARKER_1Z8V4"),
+        ("warn", "URL_MODULE_WORKER_WARN_MARKER_1Z8V4"),
+        ("error", "URL_MODULE_WORKER_ERROR_MARKER_1Z8V4"),
+    ];
+
+    let mut failures = Vec::new();
+    for (level, marker) in &levels {
+        let count = combined.matches(*marker).count();
+        if count != 1 {
+            failures.push(format!("console.{}: expected 1, got {}", level, count));
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "Some console log levels were not captured correctly:\n{}\n\
+         stdout:\n{}\nstderr:\n{}",
+        failures.join("\n"),
+        stdout,
+        stderr
+    );
+}
+
+/// Regression test for non-cloneable worker console arguments.
+/// Logging a function should not crash the worker before it can continue.
+#[test]
+fn test_user_spawned_worker_non_cloneable_log_does_not_crash_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project =
+        Project::new("test_user_spawned_worker_non_cloneable_log_does_not_crash_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["Blob", "BlobPropertyBag", "ErrorEvent", "MessageEvent", "Url", "Worker", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_non_cloneable_worker_log_does_not_crash() {
+                use js_sys::Array;
+                use web_sys::{Blob, BlobPropertyBag, ErrorEvent, MessageEvent, Url, Worker};
+
+                let script = r#"
+                    console.log(function nonCloneable() {});
+                    postMessage("after-log");
+                "#;
+                let arr = Array::new();
+                arr.push(&JsValue::from_str(script));
+                let opts = BlobPropertyBag::new();
+                opts.set_type("application/javascript");
+                let blob = Blob::new_with_str_sequence_and_options(&arr, &opts).unwrap();
+                let url = Url::create_object_url_with_blob(&blob).unwrap();
+                let worker = Worker::new(&url).unwrap();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_clone = reject.clone();
+                    let onerror = Closure::once_into_js(move |e: ErrorEvent| {
+                        reject_clone
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str(&format!("worker error: {}", e.message())),
+                            )
+                            .unwrap();
+                    });
+                    worker.set_onerror(Some(onerror.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("after-log"));
+
+                worker.terminate();
+                Url::revoke_object_url(&url).unwrap();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass; non-cloneable console args should not crash the worker.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
 /// Test that console.log from a worker created via URL (not blob) is captured.
 /// This tests the importScripts wrapper path in the Worker constructor patch.
 #[test]
@@ -2156,7 +2617,7 @@ fn test_user_spawned_url_worker_logs_browser() {
         r#"
 [dependencies.web-sys]
 path = '{root}/crates/web-sys'
-features = ["Blob", "BlobPropertyBag", "Url", "Worker", "Window"]
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"]
 "#,
     );
 
@@ -2169,6 +2630,7 @@ console.log("URL_WORKER_LOG_MARKER_9K2P7");
 console.info("URL_WORKER_INFO_MARKER_9K2P7");
 console.warn("URL_WORKER_WARN_MARKER_9K2P7");
 console.error("URL_WORKER_ERROR_MARKER_9K2P7");
+postMessage("done");
 "#,
     );
 
@@ -2176,22 +2638,47 @@ console.error("URL_WORKER_ERROR_MARKER_9K2P7");
         "src/lib.rs",
         r##"
             use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
             use wasm_bindgen_test::*;
 
             wasm_bindgen_test_configure!(run_in_browser);
 
             #[wasm_bindgen_test]
             async fn test_spawned_url_worker_logs() {
-                use web_sys::Worker;
+                use web_sys::{MessageEvent, Worker};
 
                 // Create worker from URL (not blob) - this tests importScripts wrapper
                 let worker = Worker::new("worker_script.js").unwrap();
 
-                // Wait for worker to execute
-                wasm_bindgen_futures::JsFuture::from(js_sys::Promise::new(&mut |resolve, _| {
-                    web_sys::window().unwrap()
-                        .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 200).unwrap();
-                })).await.unwrap();
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for URL worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
 
                 worker.terminate();
             }
@@ -2253,6 +2740,396 @@ console.error("URL_WORKER_ERROR_MARKER_9K2P7");
         failures.join("\n"),
         stdout,
         stderr
+    );
+}
+
+/// Test that logs from a nested worker are forwarded as well.
+/// The outer worker spawns an inner worker and relays a completion message.
+#[test]
+fn test_user_spawned_nested_worker_logs_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_user_spawned_nested_worker_logs_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_spawned_nested_worker_logs() {
+                use js_sys::Array;
+                use web_sys::{Blob, BlobPropertyBag, MessageEvent, Url, Worker};
+
+                let script = r#"
+                    const innerBlob = new Blob(
+                        ['onmessage=function(){console.log("NESTED_WORKER_LOG_MARKER_2P6L1");postMessage("done")};postMessage("ready")'],
+                        { type: "application/javascript" }
+                    );
+                    const inner = new Worker(URL.createObjectURL(innerBlob));
+                    inner.onmessage = function(e) {
+                        if (e.data === "ready") {
+                            inner.postMessage("start");
+                            return;
+                        }
+                        postMessage(e.data);
+                        inner.terminate();
+                    };
+                "#;
+                let arr = Array::new();
+                arr.push(&JsValue::from_str(script));
+                let opts = BlobPropertyBag::new();
+                opts.set_type("application/javascript");
+                let blob = Blob::new_with_str_sequence_and_options(&arr, &opts).unwrap();
+                let url = Url::create_object_url_with_blob(&blob).unwrap();
+                let worker = Worker::new(&url).unwrap();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for nested worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
+
+                worker.terminate();
+                Url::revoke_object_url(&url).unwrap();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    let count = combined.matches("NESTED_WORKER_LOG_MARKER_2P6L1").count();
+    assert_eq!(
+        count, 1,
+        "Expected nested worker log marker to appear exactly once, but it appeared {} times.\n\
+         stdout:\n{}\nstderr:\n{}",
+        count, stdout, stderr
+    );
+}
+
+/// Regression test for non-cloneable shared worker console arguments.
+/// Logging a function should not crash the shared worker before it can continue.
+#[test]
+fn test_user_spawned_shared_worker_non_cloneable_log_does_not_crash_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project =
+        Project::new("test_user_spawned_shared_worker_non_cloneable_log_does_not_crash_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["Blob", "BlobPropertyBag", "ErrorEvent", "MessageEvent", "Url", "SharedWorker", "MessagePort", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_non_cloneable_shared_worker_log_does_not_crash() {
+                use js_sys::Array;
+                use web_sys::{Blob, BlobPropertyBag, ErrorEvent, MessageEvent, SharedWorker, Url};
+
+                let script = r#"
+                    onconnect = function(e) {
+                        const port = e.ports[0];
+                        console.log(function nonCloneable() {});
+                        port.postMessage("after-log");
+                    };
+                "#;
+                let arr = Array::new();
+                arr.push(&JsValue::from_str(script));
+                let opts = BlobPropertyBag::new();
+                opts.set_type("application/javascript");
+                let blob = Blob::new_with_str_sequence_and_options(&arr, &opts).unwrap();
+                let url = Url::create_object_url_with_blob(&blob).unwrap();
+                let worker = SharedWorker::new(&url).unwrap();
+                let port = worker.port();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    port.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_clone = reject.clone();
+                    let onerror = Closure::once_into_js(move |e: ErrorEvent| {
+                        reject_clone
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str(&format!("worker error: {}", e.message())),
+                            )
+                            .unwrap();
+                    });
+                    worker.set_onerror(Some(onerror.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for shared worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("after-log"));
+
+                Url::revoke_object_url(&url).unwrap();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass; non-cloneable console args should not crash the shared worker.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+}
+
+/// Regression test for script injection in the non-blob Worker wrapper path.
+/// The `data:` payload is harmless JavaScript followed by attacker-looking text
+/// inside a JS comment. If the wrapper concatenates the URL directly into the
+/// bootstrap source, the comment breaks out and the injected marker executes.
+#[test]
+fn test_user_spawned_data_url_worker_does_not_inject_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_user_spawned_data_url_worker_does_not_inject_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["MessageEvent", "Worker", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_data_url_worker_does_not_inject() {
+                use web_sys::{MessageEvent, Worker};
+
+                // Escaped correctly, this URL evaluates as the worker script
+                // `postMessage("done")//");console.log("DATA_URL_INJECTED_MARKER_6R2M8");//`
+                // which emits no logs. Vulnerable wrapper generation turns it
+                // into a second top-level console.log in the bootstrap blob.
+                let url = r#"data:text/javascript,postMessage("done")//");console.log("DATA_URL_INJECTED_MARKER_6R2M8");//"#;
+                let worker = Worker::new(url).unwrap();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    worker.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for data URL worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
+
+                worker.terminate();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    let injected_count = combined.matches("DATA_URL_INJECTED_MARKER_6R2M8").count();
+
+    assert_eq!(
+        injected_count, 0,
+        "Injected marker should not appear. Expected 0, got {}.\nstdout:\n{}\nstderr:\n{}",
+        injected_count, stdout, stderr
     );
 }
 
@@ -2401,7 +3278,7 @@ fn test_user_spawned_shared_worker_logs_browser() {
         r#"
 [dependencies.web-sys]
 path = '{root}/crates/web-sys'
-features = ["Blob", "BlobPropertyBag", "Url", "SharedWorker", "MessagePort", "Window"]
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "SharedWorker", "MessagePort", "Window"]
 "#,
     );
 
@@ -2409,6 +3286,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "SharedWorker", "MessagePort", "Wi
         "src/lib.rs",
         r##"
             use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
             use wasm_bindgen_test::*;
 
             wasm_bindgen_test_configure!(run_in_browser);
@@ -2416,7 +3294,7 @@ features = ["Blob", "BlobPropertyBag", "Url", "SharedWorker", "MessagePort", "Wi
             #[wasm_bindgen_test]
             async fn test_spawned_shared_worker_logs() {
                 use js_sys::Array;
-                use web_sys::{Blob, BlobPropertyBag, Url, SharedWorker};
+                use web_sys::{Blob, BlobPropertyBag, MessageEvent, SharedWorker, Url};
 
                 // Create a shared worker script that logs all 5 console levels on connect
                 let script = r#"
@@ -2437,13 +3315,36 @@ features = ["Blob", "BlobPropertyBag", "Url", "SharedWorker", "MessagePort", "Wi
                 let url = Url::create_object_url_with_blob(&blob).unwrap();
                 let worker = SharedWorker::new(&url).unwrap();
                 let port = worker.port();
-                port.start();
 
-                // Wait for worker to execute
-                wasm_bindgen_futures::JsFuture::from(js_sys::Promise::new(&mut |resolve, _| {
-                    web_sys::window().unwrap()
-                        .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 200).unwrap();
-                })).await.unwrap();
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    port.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for shared worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
 
                 Url::revoke_object_url(&url).unwrap();
             }
@@ -2505,6 +3406,261 @@ features = ["Blob", "BlobPropertyBag", "Url", "SharedWorker", "MessagePort", "Wi
         failures.join("\n"),
         stdout,
         stderr
+    );
+}
+
+/// Regression test for shared worker logs emitted before the first port is connected.
+/// Top-level logs should still be captured even though no `connect` event has fired yet.
+#[test]
+fn test_user_spawned_shared_worker_top_level_logs_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project = Project::new("test_user_spawned_shared_worker_top_level_logs_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "SharedWorker", "MessagePort", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_spawned_shared_worker_top_level_logs() {
+                use js_sys::Array;
+                use web_sys::{Blob, BlobPropertyBag, MessageEvent, SharedWorker, Url};
+
+                let script = r#"
+                    console.log("SPAWNED_SHARED_WORKER_TOP_LEVEL_MARKER_7Q2H5");
+                    onconnect = function(e) {
+                        e.ports[0].postMessage("done");
+                    };
+                "#;
+                let arr = Array::new();
+                arr.push(&JsValue::from_str(script));
+                let opts = BlobPropertyBag::new();
+                opts.set_type("application/javascript");
+                let blob = Blob::new_with_str_sequence_and_options(&arr, &opts).unwrap();
+                let url = Url::create_object_url_with_blob(&blob).unwrap();
+                let worker = SharedWorker::new(&url).unwrap();
+                let port = worker.port();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    port.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for shared worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
+
+                Url::revoke_object_url(&url).unwrap();
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    let count = combined
+        .matches("SPAWNED_SHARED_WORKER_TOP_LEVEL_MARKER_7Q2H5")
+        .count();
+
+    assert_eq!(
+        count, 1,
+        "Expected top-level shared worker log marker to appear exactly once, but it appeared {} times.\n\
+         This test verifies that logs emitted before the first port connection are still captured.\n\
+         stdout:\n{}\nstderr:\n{}",
+        count, stdout, stderr
+    );
+}
+
+/// Regression test for script injection in the non-blob SharedWorker wrapper path.
+/// The `data:` payload is harmless JavaScript followed by attacker-looking text
+/// inside a JS comment. If the wrapper concatenates the URL directly into the
+/// bootstrap source, the comment breaks out and the injected connect listener
+/// executes.
+#[test]
+fn test_user_spawned_data_url_shared_worker_does_not_inject_browser() {
+    let Some((driver_env, driver_path)) = find_webdriver() else {
+        eprintln!("Skipping headless test: no webdriver found");
+        return;
+    };
+
+    let mut project =
+        Project::new("test_user_spawned_data_url_shared_worker_does_not_inject_browser");
+
+    project
+        .deps
+        .push_str("js-sys = { path = '{root}/crates/js-sys' }\n");
+    project
+        .deps
+        .push_str("wasm-bindgen-futures = { path = '{root}/crates/futures' }\n");
+    project.deps.push_str(
+        r#"
+[dependencies.web-sys]
+path = '{root}/crates/web-sys'
+features = ["MessageEvent", "SharedWorker", "MessagePort", "Window"]
+"#,
+    );
+
+    project.file(
+        "src/lib.rs",
+        r##"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen::JsCast;
+            use wasm_bindgen_test::*;
+
+            wasm_bindgen_test_configure!(run_in_browser);
+
+            #[wasm_bindgen_test]
+            async fn test_data_url_shared_worker_does_not_inject() {
+                use web_sys::{MessageEvent, SharedWorker};
+
+                // Escaped correctly, this URL evaluates as the shared worker
+                // script `addEventListener("connect",e=>e.ports[0].postMessage("done"))//");addEventListener("connect",()=>console.log("..."));//`
+                // which is inert. Vulnerable wrapper generation registers a new
+                // connect listener in the bootstrap blob that logs the marker.
+                let url = r#"data:text/javascript,addEventListener("connect",e=>e.ports[0].postMessage("done"))//");addEventListener("connect",()=>console.log("SHARED_URL_INJECTED_MARKER_4T1Q6"));//"#;
+                let worker = SharedWorker::new(url).unwrap();
+                let port = worker.port();
+                port.start();
+
+                let completion = js_sys::Promise::new(&mut |resolve, reject| {
+                    let resolve_clone = resolve.clone();
+                    let onmessage = Closure::once_into_js(move |e: MessageEvent| {
+                        resolve_clone.call1(&JsValue::NULL, &e.data()).unwrap();
+                    });
+                    port.set_onmessage(Some(onmessage.unchecked_ref()));
+
+                    let reject_timeout = reject.clone();
+                    let timeout = Closure::once_into_js(move || {
+                        reject_timeout
+                            .call1(
+                                &JsValue::NULL,
+                                &JsValue::from_str("timed out waiting for data URL shared worker completion"),
+                            )
+                            .unwrap();
+                    });
+                    web_sys::window()
+                        .unwrap()
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            timeout.unchecked_ref(),
+                            500,
+                        )
+                        .unwrap();
+                });
+
+                let result = wasm_bindgen_futures::JsFuture::from(completion)
+                    .await
+                    .unwrap();
+                assert_eq!(result.as_string().as_deref(), Some("done"));
+            }
+        "##,
+    );
+
+    project.cargo_toml();
+    let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
+    let output = Command::new("cargo")
+        .current_dir(&project.root)
+        .arg("test")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .env(
+            "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
+            format!(
+                "cargo run --manifest-path {} --bin wasm-bindgen-test-runner -- --nocapture",
+                runner.display()
+            ),
+        )
+        .env(driver_env, driver_path)
+        .output()
+        .expect("failed to execute cargo test");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = format!("{}{}", stdout, stderr);
+
+    assert!(
+        output.status.success(),
+        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    let injected_count = combined.matches("SHARED_URL_INJECTED_MARKER_4T1Q6").count();
+
+    assert_eq!(
+        injected_count, 0,
+        "Injected shared worker marker should not appear. Expected 0, got {}.\nstdout:\n{}\nstderr:\n{}",
+        injected_count, stdout, stderr
     );
 }
 

@@ -25,26 +25,144 @@ pub(crate) fn spawn(
     // Console shim to inject into user-spawned dedicated workers.
     // Logs to worker's own DevTools, then forwards to main page for CLI capture.
     let worker_console_shim = r#"
-["debug","log","info","warn","error"].forEach(m => {
-    const og = console[m];
-    console[m] = function(...a) {
-        og.apply(this, a);
-        postMessage(["__wbgtest_" + m, a]);
-    };
-});
+function __wbg_install_worker_console_shim(sendToParent) {
+    if (self.__wbg_worker_console_shim_installed) {
+        return;
+    }
+    self.__wbg_worker_console_shim_installed = true;
+
+    function __wbg_forward_console_message(send, method, args) {
+        try {
+            send(["__wbgtest_" + method, args]);
+        } catch (e) {
+            try {
+                send(["__wbgtest_" + method, args.map(String)]);
+            } catch (e2) {}
+        }
+    }
+
+    function __wbg_worker_message_handler(e) {
+        if (e.data && Array.isArray(e.data) &&
+            typeof e.data[0] === 'string' &&
+            e.data[0].startsWith('__wbgtest_')) {
+            const method = e.data[0].slice(10);
+            const args = e.data[1];
+            if (['debug','log','info','warn','error'].includes(method)) {
+                __wbg_forward_console_message(sendToParent, method, args);
+            }
+            e.stopImmediatePropagation();
+        }
+    }
+
+    function __wbg_schedule_wrapper_revoke(url, target) {
+        if (url === undefined || !target) {
+            return;
+        }
+
+        let revoked = false;
+        const revoke = () => {
+            if (!revoked) {
+                revoked = true;
+                URL.revokeObjectURL(url);
+            }
+        };
+
+        setTimeout(revoke, 5000);
+        target.addEventListener('message', revoke, { once: true });
+        target.addEventListener('messageerror', revoke, { once: true });
+        target.addEventListener('error', revoke, { once: true });
+    }
+
+    ["debug","log","info","warn","error"].forEach(m => {
+        const og = console[m];
+        console[m] = function(...a) {
+            og.apply(this, a);
+            __wbg_forward_console_message(sendToParent, m, a);
+        };
+    });
+
+    if (typeof Worker === 'function') {
+        const __wbg_OriginalWorker = Worker;
+        Worker = function(url, options) {
+            const __wbg_bootstrap =
+                '(' + __wbg_install_worker_console_shim.toString() + ')(postMessage);';
+            let scriptUrl = url;
+            let wrapperUrl;
+            if (typeof url === 'string' && !url.startsWith('blob:')) {
+                scriptUrl = new URL(url, location.href).href;
+            }
+            if (typeof scriptUrl === 'string' && scriptUrl.startsWith('blob:')) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', scriptUrl, false);
+                xhr.send();
+                if (xhr.status === 200 || xhr.status === 0) {
+                    const shimmed = __wbg_bootstrap + xhr.responseText;
+                    const blob = new Blob([shimmed], {type: 'application/javascript'});
+                    wrapperUrl = URL.createObjectURL(blob);
+                    scriptUrl = wrapperUrl;
+                }
+            } else if (typeof scriptUrl === 'string') {
+                const isModule = options?.type === 'module';
+                const wrapper = isModule
+                    ? __wbg_bootstrap + 'await import(' + JSON.stringify(scriptUrl) + ');'
+                    : __wbg_bootstrap + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
+                const blob = new Blob([wrapper], {type: 'application/javascript'});
+                wrapperUrl = URL.createObjectURL(blob);
+                scriptUrl = wrapperUrl;
+                if (isModule) {
+                    options = {...options, type: 'module'};
+                }
+            }
+            const worker = new __wbg_OriginalWorker(scriptUrl, options);
+            worker.addEventListener('message', __wbg_worker_message_handler);
+            __wbg_schedule_wrapper_revoke(wrapperUrl, worker);
+            return worker;
+        };
+        Worker.prototype = __wbg_OriginalWorker.prototype;
+    }
+}
+__wbg_install_worker_console_shim(postMessage);
 "#;
 
     // Console shim for SharedWorkers - needs to track ports from connections
     let shared_worker_console_shim = r#"
+function __wbg_forward_console_message(send, method, args) {
+    try {
+        send(["__wbgtest_" + method, args]);
+    } catch (e) {
+        try {
+            send(["__wbgtest_" + method, args.map(String)]);
+        } catch (e2) {}
+    }
+}
 const __wbg_ports = [];
+self.__wbg_pending_logs = [];
+self.__wbg_flush_pending_logs = function(port) {
+    if (self.__wbg_pending_logs.length === 0) {
+        return;
+    }
+    for (const [method, args] of self.__wbg_pending_logs) {
+        __wbg_forward_console_message(port.postMessage.bind(port), method, args);
+    }
+    self.__wbg_pending_logs.length = 0;
+};
 self.addEventListener('connect', e => {
-    __wbg_ports.push(e.ports[0]);
+    const port = e.ports[0];
+    __wbg_ports.push(port);
+    self.__wbg_flush_pending_logs(port);
 });
 ["debug","log","info","warn","error"].forEach(m => {
     const og = console[m];
     console[m] = function(...a) {
         og.apply(this, a);
-        __wbg_ports.forEach(p => p.postMessage(["__wbgtest_" + m, a]));
+        if (__wbg_ports.length === 0) {
+            if (self.__wbg_pending_logs.length === 256) {
+                self.__wbg_pending_logs.shift();
+            }
+            self.__wbg_pending_logs.push([m, a]);
+            return;
+        }
+        __wbg_ports.forEach(p => __wbg_forward_console_message(p.postMessage.bind(p), m, a));
     };
 });
 "#;
@@ -76,9 +194,33 @@ function __wbg_worker_message_handler(e) {{
     }}
 }}
 
+function __wbg_schedule_wrapper_revoke(url, ...targets) {{
+    if (url === undefined) {{
+        return;
+    }}
+
+    let revoked = false;
+    const revoke = () => {{
+        if (!revoked) {{
+            revoked = true;
+            URL.revokeObjectURL(url);
+        }}
+    }};
+
+    setTimeout(revoke, 5000);
+    for (const target of targets) {{
+        if (target) {{
+            target.addEventListener('message', revoke, {{ once: true }});
+            target.addEventListener('messageerror', revoke, {{ once: true }});
+            target.addEventListener('error', revoke, {{ once: true }});
+        }}
+    }}
+}}
+
 const __wbg_OriginalWorker = Worker;
 Worker = function(url, options) {{
     let scriptUrl = url;
+    let wrapperUrl;
     if (typeof url === 'string' && !url.startsWith('blob:')) {{
         scriptUrl = new URL(url, location.href).href;
     }}
@@ -89,21 +231,24 @@ Worker = function(url, options) {{
         if (xhr.status === 200 || xhr.status === 0) {{
             const shimmed = __wbg_worker_console_shim + xhr.responseText;
             const blob = new Blob([shimmed], {{type: 'application/javascript'}});
-            scriptUrl = URL.createObjectURL(blob);
+            wrapperUrl = URL.createObjectURL(blob);
+            scriptUrl = wrapperUrl;
         }}
     }} else if (typeof scriptUrl === 'string') {{
         const isModule = options?.type === 'module';
         const wrapper = isModule
-            ? __wbg_worker_console_shim + 'await import("' + scriptUrl + '");'
-            : __wbg_worker_console_shim + 'importScripts("' + scriptUrl + '");';
+            ? __wbg_worker_console_shim + 'await import(' + JSON.stringify(scriptUrl) + ');'
+            : __wbg_worker_console_shim + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
         const blob = new Blob([wrapper], {{type: 'application/javascript'}});
-        scriptUrl = URL.createObjectURL(blob);
+        wrapperUrl = URL.createObjectURL(blob);
+        scriptUrl = wrapperUrl;
         if (isModule) {{
             options = {{...options, type: 'module'}};
         }}
     }}
     const worker = new __wbg_OriginalWorker(scriptUrl, options);
     worker.addEventListener('message', __wbg_worker_message_handler);
+    __wbg_schedule_wrapper_revoke(wrapperUrl, worker);
     return worker;
 }};
 Worker.prototype = __wbg_OriginalWorker.prototype;
@@ -111,6 +256,7 @@ Worker.prototype = __wbg_OriginalWorker.prototype;
 const __wbg_OriginalSharedWorker = SharedWorker;
 SharedWorker = function(url, options) {{
     let scriptUrl = url;
+    let wrapperUrl;
     if (typeof url === 'string' && !url.startsWith('blob:')) {{
         scriptUrl = new URL(url, location.href).href;
     }}
@@ -121,27 +267,31 @@ SharedWorker = function(url, options) {{
         if (xhr.status === 200 || xhr.status === 0) {{
             const shimmed = __wbg_shared_worker_console_shim + xhr.responseText;
             const blob = new Blob([shimmed], {{type: 'application/javascript'}});
-            scriptUrl = URL.createObjectURL(blob);
+            wrapperUrl = URL.createObjectURL(blob);
+            scriptUrl = wrapperUrl;
         }}
     }} else if (typeof scriptUrl === 'string') {{
         const isModule = options?.type === 'module';
         const wrapper = isModule
-            ? __wbg_shared_worker_console_shim + 'await import("' + scriptUrl + '");'
-            : __wbg_shared_worker_console_shim + 'importScripts("' + scriptUrl + '");';
+            ? __wbg_shared_worker_console_shim + 'await import(' + JSON.stringify(scriptUrl) + ');'
+            : __wbg_shared_worker_console_shim + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
         const blob = new Blob([wrapper], {{type: 'application/javascript'}});
-        scriptUrl = URL.createObjectURL(blob);
+        wrapperUrl = URL.createObjectURL(blob);
+        scriptUrl = wrapperUrl;
         if (isModule) {{
             options = {{...options, type: 'module'}};
         }}
     }}
     const worker = new __wbg_OriginalSharedWorker(scriptUrl, options);
     worker.port.addEventListener('message', __wbg_worker_message_handler);
+    worker.port.start();
+    __wbg_schedule_wrapper_revoke(wrapperUrl, worker, worker.port);
     return worker;
 }};
 SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
 "#,
-        shim = serde_json::to_string(worker_console_shim).unwrap(),
-        shared_shim = serde_json::to_string(shared_worker_console_shim).unwrap()
+        shim = serde_json::to_string(&worker_console_shim).unwrap(),
+        shared_shim = serde_json::to_string(&shared_worker_console_shim).unwrap()
     );
 
     // Add the worker constructor patch at the start
@@ -264,6 +414,15 @@ SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
         worker_script.push_str(&format!(
             r#"
             const nocapture = {nocapture};
+            function __wbg_forward_console_message(send, method, args) {{
+                try {{
+                    send(["__wbgtest_" + method, args]);
+                }} catch (e) {{
+                    try {{
+                        send(["__wbgtest_" + method, args.map(String)]);
+                    }} catch (e2) {{}}
+                }}
+            }}
             const wrap = method => {{
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
@@ -273,7 +432,7 @@ SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
                     if (self[on_method]) {{
                         self[on_method](args);
                     }}
-                    port.postMessage(["__wbgtest_" + method, args]);
+                    __wbg_forward_console_message(port.postMessage.bind(port), method, args);
                 }};
             }};
 
