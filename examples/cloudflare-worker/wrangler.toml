@@ -1,0 +1,10 @@
+name = "hello-world"
+main = "build/cloudflare_worker_example.js"
+compatibility_date = "2026-03-17"
+
+[build]
+command = "just build-dev"
+watch_dir = ["src", "cloudflare-worker.d.ts"]
+
+[ai]
+binding = "AI"

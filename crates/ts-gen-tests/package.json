@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "dependencies": {
+    "es-module-lexer": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
+  }
+}

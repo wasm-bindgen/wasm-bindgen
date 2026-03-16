@@ -1,0 +1,21 @@
+[package]
+name = "ts-gen-integration-tests"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+test = false
+doctest = false
+
+[dependencies]
+wasm-bindgen = { path = "../.." }
+js-sys = { path = "../js-sys" }
+
+[build-dependencies]
+ts-gen = { path = "../ts-gen" }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = { path = "../test" }
+wasm-bindgen-futures = { path = "../futures" }

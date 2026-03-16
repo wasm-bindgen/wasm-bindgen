@@ -1,0 +1,7 @@
+{
+  "name": "cloudflare-worker-example",
+  "private": true,
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

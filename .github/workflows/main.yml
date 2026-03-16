@@ -221,6 +221,30 @@ jobs:
     - name: Check JavaScript output
       run: tsc --noEmit --skipLibCheck --lib esnext,dom --module esnext --allowJs $(find crates/cli/tests/reference -maxdepth 1 -name '*.js' ! -name '*target-module*.js')
 
+  test_ts_gen:
+    name: Run ts-gen tests (unit + snapshot)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo test -p ts-gen
+
+  test_ts_gen_integration:
+    name: Run ts-gen integration tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    - uses: actions/setup-node@v6
+      with:
+        node-version: '20'
+    - run: npm install --prefix crates/ts-gen-tests
+    - run: cargo test -p ts-gen-integration-tests --target wasm32-unknown-unknown
+      env:
+        NODE_PATH: ${{ github.workspace }}/crates/ts-gen-tests/node_modules
+
   test_native:
     name: Run native tests
     runs-on: ubuntu-latest

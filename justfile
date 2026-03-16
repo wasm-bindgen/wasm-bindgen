@@ -15,8 +15,22 @@ test:
     just test-js-sys
     just test-web-sys
     just test-webidl
+    just test-ts-gen
     just test-webidl-tests
     just test-webidl-tests-compat
+
+test-ts-gen *ARGS="":
+    RUST_BACKTRACE=1 cargo test -p ts-gen {{ARGS}}
+
+test-ts-gen-overwrite:
+    RUST_BACKTRACE=1 BLESS=1 cargo test -p ts-gen
+
+test-ts-gen-tests *ARGS="":
+    npm install --prefix crates/ts-gen-tests
+    CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER="cargo run -p wasm-bindgen-cli --bin wasm-bindgen-test-runner --" \
+    NODE_PATH={{justfile_directory()}}/crates/ts-gen-tests/node_modules \
+    RUST_BACKTRACE=1 \
+        cargo test -p ts-gen-integration-tests --target wasm32-unknown-unknown {{ARGS}}
 
 test-cli *ARGS="":
     cargo test -p wasm-bindgen-cli {{ARGS}} > /tmp/test-cli.log 2>&1 || (cat /tmp/test-cli.log && exit 1)

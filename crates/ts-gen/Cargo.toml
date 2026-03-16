@@ -1,0 +1,40 @@
+[package]
+name = "ts-gen"
+version = "0.1.0"
+edition = "2021"
+description = "Generate wasm-bindgen Rust bindings from TypeScript .d.ts files"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/main/crates/ts-gen"
+readme = "README.md"
+keywords = ["wasm", "wasm-bindgen", "typescript", "codegen", "ffi"]
+categories = ["wasm", "development-tools::ffi"]
+
+[features]
+default = ["cli"]
+cli = ["clap", "walkdir"]
+
+[[bin]]
+name = "ts-gen"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+oxc_parser = "0.118"
+oxc_allocator = "0.118"
+oxc_ast = "0.118"
+oxc_span = "0.118"
+syn = { version = "2", features = ["full", "extra-traits", "printing"] }
+quote = "1"
+proc-macro2 = "1"
+prettyplease = "0.2"
+anyhow = "1"
+walkdir = { version = "2", optional = true }
+clap = { version = "4", features = ["derive"], optional = true }
+convert_case = "0.6"
+oxc_resolver = "11"
+
+[dev-dependencies]
+similar = "2"

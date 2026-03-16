@@ -120,7 +120,7 @@ pub struct JsFuture<T = JsValue> {
     inner: Rc<RefCell<Inner<T>>>,
 }
 
-impl core::panic::UnwindSafe for JsFuture {}
+impl<T> core::panic::UnwindSafe for JsFuture<T> {}
 
 unsafe impl<T> ErasableGeneric for JsFuture<T> {
     type Repr = JsFuture<JsValue>;

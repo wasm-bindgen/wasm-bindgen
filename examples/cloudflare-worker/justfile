@@ -1,0 +1,44 @@
+wasm-bindgen := "../../target/debug/wasm-bindgen"
+wasm-bindgen-release := "../../target/release/wasm-bindgen"
+wasm-target := "wasm32-unknown-unknown"
+wasm-debug := "../../target/" + wasm-target + "/debug/cloudflare_worker_example.wasm"
+wasm-release := "../../target/" + wasm-target + "/release/cloudflare_worker_example.wasm"
+
+default:
+    @just --list
+
+# Generate Rust bindings from TypeScript definitions
+tsgen:
+    cargo +nightly run -p ts-gen -- \
+        --input cloudflare-worker.d.ts \
+        --output generated/bindings.rs \
+        --lib-name cloudflare-worker
+
+# Build for development (debug, panic=unwind)
+build-dev: tsgen
+    RUSTFLAGS="-Cpanic=unwind" cargo +nightly build \
+        -Zbuild-std=std,panic_unwind \
+        --target {{wasm-target}}
+    {{wasm-bindgen}} {{wasm-debug}} \
+        --target module \
+        --out-dir build
+    sed -i '' 's/import source/import/g' ./build/cloudflare_worker_example.js
+
+# Build for production (release, panic=unwind)
+build: tsgen
+    RUSTFLAGS="-Cpanic=unwind" cargo +nightly build \
+        -Zbuild-std=std,panic_unwind \
+        --target {{wasm-target}} \
+        --release
+    {{wasm-bindgen-release}} {{wasm-release}} \
+        --target module \
+        --out-dir build
+    sed -i '' 's/import source/import/g' ./build/cloudflare_worker_example.js
+
+# Run local dev server
+dev:
+    npx wrangler dev
+
+# Deploy to Cloudflare
+deploy: build
+    npx wrangler deploy

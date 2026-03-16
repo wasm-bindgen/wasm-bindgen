@@ -92,6 +92,8 @@ members = [
   "crates/js-sys",
   "crates/test",
   "crates/test/sample",
+  "crates/ts-gen-tests",
+  "crates/ts-gen",
   "crates/typescript-tests",
   "crates/web-sys",
   "crates/webidl",
@@ -129,6 +131,7 @@ members = [
   "examples/without-a-bundler",
   "examples/without-a-bundler-no-modules",
   "examples/synchronous-instantiation",
+  "examples/cloudflare-worker",
   "tests/no-std",
 ]
 resolver = "2"
