@@ -68,13 +68,11 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MimeType`, `Plugin`*"]
     pub fn get_with_index(this: &Plugin, index: u32) -> Option<MimeType>;
     #[cfg(feature = "MimeType")]
     #[wasm_bindgen(method, structural, js_class = "Plugin", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MimeType`, `Plugin`*"]

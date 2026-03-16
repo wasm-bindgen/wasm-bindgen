@@ -38,7 +38,7 @@ extern "C" {
     #[cfg(feature = "Blob")]
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `WriteParams`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `WriteParams`*"]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data_opt_blob(this: &WriteParams, val: Option<&Blob>);
     #[doc = "Change the `data` field of this object."]

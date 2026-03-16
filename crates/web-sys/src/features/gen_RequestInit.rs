@@ -23,7 +23,7 @@ extern "C" {
     #[cfg(feature = "Blob")]
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `RequestInit`*"]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body_opt_blob(this: &RequestInit, val: Option<&Blob>);
     #[doc = "Change the `body` field of this object."]
@@ -44,13 +44,13 @@ extern "C" {
     #[cfg(feature = "FormData")]
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`, `RequestInit`*"]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body_opt_form_data(this: &RequestInit, val: Option<&FormData>);
     #[cfg(feature = "UrlSearchParams")]
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`, `UrlSearchParams`*"]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body_opt_url_search_params(this: &RequestInit, val: Option<&UrlSearchParams>);
     #[doc = "Change the `body` field of this object."]
@@ -61,7 +61,7 @@ extern "C" {
     #[cfg(feature = "ReadableStream")]
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`, `RequestInit`*"]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body_opt_readable_stream(this: &RequestInit, val: Option<&ReadableStream>);
     #[cfg(feature = "RequestCache")]
@@ -101,7 +101,7 @@ extern "C" {
     #[cfg(feature = "Headers")]
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`, `RequestInit`*"]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers_headers(this: &RequestInit, val: &Headers);
     #[doc = "Change the `headers` field of this object."]
@@ -160,7 +160,7 @@ extern "C" {
     pub fn set_observe(this: &RequestInit, val: &ObserverCallback);
     #[doc = "Change the `observe` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ObserverCallback`, `RequestInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, setter = "observe")]
     pub fn set_observe_callback(this: &RequestInit, val: &::js_sys::Function);
     #[cfg(feature = "ObserverCallback")]
