@@ -107,6 +107,8 @@ macro_rules! attrgen {
             (private, false, Hide(Span)),
             (main, false, Main(Span)),
             (start, false, Start(Span)),
+            (pre_reinit_hook, false, PreReinitHook(Span)),
+            (post_reinit_hook, false, PostReinitHook(Span)),
             (wasm_bindgen, false, WasmBindgen(Span, syn::Path)),
             (js_sys, false, JsSys(Span, syn::Path)),
             (wasm_bindgen_futures, false, WasmBindgenFutures(Span, syn::Path)),
@@ -1402,6 +1404,24 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                         bail_span!(&f.sig.inputs, "the start function cannot have arguments",);
                     }
                 }
+                let pre_reinit_hook = opts.pre_reinit_hook().is_some();
+                let post_reinit_hook = opts.post_reinit_hook().is_some();
+                if pre_reinit_hook || post_reinit_hook {
+                    let label = if pre_reinit_hook {
+                        "pre_reinit_hook"
+                    } else {
+                        "post_reinit_hook"
+                    };
+                    if !f.sig.generics.params.is_empty() {
+                        bail_span!(&f.sig.generics, "{label} function cannot have generics",);
+                    }
+                    if !f.sig.inputs.is_empty() {
+                        bail_span!(&f.sig.inputs, "{label} function cannot have arguments",);
+                    }
+                    if f.sig.output != syn::ReturnType::Default {
+                        bail_span!(&f.sig.output, "{label} function cannot have a return value",);
+                    }
+                }
                 let method_kind = ast::MethodKind::Operation(ast::Operation {
                     is_static: true,
                     kind: operation_kind(&opts),
@@ -1427,6 +1447,8 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     rust_class: None,
                     rust_name,
                     start,
+                    pre_reinit_hook,
+                    post_reinit_hook,
                     wasm_bindgen: program.wasm_bindgen.clone(),
                     wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
                 });
@@ -1650,6 +1672,8 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             rust_class: Some(class.clone()),
             rust_name: self.sig.ident.clone(),
             start: false,
+            pre_reinit_hook: false,
+            post_reinit_hook: false,
             wasm_bindgen: program.wasm_bindgen.clone(),
             wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
         });

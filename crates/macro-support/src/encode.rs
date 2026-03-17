@@ -215,6 +215,8 @@ fn shared_export<'a>(
             .map(|ns| ns.iter().map(|s| &**s).collect()),
         method_kind,
         start: export.start,
+        pre_reinit_hook: export.pre_reinit_hook,
+        post_reinit_hook: export.post_reinit_hook,
     })
 }
 

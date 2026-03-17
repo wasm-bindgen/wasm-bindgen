@@ -2914,7 +2914,10 @@ if (require('worker_threads').isMainThread) {{
 
     fn generate_reset_state(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
-        self.global("let __wbg_reinit_hook = null;");
+
+        // Look up pre/post reinit hook exports if the user defined them.
+        let pre_reinit_hook = self.aux.reinit_preinit.map(|id| self.export_name_of(id));
+        let post_reinit_hook = self.aux.reinit_postinit.map(|id| self.export_name_of(id));
 
         let mut reset_statements = Vec::new();
         reset_statements.push("__wbg_instance_id++;".to_string());
@@ -2973,20 +2976,32 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
+        // Call the pre-reinit hook on the old instance (only when not
+        // terminated — a corrupted instance must not be called into).
+        if let Some(ref name) = pre_reinit_hook {
+            reset_statements.push(format!("if (!__wbg_skip_pre_reinit) {{ wasm.{name}(); }}"));
+        }
+
         reset_statements.push(
             "
-            const oldExports = wasm;
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
-            if (__wbg_reinit_hook !== null) {
-                __wbg_reinit_hook(wasm, oldExports);
-            }
             "
             .to_string(),
         );
 
-        let function_body = format!("() {{\n{}}}", reset_statements.join("\n"));
+        // Call the post-reinit hook on the new instance.
+        if let Some(ref name) = post_reinit_hook {
+            reset_statements.push(format!("wasm.{name}();"));
+        }
+
+        // The function accepts a boolean parameter to skip the pre-reinit hook
+        // when the old instance is terminated / corrupted.
+        let function_body = format!(
+            "(__wbg_skip_pre_reinit) {{\n{}}}",
+            reset_statements.join("\n")
+        );
 
         let identifier = self.generate_identifier("__wbg_reset_state");
         let definition = format!("function {identifier} {function_body}\n");
@@ -3001,39 +3016,6 @@ if (require('worker_threads').isMainThread) {{
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
                 private: !self.config.generate_reset_state,
-            }),
-        )?;
-
-        // Generate the reinit hook setter (always public so users can register
-        // hooks even when __wbg_reset_state itself is private / called only by
-        // the termination guard).
-        let hook_identifier = self.generate_identifier("__wbg_set_reinit_hook");
-        let hook_definition = format!(
-            "function {hook_identifier} (callback) {{\n\
-                if (callback !== null && typeof callback !== 'function') {{\n\
-                    throw new Error('expected function or null, got ' + typeof callback);\n\
-                }}\n\
-                __wbg_reinit_hook = callback;\n\
-            }}\n"
-        );
-        let instance_type = match self.config.mode {
-            OutputMode::Web | OutputMode::NoModules { .. } => "InitOutput",
-            OutputMode::Node { .. } if self.threads_enabled => "InitOutput",
-            _ => "WebAssembly.Exports",
-        };
-        define_export(
-            &mut self.exports,
-            "__wbg_set_reinit_hook",
-            &[],
-            ExportEntry::Definition(ExportDefinition {
-                comments: None,
-                identifier: hook_identifier,
-                definition: hook_definition,
-                ts_definition: format!(
-                    "function __wbg_set_reinit_hook(callback: ((newInstance: {instance_type}, oldInstance: {instance_type}) => void) | null): void;\n"
-                ),
-                ts_comments: None,
-                private: false,
             }),
         )?;
 
@@ -3389,7 +3371,7 @@ if (require('worker_threads').isMainThread) {{
         self.global("let __wbg_terminated_addr;");
 
         let terminated_action = if self.config.generate_reset_state {
-            "__wbg_reset_state()"
+            "__wbg_reset_state(true)"
         } else {
             "throw new Error('Module terminated')"
         };

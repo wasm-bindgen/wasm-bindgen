@@ -129,6 +129,8 @@ macro_rules! shared_api {
             js_namespace: Option<Vec<&'a str>>,
             method_kind: MethodKind<'a>,
             start: bool,
+            pre_reinit_hook: bool,
+            post_reinit_hook: bool,
         }
 
         struct Enum<'a> {
