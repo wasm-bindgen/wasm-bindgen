@@ -591,6 +591,17 @@ impl<'a> Context<'a> {
             self.add_start_function(id)?;
         }
 
+        // Reinit hooks are stored separately and not exposed as normal JS
+        // exports. The JS codegen calls them directly in __wbg_reset_state().
+        if export.pre_reinit_hook {
+            self.aux.reinit_preinit = Some(id);
+            return Ok(());
+        }
+        if export.post_reinit_hook {
+            self.aux.reinit_postinit = Some(id);
+            return Ok(());
+        }
+
         let classless_this = matches!(
             &export.method_kind,
             decode::MethodKind::Operation(op) if matches!(op.kind, decode::OperationKind::RegularThis)

@@ -95,6 +95,12 @@ pub struct Export {
     /// Whether or not this function should be flagged as the Wasm start
     /// function.
     pub start: bool,
+    /// Whether this function is a pre-reinit hook, called on the old instance
+    /// before reinitialization.
+    pub pre_reinit_hook: bool,
+    /// Whether this function is a post-reinit hook, called on the new instance
+    /// after reinitialization.
+    pub post_reinit_hook: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures

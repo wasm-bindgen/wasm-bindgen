@@ -67,6 +67,12 @@ pub struct WasmBindgenAux {
     pub stack_pointer: Option<walrus::GlobalId>,
     pub thread_destroy: Option<walrus::FunctionId>,
 
+    /// User-defined reinit hooks called during `__wbg_reset_state()`.
+    /// Pre-reinit runs on the old instance (skipped if terminated).
+    /// Post-reinit runs on the new instance after `__wbindgen_start()`.
+    pub reinit_preinit: Option<walrus::FunctionId>,
+    pub reinit_postinit: Option<walrus::FunctionId>,
+
     /// The imported JSTag for catching JavaScript exceptions in Wasm.
     /// When this is `Some`, all imports with `catch` use Wasm catch wrappers
     /// instead of JS `handleError` wrappers.
