@@ -1387,3 +1387,180 @@ describe('pre_reinit_hook and post_reinit_hook', () => {
         .assert()
         .success();
 }
+
+#[test]
+fn reinit_hooks_with_transfer() {
+    let mut project = Project::new("reinit_hooks_transfer");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+    use wasm_bindgen::prelude::*;
+    use serde::{Serialize, Deserialize};
+
+    #[wasm_bindgen(inline_js = "
+        export function js_set_restored(val) { globalThis.restored_counter = val; }
+        export function js_set_pre_called(val) { globalThis.pre_called = val; }
+    ")]
+    extern "C" {
+        fn js_set_restored(val: u32);
+        fn js_set_pre_called(val: bool);
+    }
+
+    static mut COUNTER: u32 = 0;
+
+    #[wasm_bindgen]
+    pub fn increment_counter() -> u32 { unsafe { COUNTER += 1; COUNTER } }
+    #[wasm_bindgen]
+    pub fn get_counter() -> u32 { unsafe { COUNTER } }
+    #[wasm_bindgen]
+    pub fn simple_add(a: u32, b: u32) -> u32 { a + b }
+    #[wasm_bindgen]
+    pub fn trigger_unreachable() {
+        #[cfg(target_arch = "wasm32")]
+        unsafe { core::arch::wasm32::unreachable(); }
+    }
+
+    #[derive(Serialize, Deserialize)]
+    struct AppState {
+        counter: u32,
+    }
+
+    #[wasm_bindgen(pre_reinit_hook)]
+    pub fn save_state() -> AppState {
+        js_set_pre_called(true);
+        AppState { counter: unsafe { COUNTER } }
+    }
+
+    #[wasm_bindgen(post_reinit_hook)]
+    pub fn restore_state(saved: Option<AppState>) {
+        if let Some(state) = saved {
+            unsafe { COUNTER = state.counter; }
+            js_set_restored(state.counter);
+        } else {
+            js_set_restored(0);
+        }
+    }
+"#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"reinit_hooks_transfer\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+                    serde = {{ version = \"1.0\", features = [\"derive\"] }}
+                    serde-wasm-bindgen = \"0.6\"
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+                REPO_ROOT.display(),
+            ),
+        );
+
+    // termination detection requires panic=unwind and nightly build-std
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --experimental-reset-state-function")
+        .unwrap();
+
+    fs::write(
+        out_dir.join("test_reinit_transfer.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+const wasm = require('./reinit_hooks_transfer.js');
+
+describe('reinit hooks with serde transfer', () => {
+    it('counter state is transferred across explicit reset', () => {
+        wasm.increment_counter();
+        wasm.increment_counter();
+        wasm.increment_counter();
+        assert.strictEqual(wasm.get_counter(), 3);
+
+        globalThis.pre_called = false;
+        wasm.__wbg_reset_state();
+
+        assert.strictEqual(globalThis.pre_called, true,
+            'pre_reinit_hook should have been called');
+        // The pre-hook saved counter=3, post-hook restored it.
+        assert.strictEqual(globalThis.restored_counter, 3,
+            'restored_counter should be 3');
+        assert.strictEqual(wasm.get_counter(), 3,
+            'counter should be restored to 3');
+    });
+
+    it('counter survives multiple reset cycles', () => {
+        // Counter is 3 from previous test.
+        wasm.increment_counter();
+        assert.strictEqual(wasm.get_counter(), 4);
+
+        wasm.__wbg_reset_state();
+        assert.strictEqual(wasm.get_counter(), 4,
+            'counter should survive first reset');
+
+        wasm.increment_counter();
+        assert.strictEqual(wasm.get_counter(), 5);
+
+        wasm.__wbg_reset_state();
+        assert.strictEqual(wasm.get_counter(), 5,
+            'counter should survive second reset');
+    });
+
+    it('post hook receives None on auto-reset after fatal error', () => {
+        wasm.increment_counter();
+        assert.strictEqual(wasm.get_counter(), 6);
+
+        // Trigger fatal error.
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
+
+        // Auto-reset skips pre-hook (terminated), post-hook gets None.
+        globalThis.pre_called = false;
+        globalThis.restored_counter = 999;
+        const counter = wasm.get_counter();
+
+        assert.strictEqual(globalThis.pre_called, false,
+            'pre_reinit_hook should NOT fire on terminated instance');
+        assert.strictEqual(globalThis.restored_counter, 0,
+            'restored_counter should be 0 (None path)');
+        assert.strictEqual(counter, 0,
+            'counter should be 0 after fatal reset with no transfer');
+    });
+
+    it('normal functions still work after transfer', () => {
+        wasm.__wbg_reset_state();
+        assert.strictEqual(wasm.simple_add(10, 20), 30);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reinit_transfer.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}

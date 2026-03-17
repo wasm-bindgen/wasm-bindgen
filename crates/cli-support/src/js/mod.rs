@@ -2976,10 +2976,28 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
+        // Detect whether the hooks transfer state (pre returns a value,
+        // post accepts one).
+        let pre_has_transfer = self.aux.reinit_preinit.is_some_and(|id| {
+            let ty_id = self.module.funcs.get(id).ty();
+            !self.module.types.get(ty_id).results().is_empty()
+        });
+        let post_has_transfer = self.aux.reinit_postinit.is_some_and(|id| {
+            let ty_id = self.module.funcs.get(id).ty();
+            !self.module.types.get(ty_id).params().is_empty()
+        });
+
         // Call the pre-reinit hook on the old instance (only when not
         // terminated — a corrupted instance must not be called into).
         if let Some(ref name) = pre_reinit_hook {
-            reset_statements.push(format!("if (!__wbg_skip_pre_reinit) {{ wasm.{name}(); }}"));
+            if pre_has_transfer {
+                reset_statements.push("let __wbg_transfer;".to_string());
+                reset_statements.push(format!(
+                    "if (!__wbg_skip_pre_reinit) {{ __wbg_transfer = wasm.{name}(); }}"
+                ));
+            } else {
+                reset_statements.push(format!("if (!__wbg_skip_pre_reinit) {{ wasm.{name}(); }}"));
+            }
         }
 
         reset_statements.push(
@@ -2991,9 +3009,14 @@ if (require('worker_threads').isMainThread) {{
             .to_string(),
         );
 
-        // Call the post-reinit hook on the new instance.
+        // Call the post-reinit hook on the new instance, passing the
+        // transfer value if the pre-reinit hook produced one.
         if let Some(ref name) = post_reinit_hook {
-            reset_statements.push(format!("wasm.{name}();"));
+            if post_has_transfer {
+                reset_statements.push(format!("wasm.{name}(__wbg_transfer);"));
+            } else {
+                reset_statements.push(format!("wasm.{name}();"));
+            }
         }
 
         // The function accepts a boolean parameter to skip the pre-reinit hook

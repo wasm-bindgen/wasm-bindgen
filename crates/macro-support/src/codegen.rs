@@ -709,6 +709,43 @@ impl TryToTokens for ast::Export {
             }
             converted_arguments.push(quote! { #ident });
         }
+
+        // Post-reinit hook with transfer: override argument handling to accept
+        // a JsValue and deserialize it via serde_wasm_bindgen.
+        let post_reinit_transfer = self.post_reinit_hook && !self.function.arguments.is_empty();
+        if post_reinit_transfer {
+            let arg_ty = &self.function.arguments[0].pat_type.ty;
+            let ident = Ident::new("arg0", Span::call_site());
+            let abi =
+                quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>::Abi };
+            let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+
+            args.clear();
+            args.extend(prim_args);
+
+            arg_conversions.clear();
+            arg_conversions.push(quote! {
+                let #ident = unsafe {
+                    <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>
+                        ::from_abi(
+                            <#abi as #wasm_bindgen::convert::WasmAbi>::join(#(#prim_names),*)
+                        )
+                };
+                let #ident: #arg_ty = if #ident.is_undefined() {
+                    None
+                } else {
+                    Some(
+                        #wasm_bindgen::UnwrapThrowExt::unwrap_throw(
+                            serde_wasm_bindgen::from_value(#ident)
+                        )
+                    )
+                };
+            });
+
+            converted_arguments.clear();
+            converted_arguments.push(quote! { #ident });
+        }
+
         let syn_unit = syn::Type::Tuple(syn::TypeTuple {
             elems: Default::default(),
             paren_token: Default::default(),
@@ -722,6 +759,10 @@ impl TryToTokens for ast::Export {
         if let syn::Type::Reference(_) = syn_ret {
             bail_span!(syn_ret, "cannot return a borrowed ref with #[wasm_bindgen]",)
         }
+
+        // Pre-reinit hook with transfer: the user function returns T: Serialize,
+        // but the wasm shim returns JsValue after serializing with serde.
+        let pre_reinit_transfer = self.pre_reinit_hook && *syn_ret != syn_unit;
 
         // For an `async` function we always run it through `future_to_promise`
         // since we're returning a promise to JS, and this will implicitly
@@ -749,6 +790,16 @@ impl TryToTokens for ast::Export {
                 quote! { () },
                 quote! { () },
                 quote! { <#syn_ret as #wasm_bindgen::__rt::Start>::start(#ret) },
+            )
+        } else if pre_reinit_transfer {
+            (
+                quote! { #wasm_bindgen::JsValue },
+                quote! { #wasm_bindgen::JsValue },
+                quote! {
+                    #wasm_bindgen::UnwrapThrowExt::unwrap_throw(
+                        serde_wasm_bindgen::to_value(&#ret)
+                    )
+                },
             )
         } else {
             (quote! { #syn_ret }, quote! { #syn_ret }, quote! { #ret })
@@ -879,21 +930,26 @@ impl TryToTokens for ast::Export {
         })
         .to_tokens(into);
 
-        let describe_args: TokenStream = argtys
-            .iter()
-            .map(|ty| match ty {
-                syn::Type::Reference(reference)
-                    if self.function.r#async && reference.mutability.is_none() =>
-                {
-                    let inner = &reference.elem;
-                    quote! {
-                        inform(LONGREF);
-                        <#inner as WasmDescribe>::describe();
+        let describe_args: TokenStream = if post_reinit_transfer {
+            // The actual ABI accepts JsValue, not the user's Option<T>.
+            quote! { <#wasm_bindgen::JsValue as WasmDescribe>::describe(); }
+        } else {
+            argtys
+                .iter()
+                .map(|ty| match ty {
+                    syn::Type::Reference(reference)
+                        if self.function.r#async && reference.mutability.is_none() =>
+                    {
+                        let inner = &reference.elem;
+                        quote! {
+                            inform(LONGREF);
+                            <#inner as WasmDescribe>::describe();
+                        }
                     }
-                }
-                _ => quote! { <#ty as WasmDescribe>::describe(); },
-            })
-            .collect();
+                    _ => quote! { <#ty as WasmDescribe>::describe(); },
+                })
+                .collect()
+        };
 
         // In addition to generating the shim function above which is what
         // our generated JS will invoke, we *also* generate a "descriptor"
