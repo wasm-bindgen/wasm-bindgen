@@ -24,7 +24,7 @@ test = false
 [features]
 default = ["std"]
 enable-interning = ["std"]
-serde-serialize = ["serde", "serde_json", "std"]
+serde-serialize = ["dep:serde", "dep:serde_json", "std"]
 spans = []
 std = []
 

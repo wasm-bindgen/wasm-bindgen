@@ -1406,20 +1406,38 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                 }
                 let pre_reinit_hook = opts.pre_reinit_hook().is_some();
                 let post_reinit_hook = opts.post_reinit_hook().is_some();
-                if pre_reinit_hook || post_reinit_hook {
-                    let label = if pre_reinit_hook {
-                        "pre_reinit_hook"
-                    } else {
-                        "post_reinit_hook"
-                    };
+                if pre_reinit_hook {
                     if !f.sig.generics.params.is_empty() {
-                        bail_span!(&f.sig.generics, "{label} function cannot have generics",);
+                        bail_span!(
+                            &f.sig.generics,
+                            "pre_reinit_hook function cannot have generics",
+                        );
                     }
                     if !f.sig.inputs.is_empty() {
-                        bail_span!(&f.sig.inputs, "{label} function cannot have arguments",);
+                        bail_span!(
+                            &f.sig.inputs,
+                            "pre_reinit_hook function cannot have arguments",
+                        );
+                    }
+                }
+                if post_reinit_hook {
+                    if !f.sig.generics.params.is_empty() {
+                        bail_span!(
+                            &f.sig.generics,
+                            "post_reinit_hook function cannot have generics",
+                        );
+                    }
+                    if f.sig.inputs.len() > 1 {
+                        bail_span!(
+                            &f.sig.inputs,
+                            "post_reinit_hook function must accept zero or one argument",
+                        );
                     }
                     if f.sig.output != syn::ReturnType::Default {
-                        bail_span!(&f.sig.output, "{label} function cannot have a return value",);
+                        bail_span!(
+                            &f.sig.output,
+                            "post_reinit_hook function cannot have a return value",
+                        );
                     }
                 }
                 let method_kind = ast::MethodKind::Operation(ast::Operation {
