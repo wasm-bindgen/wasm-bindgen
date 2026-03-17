@@ -1,25 +1,13 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
-function __wbg_reset_state () {
+function __wbg_reset_state (__wbg_skip_pre_reinit) {
     __wbg_instance_id++;
 
-    const oldExports = wasm;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
-    if (__wbg_reinit_hook !== null) {
-        __wbg_reinit_hook(wasm, oldExports);
-    }
 }
 exports.__wbg_reset_state = __wbg_reset_state;
-
-function __wbg_set_reinit_hook (callback) {
-    if (callback !== null && typeof callback !== 'function') {
-        throw new Error('expected function or null, got ' + typeof callback);
-    }
-    __wbg_reinit_hook = callback;
-}
-exports.__wbg_set_reinit_hook = __wbg_set_reinit_hook;
 
 /**
  * @param {number} a
@@ -47,9 +35,6 @@ function __wbg_get_imports() {
 }
 
 let __wbg_instance_id = 0;
-
-
-let __wbg_reinit_hook = null;
 
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
