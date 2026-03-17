@@ -122,7 +122,6 @@
   - [Usage](./wasm-bindgen-test/usage.md)
   - [Writing Asynchronous Tests](./wasm-bindgen-test/asynchronous-tests.md)
   - [Testing in Headless Browsers](./wasm-bindgen-test/browsers.md)
-  - [Screenshots](./wasm-bindgen-test/screenshots.md)
   - [Continuous Integration](./wasm-bindgen-test/continuous-integration.md)
   - [Coverage (Experimental)](./wasm-bindgen-test/coverage.md)
   - [Benchmark](./wasm-bindgen-test/benchmark.md)
