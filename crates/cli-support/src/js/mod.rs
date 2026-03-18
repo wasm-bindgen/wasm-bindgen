@@ -3022,7 +3022,7 @@ if (require('worker_threads').isMainThread) {{
         // The function accepts a boolean parameter to skip the pre-reinit hook
         // when the old instance is terminated / corrupted.
         let function_body = format!(
-            "(__wbg_skip_pre_reinit) {{\n{}}}",
+            "(__wbg_skip_pre_reinit) {{\n{}\n}}",
             reset_statements.join("\n")
         );
 

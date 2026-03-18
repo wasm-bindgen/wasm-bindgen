@@ -6,6 +6,7 @@ export function __wbg_reset_state (__wbg_skip_pre_reinit) {
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
+
 }
 
 /**
