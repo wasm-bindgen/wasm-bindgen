@@ -105,7 +105,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
     pub fn get(this: &CssStyleDeclaration, index: u32) -> Option<::alloc::string::String>;
 }

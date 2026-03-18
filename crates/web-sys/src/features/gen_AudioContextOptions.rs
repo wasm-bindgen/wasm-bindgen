@@ -23,7 +23,7 @@ extern "C" {
     #[cfg(feature = "AudioContextLatencyCategory")]
     #[doc = "Change the `latencyHint` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioContextOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `AudioContextLatencyCategory`, `AudioContextOptions`*"]
     #[wasm_bindgen(method, setter = "latencyHint")]
     pub fn set_latency_hint_audio_context_latency_category(
         this: &AudioContextOptions,
@@ -66,7 +66,7 @@ extern "C" {
     #[cfg(feature = "AudioSinkOptions")]
     #[doc = "Change the `sinkId` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `AudioContextOptions`*"]
+    #[doc = "*This API requires the following crate features to be activated: `AudioContextOptions`, `AudioSinkOptions`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]

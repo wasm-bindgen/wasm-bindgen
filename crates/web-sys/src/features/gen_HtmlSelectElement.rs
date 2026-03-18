@@ -344,7 +344,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn get(this: &HtmlSelectElement, index: u32) -> Option<Element>;
     #[cfg(feature = "HtmlOptionElement")]
@@ -356,7 +355,6 @@ extern "C" {
         indexing_setter
     )]
     #[doc = "Indexing setter. As in the literal Javascript `this[key] = value`."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`, `HtmlSelectElement`*"]

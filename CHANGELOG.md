@@ -31,6 +31,17 @@
 
 ### Fixed
 
+* Added support for per-operation `[WbgGeneric]` in WebIDL, restoring typed
+  generic return types (e.g. `Promise<ImageBitmap>`) for `createImageBitmap` on
+  `Window` and `WorkerGlobalScope` that were lost after the `VideoFrame`
+  stabilization.
+  [#5026](https://github.com/wasm-bindgen/wasm-bindgen/pull/5026)
+
+* Fixed missing `#[cfg(feature = "...")]` gates on deprecated dictionary builder
+  methods and getters for union-typed fields (e.g. `{Open,Save,Directory}FilePickerOptions::start_in()`),
+  and fixed per-setter doc requirements to list each setter's own required features.
+  [#5039](https://github.com/wasm-bindgen/wasm-bindgen/pull/5039)
+
 * Fixed `JsOption::new()` to use `undefined` instead of `null`, to be compatible with `Option::None` and JS default parameters.
   [#5023](https://github.com/wasm-bindgen/wasm-bindgen/pull/5023)
 

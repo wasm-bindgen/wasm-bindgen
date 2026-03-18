@@ -28,7 +28,7 @@ extern "C" {
     #[cfg(feature = "ConstrainBooleanParameters")]
     #[doc = "Change the `autoGainControl` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainBooleanParameters`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "autoGainControl")]
     pub fn set_auto_gain_control_constrain_boolean_parameters(
         this: &MediaTrackConstraints,
@@ -72,7 +72,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `channelCount` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "channelCount")]
     pub fn set_channel_count_constrain_long_range(
         this: &MediaTrackConstraints,
@@ -101,7 +101,7 @@ extern "C" {
     #[cfg(feature = "ConstrainDomStringParameters")]
     #[doc = "Change the `deviceId` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "deviceId")]
     pub fn set_device_id_constrain_dom_string_parameters(
         this: &MediaTrackConstraints,
@@ -125,7 +125,7 @@ extern "C" {
     #[cfg(feature = "ConstrainBooleanParameters")]
     #[doc = "Change the `echoCancellation` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainBooleanParameters`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "echoCancellation")]
     pub fn set_echo_cancellation_constrain_boolean_parameters(
         this: &MediaTrackConstraints,
@@ -157,7 +157,7 @@ extern "C" {
     #[cfg(feature = "ConstrainDomStringParameters")]
     #[doc = "Change the `facingMode` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "facingMode")]
     pub fn set_facing_mode_constrain_dom_string_parameters(
         this: &MediaTrackConstraints,
@@ -181,7 +181,7 @@ extern "C" {
     #[cfg(feature = "ConstrainDoubleRange")]
     #[doc = "Change the `frameRate` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDoubleRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "frameRate")]
     pub fn set_frame_rate_constrain_double_range(
         this: &MediaTrackConstraints,
@@ -205,7 +205,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `height` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "height")]
     pub fn set_height_constrain_long_range(this: &MediaTrackConstraints, val: &ConstrainLongRange);
     #[doc = "Get the `mediaSource` field of this object."]
@@ -236,7 +236,7 @@ extern "C" {
     #[cfg(feature = "ConstrainBooleanParameters")]
     #[doc = "Change the `noiseSuppression` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainBooleanParameters`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "noiseSuppression")]
     pub fn set_noise_suppression_constrain_boolean_parameters(
         this: &MediaTrackConstraints,
@@ -270,7 +270,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `viewportHeight` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "viewportHeight")]
     pub fn set_viewport_height_constrain_long_range(
         this: &MediaTrackConstraints,
@@ -294,7 +294,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `viewportOffsetX` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "viewportOffsetX")]
     pub fn set_viewport_offset_x_constrain_long_range(
         this: &MediaTrackConstraints,
@@ -318,7 +318,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `viewportOffsetY` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "viewportOffsetY")]
     pub fn set_viewport_offset_y_constrain_long_range(
         this: &MediaTrackConstraints,
@@ -342,7 +342,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `viewportWidth` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "viewportWidth")]
     pub fn set_viewport_width_constrain_long_range(
         this: &MediaTrackConstraints,
@@ -366,7 +366,7 @@ extern "C" {
     #[cfg(feature = "ConstrainLongRange")]
     #[doc = "Change the `width` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraints`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainLongRange`, `MediaTrackConstraints`*"]
     #[wasm_bindgen(method, setter = "width")]
     pub fn set_width_constrain_long_range(this: &MediaTrackConstraints, val: &ConstrainLongRange);
     #[doc = "Get the `advanced` field of this object."]

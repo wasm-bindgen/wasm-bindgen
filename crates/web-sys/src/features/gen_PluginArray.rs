@@ -54,13 +54,11 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`, `PluginArray`*"]
     pub fn get_with_index(this: &PluginArray, index: u32) -> Option<Plugin>;
     #[cfg(feature = "Plugin")]
     #[wasm_bindgen(method, structural, js_class = "PluginArray", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`, `PluginArray`*"]
