@@ -1,6 +1,9 @@
 {
   "name": "cloudflare-worker-example",
   "private": true,
+  "scripts": {
+    "test": "echo 'no tests (requires wrangler deploy)'"
+  },
   "devDependencies": {
     "wrangler": "^4"
   }

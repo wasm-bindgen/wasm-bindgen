@@ -53,7 +53,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy,rustfmt
-    - run: cargo clippy --no-deps --all --all-features -- -D warnings
+    - run: cargo clippy --no-deps --all --all-features --exclude ts-gen-integration-tests -- -D warnings
 
   # Run `cargo clippy` over all Wasm crates
   clippy_wasm:
@@ -71,6 +71,7 @@ jobs:
         --exclude wasm-bindgen-cli*
         --exclude wasm-bindgen-*macro*
         --exclude wasm-bindgen-webidl
+        --exclude ts-gen-integration-tests
         -- -D warnings
 
   # Run `cargo clippy` over crates that support `no_std`
