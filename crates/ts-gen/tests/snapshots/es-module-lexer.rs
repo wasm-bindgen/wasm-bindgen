@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 #[doc = r" use bindings::PromiseExt;"]
 #[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
 #[doc = r" ```"]
+#[allow(dead_code)]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -326,6 +327,17 @@ pub mod es_module_lexer {
     }
     #[wasm_bindgen(module = "es-module-lexer")]
     extern "C" {
+        #[doc = " Outputs the list of exports and locations of import specifiers,"]
+        #[doc = " including dynamic import and import meta handling."]
+        #[doc = " "]
+        #[doc = " ## Arguments"]
+        #[doc = " "]
+        #[doc = " * `source` - Source code to parser"]
+        #[doc = " * `name` - Optional sourcename"]
+        #[doc = " "]
+        #[doc = " ## Returns"]
+        #[doc = " "]
+        #[doc = " Tuple contaning imports list and exports list."]
         #[wasm_bindgen(catch, js_name = "parse")]
         pub fn try_parse(
             source: &str,
@@ -341,6 +353,17 @@ pub mod es_module_lexer {
     }
     #[wasm_bindgen(module = "es-module-lexer")]
     extern "C" {
+        #[doc = " Outputs the list of exports and locations of import specifiers,"]
+        #[doc = " including dynamic import and import meta handling."]
+        #[doc = " "]
+        #[doc = " ## Arguments"]
+        #[doc = " "]
+        #[doc = " * `source` - Source code to parser"]
+        #[doc = " * `name` - Optional sourcename"]
+        #[doc = " "]
+        #[doc = " ## Returns"]
+        #[doc = " "]
+        #[doc = " Tuple contaning imports list and exports list."]
         #[wasm_bindgen(js_name = "parse")]
         pub fn parse_with_name(
             source: &str,
@@ -354,6 +377,17 @@ pub mod es_module_lexer {
     }
     #[wasm_bindgen(module = "es-module-lexer")]
     extern "C" {
+        #[doc = " Outputs the list of exports and locations of import specifiers,"]
+        #[doc = " including dynamic import and import meta handling."]
+        #[doc = " "]
+        #[doc = " ## Arguments"]
+        #[doc = " "]
+        #[doc = " * `source` - Source code to parser"]
+        #[doc = " * `name` - Optional sourcename"]
+        #[doc = " "]
+        #[doc = " ## Returns"]
+        #[doc = " "]
+        #[doc = " Tuple contaning imports list and exports list."]
         #[wasm_bindgen(catch, js_name = "parse")]
         pub fn try_parse_with_name(
             source: &str,

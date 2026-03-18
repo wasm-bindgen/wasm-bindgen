@@ -3,7 +3,13 @@ main = "build/cloudflare_worker_example.js"
 name = "hello-world"
 
 [build]
-command = "just build-dev"
+command = '''
+    ts-gen -i cloudflare-worker.d.ts -o generated/bindings.rs
+    cargo build --target wasm32-unknown-unknown
+    wasm-bindgen --target module --out-dir build\
+        ../../target/wasm32-unknown-unknown/debug/cloudflare_worker_example.wasm
+    sed -i '' 's/import source/import/g' ./build/cloudflare_worker_example.js
+'''
 watch_dir = ["src", "cloudflare-worker.d.ts"]
 
 [ai]

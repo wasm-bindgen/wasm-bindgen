@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 #[doc = r" use bindings::PromiseExt;"]
 #[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
 #[doc = r" ```"]
+#[allow(dead_code)]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -115,6 +116,7 @@ extern "C" {
     #[doc = " Returns a new Response with a network error."]
     # [wasm_bindgen (static_method_of = Response)]
     pub fn error() -> Response;
+    #[doc = " Returns a new Response with a network error."]
     # [wasm_bindgen (static_method_of = Response , catch , js_name = "error")]
     pub fn try_error() -> Result<Response, JsValue>;
     # [wasm_bindgen (static_method_of = Response)]
@@ -146,6 +148,7 @@ extern "C" {
     #[doc = " Creates a clone of this response."]
     #[wasm_bindgen(method)]
     pub fn clone(this: &Response) -> Response;
+    #[doc = " Creates a clone of this response."]
     #[wasm_bindgen(method, catch, js_name = "clone")]
     pub fn try_clone(this: &Response) -> Result<Response, JsValue>;
     #[doc = " The HTTP status code."]
@@ -174,6 +177,7 @@ extern "C" {
     #[doc = " Returns the body as an ArrayBuffer."]
     #[wasm_bindgen(method, js_name = "arrayBuffer")]
     pub fn array_buffer(this: &Body) -> Promise<ArrayBuffer>;
+    #[doc = " Returns the body as an ArrayBuffer."]
     #[wasm_bindgen(method, catch, js_name = "arrayBuffer")]
     pub fn try_array_buffer(this: &Body) -> Result<Promise<ArrayBuffer>, JsValue>;
     #[wasm_bindgen(method)]

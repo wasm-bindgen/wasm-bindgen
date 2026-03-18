@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 #[doc = r" use bindings::PromiseExt;"]
 #[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
 #[doc = r" ```"]
+#[allow(dead_code)]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;

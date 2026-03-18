@@ -118,6 +118,7 @@ fn generate_tokens(
             /// use bindings::PromiseExt;
             /// let data: ArrayBuffer = promise.into_future().await?;
             /// ```
+            #[allow(dead_code)]
             pub trait PromiseExt {
                 type Output;
                 fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;

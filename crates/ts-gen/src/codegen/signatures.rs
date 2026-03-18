@@ -813,7 +813,7 @@ mod tests {
     }
 
     #[test]
-    fn test_doc_only_on_first() {
+    fn test_doc_on_all_variants() {
         let doc = Some("Hello".to_string());
         let mut used = no_used();
         let sigs = expand(
@@ -825,9 +825,9 @@ mod tests {
             &mut used,
         );
         assert_eq!(sigs[0].doc, Some("Hello".to_string()));
-        assert_eq!(sigs[1].doc, None); // try_count
-        assert_eq!(sigs[2].doc, None); // count_with_label
-        assert_eq!(sigs[3].doc, None); // try_count_with_label
+        assert_eq!(sigs[1].doc, Some("Hello".to_string())); // try_count
+        assert_eq!(sigs[2].doc, Some("Hello".to_string())); // count_with_label
+        assert_eq!(sigs[3].doc, Some("Hello".to_string())); // try_count_with_label
     }
 
     #[test]
