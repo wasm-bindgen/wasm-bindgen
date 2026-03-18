@@ -19,6 +19,7 @@ extern "C" {
 
 #[wasm_bindgen]
 pub struct Interval {
+    #[allow(dead_code)]
     closure: Closure<dyn FnMut()>,
     token: f64,
 }
@@ -47,11 +48,11 @@ impl Drop for Interval {
 
 // Keep logging "hello" every second until the resulting `Interval` is dropped.
 #[wasm_bindgen]
-pub fn hello() -> Interval {
-    Interval::new(1_000, || log("hello"))
+pub async fn hello() -> Interval {
+    Interval::new(10, || log("hello"))
 }
 
 #[wasm_bindgen_test]
-fn hello_test() {
-    hello();
+async fn hello_test() {
+    hello().await;
 }

@@ -554,7 +554,10 @@ impl<'a> Context<'a> {
 
         let already_exports_wasm_for_node_esm_threads =
             self.threads_enabled && matches!(self.config.mode, OutputMode::Node { module: true });
-        if self.config.debug && !already_exports_wasm_for_node_esm_threads {
+        if self.config.debug
+            && !already_exports_wasm_for_node_esm_threads
+            && !matches!(self.config.mode, OutputMode::Emscripten)
+        {
             if self.config.mode.uses_es_modules() {
                 self.globals.push_str("export { wasm as __wasm }");
             } else {

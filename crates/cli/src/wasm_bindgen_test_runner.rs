@@ -387,12 +387,28 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         TestMode::Deno => deno::execute(module, &tmpdir_path, cli, tests)?,
         TestMode::Emscripten => {
             let srv = server::spawn_emscripten(
-                &"127.0.0.1:0".parse().unwrap(),
+                &if headless {
+                    "127.0.0.1:0".parse().unwrap()
+                } else if let Ok(address) = std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
+                    address.parse().unwrap()
+                } else {
+                    "127.0.0.1:8000".parse().unwrap()
+                },
                 &tmpdir_path,
                 std::env::var("WASM_BINDGEN_TEST_NO_ORIGIN_ISOLATION").is_err(),
             )
             .context("failed to spawn server")?;
             let addr = srv.server_addr();
+            if !headless {
+                println!("Interactive browsers tests are now available at http://{addr}");
+                println!();
+                println!("Note that interactive mode is enabled because `NO_HEADLESS`");
+                println!("is specified in the environment of this process. Once you're");
+                println!("done with testing you'll need to kill this server with");
+                println!("Ctrl-C.");
+                srv.run();
+                return Ok(());
+            }
             println!("Tests are now available at http://{addr}");
             thread::spawn(|| srv.run());
             headless::run(&addr, &shell, driver_timeout, browser_timeout)?;

@@ -233,14 +233,6 @@ impl Bindgen {
         Ok(self)
     }
 
-    /// This is only intended to be called within cli-support.
-    pub(crate) fn emscripten(&mut self, emscripten: bool) -> Result<&mut Bindgen, Error> {
-        if emscripten {
-            self.switch_mode(OutputMode::Emscripten, "")?;
-        }
-        Ok(self)
-    }
-
     pub fn debug(&mut self, debug: bool) -> &mut Bindgen {
         self.debug = debug;
         self
@@ -346,7 +338,7 @@ impl Bindgen {
             .is_some()
         {
             // Force the internal configuration to Emscripten mode.
-            let _ = self.emscripten(true);
+            self.mode = OutputMode::Emscripten;
         }
 
         // Enable reference type transformations if the module is already using it.
