@@ -1,15 +1,15 @@
 #[allow(unused_imports)]
-use wasm_bindgen::prelude::*;
-#[allow(unused_imports)]
 use js_sys::*;
-/// Extension trait for awaiting `js_sys::Promise<T>`.
-///
-/// Since `IntoFuture` can't be implemented for `js_sys::Promise` from
-/// generated code (orphan rule), use `.into_future().await` instead:
-/// ```ignore
-/// use bindings::PromiseExt;
-/// let data: ArrayBuffer = promise.into_future().await?;
-/// ```
+#[allow(unused_imports)]
+use wasm_bindgen::prelude::*;
+#[doc = r" Extension trait for awaiting `js_sys::Promise<T>`."]
+#[doc = r""]
+#[doc = r" Since `IntoFuture` can't be implemented for `js_sys::Promise` from"]
+#[doc = r" generated code (orphan rule), use `.into_future().await` instead:"]
+#[doc = r" ```ignore"]
+#[doc = r" use bindings::PromiseExt;"]
+#[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
+#[doc = r" ```"]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -46,7 +46,7 @@ pub enum AutoIncrement {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type EventTarget;
     #[wasm_bindgen(method, js_name = "addEventListener")]
@@ -60,7 +60,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Serializable;
     #[wasm_bindgen(method, js_name = "toJSON")]
@@ -70,7 +70,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = EventTarget, extends = Serializable, extends = Object)]
+    # [wasm_bindgen (extends = EventTarget , extends = Serializable , extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type EventEmitter;
     #[wasm_bindgen(method)]
@@ -82,7 +82,7 @@ pub mod node_js {
     use wasm_bindgen::prelude::*;
     #[wasm_bindgen]
     extern "C" {
-        #[wasm_bindgen(extends = Object, js_namespace = "NodeJS")]
+        # [wasm_bindgen (extends = Object , js_namespace = "NodeJS")]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type EventEmitter;
         #[wasm_bindgen(method)]
@@ -97,7 +97,7 @@ pub mod node_js {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = EventEmitter, extends = Object)]
+    # [wasm_bindgen (extends = EventEmitter , extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Stream;
     #[wasm_bindgen(method)]
@@ -107,7 +107,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Counter;
     #[wasm_bindgen(method)]
@@ -125,7 +125,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Duplex;
     #[wasm_bindgen(method)]
@@ -145,7 +145,7 @@ pub mod intl {
     use wasm_bindgen::prelude::*;
     #[wasm_bindgen]
     extern "C" {
-        #[wasm_bindgen(extends = Object, js_namespace = "Intl")]
+        # [wasm_bindgen (extends = Object , js_namespace = "Intl")]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type Collator;
         #[wasm_bindgen(method)]
@@ -155,7 +155,7 @@ pub mod intl {
     }
     #[wasm_bindgen]
     extern "C" {
-        #[wasm_bindgen(extends = Object, js_namespace = "Intl")]
+        # [wasm_bindgen (extends = Object , js_namespace = "Intl")]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type CollatorOptions;
         #[wasm_bindgen(method, getter)]
@@ -175,9 +175,7 @@ pub mod intl {
             JsCast::unchecked_into(js_sys::Object::new())
         }
         pub fn builder() -> CollatorOptionsBuilder {
-            CollatorOptionsBuilder {
-                inner: Self::new(),
-            }
+            CollatorOptionsBuilder { inner: Self::new() }
         }
     }
     pub struct CollatorOptionsBuilder {
@@ -199,11 +197,7 @@ pub mod intl {
     }
     #[wasm_bindgen]
     extern "C" {
-        #[wasm_bindgen(
-            thread_local_v2,
-            js_name = "defaultLocale",
-            js_namespace = "Intl"
-        )]
+        #[wasm_bindgen(thread_local_v2, js_name = "defaultLocale", js_namespace = "Intl")]
         pub static default_locale: String;
     }
 }

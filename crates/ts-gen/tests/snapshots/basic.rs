@@ -1,15 +1,15 @@
 #[allow(unused_imports)]
-use wasm_bindgen::prelude::*;
-#[allow(unused_imports)]
 use js_sys::*;
-/// Extension trait for awaiting `js_sys::Promise<T>`.
-///
-/// Since `IntoFuture` can't be implemented for `js_sys::Promise` from
-/// generated code (orphan rule), use `.into_future().await` instead:
-/// ```ignore
-/// use bindings::PromiseExt;
-/// let data: ArrayBuffer = promise.into_future().await?;
-/// ```
+#[allow(unused_imports)]
+use wasm_bindgen::prelude::*;
+#[doc = r" Extension trait for awaiting `js_sys::Promise<T>`."]
+#[doc = r""]
+#[doc = r" Since `IntoFuture` can't be implemented for `js_sys::Promise` from"]
+#[doc = r" generated code (orphan rule), use `.into_future().await` instead:"]
+#[doc = r" ```ignore"]
+#[doc = r" use bindings::PromiseExt;"]
+#[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
+#[doc = r" ```"]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -46,7 +46,7 @@ use JsValue as WebSocket;
 use JsValue as WritableStream;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type DOMException;
     #[wasm_bindgen(constructor, catch)]
@@ -54,11 +54,8 @@ extern "C" {
     #[wasm_bindgen(constructor, catch, js_name = "DOMException")]
     pub fn new_with_message(message: &str) -> Result<DOMException, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "DOMException")]
-    pub fn new_with_message_and_name(
-        message: &str,
-        name: &str,
-    ) -> Result<DOMException, JsValue>;
-    /// The error message.
+    pub fn new_with_message_and_name(message: &str, name: &str) -> Result<DOMException, JsValue>;
+    #[doc = " The error message."]
     #[wasm_bindgen(method, getter)]
     pub fn message(this: &DOMException) -> String;
     #[wasm_bindgen(method, getter)]
@@ -68,27 +65,21 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Body, extends = Object)]
+    # [wasm_bindgen (extends = Body , extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Response;
     #[wasm_bindgen(constructor, catch)]
     pub fn new() -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_readable_stream(
-        body: Option<&ReadableStream>,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_readable_stream(body: Option<&ReadableStream>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_str(body: Option<&str>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_array_buffer(
-        body: Option<&ArrayBuffer>,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_array_buffer(body: Option<&ArrayBuffer>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_blob(body: Option<&Blob>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_url_search_params(
-        body: Option<&URLSearchParams>,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_url_search_params(body: Option<&URLSearchParams>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_form_data(body: Option<&FormData>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
@@ -121,43 +112,43 @@ extern "C" {
         body: Option<&FormData>,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
-    /// Returns a new Response with a network error.
-    #[wasm_bindgen(static_method_of = Response)]
+    #[doc = " Returns a new Response with a network error."]
+    # [wasm_bindgen (static_method_of = Response)]
     pub fn error() -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "error")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "error")]
     pub fn try_error() -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response)]
+    # [wasm_bindgen (static_method_of = Response)]
     pub fn redirect(url: &str) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "redirect")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "redirect")]
     pub fn try_redirect(url: &str) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response, js_name = "redirect")]
+    # [wasm_bindgen (static_method_of = Response , js_name = "redirect")]
     pub fn redirect_with_status(url: &str, status: f64) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "redirect")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "redirect")]
     pub fn try_redirect_with_status(url: &str, status: f64) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response)]
+    # [wasm_bindgen (static_method_of = Response)]
     pub fn json(any: &JsValue) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "json")]
     pub fn try_json(any: &JsValue) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , js_name = "json")]
     pub fn json_with_response_init(any: &JsValue, maybe_init: &ResponseInit) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "json")]
     pub fn try_json_with_response_init(
         any: &JsValue,
         maybe_init: &ResponseInit,
     ) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , js_name = "json")]
     pub fn json_with_response(any: &JsValue, maybe_init: &Response) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "json")]
     pub fn try_json_with_response(
         any: &JsValue,
         maybe_init: &Response,
     ) -> Result<Response, JsValue>;
-    /// Creates a clone of this response.
+    #[doc = " Creates a clone of this response."]
     #[wasm_bindgen(method)]
     pub fn clone(this: &Response) -> Response;
     #[wasm_bindgen(method, catch, js_name = "clone")]
     pub fn try_clone(this: &Response) -> Result<Response, JsValue>;
-    /// The HTTP status code.
+    #[doc = " The HTTP status code."]
     #[wasm_bindgen(method, getter)]
     pub fn status(this: &Response) -> f64;
     #[wasm_bindgen(method, getter, js_name = "statusText")]
@@ -173,14 +164,14 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Body;
     #[wasm_bindgen(method, getter)]
     pub fn body(this: &Body) -> Option<ReadableStream>;
     #[wasm_bindgen(method, getter, js_name = "bodyUsed")]
     pub fn body_used(this: &Body) -> bool;
-    /// Returns the body as an ArrayBuffer.
+    #[doc = " Returns the body as an ArrayBuffer."]
     #[wasm_bindgen(method, js_name = "arrayBuffer")]
     pub fn array_buffer(this: &Body) -> Promise<ArrayBuffer>;
     #[wasm_bindgen(method, catch, js_name = "arrayBuffer")]
@@ -204,7 +195,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ResponseInit;
     #[wasm_bindgen(method, getter)]
@@ -232,9 +223,7 @@ impl ResponseInit {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> ResponseInitBuilder {
-        ResponseInitBuilder {
-            inner: Self::new(),
-        }
+        ResponseInitBuilder { inner: Self::new() }
     }
 }
 pub struct ResponseInitBuilder {
@@ -284,7 +273,7 @@ pub type BodyInit = JsValue;
 pub type HeadersInit = JsValue;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type DurableObject;
     #[wasm_bindgen(method, getter)]
@@ -328,7 +317,7 @@ pub mod web_assembly {
     use wasm_bindgen::prelude::*;
     #[wasm_bindgen]
     extern "C" {
-        #[wasm_bindgen(extends = Object, js_namespace = "WebAssembly")]
+        # [wasm_bindgen (extends = Object , js_namespace = "WebAssembly")]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type Module;
         #[wasm_bindgen(constructor, catch)]
@@ -336,16 +325,13 @@ pub mod web_assembly {
     }
     #[wasm_bindgen]
     extern "C" {
-        #[wasm_bindgen(extends = Object, js_namespace = "WebAssembly")]
+        # [wasm_bindgen (extends = Object , js_namespace = "WebAssembly")]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type Instance;
         #[wasm_bindgen(constructor, catch)]
         pub fn new(module: &Module) -> Result<Instance, JsValue>;
         #[wasm_bindgen(constructor, catch, js_name = "Instance")]
-        pub fn new_with_imports(
-            module: &Module,
-            imports: &Object,
-        ) -> Result<Instance, JsValue>;
+        pub fn new_with_imports(module: &Module, imports: &Object) -> Result<Instance, JsValue>;
         #[wasm_bindgen(method, getter)]
         pub fn exports(this: &Instance) -> Object;
     }
@@ -372,10 +358,7 @@ pub mod web_assembly {
     #[wasm_bindgen]
     extern "C" {
         #[wasm_bindgen(js_name = "instantiate", js_namespace = "WebAssembly")]
-        pub fn instantiate_with_imports(
-            module: &Module,
-            imports: &Object,
-        ) -> Promise<Instance>;
+        pub fn instantiate_with_imports(module: &Module, imports: &Object) -> Promise<Instance>;
     }
     #[wasm_bindgen]
     extern "C" {
@@ -437,9 +420,9 @@ extern "C" {
     pub static self_: ServiceWorkerGlobalScope;
 }
 pub mod sockets {
-    use wasm_bindgen::prelude::*;
-    use js_sys::*;
     use super::*;
+    use js_sys::*;
+    use wasm_bindgen::prelude::*;
     #[wasm_bindgen(module = "cloudflare:sockets")]
     extern "C" {
         pub fn connect(address: &str) -> Socket;
@@ -464,7 +447,7 @@ pub mod sockets {
     }
     #[wasm_bindgen(module = "cloudflare:sockets")]
     extern "C" {
-        #[wasm_bindgen(extends = Object)]
+        # [wasm_bindgen (extends = Object)]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type Socket;
         #[wasm_bindgen(method)]
@@ -486,7 +469,7 @@ pub mod sockets {
     }
     #[wasm_bindgen(module = "cloudflare:sockets")]
     extern "C" {
-        #[wasm_bindgen(extends = Object)]
+        # [wasm_bindgen (extends = Object)]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type SocketOptions;
         #[wasm_bindgen(method, getter, js_name = "secureTransport")]
@@ -506,9 +489,7 @@ pub mod sockets {
             JsCast::unchecked_into(js_sys::Object::new())
         }
         pub fn builder() -> SocketOptionsBuilder {
-            SocketOptionsBuilder {
-                inner: Self::new(),
-            }
+            SocketOptionsBuilder { inner: Self::new() }
         }
     }
     pub struct SocketOptionsBuilder {

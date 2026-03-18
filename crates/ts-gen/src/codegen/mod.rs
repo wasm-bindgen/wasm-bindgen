@@ -59,10 +59,43 @@ pub fn generate_with_options(
     options: &GenerateOptions,
 ) -> anyhow::Result<String> {
     let tokens = generate_tokens(module, gctx, options);
-    let file = syn::parse2::<syn::File>(tokens.clone()).map_err(|e| {
+    // Validate that the tokens are valid Rust syntax.
+    syn::parse2::<syn::File>(tokens.clone()).map_err(|e| {
         anyhow::anyhow!("generated tokens are not valid syn:\n{e}\n\nTokens:\n{tokens}")
     })?;
-    Ok(prettyplease::unparse(&file))
+    rustfmt(&tokens.to_string())
+}
+
+/// Format Rust source via `rustfmt`.
+///
+/// Falls back to `prettyplease` if `rustfmt` is not available.
+fn rustfmt(code: &str) -> anyhow::Result<String> {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let mut child = match Command::new("rustfmt")
+        .arg("--edition=2021")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+    {
+        Ok(child) => child,
+        Err(_) => {
+            let file = syn::parse_str::<syn::File>(code)?;
+            return Ok(prettyplease::unparse(&file));
+        }
+    };
+
+    child.stdin.take().unwrap().write_all(code.as_bytes())?;
+
+    let output = child.wait_with_output()?;
+    if output.status.success() {
+        Ok(String::from_utf8(output.stdout)?)
+    } else {
+        let file = syn::parse_str::<syn::File>(code)?;
+        Ok(prettyplease::unparse(&file))
+    }
 }
 
 /// Generate the token stream for a full module.

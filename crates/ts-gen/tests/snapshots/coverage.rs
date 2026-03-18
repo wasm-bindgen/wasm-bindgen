@@ -1,15 +1,15 @@
 #[allow(unused_imports)]
-use wasm_bindgen::prelude::*;
-#[allow(unused_imports)]
 use js_sys::*;
-/// Extension trait for awaiting `js_sys::Promise<T>`.
-///
-/// Since `IntoFuture` can't be implemented for `js_sys::Promise` from
-/// generated code (orphan rule), use `.into_future().await` instead:
-/// ```ignore
-/// use bindings::PromiseExt;
-/// let data: ArrayBuffer = promise.into_future().await?;
-/// ```
+#[allow(unused_imports)]
+use wasm_bindgen::prelude::*;
+#[doc = r" Extension trait for awaiting `js_sys::Promise<T>`."]
+#[doc = r""]
+#[doc = r" Since `IntoFuture` can't be implemented for `js_sys::Promise` from"]
+#[doc = r" generated code (orphan rule), use `.into_future().await` instead:"]
+#[doc = r" ```ignore"]
+#[doc = r" use bindings::PromiseExt;"]
+#[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
+#[doc = r" ```"]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -26,13 +26,13 @@ use JsValue as AbortSignal;
 use JsValue as Headers;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type StringMap;
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type NumberIndexed;
     #[wasm_bindgen(method, getter)]
@@ -71,18 +71,18 @@ impl NumberIndexedBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `length`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!("{}: {}", stringify!(NumberIndexed), missing.join(", ")),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(NumberIndexed),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type MixedWithIndex;
     #[wasm_bindgen(method, getter)]
@@ -121,11 +121,11 @@ impl MixedWithIndexBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `name`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!("{}: {}", stringify!(MixedWithIndex), missing.join(", ")),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(MixedWithIndex),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
@@ -138,7 +138,7 @@ pub type HasAge = Object;
 pub type Person = JsValue;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Serializable;
     #[wasm_bindgen(method)]
@@ -167,7 +167,7 @@ pub enum HttpStatus {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type GlobalMixin;
     #[wasm_bindgen(method, js_name = "customMethod")]
@@ -192,7 +192,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type DefaultProcessor;
     #[wasm_bindgen(constructor, catch)]
@@ -200,10 +200,7 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn process(this: &DefaultProcessor, input: &str) -> Promise<JsString>;
     #[wasm_bindgen(method, catch, js_name = "process")]
-    pub fn try_process(
-        this: &DefaultProcessor,
-        input: &str,
-    ) -> Result<Promise<JsString>, JsValue>;
+    pub fn try_process(this: &DefaultProcessor, input: &str) -> Result<Promise<JsString>, JsValue>;
     #[wasm_bindgen(method, getter)]
     pub fn name(this: &DefaultProcessor) -> String;
 }
@@ -219,7 +216,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type TreeNode;
     #[wasm_bindgen(method, getter)]
@@ -278,18 +275,18 @@ impl TreeNodeBuilder {
             if self.required & 2u64 != 0 {
                 missing.push("missing required property `children`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!("{}: {}", stringify!(TreeNode), missing.join(", ")),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(TreeNode),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type LinkedList;
     #[wasm_bindgen(method, getter)]
@@ -340,24 +337,24 @@ impl LinkedListBuilder {
             if self.required & 2u64 != 0 {
                 missing.push("missing required property `next`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!("{}: {}", stringify!(LinkedList), missing.join(", ")),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(LinkedList),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Iterable;
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type AsyncIterable;
 }
@@ -394,7 +391,7 @@ pub enum SignedValues {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Serializable, extends = GlobalMixin, extends = Object)]
+    # [wasm_bindgen (extends = Serializable , extends = GlobalMixin , extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type MultiExtend;
     #[wasm_bindgen(method, getter)]
@@ -433,18 +430,18 @@ impl MultiExtendBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `id`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!("{}: {}", stringify!(MultiExtend), missing.join(", ")),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(MultiExtend),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type EventTarget;
     #[wasm_bindgen(method, js_name = "addEventListener")]
@@ -466,25 +463,19 @@ extern "C" {
     #[wasm_bindgen(method, js_name = "dispatchEvent")]
     pub fn dispatch_event(this: &EventTarget, event: &Object) -> bool;
     #[wasm_bindgen(method, catch, js_name = "dispatchEvent")]
-    pub fn try_dispatch_event(
-        this: &EventTarget,
-        event: &Object,
-    ) -> Result<bool, JsValue>;
+    pub fn try_dispatch_event(this: &EventTarget, event: &Object) -> Result<bool, JsValue>;
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type EventEmitter;
     #[wasm_bindgen(constructor, catch)]
     pub fn new() -> Result<EventEmitter, JsValue>;
-    #[wasm_bindgen(static_method_of = EventEmitter, js_name = "listenerCount")]
+    # [wasm_bindgen (static_method_of = EventEmitter , js_name = "listenerCount")]
     pub fn listener_count(emitter: &EventEmitter, event: &str) -> f64;
-    #[wasm_bindgen(static_method_of = EventEmitter, catch, js_name = "listenerCount")]
-    pub fn try_listener_count(
-        emitter: &EventEmitter,
-        event: &str,
-    ) -> Result<f64, JsValue>;
+    # [wasm_bindgen (static_method_of = EventEmitter , catch , js_name = "listenerCount")]
+    pub fn try_listener_count(emitter: &EventEmitter, event: &str) -> Result<f64, JsValue>;
     #[wasm_bindgen(method)]
     pub fn on(this: &EventEmitter, event: &str, listener: &Function) -> JsValue;
     #[wasm_bindgen(method, catch, js_name = "on")]
@@ -496,11 +487,7 @@ extern "C" {
     #[wasm_bindgen(method, variadic)]
     pub fn emit(this: &EventEmitter, event: &str, args: &[JsValue]) -> bool;
     #[wasm_bindgen(method, variadic, catch, js_name = "emit")]
-    pub fn try_emit(
-        this: &EventEmitter,
-        event: &str,
-        args: &[JsValue],
-    ) -> Result<bool, JsValue>;
+    pub fn try_emit(this: &EventEmitter, event: &str, args: &[JsValue]) -> Result<bool, JsValue>;
     #[wasm_bindgen(method, js_name = "removeAllListeners")]
     pub fn remove_all_listeners(this: &EventEmitter) -> JsValue;
     #[wasm_bindgen(method, catch, js_name = "removeAllListeners")]
@@ -515,7 +502,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Storage;
     #[wasm_bindgen(method, js_name = "getItem")]
@@ -539,14 +526,11 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Cache;
     #[wasm_bindgen(method)]
-    pub fn get(
-        this: &Cache,
-        key: &str,
-    ) -> Promise<JsOption<Map<JsString, Array<JsString>>>>;
+    pub fn get(this: &Cache, key: &str) -> Promise<JsOption<Map<JsString, Array<JsString>>>>;
     #[wasm_bindgen(method, catch, js_name = "get")]
     pub fn try_get(
         this: &Cache,
@@ -567,7 +551,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type FetchOptions;
     #[wasm_bindgen(method, getter)]
@@ -603,9 +587,7 @@ impl FetchOptions {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> FetchOptionsBuilder {
-        FetchOptionsBuilder {
-            inner: Self::new(),
-        }
+        FetchOptionsBuilder { inner: Self::new() }
     }
 }
 pub struct FetchOptionsBuilder {
@@ -647,7 +629,7 @@ impl FetchOptionsBuilder {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type SimpleConfig;
     #[wasm_bindgen(method, getter)]
@@ -663,9 +645,7 @@ impl SimpleConfig {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> SimpleConfigBuilder {
-        SimpleConfigBuilder {
-            inner: Self::new(),
-        }
+        SimpleConfigBuilder { inner: Self::new() }
     }
 }
 pub struct SimpleConfigBuilder {
@@ -683,7 +663,7 @@ impl SimpleConfigBuilder {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type NotificationOptions;
     #[wasm_bindgen(method, getter)]
@@ -711,9 +691,7 @@ impl NotificationOptions {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> NotificationOptionsBuilder {
-        NotificationOptionsBuilder {
-            inner: Self::new(),
-        }
+        NotificationOptionsBuilder { inner: Self::new() }
     }
 }
 pub struct NotificationOptionsBuilder {
@@ -743,7 +721,7 @@ impl NotificationOptionsBuilder {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type MutableWidget;
     #[wasm_bindgen(method, getter)]
@@ -763,13 +741,15 @@ impl MutableWidget {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         #[allow(unused_unsafe)]
-        unsafe { JsValue::from(js_sys::Object::new()).unchecked_into() }
+        unsafe {
+            JsValue::from(js_sys::Object::new()).unchecked_into()
+        }
     }
 }
 pub mod my_module {
-    use wasm_bindgen::prelude::*;
-    use js_sys::*;
     use super::*;
+    use js_sys::*;
+    use wasm_bindgen::prelude::*;
     #[wasm_bindgen(module = "my-module")]
     extern "C" {
         #[wasm_bindgen(js_name = "doWork")]
@@ -782,7 +762,7 @@ pub mod my_module {
     }
     #[wasm_bindgen(module = "my-module")]
     extern "C" {
-        #[wasm_bindgen(extends = Object)]
+        # [wasm_bindgen (extends = Object)]
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub type WorkResult;
         #[wasm_bindgen(method, getter)]
@@ -829,11 +809,11 @@ pub mod my_module {
                 if self.required & 1u64 != 0 {
                     missing.push("missing required property `success`");
                 }
-                return Err(
-                    JsValue::from_str(
-                        &format!("{}: {}", stringify!(WorkResult), missing.join(", ")),
-                    ),
-                );
+                return Err(JsValue::from_str(&format!(
+                    "{}: {}",
+                    stringify!(WorkResult),
+                    missing.join(", ")
+                )));
             }
             Ok(self.inner)
         }

@@ -1,15 +1,15 @@
 #[allow(unused_imports)]
-use wasm_bindgen::prelude::*;
-#[allow(unused_imports)]
 use js_sys::*;
-/// Extension trait for awaiting `js_sys::Promise<T>`.
-///
-/// Since `IntoFuture` can't be implemented for `js_sys::Promise` from
-/// generated code (orphan rule), use `.into_future().await` instead:
-/// ```ignore
-/// use bindings::PromiseExt;
-/// let data: ArrayBuffer = promise.into_future().await?;
-/// ```
+#[allow(unused_imports)]
+use wasm_bindgen::prelude::*;
+#[doc = r" Extension trait for awaiting `js_sys::Promise<T>`."]
+#[doc = r""]
+#[doc = r" Since `IntoFuture` can't be implemented for `js_sys::Promise` from"]
+#[doc = r" generated code (orphan rule), use `.into_future().await` instead:"]
+#[doc = r" ```ignore"]
+#[doc = r" use bindings::PromiseExt;"]
+#[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
+#[doc = r" ```"]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -21,27 +21,27 @@ impl<T: 'static + wasm_bindgen::convert::FromWasmAbi> PromiseExt for js_sys::Pro
     }
 }
 #[allow(dead_code)]
-use ::web_sys::Request as Request;
+use ::web_sys::Request;
 #[allow(dead_code)]
-use ::web_sys::RequestInit as RequestInit;
+use ::web_sys::RequestInit;
 #[allow(dead_code)]
-use ::web_sys::Response as Response;
+use ::web_sys::Response;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = RequestInit, extends = Object)]
+    # [wasm_bindgen (extends = RequestInit , extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type FetchOptions;
-    /// Number of times to retry on failure.
+    #[doc = " Number of times to retry on failure."]
     #[wasm_bindgen(method, getter)]
     pub fn retries(this: &FetchOptions) -> Option<f64>;
     #[wasm_bindgen(method, setter)]
     pub fn set_retries(this: &FetchOptions, val: f64);
-    /// Timeout in milliseconds.
+    #[doc = " Timeout in milliseconds."]
     #[wasm_bindgen(method, getter)]
     pub fn timeout(this: &FetchOptions) -> Option<f64>;
     #[wasm_bindgen(method, setter)]
     pub fn set_timeout(this: &FetchOptions, val: f64);
-    /// Custom priority hint.
+    #[doc = " Custom priority hint."]
     #[wasm_bindgen(method, getter)]
     pub fn priority(this: &FetchOptions) -> Option<String>;
     #[wasm_bindgen(method, setter)]
@@ -55,9 +55,7 @@ impl FetchOptions {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> FetchOptionsBuilder {
-        FetchOptionsBuilder {
-            inner: Self::new(),
-        }
+        FetchOptionsBuilder { inner: Self::new() }
     }
 }
 pub struct FetchOptionsBuilder {
@@ -83,29 +81,29 @@ impl FetchOptionsBuilder {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Response, extends = Object)]
+    # [wasm_bindgen (extends = Response , extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ResponseExt;
-    /// Parse the body as JSON and return a typed result.
+    #[doc = " Parse the body as JSON and return a typed result."]
     #[wasm_bindgen(method, js_name = "jsonExt")]
     pub fn json_ext(this: &ResponseExt) -> Promise;
     #[wasm_bindgen(method, catch, js_name = "jsonExt")]
     pub fn try_json_ext(this: &ResponseExt) -> Result<Promise, JsValue>;
-    /// Get the response body as a Uint8Array.
+    #[doc = " Get the response body as a Uint8Array."]
     #[wasm_bindgen(method)]
     pub fn bytes(this: &ResponseExt) -> Promise<ArrayBuffer>;
     #[wasm_bindgen(method, catch, js_name = "bytes")]
     pub fn try_bytes(this: &ResponseExt) -> Result<Promise<ArrayBuffer>, JsValue>;
-    /// Whether the response was served from cache.
+    #[doc = " Whether the response was served from cache."]
     #[wasm_bindgen(method, getter)]
     pub fn cached(this: &ResponseExt) -> bool;
-    /// Timing info in milliseconds.
+    #[doc = " Timing info in milliseconds."]
     #[wasm_bindgen(method, getter)]
     pub fn timing(this: &ResponseExt) -> f64;
 }
 #[wasm_bindgen]
 extern "C" {
-    /// Perform a fetch with extended options, returning an extended response.
+    #[doc = " Perform a fetch with extended options, returning an extended response."]
     pub fn fetch(input: &Request) -> Promise<ResponseExt>;
 }
 #[wasm_bindgen]
@@ -142,10 +140,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_name = "fetch")]
-    pub fn fetch_with_str_and_init(
-        input: &str,
-        init: &FetchOptions,
-    ) -> Promise<ResponseExt>;
+    pub fn fetch_with_str_and_init(input: &str, init: &FetchOptions) -> Promise<ResponseExt>;
 }
 #[wasm_bindgen]
 extern "C" {

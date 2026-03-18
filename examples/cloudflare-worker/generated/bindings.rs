@@ -1,15 +1,15 @@
 #[allow(unused_imports)]
-use wasm_bindgen::prelude::*;
-#[allow(unused_imports)]
 use js_sys::*;
-/// Extension trait for awaiting `js_sys::Promise<T>`.
-///
-/// Since `IntoFuture` can't be implemented for `js_sys::Promise` from
-/// generated code (orphan rule), use `.into_future().await` instead:
-/// ```ignore
-/// use bindings::PromiseExt;
-/// let data: ArrayBuffer = promise.into_future().await?;
-/// ```
+#[allow(unused_imports)]
+use wasm_bindgen::prelude::*;
+#[doc = r" Extension trait for awaiting `js_sys::Promise<T>`."]
+#[doc = r""]
+#[doc = r" Since `IntoFuture` can't be implemented for `js_sys::Promise` from"]
+#[doc = r" generated code (orphan rule), use `.into_future().await` instead:"]
+#[doc = r" ```ignore"]
+#[doc = r" use bindings::PromiseExt;"]
+#[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
+#[doc = r" ```"]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -75,7 +75,7 @@ pub mod console {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ReadableStream;
     #[wasm_bindgen(method, getter)]
@@ -91,7 +91,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Headers;
     #[wasm_bindgen(constructor, catch)]
@@ -129,7 +129,7 @@ extern "C" {
 pub type HeadersInit = JsValue;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Request;
     #[wasm_bindgen(constructor, catch)]
@@ -142,10 +142,7 @@ extern "C" {
         init: &RequestInit,
     ) -> Result<Request, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Request")]
-    pub fn new_with_str_and_init(
-        input: &str,
-        init: &RequestInit,
-    ) -> Result<Request, JsValue>;
+    pub fn new_with_str_and_init(input: &str, init: &RequestInit) -> Result<Request, JsValue>;
     #[wasm_bindgen(method, getter)]
     pub fn method(this: &Request) -> String;
     #[wasm_bindgen(method, getter)]
@@ -171,7 +168,7 @@ extern "C" {
 pub type RequestInfo = JsValue;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type RequestInit;
     #[wasm_bindgen(method, getter)]
@@ -208,9 +205,7 @@ impl RequestInit {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> RequestInitBuilder {
-        RequestInitBuilder {
-            inner: Self::new(),
-        }
+        RequestInitBuilder { inner: Self::new() }
     }
 }
 pub struct RequestInitBuilder {
@@ -230,10 +225,7 @@ impl RequestInitBuilder {
         self.inner.set_headers_with_record(val);
         self
     }
-    pub fn headers_with_array(
-        mut self,
-        val: &Array<ArrayTuple<(JsString, JsString)>>,
-    ) -> Self {
+    pub fn headers_with_array(mut self, val: &Array<ArrayTuple<(JsString, JsString)>>) -> Self {
         self.inner.set_headers_with_array(val);
         self
     }
@@ -255,7 +247,7 @@ impl RequestInitBuilder {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Response;
     #[wasm_bindgen(constructor, catch)]
@@ -263,13 +255,9 @@ extern "C" {
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_str(body: Option<&str>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_array_buffer(
-        body: Option<&ArrayBuffer>,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_array_buffer(body: Option<&ArrayBuffer>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_readable_stream(
-        body: Option<&ReadableStream>,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_readable_stream(body: Option<&ReadableStream>) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_str_and_init(
         body: Option<&str>,
@@ -285,25 +273,22 @@ extern "C" {
         body: Option<&ReadableStream>,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response)]
+    # [wasm_bindgen (static_method_of = Response)]
     pub fn redirect(url: &str) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "redirect")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "redirect")]
     pub fn try_redirect(url: &str) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response, js_name = "redirect")]
+    # [wasm_bindgen (static_method_of = Response , js_name = "redirect")]
     pub fn redirect_with_status(url: &str, status: f64) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "redirect")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "redirect")]
     pub fn try_redirect_with_status(url: &str, status: f64) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response)]
+    # [wasm_bindgen (static_method_of = Response)]
     pub fn json(data: &JsValue) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "json")]
     pub fn try_json(data: &JsValue) -> Result<Response, JsValue>;
-    #[wasm_bindgen(static_method_of = Response, js_name = "json")]
+    # [wasm_bindgen (static_method_of = Response , js_name = "json")]
     pub fn json_with_init(data: &JsValue, init: &ResponseInit) -> Response;
-    #[wasm_bindgen(static_method_of = Response, catch, js_name = "json")]
-    pub fn try_json_with_init(
-        data: &JsValue,
-        init: &ResponseInit,
-    ) -> Result<Response, JsValue>;
+    # [wasm_bindgen (static_method_of = Response , catch , js_name = "json")]
+    pub fn try_json_with_init(data: &JsValue, init: &ResponseInit) -> Result<Response, JsValue>;
     #[wasm_bindgen(method, getter)]
     pub fn status(this: &Response) -> f64;
     #[wasm_bindgen(method, getter, js_name = "statusText")]
@@ -329,7 +314,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ResponseInit;
     #[wasm_bindgen(method, getter)]
@@ -360,9 +345,7 @@ impl ResponseInit {
         JsCast::unchecked_into(js_sys::Object::new())
     }
     pub fn builder() -> ResponseInitBuilder {
-        ResponseInitBuilder {
-            inner: Self::new(),
-        }
+        ResponseInitBuilder { inner: Self::new() }
     }
 }
 pub struct ResponseInitBuilder {
@@ -386,10 +369,7 @@ impl ResponseInitBuilder {
         self.inner.set_headers_with_record(val);
         self
     }
-    pub fn headers_with_array(
-        mut self,
-        val: &Array<ArrayTuple<(JsString, JsString)>>,
-    ) -> Self {
+    pub fn headers_with_array(mut self, val: &Array<ArrayTuple<(JsString, JsString)>>) -> Self {
         self.inner.set_headers_with_array(val);
         self
     }
@@ -399,16 +379,13 @@ impl ResponseInitBuilder {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ExecutionContext;
     #[wasm_bindgen(method, js_name = "waitUntil")]
     pub fn wait_until(this: &ExecutionContext, promise: &Promise);
     #[wasm_bindgen(method, catch, js_name = "waitUntil")]
-    pub fn try_wait_until(
-        this: &ExecutionContext,
-        promise: &Promise,
-    ) -> Result<(), JsValue>;
+    pub fn try_wait_until(this: &ExecutionContext, promise: &Promise) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_name = "passThroughOnException")]
     pub fn pass_through_on_exception(this: &ExecutionContext);
     #[wasm_bindgen(method, catch, js_name = "passThroughOnException")]
@@ -416,7 +393,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ExportedHandler;
     #[wasm_bindgen(method)]
@@ -456,10 +433,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_name = "fetch")]
-    pub fn fetch_with_request_and_init(
-        input: &Request,
-        init: &RequestInit,
-    ) -> Promise<Response>;
+    pub fn fetch_with_request_and_init(input: &Request, init: &RequestInit) -> Promise<Response>;
 }
 #[wasm_bindgen]
 extern "C" {
@@ -484,15 +458,11 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Ai;
     #[wasm_bindgen(method)]
-    pub fn run(
-        this: &Ai,
-        model: &str,
-        inputs: &AiTextToImageInput,
-    ) -> Promise<ReadableStream>;
+    pub fn run(this: &Ai, model: &str, inputs: &AiTextToImageInput) -> Promise<ReadableStream>;
     #[wasm_bindgen(method, catch, js_name = "run")]
     pub fn try_run(
         this: &Ai,
@@ -514,7 +484,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type AiTextToImageInput;
     #[wasm_bindgen(method, getter)]
@@ -633,20 +603,18 @@ impl AiTextToImageInputBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `prompt`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!(
-                        "{}: {}", stringify!(AiTextToImageInput), missing.join(", ")
-                    ),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(AiTextToImageInput),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type AiTextGenerationInput;
     #[wasm_bindgen(method, getter)]
@@ -709,20 +677,18 @@ impl AiTextGenerationInputBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `prompt`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!(
-                        "{}: {}", stringify!(AiTextGenerationInput), missing.join(", ")
-                    ),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(AiTextGenerationInput),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type AiTextGenerationOutput;
     #[wasm_bindgen(method, getter)]
@@ -761,20 +727,18 @@ impl AiTextGenerationOutputBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `response`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!(
-                        "{}: {}", stringify!(AiTextGenerationOutput), missing.join(", ")
-                    ),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(AiTextGenerationOutput),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
 }
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object)]
+    # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Env;
     #[wasm_bindgen(method, getter, js_name = "AI")]
@@ -813,11 +777,11 @@ impl EnvBuilder {
             if self.required & 1u64 != 0 {
                 missing.push("missing required property `AI`");
             }
-            return Err(
-                JsValue::from_str(
-                    &format!("{}: {}", stringify!(Env), missing.join(", ")),
-                ),
-            );
+            return Err(JsValue::from_str(&format!(
+                "{}: {}",
+                stringify!(Env),
+                missing.join(", ")
+            )));
         }
         Ok(self.inner)
     }
