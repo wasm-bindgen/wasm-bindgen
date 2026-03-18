@@ -63,7 +63,19 @@ pub fn process(module: &mut Module) -> Result<()> {
     // slice-related instructions, though, so let's just cop out and only enable
     // these coarsely.
     aux.externref_table = Some(meta.table);
-    if module_needs_externref_metadata(&aux, section) {
+
+    // Always store alloc/drop when reinit hooks with transfer are present,
+    // because `generate_reset_state` needs them to bridge the externref table
+    // across wasm instance re-instantiation.
+    let hooks_need_externref = aux.reinit_preinit.is_some_and(|id| {
+        let ty_id = module.funcs.get(id).ty();
+        !module.types.get(ty_id).results().is_empty()
+    }) || aux.reinit_postinit.is_some_and(|id| {
+        let ty_id = module.funcs.get(id).ty();
+        !module.types.get(ty_id).params().is_empty()
+    });
+
+    if module_needs_externref_metadata(&aux, section) || hooks_need_externref {
         aux.externref_alloc = meta.alloc;
         aux.externref_drop = meta.drop;
         aux.externref_drop_slice = meta.drop_slice;

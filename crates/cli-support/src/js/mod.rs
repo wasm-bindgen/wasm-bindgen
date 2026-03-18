@@ -2987,14 +2987,52 @@ if (require('worker_threads').isMainThread) {{
             !self.module.types.get(ty_id).params().is_empty()
         });
 
+        // When externref is enabled, hook exports work with i32 slab indices
+        // (not externref values) because the externref transform doesn't wrap
+        // them. We must manually bridge the externref table across the old and
+        // new wasm instances: extract the JS value from the old table before
+        // destroying the instance, then insert it into the new table after
+        // re-instantiation.
+        let needs_externref_bridge =
+            self.config.externref && (pre_has_transfer || post_has_transfer);
+        let (externref_table, externref_alloc) = if needs_externref_bridge {
+            let table = self
+                .aux
+                .externref_table
+                .expect("externref table must exist when externref is enabled");
+            let alloc = self
+                .aux
+                .externref_alloc
+                .expect("externref_alloc must exist for hook transfer");
+            (
+                Some(self.export_name_of(table)),
+                Some(self.export_name_of(alloc)),
+            )
+        } else {
+            (None, None)
+        };
+
         // Call the pre-reinit hook on the old instance (only when not
         // terminated — a corrupted instance must not be called into).
         if let Some(ref name) = pre_reinit_hook {
             if pre_has_transfer {
                 reset_statements.push("let __wbg_transfer;".to_string());
-                reset_statements.push(format!(
-                    "if (!__wbg_skip_pre_reinit) {{ __wbg_transfer = wasm.{name}(); }}"
-                ));
+                if needs_externref_bridge {
+                    // The hook returns an i32 slab index into the old instance's
+                    // externref table. Extract the actual JS value before the
+                    // old instance is destroyed.
+                    let table = externref_table.as_ref().unwrap();
+                    reset_statements.push(format!(
+                        "if (!__wbg_skip_pre_reinit) {{ \
+                            const __wbg_idx = wasm.{name}(); \
+                            __wbg_transfer = wasm.{table}.get(__wbg_idx); \
+                        }}"
+                    ));
+                } else {
+                    reset_statements.push(format!(
+                        "if (!__wbg_skip_pre_reinit) {{ __wbg_transfer = wasm.{name}(); }}"
+                    ));
+                }
             } else {
                 reset_statements.push(format!("if (!__wbg_skip_pre_reinit) {{ wasm.{name}(); }}"));
             }
@@ -3013,7 +3051,25 @@ if (require('worker_threads').isMainThread) {{
         // transfer value if the pre-reinit hook produced one.
         if let Some(ref name) = post_reinit_hook {
             if post_has_transfer {
-                reset_statements.push(format!("wasm.{name}(__wbg_transfer);"));
+                if needs_externref_bridge {
+                    // The hook expects an i32 slab index. Allocate a slot in the
+                    // new instance's externref table and store the JS value there.
+                    // When __wbg_transfer is undefined (skipped pre-hook),
+                    // use the well-known JSIDX_UNDEFINED slot (offset 1024).
+                    let table = externref_table.as_ref().unwrap();
+                    let alloc = externref_alloc.as_ref().unwrap();
+                    reset_statements.push(format!(
+                        "if (typeof __wbg_transfer !== 'undefined') {{ \
+                            const __wbg_idx = wasm.{alloc}(); \
+                            wasm.{table}.set(__wbg_idx, __wbg_transfer); \
+                            wasm.{name}(__wbg_idx); \
+                        }} else {{ \
+                            wasm.{name}(1024); \
+                        }}"
+                    ));
+                } else {
+                    reset_statements.push(format!("wasm.{name}(__wbg_transfer);"));
+                }
             } else {
                 reset_statements.push(format!("wasm.{name}();"));
             }
