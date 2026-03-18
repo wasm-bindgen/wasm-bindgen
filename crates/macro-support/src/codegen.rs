@@ -1,6 +1,6 @@
 use crate::ast::{self};
-use crate::encode::{self};
 use crate::encode::EncodeChunk;
+use crate::encode::{self};
 use crate::generics::{self, generic_to_concrete};
 use crate::Diagnostic;
 use proc_macro2::{Ident, Span, TokenStream};
@@ -101,9 +101,7 @@ impl TryToTokens for ast::Program {
 
         let wasm_bindgen = &self.wasm_bindgen;
 
-
         // dbg!(&self);
-
 
         let encoded = encode::encode(self)?;
 

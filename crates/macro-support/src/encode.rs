@@ -624,11 +624,20 @@ macro_rules! encode_api {
         encode_api!($($rest)*);
     );
 }
-struct Program<'a>{
-    exports:Vec<Export<'a>> ,enums:Vec<Enum<'a>> ,imports:Vec<Import<'a>> ,structs:Vec<Struct<'a>> ,typescript_custom_sections:Vec<LitOrExpr<'a>> ,local_modules:Vec<LocalModule<'a>> ,inline_js:Vec< &'a str> ,unique_crate_identifier: &'a str,package_json:Option< &'a str> ,linked_modules:Vec<LinkedModule<'a>> ,
+struct Program<'a> {
+    exports: Vec<Export<'a>>,
+    enums: Vec<Enum<'a>>,
+    imports: Vec<Import<'a>>,
+    structs: Vec<Struct<'a>>,
+    typescript_custom_sections: Vec<LitOrExpr<'a>>,
+    local_modules: Vec<LocalModule<'a>>,
+    inline_js: Vec<&'a str>,
+    unique_crate_identifier: &'a str,
+    package_json: Option<&'a str>,
+    linked_modules: Vec<LinkedModule<'a>>,
 }
-impl <'a>Encode for Program<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+impl<'a> Encode for Program<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.exports.encode(_dst);
         self.enums.encode(_dst);
         self.imports.encode(_dst);
@@ -640,55 +649,66 @@ impl <'a>Encode for Program<'a>{
         self.package_json.encode(_dst);
         self.linked_modules.encode(_dst);
     }
-
-    }
-struct Import<'a>{
-    module:Option<ImportModule<'a>> ,js_namespace:Option<Vec<String>> ,reexport:Option<String> ,kind:ImportKind<'a> ,
 }
-impl <'a>Encode for Import<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct Import<'a> {
+    module: Option<ImportModule<'a>>,
+    js_namespace: Option<Vec<String>>,
+    reexport: Option<String>,
+    kind: ImportKind<'a>,
+}
+impl<'a> Encode for Import<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.module.encode(_dst);
         self.js_namespace.encode(_dst);
         self.reexport.encode(_dst);
         self.kind.encode(_dst);
     }
-
-    }
-struct LinkedModule<'a>{
-    module:ImportModule<'a> ,link_function_name: &'a str,
 }
-impl <'a>Encode for LinkedModule<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct LinkedModule<'a> {
+    module: ImportModule<'a>,
+    link_function_name: &'a str,
+}
+impl<'a> Encode for LinkedModule<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.module.encode(_dst);
         self.link_function_name.encode(_dst);
     }
-
-    }
-enum ImportModule<'a>{
-    Named(&'a str),RawNamed(&'a str),Inline(u32),
 }
-impl <'a>Encode for ImportModule<'a>{
-    fn encode(&self,dst: &mut Encoder){
+enum ImportModule<'a> {
+    Named(&'a str),
+    RawNamed(&'a str),
+    Inline(u32),
+}
+impl<'a> Encode for ImportModule<'a> {
+    fn encode(&self, dst: &mut Encoder) {
         use self::ImportModule::*;
         encode_enum!(@arms self dst(0)()Named(&'a str),RawNamed(&'a str),Inline(u32),)
     }
-
-    }
-enum ImportKind<'a>{
-    Function(ImportFunction<'a>),Static(ImportStatic<'a>),String(ImportString<'a>),Type(ImportType<'a>),Enum(StringEnum<'a>),
 }
-impl <'a>Encode for ImportKind<'a>{
-    fn encode(&self,dst: &mut Encoder){
+enum ImportKind<'a> {
+    Function(ImportFunction<'a>),
+    Static(ImportStatic<'a>),
+    String(ImportString<'a>),
+    Type(ImportType<'a>),
+    Enum(StringEnum<'a>),
+}
+impl<'a> Encode for ImportKind<'a> {
+    fn encode(&self, dst: &mut Encoder) {
         use self::ImportKind::*;
         encode_enum!(@arms self dst(0)()Function(ImportFunction<'a>),Static(ImportStatic<'a>),String(ImportString<'a>),Type(ImportType<'a>),Enum(StringEnum<'a>),)
     }
-
-    }
-struct ImportFunction<'a>{
-    shim: &'a str,catch:bool,variadic:bool,assert_no_shim:bool,method:Option<MethodData<'a>> ,structural:bool,function:Function<'a> ,
 }
-impl <'a>Encode for ImportFunction<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct ImportFunction<'a> {
+    shim: &'a str,
+    catch: bool,
+    variadic: bool,
+    assert_no_shim: bool,
+    method: Option<MethodData<'a>>,
+    structural: bool,
+    function: Function<'a>,
+}
+impl<'a> Encode for ImportFunction<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.shim.encode(_dst);
         self.catch.encode(_dst);
         self.variadic.encode(_dst);
@@ -697,97 +717,111 @@ impl <'a>Encode for ImportFunction<'a>{
         self.structural.encode(_dst);
         self.function.encode(_dst);
     }
-
-    }
-struct MethodData<'a>{
-    class: &'a str,kind:MethodKind<'a> ,
 }
-impl <'a>Encode for MethodData<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct MethodData<'a> {
+    class: &'a str,
+    kind: MethodKind<'a>,
+}
+impl<'a> Encode for MethodData<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.class.encode(_dst);
         self.kind.encode(_dst);
     }
-
-    }
-enum MethodKind<'a>{
-    Constructor,Operation(Operation<'a>),
 }
-impl <'a>Encode for MethodKind<'a>{
-    fn encode(&self,dst: &mut Encoder){
+enum MethodKind<'a> {
+    Constructor,
+    Operation(Operation<'a>),
+}
+impl<'a> Encode for MethodKind<'a> {
+    fn encode(&self, dst: &mut Encoder) {
         use self::MethodKind::*;
         encode_enum!(@arms self dst(0)()Constructor,Operation(Operation<'a>),)
     }
-
-    }
-struct Operation<'a>{
-    is_static:bool,kind:OperationKind<'a> ,
 }
-impl <'a>Encode for Operation<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct Operation<'a> {
+    is_static: bool,
+    kind: OperationKind<'a>,
+}
+impl<'a> Encode for Operation<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.is_static.encode(_dst);
         self.kind.encode(_dst);
     }
-
-    }
-enum OperationKind<'a>{
-    Regular,RegularThis,Getter(&'a str),Setter(&'a str),IndexingGetter,IndexingSetter,IndexingDeleter,
 }
-impl <'a>Encode for OperationKind<'a>{
-    fn encode(&self,dst: &mut Encoder){
+enum OperationKind<'a> {
+    Regular,
+    RegularThis,
+    Getter(&'a str),
+    Setter(&'a str),
+    IndexingGetter,
+    IndexingSetter,
+    IndexingDeleter,
+}
+impl<'a> Encode for OperationKind<'a> {
+    fn encode(&self, dst: &mut Encoder) {
         use self::OperationKind::*;
         encode_enum!(@arms self dst(0)()Regular,RegularThis,Getter(&'a str),Setter(&'a str),IndexingGetter,IndexingSetter,IndexingDeleter,)
     }
-
-    }
-struct ImportStatic<'a>{
-    name: &'a str,shim: &'a str,
 }
-impl <'a>Encode for ImportStatic<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct ImportStatic<'a> {
+    name: &'a str,
+    shim: &'a str,
+}
+impl<'a> Encode for ImportStatic<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.name.encode(_dst);
         self.shim.encode(_dst);
     }
-
-    }
-struct ImportString<'a>{
-    shim: &'a str,string: &'a str,
 }
-impl <'a>Encode for ImportString<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct ImportString<'a> {
+    shim: &'a str,
+    string: &'a str,
+}
+impl<'a> Encode for ImportString<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.shim.encode(_dst);
         self.string.encode(_dst);
     }
-
-    }
-struct ImportType<'a>{
-    name: &'a str,instanceof_shim: &'a str,vendor_prefixes:Vec< &'a str> ,
 }
-impl <'a>Encode for ImportType<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct ImportType<'a> {
+    name: &'a str,
+    instanceof_shim: &'a str,
+    vendor_prefixes: Vec<&'a str>,
+}
+impl<'a> Encode for ImportType<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.name.encode(_dst);
         self.instanceof_shim.encode(_dst);
         self.vendor_prefixes.encode(_dst);
     }
-
-    }
-struct StringEnum<'a>{
-    name: &'a str,variant_values:Vec< &'a str> ,comments:Vec< &'a str> ,generate_typescript:bool,js_namespace:Option<Vec< &'a str>> ,
 }
-impl <'a>Encode for StringEnum<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+struct StringEnum<'a> {
+    name: &'a str,
+    variant_values: Vec<&'a str>,
+    comments: Vec<&'a str>,
+    generate_typescript: bool,
+    js_namespace: Option<Vec<&'a str>>,
+}
+impl<'a> Encode for StringEnum<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.name.encode(_dst);
         self.variant_values.encode(_dst);
         self.comments.encode(_dst);
         self.generate_typescript.encode(_dst);
         self.js_namespace.encode(_dst);
     }
-
-    }
-pub struct Export<'a>{
-    class:Option< &'a str> ,comments:Vec< &'a str> ,consumed:bool,function:Function<'a> ,js_namespace:Option<Vec< &'a str>> ,method_kind:MethodKind<'a> ,start:bool,
 }
-impl <'a>Encode for Export<'a>{
-    fn encode(&self,_dst: &mut Encoder){
+pub struct Export<'a> {
+    class: Option<&'a str>,
+    comments: Vec<&'a str>,
+    consumed: bool,
+    function: Function<'a>,
+    js_namespace: Option<Vec<&'a str>>,
+    method_kind: MethodKind<'a>,
+    start: bool,
+}
+impl<'a> Encode for Export<'a> {
+    fn encode(&self, _dst: &mut Encoder) {
         self.class.encode(_dst);
         self.comments.encode(_dst);
         self.consumed.encode(_dst);
@@ -796,23 +830,59 @@ impl <'a>Encode for Export<'a>{
         self.method_kind.encode(_dst);
         self.start.encode(_dst);
     }
-
+}
+encode_api!(
+    struct Enum<'a> {
+        name: &'a str,
+        signed: bool,
+        variants: Vec<EnumVariant<'a>>,
+        comments: Vec<&'a str>,
+        generate_typescript: bool,
+        js_namespace: Option<Vec<&'a str>>,
+        private: bool,
     }
-encode_api!(struct Enum<'a>{
-    name: &'a str,signed:bool,variants:Vec<EnumVariant<'a>>,comments:Vec<&'a str>,generate_typescript:bool,js_namespace:Option<Vec<&'a str>>,private:bool,
-}struct EnumVariant<'a>{
-    name: &'a str,value:u32,comments:Vec<&'a str>,
-}struct Function<'a>{
-    args:Vec<FunctionArgumentData<'a>>,asyncness:bool,name: &'a str,generate_typescript:bool,generate_jsdoc:bool,variadic:bool,ret_ty_override:Option<&'a str>,ret_desc:Option<&'a str>,
-}struct FunctionArgumentData<'a>{
-    name:String,ty_override:Option<&'a str>,desc:Option<&'a str>,
-}struct Struct<'a>{
-    name: &'a str,fields:Vec<StructField<'a>>,comments:Vec<&'a str>,is_inspectable:bool,generate_typescript:bool,js_namespace:Option<Vec<&'a str>>,private:bool,
-}struct StructField<'a>{
-    name: &'a str,readonly:bool,comments:Vec<&'a str>,generate_typescript:bool,generate_jsdoc:bool,
-}struct LocalModule<'a>{
-    identifier: &'a str,contents: &'a str,linked_module:bool,
-});
+    struct EnumVariant<'a> {
+        name: &'a str,
+        value: u32,
+        comments: Vec<&'a str>,
+    }
+    struct Function<'a> {
+        args: Vec<FunctionArgumentData<'a>>,
+        asyncness: bool,
+        name: &'a str,
+        generate_typescript: bool,
+        generate_jsdoc: bool,
+        variadic: bool,
+        ret_ty_override: Option<&'a str>,
+        ret_desc: Option<&'a str>,
+    }
+    struct FunctionArgumentData<'a> {
+        name: String,
+        ty_override: Option<&'a str>,
+        desc: Option<&'a str>,
+    }
+    struct Struct<'a> {
+        name: &'a str,
+        fields: Vec<StructField<'a>>,
+        comments: Vec<&'a str>,
+        is_inspectable: bool,
+        generate_typescript: bool,
+        js_namespace: Option<Vec<&'a str>>,
+        private: bool,
+    }
+    struct StructField<'a> {
+        name: &'a str,
+        readonly: bool,
+        comments: Vec<&'a str>,
+        generate_typescript: bool,
+        generate_jsdoc: bool,
+    }
+    struct LocalModule<'a> {
+        identifier: &'a str,
+        contents: &'a str,
+        linked_module: bool,
+    }
+);
 
 fn from_ast_method_kind<'a>(
     function: &'a ast::Function,
