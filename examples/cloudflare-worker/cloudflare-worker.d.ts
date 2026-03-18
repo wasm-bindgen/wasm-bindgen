@@ -84,6 +84,11 @@ declare class ReadableStream {
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers)
  */
 declare class Headers {
+  /**
+   * The **`Headers()`** constructor creates a new Headers object.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers/Headers)
+   */
   constructor(init?: HeadersInit);
   /**
    * The **`append()`** method of the Headers interface appends a new value onto an existing header inside a `Headers` object, or adds the header if it does not already exist.
@@ -125,6 +130,11 @@ type HeadersInit = Headers | Record<string, string> | [string, string][];
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Request)
  */
 declare class Request {
+  /**
+   * The **`Request()`** constructor creates a new Request object.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Request/Request)
+   */
   constructor(input: RequestInfo, init?: RequestInit);
   /**
    * The **`method`** read-only property of the Request interface contains the request's method (`GET`, `POST`, etc.)
@@ -189,6 +199,11 @@ interface RequestInit {
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response)
  */
 declare class Response {
+  /**
+   * The **`Response()`** constructor creates a new Response object.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)
+   */
   constructor(body?: string | ArrayBuffer | ReadableStream | null, init?: ResponseInit);
   /**
    * The **`Response.redirect()`** static method returns a `Response` resulting in a redirect to the specified URL.
@@ -253,8 +268,11 @@ declare class Response {
 }
 
 interface ResponseInit {
+  /** The status code for the response. */
   status?: number;
+  /** The status message associated with the status code. */
   statusText?: string;
+  /** A Headers object, an object literal, or an array of two-item arrays to set response's headers. */
   headers?: HeadersInit;
 }
 
@@ -293,7 +311,7 @@ interface ExportedHandler {
 }
 
 /**
- * The Fetch API provides an interface for fetching resources across the network.
+ * The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available.
  *
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)
  */
@@ -308,15 +326,15 @@ declare function fetch(input: RequestInfo, init?: RequestInit): Promise<Response
  */
 interface Ai {
   /**
-   * Run an AI model with the given inputs. Returns a ReadableStream for text-to-image models.
+   * Run a text-to-image AI model with the given inputs. Returns a ReadableStream containing the generated image data.
    *
-   * [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/configuration/bindings/)
+   * [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/models/#text-to-image)
    */
   run(model: string, inputs: AiTextToImageInput): Promise<ReadableStream>;
   /**
-   * Run an AI model with the given inputs. Returns an AiTextGenerationOutput for text generation models.
+   * Run a text generation AI model with the given inputs. Returns an AiTextGenerationOutput containing the generated text.
    *
-   * [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/configuration/bindings/)
+   * [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/models/#text-generation)
    */
   run(model: string, inputs: AiTextGenerationInput): Promise<AiTextGenerationOutput>;
 }
@@ -343,9 +361,9 @@ interface AiTextToImageInput {
   mask?: number[];
   /** The number of diffusion steps; higher values can improve quality but take longer. */
   num_steps?: number;
-  /** How much the generated image should be similar to the input image for img2img. */
+  /** How much the generated image should be similar to the input image for img2img. A value between 0 and 1. */
   strength?: number;
-  /** Controls how closely the generated image should adhere to the prompt. */
+  /** Controls how closely the generated image should adhere to the prompt; higher values make the image more aligned with the prompt. */
   guidance?: number;
   /** Random seed for reproducibility of the image generation. */
   seed?: number;

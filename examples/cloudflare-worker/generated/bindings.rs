@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 #[doc = r" use bindings::PromiseExt;"]
 #[doc = r" let data: ArrayBuffer = promise.into_future().await?;"]
 #[doc = r" ```"]
+#[allow(dead_code)]
 pub trait PromiseExt {
     type Output;
     fn into_future(self) -> wasm_bindgen_futures::JsFuture<Self::Output>;
@@ -139,12 +140,24 @@ extern "C" {
     # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Headers;
+    #[doc = " The **`Headers()`** constructor creates a new Headers object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers/Headers)"]
     #[wasm_bindgen(constructor, catch)]
     pub fn new() -> Result<Headers, JsValue>;
+    #[doc = " The **`Headers()`** constructor creates a new Headers object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers/Headers)"]
     #[wasm_bindgen(constructor, catch, js_name = "Headers")]
     pub fn new_with_headers(init: &Headers) -> Result<Headers, JsValue>;
+    #[doc = " The **`Headers()`** constructor creates a new Headers object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers/Headers)"]
     #[wasm_bindgen(constructor, catch, js_name = "Headers")]
     pub fn new_with_record(init: &Object<JsString>) -> Result<Headers, JsValue>;
+    #[doc = " The **`Headers()`** constructor creates a new Headers object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers/Headers)"]
     #[wasm_bindgen(constructor, catch, js_name = "Headers")]
     pub fn new_with_array(
         init: &Array<ArrayTuple<(JsString, JsString)>>,
@@ -207,15 +220,27 @@ extern "C" {
     # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Request;
+    #[doc = " The **`Request()`** constructor creates a new Request object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Request/Request)"]
     #[wasm_bindgen(constructor, catch)]
     pub fn new(input: &Request) -> Result<Request, JsValue>;
+    #[doc = " The **`Request()`** constructor creates a new Request object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Request/Request)"]
     #[wasm_bindgen(constructor, catch, js_name = "Request")]
     pub fn new_with_str(input: &str) -> Result<Request, JsValue>;
+    #[doc = " The **`Request()`** constructor creates a new Request object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Request/Request)"]
     #[wasm_bindgen(constructor, catch, js_name = "Request")]
     pub fn new_with_request_and_init(
         input: &Request,
         init: &RequestInit,
     ) -> Result<Request, JsValue>;
+    #[doc = " The **`Request()`** constructor creates a new Request object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Request/Request)"]
     #[wasm_bindgen(constructor, catch, js_name = "Request")]
     pub fn new_with_str_and_init(input: &str, init: &RequestInit) -> Result<Request, JsValue>;
     #[doc = " The **`method`** read-only property of the Request interface contains the request's method (`GET`, `POST`, etc.)"]
@@ -359,24 +384,45 @@ extern "C" {
     # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Response;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch)]
     pub fn new() -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_str(body: Option<&str>) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_array_buffer(body: Option<&ArrayBuffer>) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_readable_stream(body: Option<&ReadableStream>) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_str_and_init(
         body: Option<&str>,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_array_buffer_and_init(
         body: Option<&ArrayBuffer>,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_readable_stream_and_init(
         body: Option<&ReadableStream>,
@@ -483,14 +529,17 @@ extern "C" {
     # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type ResponseInit;
+    #[doc = " The status code for the response."]
     #[wasm_bindgen(method, getter)]
     pub fn status(this: &ResponseInit) -> Option<f64>;
     #[wasm_bindgen(method, setter)]
     pub fn set_status(this: &ResponseInit, val: f64);
+    #[doc = " The status message associated with the status code."]
     #[wasm_bindgen(method, getter, js_name = "statusText")]
     pub fn status_text(this: &ResponseInit) -> Option<String>;
     #[wasm_bindgen(method, setter, js_name = "statusText")]
     pub fn set_status_text(this: &ResponseInit, val: &str);
+    #[doc = " A Headers object, an object literal, or an array of two-item arrays to set response's headers."]
     #[wasm_bindgen(method, getter)]
     pub fn headers(this: &ResponseInit) -> Option<JsValue>;
     #[wasm_bindgen(method, setter)]
@@ -597,14 +646,14 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     pub fn fetch(input: &Request) -> Promise<Response>;
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(catch, js_name = "fetch")]
@@ -612,7 +661,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(js_name = "fetch")]
@@ -620,7 +669,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(catch, js_name = "fetch")]
@@ -628,7 +677,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(js_name = "fetch")]
@@ -636,7 +685,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(catch, js_name = "fetch")]
@@ -647,7 +696,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(js_name = "fetch")]
@@ -655,7 +704,7 @@ extern "C" {
 }
 #[wasm_bindgen]
 extern "C" {
-    #[doc = " The Fetch API provides an interface for fetching resources across the network."]
+    #[doc = " The global **`fetch()`** method starts the process of fetching a resource from the network, returning a promise that is fulfilled once the response is available."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)"]
     #[wasm_bindgen(catch, js_name = "fetch")]
@@ -669,32 +718,32 @@ extern "C" {
     # [wasm_bindgen (extends = Object)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub type Ai;
-    #[doc = " Run an AI model with the given inputs. Returns a ReadableStream for text-to-image models."]
+    #[doc = " Run a text-to-image AI model with the given inputs. Returns a ReadableStream containing the generated image data."]
     #[doc = " "]
-    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/configuration/bindings/)"]
+    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/models/#text-to-image)"]
     #[wasm_bindgen(method)]
     pub fn run(this: &Ai, model: &str, inputs: &AiTextToImageInput) -> Promise<ReadableStream>;
-    #[doc = " Run an AI model with the given inputs. Returns a ReadableStream for text-to-image models."]
+    #[doc = " Run a text-to-image AI model with the given inputs. Returns a ReadableStream containing the generated image data."]
     #[doc = " "]
-    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/configuration/bindings/)"]
+    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/models/#text-to-image)"]
     #[wasm_bindgen(method, catch, js_name = "run")]
     pub fn try_run(
         this: &Ai,
         model: &str,
         inputs: &AiTextToImageInput,
     ) -> Result<Promise<ReadableStream>, JsValue>;
-    #[doc = " Run an AI model with the given inputs. Returns a ReadableStream for text-to-image models."]
+    #[doc = " Run a text-to-image AI model with the given inputs. Returns a ReadableStream containing the generated image data."]
     #[doc = " "]
-    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/configuration/bindings/)"]
+    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/models/#text-to-image)"]
     #[wasm_bindgen(method, js_name = "run")]
     pub fn run_with_ai_text_generation_input(
         this: &Ai,
         model: &str,
         inputs: &AiTextGenerationInput,
     ) -> Promise<ReadableStream>;
-    #[doc = " Run an AI model with the given inputs. Returns a ReadableStream for text-to-image models."]
+    #[doc = " Run a text-to-image AI model with the given inputs. Returns a ReadableStream containing the generated image data."]
     #[doc = " "]
-    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/configuration/bindings/)"]
+    #[doc = " [Cloudflare Docs Reference](https://developers.cloudflare.com/workers-ai/models/#text-to-image)"]
     #[wasm_bindgen(method, catch, js_name = "run")]
     pub fn try_run_with_ai_text_generation_input(
         this: &Ai,
@@ -747,12 +796,12 @@ extern "C" {
     pub fn num_steps(this: &AiTextToImageInput) -> Option<f64>;
     #[wasm_bindgen(method, setter)]
     pub fn set_num_steps(this: &AiTextToImageInput, val: f64);
-    #[doc = " How much the generated image should be similar to the input image for img2img."]
+    #[doc = " How much the generated image should be similar to the input image for img2img. A value between 0 and 1."]
     #[wasm_bindgen(method, getter)]
     pub fn strength(this: &AiTextToImageInput) -> Option<f64>;
     #[wasm_bindgen(method, setter)]
     pub fn set_strength(this: &AiTextToImageInput, val: f64);
-    #[doc = " Controls how closely the generated image should adhere to the prompt."]
+    #[doc = " Controls how closely the generated image should adhere to the prompt; higher values make the image more aligned with the prompt."]
     #[wasm_bindgen(method, getter)]
     pub fn guidance(this: &AiTextToImageInput) -> Option<f64>;
     #[wasm_bindgen(method, setter)]
