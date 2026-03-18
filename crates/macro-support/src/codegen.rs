@@ -102,6 +102,10 @@ impl TryToTokens for ast::Program {
 
         let wasm_bindgen = &self.wasm_bindgen;
 
+
+        // dbg!(&self);
+
+
         let encoded = encode::encode(self)?;
 
         let encoded_chunks: Vec<_> = encoded

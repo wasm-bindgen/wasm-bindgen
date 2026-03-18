@@ -5,7 +5,7 @@
 #[macro_use]
 mod error;
 
-mod ast;
+pub mod ast;
 mod codegen;
 pub mod encode;
 mod generics;
