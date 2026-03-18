@@ -1,13 +1,13 @@
 [package]
-name = "cloudflare-worker-example"
-version = "0.0.0"
 edition = "2021"
+name = "cloudflare-worker-example"
 publish = false
+version = "0.0.0"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
+js-sys = { path = "../../crates/js-sys" }
 wasm-bindgen = { path = "../.." }
 wasm-bindgen-futures = { path = "../../crates/futures" }
-js-sys = { path = "../../crates/js-sys" }

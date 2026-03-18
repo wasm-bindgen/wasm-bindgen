@@ -1,6 +1,6 @@
-name = "hello-world"
-main = "build/cloudflare_worker_example.js"
 compatibility_date = "2026-03-17"
+main = "build/cloudflare_worker_example.js"
+name = "hello-world"
 
 [build]
 command = "just build-dev"
