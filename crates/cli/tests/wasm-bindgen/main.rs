@@ -1454,7 +1454,7 @@ fn reinit_hooks_with_transfer() {
                     edition = '2021'
 
                     [dependencies]
-                    wasm-bindgen = {{ path = '{}' }}
+                    wasm-bindgen = {{ path = '{repo}' }}
                     serde = {{ version = \"1.0\", features = [\"derive\"] }}
                     serde-wasm-bindgen = \"0.6\"
 
@@ -1463,10 +1463,14 @@ fn reinit_hooks_with_transfer() {
 
                     [workspace]
 
+                    [patch.crates-io]
+                    wasm-bindgen = {{ path = '{repo}' }}
+                    js-sys = {{ path = '{repo}/crates/js-sys' }}
+
                     [profile.dev]
                     codegen-units = 1
                 ",
-                REPO_ROOT.display(),
+                repo = REPO_ROOT.display(),
             ),
         );
 

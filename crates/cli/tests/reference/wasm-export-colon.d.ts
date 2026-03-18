@@ -109,11 +109,11 @@ export interface InitOutput {
     readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
     readonly wasmbindgentestcontext_new: (a: number) => number;
     readonly wasmbindgentestcontext_run: (a: number, b: number, c: number) => any;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number, c: any, d: number, e: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000007: (a: number, b: number, c: any) => [number, number];
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000005: (a: number, b: number, c: any, d: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number) => number;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number) => void;
+    readonly wasm_bindgen_8ea23a9b86b07f88___convert__closures_____invoke___wasm_bindgen_8ea23a9b86b07f88___JsValue__u32__js_sys_674724985cba5522___Array______true_: (a: number, b: number, c: any, d: number, e: any) => void;
+    readonly wasm_bindgen_8ea23a9b86b07f88___convert__closures_____invoke___wasm_bindgen_8ea23a9b86b07f88___JsValue__core_61e878f9ec827005___result__Result_____wasm_bindgen_8ea23a9b86b07f88___JsError___true_: (a: number, b: number, c: any) => [number, number];
+    readonly wasm_bindgen_8ea23a9b86b07f88___convert__closures_____invoke___js_sys_674724985cba5522___Function_fn_wasm_bindgen_8ea23a9b86b07f88___JsValue_____wasm_bindgen_8ea23a9b86b07f88___sys__Undefined___js_sys_674724985cba5522___Function_fn_wasm_bindgen_8ea23a9b86b07f88___JsValue_____wasm_bindgen_8ea23a9b86b07f88___sys__Undefined_______true_: (a: number, b: number, c: any, d: any) => void;
+    readonly wasm_bindgen_8ea23a9b86b07f88___convert__closures_____invoke___bool__true_: (a: number, b: number) => number;
+    readonly wasm_bindgen_8ea23a9b86b07f88___convert__closures_____invoke_______true_: (a: number, b: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
