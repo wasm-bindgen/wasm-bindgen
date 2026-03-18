@@ -5,7 +5,7 @@ mod bindings;
 use bindings::*;
 
 #[wasm_bindgen(js_name = "fetch", js_namespace = "default")]
-pub async fn fetch(
+pub async fn fetch_handler(
     request: Request,
     env: Env,
     _ctx: ExecutionContext,

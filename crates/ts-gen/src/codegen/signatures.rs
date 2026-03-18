@@ -165,8 +165,7 @@ pub fn expand_signatures(
     let is_constructor = kind == SignatureKind::Constructor;
     let mut result = Vec::new();
 
-    for (i, (candidate, concrete_params)) in candidate_names.into_iter().zip(deduped).enumerate() {
-        let is_first = i == 0;
+    for (candidate, concrete_params) in candidate_names.into_iter().zip(deduped) {
         let rust_name = dedupe_name(&candidate, used_names);
 
         result.push(ExpandedSignature {
@@ -175,7 +174,7 @@ pub fn expand_signatures(
             params: concrete_params.clone(),
             catch: is_constructor,
             return_type: return_type.clone(),
-            doc: if is_first { doc.clone() } else { None },
+            doc: doc.clone(),
             kind,
         });
 
@@ -193,7 +192,7 @@ pub fn expand_signatures(
                 params: concrete_params,
                 catch: true,
                 return_type: return_type.clone(),
-                doc: None,
+                doc: doc.clone(),
                 kind,
             });
         }
