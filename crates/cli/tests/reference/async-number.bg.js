@@ -41,7 +41,7 @@ export function __wbg_new_typed_aaaeaf29cf802876(arg0, arg1) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen_f617501964f1b510___convert__closures_____invoke___js_sys_abeb9c1007819bac___Function_fn_wasm_bindgen_f617501964f1b510___JsValue_____wasm_bindgen_f617501964f1b510___sys__Undefined___js_sys_abeb9c1007819bac___Function_fn_wasm_bindgen_f617501964f1b510___JsValue_____wasm_bindgen_f617501964f1b510___sys__Undefined_______true_(a, state0.b, arg0, arg1);
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000002(a, state0.b, arg0, arg1);
             } finally {
                 state0.a = a;
             }
@@ -70,7 +70,7 @@ export function __wbg_run_78b7b601add6ed6b(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen_f617501964f1b510___convert__closures_____invoke___bool__true_(a, state0.b, );
+                return wasm_bindgen__convert__closures_____invoke__h0000000000000003(a, state0.b, );
             } finally {
                 state0.a = a;
             }
@@ -102,8 +102,8 @@ export function __wbg_then_098abe61755d12f6(arg0, arg1) {
     return ret;
 }
 export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 2, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_f617501964f1b510___convert__closures_____invoke___wasm_bindgen_f617501964f1b510___JsValue__core_baf86cdb5c476a64___result__Result_____wasm_bindgen_f617501964f1b510___JsError___true_);
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 5, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen__convert__closures_____invoke__h0000000000000004);
     return ret;
 }
 export function __wbindgen_cast_0000000000000001(arg0) {
@@ -120,20 +120,20 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-function wasm_bindgen_f617501964f1b510___convert__closures_____invoke___bool__true_(arg0, arg1) {
-    const ret = wasm.wasm_bindgen_f617501964f1b510___convert__closures_____invoke___bool__true_(arg0, arg1);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1) {
+    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
     return ret !== 0;
 }
 
-function wasm_bindgen_f617501964f1b510___convert__closures_____invoke___wasm_bindgen_f617501964f1b510___JsValue__core_baf86cdb5c476a64___result__Result_____wasm_bindgen_f617501964f1b510___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_f617501964f1b510___convert__closures_____invoke___wasm_bindgen_f617501964f1b510___JsValue__core_baf86cdb5c476a64___result__Result_____wasm_bindgen_f617501964f1b510___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
 
-function wasm_bindgen_f617501964f1b510___convert__closures_____invoke___js_sys_abeb9c1007819bac___Function_fn_wasm_bindgen_f617501964f1b510___JsValue_____wasm_bindgen_f617501964f1b510___sys__Undefined___js_sys_abeb9c1007819bac___Function_fn_wasm_bindgen_f617501964f1b510___JsValue_____wasm_bindgen_f617501964f1b510___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen_f617501964f1b510___convert__closures_____invoke___js_sys_abeb9c1007819bac___Function_fn_wasm_bindgen_f617501964f1b510___JsValue_____wasm_bindgen_f617501964f1b510___sys__Undefined___js_sys_abeb9c1007819bac___Function_fn_wasm_bindgen_f617501964f1b510___JsValue_____wasm_bindgen_f617501964f1b510___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
+function wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000002(arg0, arg1, arg2, arg3);
 }
 
 function addToExternrefTable0(obj) {
