@@ -372,7 +372,7 @@ pub fn to_syn_type(
         TypeRef::BigInt => maybe_ref(quote! { BigInt }, borrow),
         TypeRef::Void => quote! { () },
         TypeRef::Undefined => maybe_ref(quote! { Undefined }, borrow),
-        TypeRef::Null => maybe_ref(quote! { JsValue }, borrow),
+        TypeRef::Null => maybe_ref(quote! { Null }, borrow),
         TypeRef::Any => maybe_ref(quote! { JsValue }, borrow),
         TypeRef::Unknown => maybe_ref(quote! { JsValue }, borrow),
         TypeRef::Object => maybe_ref(quote! { Object }, borrow),

@@ -331,11 +331,15 @@ fn flatten_type(ty: &TypeRef, cgctx: Option<&CodegenContext<'_>>, scope: ScopeId
             vec![ty.clone()]
         }
 
-        // Nullable: flatten inner, wrap each in Nullable
-        TypeRef::Nullable(inner) => flatten_type(inner, cgctx, scope)
-            .into_iter()
-            .map(|t| TypeRef::Nullable(Box::new(t)))
-            .collect(),
+        // Nullable: flatten inner types unwrapped, then add a Null variant.
+        // This expands `T | null` into separate overload variants for each T
+        // plus an explicit `_with_null` variant, rather than wrapping every
+        // alternative in `Option<T>`.
+        TypeRef::Nullable(inner) => {
+            let mut alts = flatten_type(inner, cgctx, scope);
+            alts.push(TypeRef::Null);
+            alts
+        }
 
         // Generic containers: flatten inner, wrap each
         TypeRef::Promise(inner) => flatten_type(inner, cgctx, scope)

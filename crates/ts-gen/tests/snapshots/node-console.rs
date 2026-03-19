@@ -33,27 +33,35 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn stderr(this: &ConsoleOptions) -> Option<Object>;
     #[wasm_bindgen(method, setter)]
-    pub fn set_stderr(this: &ConsoleOptions, val: Option<&Object>);
+    pub fn set_stderr(this: &ConsoleOptions, val: &Object);
+    #[wasm_bindgen(method, setter, js_name = "stderr")]
+    pub fn set_stderr_with_null(this: &ConsoleOptions, val: &Null);
     #[doc = " Ignore errors when writing to the underlying streams."]
     #[doc = " @default true"]
     #[wasm_bindgen(method, getter, js_name = "ignoreErrors")]
     pub fn ignore_errors(this: &ConsoleOptions) -> Option<bool>;
     #[wasm_bindgen(method, setter, js_name = "ignoreErrors")]
-    pub fn set_ignore_errors(this: &ConsoleOptions, val: Option<bool>);
+    pub fn set_ignore_errors(this: &ConsoleOptions, val: bool);
+    #[wasm_bindgen(method, setter, js_name = "ignoreErrors")]
+    pub fn set_ignore_errors_with_null(this: &ConsoleOptions, val: &Null);
     #[doc = " Set color support for this `Console` instance."]
     #[doc = " @default 'auto'"]
     #[wasm_bindgen(method, getter, js_name = "colorMode")]
     pub fn color_mode(this: &ConsoleOptions) -> Option<JsValue>;
     #[wasm_bindgen(method, setter, js_name = "colorMode")]
-    pub fn set_color_mode(this: &ConsoleOptions, val: Option<bool>);
+    pub fn set_color_mode(this: &ConsoleOptions, val: bool);
     #[wasm_bindgen(method, setter, js_name = "colorMode")]
-    pub fn set_color_mode_with_str(this: &ConsoleOptions, val: Option<&str>);
+    pub fn set_color_mode_with_str(this: &ConsoleOptions, val: &str);
+    #[wasm_bindgen(method, setter, js_name = "colorMode")]
+    pub fn set_color_mode_with_null(this: &ConsoleOptions, val: &Null);
     #[doc = " Set group indentation."]
     #[doc = " @default 2"]
     #[wasm_bindgen(method, getter, js_name = "groupIndentation")]
     pub fn group_indentation(this: &ConsoleOptions) -> Option<f64>;
     #[wasm_bindgen(method, setter, js_name = "groupIndentation")]
-    pub fn set_group_indentation(this: &ConsoleOptions, val: Option<f64>);
+    pub fn set_group_indentation(this: &ConsoleOptions, val: f64);
+    #[wasm_bindgen(method, setter, js_name = "groupIndentation")]
+    pub fn set_group_indentation_with_null(this: &ConsoleOptions, val: &Null);
 }
 impl ConsoleOptions {
     #[allow(clippy::new_without_default)]
@@ -80,24 +88,40 @@ impl ConsoleOptionsBuilder {
         self.required &= 18446744073709551614u64;
         self
     }
-    pub fn stderr(mut self, val: Option<&Object>) -> Self {
+    pub fn stderr(mut self, val: &Object) -> Self {
         self.inner.set_stderr(val);
         self
     }
-    pub fn ignore_errors(mut self, val: Option<bool>) -> Self {
+    pub fn stderr_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_stderr_with_null(val);
+        self
+    }
+    pub fn ignore_errors(mut self, val: bool) -> Self {
         self.inner.set_ignore_errors(val);
         self
     }
-    pub fn color_mode(mut self, val: Option<bool>) -> Self {
+    pub fn ignore_errors_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_ignore_errors_with_null(val);
+        self
+    }
+    pub fn color_mode(mut self, val: bool) -> Self {
         self.inner.set_color_mode(val);
         self
     }
-    pub fn color_mode_with_str(mut self, val: Option<&str>) -> Self {
+    pub fn color_mode_with_str(mut self, val: &str) -> Self {
         self.inner.set_color_mode_with_str(val);
         self
     }
-    pub fn group_indentation(mut self, val: Option<f64>) -> Self {
+    pub fn color_mode_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_color_mode_with_null(val);
+        self
+    }
+    pub fn group_indentation(mut self, val: f64) -> Self {
         self.inner.set_group_indentation(val);
+        self
+    }
+    pub fn group_indentation_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_group_indentation_with_null(val);
         self
     }
     pub fn build(self) -> Result<ConsoleOptions, JsValue> {

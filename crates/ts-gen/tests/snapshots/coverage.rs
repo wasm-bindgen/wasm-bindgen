@@ -297,7 +297,9 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn next(this: &LinkedList) -> Option<LinkedList>;
     #[wasm_bindgen(method, setter)]
-    pub fn set_next(this: &LinkedList, val: Option<&LinkedList>);
+    pub fn set_next(this: &LinkedList, val: &LinkedList);
+    #[wasm_bindgen(method, setter, js_name = "next")]
+    pub fn set_next_with_null(this: &LinkedList, val: &Null);
 }
 impl LinkedList {
     #[allow(clippy::new_without_default)]
@@ -324,8 +326,13 @@ impl LinkedListBuilder {
         self.required &= 18446744073709551614u64;
         self
     }
-    pub fn next(mut self, val: Option<&LinkedList>) -> Self {
+    pub fn next(mut self, val: &LinkedList) -> Self {
         self.inner.set_next(val);
+        self.required &= 18446744073709551613u64;
+        self
+    }
+    pub fn next_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_next_with_null(val);
         self.required &= 18446744073709551613u64;
         self
     }
@@ -568,9 +575,11 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn body(this: &FetchOptions) -> Option<JsValue>;
     #[wasm_bindgen(method, setter)]
-    pub fn set_body(this: &FetchOptions, val: Option<&str>);
+    pub fn set_body(this: &FetchOptions, val: &str);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_array_buffer(this: &FetchOptions, val: Option<&ArrayBuffer>);
+    pub fn set_body_with_array_buffer(this: &FetchOptions, val: &ArrayBuffer);
+    #[wasm_bindgen(method, setter, js_name = "body")]
+    pub fn set_body_with_null(this: &FetchOptions, val: &Null);
     #[wasm_bindgen(method, getter)]
     pub fn redirect(this: &FetchOptions) -> Option<String>;
     #[wasm_bindgen(method, setter)]
@@ -608,12 +617,16 @@ impl FetchOptionsBuilder {
         self.inner.set_headers_with_record(val);
         self
     }
-    pub fn body(mut self, val: Option<&str>) -> Self {
+    pub fn body(mut self, val: &str) -> Self {
         self.inner.set_body(val);
         self
     }
-    pub fn body_with_array_buffer(mut self, val: Option<&ArrayBuffer>) -> Self {
+    pub fn body_with_array_buffer(mut self, val: &ArrayBuffer) -> Self {
         self.inner.set_body_with_array_buffer(val);
+        self
+    }
+    pub fn body_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_body_with_null(val);
         self
     }
     pub fn redirect(mut self, val: &str) -> Self {

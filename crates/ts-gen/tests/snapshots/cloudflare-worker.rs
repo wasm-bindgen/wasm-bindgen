@@ -165,17 +165,19 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn body(this: &RequestInit) -> Option<JsValue>;
     #[wasm_bindgen(method, setter)]
-    pub fn set_body(this: &RequestInit, val: Option<&ReadableStream>);
+    pub fn set_body(this: &RequestInit, val: &ReadableStream);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_str(this: &RequestInit, val: Option<&str>);
+    pub fn set_body_with_str(this: &RequestInit, val: &str);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_array_buffer(this: &RequestInit, val: Option<&ArrayBuffer>);
+    pub fn set_body_with_array_buffer(this: &RequestInit, val: &ArrayBuffer);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_blob(this: &RequestInit, val: Option<&Blob>);
+    pub fn set_body_with_blob(this: &RequestInit, val: &Blob);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_url_search_params(this: &RequestInit, val: Option<&URLSearchParams>);
+    pub fn set_body_with_url_search_params(this: &RequestInit, val: &URLSearchParams);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_form_data(this: &RequestInit, val: Option<&FormData>);
+    pub fn set_body_with_form_data(this: &RequestInit, val: &FormData);
+    #[wasm_bindgen(method, setter, js_name = "body")]
+    pub fn set_body_with_null(this: &RequestInit, val: &Null);
     #[wasm_bindgen(method, getter)]
     pub fn redirect(this: &RequestInit) -> Option<String>;
     #[wasm_bindgen(method, setter)]
@@ -217,28 +219,32 @@ impl RequestInitBuilder {
         self.inner.set_headers_with_array(val);
         self
     }
-    pub fn body(mut self, val: Option<&ReadableStream>) -> Self {
+    pub fn body(mut self, val: &ReadableStream) -> Self {
         self.inner.set_body(val);
         self
     }
-    pub fn body_with_str(mut self, val: Option<&str>) -> Self {
+    pub fn body_with_str(mut self, val: &str) -> Self {
         self.inner.set_body_with_str(val);
         self
     }
-    pub fn body_with_array_buffer(mut self, val: Option<&ArrayBuffer>) -> Self {
+    pub fn body_with_array_buffer(mut self, val: &ArrayBuffer) -> Self {
         self.inner.set_body_with_array_buffer(val);
         self
     }
-    pub fn body_with_blob(mut self, val: Option<&Blob>) -> Self {
+    pub fn body_with_blob(mut self, val: &Blob) -> Self {
         self.inner.set_body_with_blob(val);
         self
     }
-    pub fn body_with_url_search_params(mut self, val: Option<&URLSearchParams>) -> Self {
+    pub fn body_with_url_search_params(mut self, val: &URLSearchParams) -> Self {
         self.inner.set_body_with_url_search_params(val);
         self
     }
-    pub fn body_with_form_data(mut self, val: Option<&FormData>) -> Self {
+    pub fn body_with_form_data(mut self, val: &FormData) -> Self {
         self.inner.set_body_with_form_data(val);
+        self
+    }
+    pub fn body_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_body_with_null(val);
         self
     }
     pub fn redirect(mut self, val: &str) -> Self {
@@ -263,47 +269,45 @@ extern "C" {
     #[wasm_bindgen(constructor, catch)]
     pub fn new() -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_readable_stream(body: Option<&ReadableStream>) -> Result<Response, JsValue>;
+    pub fn new_with_readable_stream(body: &ReadableStream) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_str(body: Option<&str>) -> Result<Response, JsValue>;
+    pub fn new_with_str(body: &str) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_array_buffer(body: Option<&ArrayBuffer>) -> Result<Response, JsValue>;
+    pub fn new_with_array_buffer(body: &ArrayBuffer) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_blob(body: Option<&Blob>) -> Result<Response, JsValue>;
+    pub fn new_with_blob(body: &Blob) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_url_search_params(body: Option<&URLSearchParams>) -> Result<Response, JsValue>;
+    pub fn new_with_url_search_params(body: &URLSearchParams) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_form_data(body: Option<&FormData>) -> Result<Response, JsValue>;
+    pub fn new_with_form_data(body: &FormData) -> Result<Response, JsValue>;
+    #[wasm_bindgen(constructor, catch, js_name = "Response")]
+    pub fn new_with_null(body: &Null) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_readable_stream_and_init(
-        body: Option<&ReadableStream>,
+        body: &ReadableStream,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_str_and_init(
-        body: Option<&str>,
-        init: &ResponseInit,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_str_and_init(body: &str, init: &ResponseInit) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_array_buffer_and_init(
-        body: Option<&ArrayBuffer>,
+        body: &ArrayBuffer,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_blob_and_init(
-        body: Option<&Blob>,
-        init: &ResponseInit,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_blob_and_init(body: &Blob, init: &ResponseInit) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_url_search_params_and_init(
-        body: Option<&URLSearchParams>,
+        body: &URLSearchParams,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_form_data_and_init(
-        body: Option<&FormData>,
+        body: &FormData,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
+    #[wasm_bindgen(constructor, catch, js_name = "Response")]
+    pub fn new_with_null_and_init(body: &Null, init: &ResponseInit) -> Result<Response, JsValue>;
     # [wasm_bindgen (static_method_of = Response)]
     pub fn redirect(url: &str) -> Response;
     # [wasm_bindgen (static_method_of = Response , catch , js_name = "redirect")]

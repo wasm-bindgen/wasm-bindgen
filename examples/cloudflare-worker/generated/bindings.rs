@@ -322,9 +322,11 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn body(this: &RequestInit) -> Option<JsValue>;
     #[wasm_bindgen(method, setter)]
-    pub fn set_body(this: &RequestInit, val: Option<&str>);
+    pub fn set_body(this: &RequestInit, val: &str);
     #[wasm_bindgen(method, setter, js_name = "body")]
-    pub fn set_body_with_array_buffer(this: &RequestInit, val: Option<&ArrayBuffer>);
+    pub fn set_body_with_array_buffer(this: &RequestInit, val: &ArrayBuffer);
+    #[wasm_bindgen(method, setter, js_name = "body")]
+    pub fn set_body_with_null(this: &RequestInit, val: &Null);
     #[doc = " A string indicating how the request will interact with the browser's cache to set request's redirect."]
     #[wasm_bindgen(method, getter)]
     pub fn redirect(this: &RequestInit) -> Option<String>;
@@ -363,12 +365,16 @@ impl RequestInitBuilder {
         self.inner.set_headers_with_array(val);
         self
     }
-    pub fn body(mut self, val: Option<&str>) -> Self {
+    pub fn body(mut self, val: &str) -> Self {
         self.inner.set_body(val);
         self
     }
-    pub fn body_with_array_buffer(mut self, val: Option<&ArrayBuffer>) -> Self {
+    pub fn body_with_array_buffer(mut self, val: &ArrayBuffer) -> Self {
         self.inner.set_body_with_array_buffer(val);
+        self
+    }
+    pub fn body_with_null(mut self, val: &Null) -> Self {
+        self.inner.set_body_with_null(val);
         self
     }
     pub fn redirect(mut self, val: &str) -> Self {
@@ -393,31 +399,33 @@ extern "C" {
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_str(body: Option<&str>) -> Result<Response, JsValue>;
+    pub fn new_with_str(body: &str) -> Result<Response, JsValue>;
     #[doc = " The **`Response()`** constructor creates a new Response object."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_array_buffer(body: Option<&ArrayBuffer>) -> Result<Response, JsValue>;
+    pub fn new_with_array_buffer(body: &ArrayBuffer) -> Result<Response, JsValue>;
     #[doc = " The **`Response()`** constructor creates a new Response object."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_readable_stream(body: Option<&ReadableStream>) -> Result<Response, JsValue>;
+    pub fn new_with_readable_stream(body: &ReadableStream) -> Result<Response, JsValue>;
     #[doc = " The **`Response()`** constructor creates a new Response object."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
-    pub fn new_with_str_and_init(
-        body: Option<&str>,
-        init: &ResponseInit,
-    ) -> Result<Response, JsValue>;
+    pub fn new_with_null(body: &Null) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
+    #[wasm_bindgen(constructor, catch, js_name = "Response")]
+    pub fn new_with_str_and_init(body: &str, init: &ResponseInit) -> Result<Response, JsValue>;
     #[doc = " The **`Response()`** constructor creates a new Response object."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_array_buffer_and_init(
-        body: Option<&ArrayBuffer>,
+        body: &ArrayBuffer,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
     #[doc = " The **`Response()`** constructor creates a new Response object."]
@@ -425,9 +433,14 @@ extern "C" {
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
     #[wasm_bindgen(constructor, catch, js_name = "Response")]
     pub fn new_with_readable_stream_and_init(
-        body: Option<&ReadableStream>,
+        body: &ReadableStream,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
+    #[doc = " The **`Response()`** constructor creates a new Response object."]
+    #[doc = " "]
+    #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/Response)"]
+    #[wasm_bindgen(constructor, catch, js_name = "Response")]
+    pub fn new_with_null_and_init(body: &Null, init: &ResponseInit) -> Result<Response, JsValue>;
     #[doc = " The **`Response.redirect()`** static method returns a `Response` resulting in a redirect to the specified URL."]
     #[doc = " "]
     #[doc = " [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response/redirect_static)"]
