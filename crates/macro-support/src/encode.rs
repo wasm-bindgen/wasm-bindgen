@@ -204,6 +204,12 @@ fn shared_export<'a>(
 ) -> Result<Export<'a>, Diagnostic> {
     let consumed = matches!(export.method_self, Some(ast::MethodSelf::ByValue));
     let method_kind = from_ast_method_kind(&export.function, intern, &export.method_kind)?;
+    let kind = match export.kind {
+        ast::ExportKind::Normal => ExportKind::Normal,
+        ast::ExportKind::Start => ExportKind::Start,
+        ast::ExportKind::PreReinitHook => ExportKind::PreReinitHook,
+        ast::ExportKind::PostReinitHook => ExportKind::PostReinitHook,
+    };
     Ok(Export {
         class: export.js_class.as_deref(),
         comments: export.comments.iter().map(|s| &**s).collect(),
@@ -214,9 +220,7 @@ fn shared_export<'a>(
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
         method_kind,
-        start: export.start,
-        pre_reinit_hook: export.pre_reinit_hook,
-        post_reinit_hook: export.post_reinit_hook,
+        kind,
     })
 }
 

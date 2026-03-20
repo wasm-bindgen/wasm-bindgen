@@ -92,19 +92,28 @@ pub struct Export {
     pub rust_class: Option<Ident>,
     /// The name of the rust function/method on the rust side.
     pub rust_name: Ident,
-    /// Whether or not this function should be flagged as the Wasm start
-    /// function.
-    pub start: bool,
-    /// Whether this function is a pre-reinit hook, called on the old instance
-    /// before reinitialization.
-    pub pre_reinit_hook: bool,
-    /// Whether this function is a post-reinit hook, called on the new instance
-    /// after reinitialization.
-    pub post_reinit_hook: bool,
+    /// The role of this exported function in the module lifecycle.
+    /// At most one of `Start`, `PreReinitHook`, or `PostReinitHook` — the
+    /// enum makes this mutual exclusion unrepresentable at compile time.
+    pub kind: ExportKind,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures
     pub wasm_bindgen_futures: Path,
+}
+
+/// The role of an exported function in the module lifecycle.
+#[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum ExportKind {
+    /// A normal exported function.
+    Normal,
+    /// The Wasm start function.
+    Start,
+    /// A pre-reinit hook, called on the old instance before reinitialization.
+    PreReinitHook,
+    /// A post-reinit hook, called on the new instance after reinitialization.
+    PostReinitHook,
 }
 
 /// The 3 types variations of `self`.

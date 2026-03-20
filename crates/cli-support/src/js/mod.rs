@@ -2919,7 +2919,112 @@ if (require('worker_threads').isMainThread) {{
         let pre_reinit_hook = self.aux.reinit_preinit.map(|id| self.export_name_of(id));
         let post_reinit_hook = self.aux.reinit_postinit.map(|id| self.export_name_of(id));
 
+        // Detect whether the hooks transfer state (pre returns a value,
+        // post accepts one).
+        let pre_has_transfer = self.aux.reinit_preinit.is_some_and(|id| {
+            let ty_id = self.module.funcs.get(id).ty();
+            !self.module.types.get(ty_id).results().is_empty()
+        });
+        let post_has_transfer = self.aux.reinit_postinit.is_some_and(|id| {
+            let ty_id = self.module.funcs.get(id).ty();
+            !self.module.types.get(ty_id).params().is_empty()
+        });
+
+        // Asymmetric transfer is a user error: include the hook names for
+        // easier diagnosis.
+        if post_has_transfer && !pre_has_transfer {
+            let post_name = post_reinit_hook.as_deref().unwrap_or("<unknown>");
+            let pre_name = pre_reinit_hook.as_deref().unwrap_or("<none>");
+            bail!(
+                "post_reinit_hook `{post_name}` accepts a transfer value but \
+                 pre_reinit_hook `{pre_name}` does not return one; both hooks \
+                 must agree on whether state is transferred"
+            );
+        }
+        if pre_has_transfer && !post_has_transfer {
+            let pre_name = pre_reinit_hook.as_deref().unwrap_or("<unknown>");
+            let post_name = post_reinit_hook.as_deref().unwrap_or("<none>");
+            bail!(
+                "pre_reinit_hook `{pre_name}` returns a transfer value but \
+                 post_reinit_hook `{post_name}` does not accept one; both hooks \
+                 must agree on whether state is transferred"
+            );
+        }
+
+        // When externref is enabled, hook exports work with i32 slab indices
+        // (not externref values) because the externref transform doesn't wrap
+        // them. We must manually bridge the externref table across the old and
+        // new wasm instances: extract the JS value from the old table before
+        // destroying the instance, then insert it into the new table after
+        // re-instantiation.
+        let needs_externref_bridge =
+            self.config.externref && (pre_has_transfer || post_has_transfer);
+        let (externref_table, externref_alloc) = if needs_externref_bridge {
+            let table = self
+                .aux
+                .externref_table
+                .expect("externref table must exist when externref is enabled");
+            let alloc = self
+                .aux
+                .externref_alloc
+                .expect("externref_alloc must exist for hook transfer");
+            (
+                Some(self.export_name_of(table)),
+                Some(self.export_name_of(alloc)),
+            )
+        } else {
+            (None, None)
+        };
+
         let mut reset_statements = Vec::new();
+
+        // --- Pre-reinit hook runs FIRST, before any state is torn down ---
+        // This ensures the hook can access the old instance's full state,
+        // including any JsValues stored in the JS-side heap (non-externref)
+        // or the externref table. It also means a throwing pre-hook leaves
+        // the module in its original working state, enabling error recovery.
+        //
+        // Contract: a pre-hook that throws aborts the entire reset; the
+        // module remains in its prior state. Users must ensure pre-hooks
+        // do not panic or throw.
+        //
+        // Transfer type compatibility between pre and post hooks is the
+        // user's responsibility — a mismatch produces a runtime serde
+        // deserialization error in the post-hook.
+
+        // Declare the transfer variable whenever either side uses it so that
+        // the variable is always in scope regardless of which hook is present.
+        if pre_has_transfer || post_has_transfer {
+            reset_statements.push("let __wbg_transfer;".to_string());
+        }
+
+        // Call the pre-reinit hook on the old instance (only when not
+        // terminated — a corrupted instance must not be called into).
+        if let Some(ref name) = pre_reinit_hook {
+            if pre_has_transfer {
+                if needs_externref_bridge {
+                    // The hook returns an i32 slab index into the old instance's
+                    // externref table. Extract the actual JS value before the
+                    // old instance is destroyed.
+                    let table = externref_table.as_ref().unwrap();
+                    reset_statements.push(format!(
+                        "if (!__wbg_skip_pre_reinit) {{ \
+                            const __wbg_idx = wasm.{name}(); \
+                            __wbg_transfer = wasm.{table}.get(__wbg_idx); \
+                        }}"
+                    ));
+                } else {
+                    reset_statements.push(format!(
+                        "if (!__wbg_skip_pre_reinit) {{ __wbg_transfer = wasm.{name}(); }}"
+                    ));
+                }
+            } else {
+                reset_statements.push(format!("if (!__wbg_skip_pre_reinit) {{ wasm.{name}(); }}"));
+            }
+        }
+
+        // --- Now tear down old state and re-instantiate ---
+
         reset_statements.push("__wbg_instance_id++;".to_string());
 
         for (num, kinds) in self.memories.values() {
@@ -2976,93 +3081,6 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
-        // Detect whether the hooks transfer state (pre returns a value,
-        // post accepts one).
-        let pre_has_transfer = self.aux.reinit_preinit.is_some_and(|id| {
-            let ty_id = self.module.funcs.get(id).ty();
-            !self.module.types.get(ty_id).results().is_empty()
-        });
-        let post_has_transfer = self.aux.reinit_postinit.is_some_and(|id| {
-            let ty_id = self.module.funcs.get(id).ty();
-            !self.module.types.get(ty_id).params().is_empty()
-        });
-
-        // Asymmetric transfer is a user error: a post-hook that accepts a value
-        // but a pre-hook that produces nothing (or no pre-hook at all) means the
-        // post-hook will always receive `undefined`, which is almost certainly
-        // wrong.
-        if post_has_transfer && !pre_has_transfer {
-            bail!(
-                "post_reinit_hook accepts a transfer value but the pre_reinit_hook does \
-                 not return one; both hooks must agree on whether state is transferred"
-            );
-        }
-
-        // The reverse asymmetry is also an error: the pre-hook returns a value
-        // but no post-hook consumes it, so the returned value is silently discarded.
-        if pre_has_transfer && !post_has_transfer {
-            bail!(
-                "pre_reinit_hook returns a transfer value but the post_reinit_hook does \
-                 not accept one; both hooks must agree on whether state is transferred"
-            );
-        }
-
-        // When externref is enabled, hook exports work with i32 slab indices
-        // (not externref values) because the externref transform doesn't wrap
-        // them. We must manually bridge the externref table across the old and
-        // new wasm instances: extract the JS value from the old table before
-        // destroying the instance, then insert it into the new table after
-        // re-instantiation.
-        let needs_externref_bridge =
-            self.config.externref && (pre_has_transfer || post_has_transfer);
-        let (externref_table, externref_alloc) = if needs_externref_bridge {
-            let table = self
-                .aux
-                .externref_table
-                .expect("externref table must exist when externref is enabled");
-            let alloc = self
-                .aux
-                .externref_alloc
-                .expect("externref_alloc must exist for hook transfer");
-            (
-                Some(self.export_name_of(table)),
-                Some(self.export_name_of(alloc)),
-            )
-        } else {
-            (None, None)
-        };
-
-        // Declare the transfer variable whenever either side uses it so that
-        // the variable is always in scope regardless of which hook is present.
-        if pre_has_transfer || post_has_transfer {
-            reset_statements.push("let __wbg_transfer;".to_string());
-        }
-
-        // Call the pre-reinit hook on the old instance (only when not
-        // terminated — a corrupted instance must not be called into).
-        if let Some(ref name) = pre_reinit_hook {
-            if pre_has_transfer {
-                if needs_externref_bridge {
-                    // The hook returns an i32 slab index into the old instance's
-                    // externref table. Extract the actual JS value before the
-                    // old instance is destroyed.
-                    let table = externref_table.as_ref().unwrap();
-                    reset_statements.push(format!(
-                        "if (!__wbg_skip_pre_reinit) {{ \
-                            const __wbg_idx = wasm.{name}(); \
-                            __wbg_transfer = wasm.{table}.get(__wbg_idx); \
-                        }}"
-                    ));
-                } else {
-                    reset_statements.push(format!(
-                        "if (!__wbg_skip_pre_reinit) {{ __wbg_transfer = wasm.{name}(); }}"
-                    ));
-                }
-            } else {
-                reset_statements.push(format!("if (!__wbg_skip_pre_reinit) {{ wasm.{name}(); }}"));
-            }
-        }
-
         reset_statements.push(
             "
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
@@ -3087,13 +3105,9 @@ if (require('worker_threads').isMainThread) {{
                     // because JsValue::Drop has a debug_assert that idx >= JSIDX_OFFSET
                     // (1024), and would panic when dropping a JsValue with idx=0.
                     //
-                    // NOTE: We intentionally do NOT free the allocated slot after
-                    // the hook runs. Calling dealloc() puts the slot back on the
-                    // free list and clears the table entry, which can cause the
-                    // slot to be reused by the pre-hook's return value on the next
-                    // reset cycle, leading to a race where the value is read as null.
-                    // This leaks one externref slot per reset cycle with transfer,
-                    // which is acceptable for the intended use case (infrequent resets).
+                    // The allocated slot is freed by the Rust-side JsValue::drop
+                    // when the post-hook's argument goes out of scope, which calls
+                    // __externref_table_dealloc internally.
                     let table = externref_table.as_ref().unwrap();
                     let alloc = externref_alloc.as_ref().unwrap();
                     reset_statements.push(format!(
@@ -3107,8 +3121,10 @@ if (require('worker_threads').isMainThread) {{
                     ));
                 } else {
                     // When __wbg_transfer is undefined (pre-hook was skipped due
-                    // to termination), pass 0 which is JsValue::UNDEFINED's ABI
-                    // representation in the JS-side heap.
+                    // to termination), pass 0 which resolves to `undefined`
+                    // because `heap[0]` is always `undefined` in the JS-side
+                    // heap. (Note: JSIDX_UNDEFINED is 1024 in the externref
+                    // path; index 0 only works for the non-externref heap.)
                     reset_statements.push(format!(
                         "if (typeof __wbg_transfer !== 'undefined') {{ \
                             wasm.{name}(__wbg_transfer); \
@@ -3125,12 +3141,13 @@ if (require('worker_threads').isMainThread) {{
         // The function accepts a boolean parameter to skip the pre-reinit hook
         // when the old instance is terminated / corrupted.
         let function_body = format!(
-            "(__wbg_skip_pre_reinit) {{\n{}\n}}",
+            "({}) {{\n{}\n}}",
+            "__wbg_skip_pre_reinit",
             reset_statements.join("\n")
         );
 
         let identifier = self.generate_identifier("__wbg_reset_state");
-        let definition = format!("function {identifier} {function_body}\n");
+        let definition = format!("function {identifier}{function_body}\n");
         define_export(
             &mut self.exports,
             "__wbg_reset_state",

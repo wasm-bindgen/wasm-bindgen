@@ -34,7 +34,7 @@ std = []
 # serde-wasm-bindgen before the old Wasm instance is torn down and
 # deserialized into the new instance. Without this feature, both hooks must
 # have no return value / no arguments.
-reinit-transfer = ["wasm-bindgen-macro/reinit-transfer"]
+reinit-transfer = []
 
 # Whether or not the `#[wasm_bindgen]` macro is strict and generates an error on
 # all unused attributes

@@ -417,16 +417,16 @@ impl Bindgen {
         // interface types.
         wit::process(self, &mut module, programs, thread_count)?;
 
-        // Warn if reinit hooks were defined without --experimental-reset-state-function.
+        // Error if reinit hooks were defined without --experimental-reset-state-function.
         // The hooks are stored in the aux section but will never be called, which
         // is almost certainly a user mistake.
         if !self.generate_reset_state {
             if let Some(aux) = module.customs.get_typed::<wit::WasmBindgenAux>() {
                 if aux.reinit_preinit.is_some() || aux.reinit_postinit.is_some() {
-                    log::warn!(
+                    bail!(
                         "pre_reinit_hook / post_reinit_hook are defined but \
-                         --experimental-reset-state-function was not passed; the hooks \
-                         will never be called"
+                         --experimental-reset-state-function was not passed; \
+                         the hooks will never be called"
                     );
                 }
             }

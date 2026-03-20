@@ -1,17 +1,17 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
-function __wbg_reset_state (__wbg_skip_pre_reinit) {
+function __wbg_reset_state(__wbg_skip_pre_reinit) {
+    if (!__wbg_skip_pre_reinit) { wasm.__wbg_my_pre_reinit(); }
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
     if (typeof WASM_VECTOR_LEN !== 'undefined') WASM_VECTOR_LEN = 0;
-    if (!__wbg_skip_pre_reinit) { wasm.my_pre_reinit(); }
 
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 
-    wasm.my_post_reinit();
+    wasm.__wbg_my_post_reinit();
 }
 exports.__wbg_reset_state = __wbg_reset_state;
 

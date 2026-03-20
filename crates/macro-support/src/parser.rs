@@ -995,6 +995,8 @@ impl ConvertToAst<(BindgenAttrs, Vec<FnArgAttrs>)> for syn::ItemFn {
         match self.vis {
             syn::Visibility::Public(_) => {}
             _ if attrs.start().is_some() => {}
+            _ if attrs.pre_reinit_hook().is_some() => {}
+            _ if attrs.post_reinit_hook().is_some() => {}
             _ => bail_span!(self, "can only #[wasm_bindgen] public functions"),
         }
         if self.sig.constness.is_some() {
@@ -1424,6 +1426,16 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     );
                 }
 
+                let kind = if start {
+                    ast::ExportKind::Start
+                } else if pre_reinit_hook {
+                    ast::ExportKind::PreReinitHook
+                } else if post_reinit_hook {
+                    ast::ExportKind::PostReinitHook
+                } else {
+                    ast::ExportKind::Normal
+                };
+
                 // Async hooks are not supported: the pre-hook must return a
                 // plain (possibly serializable) value synchronously, and the
                 // post-hook must accept one.
@@ -1463,9 +1475,16 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     // skipped due to termination).
                     if f.sig.inputs.len() == 1 {
                         if let syn::FnArg::Typed(pat_type) = &f.sig.inputs[0] {
-                            let is_option = matches!(&*pat_type.ty, syn::Type::Path(p)
-                                if p.path.segments.last().is_some_and(|s| s.ident == "Option"));
-                            if !is_option {
+                            let is_valid_option = matches!(&*pat_type.ty, syn::Type::Path(p)
+                            if p.path.segments.last().is_some_and(|s| {
+                                s.ident == "Option"
+                                    && matches!(
+                                        &s.arguments,
+                                        syn::PathArguments::AngleBracketed(args)
+                                            if args.args.len() == 1
+                                    )
+                            }));
+                            if !is_valid_option {
                                 bail_span!(
                                     pat_type.ty,
                                     "post_reinit_hook argument must be Option<T> to receive \
@@ -1504,9 +1523,7 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     method_self: None,
                     rust_class: None,
                     rust_name,
-                    start,
-                    pre_reinit_hook,
-                    post_reinit_hook,
+                    kind,
                     wasm_bindgen: program.wasm_bindgen.clone(),
                     wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
                 });
@@ -1729,9 +1746,7 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             method_self,
             rust_class: Some(class.clone()),
             rust_name: self.sig.ident.clone(),
-            start: false,
-            pre_reinit_hook: false,
-            post_reinit_hook: false,
+            kind: ast::ExportKind::Normal,
             wasm_bindgen: program.wasm_bindgen.clone(),
             wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
         });

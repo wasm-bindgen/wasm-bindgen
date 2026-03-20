@@ -121,6 +121,13 @@ macro_rules! shared_api {
             js_namespace: Option<Vec<&'a str>>,
         }
 
+        enum ExportKind {
+            Normal,
+            Start,
+            PreReinitHook,
+            PostReinitHook,
+        }
+
         struct Export<'a> {
             class: Option<&'a str>,
             comments: Vec<&'a str>,
@@ -128,9 +135,7 @@ macro_rules! shared_api {
             function: Function<'a>,
             js_namespace: Option<Vec<&'a str>>,
             method_kind: MethodKind<'a>,
-            start: bool,
-            pre_reinit_hook: bool,
-            post_reinit_hook: bool,
+            kind: ExportKind,
         }
 
         struct Enum<'a> {

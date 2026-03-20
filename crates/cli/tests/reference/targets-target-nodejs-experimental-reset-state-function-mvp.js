@@ -1,6 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
-function __wbg_reset_state (__wbg_skip_pre_reinit) {
+function __wbg_reset_state(__wbg_skip_pre_reinit) {
     __wbg_instance_id++;
 
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());

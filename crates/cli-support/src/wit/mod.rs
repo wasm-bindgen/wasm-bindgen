@@ -587,25 +587,33 @@ impl<'a> Context<'a> {
                 and discarded by wasm-ld.");
         };
 
-        if export.start {
-            self.add_start_function(id)?;
-        }
-
-        // Reinit hooks are stored separately and not exposed as normal JS
-        // exports. The JS codegen calls them directly in __wbg_reset_state().
-        if export.pre_reinit_hook {
-            if self.aux.reinit_preinit.is_some() {
-                bail!("only one pre_reinit_hook function is allowed");
+        match export.kind {
+            decode::ExportKind::Start => {
+                self.add_start_function(id)?;
             }
-            self.aux.reinit_preinit = Some(id);
-            return Ok(());
-        }
-        if export.post_reinit_hook {
-            if self.aux.reinit_postinit.is_some() {
-                bail!("only one post_reinit_hook function is allowed");
+            // Reinit hooks are stored separately and not exposed as normal JS
+            // exports. The JS codegen calls them directly in __wbg_reset_state().
+            // We mangle the wasm export name with a `__wbg_` prefix so that
+            // hooks don't appear as user-callable functions in InitOutput.
+            decode::ExportKind::PreReinitHook => {
+                if self.aux.reinit_preinit.is_some() {
+                    bail!("only one pre_reinit_hook function is allowed");
+                }
+                let export = self.module.exports.get_mut(export_id);
+                export.name = format!("__wbg_{}", export.name);
+                self.aux.reinit_preinit = Some(id);
+                return Ok(());
             }
-            self.aux.reinit_postinit = Some(id);
-            return Ok(());
+            decode::ExportKind::PostReinitHook => {
+                if self.aux.reinit_postinit.is_some() {
+                    bail!("only one post_reinit_hook function is allowed");
+                }
+                let export = self.module.exports.get_mut(export_id);
+                export.name = format!("__wbg_{}", export.name);
+                self.aux.reinit_postinit = Some(id);
+                return Ok(());
+            }
+            decode::ExportKind::Normal => {}
         }
 
         let classless_this = matches!(

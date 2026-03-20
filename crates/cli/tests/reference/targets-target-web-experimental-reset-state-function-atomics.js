@@ -1,6 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
-export function __wbg_reset_state (__wbg_skip_pre_reinit) {
+export function __wbg_reset_state(__wbg_skip_pre_reinit) {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;

@@ -722,7 +722,8 @@ impl TryToTokens for ast::Export {
         // `serde-wasm-bindgen` cannot be re-exported through `wasm-bindgen`
         // itself because it transitively depends on `wasm-bindgen` (via
         // `js-sys`), which would create a circular dependency.
-        let post_reinit_transfer = self.post_reinit_hook && !self.function.arguments.is_empty();
+        let post_reinit_transfer =
+            self.kind == ast::ExportKind::PostReinitHook && !self.function.arguments.is_empty();
         if post_reinit_transfer {
             let arg_ty = &self.function.arguments[0].pat_type.ty;
             let ident = Ident::new("arg0", Span::call_site());
@@ -753,8 +754,9 @@ impl TryToTokens for ast::Export {
                     None
                 } else {
                     Some(
-                        #wasm_bindgen::UnwrapThrowExt::unwrap_throw(
-                            serde_wasm_bindgen::from_value(#ident)
+                        #wasm_bindgen::UnwrapThrowExt::expect_throw(
+                            serde_wasm_bindgen::from_value(#ident),
+                            "post_reinit_hook: failed to deserialize transferred state"
                         )
                     )
                 };
@@ -791,13 +793,14 @@ impl TryToTokens for ast::Export {
         // Serialization must produce a self-contained JS value — no pointers
         // into the Rust heap — which is why a serde backend is required rather
         // than passing JsValue directly.
-        let pre_reinit_transfer = self.pre_reinit_hook && *syn_ret != syn_unit;
+        let pre_reinit_transfer =
+            self.kind == ast::ExportKind::PreReinitHook && *syn_ret != syn_unit;
 
         // For an `async` function we always run it through `future_to_promise`
         // since we're returning a promise to JS, and this will implicitly
         // require that the function returns a `Future<Output = Result<...>>`
         let (ret_ty, inner_ret_ty, ret_expr) = if self.function.r#async {
-            if self.start {
+            if self.kind == ast::ExportKind::Start {
                 (
                     quote! { () },
                     quote! { () },
@@ -814,7 +817,7 @@ impl TryToTokens for ast::Export {
                     },
                 )
             }
-        } else if self.start {
+        } else if self.kind == ast::ExportKind::Start {
             (
                 quote! { () },
                 quote! { () },
@@ -834,8 +837,9 @@ impl TryToTokens for ast::Export {
                         #[allow(unused_imports)]
                         use #wasm_bindgen::__reinit_transfer_enabled as _;
 
-                        #wasm_bindgen::UnwrapThrowExt::unwrap_throw(
-                            serde_wasm_bindgen::to_value(&#ret)
+                        #wasm_bindgen::UnwrapThrowExt::expect_throw(
+                            serde_wasm_bindgen::to_value(&#ret),
+                            "pre_reinit_hook: failed to serialize transfer state"
                         )
                     }
                 },
@@ -853,7 +857,7 @@ impl TryToTokens for ast::Export {
         };
 
         if self.function.r#async {
-            if self.start {
+            if self.kind == ast::ExportKind::Start {
                 call = quote! {
                     #wasm_bindgen_futures::spawn_local(async move {
                         #call
@@ -901,7 +905,7 @@ impl TryToTokens for ast::Export {
             .collect::<Vec<_>>();
 
         let mut checks = Vec::new();
-        if self.start {
+        if self.kind == ast::ExportKind::Start {
             checks.push(quote! { const _ASSERT: fn() = || -> #projection::Abi { loop {} }; });
         };
 
