@@ -1464,7 +1464,7 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     if f.sig.inputs.len() == 1 {
                         if let syn::FnArg::Typed(pat_type) = &f.sig.inputs[0] {
                             let is_option = matches!(&*pat_type.ty, syn::Type::Path(p)
-                                if p.path.segments.last().map_or(false, |s| s.ident == "Option"));
+                                if p.path.segments.last().is_some_and(|s| s.ident == "Option"));
                             if !is_option {
                                 bail_span!(
                                     pat_type.ty,
