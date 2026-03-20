@@ -3079,10 +3079,13 @@ if (require('worker_threads').isMainThread) {{
                 if needs_externref_bridge {
                     // The hook expects an i32 slab index. Allocate a slot in the
                     // new instance's externref table and store the JS value there.
+                    //
                     // When __wbg_transfer is undefined (pre-hook was skipped due to
-                    // termination), use slot 0 which is always `undefined` — see
-                    // __wbindgen_init_externref_table where `table.set(0, undefined)`
-                    // is set unconditionally.
+                    // termination), we pass INITIAL_HEAP_OFFSET (1024) which is the
+                    // reserved slot for `undefined`. This matches JSIDX_UNDEFINED in
+                    // the Rust runtime (see src/rt/mod.rs). We cannot use slot 0
+                    // because JsValue::Drop has a debug_assert that idx >= JSIDX_OFFSET
+                    // (1024), and would panic when dropping a JsValue with idx=0.
                     //
                     // NOTE: We intentionally do NOT free the allocated slot after
                     // the hook runs. Calling dealloc() puts the slot back on the
@@ -3099,7 +3102,7 @@ if (require('worker_threads').isMainThread) {{
                             wasm.{table}.set(__wbg_idx, __wbg_transfer); \
                             wasm.{name}(__wbg_idx); \
                         }} else {{ \
-                            wasm.{name}(0); \
+                            wasm.{name}({INITIAL_HEAP_OFFSET}); \
                         }}"
                     ));
                 } else {
