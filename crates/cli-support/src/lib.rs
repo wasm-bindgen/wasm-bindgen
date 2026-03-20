@@ -423,8 +423,8 @@ impl Bindgen {
         if !self.generate_reset_state {
             if let Some(aux) = module.customs.get_typed::<wit::WasmBindgenAux>() {
                 if aux.reinit_preinit.is_some() || aux.reinit_postinit.is_some() {
-                    eprintln!(
-                        "warning: pre_reinit_hook / post_reinit_hook are defined but \
+                    log::warn!(
+                        "pre_reinit_hook / post_reinit_hook are defined but \
                          --experimental-reset-state-function was not passed; the hooks \
                          will never be called"
                     );

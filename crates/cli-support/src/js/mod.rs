@@ -2998,6 +2998,15 @@ if (require('worker_threads').isMainThread) {{
             );
         }
 
+        // The reverse asymmetry is also an error: the pre-hook returns a value
+        // but no post-hook consumes it, so the returned value is silently discarded.
+        if pre_has_transfer && !post_has_transfer {
+            bail!(
+                "pre_reinit_hook returns a transfer value but the post_reinit_hook does \
+                 not accept one; both hooks must agree on whether state is transferred"
+            );
+        }
+
         // When externref is enabled, hook exports work with i32 slab indices
         // (not externref values) because the externref transform doesn't wrap
         // them. We must manually bridge the externref table across the old and
@@ -3074,6 +3083,14 @@ if (require('worker_threads').isMainThread) {{
                     // termination), use slot 0 which is always `undefined` — see
                     // __wbindgen_init_externref_table where `table.set(0, undefined)`
                     // is set unconditionally.
+                    //
+                    // NOTE: We intentionally do NOT free the allocated slot after
+                    // the hook runs. Calling dealloc() puts the slot back on the
+                    // free list and clears the table entry, which can cause the
+                    // slot to be reused by the pre-hook's return value on the next
+                    // reset cycle, leading to a race where the value is read as null.
+                    // This leaks one externref slot per reset cycle with transfer,
+                    // which is acceptable for the intended use case (infrequent resets).
                     let table = externref_table.as_ref().unwrap();
                     let alloc = externref_alloc.as_ref().unwrap();
                     reset_statements.push(format!(
@@ -3086,7 +3103,16 @@ if (require('worker_threads').isMainThread) {{
                         }}"
                     ));
                 } else {
-                    reset_statements.push(format!("wasm.{name}(__wbg_transfer);"));
+                    // When __wbg_transfer is undefined (pre-hook was skipped due
+                    // to termination), pass 0 which is JsValue::UNDEFINED's ABI
+                    // representation in the JS-side heap.
+                    reset_statements.push(format!(
+                        "if (typeof __wbg_transfer !== 'undefined') {{ \
+                            wasm.{name}(__wbg_transfer); \
+                        }} else {{ \
+                            wasm.{name}(0); \
+                        }}"
+                    ));
                 }
             } else {
                 reset_statements.push(format!("wasm.{name}();"));

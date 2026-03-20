@@ -585,19 +585,17 @@ const TERMINATION_LIB_RS: &str = r#"
                     }
                 }
 
-                static mut COUNTER: u32 = 0;
+                use std::sync::atomic::{AtomicU32, Ordering};
+                static COUNTER: AtomicU32 = AtomicU32::new(0);
 
                 #[wasm_bindgen]
                 pub fn increment_counter() -> u32 {
-                    unsafe {
-                        COUNTER += 1;
-                        COUNTER
-                    }
+                    COUNTER.fetch_add(1, Ordering::Relaxed) + 1
                 }
 
                 #[wasm_bindgen]
                 pub fn get_counter() -> u32 {
-                    unsafe { COUNTER }
+                    COUNTER.load(Ordering::Relaxed)
                 }
 
                 #[wasm_bindgen]
@@ -1182,12 +1180,13 @@ fn reinit_hooks() {
         fn drop(&mut self) {{ set_was_dropped(true); }}
     }}
 
-    static mut COUNTER: u32 = 0;
+    use std::sync::atomic::{{AtomicU32, Ordering}};
+    static COUNTER: AtomicU32 = AtomicU32::new(0);
 
     #[wasm_bindgen]
-    pub fn increment_counter() -> u32 {{ unsafe {{ COUNTER += 1; COUNTER }} }}
+    pub fn increment_counter() -> u32 {{ COUNTER.fetch_add(1, Ordering::Relaxed) + 1 }}
     #[wasm_bindgen]
-    pub fn get_counter() -> u32 {{ unsafe {{ COUNTER }} }}
+    pub fn get_counter() -> u32 {{ COUNTER.load(Ordering::Relaxed) }}
     #[wasm_bindgen]
     pub fn simple_add(a: u32, b: u32) -> u32 {{ a + b }}
     #[wasm_bindgen]
@@ -1375,6 +1374,21 @@ describe('pre_reinit_hook and post_reinit_hook', () => {
         assert.strictEqual(wasm.get_counter(), 0);
         assert.strictEqual(wasm.increment_counter(), 1);
     });
+
+    it('skip_pre_reinit=true skips pre hook on explicit reset', () => {
+        // Explicit __wbg_reset_state(true) should skip the pre-hook
+        // but still call the post-hook. This is the public API for
+        // when the caller knows the instance is in a bad state.
+        globalThis.pre_reinit_called = false;
+        globalThis.post_reinit_called = false;
+
+        wasm.__wbg_reset_state(true);
+
+        assert.strictEqual(globalThis.pre_reinit_called, false,
+            'pre_reinit_hook should NOT fire when skip_pre_reinit=true');
+        assert.strictEqual(globalThis.post_reinit_called, true,
+            'post_reinit_hook should still fire when skip_pre_reinit=true');
+    });
 });
 "#,
     )
@@ -1407,12 +1421,13 @@ fn reinit_hooks_with_transfer() {
         fn js_set_pre_called(val: bool);
     }
 
-    static mut COUNTER: u32 = 0;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static COUNTER: AtomicU32 = AtomicU32::new(0);
 
     #[wasm_bindgen]
-    pub fn increment_counter() -> u32 { unsafe { COUNTER += 1; COUNTER } }
+    pub fn increment_counter() -> u32 { COUNTER.fetch_add(1, Ordering::Relaxed) + 1 }
     #[wasm_bindgen]
-    pub fn get_counter() -> u32 { unsafe { COUNTER } }
+    pub fn get_counter() -> u32 { COUNTER.load(Ordering::Relaxed) }
     #[wasm_bindgen]
     pub fn simple_add(a: u32, b: u32) -> u32 { a + b }
     #[wasm_bindgen]
@@ -1429,13 +1444,13 @@ fn reinit_hooks_with_transfer() {
     #[wasm_bindgen(pre_reinit_hook)]
     pub fn save_state() -> AppState {
         js_set_pre_called(true);
-        AppState { counter: unsafe { COUNTER } }
+        AppState { counter: COUNTER.load(Ordering::Relaxed) }
     }
 
     #[wasm_bindgen(post_reinit_hook)]
     pub fn restore_state(saved: Option<AppState>) {
         if let Some(state) = saved {
-            unsafe { COUNTER = state.counter; }
+            COUNTER.store(state.counter, Ordering::Relaxed);
             js_set_restored(state.counter);
         } else {
             js_set_restored(0);
@@ -1493,7 +1508,10 @@ const assert = require('node:assert/strict');
 
 const wasm = require('./reinit_hooks_transfer.js');
 
+// NOTE: These tests are executed sequentially and share mutable state.
+// Each test builds on the counter state from previous tests.
 describe('reinit hooks with serde transfer', () => {
+    // Test 1: Starts with counter=0, increments to 3, then resets.
     it('counter state is transferred across explicit reset', () => {
         wasm.increment_counter();
         wasm.increment_counter();
@@ -1512,6 +1530,7 @@ describe('reinit hooks with serde transfer', () => {
             'counter should be restored to 3');
     });
 
+    // Test 2: Inherits counter=3 from previous test.
     it('counter survives multiple reset cycles', () => {
         // Counter is 3 from previous test.
         wasm.increment_counter();
@@ -1529,6 +1548,7 @@ describe('reinit hooks with serde transfer', () => {
             'counter should survive second reset');
     });
 
+    // Test 3: Inherits counter=5, increments to 6, then triggers fatal.
     it('post hook receives None on auto-reset after fatal error', () => {
         wasm.increment_counter();
         assert.strictEqual(wasm.get_counter(), 6);

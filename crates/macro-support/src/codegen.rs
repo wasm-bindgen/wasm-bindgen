@@ -781,11 +781,16 @@ impl TryToTokens for ast::Export {
         // Pre-reinit hook with transfer: the user function returns T: Serialize,
         // but the wasm shim returns JsValue after serializing with serde.
         //
-        // The generated code uses `#wasm_bindgen::__rt::serde_wasm_bindgen`,
-        // which is only available when the `reinit-transfer` feature of
-        // `wasm-bindgen` is enabled. Serialization must produce a self-contained
-        // JS value — no pointers into the Rust heap — which is why a serde
-        // backend is required rather than passing JsValue directly.
+        // The generated code uses `serde_wasm_bindgen` directly, which the user
+        // must add as a dependency. The `__reinit_transfer_enabled` sentinel
+        // (checked via a `use` statement) verifies the `reinit-transfer` feature
+        // is enabled on `wasm-bindgen`. If deserialization fails (e.g., schema
+        // mismatch after a hot-reload), the `unwrap_throw` will throw a JS
+        // exception — schema compatibility is the user's responsibility.
+        //
+        // Serialization must produce a self-contained JS value — no pointers
+        // into the Rust heap — which is why a serde backend is required rather
+        // than passing JsValue directly.
         let pre_reinit_transfer = self.pre_reinit_hook && *syn_ret != syn_unit;
 
         // For an `async` function we always run it through `future_to_promise`

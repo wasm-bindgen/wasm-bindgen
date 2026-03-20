@@ -1458,6 +1458,22 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                             "post_reinit_hook function must accept zero or one argument",
                         );
                     }
+                    // If there is exactly one argument, it must be `Option<T>` to
+                    // receive the transferred state (or `None` if the pre-hook was
+                    // skipped due to termination).
+                    if f.sig.inputs.len() == 1 {
+                        if let syn::FnArg::Typed(pat_type) = &f.sig.inputs[0] {
+                            let is_option = matches!(&*pat_type.ty, syn::Type::Path(p)
+                                if p.path.segments.last().map_or(false, |s| s.ident == "Option"));
+                            if !is_option {
+                                bail_span!(
+                                    pat_type.ty,
+                                    "post_reinit_hook argument must be Option<T> to receive \
+                                     the transferred state (or None if the pre-hook was skipped)"
+                                );
+                            }
+                        }
+                    }
                     if f.sig.output != syn::ReturnType::Default {
                         bail_span!(
                             &f.sig.output,
