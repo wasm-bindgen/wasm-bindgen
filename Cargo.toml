@@ -28,6 +28,14 @@ serde-serialize = ["dep:serde", "dep:serde_json", "std"]
 spans = []
 std = []
 
+# Enables state-transfer support for pre_reinit_hook / post_reinit_hook.
+# When this feature is active, a pre_reinit_hook may return a value and a
+# post_reinit_hook may accept one; the value is fully serialized via
+# serde-wasm-bindgen before the old Wasm instance is torn down and
+# deserialized into the new instance. Without this feature, both hooks must
+# have no return value / no arguments.
+reinit-transfer = ["wasm-bindgen-macro/reinit-transfer"]
+
 # Whether or not the `#[wasm_bindgen]` macro is strict and generates an error on
 # all unused attributes
 strict-macro = ["wasm-bindgen-macro/strict-macro"]

@@ -149,6 +149,19 @@ pub use cache::intern::{intern, unintern};
 pub mod __rt;
 use __rt::wbg_cast;
 
+/// Marker module that only exists when the `reinit-transfer` feature is
+/// enabled. Generated reinit-hook transfer code references this module so that
+/// a missing feature produces a clear `compile_error`-style diagnostic
+/// ("failed to resolve: could not find `__reinit_transfer_enabled`") rather
+/// than a cryptic "use of undeclared crate `serde_wasm_bindgen`".
+///
+/// When you see this module missing, add:
+/// - `features = ["reinit-transfer"]` to the `wasm-bindgen` entry in Cargo.toml
+/// - `serde-wasm-bindgen = "0.6"` as a direct dependency
+#[doc(hidden)]
+#[cfg(feature = "reinit-transfer")]
+pub mod __reinit_transfer_enabled {}
+
 /// Representation of an object owned by JS.
 ///
 /// A `JsValue` doesn't actually live in Rust right now but actually in a table

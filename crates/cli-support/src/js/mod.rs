@@ -2987,6 +2987,17 @@ if (require('worker_threads').isMainThread) {{
             !self.module.types.get(ty_id).params().is_empty()
         });
 
+        // Asymmetric transfer is a user error: a post-hook that accepts a value
+        // but a pre-hook that produces nothing (or no pre-hook at all) means the
+        // post-hook will always receive `undefined`, which is almost certainly
+        // wrong.
+        if post_has_transfer && !pre_has_transfer {
+            bail!(
+                "post_reinit_hook accepts a transfer value but the pre_reinit_hook does \
+                 not return one; both hooks must agree on whether state is transferred"
+            );
+        }
+
         // When externref is enabled, hook exports work with i32 slab indices
         // (not externref values) because the externref transform doesn't wrap
         // them. We must manually bridge the externref table across the old and
@@ -3012,11 +3023,16 @@ if (require('worker_threads').isMainThread) {{
             (None, None)
         };
 
+        // Declare the transfer variable whenever either side uses it so that
+        // the variable is always in scope regardless of which hook is present.
+        if pre_has_transfer || post_has_transfer {
+            reset_statements.push("let __wbg_transfer;".to_string());
+        }
+
         // Call the pre-reinit hook on the old instance (only when not
         // terminated — a corrupted instance must not be called into).
         if let Some(ref name) = pre_reinit_hook {
             if pre_has_transfer {
-                reset_statements.push("let __wbg_transfer;".to_string());
                 if needs_externref_bridge {
                     // The hook returns an i32 slab index into the old instance's
                     // externref table. Extract the actual JS value before the
@@ -3054,8 +3070,10 @@ if (require('worker_threads').isMainThread) {{
                 if needs_externref_bridge {
                     // The hook expects an i32 slab index. Allocate a slot in the
                     // new instance's externref table and store the JS value there.
-                    // When __wbg_transfer is undefined (skipped pre-hook),
-                    // use the well-known JSIDX_UNDEFINED slot (offset 1024).
+                    // When __wbg_transfer is undefined (pre-hook was skipped due to
+                    // termination), use slot 0 which is always `undefined` — see
+                    // __wbindgen_init_externref_table where `table.set(0, undefined)`
+                    // is set unconditionally.
                     let table = externref_table.as_ref().unwrap();
                     let alloc = externref_alloc.as_ref().unwrap();
                     reset_statements.push(format!(
@@ -3064,7 +3082,7 @@ if (require('worker_threads').isMainThread) {{
                             wasm.{table}.set(__wbg_idx, __wbg_transfer); \
                             wasm.{name}(__wbg_idx); \
                         }} else {{ \
-                            wasm.{name}(1024); \
+                            wasm.{name}(0); \
                         }}"
                     ));
                 } else {
@@ -3092,7 +3110,8 @@ if (require('worker_threads').isMainThread) {{
                 comments: None,
                 identifier,
                 definition,
-                ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
+                ts_definition: "function __wbg_reset_state(skip_pre_reinit?: boolean): void;\n"
+                    .to_string(),
                 ts_comments: None,
                 private: !self.config.generate_reset_state,
             }),

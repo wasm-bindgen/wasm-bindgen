@@ -712,6 +712,16 @@ impl TryToTokens for ast::Export {
 
         // Post-reinit hook with transfer: override argument handling to accept
         // a JsValue and deserialize it via serde_wasm_bindgen.
+        //
+        // The `reinit-transfer` feature of `wasm-bindgen` acts as an opt-in
+        // sentinel that the user has declared transfer support and added
+        // `serde-wasm-bindgen` to their own Cargo.toml. Without it a clear
+        // `compile_error!` fires at macro-expansion time instead of a cryptic
+        // "use of undeclared crate" error.
+        //
+        // `serde-wasm-bindgen` cannot be re-exported through `wasm-bindgen`
+        // itself because it transitively depends on `wasm-bindgen` (via
+        // `js-sys`), which would create a circular dependency.
         let post_reinit_transfer = self.post_reinit_hook && !self.function.arguments.is_empty();
         if post_reinit_transfer {
             let arg_ty = &self.function.arguments[0].pat_type.ty;
@@ -725,6 +735,14 @@ impl TryToTokens for ast::Export {
 
             arg_conversions.clear();
             arg_conversions.push(quote! {
+                // If `wasm-bindgen` is missing the `reinit-transfer` feature,
+                // this `use` will fail to resolve (`__reinit_transfer_enabled`
+                // only exists with that feature), producing a diagnostic that
+                // points directly at the missing feature rather than a cryptic
+                // "use of undeclared crate `serde_wasm_bindgen`".
+                #[allow(unused_imports)]
+                use #wasm_bindgen::__reinit_transfer_enabled as _;
+
                 let #ident = unsafe {
                     <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>
                         ::from_abi(
@@ -762,6 +780,12 @@ impl TryToTokens for ast::Export {
 
         // Pre-reinit hook with transfer: the user function returns T: Serialize,
         // but the wasm shim returns JsValue after serializing with serde.
+        //
+        // The generated code uses `#wasm_bindgen::__rt::serde_wasm_bindgen`,
+        // which is only available when the `reinit-transfer` feature of
+        // `wasm-bindgen` is enabled. Serialization must produce a self-contained
+        // JS value — no pointers into the Rust heap — which is why a serde
+        // backend is required rather than passing JsValue directly.
         let pre_reinit_transfer = self.pre_reinit_hook && *syn_ret != syn_unit;
 
         // For an `async` function we always run it through `future_to_promise`
@@ -796,9 +820,19 @@ impl TryToTokens for ast::Export {
                 quote! { #wasm_bindgen::JsValue },
                 quote! { #wasm_bindgen::JsValue },
                 quote! {
-                    #wasm_bindgen::UnwrapThrowExt::unwrap_throw(
-                        serde_wasm_bindgen::to_value(&#ret)
-                    )
+                    {
+                        // If `wasm-bindgen` is missing the `reinit-transfer` feature,
+                        // this `use` will fail to resolve (`__reinit_transfer_enabled`
+                        // only exists with that feature), producing a diagnostic that
+                        // points directly at the missing feature rather than a cryptic
+                        // "use of undeclared crate `serde_wasm_bindgen`".
+                        #[allow(unused_imports)]
+                        use #wasm_bindgen::__reinit_transfer_enabled as _;
+
+                        #wasm_bindgen::UnwrapThrowExt::unwrap_throw(
+                            serde_wasm_bindgen::to_value(&#ret)
+                        )
+                    }
                 },
             )
         } else {

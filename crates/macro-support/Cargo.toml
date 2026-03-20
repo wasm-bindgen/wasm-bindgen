@@ -14,6 +14,7 @@ version = "0.2.114"
 [features]
 extra-traits = ["syn/extra-traits"]
 strict-macro = []
+reinit-transfer = []
 
 [dependencies]
 bumpalo = "3.0.0"

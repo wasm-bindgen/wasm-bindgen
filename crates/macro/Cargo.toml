@@ -18,6 +18,7 @@ proc-macro = true
 
 [features]
 strict-macro = ["wasm-bindgen-macro-support/strict-macro"]
+reinit-transfer = ["wasm-bindgen-macro-support/reinit-transfer"]
 
 [dependencies]
 quote = "1.0"
