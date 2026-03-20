@@ -13,7 +13,6 @@ use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
 use crate::{wasm_conventions, Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
-use regex::Regex;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -717,6 +716,10 @@ impl<'a> Context<'a> {
         }
 
         imports.push_str("addToLibrary({\n");
+        // Declare `wasm` as a library variable so it can be assigned in initBindgen.
+        // In emscripten's modularized output, implicit global assignment is not allowed
+        // (strict mode), so we need an explicit declaration.
+        imports.push_str("$wasm: \"null\",\n");
         // Inject Global Dependencies
         for global_dep in self.emscripten_global_deps.iter() {
             if global_dep == "WASM_VECTOR_LEN" {
@@ -727,7 +730,7 @@ impl<'a> Context<'a> {
                 imports.push_str("$cachedTextDecoder: \"new TextDecoder()\",\n");
             } else if global_dep == "heap" {
                 imports.push_str(&format!(
-                    "$heap: \"new Array({INITIAL_HEAP_OFFSET}).fill(undefined)\",\n\"heap.push({})\",\n",
+                    "$heap: \"new Array({INITIAL_HEAP_OFFSET}).fill(undefined)\",\n$heap__postset: \"heap.push({}); heap_next = heap.length;\",\n",
                     INITIAL_HEAP_VALUES.join(", ")
                 ));
             } else if global_dep == "stack_pointer" {
@@ -1396,12 +1399,17 @@ if (require('worker_threads').isMainThread) {{
                 $initBindgen__postset: 'addOnInit(initBindgen);',
                 $initBindgen: () => {{
                     wasm = wasmExports;
+                    // Call emscripten's _initialize to run static constructors
+                    // (needed for --no-entry builds)
+                    if (wasmExports['_initialize']) {{
+                        wasmExports['_initialize']();
+                    }}
                     {start_logic}
                     {classes_and_exports}
                 }}
             }});
             
-            extraLibraryFuncs.push('$initBindgen', '$addOnInit', {formatted_deps});
+            extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {formatted_deps});
             "#,
             formatted_deps = formatted_deps.join(", ")
         )
@@ -2215,7 +2223,7 @@ if (require('worker_threads').isMainThread) {{
                 let add = self.expose_add_to_externref_table(table, alloc);
 
                 if self.config.mode.emscripten() {
-                    self.adapter_deps.insert("{add}".to_string());
+                    self.adapter_deps.insert(add.to_string());
                 }
 
                 self.intrinsic(ret.to_string().into(), None, {
@@ -2281,10 +2289,13 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn expose_text_encoder(&mut self, memory: MemoryId) {
-        self.emscripten_global_deps
-            .insert("cachedTextEncoder".to_string());
+        let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
+        if is_emscripten {
+            self.emscripten_global_deps
+                .insert("cachedTextEncoder".to_string());
+        }
         self.intrinsic("text_encoder".into(), "textEncoder".into(), {
-            if matches!(self.config.mode, OutputMode::Emscripten) {
+            if is_emscripten {
                 "".into()
             } else {
                 let mut dst = Self::write_text_processor(
@@ -3193,7 +3204,7 @@ if (require('worker_threads').isMainThread) {{
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
-        self.intrinsic("make_closure".into(), "makeMutClosure".into(), {
+        self.intrinsic("make_closure".into(), "makeClosure".into(), {
             let (state_init, instance_check) = if self.config.generate_reset_state {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
@@ -3240,8 +3251,8 @@ if (require('worker_threads').isMainThread) {{
                     "
                 addToLibrary({
                     $makeClosure: makeClosure,
-                    $makeClosure_deps: ['$CLOSURE_DTORS']
-                });\n
+                    $makeClosure__deps: ['$CLOSURE_DTORS']
+                });
                 ",
                 );
             };
@@ -4371,17 +4382,6 @@ function __wbg_handle_catch(e) {{
                 }
             })
         };
-
-        // Emscripten needs the function name extracted from the full function call here
-        // to construct dependency lists for each import.
-        if matches!(self.config.mode, OutputMode::Emscripten) {
-            let re = Regex::new(r"([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(").unwrap();
-            for arg in args {
-                if let Some(result) = re.captures(arg) {
-                    self.adapter_deps.insert(result[1].to_string());
-                }
-            }
-        }
 
         match import {
             AuxImport::Value(val) => match kind {
