@@ -17,8 +17,8 @@ version = "0.2.114"
 proc-macro = true
 
 [features]
-strict-macro = ["wasm-bindgen-macro-support/strict-macro"]
 reinit-transfer = ["wasm-bindgen-macro-support/reinit-transfer"]
+strict-macro = ["wasm-bindgen-macro-support/strict-macro"]
 
 [dependencies]
 quote = "1.0"
