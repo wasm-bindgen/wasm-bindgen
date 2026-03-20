@@ -1454,7 +1454,7 @@ fn reinit_hooks_with_transfer() {
                     edition = '2021'
 
                     [dependencies]
-                    wasm-bindgen = {{ path = '{repo}' }}
+                    wasm-bindgen = {{ path = '{repo}', features = [\"reinit-transfer\"] }}
                     serde = {{ version = \"1.0\", features = [\"derive\"] }}
                     serde-wasm-bindgen = \"0.6\"
 

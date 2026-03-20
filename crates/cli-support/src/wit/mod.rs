@@ -594,10 +594,16 @@ impl<'a> Context<'a> {
         // Reinit hooks are stored separately and not exposed as normal JS
         // exports. The JS codegen calls them directly in __wbg_reset_state().
         if export.pre_reinit_hook {
+            if self.aux.reinit_preinit.is_some() {
+                bail!("only one pre_reinit_hook function is allowed");
+            }
             self.aux.reinit_preinit = Some(id);
             return Ok(());
         }
         if export.post_reinit_hook {
+            if self.aux.reinit_postinit.is_some() {
+                bail!("only one post_reinit_hook function is allowed");
+            }
             self.aux.reinit_postinit = Some(id);
             return Ok(());
         }

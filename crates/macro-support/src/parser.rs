@@ -1406,6 +1406,31 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                 }
                 let pre_reinit_hook = opts.pre_reinit_hook().is_some();
                 let post_reinit_hook = opts.post_reinit_hook().is_some();
+                let start = opts.start().is_some();
+
+                // Mutual exclusion: start cannot be combined with reinit hooks.
+                if start && (pre_reinit_hook || post_reinit_hook) {
+                    bail_span!(
+                        &f.sig,
+                        "reinit hook functions cannot also be the start function",
+                    );
+                }
+
+                // Mutual exclusion: a function cannot be both hooks at once.
+                if pre_reinit_hook && post_reinit_hook {
+                    bail_span!(
+                        &f.sig,
+                        "a function cannot be both pre_reinit_hook and post_reinit_hook",
+                    );
+                }
+
+                // Async hooks are not supported: the pre-hook must return a
+                // plain (possibly serializable) value synchronously, and the
+                // post-hook must accept one.
+                if (pre_reinit_hook || post_reinit_hook) && f.sig.asyncness.is_some() {
+                    bail_span!(&f.sig, "reinit hook functions cannot be async",);
+                }
+
                 if pre_reinit_hook {
                     if !f.sig.generics.params.is_empty() {
                         bail_span!(
@@ -1445,7 +1470,6 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     kind: operation_kind(&opts),
                 });
                 let rust_name = f.sig.ident.clone();
-                let start = opts.start().is_some();
 
                 if opts.this().is_some() && f.sig.inputs.is_empty() {
                     bail_span!(

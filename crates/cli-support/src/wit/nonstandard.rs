@@ -514,5 +514,13 @@ impl walrus::CustomSection for WasmBindgenAux {
         if let Some(id) = self.js_tag {
             roots.push_tag(id);
         }
+        // Reinit hook functions must be kept alive even if the GC pass runs
+        // before the export is fully registered.
+        if let Some(id) = self.reinit_preinit {
+            roots.push_func(id);
+        }
+        if let Some(id) = self.reinit_postinit {
+            roots.push_func(id);
+        }
     }
 }
