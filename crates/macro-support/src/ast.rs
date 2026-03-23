@@ -103,7 +103,7 @@ pub struct Export {
 }
 
 /// The role of an exported function in the module lifecycle.
-#[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ExportKind {
     /// A normal exported function.
