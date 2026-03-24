@@ -256,7 +256,7 @@ function __wbg_get_imports() {
             const ret = arg0.constructor;
             return ret;
         },
-        __wbg_createTask_6eb3a8b6dd2f87c9: function() { return handleError(function (arg0, arg1) {
+        __wbg_createTask_a0801140eb3d1c8e: function() { return handleError(function (arg0, arg1) {
             const ret = console.createTask(getStringFromWasm0(arg0, arg1));
             return ret;
         }, arguments); },
@@ -332,18 +332,18 @@ function __wbg_get_imports() {
             const ret = arg0.performance;
             return ret;
         },
-        __wbg_queueMicrotask_0c399741342fb10f: function(arg0) {
+        __wbg_queueMicrotask_274a87b943cb126a: function(arg0) {
             const ret = arg0.queueMicrotask;
             return ret;
         },
-        __wbg_queueMicrotask_a082d78ce798393e: function(arg0) {
+        __wbg_queueMicrotask_fc88d67ac6d6ba4f: function(arg0) {
             queueMicrotask(arg0);
         },
         __wbg_resolve_ae8d83246e5bcc12: function(arg0) {
             const ret = Promise.resolve(arg0);
             return ret;
         },
-        __wbg_run_78b7b601add6ed6b: function(arg0, arg1, arg2) {
+        __wbg_run_d3fa521301780884: function(arg0, arg1, arg2) {
             try {
                 var state0 = {a: arg1, b: arg2};
                 var cb0 = () => {

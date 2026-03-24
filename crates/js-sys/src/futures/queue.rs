@@ -1,8 +1,8 @@
+use crate::Promise;
 use alloc::collections::VecDeque;
 use alloc::rc::Rc;
 use core::cell::{Cell, RefCell};
 use core::panic::AssertUnwindSafe;
-use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
 
@@ -21,7 +21,7 @@ struct QueueState {
     // The queue of Tasks which are to be run in order. In practice this is all the
     // synchronous work of futures, and each `Task` represents calling `poll` on
     // a future "at the right time".
-    tasks: RefCell<VecDeque<Rc<crate::task::Task>>>,
+    tasks: RefCell<VecDeque<Rc<crate::futures::task::Task>>>,
 
     // This flag indicates whether we've scheduled `run_all` to run in the future.
     // This is used to ensure that it's only scheduled once.
@@ -60,7 +60,7 @@ pub(crate) struct Queue {
 
 impl Queue {
     // Schedule a task to run on the next tick
-    pub(crate) fn schedule_task(&self, task: Rc<crate::task::Task>) {
+    pub(crate) fn schedule_task(&self, task: Rc<crate::futures::task::Task>) {
         self.state.tasks.borrow_mut().push_back(task);
         // Use queueMicrotask to execute as soon as possible. If it does not exist
         // fall back to the promise resolution
@@ -74,7 +74,7 @@ impl Queue {
     }
     // Append a task to the currently running queue, or schedule it
     #[cfg(not(target_feature = "atomics"))]
-    pub(crate) fn push_task(&self, task: Rc<crate::task::Task>) {
+    pub(crate) fn push_task(&self, task: Rc<crate::futures::task::Task>) {
         // It would make sense to run this task on the same tick.  For now, we
         // make the simplifying choice of always scheduling tasks for a future tick.
         self.schedule_task(task)
@@ -88,7 +88,7 @@ impl Queue {
             tasks: RefCell::new(VecDeque::new()),
         });
 
-        let has_queue_microtask = js_sys::global()
+        let has_queue_microtask = crate::global()
             .unchecked_into::<Global>()
             .hasQueueMicrotask()
             .is_function();
