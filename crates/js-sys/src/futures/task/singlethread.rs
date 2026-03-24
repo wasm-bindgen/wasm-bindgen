@@ -62,11 +62,11 @@ impl Task {
             waker,
         });
 
-        crate::queue::Queue::with(|queue| queue.schedule_task(this));
+        crate::futures::queue::Queue::with(|queue| queue.schedule_task(this));
     }
 
     fn force_wake(this: Rc<Self>) {
-        crate::queue::Queue::with(|queue| {
+        crate::futures::queue::Queue::with(|queue| {
             queue.push_task(this);
         });
     }

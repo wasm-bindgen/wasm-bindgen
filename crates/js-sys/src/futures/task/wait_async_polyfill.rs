@@ -38,13 +38,33 @@
  * when possible.  The worker communicates with its parent using postMessage.
  */
 
+use crate::{Array, Promise};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::sync::atomic::AtomicI32;
-use js_sys::{Array, Promise};
 use wasm_bindgen::prelude::*;
-use web_sys::{MessageEvent, Worker};
+
+// Inline bindings for the web Worker and MessageEvent APIs.
+// These replace the web-sys dependency, which would create a circular
+// dependency since web-sys depends on js-sys.
+#[wasm_bindgen]
+extern "C" {
+    type Worker;
+    type MessageEvent;
+
+    #[wasm_bindgen(constructor)]
+    fn new(url: &str) -> Worker;
+
+    #[wasm_bindgen(method, js_name = postMessage, catch)]
+    fn post_message(this: &Worker, msg: &JsValue) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(method, setter, js_name = onmessage)]
+    fn set_onmessage(this: &Worker, cb: Option<&Function>);
+
+    #[wasm_bindgen(method, getter)]
+    fn data(this: &MessageEvent) -> JsValue;
+}
 
 #[thread_local]
 static HELPERS: RefCell<Vec<Worker>> = RefCell::new(vec![]);
@@ -54,8 +74,8 @@ fn alloc_helper() -> Worker {
         return helper;
     }
 
-    let worker_url = wasm_bindgen::link_to!(module = "/src/task/worker.js");
-    Worker::new(&worker_url).unwrap_or_else(|js| wasm_bindgen::throw_val(js))
+    let worker_url = wasm_bindgen::link_to!(module = "/src/futures/task/worker.js");
+    new(&worker_url)
 }
 
 fn free_helper(helper: Worker) {
@@ -75,7 +95,7 @@ pub fn wait_async(ptr: &AtomicI32, value: i32) -> Promise {
             free_helper(helper_ref);
             drop(resolve.call1(&JsValue::NULL, &e.data()));
         });
-        helper.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
+        set_onmessage(&helper, Some(onmessage_callback.as_ref().unchecked_ref()));
 
         let data = Array::of3(
             &wasm_bindgen::memory(),
@@ -83,8 +103,6 @@ pub fn wait_async(ptr: &AtomicI32, value: i32) -> Promise {
             &JsValue::from(value),
         );
 
-        helper
-            .post_message(&data)
-            .unwrap_or_else(|js| wasm_bindgen::throw_val(js));
+        post_message(&helper, &data).unwrap_or_else(|js| wasm_bindgen::throw_val(js));
     })
 }
