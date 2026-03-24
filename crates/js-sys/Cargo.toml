@@ -41,6 +41,8 @@ once_cell = { version = "1.12", default-features = false }
 wasm-bindgen = { path = "../..", version = "=0.2.114", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+futures-channel = "0.3"
+futures-lite = { version = "2", default-features = false }
 wasm-bindgen-futures = { path = '../futures' }
 wasm-bindgen-test = { path = '../test' }
 web-sys = { path = "../web-sys", features = ["Headers", "Response", "ResponseInit"] }
