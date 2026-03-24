@@ -37,6 +37,10 @@
 
 ### Fixed
 
+* Fixed argument order when calling multi-parameter functions in the
+  `wasm-bindgen` interpreter by reversing the args collected from the stack.
+  [#5047](https://github.com/wasm-bindgen/wasm-bindgen/pull/5047)
+
 * Added support for per-operation `[WbgGeneric]` in WebIDL, restoring typed
   generic return types (e.g. `Promise<ImageBitmap>`) for `createImageBitmap` on
   `Window` and `WorkerGlobalScope` that were lost after the `VideoFrame`
