@@ -29,7 +29,7 @@ std = ["wasm-bindgen/std"]
 unsafe-eval = []
 # Enables JsFuture, spawn_local, future_to_promise, and IntoFuture for Promise.
 # Automatically enabled when depending on wasm-bindgen-futures.
-futures = ["dep:cfg-if"]
+futures = ["dep:cfg-if", "dep:futures-util"]
 # Enables JsStream (AsyncIterator -> Stream bridge). Implies futures.
 futures-core-03-stream = ["futures", "dep:futures-core"]
 

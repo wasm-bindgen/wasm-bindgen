@@ -17,3 +17,5 @@ help: consider importing one of these functions
    |
 3  + use js_sys::futures::future_to_promise;
    |
+3  + use wasm_bindgen_futures::future_to_promise;
+   |

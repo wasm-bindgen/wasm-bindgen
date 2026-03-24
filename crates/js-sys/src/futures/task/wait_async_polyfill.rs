@@ -50,6 +50,7 @@ use wasm_bindgen::prelude::*;
 // dependency since web-sys depends on js-sys.
 #[wasm_bindgen]
 extern "C" {
+    #[derive(Clone)]
     type Worker;
     type MessageEvent;
 
@@ -75,7 +76,7 @@ fn alloc_helper() -> Worker {
     }
 
     let worker_url = wasm_bindgen::link_to!(module = "/src/futures/task/worker.js");
-    new_worker(&worker_url)
+    Worker::new_worker(&worker_url)
 }
 
 fn free_helper(helper: Worker) {
