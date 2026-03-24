@@ -158,6 +158,78 @@ async fn spawn_local_err_no_exception() {
 }
 
 // ---------------------------------------------------------------------------
+// Atomics / multithread-specific tests
+// ---------------------------------------------------------------------------
+
+#[cfg(target_feature = "atomics")]
+use std::future::Future;
+#[cfg(target_feature = "atomics")]
+use std::pin::Pin;
+#[cfg(target_feature = "atomics")]
+use std::task::{Context, Poll};
+
+#[cfg(target_feature = "atomics")]
+#[wasm_bindgen(module = "/tests/wait_async_mock.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = installNotifyOnlyWaitAsyncMock)]
+    fn install_wait_async_mock() -> JsValue;
+
+    #[wasm_bindgen(js_name = restoreWaitAsyncMock)]
+    fn restore_wait_async_mock(original: &JsValue);
+}
+
+#[cfg(target_feature = "atomics")]
+struct WaitAsyncMockGuard {
+    original: JsValue,
+}
+
+#[cfg(target_feature = "atomics")]
+impl Drop for WaitAsyncMockGuard {
+    fn drop(&mut self) {
+        restore_wait_async_mock(&self.original);
+    }
+}
+
+#[cfg(target_feature = "atomics")]
+#[derive(Default)]
+struct PendingThenReady {
+    polled: bool,
+}
+
+#[cfg(target_feature = "atomics")]
+impl Future for PendingThenReady {
+    type Output = ();
+
+    fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if self.polled {
+            Poll::Ready(())
+        } else {
+            self.polled = true;
+            Poll::Pending
+        }
+    }
+}
+
+// Reproduces a race condition where the waitAsync promise resolves without
+// first transitioning the task state back to AWAKE. Without the fix this
+// panics inside `Task::run` because it observes the `SLEEPING` state on entry.
+#[cfg(target_feature = "atomics")]
+#[wasm_bindgen_test(async)]
+async fn wait_async_promise_callback_runs_without_wake() {
+    let _guard = WaitAsyncMockGuard {
+        original: install_wait_async_mock(),
+    };
+
+    let (done_tx, done_rx) = oneshot::channel::<()>();
+    spawn_local(async move {
+        PendingThenReady::default().await;
+        done_tx.send(()).ok();
+    });
+
+    done_rx.await.expect("task finished");
+}
+
+// ---------------------------------------------------------------------------
 // JsStream (requires futures-core-03-stream feature)
 // ---------------------------------------------------------------------------
 

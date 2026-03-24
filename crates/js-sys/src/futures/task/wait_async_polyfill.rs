@@ -1,42 +1,8 @@
-//!
-//! The polyfill was kindly borrowed from https://github.com/tc39/proposal-atomics-wait-async
-//! and ported to Rust
-//!
+//! Polyfill for `Atomics.waitAsync` using a dedicated `Worker` per wait.
+//! Workers are pooled and reused. The worker communicates the result back via
+//! `postMessage`, which resolves a `Promise` on the calling thread.
 
 #![allow(clippy::incompatible_msrv)]
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- *
- * Author: Lars T Hansen, lhansen@mozilla.com
- */
-
-/* Polyfill for Atomics.waitAsync() for web browsers.
- *
- * Any kind of agent that is able to create a new Worker can use this polyfill.
- *
- * Load this file in all agents that will use Atomics.waitAsync.
- *
- * Agents that don't call Atomics.waitAsync need do nothing special.
- *
- * Any kind of agent can wake another agent that is sleeping in
- * Atomics.waitAsync by just calling Atomics.wake for the location being slept
- * on, as normal.
- *
- * The implementation is not completely faithful to the proposed semantics: in
- * the case where an agent first asyncWaits and then waits on the same location:
- * when it is woken, the two waits will be woken in order, while in the real
- * semantics, the sync wait will be woken first.
- *
- * In this polyfill Atomics.waitAsync is not very fast.
- */
-
-/* Implementation:
- *
- * For every wait we fork off a Worker to perform the wait.  Workers are reused
- * when possible.  The worker communicates with its parent using postMessage.
- */
 
 use crate::{Array, Function, Promise};
 use alloc::vec;
