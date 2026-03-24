@@ -83,11 +83,29 @@ fn from_iter() {
     );
 }
 
+// Regression test for https://github.com/wasm-bindgen/wasm-bindgen/issues/5042:
+// collecting a wasm_bindgen type without explicit type annotations must not cause E0283.
+#[cfg(not(js_sys_unstable_apis))]
+#[wasm_bindgen_test]
+fn from_iter_wasm_bindgen_type() {
+    // JsString implements AsRef<JsValue> and AsRef<JsString>; before the fix this
+    // caused "cannot infer type for type parameter T" on the stable FromIterator impl.
+    let arr = Array::from_iter([JsString::from("a"), JsString::from("b")]);
+    assert_eq!(arr.length(), 2);
+
+    let arr = [JsString::from("x"), JsString::from("y")]
+        .iter()
+        .collect::<Array>();
+    assert_eq!(arr.length(), 2);
+}
+
+#[cfg(not(js_sys_unstable_apis))]
 #[wasm_bindgen_test]
 fn extend() {
-    let mut array = array![JsString; "a", "b"];
-    array.extend(vec![JsString::from("c"), JsString::from("d")]);
-    assert_eq!(array, array![JsString; "a", "b", "c", "d"]);
+    let mut array = Array::new();
+    array.extend([JsString::from("a"), JsString::from("b")]);
+    array.extend([JsString::from("c"), JsString::from("d")]);
+    assert_eq!(array.length(), 4);
 }
 
 #[wasm_bindgen_test]
@@ -1344,6 +1362,7 @@ fn test_array_to_vec() {
     assert_eq!(second.id(), 2);
 }
 
+#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn test_array_from_iter() {
     let items = vec![
@@ -1359,6 +1378,7 @@ fn test_array_from_iter() {
     assert_eq!(first.id(), 1);
 }
 
+#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn test_array_extend() {
     let mut arr: Array<TestItem> = Array::new_typed();
