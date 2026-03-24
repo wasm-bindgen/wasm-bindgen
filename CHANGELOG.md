@@ -5,6 +5,12 @@
 
 ### Added
 
+* Added `--target emscripten` support, generating a `library_bindgen.js` file
+  for consumption by Emscripten at link time. Includes support for futures,
+  JS closures, and TypeScript output. A new Emscripten-specific test runner is
+  also included, along with CI integration.
+  [#4443](https://github.com/wasm-bindgen/wasm-bindgen/pull/4443)
+
 * Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
   [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
