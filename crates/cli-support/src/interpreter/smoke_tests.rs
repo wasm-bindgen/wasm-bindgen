@@ -347,6 +347,36 @@ fn calling_functions_with_args() {
 }
 
 #[test]
+#[should_panic]
+fn calling_function_with_args_out_of_order() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (global i32 (i32.const 0))
+            (memory 1)
+
+            (func $foo
+                i32.const 1
+                i32.const 2
+                call $bar
+            )
+
+            (func $bar (param i32) (param i32)
+                local.get 0
+                call $__wbindgen_describe
+                local.get 1
+                call $__wbindgen_describe
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[2, 1]);
+}
+
+#[test]
 fn blocks() {
     let wat = r#"
         (module
