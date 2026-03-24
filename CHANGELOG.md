@@ -5,6 +5,15 @@
 
 ### Added
 
+* `js_sys::Promise<T>` now implements `IntoFuture`, enabling direct `.await` on
+  any JS promise without a wrapper type. The `wasm-bindgen-futures` implementation
+  has been moved into `js-sys` behind an optional `futures` feature, which is
+  activated automatically when `wasm-bindgen-futures` is a dependency. All
+  existing `wasm_bindgen_futures::*` import paths continue to work unchanged via
+  re-exports. `js_sys::futures` is also available directly for users who want
+  `promise.await` without depending on `wasm-bindgen-futures`.
+  [#5049](https://github.com/wasm-bindgen/wasm-bindgen/pull/5049)
+
 * Added `--target emscripten` support, generating a `library_bindgen.js` file
   for consumption by Emscripten at link time. Includes support for futures,
   JS closures, and TypeScript output. A new Emscripten-specific test runner is
