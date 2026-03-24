@@ -9,6 +9,8 @@
 //! `future_to_promise_typed`) are re-exported unchanged for backwards
 //! compatibility.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 pub use js_sys::futures::{future_to_promise, future_to_promise_typed, spawn_local, JsFuture};
 
 #[cfg(feature = "futures-core-03-stream")]

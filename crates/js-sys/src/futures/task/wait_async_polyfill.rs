@@ -38,7 +38,7 @@
  * when possible.  The worker communicates with its parent using postMessage.
  */
 
-use crate::{Array, Promise};
+use crate::{Array, Function, Promise};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::RefCell;
@@ -54,7 +54,7 @@ extern "C" {
     type MessageEvent;
 
     #[wasm_bindgen(constructor)]
-    fn new(url: &str) -> Worker;
+    fn new_worker(url: &str) -> Worker;
 
     #[wasm_bindgen(method, js_name = postMessage, catch)]
     fn post_message(this: &Worker, msg: &JsValue) -> Result<(), JsValue>;
@@ -75,7 +75,7 @@ fn alloc_helper() -> Worker {
     }
 
     let worker_url = wasm_bindgen::link_to!(module = "/src/futures/task/worker.js");
-    new(&worker_url)
+    new_worker(&worker_url)
 }
 
 fn free_helper(helper: Worker) {
@@ -95,7 +95,7 @@ pub fn wait_async(ptr: &AtomicI32, value: i32) -> Promise {
             free_helper(helper_ref);
             drop(resolve.call1(&JsValue::NULL, &e.data()));
         });
-        set_onmessage(&helper, Some(onmessage_callback.as_ref().unchecked_ref()));
+        helper.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
 
         let data = Array::of3(
             &wasm_bindgen::memory(),
@@ -103,6 +103,8 @@ pub fn wait_async(ptr: &AtomicI32, value: i32) -> Promise {
             &JsValue::from(value),
         );
 
-        post_message(&helper, &data).unwrap_or_else(|js| wasm_bindgen::throw_val(js));
+        helper
+            .post_message(&data)
+            .unwrap_or_else(|js| wasm_bindgen::throw_val(js));
     })
 }

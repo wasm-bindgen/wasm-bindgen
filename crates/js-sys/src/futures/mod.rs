@@ -30,13 +30,9 @@
 //! systems and make sure that Rust/JavaScript can work together with
 //! asynchronous and I/O work.
 
-#![cfg_attr(
-    target_feature = "atomics",
-    feature(thread_local, stdarch_wasm_atomic_wait)
-)]
-
 extern crate alloc;
 
+use crate::Promise;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::fmt;
@@ -46,7 +42,6 @@ use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use futures_util::FutureExt;
-use crate::Promise;
 use wasm_bindgen::__rt::marker::ErasableGeneric;
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
