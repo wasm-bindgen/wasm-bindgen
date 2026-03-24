@@ -1,4 +1,4 @@
-error[E0412]: cannot find type `A` in this scope
+error[E0425]: cannot find type `A` in this scope
  --> ui-tests/unknown-type-in-import.rs:6:19
   |
 6 |     pub fn foo(a: A);
@@ -9,7 +9,7 @@ help: you might be missing a type parameter
 6 |     pub fn foo<A>(a: A);
   |               +++
 
-error[E0412]: cannot find type `A` in this scope
+error[E0425]: cannot find type `A` in this scope
  --> ui-tests/unknown-type-in-import.rs:6:19
   |
 6 |     pub fn foo(a: A);
