@@ -390,12 +390,10 @@ impl Frame<'_> {
                         }
 
                         let ty = self.module.types.get(self.module.funcs.get(func).ty());
-                        let mut args = (0..ty.params().len())
+                        let args = (0..ty.params().len())
                             .map(|_| stack.pop().unwrap())
+                            .rev()
                             .collect::<Vec<_>>();
-                        // Stack pops yield args in reverse order (last arg on top),
-                        // so reverse to match the function's parameter order.
-                        args.reverse();
 
                         self.interp.call(func, self.module, &args);
                     }
