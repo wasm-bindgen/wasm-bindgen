@@ -418,9 +418,13 @@ impl<'a> Context<'a> {
         };
 
         // Process reexports
-        for (export_name, js_import) in self.aux.reexports.clone() {
+        for (export_name, (js_import, generate_typescript)) in self.aux.reexports.clone() {
             let import_name = self.import_name(&js_import)?;
-            let ts_definition = format!("let {import_name}: unknown;\n");
+            let ts_definition = if generate_typescript {
+                format!("let {import_name}: unknown;\n")
+            } else {
+                String::new()
+            };
             define_export(
                 &mut self.exports,
                 &export_name,
@@ -3676,7 +3680,7 @@ if (require('worker_threads').isMainThread) {{
         }
 
         // Ensure all imports for reexports are defined
-        for js_import in self.aux.reexports.values() {
+        for (js_import, _) in self.aux.reexports.values() {
             self.import_name(js_import)?;
         }
 
