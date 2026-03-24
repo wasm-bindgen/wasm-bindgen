@@ -182,6 +182,24 @@ jobs:
         node-version: '25'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
+  
+  test_emscripten:
+      name: Run Emscripten tests
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-emscripten
+      - name: Setup Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Run Emscripten headless tests
+        run: cargo test --test wasm32-emscripten --target wasm32-unknown-emscripten
 
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.
