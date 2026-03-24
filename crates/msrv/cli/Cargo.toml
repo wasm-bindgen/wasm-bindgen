@@ -29,9 +29,8 @@ tempfile = "=3.24.0"
 clap = { version = "=4.5.61", features = ["derive"] }
 clap_lex = "=1.0.0"
 
-# ureq 3.3+ and ureq-proto 0.6+ use edition 2024 which requires Rust 1.85+
+# ureq 3.3.0 requires edition 2024 (Rust 1.85+)
 ureq = "=3.2.0"
-ureq-proto = "=0.5.3"
 
 # enable default feature for icu
 writeable = "0.6.0"
