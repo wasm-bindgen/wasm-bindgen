@@ -17,7 +17,7 @@ async fn promise_await_resolve() {
 
 #[wasm_bindgen_test]
 async fn promise_await_reject() {
-    let p = Promise::reject(&JsValue::from(42));
+    let p = Promise::<JsValue>::reject(&JsValue::from(42));
     let e = p.await.unwrap_err();
     assert_eq!(e, 42);
 }
@@ -43,7 +43,7 @@ async fn promise_resolve_is_ok_future() {
 
 #[wasm_bindgen_test]
 async fn promise_reject_is_error_future() {
-    let p = Promise::reject(&JsValue::from(42));
+    let p = Promise::<JsValue>::reject(&JsValue::from(42));
     let e = JsFuture::from(p).await.unwrap_err();
     assert_eq!(e, 42);
 }
@@ -112,6 +112,9 @@ async fn spawn_local_runs() {
     assert_eq!(rx.await.unwrap(), 42);
 }
 
+// Uses promise.then() which has different signatures under stable vs unstable APIs.
+// Only run under stable to avoid the unstable overload mismatch.
+#[cfg(not(js_sys_unstable_apis))]
 #[wasm_bindgen_test]
 async fn spawn_local_nested() {
     let (ta, mut ra) = oneshot::channel::<u32>();
