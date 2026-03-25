@@ -5,6 +5,21 @@
 
 ### Added
 
+* `js_sys::Promise<T>` now implements `IntoFuture`, enabling direct `.await` on
+  any JS promise without a wrapper type. The `wasm-bindgen-futures` implementation
+  has been moved into `js-sys` behind an optional `futures` feature, which is
+  activated automatically when `wasm-bindgen-futures` is a dependency. All
+  existing `wasm_bindgen_futures::*` import paths continue to work unchanged via
+  re-exports. `js_sys::futures` is also available directly for users who want
+  `promise.await` without depending on `wasm-bindgen-futures`.
+  [#5049](https://github.com/wasm-bindgen/wasm-bindgen/pull/5049)
+
+* Added `--target emscripten` support, generating a `library_bindgen.js` file
+  for consumption by Emscripten at link time. Includes support for futures,
+  JS closures, and TypeScript output. A new Emscripten-specific test runner is
+  also included, along with CI integration.
+  [#4443](https://github.com/wasm-bindgen/wasm-bindgen/pull/4443)
+
 * Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
   [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
@@ -30,6 +45,21 @@
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
 
 ### Fixed
+
+* Fixed argument order when calling multi-parameter functions in the
+  `wasm-bindgen` interpreter by reversing the args collected from the stack.
+  [#5047](https://github.com/wasm-bindgen/wasm-bindgen/pull/5047)
+
+* Added support for per-operation `[WbgGeneric]` in WebIDL, restoring typed
+  generic return types (e.g. `Promise<ImageBitmap>`) for `createImageBitmap` on
+  `Window` and `WorkerGlobalScope` that were lost after the `VideoFrame`
+  stabilization.
+  [#5026](https://github.com/wasm-bindgen/wasm-bindgen/pull/5026)
+
+* Fixed missing `#[cfg(feature = "...")]` gates on deprecated dictionary builder
+  methods and getters for union-typed fields (e.g. `{Open,Save,Directory}FilePickerOptions::start_in()`),
+  and fixed per-setter doc requirements to list each setter's own required features.
+  [#5039](https://github.com/wasm-bindgen/wasm-bindgen/pull/5039)
 
 * Fixed `JsOption::new()` to use `undefined` instead of `null`, to be compatible with `Option::None` and JS default parameters.
   [#5023](https://github.com/wasm-bindgen/wasm-bindgen/pull/5023)

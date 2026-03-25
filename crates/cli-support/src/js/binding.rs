@@ -10,6 +10,7 @@ use crate::wit::InstructionData;
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
+use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -1072,8 +1073,9 @@ fn instruction(
             // Note that we always assume the return pointer is argument 0,
             // which is currently the case for LLVM.
             let val = js.pop();
+            let mem_string = mem.access(js.cx.config.mode.emscripten());
             let expr = format!(
-                "{mem}().{method}({} + {size} * {offset}, {val}, true);",
+                "{mem_string}.{method}({} + {size} * {offset}, {val}, true);",
                 js.arg(0),
             );
             js.prelude(&expr);
@@ -1095,7 +1097,9 @@ fn instruction(
             // If we're loading from the return pointer then we must have pushed
             // it earlier, and we always push the same value, so load that value
             // here
-            let expr = format!("{mem}().{method}(retptr + {size} * {scaled_offset}, true)");
+            let mem_string = mem.access(js.cx.config.mode.emscripten());
+
+            let expr = format!("{mem_string}.{method}(retptr + {size} * {scaled_offset}, true)");
             js.prelude(&format!("var r{offset} = {expr};"));
             js.push(format!("r{offset}"));
         }
@@ -1500,6 +1504,10 @@ fn instruction(
             let b = js.pop();
             let a = js.pop();
             let wrapper = js.cx.export_adapter_name(*adapter);
+
+            if matches!(js.cx.config.mode, OutputMode::Emscripten) {
+                js.cx.adapter_deps.insert(wrapper.clone());
+            }
 
             // TODO: further merge the heap and stack closure handling as
             // they're almost identical (by nature) except for ownership

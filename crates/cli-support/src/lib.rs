@@ -68,6 +68,7 @@ enum OutputMode {
     Node { module: bool },
     Deno,
     Module,
+    Emscripten,
 }
 
 enum Input {
@@ -330,6 +331,15 @@ impl Bindgen {
                 .module_from_bytes(bytes)
                 .context("failed getting Wasm module")?,
         };
+
+        if module
+            .customs
+            .remove_raw("__wasm_bindgen_emscripten_marker")
+            .is_some()
+        {
+            // Force the internal configuration to Emscripten mode.
+            self.mode = OutputMode::Emscripten;
+        }
 
         // Enable reference type transformations if the module is already using it.
         if let Ok(true) = wasm_conventions::target_feature(&module, "reference-types") {
@@ -626,6 +636,10 @@ impl OutputMode {
     fn bundler(&self) -> bool {
         matches!(self, OutputMode::Bundler { .. })
     }
+
+    fn emscripten(&self) -> bool {
+        matches!(self, OutputMode::Emscripten)
+    }
 }
 
 /// Remove a number of internal exports that are synthesized by Rust's linker,
@@ -751,7 +765,12 @@ impl Output {
         }
 
         let js_path = out_dir.join(&self.stem).with_extension(extension);
-        write(&js_path, reset_indentation(&gen.js))?;
+        if matches!(self.generated.mode, OutputMode::Emscripten) {
+            let emscripten_js_path = out_dir.join("library_bindgen.js");
+            write(&emscripten_js_path, reset_indentation(&gen.js))?;
+        } else {
+            write(&js_path, reset_indentation(&gen.js))?;
+        }
 
         if let Some(start) = &gen.start {
             let js_path = out_dir.join(wasm_name).with_extension(extension);

@@ -27,6 +27,10 @@
 #![doc(html_root_url = "https://docs.rs/js-sys/0.2")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(target_feature = "atomics", feature(thread_local))]
+#![cfg_attr(
+    all(feature = "futures", target_feature = "atomics"),
+    feature(stdarch_wasm_atomic_wait)
+)]
 
 extern crate alloc;
 
@@ -13668,3 +13672,10 @@ arrays! {
     /// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigUint64Array
     BigUint64Array: u64,
 }
+
+/// Bridging between JavaScript `Promise`s and Rust `Future`s.
+///
+/// Enables `promise.await` directly on any [`Promise`] when this feature is active.
+/// This module is automatically available when depending on `wasm-bindgen-futures`.
+#[cfg(feature = "futures")]
+pub mod futures;

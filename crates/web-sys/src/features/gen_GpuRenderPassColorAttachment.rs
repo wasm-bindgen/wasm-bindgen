@@ -36,7 +36,7 @@ extern "C" {
     #[cfg(feature = "GpuColorDict")]
     #[doc = "Change the `clearValue` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuColorDict`, `GpuRenderPassColorAttachment`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -81,9 +81,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "loadOp")]
     pub fn set_load_op(this: &GpuRenderPassColorAttachment, val: GpuLoadOp);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
     #[doc = "Get the `resolveTarget` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuTexture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -93,7 +94,7 @@ extern "C" {
     #[cfg(feature = "GpuTexture")]
     #[doc = "Change the `resolveTarget` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuTexture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -103,7 +104,7 @@ extern "C" {
     #[cfg(feature = "GpuTextureView")]
     #[doc = "Change the `resolveTarget` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuTextureView`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -133,9 +134,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "storeOp")]
     pub fn set_store_op(this: &GpuRenderPassColorAttachment, val: GpuStoreOp);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
     #[doc = "Get the `view` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuTexture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -145,7 +147,7 @@ extern "C" {
     #[cfg(feature = "GpuTexture")]
     #[doc = "Change the `view` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuTexture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -155,7 +157,7 @@ extern "C" {
     #[cfg(feature = "GpuTextureView")]
     #[doc = "Change the `view` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassColorAttachment`, `GpuTextureView`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -222,6 +224,7 @@ impl GpuRenderPassColorAttachment {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
     #[deprecated = "Use `set_resolve_target()` instead."]
     pub fn resolve_target(&mut self, val: &GpuTexture) -> &mut Self {
         self.set_resolve_target(val);
@@ -235,6 +238,7 @@ impl GpuRenderPassColorAttachment {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
     #[deprecated = "Use `set_view()` instead."]
     pub fn view(&mut self, val: &GpuTexture) -> &mut Self {
         self.set_view(val);

@@ -361,8 +361,12 @@ impl<'src> FirstPassRecord<'src> {
         for signature in data.signatures.iter() {
             // Signatures from unstable IDL definitions always use typed generics
             // for WbgType expansion (callbacks become typed, etc.)
-            // [WbgGeneric] on the definition also opts into typed generics.
-            if unstable || wbg_generic || signature.stability.is_unstable() {
+            // [WbgGeneric] on the definition or operation also opts into typed generics.
+            if unstable
+                || wbg_generic
+                || signature.stability.is_unstable()
+                || is_wbg_generic(signature.attrs.as_ref())
+            {
                 self.options.next_unstable.set(true);
             }
 
@@ -639,7 +643,14 @@ impl<'src> FirstPassRecord<'src> {
             has_unstable_override: bool,
             wbg_generic: bool,
         ) -> Option<InterfaceMethod<'a>> {
+            // Temporarily set next_unstable so that return type WbgType
+            // expansion uses typed callbacks when wbg_generic or unstable.
+            let saved = first_pass.options.next_unstable.get();
+            if wbg_generic || unstable_flag {
+                first_pass.options.next_unstable.set(true);
+            }
             let ret_ty = signature.orig.ret.to_wbg_type(first_pass);
+            first_pass.options.next_unstable.set(saved);
             let structural =
                 force_structural || is_structural(signature.orig.attrs.as_ref(), container_attrs);
             let catch = force_throws
@@ -751,6 +762,9 @@ impl<'src> FirstPassRecord<'src> {
                     }
                 }
 
+                // [WbgGeneric] on the operation itself also opts into typed generics.
+                let op_wbg_generic = wbg_generic || is_wbg_generic(signature.orig.attrs.as_ref());
+
                 if let Some(method) = create_method(
                     self,
                     signature,
@@ -765,7 +779,7 @@ impl<'src> FirstPassRecord<'src> {
                     container_attrs,
                     unstable_flag,
                     false,
-                    wbg_generic,
+                    op_wbg_generic,
                 ) {
                     methods.push(method.clone());
 

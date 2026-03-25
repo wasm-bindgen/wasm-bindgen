@@ -34,12 +34,16 @@ jobs:
           node-version: '25'
 
       - name: Install Firefox and geckodriver
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           sudo apt-get update
           sudo apt-get install -y firefox
           # Download geckodriver for ARM64
-          GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep tag_name | cut -d '"' -f 4)
-          curl -sL "https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux-aarch64.tar.gz" | sudo tar -xz -C /usr/local/bin
+          GECKODRIVER_VERSION=$(gh api repos/mozilla/geckodriver/releases/latest --jq '.tag_name')
+          echo "Installing geckodriver ${GECKODRIVER_VERSION}"
+          curl -fSL "https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux-aarch64.tar.gz" | sudo tar -xz -C /usr/local/bin
+          geckodriver --version
 
       - uses: Swatinem/rust-cache@v2
         with:

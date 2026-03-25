@@ -128,7 +128,6 @@ extern "C" {
     #[doc = "Indexing setter. As in the literal Javascript `this[key] = value`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`, `HtmlOptionsCollection`*"]
     pub fn set(
         this: &HtmlOptionsCollection,

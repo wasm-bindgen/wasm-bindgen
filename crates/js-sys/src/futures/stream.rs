@@ -5,12 +5,12 @@
 //! that produce values that can be awaited from.
 //!
 
-use crate::JsFuture;
+use super::JsFuture;
+use crate::{AsyncIterator, IteratorNext};
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll};
 use futures_core::stream::Stream;
-use js_sys::{AsyncIterator, IteratorNext};
 use wasm_bindgen::convert::FromWasmAbi;
 use wasm_bindgen::{prelude::*, JsGeneric};
 

@@ -286,7 +286,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn get(this: &DomTokenList, index: u32) -> Option<::alloc::string::String>;
     # [wasm_bindgen (method , structural , js_class = "DOMTokenList" , js_name = entries)]

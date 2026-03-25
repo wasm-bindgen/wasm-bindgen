@@ -39,7 +39,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`, `NodeList`*"]
     pub fn get(this: &NodeList, index: u32) -> Option<Node>;
     # [wasm_bindgen (method , structural , js_class = "NodeList" , js_name = entries)]

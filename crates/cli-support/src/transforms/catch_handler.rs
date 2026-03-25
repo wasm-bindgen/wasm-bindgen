@@ -79,7 +79,13 @@ pub fn run(
         }
     }
 
-    let terminated_addr = get_terminated_addr(module)?;
+    let terminated_addr = match get_terminated_addr(module) {
+        Ok(addr) => addr,
+        // __instance_terminated is only emitted with panic=unwind.
+        // If it's missing (e.g. panic=abort with C++ exception handling
+        // instructions from embind/libcxx), skip catch wrapper generation.
+        Err(_) => return Ok(()),
+    };
     let memory = crate::wasm_conventions::get_memory(module)?;
 
     // Import the JSTag

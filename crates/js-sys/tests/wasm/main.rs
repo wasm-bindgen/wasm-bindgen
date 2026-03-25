@@ -43,4 +43,5 @@ pub mod WeakMap;
 pub mod WeakRef;
 pub mod WeakSet;
 pub mod WebAssembly;
+pub mod futures;
 pub mod global_fns;
