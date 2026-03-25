@@ -171,7 +171,10 @@ fn webassembly_instance() {
 
     // Has expected exports.
     let exports = instance.exports();
+    #[cfg(not(js_sys_unstable_apis))]
     assert!(Reflect::has_str(exports.as_ref(), &"exported_func".into()).unwrap());
+    #[cfg(js_sys_unstable_apis)]
+    assert!(Reflect::has(&exports, &"exported_func".into()).unwrap());
 }
 
 #[wasm_bindgen_test]

@@ -137,7 +137,7 @@ async fn test_promise_catch_with_closure() {
     });
     #[cfg(js_sys_unstable_apis)]
     let closure = Closure::new(|error: TestValue| {
-        let msg = js_sys::Reflect::get_str(&error, &"message".into())
+        let msg = js_sys::Reflect::get(&error, &"message".into())
             .unwrap()
             .unwrap();
         assert_eq!(msg.as_string(), Some("error occurred".to_string()));

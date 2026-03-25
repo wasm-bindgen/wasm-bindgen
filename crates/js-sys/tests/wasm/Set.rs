@@ -265,12 +265,24 @@ fn new_from_iterable() {
 
 // Helper function to check if Set methods are available
 fn has_set_methods() -> bool {
+    #[cfg(not(js_sys_unstable_apis))]
     let set_proto: Option<Object> = Reflect::get_str(&new_set!(), &"constructor".into())
         .unwrap()
         .and_then(|c| Reflect::get_str(c.unchecked_ref(), &"prototype".into()).unwrap());
+    #[cfg(js_sys_unstable_apis)]
+    let set_proto: Option<Object> = Reflect::get(&new_set!(), &"constructor".into())
+        .unwrap()
+        .and_then(|c| Reflect::get(c.unchecked_ref(), &"prototype".into()).unwrap());
 
     if let Some(proto) = set_proto {
-        Reflect::has_str(&proto, &"union".into()).unwrap_or(false)
+        #[cfg(not(js_sys_unstable_apis))]
+        {
+            Reflect::has_str(&proto, &"union".into()).unwrap_or(false)
+        }
+        #[cfg(js_sys_unstable_apis)]
+        {
+            Reflect::has(&proto, &"union".into()).unwrap_or(false)
+        }
     } else {
         false
     }

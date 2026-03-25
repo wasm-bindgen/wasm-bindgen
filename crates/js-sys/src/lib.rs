@@ -6707,6 +6707,7 @@ extern "C" {
     /// property on an object, and returns the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
     pub fn define_property_str<T>(
         obj: &Object<T>,
@@ -6719,6 +6720,7 @@ extern "C" {
     /// property on an object, and returns the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
     pub fn define_property_symbol<T>(
         obj: &Object<T>,
@@ -6860,6 +6862,7 @@ extern "C" {
     /// of a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
     pub fn get_own_property_descriptor_str<T>(
         obj: &Object<T>,
@@ -6872,6 +6875,7 @@ extern "C" {
     /// of a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
     pub fn get_own_property_descriptor_symbol<T>(
         obj: &Object<T>,
@@ -6975,6 +6979,7 @@ extern "C" {
     /// opposed to inheriting it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
     pub fn has_own_str<T>(instance: &Object<T>, property: &JsString) -> Result<bool, JsValue>;
 
@@ -6983,6 +6988,7 @@ extern "C" {
     /// opposed to inheriting it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
     pub fn has_own_symbol<T>(instance: &Object<T>, property: &Symbol) -> Result<bool, JsValue>;
 
@@ -7344,6 +7350,7 @@ pub mod Reflect {
         /// `Object.defineProperty()` but returns a `Boolean`.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
         pub fn define_property_str<T>(
             target: &Object<T>,
@@ -7401,6 +7408,7 @@ pub mod Reflect {
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_str<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
 
@@ -7408,6 +7416,7 @@ pub mod Reflect {
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_symbol<T>(target: &Object<T>, key: &Symbol) -> Result<JsValue, JsValue>;
 
@@ -7504,6 +7513,7 @@ pub mod Reflect {
         /// function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
         pub fn has_str<T>(target: &Object<T>, property_key: &JsString) -> Result<bool, JsValue>;
 
@@ -7511,6 +7521,7 @@ pub mod Reflect {
         /// function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
         pub fn has_symbol<T>(target: &Object<T>, property_key: &Symbol) -> Result<bool, JsValue>;
 
@@ -7579,6 +7590,7 @@ pub mod Reflect {
         /// property on an object.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
         pub fn set_str<T>(
             target: &Object<T>,

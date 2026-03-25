@@ -687,11 +687,17 @@ fn locale() {
 
     // Test getCalendars, etc. (not available in all environments)
     // Check if getCalendars method exists on the locale object
-    if Reflect::get_str(&locale, &"getCalendars".into())
+    #[cfg(not(js_sys_unstable_apis))]
+    let has_get_calendars = Reflect::get_str(&locale, &"getCalendars".into())
         .unwrap()
         .map(|v| v.is_function())
-        .unwrap_or(false)
-    {
+        .unwrap_or(false);
+    #[cfg(js_sys_unstable_apis)]
+    let has_get_calendars = Reflect::get(&locale, &"getCalendars".into())
+        .unwrap()
+        .map(|v| v.is_function())
+        .unwrap_or(false);
+    if has_get_calendars {
         let calendars = locale.get_calendars();
         assert!(calendars.length() > 0);
 
@@ -748,11 +754,24 @@ fn duration_format() {
     use Intl::{Duration, DurationFormat, DurationFormatOptions, DurationFormatStyle};
 
     // Check if Intl.DurationFormat exists (not available in all environments)
+    #[cfg(not(js_sys_unstable_apis))]
     let intl_val = Reflect::get_str(js_sys::global().as_ref(), &"Intl".into())
         .unwrap()
         .unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    let intl_val = Reflect::get(js_sys::global().as_ref(), &"Intl".into())
+        .unwrap()
+        .unwrap();
     let intl = Object::try_from(&intl_val).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
     if Reflect::get_str(intl, &"DurationFormat".into())
+        .unwrap()
+        .is_none()
+    {
+        return;
+    }
+    #[cfg(js_sys_unstable_apis)]
+    if Reflect::get(intl, &"DurationFormat".into())
         .unwrap()
         .is_none()
     {

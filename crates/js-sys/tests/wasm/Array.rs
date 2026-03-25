@@ -875,7 +875,15 @@ fn Float64Array_view_mut_raw() {
 async fn from_async() {
     // Check if Array.fromAsync exists (not available in all browsers)
     let array_constructor = Array::<JsValue>::new().constructor();
+    #[cfg(not(js_sys_unstable_apis))]
     if Reflect::get_str(array_constructor.as_ref(), &"fromAsync".into())
+        .unwrap()
+        .is_none()
+    {
+        return;
+    }
+    #[cfg(js_sys_unstable_apis)]
+    if Reflect::get(array_constructor.as_ref(), &"fromAsync".into())
         .unwrap()
         .is_none()
     {
@@ -900,7 +908,15 @@ async fn from_async_map() {
 
     // Check if Array.fromAsync exists (not available in all browsers)
     let array_constructor = Array::<JsValue>::new().constructor();
+    #[cfg(not(js_sys_unstable_apis))]
     if Reflect::get_str(array_constructor.as_ref(), &"fromAsync".into())
+        .unwrap()
+        .is_none()
+    {
+        return;
+    }
+    #[cfg(js_sys_unstable_apis)]
+    if Reflect::get(array_constructor.as_ref(), &"fromAsync".into())
         .unwrap()
         .is_none()
     {
@@ -929,7 +945,15 @@ async fn from_async_map_with_index() {
 
     // Check if Array.fromAsync exists (not available in all browsers)
     let array_constructor = Array::<JsValue>::new().constructor();
+    #[cfg(not(js_sys_unstable_apis))]
     if Reflect::get_str(array_constructor.as_ref(), &"fromAsync".into())
+        .unwrap()
+        .is_none()
+    {
+        return;
+    }
+    #[cfg(js_sys_unstable_apis)]
+    if Reflect::get(array_constructor.as_ref(), &"fromAsync".into())
         .unwrap()
         .is_none()
     {
