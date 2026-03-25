@@ -44,6 +44,9 @@
   headless test runner. The main branch cannot complete this benchmark at any volume.
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
 
+* Updated to Walrus 0.26
+  [#5057](https://github.com/wasm-bindgen/walrus/pull/5057)
+
 ### Fixed
 
 * Fixed argument order when calling multi-parameter functions in the
