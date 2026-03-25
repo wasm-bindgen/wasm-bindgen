@@ -5,6 +5,22 @@
 
 ### Added
 
+* Added `js_sys::Property`, a new type representing a JavaScript property key —
+  either a [`JsString`] or a [`Symbol`]. `Property` sits in the [`Deref`] chain
+  of both: `Symbol → Property → JsValue` (always), and under
+  `js_sys_unstable_apis` `JsString → Property → JsValue` (on stable,
+  `JsString → Object → JsValue` is preserved with an additional `AsRef<Property>`).
+  The unstable generic property-key methods on `Object` and `Reflect`
+  (`define_property`, `get_own_property_descriptor`, `has_own`, `get`, `has`,
+  `set`) now accept `&Property` uniformly instead of separate `&JsString` /
+  `&Symbol` overloads. `From<&str>`, `From<String>`, and `From<char>` are also
+  implemented for `Property` so that `"key".into()` continues to work at call
+  sites. The `extends = Object` relationship on `JsString` is deprecated under
+  `js_sys_unstable_apis`, reflecting that string primitives are not objects in
+  JavaScript; use [`JsCast`] to access boxed `String` objects as `Object` if
+  needed.
+  [#NNNN](https://github.com/wasm-bindgen/wasm-bindgen/pull/NNNN)
+
 * `js_sys::Promise<T>` now implements `IntoFuture`, enabling direct `.await` on
   any JS promise without a wrapper type. The `wasm-bindgen-futures` implementation
   has been moved into `js-sys` behind an optional `futures` feature, which is

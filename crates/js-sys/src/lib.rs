@@ -6678,12 +6678,15 @@ extern "C" {
     /// property directly on an object, or modifies an existing
     /// property on an object, and returns the object.
     ///
+    /// The `prop` argument accepts any [`Property`] key — either a
+    /// [`JsString`] or a [`Symbol`].
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
     pub fn define_property<T>(
         obj: &Object<T>,
-        prop: &JsString,
+        prop: &Property,
         descriptor: &PropertyDescriptor<T>,
     ) -> Result<Object<T>, JsValue>;
 
@@ -6828,12 +6831,15 @@ extern "C" {
     /// present on an object and not in the object's prototype chain)
     /// of a given object.
     ///
+    /// The `prop` argument accepts any [`Property`] key — either a
+    /// [`JsString`] or a [`Symbol`].
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
     pub fn get_own_property_descriptor<T>(
         obj: &Object<T>,
-        prop: &JsString,
+        prop: &Property,
     ) -> Result<PropertyDescriptor<T>, JsValue>;
 
     // Next major: deprecate
@@ -6944,10 +6950,13 @@ extern "C" {
     /// object passed in has the specified property as its own property (as
     /// opposed to inheriting it).
     ///
+    /// The `property` argument accepts any [`Property`] key — either a
+    /// [`JsString`] or a [`Symbol`].
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
-    pub fn has_own<T>(instance: &Object<T>, property: &JsString) -> Result<bool, JsValue>;
+    pub fn has_own<T>(instance: &Object<T>, property: &Property) -> Result<bool, JsValue>;
 
     // Next major: deprecate
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
@@ -7296,12 +7305,15 @@ pub mod Reflect {
         /// The static `Reflect.defineProperty()` method is like
         /// `Object.defineProperty()` but returns a `Boolean`.
         ///
+        /// The `property_key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
         pub fn define_property<T>(
             target: &Object<T>,
-            property_key: &JsValue,
+            property_key: &Property,
             attributes: &PropertyDescriptor<T>,
         ) -> Result<bool, JsValue>;
 
@@ -7341,10 +7353,13 @@ pub mod Reflect {
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
         ///
+        /// The `key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn get<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
+        pub fn get<T>(target: &Object<T>, key: &Property) -> Result<Option<T>, JsValue>;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
@@ -7423,10 +7438,13 @@ pub mod Reflect {
         /// The static `Reflect.has()` method works like the in operator as a
         /// function.
         ///
+        /// The `property_key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn has(target: &JsValue, property_key: &Symbol) -> Result<bool, JsValue>;
+        pub fn has(target: &JsValue, property_key: &Property) -> Result<bool, JsValue>;
 
         // Next major: deprecate
         /// The static `Reflect.has()` method works like the in operator as a
@@ -7482,12 +7500,15 @@ pub mod Reflect {
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
         ///
+        /// The `property_key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(js_namespace = Reflect, catch)]
         pub fn set<T>(
             target: &Object<T>,
-            property_key: &JsString,
+            property_key: &Property,
             value: &T,
         ) -> Result<bool, JsValue>;
 
@@ -8811,13 +8832,53 @@ pub mod JSON {
         ) -> Result<JsString, JsValue>;
     }
 }
-// JsString
+// Property
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_name = String, extends = Object, is_type_of = JsValue::is_string, typescript_type = "string")]
+    /// A JavaScript property key — either a string ([`JsString`]) or a symbol
+    /// ([`Symbol`]).
+    ///
+    /// In JavaScript, object property keys can be either strings or symbols.
+    /// This type represents that union and sits in the [`Deref`] chain of both
+    /// [`JsString`] (`JsString → Property → JsValue` under `js_sys_unstable_apis`,
+    /// or `JsString → Object → JsValue` with `AsRef<Property>` on stable)
+    /// and [`Symbol`] (`Symbol → Property → JsValue`).
+    ///
+    /// [`Deref`]: core::ops::Deref
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#shared_symbols_in_the_global_symbol_registry)
+    #[wasm_bindgen(typescript_type = "string | symbol")]
+    #[derive(Clone, Debug, PartialEq)]
+    pub type Property;
+}
+
+impl Eq for Property {}
+
+// JsString — stable: extends Object (for boxed String compatibility), deprecated under unstable
+#[cfg(not(js_sys_unstable_apis))]
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = String, extends = Object, extends = Property, is_type_of = JsValue::is_string, typescript_type = "string")]
     #[derive(Clone, PartialEq, Eq)]
     pub type JsString;
+}
 
+// JsString — unstable: extends Property directly; extends = Object is deprecated
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen]
+extern "C" {
+    /// Under `js_sys_unstable_apis`, `JsString` extends [`Property`] directly
+    /// rather than [`Object`], reflecting the fact that string primitives are
+    /// not objects in JavaScript. The `extends = Object` relationship is
+    /// deprecated and will be removed in a future major version. Use
+    /// [`JsCast`] to access boxed `String` objects as `Object` if needed.
+    #[wasm_bindgen(js_name = String, extends = Property, is_type_of = JsValue::is_string, typescript_type = "string")]
+    #[derive(Clone, PartialEq, Eq)]
+    pub type JsString;
+}
+
+#[wasm_bindgen]
+extern "C" {
     /// The length property of a String object indicates the length of a string,
     /// in UTF-16 code units.
     ///
@@ -9641,10 +9702,31 @@ impl str::FromStr for JsString {
     }
 }
 
+impl<'a> From<&'a str> for Property {
+    #[inline]
+    fn from(s: &'a str) -> Self {
+        Property::from(JsString::from(s))
+    }
+}
+
+impl From<String> for Property {
+    #[inline]
+    fn from(s: String) -> Self {
+        Property::from(JsString::from(s))
+    }
+}
+
+impl From<char> for Property {
+    #[inline]
+    fn from(c: char) -> Self {
+        Property::from(JsString::from(c))
+    }
+}
+
 // Symbol
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(is_type_of = JsValue::is_symbol, typescript_type = "Symbol")]
+    #[wasm_bindgen(extends = Property, is_type_of = JsValue::is_symbol, typescript_type = "Symbol")]
     #[derive(Clone, Debug)]
     pub type Symbol;
 
