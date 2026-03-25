@@ -185,11 +185,19 @@ fn is_extensible() {
 
 #[wasm_bindgen_test]
 fn own_keys() {
-    let obj = JsValue::from(Rectangle::new());
+    let obj = Rectangle::new();
+    #[cfg(not(js_sys_unstable_apis))]
+    let keys = Reflect::own_keys(&JsValue::from(obj.clone())).unwrap();
+    #[cfg(js_sys_unstable_apis)]
     let keys = Reflect::own_keys(&obj).unwrap();
     assert!(keys.length() == 2);
+    #[cfg(not(js_sys_unstable_apis))]
     keys.for_each(&mut |k, _, _| {
         assert!(k == "x" || k == "y");
+    });
+    #[cfg(js_sys_unstable_apis)]
+    keys.for_each(&mut |k, _, _| {
+        assert!(k == Property::from("x") || k == Property::from("y"));
     });
 }
 

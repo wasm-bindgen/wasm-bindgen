@@ -5259,10 +5259,21 @@ impl IterState {
 pub fn try_iter(val: &JsValue) -> Result<Option<IntoIter<JsValue>>, JsValue> {
     let iter_sym = Symbol::iterator();
 
-    let iter_fn = Reflect::get_symbol::<Object>(val.unchecked_ref(), iter_sym.as_ref())?;
-    let iter_fn: Function = match iter_fn.dyn_into() {
-        Ok(iter_fn) => iter_fn,
-        Err(_) => return Ok(None),
+    #[cfg(not(js_sys_unstable_apis))]
+    let iter_fn = {
+        let v = Reflect::get_symbol::<Object>(val.unchecked_ref(), iter_sym.as_ref())?;
+        match v.dyn_into::<Function>() {
+            Ok(f) => f,
+            Err(_) => return Ok(None),
+        }
+    };
+    #[cfg(js_sys_unstable_apis)]
+    let iter_fn = {
+        let v = Reflect::get::<Object>(val.unchecked_ref(), iter_sym.as_ref())?;
+        match v {
+            Some(o) if o.is_function() => o.unchecked_into::<Function>(),
+            _ => return Ok(None),
+        }
     };
 
     let it: Iterator = match iter_fn.call0(val)?.dyn_into() {
@@ -7473,8 +7484,17 @@ pub mod Reflect {
         /// target object's own property keys.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/ownKeys)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = ownKeys, catch)]
         pub fn own_keys(target: &JsValue) -> Result<Array, JsValue>;
+
+        /// The static `Reflect.ownKeys()` method returns an array of the
+        /// target object's own property keys — both string and symbol keys.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/ownKeys)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = ownKeys, catch)]
+        pub fn own_keys<T>(target: &Object<T>) -> Result<Array<Property>, JsValue>;
 
         /// The static `Reflect.preventExtensions()` method prevents new
         /// properties from ever being added to an object (i.e. prevents
@@ -7512,17 +7532,7 @@ pub mod Reflect {
             value: &T,
         ) -> Result<bool, JsValue>;
 
-        /// The static `Reflect.set()` method works like setting a
-        /// property on an object.
-        ///
-        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
-        #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn set_symbol<T>(
-            target: &Object<T>,
-            property_key: &Symbol,
-            value: &JsValue,
-        ) -> Result<bool, JsValue>;
+
 
         // Next major: deprecate
         /// The static `Reflect.set()` method works like setting a
