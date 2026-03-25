@@ -19,7 +19,7 @@
   `js_sys_unstable_apis`, reflecting that string primitives are not objects in
   JavaScript; use [`JsCast`] to access boxed `String` objects as `Object` if
   needed.
-  [#NNNN](https://github.com/wasm-bindgen/wasm-bindgen/pull/NNNN)
+  [#5054](https://github.com/wasm-bindgen/wasm-bindgen/pull/5054)
 
 * `js_sys::Promise<T>` now implements `IntoFuture`, enabling direct `.await` on
   any JS promise without a wrapper type. The `wasm-bindgen-futures` implementation
