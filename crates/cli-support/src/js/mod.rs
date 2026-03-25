@@ -2976,13 +2976,6 @@ if (require('worker_threads').isMainThread) {{
             (None, None)
         };
 
-        // When non-externref transfer is needed, expose heap object helpers
-        // to bridge the JS value across the heap reset.
-        if !needs_externref_bridge && (pre_has_transfer || post_has_transfer) {
-            self.expose_get_object();
-            self.expose_add_heap_object();
-        }
-
         let mut reset_statements = Vec::new();
 
         // --- Pre-reinit hook runs FIRST, before any state is torn down ---
@@ -3021,13 +3014,8 @@ if (require('worker_threads').isMainThread) {{
                         }}"
                     ));
                 } else {
-                    // The hook returns an i32 heap index into the JS-side heap.
-                    // Extract the actual JS value before the heap is reset.
                     reset_statements.push(format!(
-                        "if (!__wbg_skip_pre_reinit) {{ \
-                            const __wbg_idx = wasm.{name}(); \
-                            __wbg_transfer = getObject(__wbg_idx); \
-                        }}"
+                        "if (!__wbg_skip_pre_reinit) {{ __wbg_transfer = wasm.{name}(); }}"
                     ));
                 }
             } else {
@@ -3132,9 +3120,6 @@ if (require('worker_threads').isMainThread) {{
                         }}"
                     ));
                 } else {
-                    // The hook expects an i32 heap index. Insert the JS value
-                    // into the new heap to get a fresh index.
-                    //
                     // When __wbg_transfer is undefined (pre-hook was skipped due
                     // to termination), pass 0 which resolves to `undefined`
                     // because `heap[0]` is always `undefined` in the JS-side
@@ -3142,8 +3127,7 @@ if (require('worker_threads').isMainThread) {{
                     // path; index 0 only works for the non-externref heap.)
                     reset_statements.push(format!(
                         "if (typeof __wbg_transfer !== 'undefined') {{ \
-                            const __wbg_idx = addHeapObject(__wbg_transfer); \
-                            wasm.{name}(__wbg_idx); \
+                            wasm.{name}(__wbg_transfer); \
                         }} else {{ \
                             wasm.{name}(0); \
                         }}"
