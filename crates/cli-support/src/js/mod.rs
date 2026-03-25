@@ -2299,22 +2299,21 @@ if (require('worker_threads').isMainThread) {{
         if is_emscripten {
             self.emscripten_global_deps
                 .insert("cachedTextEncoder".to_string());
+            self.adapter_deps.insert("cachedTextEncoder".to_string());
+            return;
         }
         self.intrinsic("text_encoder".into(), "textEncoder".into(), {
-            if is_emscripten {
-                "".into()
-            } else {
-                let mut dst = Self::write_text_processor(
-                    self.module,
-                    memory,
-                    "const",
-                    "TextEncoder",
-                    "()",
-                    None,
-                    self.config.mode.clone(),
-                );
+            let mut dst = Self::write_text_processor(
+                self.module,
+                memory,
+                "const",
+                "TextEncoder",
+                "()",
+                None,
+                self.config.mode.clone(),
+            );
 
-                let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
+            let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
                 const buf = cachedTextEncoder.encode(arg);
                 view.set(buf);
                 return {
@@ -2323,40 +2322,39 @@ if (require('worker_threads').isMainThread) {{
                 };
             };";
 
-                // `encodeInto` doesn't currently work in any browsers when the memory passed
-                // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
-                // a `SharedArrayBuffer` is in use.
-                let shared = self.module.memories.get(memory).shared;
+            // `encodeInto` doesn't currently work in any browsers when the memory passed
+            // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
+            // a `SharedArrayBuffer` is in use.
+            let shared = self.module.memories.get(memory).shared;
 
-                match self.config.encode_into {
-                    EncodeInto::Always if !shared => {}
-                    EncodeInto::Test if !shared => {
-                        dst.push_str(&format!(
-                            "
+            match self.config.encode_into {
+                EncodeInto::Always if !shared => {}
+                EncodeInto::Test if !shared => {
+                    dst.push_str(&format!(
+                        "
                         if (!('encodeInto' in cachedTextEncoder)) {{
                             {polyfill_encode_into}
                         }}
                         "
-                        ));
-                    }
-                    _ => {
-                        // Support audio worklets when able to spawn them.
-                        if shared {
-                            dst.push_str(&format!(
-                                "
+                    ));
+                }
+                _ => {
+                    // Support audio worklets when able to spawn them.
+                    if shared {
+                        dst.push_str(&format!(
+                            "
                             if (cachedTextEncoder) {{
                                 {polyfill_encode_into}
                             }}
                             "
-                            ));
-                        } else {
-                            dst.push_str(polyfill_encode_into);
-                        }
+                        ));
+                    } else {
+                        dst.push_str(polyfill_encode_into);
                     }
                 }
-
-                dst.into()
             }
+
+            dst.into()
         });
     }
 
