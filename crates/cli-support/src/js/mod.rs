@@ -279,9 +279,15 @@ impl<'a> Context<'a> {
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             let actual_js_name: &str = js_name.unwrap_or(&name);
-            self.adapter_deps.insert(actual_js_name.to_string());
 
-            self.export_to_emscripten(actual_js_name, &val);
+            // Only add as a dependency and export if there's actual content.
+            // Empty content means the intrinsic is handled elsewhere (e.g. via
+            // emscripten_global_deps), so registering a dep here would create a
+            // reference to a non-existent library variable.
+            if !val.trim().is_empty() {
+                self.adapter_deps.insert(actual_js_name.to_string());
+                self.export_to_emscripten(actual_js_name, &val);
+            }
 
             // Register empty string so standard generation skips this key
             self.intrinsics.as_mut().unwrap().insert(name, "".into());
@@ -2300,20 +2306,22 @@ if (require('worker_threads').isMainThread) {{
             self.emscripten_global_deps
                 .insert("cachedTextEncoder".to_string());
             self.adapter_deps.insert("cachedTextEncoder".to_string());
-            return;
         }
         self.intrinsic("text_encoder".into(), "textEncoder".into(), {
-            let mut dst = Self::write_text_processor(
-                self.module,
-                memory,
-                "const",
-                "TextEncoder",
-                "()",
-                None,
-                self.config.mode.clone(),
-            );
+            if is_emscripten {
+                "".into()
+            } else {
+                let mut dst = Self::write_text_processor(
+                    self.module,
+                    memory,
+                    "const",
+                    "TextEncoder",
+                    "()",
+                    None,
+                    self.config.mode.clone(),
+                );
 
-            let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
+                let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
                 const buf = cachedTextEncoder.encode(arg);
                 view.set(buf);
                 return {
@@ -2322,39 +2330,40 @@ if (require('worker_threads').isMainThread) {{
                 };
             };";
 
-            // `encodeInto` doesn't currently work in any browsers when the memory passed
-            // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
-            // a `SharedArrayBuffer` is in use.
-            let shared = self.module.memories.get(memory).shared;
+                // `encodeInto` doesn't currently work in any browsers when the memory passed
+                // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
+                // a `SharedArrayBuffer` is in use.
+                let shared = self.module.memories.get(memory).shared;
 
-            match self.config.encode_into {
-                EncodeInto::Always if !shared => {}
-                EncodeInto::Test if !shared => {
-                    dst.push_str(&format!(
-                        "
+                match self.config.encode_into {
+                    EncodeInto::Always if !shared => {}
+                    EncodeInto::Test if !shared => {
+                        dst.push_str(&format!(
+                            "
                         if (!('encodeInto' in cachedTextEncoder)) {{
                             {polyfill_encode_into}
                         }}
                         "
-                    ));
-                }
-                _ => {
-                    // Support audio worklets when able to spawn them.
-                    if shared {
-                        dst.push_str(&format!(
-                            "
+                        ));
+                    }
+                    _ => {
+                        // Support audio worklets when able to spawn them.
+                        if shared {
+                            dst.push_str(&format!(
+                                "
                             if (cachedTextEncoder) {{
                                 {polyfill_encode_into}
                             }}
                             "
-                        ));
-                    } else {
-                        dst.push_str(polyfill_encode_into);
+                            ));
+                        } else {
+                            dst.push_str(polyfill_encode_into);
+                        }
                     }
                 }
-            }
 
-            dst.into()
+                dst.into()
+            }
         });
     }
 
