@@ -376,7 +376,7 @@ impl Bindgen {
         if self.demangle {
             demangle(&mut module);
         }
-        if !self.keep_lld_exports {
+        if !self.keep_lld_exports && !self.mode.emscripten() {
             unexported_unused_lld_things(&mut module);
         }
         // Quick fix for https://github.com/wasm-bindgen/wasm-bindgen/pull/4931
