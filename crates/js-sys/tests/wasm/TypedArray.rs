@@ -173,7 +173,7 @@ fn float16array_basic_methods() {
     assert_eq!(arr.byte_offset(), 0);
     assert!(JsValue::from(arr.buffer()).is_object());
 
-    arr.fill_from_f32(1.0, 0, 2);
+    arr.fill_with_f32(1.0, 0, 2);
     assert_eq!(arr.get_index_as_f32(0), 1.0);
     assert_eq!(arr.get_index_as_f32(1), 1.0);
     assert_eq!(arr.get_index_as_f32(2), 0.0);
