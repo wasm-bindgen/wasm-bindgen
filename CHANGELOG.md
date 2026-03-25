@@ -78,7 +78,17 @@
   
 * Fixed a duplciate wasm export in node ESM atomics, when compiled in debug mode
   [#5028](https://github.com/wasm-bindgen/wasm-bindgen/pull/5028)
-  
+
+* Fixed a type inference regression (`E0283: type annotations needed`) introduced
+  in v0.2.109 where the stable `FromIterator` and `Extend` impls on `js_sys::Array`
+  were changed from `A: AsRef<JsValue>` to `A: AsRef<T>`. Because `#[wasm_bindgen]`
+  generates multiple `AsRef` impls per type, the compiler could not uniquely resolve
+  `T`, breaking code like `Array::from_iter([my_wasm_value])` without explicit
+  annotations. The stable impls are restored to `A: AsRef<JsValue>` (returning
+  `Array<JsValue>`); the generic `A: AsRef<T>` forms remain available under
+  `js_sys_unstable_apis`.
+  [#5052](https://github.com/wasm-bindgen/wasm-bindgen/pull/5052)
+
 ### Removed
 
 ## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
