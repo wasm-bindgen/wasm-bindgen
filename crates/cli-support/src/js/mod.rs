@@ -2171,8 +2171,8 @@ if (require('worker_threads').isMainThread) {{
             format!(
                 "{func_decl}
                 addToLibrary({{
-                    '{ret}': {ret},
-                    '{ret}__deps': ['$cachedTextEncoder', '$WASM_VECTOR_LEN']
+                    '${ret}': {ret},
+                    '${ret}__deps': ['$cachedTextEncoder', '$WASM_VECTOR_LEN']
                 }});\n"
             ).into()
         } else {
