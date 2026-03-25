@@ -6707,6 +6707,7 @@ extern "C" {
     /// property on an object, and returns the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+    // Next major: deprecate — use `define_property` with `&Property` instead
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
     pub fn define_property_str<T>(
@@ -6720,6 +6721,7 @@ extern "C" {
     /// property on an object, and returns the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+    // Next major: deprecate — use `define_property` with `&Property` instead
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
     pub fn define_property_symbol<T>(
@@ -6855,7 +6857,7 @@ extern "C" {
         prop: &Property,
     ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
-    // Next major: deprecate
+    // Next major: deprecate — use `get_own_property_descriptor` with `&Property` instead
     /// The `Object.getOwnPropertyDescriptor()` method returns a
     /// property descriptor for an own property (that is, one directly
     /// present on an object and not in the object's prototype chain)
@@ -6875,6 +6877,7 @@ extern "C" {
     /// of a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
+    // Next major: deprecate — use `get_own_property_descriptor` with `&Property` instead
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
     pub fn get_own_property_descriptor_symbol<T>(
@@ -6973,7 +6976,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
     pub fn has_own<T>(instance: &Object<T>, property: &Property) -> Result<bool, JsValue>;
 
-    // Next major: deprecate
+    // Next major: deprecate — use `has_own` with `&Property` instead
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
     /// object passed in has the specified property as its own property (as
     /// opposed to inheriting it).
@@ -6988,6 +6991,7 @@ extern "C" {
     /// opposed to inheriting it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
+    // Next major: deprecate — use `has_own` with `&Property` instead
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
     pub fn has_own_symbol<T>(instance: &Object<T>, property: &Symbol) -> Result<bool, JsValue>;
@@ -7350,6 +7354,7 @@ pub mod Reflect {
         /// `Object.defineProperty()` but returns a `Boolean`.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
+        // Next major: deprecate — use `define_property` with `&Property` instead
         #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
         pub fn define_property_str<T>(
@@ -7381,6 +7386,7 @@ pub mod Reflect {
         /// properties.  It is like the `delete` operator as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        // Next major: deprecate — use `delete_property` with `&Property` instead
         #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
         pub fn delete_property_str<T>(target: &Object<T>, key: &JsString) -> Result<bool, JsValue>;
@@ -7408,6 +7414,7 @@ pub mod Reflect {
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        // Next major: deprecate — use `get` with `&Property` instead
         #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_str<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
@@ -7416,6 +7423,7 @@ pub mod Reflect {
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        // Next major: deprecate — use `get` with `&Property` instead
         #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_symbol<T>(target: &Object<T>, key: &Symbol) -> Result<JsValue, JsValue>;
@@ -7462,6 +7470,7 @@ pub mod Reflect {
         /// of the given property if it exists on the object, `undefined` otherwise.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        // Next major: deprecate — use `get_own_property_descriptor` with `&Property` instead
         #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
         pub fn get_own_property_descriptor_str<T>(
@@ -7508,7 +7517,7 @@ pub mod Reflect {
         #[wasm_bindgen(js_namespace = Reflect, catch)]
         pub fn has(target: &JsValue, property_key: &Property) -> Result<bool, JsValue>;
 
-        // Next major: deprecate
+        // Next major: deprecate — use `has` with `&Property` instead
         /// The static `Reflect.has()` method works like the in operator as a
         /// function.
         ///
@@ -7521,6 +7530,7 @@ pub mod Reflect {
         /// function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
+        // Next major: deprecate — use `has` with `&Property` instead
         #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
         pub fn has_symbol<T>(target: &Object<T>, property_key: &Symbol) -> Result<bool, JsValue>;
@@ -7585,7 +7595,7 @@ pub mod Reflect {
             value: &T,
         ) -> Result<bool, JsValue>;
 
-        // Next major: deprecate
+        // Next major: deprecate — use `set` with `&Property` instead
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
         ///
