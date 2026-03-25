@@ -64,6 +64,12 @@
 * Fixed `JsOption::new()` to use `undefined` instead of `null`, to be compatible with `Option::None` and JS default parameters.
   [#5023](https://github.com/wasm-bindgen/wasm-bindgen/pull/5023)
 
+* Fixed unsound `unsafe` transmutes in `JsOption<T>::wrap`, `as_option`, and `into_option`
+  by replacing `transmute_copy` with `unchecked_into()`. Also tightened the `JsGeneric`
+  trait bound and `JsOption<T>` impl block to require `T: JsGeneric` (which implies `JsCast`),
+  preventing use with arbitrary non-JS types.
+  [#5030](https://github.com/wasm-bindgen/wasm-bindgen/pull/5030)
+
 * Fixed headless test runner emitting `\r` carriage-return sequences in non-TTY environments,
   which polluted captured logs in CI and complicated output-matching tests.
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
