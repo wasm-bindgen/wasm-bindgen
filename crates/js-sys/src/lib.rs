@@ -6851,7 +6851,7 @@ extern "C" {
     pub fn get_own_property_descriptor<T>(
         obj: &Object<T>,
         prop: &Property,
-    ) -> Result<PropertyDescriptor<T>, JsValue>;
+    ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
     // Next major: deprecate
     /// The `Object.getOwnPropertyDescriptor()` method returns a
@@ -7061,8 +7061,20 @@ extern "C" {
     /// whether the specified property is enumerable.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = propertyIsEnumerable)]
     pub fn property_is_enumerable<T>(this: &Object<T>, property: &JsValue) -> bool;
+
+    /// The `propertyIsEnumerable()` method returns a Boolean indicating
+    /// whether the specified property is enumerable.
+    ///
+    /// The `property` argument accepts any [`Property`] key — either a
+    /// [`JsString`] or a [`Symbol`].
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = propertyIsEnumerable)]
+    pub fn property_is_enumerable<T>(this: &Object<T>, property: &Property) -> bool;
 
     /// The `Object.seal()` method seals an object, preventing new properties
     /// from being added to it and marking all existing properties as
@@ -7343,13 +7355,26 @@ pub mod Reflect {
         /// properties.  It is like the `delete` operator as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
         pub fn delete_property<T>(target: &Object<T>, key: &JsValue) -> Result<bool, JsValue>;
 
         /// The static `Reflect.deleteProperty()` method allows to delete
         /// properties.  It is like the `delete` operator as a function.
         ///
+        /// The `key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
+        pub fn delete_property<T>(target: &Object<T>, key: &Property) -> Result<bool, JsValue>;
+
+        /// The static `Reflect.deleteProperty()` method allows to delete
+        /// properties.  It is like the `delete` operator as a function.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
         pub fn delete_property_str<T>(target: &Object<T>, key: &JsString) -> Result<bool, JsValue>;
 
@@ -7401,6 +7426,7 @@ pub mod Reflect {
         /// of the given property if it exists on the object, `undefined` otherwise.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
         pub fn get_own_property_descriptor<T>(
             target: &Object<T>,
@@ -7411,7 +7437,23 @@ pub mod Reflect {
         /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
         /// of the given property if it exists on the object, `undefined` otherwise.
         ///
+        /// The `property_key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
+        pub fn get_own_property_descriptor<T>(
+            target: &Object<T>,
+            property_key: &Property,
+        ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
+
+        /// The static `Reflect.getOwnPropertyDescriptor()` method is similar to
+        /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
+        /// of the given property if it exists on the object, `undefined` otherwise.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
         pub fn get_own_property_descriptor_str<T>(
             target: &Object<T>,
@@ -7532,8 +7574,6 @@ pub mod Reflect {
             value: &T,
         ) -> Result<bool, JsValue>;
 
-
-
         // Next major: deprecate
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
@@ -7568,11 +7608,28 @@ pub mod Reflect {
         /// property on an object.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
         pub fn set_with_receiver(
             target: &JsValue,
             property_key: &JsValue,
             value: &JsValue,
+            receiver: &JsValue,
+        ) -> Result<bool, JsValue>;
+
+        /// The static `Reflect.set()` method works like setting a
+        /// property on an object.
+        ///
+        /// The `property_key` argument accepts any [`Property`] key — either a
+        /// [`JsString`] or a [`Symbol`].
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
+        pub fn set_with_receiver<T>(
+            target: &Object<T>,
+            property_key: &Property,
+            value: &T,
             receiver: &JsValue,
         ) -> Result<bool, JsValue>;
 

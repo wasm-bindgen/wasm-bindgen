@@ -260,10 +260,15 @@ fn get_own_property_descriptor() {
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        let desc = Object::get_own_property_descriptor(&foo, &"foo".into()).unwrap();
+        // Property exists — Some with correct value
+        let desc = Object::get_own_property_descriptor(&foo, &"foo".into())
+            .unwrap()
+            .unwrap();
         assert_eq!(desc.get_value().unwrap(), 42);
-        let desc = Object::get_own_property_descriptor(&foo, &"bar".into()).unwrap();
-        assert!(desc.is_undefined());
+        // Property does not exist — None
+        assert!(Object::get_own_property_descriptor(&foo, &"bar".into())
+            .unwrap()
+            .is_none());
     }
 }
 
@@ -449,7 +454,10 @@ fn values() {
 #[wasm_bindgen_test]
 fn property_is_enumerable() {
     assert!(foo_42().property_is_enumerable(&"foo".into()));
+    #[cfg(not(js_sys_unstable_apis))]
     assert!(!foo_42().property_is_enumerable(&42.into()));
+    #[cfg(js_sys_unstable_apis)]
+    assert!(!foo_42().property_is_enumerable(&"42".into()));
     assert!(!Object::new().property_is_enumerable(&"foo".into()));
 }
 

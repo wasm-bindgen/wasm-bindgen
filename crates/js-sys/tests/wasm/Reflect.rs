@@ -108,7 +108,10 @@ fn delete_property() {
     let array: Array<JsValue> = Array::new();
     array.push(&1.into());
     let obj = Object::from(JsValue::from(array.clone()));
+    #[cfg(not(js_sys_unstable_apis))]
     Reflect::delete_property(&obj, &0.into()).unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    Reflect::delete_property(&obj, &"0".into()).unwrap();
     #[cfg(not(js_sys_unstable_apis))]
     let array = Array::from(&JsValue::from(obj));
     #[cfg(js_sys_unstable_apis)]
@@ -149,10 +152,25 @@ fn get_own_property_descriptor() {
     r.set_x(10);
 
     let obj = Object::from(JsValue::from(r.clone()));
-    let desc = Reflect::get_own_property_descriptor(&obj, &"x".into()).unwrap();
-    assert_eq!(PropertyDescriptor::from(desc).value(), 10);
-    let desc = Reflect::get_own_property_descriptor(&obj, &"foo".into()).unwrap();
-    assert!(desc.is_undefined());
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let desc = Reflect::get_own_property_descriptor(&obj, &"x".into()).unwrap();
+        assert_eq!(PropertyDescriptor::from(desc).value(), 10);
+        let desc = Reflect::get_own_property_descriptor(&obj, &"foo".into()).unwrap();
+        assert!(desc.is_undefined());
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        // Property exists — Some with correct value
+        let desc = Reflect::get_own_property_descriptor(&obj, &"x".into())
+            .unwrap()
+            .unwrap();
+        assert_eq!(desc.get_value(), Some(JsValue::from(10)));
+        // Property does not exist — None
+        assert!(Reflect::get_own_property_descriptor(&obj, &"foo".into())
+            .unwrap()
+            .is_none());
+    }
 }
 
 #[wasm_bindgen_test]
