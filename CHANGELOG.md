@@ -95,6 +95,9 @@
   `js_sys_unstable_apis`.
   [#5052](https://github.com/wasm-bindgen/wasm-bindgen/pull/5052)
 
+* Fixed `skip_typescript` not being respected when using `reexport`, causing
+  TypeScript definitions to be incorrectly emitted for re-exported items marked
+  with `#[wasm_bindgen(skip_typescript)]`.
 ### Removed
 
 ## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
