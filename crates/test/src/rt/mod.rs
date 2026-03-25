@@ -813,10 +813,16 @@ impl<F: Future<Output = Result<(), JsValue>>> Future for TestFuture<F> {
         let test: Pin<&mut F> = unsafe { Pin::map_unchecked_mut(self, |me| &mut me.test) };
         let mut future_output = None;
         let result = CURRENT_OUTPUT.set(&output, || {
-            let mut test = Some(test);
-            __wbg_test_invoke(&mut || {
+            // Wrap captured &mut values in AssertUnwindSafe so the closure satisfies
+            // MaybeUnwindSafe (required when panic=unwind). &mut T is never UnwindSafe
+            // in Rust's type system regardless of T; we assert it is safe here because
+            // __wbg_test_invoke's callback is called in a controlled, non-panicking context.
+            let mut test = core::panic::AssertUnwindSafe(Some(test));
+            let mut future_output = core::panic::AssertUnwindSafe(&mut future_output);
+            let mut cx = core::panic::AssertUnwindSafe(cx);
+            __wbg_test_invoke(&mut move || {
                 let test = test.take().unwrap_throw();
-                future_output = Some(test.poll(cx))
+                **future_output = Some(test.poll(*cx))
             })
         });
         match (result, future_output) {
