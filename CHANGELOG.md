@@ -7,30 +7,38 @@
 
 * Added `js_sys::Property`, a new type representing a JavaScript property key
   (either a [`JsString`] or a [`Symbol`]). `From<&str>`, `From<String>`, and
-  `From<char>` are implemented so `"key".into()` works at call sites.
+  `From<char>` are implemented so `"key".into()` works at call sites. All
+  changes to the stable API are fully backwards compatible.
 
-  `Symbol` now deref-chains through `Property` (`Symbol → Property → JsValue`).
-  Under `js_sys_unstable_apis`, `JsString` does too (`JsString → Property →
-  JsValue`), deprecating the `extends = Object` relationship that was added for
-  boxed `String` object compatibility; on stable the existing chain
-  (`JsString → Object → JsValue`) is preserved with `AsRef<Property>` added.
+  **Deref chains.** `Symbol` now deref-chains through `Property`
+  (`Symbol → Property → JsValue`). Under `js_sys_unstable_apis`, `JsString`
+  does too (`JsString → Property → JsValue`), deprecating the `extends = Object`
+  relationship; on stable the existing chain (`JsString → Object → JsValue`) is
+  preserved with `AsRef<Property>` added.
 
-  All property-key methods on `Object` and `Reflect` are split into a stable
-  variant (original `&JsValue` / `&JsString` signature, unchanged) and a new
-  `#[cfg(js_sys_unstable_apis)]` variant accepting `&Property` uniformly. The
-  `_str` and `_symbol` helper overloads are gated to stable only. Methods
-  updated: `Object::define_property`, `Object::get_own_property_descriptor`,
+  **`_str` and `_symbol` variants.** All `_str` and `_symbol` overloads
+  (`define_property_str`, `get_str`, `set_str`, `has_str`, `has_symbol`, etc.)
+  are gated to `#[cfg(not(js_sys_unstable_apis))]`. Under the unstable flag they
+  are not available — the unified `&Property` API is the only path. On stable
+  they remain fully available and unchanged. `Reflect::set_symbol`
+  (unstable-only) is removed entirely, superseded by `Reflect::set` with
+  `&Property`.
+
+  **Unified property-key methods.** The following methods are split into a
+  stable variant (original `&JsValue` signature, unchanged) and a new
+  `#[cfg(js_sys_unstable_apis)]` variant accepting `&Property` uniformly:
+  `Object::define_property`, `Object::get_own_property_descriptor`,
   `Object::has_own`, `Object::property_is_enumerable`,
   `Reflect::define_property`, `Reflect::delete_property`, `Reflect::get`,
   `Reflect::get_own_property_descriptor`, `Reflect::has`, `Reflect::set`,
   `Reflect::set_with_receiver`. `Reflect::own_keys` returns `Array<Property>`
-  under unstable since it returns both string and symbol keys.
-  `Reflect::set_symbol` (unstable-only) is removed, superseded by `Reflect::set`
-  with `&Property`.
+  under unstable, correctly reflecting that it returns both string and symbol
+  keys.
 
+  **`getOwnPropertyDescriptor` return type.** Both
   `Object::get_own_property_descriptor` and
   `Reflect::get_own_property_descriptor` under unstable return
-  `Result<Option<PropertyDescriptor<T>>, JsValue>`, correctly reflecting that
+  `Result<Option<PropertyDescriptor<T>>, JsValue>`, correctly modelling that
   `getOwnPropertyDescriptor` returns `undefined` (not a thrown error) for
   missing properties.
   [#5054](https://github.com/wasm-bindgen/wasm-bindgen/pull/5054)
