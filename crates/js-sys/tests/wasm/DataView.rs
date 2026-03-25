@@ -64,10 +64,10 @@ fn test() {
     assert_eq!(v.get_float32_endian(0, false), f32::from_bits(0x44332211));
 
     if has_float16_methods() {
-        v.set_float16(0, 1.5);
-        assert_eq!(v.get_float16(0), 1.5);
-        v.set_float16_endian(0, 1.0, true);
-        assert_eq!(v.get_float16_endian(0, true), 1.0);
+        v.set_float16_from_f32(0, 1.5);
+        assert_eq!(v.get_float16_as_f32(0), 1.5);
+        v.set_float16_endian_from_f32(0, 1.0, true);
+        assert_eq!(v.get_float16_endian_as_f32(0, true), 1.0);
         assert_eq!(v.get_uint16_endian(0, true), 0x3c00);
     }
 

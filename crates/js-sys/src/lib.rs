@@ -3351,18 +3351,28 @@ extern "C" {
     pub fn get_float32_endian(this: &DataView, byte_offset: usize, little_endian: bool) -> f32;
 
     /// The `getFloat16()` method gets a signed 16-bit float at the specified
-    /// byte offset from the start of the DataView.
+    /// byte offset from the start of the DataView as an `f32`.
+    ///
+    /// The unsuffixed `get_float16` name is reserved for a future native
+    /// `f16` binding once Rust stabilizes the type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat16)
     #[wasm_bindgen(method, js_name = getFloat16)]
-    pub fn get_float16(this: &DataView, byte_offset: usize) -> f64;
+    pub fn get_float16_as_f32(this: &DataView, byte_offset: usize) -> f32;
 
     /// The `getFloat16()` method gets a signed 16-bit float at the specified
-    /// byte offset from the start of the DataView.
+    /// byte offset from the start of the DataView as an `f32`.
+    ///
+    /// The unsuffixed `get_float16_endian` name is reserved for a future
+    /// native `f16` binding once Rust stabilizes the type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat16)
     #[wasm_bindgen(method, js_name = getFloat16)]
-    pub fn get_float16_endian(this: &DataView, byte_offset: usize, little_endian: bool) -> f64;
+    pub fn get_float16_endian_as_f32(
+        this: &DataView,
+        byte_offset: usize,
+        little_endian: bool,
+    ) -> f32;
 
     /// The `getFloat64()` method gets a signed 64-bit float (double) at the specified
     /// byte offset from the start of the DataView.
@@ -3462,19 +3472,30 @@ extern "C" {
     #[wasm_bindgen(method, js_name = setFloat32)]
     pub fn set_float32_endian(this: &DataView, byte_offset: usize, value: f32, little_endian: bool);
 
-    /// The `setFloat16()` method stores a signed 16-bit float value at the
-    /// specified byte offset from the start of the DataView.
+    /// The `setFloat16()` method stores a signed 16-bit float value from an
+    /// `f32` at the specified byte offset from the start of the DataView.
+    ///
+    /// The unsuffixed `set_float16` name is reserved for a future native
+    /// `f16` binding once Rust stabilizes the type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat16)
     #[wasm_bindgen(method, js_name = setFloat16)]
-    pub fn set_float16(this: &DataView, byte_offset: usize, value: f64);
+    pub fn set_float16_from_f32(this: &DataView, byte_offset: usize, value: f32);
 
-    /// The `setFloat16()` method stores a signed 16-bit float value at the
-    /// specified byte offset from the start of the DataView.
+    /// The `setFloat16()` method stores a signed 16-bit float value from an
+    /// `f32` at the specified byte offset from the start of the DataView.
+    ///
+    /// The unsuffixed `set_float16_endian` name is reserved for a future
+    /// native `f16` binding once Rust stabilizes the type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat16)
     #[wasm_bindgen(method, js_name = setFloat16)]
-    pub fn set_float16_endian(this: &DataView, byte_offset: usize, value: f64, little_endian: bool);
+    pub fn set_float16_endian_from_f32(
+        this: &DataView,
+        byte_offset: usize,
+        value: f32,
+        little_endian: bool,
+    );
 
     /// The `setFloat64()` method stores a signed 64-bit float (double) value at the
     /// specified byte offset from the start of the DataView.
@@ -13154,7 +13175,8 @@ pub fn global() -> Object {
 // Float16Array
 //
 // Rust does not yet have a stable builtin `f16`, so the raw JS bindings live
-// here and any Rust-side helper APIs use explicit `u16` / `f64` naming.
+// here and any Rust-side helper APIs use explicit `u16` / `f32` naming. The
+// unsuffixed float APIs are reserved for a future native `f16` binding.
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(extends = Object, typescript_type = "Float16Array")]
@@ -13193,11 +13215,11 @@ extern "C" {
     ) -> Float16Array;
 
     /// The `fill()` method fills all elements from a start index to an end
-    /// index with a static value.
+    /// index with a static `f32` value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill)
     #[wasm_bindgen(method)]
-    pub fn fill(this: &Float16Array, value: f64, start: u32, end: u32) -> Float16Array;
+    pub fn fill_from_f32(this: &Float16Array, value: f32, start: u32, end: u32) -> Float16Array;
 
     /// The buffer accessor property represents the `ArrayBuffer` referenced
     /// by a `TypedArray` at construction time.
@@ -13214,15 +13236,17 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn slice(this: &Float16Array, begin: u32, end: u32) -> Float16Array;
 
-    /// The `forEach()` method executes a provided function once per array element.
+    /// The `forEach()` method executes a provided function once per array
+    /// element, passing values as `f32`.
     #[wasm_bindgen(method, js_name = forEach)]
-    pub fn for_each(this: &Float16Array, callback: &mut dyn FnMut(f64, u32, Float16Array));
+    pub fn for_each_as_f32(this: &Float16Array, callback: &mut dyn FnMut(f32, u32, Float16Array));
 
-    /// The `forEach()` method executes a provided function once per array element.
+    /// The `forEach()` method executes a provided function once per array
+    /// element, passing values as `f32`.
     #[wasm_bindgen(method, js_name = forEach, catch)]
-    pub fn try_for_each(
+    pub fn try_for_each_as_f32(
         this: &Float16Array,
-        callback: &mut dyn FnMut(f64, u32, Float16Array) -> Result<(), JsError>,
+        callback: &mut dyn FnMut(f32, u32, Float16Array) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
 
     /// The length accessor property represents the length (in elements) of a
@@ -13245,9 +13269,9 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn set(this: &Float16Array, src: &JsValue, offset: u32);
 
-    /// Gets the value at `idx`, counting from the end if negative.
+    /// Gets the value at `idx` as an `f32`, counting from the end if negative.
     #[wasm_bindgen(method, js_name = at)]
-    pub fn at_as_f64(this: &Float16Array, idx: i32) -> Option<f64>;
+    pub fn at_as_f32(this: &Float16Array, idx: i32) -> Option<f32>;
 
     /// The `copyWithin()` method shallow copies part of a typed array to another
     /// location in the same typed array and returns it, without modifying its size.
@@ -13256,13 +13280,15 @@ extern "C" {
     #[wasm_bindgen(method, js_name = copyWithin)]
     pub fn copy_within(this: &Float16Array, target: i32, start: i32, end: i32) -> Float16Array;
 
-    /// Gets the value at `idx`, equivalent to JavaScript `arr[idx]`.
+    /// Gets the value at `idx` as an `f32`, equivalent to JavaScript
+    /// `arr[idx]`.
     #[wasm_bindgen(method, indexing_getter)]
-    pub fn get_index_as_f64(this: &Float16Array, idx: u32) -> f64;
+    pub fn get_index_as_f32(this: &Float16Array, idx: u32) -> f32;
 
-    /// Sets the value at `idx`, equivalent to JavaScript `arr[idx] = value`.
+    /// Sets the value at `idx` from an `f32`, equivalent to JavaScript
+    /// `arr[idx] = value`.
     #[wasm_bindgen(method, indexing_setter)]
-    pub fn set_index_from_f64(this: &Float16Array, idx: u32, value: f64);
+    pub fn set_index_from_f32(this: &Float16Array, idx: u32, value: f32);
 }
 
 impl Default for Float16Array {

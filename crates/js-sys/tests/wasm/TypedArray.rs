@@ -173,22 +173,22 @@ fn float16array_basic_methods() {
     assert_eq!(arr.byte_offset(), 0);
     assert!(JsValue::from(arr.buffer()).is_object());
 
-    arr.fill(1.0, 0, 2);
-    assert_eq!(arr.get_index_as_f64(0), 1.0);
-    assert_eq!(arr.get_index_as_f64(1), 1.0);
-    assert_eq!(arr.get_index_as_f64(2), 0.0);
+    arr.fill_from_f32(1.0, 0, 2);
+    assert_eq!(arr.get_index_as_f32(0), 1.0);
+    assert_eq!(arr.get_index_as_f32(1), 1.0);
+    assert_eq!(arr.get_index_as_f32(2), 0.0);
 
-    arr.set_index_from_f64(2, -2.0);
-    assert_eq!(arr.at_as_f64(-2).unwrap(), -2.0);
+    arr.set_index_from_f32(2, -2.0);
+    assert_eq!(arr.at_as_f32(-2).unwrap(), -2.0);
 
     arr.copy_within(3, 0, 1);
-    assert_eq!(arr.get_index_as_f64(3), 1.0);
+    assert_eq!(arr.get_index_as_f32(3), 1.0);
 
     assert_eq!(arr.subarray(1, 3).length(), 2);
     assert_eq!(arr.slice(1, 3).length(), 2);
 
     let mut seen = Vec::new();
-    arr.for_each(&mut |value, _, _| seen.push(value));
+    arr.for_each_as_f32(&mut |value, _, _| seen.push(value));
     assert_eq!(seen, vec![1.0, 1.0, -2.0, 1.0]);
 }
 
@@ -200,8 +200,8 @@ fn float16array_u16_helpers() {
 
     let initial = [0x3c00, 0xc000, 0x3555];
     let arr = Float16Array::new_from_u16_slice(&initial);
-    assert_eq!(arr.get_index_as_f64(0), 1.0);
-    assert_eq!(arr.get_index_as_f64(1), -2.0);
+    assert_eq!(arr.get_index_as_f32(0), 1.0);
+    assert_eq!(arr.get_index_as_f32(1), -2.0);
 
     let mut copied = [0; 3];
     arr.copy_to_u16_slice(&mut copied);
