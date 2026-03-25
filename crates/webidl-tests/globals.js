@@ -542,6 +542,8 @@ global.GetUnstableInterface = class {
   }
 }
 
+ global.TestBlob = class TestBlob {};
+
 global.TestPromises = class {
   stringPromise() {
     return new Promise(r => r("abc"));
@@ -564,6 +566,10 @@ global.TestPromises = class {
   }
   set promiseValue(v) {
     this._promiseValue = v;
+  }
+  acceptClipboardItem(data) {
+    // data is either a Promise<DOMString|TestBlob> or a direct DOMString/TestBlob
+    return Promise.resolve(data);
   }
 };
 

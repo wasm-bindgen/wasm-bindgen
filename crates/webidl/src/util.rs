@@ -620,17 +620,28 @@ impl<'src> FirstPassRecord<'src> {
                 // CanonicalValue args are the "primary" overload form and
                 // don't contribute to the method name suffix unless a
                 // shorter signature exists (e.g. from optional params
-                // producing a no-arg variant) that would collide.
-                // When they do need disambiguation, always use the arg name
-                // since their type name is intentionally empty.
+                // producing a no-arg variant) that would collide, OR
+                // another sibling is also a CanonicalValue at the same
+                // position (e.g. Promise<DOMString> and Promise<Blob> both
+                // expand to CanonicalValue branches that would otherwise
+                // produce the same unsuffixed name).
                 if is_canonical {
-                    // Only need suffix if there's a shorter signature that
-                    // would produce the same unsuffixed name.
+                    let inner = match arg {
+                        WbgType::CanonicalValue(inner) => inner.as_ref(),
+                        _ => unreachable!(),
+                    };
+                    // Need a suffix if there's a shorter signature (no-arg
+                    // variant) OR another sibling CanonicalValue at position i.
                     let any_shorter = disambiguate_against.iter().any(|&idx| {
                         let other = &all_signatures[idx];
                         signature != other && other.args.get(i).is_none()
                     });
-                    if !any_shorter {
+                    let any_other_canonical = disambiguate_against.iter().any(|&idx| {
+                        let other = &all_signatures[idx];
+                        signature != other
+                            && matches!(other.args.get(i), Some(Some(WbgType::CanonicalValue(_))))
+                    });
+                    if !any_shorter && !any_other_canonical {
                         continue;
                     }
                     if first {
@@ -639,7 +650,16 @@ impl<'src> FirstPassRecord<'src> {
                     } else {
                         rust_name.push_str("_and_");
                     }
-                    rust_name.push_str(&snake_case_ident(arg_name));
+                    if any_other_canonical {
+                        // Use the inner Promise type's full name to distinguish
+                        // between e.g. Promise<DOMString> ("str_promise") and
+                        // Promise<Blob> ("blob_promise").  `inner` is already
+                        // `WbgType::Promise(X)` so its push_snake_case_name
+                        // produces e.g. "str_promise".
+                        inner.push_snake_case_name(&mut rust_name);
+                    } else {
+                        rust_name.push_str(&snake_case_ident(arg_name));
+                    }
                     continue;
                 }
 

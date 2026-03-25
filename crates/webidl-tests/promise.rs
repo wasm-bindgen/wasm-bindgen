@@ -3,6 +3,46 @@ use js_sys::Promise;
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::*;
 
+// Verify that the two canonical Promise branches produced by expanding
+// TestClipboardItemData (= Promise<(DOMString or TestBlob)>) are disambiguated
+// from each other and from the direct-value branches.
+// Expected generated names:
+//   accept_clipboard_item_with_str_promise     — Promise<JsString> canonical
+//   accept_clipboard_item_with_test_blob_promise — Promise<TestBlob> canonical
+//   accept_clipboard_item_with_str             — DOMString direct value
+//   accept_clipboard_item_with_test_blob       — TestBlob direct value
+#[cfg(wbg_next_unstable)]
+#[wasm_bindgen_test]
+fn promise_union_typedef_canonical_promise_str() {
+    let f = TestPromises::new().unwrap();
+    let p: Promise<js_sys::JsString> = Promise::resolve(&js_sys::JsString::from("hello"));
+    f.accept_clipboard_item_with_str_promise(&p);
+}
+
+#[cfg(wbg_next_unstable)]
+#[wasm_bindgen_test]
+fn promise_union_typedef_canonical_promise_blob() {
+    let f = TestPromises::new().unwrap();
+    let blob = TestBlob::new().unwrap();
+    let p: Promise<TestBlob> = Promise::resolve(&blob);
+    f.accept_clipboard_item_with_test_blob_promise(&p);
+}
+
+#[cfg(wbg_next_unstable)]
+#[wasm_bindgen_test]
+fn promise_union_typedef_direct_str() {
+    let f = TestPromises::new().unwrap();
+    f.accept_clipboard_item_with_str("hello");
+}
+
+#[cfg(wbg_next_unstable)]
+#[wasm_bindgen_test]
+fn promise_union_typedef_direct_blob() {
+    let f = TestPromises::new().unwrap();
+    let blob = TestBlob::new().unwrap();
+    f.accept_clipboard_item_with_test_blob(&blob);
+}
+
 #[wasm_bindgen_test]
 async fn return_promise() {
     let f = TestPromises::new().unwrap();
