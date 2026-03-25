@@ -382,6 +382,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         | TestMode::DedicatedWorker { .. }
         | TestMode::SharedWorker { .. }
         | TestMode::ServiceWorker { .. } => {
+            let nocapture = cli.nocapture;
             let srv = server::spawn(
                 &if headless {
                     "127.0.0.1:0".parse().unwrap()
@@ -416,7 +417,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             }
 
             thread::spawn(|| srv.run());
-            headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
+            headless::run(&addr, &shell, driver_timeout, browser_timeout, nocapture)?;
         }
     }
     Ok(())
