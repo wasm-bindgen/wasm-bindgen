@@ -733,6 +733,8 @@ impl<'a> Context<'a> {
                     "$heap: \"new Array({INITIAL_HEAP_OFFSET}).fill(undefined)\",\n$heap__postset: \"heap.push({}); heap_next = heap.length;\",\n",
                     INITIAL_HEAP_VALUES.join(", ")
                 ));
+            } else if global_dep == "heap_next" {
+                imports.push_str("$heap_next: '0',\n");
             } else if global_dep == "stack_pointer" {
                 imports.push_str(&format!("$stack_pointer : \"{INITIAL_HEAP_OFFSET}\",\n"));
             }
@@ -1994,6 +1996,10 @@ if (require('worker_threads').isMainThread) {{
 
     fn expose_global_heap_next(&mut self) {
         self.expose_global_heap();
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps.insert("heap_next".to_string());
+            return;
+        }
         self.intrinsic(
             "heap_next".into(),
             None,
