@@ -411,7 +411,13 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             }
             println!("Tests are now available at http://{addr}");
             thread::spawn(|| srv.run());
-            headless::run(&addr, &shell, driver_timeout, browser_timeout)?;
+            headless::run(
+                &addr,
+                &shell,
+                driver_timeout,
+                browser_timeout,
+                cli.nocapture,
+            )?;
         }
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
