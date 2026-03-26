@@ -51,6 +51,9 @@ web-sys = { path = "../web-sys", features = [
 [[bench]]
 name = "headless_output"
 
+[[bench]]
+name = "headless_worker_output"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
 
