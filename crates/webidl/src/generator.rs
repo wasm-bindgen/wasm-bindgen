@@ -28,16 +28,19 @@ fn get_features_doc(options: &Options, name: String) -> Option<String> {
     required_doc_string(options, &features)
 }
 
-fn comment(mut comment: String, features: &Option<String>) -> TokenStream {
-    if let Some(s) = features {
-        comment.push_str(s);
-    }
-
+fn doc_comment(comment: &str) -> TokenStream {
     let lines = comment.lines().map(|doc| quote!( #[doc = #doc] ));
+    quote! { #(#lines)* }
+}
 
-    quote! {
-        #(#lines)*
-    }
+fn doc_requirements(features: &Option<String>, unstable: bool) -> TokenStream {
+    let feat_docs = features.as_ref().map(|s| {
+        let s = s.trim_start_matches('\n');
+        let lines = s.lines().map(|doc| quote!( #[doc = #doc] ));
+        quote! { #[doc = ""] #(#lines)* }
+    });
+    let unstable_docs = maybe_unstable_docs(unstable);
+    quote! { #feat_docs #unstable_docs }
 }
 
 fn maybe_unstable_attr(unstable: bool) -> Option<proc_macro2::TokenStream> {
@@ -158,12 +161,9 @@ impl Enum {
         } = self;
 
         let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
 
-        let doc_comment = comment(
-            format!("The `{name}` enum."),
-            &get_features_doc(options, name.to_string()),
-        );
+        let doc_desc = doc_comment(&format!("The `{name}` enum."));
+        let doc_req = doc_requirements(&get_features_doc(options, name.to_string()), *unstable);
 
         let variants = variants
             .iter()
@@ -177,8 +177,8 @@ impl Enum {
 
             #unstable_attr
             #[wasm_bindgen]
-            #doc_comment
-            #unstable_docs
+            #doc_desc
+            #doc_req
             #[derive(Debug, Clone, Copy, PartialEq, Eq)]
             pub enum #name {
                 #(#variants),*
@@ -248,11 +248,11 @@ impl Const {
         let unstable = self.unstable;
 
         let unstable_attr = maybe_unstable_attr(unstable);
-        let unstable_docs = maybe_unstable_docs(unstable);
 
-        let doc_comment = comment(
-            format!("The `{parent_js_name}.{js_name}` const."),
+        let doc_desc = doc_comment(&format!("The `{parent_js_name}.{js_name}` const."));
+        let doc_req = doc_requirements(
             &get_features_doc(options, parent_name.to_string()),
+            unstable,
         );
 
         let deprecated = deprecated.as_ref().map(|msg| match msg {
@@ -262,8 +262,8 @@ impl Const {
 
         quote! {
             #unstable_attr
-            #doc_comment
-            #unstable_docs
+            #doc_desc
+            #doc_req
             #deprecated
             pub const #name: #ty = #value as #ty;
         }
@@ -323,10 +323,10 @@ impl InterfaceAttribute {
         } else {
             maybe_unstable_attr(*unstable)
         };
-        let unstable_docs = if *has_unstable_override {
-            None
+        let unstable_for_docs = if *has_unstable_override {
+            false
         } else {
-            maybe_unstable_docs(*unstable)
+            *unstable
         };
 
         let mdn_docs = mdn_doc(parent_js_name, Some(js_name));
@@ -345,7 +345,7 @@ impl InterfaceAttribute {
 
         features.insert(parent_name.to_string());
 
-        let doc_comment = required_doc_string(options, &features);
+        let features_doc = required_doc_string(options, &features);
 
         let structural = if *structural {
             quote!(structural,)
@@ -402,10 +402,10 @@ impl InterfaceAttribute {
                 None => quote!( #[deprecated] ),
             });
 
-        let doc_comment = comment(
-            format!("{prefix} for the `{js_name}` field of this object.\n\n{mdn_docs}"),
-            &doc_comment,
-        );
+        let doc_desc = doc_comment(&format!(
+            "{prefix} for the `{js_name}` field of this object.\n\n{mdn_docs}"
+        ));
+        let doc_req = doc_requirements(&features_doc, unstable_for_docs);
 
         let js_name = raw_ident(js_name);
 
@@ -420,8 +420,8 @@ impl InterfaceAttribute {
                 js_class = #parent_js_name,
                 js_name = #js_name
             )]
-            #doc_comment
-            #unstable_docs
+            #doc_desc
+            #doc_req
             #deprecated
             #def
         }
@@ -518,10 +518,10 @@ impl InterfaceMethod<'_> {
         } else {
             maybe_unstable_attr(*unstable)
         };
-        let unstable_docs = if *has_unstable_override {
-            None
+        let unstable_for_docs = if *has_unstable_override {
+            false
         } else {
-            maybe_unstable_docs(*unstable)
+            *unstable
         };
         // Unstable APIs always use typed generics (generics_compat=false).
         // [WbgGeneric] on the parent definition also opts into typed generics.
@@ -551,7 +551,7 @@ impl InterfaceMethod<'_> {
 
         let mut extra_args = vec![quote!( js_class = #parent_js_name )];
 
-        let doc_comment = match kind {
+        let doc_desc_str = match kind {
             InterfaceMethodKind::Constructor(name) => {
                 is_constructor = true;
                 if let Some(name) = name {
@@ -622,7 +622,11 @@ impl InterfaceMethod<'_> {
         let mut features_doc = features.clone();
         features_doc.insert(parent_name.to_string());
 
-        let doc_comment = comment(doc_comment, &required_doc_string(options, &features_doc));
+        let doc_desc = doc_comment(&doc_desc_str);
+        let doc_req = doc_requirements(
+            &required_doc_string(options, &features_doc),
+            unstable_for_docs,
+        );
 
         let deprecated = deprecated
             .as_ref()
@@ -692,8 +696,8 @@ impl InterfaceMethod<'_> {
                 #variadic_attr
                 #(#extra_args),*
             )]
-            #doc_comment
-            #unstable_docs
+            #doc_desc
+            #doc_req
             #deprecated
             pub fn #name(#this #(#arguments),*) #ret;
         })
@@ -727,12 +731,12 @@ impl Interface<'_> {
         } = self;
 
         let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
 
-        let doc_comment = comment(
-            format!("The `{name}` class.\n\n{}", mdn_doc(js_name, None)),
-            &get_features_doc(options, name.to_string()),
-        );
+        let doc_desc = doc_comment(&format!(
+            "The `{name}` class.\n\n{}",
+            mdn_doc(js_name, None)
+        ));
+        let doc_req = doc_requirements(&get_features_doc(options, name.to_string()), *unstable);
 
         let is_type_of = if *has_interface {
             None
@@ -801,8 +805,8 @@ impl Interface<'_> {
                     typescript_type = #js_name
                 )]
                 #[derive(Debug, Clone, PartialEq, Eq)]
-                #doc_comment
-                #unstable_docs
+                #doc_desc
+                #doc_req
                 #deprecated
                 pub type #name;
 
@@ -854,22 +858,17 @@ impl DictionaryField {
         let js_name = &self.js_name;
 
         let unstable_attr = maybe_unstable_attr(self.unstable);
-        let unstable_docs = maybe_unstable_docs(self.unstable);
 
         let deprecated = self.deprecated.as_ref().map(|msg| match msg {
             Some(msg) => quote!( #[deprecated(note = #msg)] ),
             None => quote!( #[deprecated] ),
         });
 
-        let getter_doc_comment = comment(
-            format!("Get the `{js_name}` field of this object."),
-            &required_doc_string(options, features),
-        );
+        let getter_doc_desc = doc_comment(&format!("Get the `{js_name}` field of this object."));
+        let getter_doc_req =
+            doc_requirements(&required_doc_string(options, features), self.unstable);
 
-        let setter_doc_comment = comment(
-            format!("Change the `{js_name}` field of this object."),
-            &required_doc_string(options, features),
-        );
+        let setter_doc_desc = doc_comment(&format!("Change the `{js_name}` field of this object."));
 
         // When is_js_value_ref_option_type is set, the nullable type collapses
         // to &JsValue for backwards compatibility. This applies to the deprecated
@@ -904,6 +903,13 @@ impl DictionaryField {
             setter_features.remove(&parent_ident.to_string());
             let setter_cfg_features = get_cfg_features(options, &setter_features);
 
+            // Each setter gets its own doc requirements based on its specific type features
+            setter_features.insert(parent_ident.to_string());
+            let setter_doc_req = doc_requirements(
+                &required_doc_string(options, &setter_features),
+                self.unstable,
+            );
+
             // Deprecate backward-compat setters that have type-safe alternatives,
             // but only for unstable APIs. For stable APIs the fallback setter is
             // the primary API and shouldn't produce deprecation warnings.
@@ -924,8 +930,8 @@ impl DictionaryField {
             quote! {
                 #unstable_attr
                 #setter_cfg_features
-                #setter_doc_comment
-                #unstable_docs
+                #setter_doc_desc
+                #setter_doc_req
                 #setter_deprecated
                 #deprecated
                 #[wasm_bindgen(method, setter = #js_name)]
@@ -936,8 +942,8 @@ impl DictionaryField {
         quote! {
             #unstable_attr
             #cfg_features
-            #getter_doc_comment
-            #unstable_docs
+            #getter_doc_desc
+            #getter_doc_req
             #deprecated
             #[wasm_bindgen(method, getter = #js_name)]
             pub fn #getter_name(this: &#parent_ident) -> #return_ty;
@@ -999,9 +1005,15 @@ impl DictionaryField {
     ) -> (BTreeSet<String>, Option<syn::Attribute>) {
         let mut features = BTreeSet::new();
 
-        // Only collect features from the return type (getter).
+        // Collect features from the return type (getter).
         // Each setter computes its own features independently in generate_rust_shim.
         add_features(&mut features, &self.return_ty);
+
+        // Also collect features from the deprecated builder method's parameter type,
+        // which uses the first setter's type (see generate_rust_setter).
+        if let Some(first_setter) = self.setter_types.first() {
+            add_features(&mut features, &first_setter.ty);
+        }
 
         features.remove(&parent_name);
 
@@ -1044,7 +1056,6 @@ impl Dictionary {
         } = self;
 
         let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
         let deprecated = deprecated.as_ref().map(|msg| match msg {
             Some(msg) => quote!( #[deprecated(note = #msg)] ),
             None => quote!( #[deprecated] ),
@@ -1148,10 +1159,8 @@ impl Dictionary {
             }]
         };
 
-        let doc_comment = comment(
-            format!("The `{name}` dictionary."),
-            &get_features_doc(options, name.to_string()),
-        );
+        let doc_desc = doc_comment(&format!("The `{name}` dictionary."));
+        let doc_req = doc_requirements(&get_features_doc(options, name.to_string()), *unstable);
 
         let (field_features, field_cfg_features): (Vec<_>, Vec<_>) = fields
             .iter()
@@ -1185,15 +1194,16 @@ impl Dictionary {
                 let ctor_cfg_features = get_cfg_features(options, &ctor_features);
 
                 ctor_features.insert(name.to_string());
-                let ctor_doc_comment = comment(
-                    format!("Construct a new `{name}`."),
+                let ctor_doc_desc = doc_comment(&format!("Construct a new `{name}`."));
+                let ctor_doc_req = doc_requirements(
                     &required_doc_string(options, &ctor_features),
+                    *unstable,
                 );
 
                 quote! {
                     #ctor_cfg_features
-                    #ctor_doc_comment
-                    #unstable_docs
+                    #ctor_doc_desc
+                    #ctor_doc_req
                     #deprecated
                     pub fn #ctor_name(#(#args),*) -> Self {
                         #[allow(unused_mut)]
@@ -1216,8 +1226,8 @@ impl Dictionary {
             extern "C" {
                 #[wasm_bindgen(extends = ::js_sys::Object, js_name = #js_name)]
                 #[derive(Debug, Clone, PartialEq, Eq)]
-                #doc_comment
-                #unstable_docs
+                #doc_desc
+                #doc_req
                 #deprecated
                 pub type #name;
 
@@ -1285,7 +1295,6 @@ impl NamespaceAttribute {
         } = self;
 
         let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
 
         let mdn_docs = mdn_doc(parent_js_name, Some(js_name));
 
@@ -1298,7 +1307,7 @@ impl NamespaceAttribute {
 
         features.insert(parent_name.to_string());
 
-        let doc_comment = required_doc_string(options, &features);
+        let features_doc = required_doc_string(options, &features);
 
         let (prefix, attr, def) = match kind {
             NamespaceAttributeKind::Getter => {
@@ -1336,10 +1345,10 @@ impl NamespaceAttribute {
 
         let catch = if *catch { Some(quote!(catch,)) } else { None };
 
-        let doc_comment = comment(
-            format!("{prefix} for the `{parent_js_name}.{js_name}` field.\n\n{mdn_docs}"),
-            &doc_comment,
-        );
+        let doc_desc = doc_comment(&format!(
+            "{prefix} for the `{parent_js_name}.{js_name}` field.\n\n{mdn_docs}"
+        ));
+        let doc_req = doc_requirements(&features_doc, *unstable);
 
         let js_name_ident = raw_ident(js_name);
 
@@ -1353,8 +1362,8 @@ impl NamespaceAttribute {
                 #attr
                 js_name = #js_name_ident
             )]
-            #doc_comment
-            #unstable_docs
+            #doc_desc
+            #doc_req
             #def
         }
     }
@@ -1414,11 +1423,10 @@ impl Function<'_> {
         };
 
         let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
 
         let js_namespace = raw_ident(&parent_js_name);
 
-        let doc_comment = format!(
+        let doc_desc_str = format!(
             "The `{parent_js_name}.{js_name}()` function.\n\n{}",
             mdn_doc(&parent_js_name, Some(js_name))
         );
@@ -1448,7 +1456,8 @@ impl Function<'_> {
         let mut features_doc = features.clone();
         features_doc.insert(parent_name.to_string());
 
-        let doc_comment = comment(doc_comment, &required_doc_string(options, &features_doc));
+        let doc_desc = doc_comment(&doc_desc_str);
+        let doc_req = doc_requirements(&required_doc_string(options, &features_doc), *unstable);
 
         let catch_attr = if *catch { Some(quote!(catch,)) } else { None };
 
@@ -1485,8 +1494,8 @@ impl Function<'_> {
                 js_namespace = #js_namespace,
                 js_name = #js_name_ident
             )]
-            #doc_comment
-            #unstable_docs
+            #doc_desc
+            #doc_req
             pub fn #name(#(#arguments),*) #ret;
         })
     }
@@ -1513,7 +1522,7 @@ impl Namespace<'_> {
         } = self;
 
         let unstable_attr = maybe_unstable_attr(*unstable);
-        let unstable_docs = maybe_unstable_docs(*unstable);
+        let unstable_doc_req = doc_requirements(&None, *unstable);
 
         let functions = functions
             .iter()
@@ -1562,7 +1571,7 @@ impl Namespace<'_> {
 
         quote! {
             #unstable_attr
-            #unstable_docs
+            #unstable_doc_req
             pub mod #name {
                 #![allow(unused_imports)]
                 #![allow(clippy::all)]

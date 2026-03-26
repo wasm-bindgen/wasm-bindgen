@@ -32,7 +32,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StyleSheet`, `StyleSheetList`*"]
     pub fn get(this: &StyleSheetList, index: u32) -> Option<StyleSheet>;
 }

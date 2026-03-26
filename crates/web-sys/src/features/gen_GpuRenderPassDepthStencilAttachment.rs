@@ -167,9 +167,10 @@ extern "C" {
     #[wasm_bindgen(method, setter = "stencilStoreOp")]
     pub fn set_stencil_store_op(this: &GpuRenderPassDepthStencilAttachment, val: GpuStoreOp);
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
     #[doc = "Get the `view` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDepthStencilAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDepthStencilAttachment`, `GpuTexture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -179,7 +180,7 @@ extern "C" {
     #[cfg(feature = "GpuTexture")]
     #[doc = "Change the `view` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDepthStencilAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDepthStencilAttachment`, `GpuTexture`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -189,7 +190,7 @@ extern "C" {
     #[cfg(feature = "GpuTextureView")]
     #[doc = "Change the `view` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDepthStencilAttachment`*"]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRenderPassDepthStencilAttachment`, `GpuTextureView`*"]
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
@@ -280,6 +281,7 @@ impl GpuRenderPassDepthStencilAttachment {
         self
     }
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuTexture")]
     #[deprecated = "Use `set_view()` instead."]
     pub fn view(&mut self, val: &GpuTexture) -> &mut Self {
         self.set_view(val);

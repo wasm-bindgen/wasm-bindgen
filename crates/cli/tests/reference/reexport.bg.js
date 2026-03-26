@@ -3,6 +3,7 @@ import { original_config } from 'config';
 import { MY_CONSTANT } from 'constants';
 import { default as _default } from 'default-export-lib';
 import { helperFunction } from 'helpers';
+import { hiddenReexport } from 'hidden-lib';
 import { OriginalName } from 'some-library';
 import { CustomType } from 'types-lib';
 import { original } from 'utils';
@@ -26,6 +27,8 @@ export { Snippet }
 export { _default as default }
 
 export { helperFunction }
+
+export { hiddenReexport }
 
 export { invalid_name as 'invalid-name' }
 

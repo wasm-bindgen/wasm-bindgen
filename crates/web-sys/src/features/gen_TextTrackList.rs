@@ -74,7 +74,6 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextTrack`, `TextTrackList`*"]
     pub fn get(this: &TextTrackList, index: u32) -> Option<TextTrack>;
 }

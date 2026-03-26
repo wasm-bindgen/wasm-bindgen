@@ -23,7 +23,7 @@ extern "C" {
     #[cfg(feature = "Headers")]
     #[doc = "Change the `headers` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`, `ResponseInit`*"]
     #[wasm_bindgen(method, setter = "headers")]
     pub fn set_headers_headers(this: &ResponseInit, val: &Headers);
     #[doc = "Change the `headers` field of this object."]

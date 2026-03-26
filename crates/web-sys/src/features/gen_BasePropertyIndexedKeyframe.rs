@@ -23,7 +23,7 @@ extern "C" {
     #[cfg(feature = "CompositeOperation")]
     #[doc = "Change the `composite` field of this object."]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
+    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`, `CompositeOperation`*"]
     #[wasm_bindgen(method, setter = "composite")]
     pub fn set_composite_opt_composite_operation(
         this: &BasePropertyIndexedKeyframe,

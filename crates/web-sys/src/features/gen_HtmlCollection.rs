@@ -40,13 +40,11 @@ extern "C" {
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
     pub fn get_with_index(this: &HtmlCollection, index: u32) -> Option<Element>;
     #[cfg(feature = "Element")]
     #[wasm_bindgen(method, structural, js_class = "HTMLCollection", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]

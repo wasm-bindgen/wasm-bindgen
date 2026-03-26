@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    CustomType, MY_CONSTANT, RenamedClass, default, helperFunction, "invalid-name", renamedConfig, renamedFunction
+    CustomType, MY_CONSTANT, RenamedClass, default, helperFunction, hiddenReexport, "invalid-name", renamedConfig, renamedFunction
 } from "./reference_test_bg.js";

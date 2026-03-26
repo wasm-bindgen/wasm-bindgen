@@ -112,7 +112,7 @@ impl Task {
         });
 
         // Queue up the Future's work to happen on the next microtask tick.
-        crate::queue::Queue::with(move |queue| queue.schedule_task(this));
+        crate::futures::queue::Queue::with(move |queue| queue.schedule_task(this));
     }
 
     pub(crate) fn run(&self) {
@@ -173,17 +173,17 @@ impl Task {
     }
 }
 
-fn wait_async(ptr: &AtomicI32, current_value: i32) -> Option<js_sys::Promise> {
+fn wait_async(ptr: &AtomicI32, current_value: i32) -> Option<crate::Promise> {
     // If `Atomics.waitAsync` isn't defined then we use our fallback, otherwise
     // we use the native function.
     return if Atomics::get_wait_async().is_undefined() {
-        Some(crate::task::wait_async_polyfill::wait_async(
+        Some(crate::futures::task::wait_async_polyfill::wait_async(
             ptr,
             current_value,
         ))
     } else {
-        let mem = wasm_bindgen::memory().unchecked_into::<js_sys::WebAssembly::Memory>();
-        let array = js_sys::Int32Array::new(&mem.buffer());
+        let mem = wasm_bindgen::memory().unchecked_into::<crate::WebAssembly::Memory>();
+        let array = crate::Int32Array::new(&mem.buffer());
         let result = Atomics::wait_async(&array, ptr.as_ptr() as u32 / 4, current_value);
         if result.async_() {
             Some(result.value())
@@ -198,7 +198,7 @@ fn wait_async(ptr: &AtomicI32, current_value: i32) -> Option<js_sys::Promise> {
         type WaitAsyncResult;
 
         #[wasm_bindgen(static_method_of = Atomics, js_name = waitAsync)]
-        fn wait_async(buf: &js_sys::Int32Array, index: u32, value: i32) -> WaitAsyncResult;
+        fn wait_async(buf: &crate::Int32Array, index: u32, value: i32) -> WaitAsyncResult;
 
         #[wasm_bindgen(static_method_of = Atomics, js_name = waitAsync, getter)]
         fn get_wait_async() -> JsValue;
@@ -207,6 +207,6 @@ fn wait_async(ptr: &AtomicI32, current_value: i32) -> Option<js_sys::Promise> {
         fn async_(this: &WaitAsyncResult) -> bool;
 
         #[wasm_bindgen(method, getter, structural)]
-        fn value(this: &WaitAsyncResult) -> js_sys::Promise;
+        fn value(this: &WaitAsyncResult) -> crate::Promise;
     }
 }

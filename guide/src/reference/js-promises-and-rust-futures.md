@@ -2,31 +2,82 @@
 
 Many APIs on the web work with a `Promise`, such as an `async` function in JS.
 Naturally you'll probably want to interoperate with them from Rust! To do that
-you can use the `wasm-bindgen-futures` crate as well as Rust `async`
-functions.
-
-The first thing you might encounter is the need for working with a `Promise`.
-For this you'll want to use [`js_sys::Promise`]. Once you've got one of those
-values you can convert that value to `wasm_bindgen_futures::JsFuture`. This type
-implements the `std::future::Future` trait which allows naturally using it in an
-`async` function. For example:
+you can use [`js_sys::Promise`] together with Rust `async` functions.
 
 [`js_sys::Promise`]: https://docs.rs/js-sys/*/js_sys/struct.Promise.html
 
+## Awaiting a `Promise` directly
+
+`js_sys::Promise` implements [`IntoFuture`], so you can `.await` it directly
+in any `async` function. This is the recommended approach:
+
 ```rust
+use js_sys::Promise;
+use wasm_bindgen::prelude::*;
+
 async fn get_from_js() -> Result<JsValue, JsValue> {
-    let promise = js_sys::Promise::resolve(&42.into());
-    let result = wasm_bindgen_futures::JsFuture::from(promise).await?;
+    let promise = Promise::resolve(&42.into());
+    let result = promise.await?;
     Ok(result)
 }
 ```
 
-Here we can see how converting a `Promise` to Rust creates a `impl Future<Output
-= Result<JsValue, JsValue>>`. This corresponds to `then` and `catch` in JS where
-a successful promise becomes `Ok` and an erroneous promise becomes `Err`.
+This works out of the box when `wasm-bindgen-futures` is in your dependency
+tree, which activates the `futures` feature on `js-sys`. You can also enable
+it explicitly without `wasm-bindgen-futures`:
 
-You can also import a JS async function directly with a `extern "C"` block, and
-the promise will be converted to a future automatically. The return type can be 
+```toml
+[dependencies]
+js-sys = { version = "0.3", features = ["futures"] }
+```
+
+For typed promises the awaited value matches the type parameter directly:
+
+```rust
+use js_sys::{Promise, Number};
+
+async fn get_number() -> Result<Number, JsValue> {
+    let promise: Promise<Number> = fetch_number();
+    let number = promise.await?;  // number: Number
+    Ok(number)
+}
+```
+
+[`IntoFuture`]: https://doc.rust-lang.org/std/future/trait.IntoFuture.html
+
+## Using `JsFuture` explicitly
+
+If you need a named `Future` type — for example to store it in a struct or
+pass it around — use [`JsFuture`] from `js_sys::futures` or
+`wasm_bindgen_futures`:
+
+```rust
+use js_sys::futures::JsFuture;
+use wasm_bindgen::JsValue;
+
+async fn get_from_js() -> Result<JsValue, JsValue> {
+    let promise = js_sys::Promise::resolve(&42.into());
+    let result = JsFuture::from(promise).await?;
+    Ok(result)
+}
+```
+
+`JsFuture` is also re-exported from `wasm_bindgen_futures` for backwards
+compatibility:
+
+```rust
+use wasm_bindgen_futures::JsFuture;
+```
+
+A successful promise becomes `Ok` and a rejected promise becomes `Err`,
+corresponding to JS `.then` and `.catch`.
+
+[`JsFuture`]: https://docs.rs/js-sys/*/js_sys/futures/struct.JsFuture.html
+
+## Importing JS `async` functions
+
+You can import a JS async function directly with an `extern "C"` block, and
+the promise will be converted to a future automatically. The return type can be
 `JsValue`, no return at all, or `Result` and `Option` types to primitives or
 types supporting [JsCast] conversions:
 
@@ -46,7 +97,7 @@ async fn get_from_js() -> f64 {
 
 [JsCast]: https://docs.rs/wasm-bindgen/*/wasm_bindgen/trait.JsCast.html
 
-The `async` can be combined with the `catch` attribute to manage errors from the
+The `async` attribute can be combined with `catch` to manage errors from the
 JS promise:
 
 ```rust
@@ -59,8 +110,10 @@ extern "C" {
 }
 ```
 
-Next up you'll probably want to export a Rust function to JS that returns a
-promise. To do this you can use an `async` function and `#[wasm_bindgen]`:
+## Exporting Rust `async fn` to JS
+
+Use an `async` function with `#[wasm_bindgen]` to export a function that
+returns a `Promise` to JavaScript:
 
 ```rust
 #[wasm_bindgen]
@@ -69,8 +122,8 @@ pub async fn foo() {
 }
 ```
 
-When invoked from JS the `foo` function here will return a `Promise`, so you can
-import this as:
+When invoked from JS the `foo` function here will return a `Promise`, so you
+can use it as:
 
 ```js
 import { foo } from "my-module";
@@ -83,20 +136,19 @@ async function shim() {
 
 ## Return values of `async fn`
 
-When using an `async fn` in Rust and exporting it to JS there's some
+When using an `async fn` in Rust and exporting it to JS there are some
 restrictions on the return type. The return value of an exported Rust function
 will eventually become `Result<JsValue, JsValue>` where `Ok` turns into a
 successfully resolved promise and `Err` is equivalent to throwing an exception.
 
 The following types are supported as return types from an `async fn`:
 
-* `()` - turns into a successful `undefined` in JS
-* `T: Into<JsValue>` - turns into a successful JS value
-* `Result<(), E: Into<JsValue>>` - if `Ok(())` turns into a successful
-  `undefined` and otherwise turns into a failed promise with `E` converted to a
-  JS value
-* `Result<T: Into<JsValue>, E: Into<JsValue>>` - like the previous case except
-  both data payloads are converted into a `JsValue`.
+* `()` — turns into a successful `undefined` in JS
+* `T: Into<JsValue>` — turns into a successful JS value
+* `Result<(), E: Into<JsValue>>` — `Ok(())` resolves to `undefined`; `Err`
+  rejects with `E` converted to a JS value
+* `Result<T: Into<JsValue>, E: Into<JsValue>>` — both payloads are converted
+  into a `JsValue`
 
 Note that many types implement being converted into a `JsValue`, such as all
 imported types via `#[wasm_bindgen]` (aka those in `js-sys` or `web-sys`),
@@ -104,54 +156,53 @@ primitives like `u32`, and all exported `#[wasm_bindgen]` types. In general,
 you should be able to write code without having too many explicit conversions,
 and the macro should take care of the rest!
 
-## Using `wasm-bindgen-futures`
+## `spawn_local` and `future_to_promise`
 
-The `wasm-bindgen-futures` crate bridges the gap between JavaScript `Promise`s
-and Rust `Future`s. Its `JsFuture` type provides conversion from a JavaScript
-`Promise` into a Rust `Future`, and its `future_to_promise` function converts a
-Rust `Future` into a JavaScript `Promise` and schedules it to be driven to
-completion.
+Use [`spawn_local`] to run a `Future<Output = ()>` on the current thread
+without returning a `Promise` to JavaScript:
 
-Learn more:
+```rust
+use js_sys::futures::spawn_local;
 
-* [`wasm_bindgen_futures` on crates.io][crate]
-* [`wasm-bindgen-futures` API documentation and example usage][docs]
+spawn_local(async {
+    // drive a future to completion on the JS microtask queue
+});
+```
 
-[crate]: https://crates.io/crates/wasm-bindgen-futures
-[docs]: https://wasm-bindgen.github.io/wasm-bindgen/api/wasm_bindgen_futures/
+Use [`future_to_promise`] to convert a Rust `Future` into a JavaScript
+`Promise` explicitly:
 
-## Compatibility with versions of `Future`
+```rust
+use js_sys::futures::future_to_promise;
+use wasm_bindgen::JsValue;
 
-The current crate on crates.io, `wasm-bindgen-futures 0.4.*`, supports
-`std::future::Future` and `async`/`await` in Rust. This typically requires Rust
-1.39.0+ (as of this writing on 2019-09-05 it's the nightly channel of Rust).
+let promise = future_to_promise(async {
+    Ok(JsValue::from(42))
+});
+```
 
-If you're using the `Future` trait from the `futures` `0.1.*` crate then you'll
-want to use the `0.3.*` track of `wasm-bindgen-futures` on crates.io.
+Both functions are also re-exported from `wasm_bindgen_futures` unchanged.
+
+[`spawn_local`]: https://docs.rs/js-sys/*/js_sys/futures/fn.spawn_local.html
+[`future_to_promise`]: https://docs.rs/js-sys/*/js_sys/futures/fn.future_to_promise.html
 
 ## Using Generic Promise Types
 
-Promises also support [erasable generic type parameters](./types/js-sys.md):
+Promises support [erasable generic type parameters](./types/js-sys.md). With
+`IntoFuture`, the resolved type flows through directly without a cast:
 
 ```rust
-use js_sys::{Promise, Number, Array, JsString};
-use wasm_bindgen_futures::JsFuture;
+use js_sys::{Promise, Number, Array};
 
 #[wasm_bindgen]
 extern "C" {
-    // Import a function returning a typed promise
     fn fetchNumbers() -> Promise<Array<Number>>;
 }
 
 async fn process_numbers() -> Result<f64, JsValue> {
-    // The promise type documents that it resolves to Array<Number>
-    let promise: Promise<Array<Number>> = fetchNumbers();
-    let result = JsFuture::from(promise).await?;
+    // Await the typed promise — no cast needed
+    let numbers: Array<Number> = fetchNumbers().await?;
 
-    // Cast to the documented type
-    let numbers: Array<Number> = result.unchecked_into();
-
-    // Process the typed array
     let mut sum = 0.0;
     for i in 0..numbers.length() {
         sum += numbers.get(i).value_of();
@@ -159,3 +210,19 @@ async fn process_numbers() -> Result<f64, JsValue> {
     Ok(sum)
 }
 ```
+
+## Compatibility note
+
+`wasm-bindgen-futures` is now a thin re-export shim. The implementation lives
+in `js-sys` under the `futures` feature, which `wasm-bindgen-futures` activates
+automatically when it is a dependency. All existing import paths
+(`wasm_bindgen_futures::JsFuture`, `wasm_bindgen_futures::spawn_local`, etc.)
+continue to work without any changes.
+
+Learn more:
+
+* [`js_sys::futures` API documentation][js-sys-docs]
+* [`wasm_bindgen_futures` on crates.io][crate]
+
+[js-sys-docs]: https://docs.rs/js-sys/*/js_sys/futures/index.html
+[crate]: https://crates.io/crates/wasm-bindgen-futures

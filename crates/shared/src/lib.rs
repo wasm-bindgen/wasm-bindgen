@@ -40,6 +40,7 @@ macro_rules! shared_api {
             module: Option<ImportModule<'a>>,
             js_namespace: Option<Vec<String>>,
             reexport: Option<String>,
+            generate_typescript: bool,
             kind: ImportKind<'a>,
         }
 

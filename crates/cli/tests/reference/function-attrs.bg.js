@@ -89,7 +89,7 @@ export function __wbg_call_2d781c1f4d5c0ef8() { return handleError(function (arg
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
-export function __wbg_createTask_6eb3a8b6dd2f87c9() { return handleError(function (arg0, arg1) {
+export function __wbg_createTask_a0801140eb3d1c8e() { return handleError(function (arg0, arg1) {
     const ret = console.createTask(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments); }
@@ -111,18 +111,18 @@ export function __wbg_new_typed_aaaeaf29cf802876(arg0, arg1) {
         state0.a = 0;
     }
 }
-export function __wbg_queueMicrotask_0c399741342fb10f(arg0) {
+export function __wbg_queueMicrotask_274a87b943cb126a(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 }
-export function __wbg_queueMicrotask_a082d78ce798393e(arg0) {
+export function __wbg_queueMicrotask_fc88d67ac6d6ba4f(arg0) {
     queueMicrotask(arg0);
 }
 export function __wbg_resolve_ae8d83246e5bcc12(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 }
-export function __wbg_run_78b7b601add6ed6b(arg0, arg1, arg2) {
+export function __wbg_run_d3fa521301780884(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = () => {

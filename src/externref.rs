@@ -105,10 +105,7 @@ fn internal_error(_msg: &str) -> ! {
             super::throw_str(_msg)
         } else if #[cfg(feature = "std")] {
             std::process::abort();
-        } else if #[cfg(all(
-            target_arch = "wasm32",
-            any(target_os = "unknown", target_os = "none")
-        ))] {
+        } else if #[cfg(target_family = "wasm")] {
             core::arch::wasm32::unreachable();
         } else {
             unreachable!()
