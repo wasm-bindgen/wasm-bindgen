@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+## [0.2.115](https://github.com/rustwasm/wasm-bindgen/compare/0.2.114...0.2.115)
+
 ### Added
 
 * `console.debug/log/info/warn/error` output from user-spawned `Worker` and

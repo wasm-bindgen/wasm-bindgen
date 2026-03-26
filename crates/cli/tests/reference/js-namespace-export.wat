@@ -12,7 +12,7 @@
   (type (;10;) (func (param i32 i32 i32 i32) (result i32)))
   (type (;11;) (func (param i32 i32) (result i32 i32)))
   (type (;12;) (func (param i32 i32 i32 i32) (result i32 i32)))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_6ddd609b62940d55" (func (;0;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_5549492daedad139" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 6)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
