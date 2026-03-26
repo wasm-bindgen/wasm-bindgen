@@ -5,6 +5,15 @@
 
 ### Added
 
+* `console.debug/log/info/warn/error` output from user-spawned `Worker` and
+  `SharedWorker` instances is now forwarded to the CLI test runner during
+  headless browser tests, just like output from the main thread. Works for
+  blob URL workers, module workers, URL-based workers (importScripts), nested
+  workers, and shared workers (including logs emitted before the first port
+  connection). Non-cloneable arguments are serialized via `String()` rather
+  than crashing the worker. The `--nocapture` flag is respected.
+  [#5037](https://github.com/wasm-bindgen/wasm-bindgen/pull/5037)
+
 * `js_sys::Promise<T>` now implements `IntoFuture`, enabling direct `.await` on
   any JS promise without a wrapper type. The `wasm-bindgen-futures` implementation
   has been moved into `js-sys` behind an optional `futures` feature, which is
