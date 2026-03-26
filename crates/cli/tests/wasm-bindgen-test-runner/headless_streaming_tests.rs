@@ -1579,21 +1579,17 @@ fn test_no_carriage_return_in_output() {
 
     assert_eq!(
         stdout_cr_count, 0,
-        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
-        stdout_cr_count, stdout
+        "Expected no carriage returns in stdout, but found {stdout_cr_count}.\nstdout (escaped):\n{stdout:?}"
     );
     assert_eq!(
         stderr_cr_count, 0,
-        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
-        stderr_cr_count, stderr
+        "Expected no carriage returns in stderr, but found {stderr_cr_count}.\nstderr (escaped):\n{stderr:?}"
     );
 
     // Verify test actually passed
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -1645,20 +1641,16 @@ fn test_default_no_carriage_return_in_output() {
 
     assert_eq!(
         stdout_cr_count, 0,
-        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
-        stdout_cr_count, stdout
+        "Expected no carriage returns in stdout, but found {stdout_cr_count}.\nstdout (escaped):\n{stdout:?}"
     );
     assert_eq!(
         stderr_cr_count, 0,
-        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
-        stderr_cr_count, stderr
+        "Expected no carriage returns in stderr, but found {stderr_cr_count}.\nstderr (escaped):\n{stderr:?}"
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -1716,20 +1708,16 @@ fn test_browser_no_carriage_return_in_output() {
 
     assert_eq!(
         stdout_cr_count, 0,
-        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
-        stdout_cr_count, stdout
+        "Expected no carriage returns in stdout, but found {stdout_cr_count}.\nstdout (escaped):\n{stdout:?}"
     );
     assert_eq!(
         stderr_cr_count, 0,
-        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
-        stderr_cr_count, stderr
+        "Expected no carriage returns in stderr, but found {stderr_cr_count}.\nstderr (escaped):\n{stderr:?}"
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -1787,20 +1775,16 @@ fn test_shared_worker_no_carriage_return_in_output() {
 
     assert_eq!(
         stdout_cr_count, 0,
-        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
-        stdout_cr_count, stdout
+        "Expected no carriage returns in stdout, but found {stdout_cr_count}.\nstdout (escaped):\n{stdout:?}"
     );
     assert_eq!(
         stderr_cr_count, 0,
-        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
-        stderr_cr_count, stderr
+        "Expected no carriage returns in stderr, but found {stderr_cr_count}.\nstderr (escaped):\n{stderr:?}"
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -1858,20 +1842,16 @@ fn test_service_worker_no_carriage_return_in_output() {
 
     assert_eq!(
         stdout_cr_count, 0,
-        "Expected no carriage returns in stdout, but found {}.\nstdout (escaped):\n{:?}",
-        stdout_cr_count, stdout
+        "Expected no carriage returns in stdout, but found {stdout_cr_count}.\nstdout (escaped):\n{stdout:?}"
     );
     assert_eq!(
         stderr_cr_count, 0,
-        "Expected no carriage returns in stderr, but found {}.\nstderr (escaped):\n{:?}",
-        stderr_cr_count, stderr
+        "Expected no carriage returns in stderr, but found {stderr_cr_count}.\nstderr (escaped):\n{stderr:?}"
     );
 
     assert!(
         output.status.success(),
-        "Test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -1995,14 +1975,12 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should pass (it just spawns a worker)
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Check all 5 log levels - each should appear exactly once
@@ -2018,17 +1996,15 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
-        failures.join("\n"),
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}",
+        failures.join("\n")
     );
 }
 
@@ -2143,13 +2119,11 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     let count = combined
@@ -2158,10 +2132,9 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"
 
     assert_eq!(
         count, 1,
-        "Expected dedicated worker log marker to appear exactly once, but it appeared {} times.\n\
+        "Expected dedicated worker log marker to appear exactly once, but it appeared {count} times.\n\
          This test verifies that user addEventListener(message) handling coexists with console forwarding.\n\
-         stdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -2282,14 +2255,12 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "WorkerO
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should pass
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Check all 5 log levels - each should appear exactly once
@@ -2305,17 +2276,15 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "WorkerO
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
-        failures.join("\n"),
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}",
+        failures.join("\n")
     );
 }
 
@@ -2431,13 +2400,11 @@ postMessage("done");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     let levels = [
@@ -2452,17 +2419,15 @@ postMessage("done");
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
-        failures.join("\n"),
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}",
+        failures.join("\n")
     );
 }
 
@@ -2589,9 +2554,7 @@ features = ["Blob", "BlobPropertyBag", "ErrorEvent", "MessageEvent", "Url", "Wor
 
     assert!(
         output.status.success(),
-        "Inner test should pass; non-cloneable console args should not crash the worker.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass; non-cloneable console args should not crash the worker.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -2706,14 +2669,12 @@ postMessage("done");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should pass
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Check all 5 log levels - each should appear exactly once
@@ -2729,17 +2690,15 @@ postMessage("done");
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
-        failures.join("\n"),
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}",
+        failures.join("\n")
     );
 }
 
@@ -2862,21 +2821,18 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "Worker", "Window"
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     let count = combined.matches("NESTED_WORKER_LOG_MARKER_2P6L1").count();
     assert_eq!(
         count, 1,
-        "Expected nested worker log marker to appear exactly once, but it appeared {} times.\n\
-         stdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+        "Expected nested worker log marker to appear exactly once, but it appeared {count} times.\n\
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -3006,9 +2962,7 @@ features = ["Blob", "BlobPropertyBag", "ErrorEvent", "MessageEvent", "Url", "Sha
 
     assert!(
         output.status.success(),
-        "Inner test should pass; non-cloneable console args should not crash the shared worker.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass; non-cloneable console args should not crash the shared worker.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -3115,21 +3069,18 @@ features = ["MessageEvent", "Worker", "Window"]
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     let injected_count = combined.matches("DATA_URL_INJECTED_MARKER_6R2M8").count();
 
     assert_eq!(
         injected_count, 0,
-        "Injected marker should not appear. Expected 0, got {}.\nstdout:\n{}\nstderr:\n{}",
-        injected_count, stdout, stderr
+        "Injected marker should not appear. Expected 0, got {injected_count}.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -3224,14 +3175,12 @@ features = ["Blob", "BlobPropertyBag", "ErrorEvent", "Url", "Worker", "Window"]
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should FAIL (it panics intentionally)
     assert!(
         !output.status.success(),
-        "Inner test should fail.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should fail.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Count occurrences of the marker - should be exactly 1 in console_log div output
@@ -3241,19 +3190,16 @@ features = ["Blob", "BlobPropertyBag", "ErrorEvent", "Url", "Worker", "Window"]
 
     assert_eq!(
         count, 1,
-        "Expected worker log marker to appear exactly once in failure output, but it appeared {} times.\n\
+        "Expected worker log marker to appear exactly once in failure output, but it appeared {count} times.\n\
          This test verifies that console.log from user-spawned workers is shown when tests fail.\n\
-         stdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Verify the worker's panic/error message appears in the output
     assert!(
         combined.contains("Intentional worker failure"),
         "Expected worker panic message 'Intentional worker failure' to appear in output.\n\
-         stdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -3372,14 +3318,12 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "SharedWorker", "M
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should pass
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Check all 5 log levels - each should appear exactly once
@@ -3395,17 +3339,15 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "SharedWorker", "M
     for (level, marker) in &levels {
         let count = combined.matches(*marker).count();
         if count != 1 {
-            failures.push(format!("console.{}: expected 1, got {}", level, count));
+            failures.push(format!("console.{level}: expected 1, got {count}"));
         }
     }
 
     assert!(
         failures.is_empty(),
         "Some console log levels were not captured correctly:\n{}\n\
-         stdout:\n{}\nstderr:\n{}",
-        failures.join("\n"),
-        stdout,
-        stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}",
+        failures.join("\n")
     );
 }
 
@@ -3519,13 +3461,11 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "SharedWorker", "M
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     let count = combined
@@ -3534,10 +3474,9 @@ features = ["Blob", "BlobPropertyBag", "MessageEvent", "Url", "SharedWorker", "M
 
     assert_eq!(
         count, 1,
-        "Expected top-level shared worker log marker to appear exactly once, but it appeared {} times.\n\
+        "Expected top-level shared worker log marker to appear exactly once, but it appeared {count} times.\n\
          This test verifies that logs emitted before the first port connection are still captured.\n\
-         stdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -3646,21 +3585,18 @@ features = ["MessageEvent", "SharedWorker", "MessagePort", "Window"]
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     assert!(
         output.status.success(),
-        "Inner test should pass.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should pass.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     let injected_count = combined.matches("SHARED_URL_INJECTED_MARKER_4T1Q6").count();
 
     assert_eq!(
         injected_count, 0,
-        "Injected shared worker marker should not appear. Expected 0, got {}.\nstdout:\n{}\nstderr:\n{}",
-        injected_count, stdout, stderr
+        "Injected shared worker marker should not appear. Expected 0, got {injected_count}.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }
 
@@ -3758,14 +3694,12 @@ features = ["Blob", "BlobPropertyBag", "ErrorEvent", "Url", "SharedWorker", "Mes
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{}{}", stdout, stderr);
+    let combined = format!("{stdout}{stderr}");
 
     // The inner test should FAIL (it panics intentionally)
     assert!(
         !output.status.success(),
-        "Inner test should fail.\nstdout:\n{}\nstderr:\n{}",
-        stdout,
-        stderr
+        "Inner test should fail.\nstdout:\n{stdout}\nstderr:\n{stderr}"
     );
 
     // Count occurrences of the marker - should be exactly 1 in console_log div output
@@ -3775,9 +3709,8 @@ features = ["Blob", "BlobPropertyBag", "ErrorEvent", "Url", "SharedWorker", "Mes
 
     assert_eq!(
         count, 1,
-        "Expected shared worker log marker to appear exactly once in failure output, but it appeared {} times.\n\
+        "Expected shared worker log marker to appear exactly once in failure output, but it appeared {count} times.\n\
          This test verifies that console.log from user-spawned shared workers is shown when tests fail.\n\
-         stdout:\n{}\nstderr:\n{}",
-        count, stdout, stderr
+         stdout:\n{stdout}\nstderr:\n{stderr}"
     );
 }

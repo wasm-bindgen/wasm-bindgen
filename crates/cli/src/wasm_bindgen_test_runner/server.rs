@@ -22,110 +22,12 @@ pub(crate) fn spawn(
 ) -> Result<Server<impl Fn(&Request) -> Response + Send + Sync>, Error> {
     let mut js_to_execute = String::new();
 
-    // Console shim to inject into user-spawned dedicated workers.
-    // Logs to worker's own DevTools, then forwards to main page for CLI capture.
-    let worker_console_shim = r#"
-function __wbg_install_worker_console_shim(sendToParent) {
-    if (self.__wbg_worker_console_shim_installed) {
-        return;
-    }
-    self.__wbg_worker_console_shim_installed = true;
-
-    function __wbg_forward_console_message(send, method, args) {
-        try {
-            send(["__wbgtest_" + method, args]);
-        } catch (e) {
-            try {
-                send(["__wbgtest_" + method, args.map(String)]);
-            } catch (e2) {}
-        }
-    }
-
-    function __wbg_worker_message_handler(e) {
-        if (e.data && Array.isArray(e.data) &&
-            typeof e.data[0] === 'string' &&
-            e.data[0].startsWith('__wbgtest_')) {
-            const method = e.data[0].slice(10);
-            const args = e.data[1];
-            if (['debug','log','info','warn','error'].includes(method)) {
-                __wbg_forward_console_message(sendToParent, method, args);
-            }
-            e.stopImmediatePropagation();
-        }
-    }
-
-    function __wbg_schedule_wrapper_revoke(url, target) {
-        if (url === undefined || !target) {
-            return;
-        }
-
-        let revoked = false;
-        const revoke = () => {
-            if (!revoked) {
-                revoked = true;
-                URL.revokeObjectURL(url);
-            }
-        };
-
-        setTimeout(revoke, 5000);
-        target.addEventListener('message', revoke, { once: true });
-        target.addEventListener('messageerror', revoke, { once: true });
-        target.addEventListener('error', revoke, { once: true });
-    }
-
-    ["debug","log","info","warn","error"].forEach(m => {
-        const og = console[m];
-        console[m] = function(...a) {
-            og.apply(this, a);
-            __wbg_forward_console_message(sendToParent, m, a);
-        };
-    });
-
-    if (typeof Worker === 'function') {
-        const __wbg_OriginalWorker = Worker;
-        Worker = function(url, options) {
-            const __wbg_bootstrap =
-                '(' + __wbg_install_worker_console_shim.toString() + ')(postMessage);';
-            let scriptUrl = url;
-            let wrapperUrl;
-            if (typeof url === 'string' && !url.startsWith('blob:')) {
-                scriptUrl = new URL(url, location.href).href;
-            }
-            if (typeof scriptUrl === 'string' && scriptUrl.startsWith('blob:')) {
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', scriptUrl, false);
-                xhr.send();
-                if (xhr.status === 200 || xhr.status === 0) {
-                    const shimmed = __wbg_bootstrap + xhr.responseText;
-                    const blob = new Blob([shimmed], {type: 'application/javascript'});
-                    wrapperUrl = URL.createObjectURL(blob);
-                    scriptUrl = wrapperUrl;
-                }
-            } else if (typeof scriptUrl === 'string') {
-                const isModule = options?.type === 'module';
-                const wrapper = isModule
-                    ? __wbg_bootstrap + 'await import(' + JSON.stringify(scriptUrl) + ');'
-                    : __wbg_bootstrap + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
-                const blob = new Blob([wrapper], {type: 'application/javascript'});
-                wrapperUrl = URL.createObjectURL(blob);
-                scriptUrl = wrapperUrl;
-                if (isModule) {
-                    options = {...options, type: 'module'};
-                }
-            }
-            const worker = new __wbg_OriginalWorker(scriptUrl, options);
-            worker.addEventListener('message', __wbg_worker_message_handler);
-            __wbg_schedule_wrapper_revoke(wrapperUrl, worker);
-            return worker;
-        };
-        Worker.prototype = __wbg_OriginalWorker.prototype;
-    }
-}
-__wbg_install_worker_console_shim(postMessage);
-"#;
-
-    // Console shim for SharedWorkers - needs to track ports from connections
-    let shared_worker_console_shim = r#"
+    // Shared source for the __wbg_forward_console_message helper. This function
+    // is inlined into multiple separate JS contexts (dedicated worker shim,
+    // shared worker shim, and the wasm-bindgen worker script) because each
+    // context is its own JS realm with no shared scope. The implementation is
+    // kept here in one place so the three copies stay in sync.
+    let forward_console_message_fn = r#"
 function __wbg_forward_console_message(send, method, args) {
     try {
         send(["__wbgtest_" + method, args]);
@@ -134,38 +36,161 @@ function __wbg_forward_console_message(send, method, args) {
             send(["__wbgtest_" + method, args.map(String)]);
         } catch (e2) {}
     }
-}
-const __wbg_ports = [];
-self.__wbg_pending_logs = [];
-self.__wbg_flush_pending_logs = function(port) {
-    if (self.__wbg_pending_logs.length === 0) {
+}"#;
+
+    // Console shim to inject into user-spawned dedicated workers.
+    // Logs to worker's own DevTools, then forwards to main page for CLI capture.
+    let worker_console_shim = format!(
+        r#"
+function __wbg_install_worker_console_shim(sendToParent) {{
+    if (self.__wbg_worker_console_shim_installed) {{
         return;
-    }
-    for (const [method, args] of self.__wbg_pending_logs) {
+    }}
+    self.__wbg_worker_console_shim_installed = true;
+
+    {forward_console_message_fn}
+
+    function __wbg_worker_message_handler(e) {{
+        if (e.data && Array.isArray(e.data) &&
+            typeof e.data[0] === 'string' &&
+            e.data[0].startsWith('__wbgtest_')) {{
+            const method = e.data[0].slice(10);
+            const args = e.data[1];
+            if (['debug','log','info','warn','error'].includes(method)) {{
+                __wbg_forward_console_message(sendToParent, method, args);
+            }}
+            e.stopImmediatePropagation();
+        }}
+    }}
+
+    // Revoke the blob wrapper URL once the worker has started (first message,
+    // error, or after 5 s). The blob is only needed during script load; keeping
+    // it alive longer just wastes memory. The 5 s fallback guards against
+    // browsers that delay the first message event (no specific known bug, but
+    // included as a conservative safety net).
+    function __wbg_schedule_wrapper_revoke(url, target) {{
+        if (url === undefined || !target) {{
+            return;
+        }}
+
+        let revoked = false;
+        const revoke = () => {{
+            if (!revoked) {{
+                revoked = true;
+                URL.revokeObjectURL(url);
+            }}
+        }};
+
+        setTimeout(revoke, 5000);
+        target.addEventListener('message', revoke, {{ once: true }});
+        target.addEventListener('messageerror', revoke, {{ once: true }});
+        target.addEventListener('error', revoke, {{ once: true }});
+    }}
+
+    ["debug","log","info","warn","error"].forEach(m => {{
+        const og = console[m];
+        console[m] = function(...a) {{
+            og.apply(this, a);
+            __wbg_forward_console_message(sendToParent, m, a);
+        }};
+    }});
+
+    if (typeof Worker === 'function') {{
+        const __wbg_OriginalWorker = Worker;
+        Worker = function(url, options) {{
+            const __wbg_bootstrap =
+                '(' + __wbg_install_worker_console_shim.toString() + ')(postMessage);';
+            let scriptUrl = url;
+            let wrapperUrl;
+            if (typeof url === 'string' && !url.startsWith('blob:')) {{
+                scriptUrl = new URL(url, location.href).href;
+            }}
+            if (typeof scriptUrl === 'string' && scriptUrl.startsWith('blob:')) {{
+                // Synchronous XHR is deprecated but required here: the Worker
+                // constructor is synchronous and we must rewrite the blob
+                // contents before handing a URL to it. An async fetch cannot
+                // be awaited at this call site without restructuring the entire
+                // constructor patch. A tracking issue for an async alternative
+                // should be filed against the headless test pipeline.
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', scriptUrl, false);
+                xhr.send();
+                if (xhr.status === 200 || xhr.status === 0) {{
+                    const shimmed = __wbg_bootstrap + xhr.responseText;
+                    const blob = new Blob([shimmed], {{type: 'application/javascript'}});
+                    wrapperUrl = URL.createObjectURL(blob);
+                    scriptUrl = wrapperUrl;
+                }}
+            }} else if (typeof scriptUrl === 'string') {{
+                // Non-blob URLs (http:, https:, data:, etc.) are wrapped in a
+                // new blob that prepends the shim and then imports the original
+                // script. Note: data: URLs are not shimmed — importScripts()
+                // with a data: URL is blocked by CSP in most browser
+                // configurations, so this path silently skips shimming for
+                // data: URLs. Only blob: and http(s): URLs are fully supported.
+                const isModule = options?.type === 'module';
+                const wrapper = isModule
+                    ? __wbg_bootstrap + 'await import(' + JSON.stringify(scriptUrl) + ');'
+                    : __wbg_bootstrap + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
+                const blob = new Blob([wrapper], {{type: 'application/javascript'}});
+                wrapperUrl = URL.createObjectURL(blob);
+                scriptUrl = wrapperUrl;
+                if (isModule) {{
+                    options = {{...options, type: 'module'}};
+                }}
+            }}
+            const worker = new __wbg_OriginalWorker(scriptUrl, options);
+            worker.addEventListener('message', __wbg_worker_message_handler);
+            __wbg_schedule_wrapper_revoke(wrapperUrl, worker);
+            return worker;
+        }};
+        Worker.prototype = __wbg_OriginalWorker.prototype;
+    }}
+}}
+__wbg_install_worker_console_shim(postMessage);
+"#
+    );
+
+    // Console shim for SharedWorkers - needs to track ports from connections.
+    let shared_worker_console_shim = format!(
+        r#"
+{forward_console_message_fn}
+const __wbg_ports = [];
+// Dead MessagePort instances are not detectable passively in a cross-browser
+// compatible way; there is no 'close' event on MessagePort itself. We therefore
+// accumulate ports and accept that closed-page ports remain in the list. The
+// postMessage calls to dead ports are silently dropped by the browser.
+self.__wbg_pending_logs = [];
+self.__wbg_flush_pending_logs = function(port) {{
+    if (self.__wbg_pending_logs.length === 0) {{
+        return;
+    }}
+    for (const [method, args] of self.__wbg_pending_logs) {{
         __wbg_forward_console_message(port.postMessage.bind(port), method, args);
-    }
+    }}
     self.__wbg_pending_logs.length = 0;
-};
-self.addEventListener('connect', e => {
+}};
+self.addEventListener('connect', e => {{
     const port = e.ports[0];
     __wbg_ports.push(port);
     self.__wbg_flush_pending_logs(port);
-});
-["debug","log","info","warn","error"].forEach(m => {
+}});
+["debug","log","info","warn","error"].forEach(m => {{
     const og = console[m];
-    console[m] = function(...a) {
+    console[m] = function(...a) {{
         og.apply(this, a);
-        if (__wbg_ports.length === 0) {
-            if (self.__wbg_pending_logs.length === 256) {
+        if (__wbg_ports.length === 0) {{
+            if (self.__wbg_pending_logs.length === 256) {{
                 self.__wbg_pending_logs.shift();
-            }
+            }}
             self.__wbg_pending_logs.push([m, a]);
             return;
-        }
+        }}
         __wbg_ports.forEach(p => __wbg_forward_console_message(p.postMessage.bind(p), m, a));
-    };
-});
-"#;
+    }};
+}});
+"#
+    );
 
     // Patch Worker and SharedWorker constructors to inject console shim.
     // This captures logs from user-spawned workers for CLI output.
@@ -181,7 +206,12 @@ function __wbg_worker_message_handler(e) {{
         const method = e.data[0].slice(10);
         const args = e.data[1];
         if (['debug','log','info','warn','error'].includes(method)) {{
-            // Write to the appropriate element based on capture mode
+            // nocapture is declared with `const` in the preceding classic
+            // <script> block. A top-level const in a classic script lands in
+            // the Realm's Declarative Environment Record, which is the outer
+            // scope of all modules in the same realm (ECMA-262 §9.1.1.4,
+            // §16.2.1.5 step 5), so this reference resolves correctly even
+            // though this code runs inside a module script (run.js).
             const targetId = (typeof nocapture !== 'undefined' && nocapture) ? 'output' : 'console_output';
             const el = document.getElementById(targetId);
             if (el) {{
@@ -194,6 +224,11 @@ function __wbg_worker_message_handler(e) {{
     }}
 }}
 
+// Revoke the blob wrapper URL once the worker has started (first message,
+// error, or after 5 s). The blob is only needed during script load; keeping
+// it alive longer just wastes memory. The 5 s fallback guards against
+// browsers that delay the first message event (no specific known bug, but
+// included as a conservative safety net).
 function __wbg_schedule_wrapper_revoke(url, ...targets) {{
     if (url === undefined) {{
         return;
@@ -217,8 +252,21 @@ function __wbg_schedule_wrapper_revoke(url, ...targets) {{
     }}
 }}
 
-const __wbg_OriginalWorker = Worker;
-Worker = function(url, options) {{
+// Rewrite a worker URL to prepend the console shim. For blob: URLs the
+// original script is fetched synchronously and a new blob is created.
+// For other URLs a wrapper blob that imports the original script is used.
+//
+// Synchronous XHR is deprecated but required for the blob: path: the Worker
+// constructor is synchronous and we must rewrite blob contents before passing
+// a URL to it. An async fetch cannot be awaited at this call site without
+// restructuring the entire constructor patch. A tracking issue for an async
+// alternative should be filed against the headless test pipeline.
+//
+// Note: data: URLs fall through to the non-blob branch and are wrapped with
+// importScripts(). However, importScripts() with a data: URL is blocked by
+// CSP in most browser configurations, so shimming is silently skipped for
+// data: URLs. Only blob: and http(s): URLs are fully supported.
+function __wbg_wrap_worker_url(url, shim, options) {{
     let scriptUrl = url;
     let wrapperUrl;
     if (typeof url === 'string' && !url.startsWith('blob:')) {{
@@ -229,7 +277,7 @@ Worker = function(url, options) {{
         xhr.open('GET', scriptUrl, false);
         xhr.send();
         if (xhr.status === 200 || xhr.status === 0) {{
-            const shimmed = __wbg_worker_console_shim + xhr.responseText;
+            const shimmed = shim + xhr.responseText;
             const blob = new Blob([shimmed], {{type: 'application/javascript'}});
             wrapperUrl = URL.createObjectURL(blob);
             scriptUrl = wrapperUrl;
@@ -237,8 +285,8 @@ Worker = function(url, options) {{
     }} else if (typeof scriptUrl === 'string') {{
         const isModule = options?.type === 'module';
         const wrapper = isModule
-            ? __wbg_worker_console_shim + 'await import(' + JSON.stringify(scriptUrl) + ');'
-            : __wbg_worker_console_shim + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
+            ? shim + 'await import(' + JSON.stringify(scriptUrl) + ');'
+            : shim + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
         const blob = new Blob([wrapper], {{type: 'application/javascript'}});
         wrapperUrl = URL.createObjectURL(blob);
         scriptUrl = wrapperUrl;
@@ -246,46 +294,29 @@ Worker = function(url, options) {{
             options = {{...options, type: 'module'}};
         }}
     }}
-    const worker = new __wbg_OriginalWorker(scriptUrl, options);
+    return {{ scriptUrl, wrapperUrl, options }};
+}}
+
+const __wbg_OriginalWorker = Worker;
+Worker = function(url, options) {{
+    const wrapped = __wbg_wrap_worker_url(url, __wbg_worker_console_shim, options);
+    const worker = new __wbg_OriginalWorker(wrapped.scriptUrl, wrapped.options);
     worker.addEventListener('message', __wbg_worker_message_handler);
-    __wbg_schedule_wrapper_revoke(wrapperUrl, worker);
+    __wbg_schedule_wrapper_revoke(wrapped.wrapperUrl, worker);
     return worker;
 }};
 Worker.prototype = __wbg_OriginalWorker.prototype;
 
 const __wbg_OriginalSharedWorker = SharedWorker;
 SharedWorker = function(url, options) {{
-    let scriptUrl = url;
-    let wrapperUrl;
-    if (typeof url === 'string' && !url.startsWith('blob:')) {{
-        scriptUrl = new URL(url, location.href).href;
-    }}
-    if (typeof scriptUrl === 'string' && scriptUrl.startsWith('blob:')) {{
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', scriptUrl, false);
-        xhr.send();
-        if (xhr.status === 200 || xhr.status === 0) {{
-            const shimmed = __wbg_shared_worker_console_shim + xhr.responseText;
-            const blob = new Blob([shimmed], {{type: 'application/javascript'}});
-            wrapperUrl = URL.createObjectURL(blob);
-            scriptUrl = wrapperUrl;
-        }}
-    }} else if (typeof scriptUrl === 'string') {{
-        const isModule = options?.type === 'module';
-        const wrapper = isModule
-            ? __wbg_shared_worker_console_shim + 'await import(' + JSON.stringify(scriptUrl) + ');'
-            : __wbg_shared_worker_console_shim + 'importScripts(' + JSON.stringify(scriptUrl) + ');';
-        const blob = new Blob([wrapper], {{type: 'application/javascript'}});
-        wrapperUrl = URL.createObjectURL(blob);
-        scriptUrl = wrapperUrl;
-        if (isModule) {{
-            options = {{...options, type: 'module'}};
-        }}
-    }}
-    const worker = new __wbg_OriginalSharedWorker(scriptUrl, options);
+    const wrapped = __wbg_wrap_worker_url(url, __wbg_shared_worker_console_shim, options);
+    const worker = new __wbg_OriginalSharedWorker(wrapped.scriptUrl, wrapped.options);
     worker.port.addEventListener('message', __wbg_worker_message_handler);
+    // port.start() is required when using addEventListener (vs. onmessage) to
+    // begin message delivery. Calling it here is idempotent if the user also
+    // calls port.start() on the returned worker.
     worker.port.start();
-    __wbg_schedule_wrapper_revoke(wrapperUrl, worker, worker.port);
+    __wbg_schedule_wrapper_revoke(wrapped.wrapperUrl, worker, worker.port);
     return worker;
 }};
 SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
@@ -414,15 +445,7 @@ SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
         worker_script.push_str(&format!(
             r#"
             const nocapture = {nocapture};
-            function __wbg_forward_console_message(send, method, args) {{
-                try {{
-                    send(["__wbgtest_" + method, args]);
-                }} catch (e) {{
-                    try {{
-                        send(["__wbgtest_" + method, args.map(String)]);
-                    }} catch (e2) {{}}
-                }}
-            }}
+            {forward_console_message_fn}
             const wrap = method => {{
                 const on_method = `on_console_${{method}}`;
                 self.console[method] = function (...args) {{
