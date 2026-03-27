@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-cli-support"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/cli-support"
 rust-version = "1.82"
-version = "0.2.114"
+version = "0.2.115"
 
 [dependencies]
 anyhow = "1.0"
@@ -21,9 +21,9 @@ log = "0.4"
 rustc-demangle = "0.1.13"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-walrus = { version = "0.25.1", features = ['parallel'] }
-wasm-bindgen-shared = { path = "../shared", version = "=0.2.114" }
-wasmparser = "0.240"
+walrus = { version = "0.26.0", features = ['parallel'] }
+wasm-bindgen-shared = { path = "../shared", version = "=0.2.115" }
+wasmparser = "0.245"
 
 [dev-dependencies]
 rstest = "0.26"

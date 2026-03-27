@@ -613,6 +613,114 @@ static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(C
 #[no_mangle]
 pub static mut __instance_terminated: u32 = 0;
 
+/// Stores the Wasm indirect-function-table index of the registered hard-abort
+/// callback.  Zero means no callback is registered.
+#[cfg(panic = "unwind")]
+#[no_mangle]
+pub static mut __abort_handler: u32 = 0;
+
+/// Register a callback invoked when a hard abort (instance termination) occurs.
+///
+/// Returns the previously registered handler, or `None` if none was set.
+/// This mirrors the `std::panic::set_hook` convention and lets callers chain
+/// or restore handlers.
+///
+/// The callback fires after the terminated flag is set, so any re-entrant
+/// export call from within the handler is immediately blocked.  A throwing
+/// or panicking handler cannot suppress the original error.
+///
+/// **Experimental — only available when built with `panic=unwind`.**
+/// On `panic=abort` builds the no-op stub always returns `None` and the
+/// callback will never fire.
+#[cfg(panic = "unwind")]
+pub fn set_on_abort(f: fn()) -> Option<fn()> {
+    // On wasm32, function pointers are indices into the Wasm
+    // __indirect_function_table. Casting fn() -> usize -> u32 extracts
+    // that index without touching linear memory.
+    unsafe {
+        let prev = __abort_handler;
+        __abort_handler = f as usize as u32;
+        if prev != 0 {
+            Some(core::mem::transmute::<usize, fn()>(prev as usize))
+        } else {
+            None
+        }
+    }
+}
+
+/// No-op stub for `panic=abort` builds — handler will never fire.
+#[cfg(not(panic = "unwind"))]
+pub fn set_on_abort(_f: fn()) -> Option<fn()> {
+    None
+}
+
+/// Sentinel written to `__instance_terminated` to signal a reinit.
+/// Distinct from `0` (live) and `1` (hard terminated).
+#[cfg(panic = "unwind")]
+pub const REINIT_SENTINEL: u32 = u32::MAX;
+
+/// Signal that the instance should be reinitialised before the next export
+/// call.
+///
+/// **Experimental — only available when built with `panic=unwind` and when
+/// wasm-bindgen is invoked with `--experimental-reset-state-function`.**
+/// Without that flag the JS guard is not emitted, so the sentinel is written
+/// but never acted upon.  On `panic=abort` builds this is a no-op.
+#[cfg(panic = "unwind")]
+pub fn reinit() {
+    unsafe {
+        __instance_terminated = REINIT_SENTINEL;
+    }
+}
+
+/// Stores the Wasm indirect-function-table index of the registered reinit
+/// callback.  Zero means no callback is registered.
+#[cfg(panic = "unwind")]
+#[no_mangle]
+pub static mut __reinit_handler: u32 = 0;
+
+/// Register a callback invoked on the new instance immediately after
+/// `__wbg_reset_state()` creates it following a [`reinit()`] signal.
+///
+/// Returns the previously registered handler, or `None` if none was set.
+/// This mirrors the `std::panic::set_hook` convention and lets callers chain
+/// or restore handlers.
+///
+/// Because `__wbg_reset_state()` creates a completely fresh
+/// `WebAssembly.Instance`, all Rust statics (including `__reinit_handler`
+/// itself) are reset to their initial values on the new instance.  The
+/// callback should therefore be re-registered on every instance — the
+/// idiomatic way is via a `#[wasm_bindgen(start)]` function that runs
+/// automatically on every instantiation.
+///
+/// **Experimental — only available when built with `panic=unwind` and when
+/// wasm-bindgen is invoked with `--experimental-reset-state-function`.**
+/// Without that flag the JS guard is not emitted and the callback will never
+/// fire.  On `panic=abort` builds the no-op stub always returns `None`.
+#[cfg(panic = "unwind")]
+pub fn set_on_reinit(f: fn()) -> Option<fn()> {
+    // Same table-index cast as set_on_abort.
+    unsafe {
+        let prev = __reinit_handler;
+        __reinit_handler = f as usize as u32;
+        if prev != 0 {
+            Some(core::mem::transmute::<usize, fn()>(prev as usize))
+        } else {
+            None
+        }
+    }
+}
+
+/// No-op stub for `panic=abort` builds.
+#[cfg(not(panic = "unwind"))]
+pub fn set_on_reinit(_f: fn()) -> Option<fn()> {
+    None
+}
+
+/// No-op stub for `panic=abort` builds.
+#[cfg(not(panic = "unwind"))]
+pub fn reinit() {}
+
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
     debug_assert_eq!(GLOBAL_EXNDATA.0.get()[0], 0);

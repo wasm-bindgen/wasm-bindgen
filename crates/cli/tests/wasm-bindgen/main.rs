@@ -1133,3 +1133,329 @@ describe('termination with reset state', () => {
         .assert()
         .success();
 }
+
+// Lib used for the abort handler and reinit tests — extends TERMINATION_LIB_RS
+// with handler setup exports.
+const HANDLER_LIB_RS: &str = r#"
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::throw_str;
+
+    #[wasm_bindgen(inline_js = "
+        export function js_throw_error() { throw new Error('JS import threw'); }
+        export function set_was_dropped(val) { globalThis.was_dropped = val; }
+        let _callback = null;
+        export function register_callback(f) { _callback = f; }
+        export function js_call_callback_with_catch() {
+            try { _callback(); } catch(e) {}
+        }
+    ")]
+    extern "C" {
+        fn js_throw_error();
+        fn set_was_dropped(val: bool);
+        fn register_callback(f: &JsValue);
+        fn js_call_callback_with_catch();
+    }
+
+    struct DropGuard;
+    impl DropGuard {
+        fn new() -> Self { set_was_dropped(false); DropGuard }
+    }
+    impl Drop for DropGuard {
+        fn drop(&mut self) { set_was_dropped(true); }
+    }
+
+    static mut COUNTER: u32 = 0;
+
+    #[wasm_bindgen]
+    pub fn get_counter() -> u32 { unsafe { COUNTER } }
+
+    #[wasm_bindgen]
+    pub fn increment_counter() -> u32 {
+        unsafe { COUNTER += 1; COUNTER }
+    }
+
+    #[wasm_bindgen]
+    pub fn simple_add(a: u32, b: u32) -> u32 { a + b }
+
+    #[wasm_bindgen]
+    pub fn trigger_unreachable() {
+        let _guard = DropGuard::new();
+        #[cfg(target_arch = "wasm32")]
+        unsafe { core::arch::wasm32::unreachable(); }
+    }
+
+    #[wasm_bindgen]
+    pub fn trigger_panic() {
+        let _guard = DropGuard::new();
+        panic!("deliberate panic");
+    }
+
+    #[wasm_bindgen]
+    pub fn call_throwing_import() {
+        let _guard = DropGuard::new();
+        js_throw_error();
+    }
+
+    // --- abort handler ---
+
+    #[cfg(panic = "unwind")]
+    #[no_mangle]
+    pub static mut __abort_called: u32 = 0;
+
+    fn on_abort() {
+        #[cfg(panic = "unwind")]
+        unsafe { __abort_called = 1; }
+    }
+
+    /// Returns true if no previous handler was registered (first registration),
+    /// false if one was already set (returned Some).
+    #[wasm_bindgen]
+    pub fn setup_abort_handler() -> bool {
+        wasm_bindgen::handler::set_on_abort(on_abort).is_none()
+    }
+
+    // --- reinit handler ---
+
+    fn on_reinit() {
+        unsafe { COUNTER += 1; }
+    }
+
+    /// Runs on every new instance (including ones created by __wbg_reset_state
+    /// after a reinit() signal) so the reinit handler is always registered.
+    #[wasm_bindgen(start)]
+    pub fn start() {
+        wasm_bindgen::handler::set_on_reinit(on_reinit);
+    }
+
+    #[wasm_bindgen]
+    pub fn signal_reinit() {
+        wasm_bindgen::handler::reinit();
+    }
+"#;
+
+#[test]
+fn termination_abort_handler() {
+    let mut project = Project::new("termination_abort_handler");
+    project.file("src/lib.rs", HANDLER_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                [package]
+                name = \"termination_abort_handler\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{}' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+
+                [profile.dev]
+                codegen-units = 1
+            ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    // panic=unwind + nightly build-std required for EH catch wrappers
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+
+    // Read __abort_called flag directly from linear memory after termination —
+    // JS-level exports are blocked but the buffer is still readable.
+    fs::write(
+        out_dir.join("test_abort_handler.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+};
+const wasm = require('./termination_abort_handler.js');
+WebAssembly.Instance = OrigInstance;
+
+function abortCalled() {
+    const addr = wasmExports.__abort_called.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+function isTerminated() {
+    const addr = wasmExports.__instance_terminated.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+
+describe('abort handler', () => {
+    it('set_on_abort returns true with panic=unwind', () => {
+        assert.strictEqual(wasm.setup_abort_handler(), true);
+    });
+
+    it('handler not called before any fatal error', () => {
+        assert.strictEqual(abortCalled(), false);
+    });
+
+    it('recoverable panic does not fire the handler', () => {
+        assert.throws(() => wasm.trigger_panic(), /deliberate panic/);
+        assert.strictEqual(abortCalled(), false);
+    });
+
+    it('recoverable JS import throw does not fire the handler', () => {
+        assert.throws(() => wasm.call_throwing_import(), /JS import threw/);
+        assert.strictEqual(abortCalled(), false);
+    });
+
+    it('unreachable fires the handler and terminates the instance', () => {
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert.ok(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
+        assert.strictEqual(abortCalled(), true);
+        assert.strictEqual(isTerminated(), true);
+    });
+
+    it('all exports blocked after termination', () => {
+        assert.throws(() => wasm.simple_add(1, 2), /Module terminated/);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_abort_handler.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn termination_reinit() {
+    let mut project = Project::new("termination_reinit");
+    project.file("src/lib.rs", HANDLER_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                [package]
+                name = \"termination_reinit\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{}' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+
+                [profile.dev]
+                codegen-units = 1
+            ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --experimental-reset-state-function")
+        .unwrap();
+
+    fs::write(
+        out_dir.join("test_reinit.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let instanceCount = 0;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    instanceCount++;
+    return new OrigInstance(module, imports);
+};
+const wasm = require('./termination_reinit.js');
+assert.strictEqual(instanceCount, 1, 'one instance on load');
+
+describe('reinit handler', () => {
+    it('signal_reinit then export call creates a new instance', () => {
+        wasm.signal_reinit();
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+        assert.strictEqual(instanceCount, 2);
+    });
+
+    it('reinit callback fires on new instance — counter resets to 0 then increments to 1', () => {
+        // Bump counter so we can prove it resets on reinit.
+        wasm.increment_counter();
+        wasm.increment_counter();
+        // Counter is now > 1 on old instance.
+        assert.ok(wasm.get_counter() > 1);
+        wasm.signal_reinit();
+        wasm.simple_add(0, 0); // __wbg_reset_state -> new instance -> start() -> __wbindgen_reinit
+        // New instance: statics reset to 0, on_reinit increments to 1.
+        assert.strictEqual(wasm.get_counter(), 1, 'fresh instance: counter reset to 0, on_reinit incremented to 1');
+        assert.strictEqual(instanceCount, 3);
+    });
+
+    it('reinit callback does not fire without signal', () => {
+        wasm.increment_counter(); // counter now 2
+        wasm.increment_counter(); // counter now 3
+        assert.strictEqual(wasm.get_counter(), 3);
+        // No reinit — counter stays at 3.
+        wasm.simple_add(0, 0);
+        assert.strictEqual(wasm.get_counter(), 3);
+    });
+
+    it('multiple reinit cycles each produce a fresh instance with counter=1', () => {
+        const startInstances = instanceCount;
+        for (let i = 0; i < 3; i++) {
+            // Bump counter to prove it resets.
+            wasm.increment_counter();
+            wasm.increment_counter();
+            wasm.signal_reinit();
+            wasm.simple_add(0, 0);
+            assert.strictEqual(instanceCount, startInstances + i + 1);
+            // Each new instance: counter reset to 0, on_reinit fires -> 1.
+            assert.strictEqual(wasm.get_counter(), 1);
+        }
+    });
+
+    it('hard abort resets the instance (reset-state flag active)', () => {
+        // With --experimental-reset-state-function the guard calls
+        // __wbg_reset_state() for any truthy flag value including 1.
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert.ok(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
+        // Next call resets — should work fine.
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reinit.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}

@@ -5,6 +5,8 @@
 ///
 /// Run with:
 ///   cargo bench --bench headless_output --target wasm32-unknown-unknown -p wasm-bindgen-test
+use std::time::Duration;
+
 use wasm_bindgen_test::{wasm_bindgen_bench, wasm_bindgen_test_configure, Criterion};
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -39,8 +41,6 @@ fn performance_now() -> f64 {
 
 #[wasm_bindgen_bench]
 async fn bench_console_log_1mb(c: &mut Criterion) {
-    use std::time::Duration;
-
     let msg: wasm_bindgen::JsValue = "y".repeat(100).into();
     prewarm(1_000).await;
     c.bench_async_function("console_log_after_1mb", |b| {
@@ -73,8 +73,6 @@ async fn bench_console_log_1mb(c: &mut Criterion) {
 
 #[wasm_bindgen_bench]
 async fn bench_console_log_10mb(c: &mut Criterion) {
-    use std::time::Duration;
-
     let msg: wasm_bindgen::JsValue = "y".repeat(100).into();
     prewarm(10_000).await;
     c.bench_async_function("console_log_after_10mb", |b| {

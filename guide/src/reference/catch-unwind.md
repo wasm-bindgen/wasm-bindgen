@@ -212,6 +212,83 @@ that this assumes your code handles potential inconsistent state after a panic.
 Functions with `&mut [T]` slice arguments cannot be used because mutable slices
 are not `UnwindSafe`. Consider using owned types like `Vec<T>` instead.
 
+## Hard Abort Handlers
+
+> **Note**: This feature is experimental and subject to change.
+
+When built with `panic=unwind`, wasm-bindgen exposes hooks for responding to
+*hard aborts* — non-recoverable errors such as `unreachable`, stack overflow,
+or out-of-memory that cannot be caught by `catch_unwind`.  When a hard abort
+occurs the Wasm instance is permanently poisoned and no further exports can be
+called.
+
+`set_on_abort` is available with `panic=unwind`.  `reinit` and `set_on_reinit`
+additionally require passing `--experimental-reset-state-function` to
+wasm-bindgen.
+
+Because `--experimental-reset-state-function` creates a completely fresh
+`WebAssembly.Instance` on reinit (resetting all Rust statics including the
+registered handlers), both callbacks should be registered in a
+`#[wasm_bindgen(start)]` function so they are re-registered automatically on
+every instantiation.
+
+### `wasm_bindgen::handler::set_on_abort`
+
+Registers a callback that fires immediately after the instance is poisoned, but
+before the original error propagates to JavaScript.  The terminated flag is
+already set when the callback runs, so any re-entrant export call from within
+the handler is immediately blocked.  A throwing or panicking handler cannot
+suppress the original error.
+
+`set_on_abort` returns the previously registered handler (`None` if none was
+set), mirroring the `std::panic::set_hook` convention.
+
+```rust
+use std::sync::atomic::{AtomicBool, Ordering};
+use wasm_bindgen::prelude::*;
+
+static ABORTED: AtomicBool = AtomicBool::new(false);
+
+fn on_abort() {
+    ABORTED.store(true, Ordering::SeqCst);
+}
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    wasm_bindgen::handler::set_on_abort(on_abort);
+}
+```
+
+### `wasm_bindgen::handler::reinit` and `set_on_reinit`
+
+`reinit()` writes a sentinel value into the termination flag.  The next call to
+any export detects this, creates a fresh `WebAssembly.Instance` from the same
+module, and then invokes the registered `set_on_reinit` callback on the new
+instance.
+
+```rust
+use wasm_bindgen::prelude::*;
+
+fn on_abort() {
+    // called on hard abort before the error propagates
+}
+
+fn on_reinit() {
+    // called on every fresh instance after reinit()
+}
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    wasm_bindgen::handler::set_on_abort(on_abort);
+    wasm_bindgen::handler::set_on_reinit(on_reinit);
+}
+
+#[wasm_bindgen]
+pub fn request_reinit() {
+    wasm_bindgen::handler::reinit();
+}
+```
+
 ## See Also
 
 - [`catch` attribute](./attributes/on-js-imports/catch.md) - For catching
