@@ -35,7 +35,8 @@ pub struct WasmBindgenAux {
     pub import_map: HashMap<AdapterId, AuxImport>,
 
     /// List of imports that should be re-exported, keyed by reexport name.
-    pub reexports: BTreeMap<String, JsImport>,
+    /// The bool indicates whether TypeScript definitions should be generated for the reexport.
+    pub reexports: BTreeMap<String, (JsImport, bool)>,
 
     /// Small bits of metadata about imports.
     pub imports_with_catch: HashSet<AdapterId>,

@@ -279,9 +279,15 @@ impl<'a> Context<'a> {
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             let actual_js_name: &str = js_name.unwrap_or(&name);
-            self.adapter_deps.insert(actual_js_name.to_string());
 
-            self.export_to_emscripten(actual_js_name, &val);
+            // Only add as a dependency and export if there's actual content.
+            // Empty content means the intrinsic is handled elsewhere (e.g. via
+            // emscripten_global_deps), so registering a dep here would create a
+            // reference to a non-existent library variable.
+            if !val.trim().is_empty() {
+                self.adapter_deps.insert(actual_js_name.to_string());
+                self.export_to_emscripten(actual_js_name, &val);
+            }
 
             // Register empty string so standard generation skips this key
             self.intrinsics.as_mut().unwrap().insert(name, "".into());
@@ -418,9 +424,13 @@ impl<'a> Context<'a> {
         };
 
         // Process reexports
-        for (export_name, js_import) in self.aux.reexports.clone() {
+        for (export_name, (js_import, generate_typescript)) in self.aux.reexports.clone() {
             let import_name = self.import_name(&js_import)?;
-            let ts_definition = format!("let {import_name}: unknown;\n");
+            let ts_definition = if generate_typescript {
+                format!("let {import_name}: unknown;\n")
+            } else {
+                String::new()
+            };
             define_export(
                 &mut self.exports,
                 &export_name,
@@ -733,6 +743,8 @@ impl<'a> Context<'a> {
                     "$heap: \"new Array({INITIAL_HEAP_OFFSET}).fill(undefined)\",\n$heap__postset: \"heap.push({}); heap_next = heap.length;\",\n",
                     INITIAL_HEAP_VALUES.join(", ")
                 ));
+            } else if global_dep == "heap_next" {
+                imports.push_str("$heap_next: '0',\n");
             } else if global_dep == "stack_pointer" {
                 imports.push_str(&format!("$stack_pointer : \"{INITIAL_HEAP_OFFSET}\",\n"));
             }
@@ -1994,6 +2006,10 @@ if (require('worker_threads').isMainThread) {{
 
     fn expose_global_heap_next(&mut self) {
         self.expose_global_heap();
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_global_deps.insert("heap_next".to_string());
+            return;
+        }
         self.intrinsic(
             "heap_next".into(),
             None,
@@ -2165,8 +2181,8 @@ if (require('worker_threads').isMainThread) {{
             format!(
                 "{func_decl}
                 addToLibrary({{
-                    '{ret}': {ret},
-                    '{ret}__deps': ['$cachedTextEncoder', '$WASM_VECTOR_LEN']
+                    '${ret}': {ret},
+                    '${ret}__deps': ['$cachedTextEncoder', '$WASM_VECTOR_LEN']
                 }});\n"
             ).into()
         } else {
@@ -2293,6 +2309,7 @@ if (require('worker_threads').isMainThread) {{
         if is_emscripten {
             self.emscripten_global_deps
                 .insert("cachedTextEncoder".to_string());
+            self.adapter_deps.insert("cachedTextEncoder".to_string());
         }
         self.intrinsic("text_encoder".into(), "textEncoder".into(), {
             if is_emscripten {
@@ -3676,7 +3693,7 @@ if (require('worker_threads').isMainThread) {{
         }
 
         // Ensure all imports for reexports are defined
-        for js_import in self.aux.reexports.values() {
+        for (js_import, _) in self.aux.reexports.values() {
             self.import_name(js_import)?;
         }
 

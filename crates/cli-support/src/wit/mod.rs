@@ -727,13 +727,21 @@ impl<'a> Context<'a> {
             function,
             assert_no_shim,
         } = function;
+        let generate_typescript = import.generate_typescript;
         let (import_id, _id) = match self.function_imports.get(shim) {
             Some(pair) => *pair,
             None => {
                 if let Some(reexport_name) = import.reexport {
                     self.aux.reexports.insert(
                         reexport_name,
-                        self.determine_import(&import.module, &import.js_namespace, function.name)?,
+                        (
+                            self.determine_import(
+                                &import.module,
+                                &import.js_namespace,
+                                function.name,
+                            )?,
+                            generate_typescript,
+                        ),
                     );
                 }
                 return Ok(());
@@ -800,7 +808,9 @@ impl<'a> Context<'a> {
                         )?;
 
                         if let Some(reexport_name) = import.reexport {
-                            self.aux.reexports.insert(reexport_name, js_import.clone());
+                            self.aux
+                                .reexports
+                                .insert(reexport_name, (js_import.clone(), generate_typescript));
                         }
 
                         AuxImport::Value(AuxValue::Bare(js_import))
@@ -951,13 +961,21 @@ impl<'a> Context<'a> {
         let decode::ImportKind::Static(static_) = import.kind else {
             unreachable!();
         };
+        let generate_typescript = import.generate_typescript;
         let (import_id, _id) = match self.function_imports.get(static_.shim) {
             Some(pair) => *pair,
             None => {
                 if let Some(reexport_name) = import.reexport {
                     self.aux.reexports.insert(
                         reexport_name,
-                        self.determine_import(&import.module, &import.js_namespace, static_.name)?,
+                        (
+                            self.determine_import(
+                                &import.module,
+                                &import.js_namespace,
+                                static_.name,
+                            )?,
+                            generate_typescript,
+                        ),
                     );
                 }
                 return Ok(());
@@ -987,7 +1005,9 @@ impl<'a> Context<'a> {
         let js = self.determine_import(&import.module, &import.js_namespace, static_.name)?;
 
         if let Some(reexport_name) = import.reexport {
-            self.aux.reexports.insert(reexport_name, js.clone());
+            self.aux
+                .reexports
+                .insert(reexport_name, (js.clone(), generate_typescript));
         }
 
         self.aux
@@ -1027,6 +1047,7 @@ impl<'a> Context<'a> {
             unreachable!();
         };
 
+        let generate_typescript = import.generate_typescript;
         let (import_id, _id) = match self.function_imports.get(type_.instanceof_shim) {
             Some(pair) => *pair,
             None => {
@@ -1035,7 +1056,14 @@ impl<'a> Context<'a> {
                 if let Some(reexport_name) = import.reexport {
                     self.aux.reexports.insert(
                         reexport_name,
-                        self.determine_import(&import.module, &import.js_namespace, type_.name)?,
+                        (
+                            self.determine_import(
+                                &import.module,
+                                &import.js_namespace,
+                                type_.name,
+                            )?,
+                            generate_typescript,
+                        ),
                     );
                 }
                 return Ok(());
@@ -1058,7 +1086,9 @@ impl<'a> Context<'a> {
         // imported item.
         let js_import = self.determine_import(&import.module, &import.js_namespace, type_.name)?;
         if let Some(reexport_name) = import.reexport {
-            self.aux.reexports.insert(reexport_name, js_import.clone());
+            self.aux
+                .reexports
+                .insert(reexport_name, (js_import.clone(), generate_typescript));
         }
         self.aux
             .import_map

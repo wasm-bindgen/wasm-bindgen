@@ -1945,16 +1945,15 @@ impl<T: JsGeneric> core::iter::IntoIterator for Array<T> {
 }
 
 #[cfg(not(js_sys_unstable_apis))]
-impl<A, T: JsGeneric> core::iter::FromIterator<A> for Array<T>
+impl<A> core::iter::FromIterator<A> for Array
 where
-    A: AsRef<T>,
+    A: AsRef<JsValue>,
 {
-    fn from_iter<I>(iter: I) -> Array<T>
+    fn from_iter<I>(iter: I) -> Array
     where
         I: IntoIterator<Item = A>,
     {
-        let iter = iter.into_iter();
-        let mut out = Array::new_typed();
+        let mut out = Array::new();
         out.extend(iter);
         out
     }
@@ -1978,10 +1977,30 @@ where
             out.set(i, value.as_ref());
             i += 1;
         }
+        // Trim to the actual number of items written, in case size_hint over-estimated.
+        if i < capacity as u32 {
+            out.set_length(i);
+        }
         out
     }
 }
 
+#[cfg(not(js_sys_unstable_apis))]
+impl<A> core::iter::Extend<A> for Array
+where
+    A: AsRef<JsValue>,
+{
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = A>,
+    {
+        for value in iter {
+            self.push(value.as_ref());
+        }
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
 impl<A, T: JsGeneric> core::iter::Extend<A> for Array<T>
 where
     A: AsRef<T>,

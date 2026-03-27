@@ -62,6 +62,7 @@ pub fn run(
     shell: &Shell,
     driver_timeout: u64,
     test_timeout: u64,
+    nocapture: bool,
 ) -> Result<(), Error> {
     let driver = Driver::find()?;
     let mut drop_log: Box<dyn FnMut()> = Box::new(|| ());
@@ -254,6 +255,20 @@ pub fn run(
         drop_log();
     } else {
         println!("Failed to detect test as having been run. It might have timed out.");
+    }
+
+    // When --nocapture is active and tests passed, verify that worker console
+    // messages were routed to #output (not #console_output). This guards against
+    // a scoping regression where the module-loaded run.js can't see the
+    // `nocapture` const from the inline classic script.
+    if nocapture && output_buf.contains("test result: ok") {
+        let console_output = client.text_content(&id, "#console_output", 0)?;
+        if !console_output.chunk.is_empty() {
+            bail!(
+                "with --nocapture, #console_output should be empty but contained:\n{}",
+                console_output.chunk
+            );
+        }
     }
 
     if !output_buf.contains("test result: ok") {

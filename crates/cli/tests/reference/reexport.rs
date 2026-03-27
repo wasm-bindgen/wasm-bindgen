@@ -60,3 +60,9 @@ extern "C" {
     #[wasm_bindgen(js_name = "original_config", reexport = "renamedConfig")]
     pub static CONFIG: JsValue;
 }
+
+#[wasm_bindgen(module = "hidden-lib")]
+extern "C" {
+    #[wasm_bindgen(reexport, skip_typescript)]
+    pub fn hiddenReexport(x: i32) -> i32;
+}
