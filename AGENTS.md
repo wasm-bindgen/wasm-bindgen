@@ -63,12 +63,12 @@ Add an entry to `CHANGELOG.md` for any user-facing change.
    ```
    ## [0.2.X](https://github.com/rustwasm/wasm-bindgen/compare/0.2.<X-1>...0.2.X)
    ```
-3. Update the `SCHEMA_VERSION` constant in `crates/shared/src/lib.rs` to `"0.2.X"`.
-4. Run the schema test to get the new hash:
+3. Run the schema test to get the new hash:
    ```sh
    cargo test -p wasm-bindgen-shared
    ```
    If it fails, copy the left hash from the assertion failure and update `APPROVED_SCHEMA_FILE_HASH` in `crates/shared/src/schema_hash_approval.rs`. Re-run to confirm it passes.
+4. If the schema was changed (either in previous step, OR via schema-change label on PRs, OR hash change added since last release) bump the `SCHEMA_VERSION` constant in `crates/shared/src/lib.rs` to `"0.2.X"`.
 5. Regenerate CLI reference tests:
    ```sh
    just test-cli-overwrite
@@ -77,3 +77,4 @@ Add an entry to `CHANGELOG.md` for any user-facing change.
    ```sh
    git add -A && git commit -m "Release 0.2.X"
    ```
+7. Post the `Release 0.2.X` PR with the CHANGELOG for the version as the PR description.
