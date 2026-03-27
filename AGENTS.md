@@ -50,7 +50,6 @@ Set `WASM_BINDGEN_KEEP_TEST_BUILD=1` to retain the temp build folder on test fai
 - Lint: `cargo clippy --all-features --workspace -- -D warnings`
 - Use inlined format args: `format!("{x}")` not `format!("{}", x)`
 - TOML: formatted with `taplo fmt` (see `taplo.toml`)
-- Edition: 2021. MSRV: 1.71 (libraries), 1.82 (CLI)
 
 Add an entry to `CHANGELOG.md` for any user-facing change.
 
