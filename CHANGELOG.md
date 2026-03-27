@@ -32,6 +32,14 @@
 * Added `VideoFrame`, `VideoColorSpace`, and related WebCodecs dictionaries/enums to `web-sys`.
   [#5008](https://github.com/wasm-bindgen/wasm-bindgen/pull/5008)
 
+* Added `wasm_bindgen::handler` module with `set_on_abort` and `set_on_reinit`
+  hooks for `panic=unwind` builds. `set_on_abort` registers a callback invoked
+  after the instance is terminated (hard abort, OOM, stack overflow).
+  `set_on_reinit` registers a callback invoked after `reinit()` resets the
+  WebAssembly instance via `--experimental-reset-state-function`. Handlers are
+  stored as Wasm indirect-function-table indices so dispatch is safe even when
+  linear memory is corrupt.
+
 ### Changed
 
 * Replaced per-closure generic destructors with a single `__wbindgen_destroy_closure`
@@ -110,6 +118,8 @@
 * Fixed `skip_typescript` not being respected when using `reexport`, causing
   TypeScript definitions to be incorrectly emitted for re-exported items marked
   with `#[wasm_bindgen(skip_typescript)]`.
+  [#5051](https://github.com/wasm-bindgen/wasm-bindgen/pull/5051)
+
 ### Removed
 
 ## [0.2.114](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.113...0.2.114)
