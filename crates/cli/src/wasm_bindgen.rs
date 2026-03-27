@@ -90,7 +90,7 @@ struct Args {
     split_linked_modules: bool,
     #[arg(
         long = "experimental-reset-state-function",
-        help = "Generate __wbg_reset_state function for WASM reinitialization (experimental)"
+        help = "Generate __wbg_reset_state function for Wasm reinitialization (experimental)"
     )]
     generate_reset_state: bool,
     // The options below are deprecated. They're still parsed for backwards compatibility,

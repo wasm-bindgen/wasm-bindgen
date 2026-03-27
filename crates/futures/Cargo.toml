@@ -10,7 +10,7 @@ name = "wasm-bindgen-futures"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures"
 rust-version = "1.71"
-version = "0.4.64"
+version = "0.4.65"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -19,10 +19,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dependencies]
 # Depending on js-sys with the "futures" feature activates IntoFuture for Promise
 # and makes promise.await work automatically.
-js-sys = { path = "../js-sys", version = "=0.3.91", default-features = false, features = [
+js-sys = { path = "../js-sys", version = "=0.3.92", default-features = false, features = [
   "futures",
 ] }
-wasm-bindgen = { path = "../..", version = "=0.2.114", default-features = false }
+wasm-bindgen = { path = "../..", version = "=0.2.115", default-features = false }
 
 [features]
 default = ["std"]
