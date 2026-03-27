@@ -8,6 +8,7 @@ export function __wbg_reset_state () {
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
+
 }
 
 /**
@@ -49,6 +50,14 @@ function __wbg_get_imports(memory) {
 
 let __wbg_instance_id = 0;
 
+let cachedInt32ArrayMemory0 = null;
+function getInt32ArrayMemory0() {
+    if (cachedInt32ArrayMemory0 === null || cachedInt32ArrayMemory0.buffer !== wasm.memory.buffer) {
+        cachedInt32ArrayMemory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachedInt32ArrayMemory0;
+}
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -81,6 +90,7 @@ let wasmModule, wasm;
 function __wbg_finalize_init(instance, module, thread_stack_size) {
     wasm = instance.exports;
     wasmModule = module;
+    cachedInt32ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
     if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) {
         throw new Error('invalid stack size');
