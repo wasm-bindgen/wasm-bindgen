@@ -13310,6 +13310,17 @@ impl Float16Array {
     }
 
     /// Creates an array from raw IEEE 754 binary16 bit patterns.
+    ///
+    /// This pairs naturally with the optional `half` crate:
+    ///
+    /// ```rust
+    /// use half::f16;
+    /// use js_sys::Float16Array;
+    ///
+    /// let values = [f16::from_f32(1.0), f16::from_f32(-2.0)];
+    /// let bits = values.map(f16::to_bits);
+    /// let array = Float16Array::new_from_u16_slice(&bits);
+    /// ```
     pub fn new_from_u16_slice(slice: &[u16]) -> Float16Array {
         let array = Float16Array::new_with_length(slice.len() as u32);
         array.copy_from_u16_slice(slice);
@@ -13323,6 +13334,9 @@ impl Float16Array {
     ///
     /// This function will panic if this typed array's length is different than
     /// the length of the provided `dst` array.
+    ///
+    /// Values copied into `dst` can be converted back into `half::f16` with
+    /// `half::f16::from_bits`.
     pub fn copy_to_u16_slice(&self, dst: &mut [u16]) {
         self.as_uint16_view().copy_to(dst);
     }
@@ -13334,12 +13348,24 @@ impl Float16Array {
     ///
     /// This function will panic if this typed array's length is different than
     /// the length of the provided `src` array.
+    ///
+    /// When using the optional `half` crate, populate `src` with
+    /// `half::f16::to_bits()`.
     pub fn copy_from_u16_slice(&self, src: &[u16]) {
         self.as_uint16_view().copy_from(src);
     }
 
     /// Efficiently copies the contents of this JS typed array into a new Vec of
     /// raw IEEE 754 binary16 bit patterns.
+    ///
+    /// This makes it easy to round-trip through the optional `half` crate:
+    ///
+    /// ```rust
+    /// use half::f16;
+    ///
+    /// let bits = array.to_u16_vec();
+    /// let values: Vec<f16> = bits.into_iter().map(f16::from_bits).collect();
+    /// ```
     pub fn to_u16_vec(&self) -> Vec<u16> {
         self.as_uint16_view().to_vec()
     }

@@ -1,5 +1,6 @@
 use std::mem::MaybeUninit;
 
+use half::f16;
 use js_sys::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
@@ -211,6 +212,32 @@ fn float16array_u16_helpers() {
     let replacement = [0x0001, 0x7bff, 0xfc00];
     arr.copy_from_u16_slice(&replacement);
     assert_eq!(arr.to_u16_vec(), replacement);
+}
+
+#[wasm_bindgen_test]
+fn float16array_half_helpers() {
+    if !has_float16_array() {
+        return;
+    }
+
+    let initial_half = [f16::from_f32(1.0), f16::from_f32(-2.0), f16::from_f32(0.5)];
+    let initial_bits = initial_half.map(f16::to_bits);
+    let arr = Float16Array::new_from_u16_slice(&initial_bits);
+
+    let mut copied_bits = [0; 3];
+    arr.copy_to_u16_slice(&mut copied_bits);
+    assert_eq!(copied_bits.map(f16::from_bits), initial_half);
+
+    let copied_half: Vec<f16> = arr.to_u16_vec().into_iter().map(f16::from_bits).collect();
+    assert_eq!(copied_half.as_slice(), &initial_half);
+
+    let replacement_half = [f16::from_f32(0.25), f16::from_f32(6.5), f16::from_f32(-4.0)];
+    let replacement_bits = replacement_half.map(f16::to_bits);
+    arr.copy_from_u16_slice(&replacement_bits);
+
+    let replacement_round_trip: Vec<f16> =
+        arr.to_u16_vec().into_iter().map(f16::from_bits).collect();
+    assert_eq!(replacement_round_trip.as_slice(), &replacement_half);
 }
 
 #[wasm_bindgen_test]
