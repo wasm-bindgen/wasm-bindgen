@@ -2779,6 +2779,38 @@ if (require('worker_threads').isMainThread) {{
         self.memview("Float64Array", memory)
     }
 
+    /// Emit a `__wbg_invoke_handler(addr)` JS helper that reads a u32 table
+    /// index from linear memory at `addr` and calls through the Wasm
+    /// indirect-function-table.
+    ///
+    /// Used for both the abort handler and the reinit handler.  No exported
+    /// Wasm function is required — the handler is stored as a plain `u32`
+    /// table index in a `#[no_mangle] static` (exported as a Wasm global),
+    /// so JS can read it directly from linear memory via the global's address.
+    ///
+    /// The indirect-function-table lives entirely outside linear memory, so
+    /// calling through it is safe even when linear memory is corrupt (e.g.
+    /// during a hard abort).  This is the key reason we store handlers as
+    /// table indices rather than heap-allocated closures or fat pointers.
+    fn expose_invoke_handler(&mut self) -> Result<String, Error> {
+        let memory = wasm_conventions::get_memory(self.module)?;
+        let mem_view = self.expose_int32_memory(memory);
+        let table = self.export_function_table()?;
+        self.intrinsic(
+            "invoke_handler".into(),
+            "__wbg_invoke_handler".into(),
+            format!(
+                "\
+                function __wbg_invoke_handler(addr) {{
+                    const idx = {mem_view}()[addr / 4];
+                    if (idx) wasm.{table}.get(idx)();
+                }}"
+            )
+            .into(),
+        );
+        Ok("__wbg_invoke_handler".to_string())
+    }
+
     fn expose_dataview_memory(&mut self, memory: MemoryId) -> MemView {
         self.memview("DataView", memory)
     }
@@ -3407,14 +3439,23 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
-        reset_statements.push(
+        // After creating the new instance, invoke the reinit handler if one
+        // was registered. We use __wbg_invoke_handler which reads the u32
+        // table index from the __reinit_handler global address and calls
+        // through the function table — no exported Wasm function needed.
+        let reinit_call = if let Ok(invoke_handler) = self.expose_invoke_handler() {
+            format!("{invoke_handler}(wasm.__reinit_handler.value);")
+        } else {
+            String::new()
+        };
+        reset_statements.push(format!(
             "
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
+            {reinit_call}
             "
-            .to_string(),
-        );
+        ));
 
         let function_body = format!("() {{\n{}}}", reset_statements.join("\n"));
 
@@ -3682,7 +3723,7 @@ if (require('worker_threads').isMainThread) {{
         }
 
         self.generate_jstag_import();
-        self.generate_wrapped_jstag_import();
+        self.generate_wrapped_jstag_import()?;
 
         for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
@@ -3775,9 +3816,9 @@ if (require('worker_threads').isMainThread) {{
     }
 
     /// Generate the import for the wrapped JSTag if it was used (abort-reinit mode).
-    fn generate_wrapped_jstag_import(&mut self) {
+    fn generate_wrapped_jstag_import(&mut self) -> Result<(), Error> {
         let Some(wrapped_js_tag) = self.aux.wrapped_js_tag else {
-            return;
+            return Ok(());
         };
 
         // Find the import ID for the wrapped JSTag
@@ -3793,14 +3834,13 @@ if (require('worker_threads').isMainThread) {{
         });
 
         let Some(id) = import_id else {
-            return;
+            return Ok(());
         };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_library.push_str(
                 r#"
 addToLibrary({
-    // THE FIX: Assign it to globalThis inline so JS can see it!
     __wbindgen_wrapped_jstag: "(globalThis.__wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] }))",
     
     __wbindgen_wrapped_jstag__postset: `
@@ -3815,7 +3855,7 @@ addToLibrary({
     `
 });
 "#);
-            return;
+            return Ok(());
         }
 
         // Create a top-level constant for the wrapped tag
@@ -3844,13 +3884,19 @@ function __wbg_termination_guard() {{
         ));
 
         // Create a helper function to unwrap and rethrow wrapped JS exceptions
+        let invoke_handler = self.expose_invoke_handler()?;
         self.global(&format!(
             "\
 function __wbg_handle_catch(e) {{
     if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
         throw e.getArg(__wbindgen_wrapped_jstag, 0);
     }}
+    // Set the terminated flag first so any re-entrant export call from within
+    // the abort handler is immediately blocked by __wbg_termination_guard().
     {mem_view}()[__wbg_terminated_addr] = 1;
+    // Invoke the Rust-registered abort handler (if any). The try/catch ensures
+    // a throwing or panicking handler cannot suppress the original error.
+    try {{ {invoke_handler}(wasm.__abort_handler.value); }} catch(_) {{}}
     throw e;
 }}"
         ));
@@ -3858,6 +3904,8 @@ function __wbg_handle_catch(e) {{
         // Use the constant for the import
         self.wasm_import_definitions
             .insert(id, "__wbindgen_wrapped_jstag".to_string());
+
+        Ok(())
     }
 
     /// Registers import names for all `Global` imports first before we actually
