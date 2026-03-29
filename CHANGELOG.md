@@ -3,6 +3,13 @@
 
 ## Unreleased
 
+### Added
+
+* Added `js_sys::Float16Array` bindings, `DataView` float16 accessors using
+  `f32`, and raw `[u16]` helper APIs for interoperability with binary16
+  representations such as `half::f16`.
+  [#5033](https://github.com/wasm-bindgen/wasm-bindgen/pull/5033)
+
 ## [0.2.115](https://github.com/rustwasm/wasm-bindgen/compare/0.2.114...0.2.115)
 
 ### Added
