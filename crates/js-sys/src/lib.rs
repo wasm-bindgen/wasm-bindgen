@@ -13237,7 +13237,7 @@ extern "C" {
     /// index with a static `f32` value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, js_name = fill)]
     pub fn fill_with_f32(this: &Float16Array, value: f32, start: u32, end: u32) -> Float16Array;
 
     /// The buffer accessor property represents the `ArrayBuffer` referenced
