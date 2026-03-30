@@ -1557,14 +1557,6 @@ impl TryToTokens for ast::ImportFunction {
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
 
-        // Extra generic params and bounds injected for raw &dyn Fn / &mut dyn FnMut arguments.
-        // When panic=unwind is active, MaybeUnwindSafe requires UnwindSafe; otherwise it's
-        // a no-op blanket impl. Collecting these here so we can append them to impl_generics
-        // and where_clause after the arg loop.
-        let mut extra_cb_params: Vec<Ident> = Vec::new();
-        let mut extra_cb_bounds: Vec<TokenStream> = Vec::new();
-        let mut cb_param_idx: usize = 0;
-
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = &*arg.pat_type.ty;
             let name = match &*arg.pat_type.pat {
@@ -1634,17 +1626,19 @@ impl TryToTokens for ast::ImportFunction {
             } else if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
                 // Raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
                 //
-                // Auto-inject a generic type parameter `__WbgCb{n}: MaybeUnwindSafe + Fn/FnMut(...)`
+                // Emit as `&mut (impl FnMut(...) + MaybeUnwindSafe)` / `&(impl Fn(...) + MaybeUnwindSafe)`
                 // so that callers must satisfy UnwindSafe when `panic = "unwind"`, while remaining
                 // backward-compatible when `panic != "unwind"` (MaybeUnwindSafe is blanket-impl'd).
-                let cb_param = Ident::new(&format!("__WbgCb{cb_param_idx}"), Span::call_site());
-                cb_param_idx += 1;
-
+                // Using `impl Trait` keeps the signature clean — no hidden generic param or where-clause.
                 if i > 0 || !is_method {
                     if is_mut {
-                        arguments.push(quote! { #name: &mut #cb_param });
+                        arguments.push(quote! {
+                            #name: &mut (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                        });
                     } else {
-                        arguments.push(quote! { #name: &#cb_param });
+                        arguments.push(quote! {
+                            #name: &(impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                        });
                     }
                 }
 
@@ -1655,20 +1649,12 @@ impl TryToTokens for ast::ImportFunction {
                     abi_ty = quote! { &dyn #fn_bounds };
                 }
 
-                // Coerce the concrete generic type to the dyn trait object for into_abi.
+                // Coerce the concrete impl Trait type to the dyn trait object for into_abi.
                 if is_mut {
                     convert_arg = quote! { #var as &mut dyn #fn_bounds };
                 } else {
                     convert_arg = quote! { #var as &dyn #fn_bounds };
                 }
-
-                // Collect the bound: `__WbgCb{n}: MaybeUnwindSafe + Fn/FnMut(...) -> R`
-                // MaybeUnwindSafe is always satisfied when panic != unwind (blanket impl),
-                // and requires UnwindSafe when panic = unwind.
-                extra_cb_bounds.push(quote! {
-                    #cb_param: #wasm_bindgen::__rt::marker::MaybeUnwindSafe + #fn_bounds
-                });
-                extra_cb_params.push(cb_param);
             } else {
                 if i > 0 || !is_method {
                     arguments.push(quote! { #name: #ty });
@@ -1865,21 +1851,20 @@ impl TryToTokens for ast::ImportFunction {
 
         // Function-level lifetime params
         let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
-        let has_generics = !fn_class_generics.fn_generic_params.is_empty()
-            || !fn_lifetime_params.is_empty()
-            || !extra_cb_params.is_empty();
+        let has_generics =
+            !fn_class_generics.fn_generic_params.is_empty() || !fn_lifetime_params.is_empty();
         let impl_generics = if !has_generics {
             quote! {}
         } else {
             let fn_generic_params = fn_class_generics.fn_generic_params;
-            quote! { <#(#fn_lifetime_params,)* #(#fn_generic_params,)* #(#extra_cb_params),*> }
+            quote! { <#(#fn_lifetime_params,)* #(#fn_generic_params),*> }
         };
-        let has_bounds = !fn_class_generics.fn_bounds.is_empty() || !extra_cb_bounds.is_empty();
+        let has_bounds = !fn_class_generics.fn_bounds.is_empty();
         let where_clause = if !has_bounds {
             quote! {}
         } else {
             let fn_bounds = fn_class_generics.fn_bounds;
-            quote! { where #(#fn_bounds,)* #(#extra_cb_bounds),* }
+            quote! { where #(#fn_bounds),* }
         };
 
         let invocation = quote! {
