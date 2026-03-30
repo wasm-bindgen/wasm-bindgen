@@ -1,10 +1,10 @@
 (module
-  (type (;0;) (func (param i32) (result i32)))
-  (type (;1;) (func (result i32)))
-  (type (;2;) (func (param i32)))
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (param i32)))
+  (type (;2;) (func (param i32) (result i32)))
   (type (;3;) (func (param externref)))
   (type (;4;) (func (param externref) (result i32)))
-  (import "env" "my_import" (func $my_import (;0;) (type 0)))
+  (import "env" "my_import" (func $my_import (;0;) (type 2)))
   (import "__wbindgen_placeholder__" "__wbindgen_jstag" (tag (;0;) (type 3) (param externref)))
   (table $externrefs (;0;) 128 externref)
   (memory (;0;) 1)
@@ -14,7 +14,7 @@
   (export "__externref_table" (table $externrefs))
   (export "__externref_table_alloc" (func $__externref_table_alloc))
   (export "exn_store" (func $exn_store))
-  (func $"my_import catch wrapper" (;1;) (type 0) (param i32) (result i32)
+  (func $"my_import catch wrapper" (;1;) (type 2) (param i32) (result i32)
     (local i32 externref)
     try (result i32) ;; label = @1
       local.get 0
@@ -50,8 +50,8 @@
       rethrow 0 (;@1;)
     end
   )
-  (func $__externref_table_alloc (;2;) (type 1) (result i32)
+  (func $__externref_table_alloc (;2;) (type 0) (result i32)
     i32.const 42
   )
-  (func $exn_store (;3;) (type 2) (param i32))
+  (func $exn_store (;3;) (type 1) (param i32))
 )
