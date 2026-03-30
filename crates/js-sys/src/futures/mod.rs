@@ -284,8 +284,12 @@ pub fn future_to_promise<F>(future: F) -> Promise
 where
     F: Future<Output = Result<JsValue, JsValue>> + 'static + std::panic::UnwindSafe,
 {
-    let mut future = Some(future);
-    Promise::new(&mut |resolve, reject| {
+    // Wrap `future` in AssertUnwindSafe and move it into the closure so the closure
+    // satisfies MaybeUnwindSafe (required when panic=unwind). Using `move` avoids
+    // capturing a `&mut` reference, which is never UnwindSafe. The Promise executor
+    // is not called inside a panic-catching context, so this is always safe.
+    let mut future = core::panic::AssertUnwindSafe(Some(future));
+    Promise::new(&mut move |resolve, reject| {
         let future = future.take().unwrap_throw();
         spawn_local(async move {
             let res = future.catch_unwind().await;

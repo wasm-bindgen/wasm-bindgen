@@ -1623,6 +1623,38 @@ impl TryToTokens for ast::ImportFunction {
                 };
 
                 convert_arg = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } };
+            } else if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
+                // Raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
+                //
+                // Emit as `&mut (impl FnMut(...) + MaybeUnwindSafe)` / `&(impl Fn(...) + MaybeUnwindSafe)`
+                // so that callers must satisfy UnwindSafe when `panic = "unwind"`, while remaining
+                // backward-compatible when `panic != "unwind"` (MaybeUnwindSafe is blanket-impl'd).
+                // Using `impl Trait` keeps the signature clean — no hidden generic param or where-clause.
+                if i > 0 || !is_method {
+                    if is_mut {
+                        arguments.push(quote! {
+                            #name: &mut (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                        });
+                    } else {
+                        arguments.push(quote! {
+                            #name: &(impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                        });
+                    }
+                }
+
+                // The ABI type is still the erased dyn type — same wire format.
+                if is_mut {
+                    abi_ty = quote! { &mut dyn #fn_bounds };
+                } else {
+                    abi_ty = quote! { &dyn #fn_bounds };
+                }
+
+                // Coerce the concrete impl Trait type to the dyn trait object for into_abi.
+                if is_mut {
+                    convert_arg = quote! { #var as &mut dyn #fn_bounds };
+                } else {
+                    convert_arg = quote! { #var as &dyn #fn_bounds };
+                }
             } else {
                 if i > 0 || !is_method {
                     arguments.push(quote! { #name: #ty });
@@ -1819,14 +1851,16 @@ impl TryToTokens for ast::ImportFunction {
 
         // Function-level lifetime params
         let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
-        let impl_generics =
-            if fn_class_generics.fn_generic_params.is_empty() && fn_lifetime_params.is_empty() {
-                quote! {}
-            } else {
-                let fn_generic_params = fn_class_generics.fn_generic_params;
-                quote! { <#(#fn_lifetime_params,)* #(#fn_generic_params),*> }
-            };
-        let where_clause = if fn_class_generics.fn_bounds.is_empty() {
+        let has_generics =
+            !fn_class_generics.fn_generic_params.is_empty() || !fn_lifetime_params.is_empty();
+        let impl_generics = if !has_generics {
+            quote! {}
+        } else {
+            let fn_generic_params = fn_class_generics.fn_generic_params;
+            quote! { <#(#fn_lifetime_params,)* #(#fn_generic_params),*> }
+        };
+        let has_bounds = !fn_class_generics.fn_bounds.is_empty();
+        let where_clause = if !has_bounds {
             quote! {}
         } else {
             let fn_bounds = fn_class_generics.fn_bounds;
@@ -2659,4 +2693,46 @@ fn get_ty(mut ty: &syn::Type) -> &syn::Type {
         ty = &g.elem;
     }
     ty
+}
+
+/// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
+///
+/// Returns `Some((is_mut, fn_trait_bounds))` where:
+/// - `is_mut` is `true` for `&mut dyn FnMut`, `false` for `&dyn Fn`
+/// - `fn_trait_bounds` are the `TypeParamBound`s from the `dyn` trait object (e.g. `FnMut(A)->R`)
+///
+/// This is used by the import function codegen to auto-inject `MaybeUnwindSafe`
+/// bounds for closure arguments, ensuring unwind safety when `panic = "unwind"`.
+fn detect_raw_fn_trait_obj(
+    ty: &syn::Type,
+) -> Option<(
+    bool,
+    &syn::punctuated::Punctuated<syn::TypeParamBound, syn::token::Plus>,
+)> {
+    let syn::Type::Reference(syn::TypeReference {
+        mutability, elem, ..
+    }) = ty
+    else {
+        return None;
+    };
+    let inner = get_ty(elem);
+    let syn::Type::TraitObject(trait_obj) = inner else {
+        return None;
+    };
+    let is_mut = mutability.is_some();
+    // Check that the primary bound is Fn or FnMut (matching mutability)
+    for bound in &trait_obj.bounds {
+        if let syn::TypeParamBound::Trait(tb) = bound {
+            if let Some(last_seg) = tb.path.segments.last() {
+                let name = last_seg.ident.to_string();
+                if is_mut && name == "FnMut" {
+                    return Some((true, &trait_obj.bounds));
+                }
+                if !is_mut && name == "Fn" {
+                    return Some((false, &trait_obj.bounds));
+                }
+            }
+        }
+    }
+    None
 }

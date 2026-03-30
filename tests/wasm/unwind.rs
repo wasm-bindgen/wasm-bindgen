@@ -52,14 +52,9 @@ extern "C" {
         predicate: &ScopedClosure<dyn FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>,
     ) -> Result<bool, JsValue>;
 
-    // This currently aborts correctly
-    // TODO: support &mut dyn FnMut as unwind safe to not abort (defaults as abort for now)
-    // this would involve macro rewriting it into:
-    // #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
-    // pub fn try_every_result<T: __rt::marker::MaybeUnwindSafe + FnMut(JsValue, u32, Array) -> Result<bool, JsValue>>(
-    //     this: &ArrayUnwind,
-    //     predicate: &mut T,
-    // ) -> Result<bool, JsValue>;
+    // The macro auto-injects `__WbgCb0: MaybeUnwindSafe + FnMut(...)` for &mut dyn FnMut
+    // arguments, so callers must provide UnwindSafe closures when panic=unwind is active.
+    // This is the same signature but named separately to test the macro-injected bound.
     #[wasm_bindgen(method, catch, js_class = Array, js_name = every)]
     pub fn try_every_result_aborting(
         this: &ArrayUnwind,
@@ -85,8 +80,11 @@ macro_rules! js_array {
 #[wasm_bindgen_test]
 async fn try_promise_all() {
     let mut resolve_ = Default::default();
-    let promise = Promise::new(&mut |resolve, _reject| {
-        resolve_ = resolve;
+    // Wrap resolve_ in AssertUnwindSafe before moving into the closure: Promise::new's
+    // executor is not called in a panic-catching context, so this is safe.
+    let mut resolve_slot = core::panic::AssertUnwindSafe(&mut resolve_);
+    let promise = Promise::new(&mut move |resolve, _reject| {
+        **resolve_slot = resolve;
     });
     let closure1 = Closure::own(|_v| {
         panic!("CLOSURE PANIC");
@@ -183,6 +181,34 @@ fn dyn_fnmut_unwind_safe_by_default() {
             .unwrap(),
         "should not continue past panic"
     );
+}
+
+/// Test that the macro-injected `MaybeUnwindSafe` bound on `&mut dyn FnMut` arguments
+/// requires `AssertUnwindSafe` for non-unwind-safe captured values (like `Cell<T>`) when
+/// `panic=unwind` is active, but allows plain closures that only capture unwind-safe types.
+///
+/// This is a compile-time verification: the test itself passing means the bound was
+/// satisfied. The `Cell<bool>` capture requires explicit `AssertUnwindSafe` wrapping.
+#[cfg(panic = "unwind")]
+#[wasm_bindgen_test]
+fn macro_injected_maybe_unwind_safe_bound() {
+    // A plain bool is UnwindSafe, but &mut bool is not — wrap before capture.
+    let mut flag = false;
+    let mut flag_ref = core::panic::AssertUnwindSafe(&mut flag);
+    let _ = js_array![1].try_every_result_aborting(&mut move |_, _, _| {
+        **flag_ref = true;
+        Ok(true)
+    });
+    assert!(flag);
+
+    // Cell<bool> is NOT UnwindSafe (interior mutability). Must wrap with AssertUnwindSafe.
+    let cell = std::cell::Cell::new(false);
+    let cell_ref = core::panic::AssertUnwindSafe(&cell);
+    let _ = js_array![1].try_every_result_aborting(&mut move |_, _, _| {
+        cell_ref.set(true);
+        Ok(true)
+    });
+    assert!(cell.get());
 }
 
 #[cfg(panic = "unwind")]

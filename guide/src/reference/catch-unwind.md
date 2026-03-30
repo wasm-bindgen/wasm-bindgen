@@ -177,9 +177,13 @@ the `*_aborting` variants: `Closure::own_aborting`, `Closure::wrap_aborting`,
 `ImmediateClosure::new_aborting`, and `ImmediateClosure::new_mut_aborting`.
 These do not require `UnwindSafe`.
 
-> **Note**: The deprecated `&dyn Fn` and `&mut dyn FnMut` patterns are **not**
-> unwind safe. Panics in these closures may corrupt program state. Use
-> `ImmediateClosure` instead.
+> **Note**: `&dyn Fn` and `&mut dyn FnMut` arguments are unwind safe when
+> `panic=unwind` is active. The `#[wasm_bindgen]` macro auto-injects a
+> `MaybeUnwindSafe` bound, so the compiler will require callers to wrap
+> non-unwind-safe captured values (e.g. `Cell<T>`, `&mut T`) in
+> `std::panic::AssertUnwindSafe`. See
+> [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md#unwind-safety)
+> for details and examples.
 
 See [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md) for
 more details on closure APIs and the `UnwindSafe` requirement.
@@ -203,9 +207,17 @@ This feature requires a nightly Rust compiler and will not work on stable Rust.
 
 ### UnwindSafe Requirement
 
-All function arguments must satisfy Rust's `UnwindSafe` trait. This is
-automatically handled by wrapping arguments in `AssertUnwindSafe`, but be aware
-that this assumes your code handles potential inconsistent state after a panic.
+Exported function arguments and closure captures must satisfy Rust's `UnwindSafe`
+trait. For `&dyn Fn` and `&mut dyn FnMut` import arguments the macro enforces
+this via an auto-injected `MaybeUnwindSafe` bound. For captured values that are
+not `UnwindSafe` (such as `&mut T`, `Cell<T>`, or `RefCell<T>`), wrap them in
+`std::panic::AssertUnwindSafe` before the closure captures them:
+
+```rust
+let cell = std::cell::Cell::new(0u32);
+let cell_ref = std::panic::AssertUnwindSafe(&cell);
+takes_mut_closure(&mut move || { cell_ref.set(cell_ref.get() + 1); });
+```
 
 ### Mutable Slice Arguments
 

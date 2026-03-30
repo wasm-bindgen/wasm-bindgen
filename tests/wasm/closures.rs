@@ -129,7 +129,9 @@ extern "C" {
 #[wasm_bindgen_test]
 fn works() {
     let a = Cell::new(false);
-    works_call(&|| a.set(true));
+    // Cell<T> is not UnwindSafe (interior mutability). Wrap before capture.
+    let a_ref = core::panic::AssertUnwindSafe(&a);
+    works_call(&move || a_ref.set(true));
     assert!(a.get());
 
     assert_eq!(works_thread(&|a| a + 1), 3);
@@ -377,13 +379,17 @@ fn long_fnmut_recursive() {
 #[wasm_bindgen_test]
 fn fnmut() {
     let mut a = false;
-    fnmut_call(&mut || a = true);
+    // &mut bool is not UnwindSafe. Wrap before capture.
+    let mut a_ref = core::panic::AssertUnwindSafe(&mut a);
+    fnmut_call(&mut move || **a_ref = true);
     assert!(a);
 
     let mut x = false;
+    // &mut bool is not UnwindSafe. Wrap before capture.
+    let mut x_ref = core::panic::AssertUnwindSafe(&mut x);
     assert_eq!(
-        fnmut_thread(&mut |a| {
-            x = true;
+        fnmut_thread(&mut move |a| {
+            **x_ref = true;
             a + 1
         }),
         3
@@ -395,12 +401,15 @@ fn fnmut() {
 fn fnmut_bad() {
     let mut x = true;
     let mut hits = 0;
-    fnmut_bad_call(&mut || {
-        hits += 1;
-        if fnmut_bad_again(hits == 1).is_err() {
+    // &mut i32 and &mut bool are not UnwindSafe. Wrap before capture.
+    let mut x_ref = core::panic::AssertUnwindSafe(&mut x);
+    let mut hits_ref = core::panic::AssertUnwindSafe(&mut hits);
+    fnmut_bad_call(&mut move || {
+        **hits_ref += 1;
+        if fnmut_bad_again(**hits_ref == 1).is_err() {
             return;
         }
-        x = false;
+        **x_ref = false;
     });
     assert_eq!(hits, 1);
     assert!(x);
@@ -411,9 +420,11 @@ fn fnmut_bad() {
 #[wasm_bindgen_test]
 fn string_arguments() {
     let mut x = false;
-    string_arguments_call(&mut |s| {
+    // &mut bool is not UnwindSafe. Wrap before capture.
+    let mut x_ref = core::panic::AssertUnwindSafe(&mut x);
+    string_arguments_call(&mut move |s| {
         assert_eq!(s, "foo");
-        x = true;
+        **x_ref = true;
     });
     assert!(x);
 }
@@ -421,10 +432,12 @@ fn string_arguments() {
 #[wasm_bindgen_test]
 fn string_ret() {
     let mut x = false;
-    string_ret_call(&mut |mut s| {
+    // &mut bool is not UnwindSafe. Wrap before capture.
+    let mut x_ref = core::panic::AssertUnwindSafe(&mut x);
+    string_ret_call(&mut move |mut s| {
         assert_eq!(s, "foo");
         s.push_str("bar");
-        x = true;
+        **x_ref = true;
         s
     });
     assert!(x);
@@ -595,17 +608,20 @@ fn reference_as_first_argument_works() {
 #[wasm_bindgen_test]
 fn reference_as_first_argument_works2() {
     let a = Cell::new(0);
+    // Cell<i32> is not UnwindSafe (interior mutability). Wrap before capture.
+    let a1 = core::panic::AssertUnwindSafe(&a);
+    let a2 = core::panic::AssertUnwindSafe(&a);
     pass_reference_first_arg_twice2(
         RefFirstArgument { contents: 3 },
-        &mut |x: &RefFirstArgument| {
-            assert_eq!(a.get(), 0);
+        &mut move |x: &RefFirstArgument| {
+            assert_eq!(a1.get(), 0);
             assert_eq!(x.contents, 3);
-            a.set(a.get() + 1);
+            a1.set(a1.get() + 1);
         },
-        &mut |x: &RefFirstArgument| {
-            assert_eq!(a.get(), 1);
+        &mut move |x: &RefFirstArgument| {
+            assert_eq!(a2.get(), 1);
             assert_eq!(x.contents, 3);
-            a.set(a.get() + 1);
+            a2.set(a2.get() + 1);
         },
     );
     assert_eq!(a.get(), 2);

@@ -10,6 +10,18 @@
   representations such as `half::f16`.
   [#5033](https://github.com/wasm-bindgen/wasm-bindgen/pull/5033)
 
+### Changed
+
+* The `#[wasm_bindgen]` macro now emits `&mut (impl FnMut(...) + MaybeUnwindSafe)`
+  / `&(impl Fn(...) + MaybeUnwindSafe)` for raw `&mut dyn FnMut` / `&dyn Fn`
+  import arguments instead of a hidden generic parameter and where-clause. The
+  generated signature is cleaner and the `MaybeUnwindSafe` bound is visible
+  directly in the argument position. The ABI and wire format are unchanged.
+  When building with `panic=unwind`, closures that capture non-`UnwindSafe`
+  values (e.g. `&mut T`, `Cell<T>`) must wrap them in `AssertUnwindSafe` before
+  capture; on all other targets `MaybeUnwindSafe` is a no-op blanket impl.
+  [#5056](https://github.com/wasm-bindgen/wasm-bindgen/pull/5056)
+
 ## [0.2.115](https://github.com/rustwasm/wasm-bindgen/compare/0.2.114...0.2.115)
 
 ### Added
