@@ -139,3 +139,4 @@ wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test = { path = 'crates/test' }
 web-sys = { path = 'crates/web-sys' }
+
