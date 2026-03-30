@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+## [0.2.116](https://github.com/rustwasm/wasm-bindgen/compare/0.2.115...0.2.116)
+
 ### Added
 
 * Added `js_sys::Float16Array` bindings, `DataView` float16 accessors using
@@ -11,6 +13,9 @@
   [#5033](https://github.com/wasm-bindgen/wasm-bindgen/pull/5033)
 
 ### Changed
+
+* Updated to Walrus 0.26.1 for deterministic type section ordering.
+  [#5069](https://github.com/wasm-bindgen/wasm-bindgen/pull/5069)
 
 * The `#[wasm_bindgen]` macro now emits `&mut (impl FnMut(...) + MaybeUnwindSafe)`
   / `&(impl Fn(...) + MaybeUnwindSafe)` for raw `&mut dyn FnMut` / `&dyn Fn`
