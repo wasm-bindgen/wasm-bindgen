@@ -3,6 +3,14 @@
 
 ## Unreleased
 
+### Fixed
+
+* Reverted walrus to 0.25.2 to fix a deterministic output ordering regression
+  introduced in walrus 0.26
+  ([#5065](https://github.com/wasm-bindgen/wasm-bindgen/issues/5065),
+  [walrus#304](https://github.com/wasm-bindgen/walrus/pull/304)).
+  [#5068](https://github.com/wasm-bindgen/wasm-bindgen/pull/5068)
+
 ### Added
 
 * Added `js_sys::Float16Array` bindings, `DataView` float16 accessors using

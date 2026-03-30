@@ -15,18 +15,18 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param i32)))
-  (type (;1;) (func (result i32)))
-  (type (;2;) (func (result i64)))
-  (type (;3;) (func (result f32)))
-  (type (;4;) (func (result f64)))
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (result i64)))
+  (type (;2;) (func (result f32)))
+  (type (;3;) (func (result f64)))
+  (type (;4;) (func (param i32)))
   (memory (;0;) 1)
   (global (;0;) (mut i32) i32.const 0)
   (export "i32" (func $"i32 multivalue shim"))
   (export "i64" (func $"i64 multivalue shim"))
   (export "f32" (func $"f32 multivalue shim"))
   (export "f64" (func $"f64 multivalue shim"))
-  (func $"i32 multivalue shim" (;0;) (type 1) (result i32)
+  (func $"i32 multivalue shim" (;0;) (type 0) (result i32)
     (local i32)
     global.get 0
     i32.const 16
@@ -42,7 +42,7 @@
     i32.add
     global.set 0
   )
-  (func $"i64 multivalue shim" (;1;) (type 2) (result i64)
+  (func $"i64 multivalue shim" (;1;) (type 1) (result i64)
     (local i32)
     global.get 0
     i32.const 16
@@ -58,7 +58,7 @@
     i32.add
     global.set 0
   )
-  (func $"f32 multivalue shim" (;2;) (type 3) (result f32)
+  (func $"f32 multivalue shim" (;2;) (type 2) (result f32)
     (local i32)
     global.get 0
     i32.const 16
@@ -74,7 +74,7 @@
     i32.add
     global.set 0
   )
-  (func $"f64 multivalue shim" (;3;) (type 4) (result f64)
+  (func $"f64 multivalue shim" (;3;) (type 3) (result f64)
     (local i32)
     global.get 0
     i32.const 16
@@ -90,10 +90,10 @@
     i32.add
     global.set 0
   )
-  (func $i32 (;4;) (type 0) (param i32))
-  (func $i64 (;5;) (type 0) (param i32))
-  (func $f32 (;6;) (type 0) (param i32))
-  (func $f64 (;7;) (type 0) (param i32))
+  (func $i32 (;4;) (type 4) (param i32))
+  (func $i64 (;5;) (type 4) (param i32))
+  (func $f32 (;6;) (type 4) (param i32))
+  (func $f64 (;7;) (type 4) (param i32))
   (@custom "target_features" (after code) "\01+\0amultivalue")
 )
 ;)

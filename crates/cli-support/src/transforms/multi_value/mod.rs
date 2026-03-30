@@ -137,7 +137,7 @@ pub fn run(
 }
 
 // Ensure that `n` is aligned to `align`, rounding up as necessary.
-fn round_up_to_alignment(n: u64, align: u64) -> u64 {
+fn round_up_to_alignment(n: u32, align: u32) -> u32 {
     debug_assert!(align.is_power_of_two());
     (n + align - 1) & !(align - 1)
 }
@@ -238,7 +238,7 @@ fn xform_one(
     body.call(func);
 
     // Copy the return values from our stack-allocated space and onto the Wasm stack.
-    let mut offset: u64 = 0;
+    let mut offset: u32 = 0;
     for ty in results {
         debug_assert!(offset < results_size);
         body.local_get(return_pointer);

@@ -23,9 +23,9 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param i32)))
-  (type (;1;) (func (param i32 i32) (result i32)))
-  (type (;2;) (func))
+  (type (;0;) (func))
+  (type (;1;) (func (param i32)))
+  (type (;2;) (func (param i32 i32) (result i32)))
   (type (;3;) (func (param i32 i32 i32)))
   (import "env" "memory" (memory (;0;) 7 1024 shared))
   (global (;0;) i32 i32.const 393216)
@@ -97,7 +97,7 @@
       global.set 3
     end
   )
-  (func (;1;) (type 0) (param i32)
+  (func (;1;) (type 1) (param i32)
     (local i32 i32)
     call $start
     i32.const 327680
@@ -153,15 +153,15 @@
     global.get 1
     call $__wasm_init_tls
   )
-  (func $__wasm_init_tls (;2;) (type 0) (param i32)
+  (func $__wasm_init_tls (;2;) (type 1) (param i32)
     i32.const 232323
     drop
   )
-  (func $start (;3;) (type 2)
+  (func $start (;3;) (type 0)
     i32.const 101010
     drop
   )
-  (func $__wbindgen_malloc (;4;) (type 1) (param i32 i32) (result i32)
+  (func $__wbindgen_malloc (;4;) (type 2) (param i32 i32) (result i32)
     i32.const 999999
   )
   (func $__wbindgen_free (;5;) (type 3) (param i32 i32 i32))
