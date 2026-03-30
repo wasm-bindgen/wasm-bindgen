@@ -12,24 +12,24 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param i32)))
-  (type (;1;) (func))
+  (type (;0;) (func))
+  (type (;1;) (func (param i32)))
   (type (;2;) (func (param externref)))
   (import "" "a" (func $a (;0;) (type 2)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (export "foo" (func 2))
-  (func $"a externref shim" (;1;) (type 0) (param i32)
+  (func $"a externref shim" (;1;) (type 1) (param i32)
     local.get 0
     table.get $__wbindgen_externrefs
     local.get 0
     call $dealloc
     call $a
   )
-  (func (;2;) (type 1)
+  (func (;2;) (type 0)
     i32.const 0
     call $"a externref shim"
   )
-  (func $dealloc (;3;) (type 0) (param i32))
+  (func $dealloc (;3;) (type 1) (param i32))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
 ;)

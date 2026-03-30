@@ -13,8 +13,8 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param i32)))
-  (type (;1;) (func (result i32)))
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (param i32)))
   (type (;2;) (func (param externref)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (export "foo" (func $"foo externref shim"))
@@ -27,12 +27,12 @@
     local.get 1
     call $foo
   )
-  (func $foo (;1;) (type 0) (param i32)
+  (func $foo (;1;) (type 1) (param i32)
     local.get 0
     ref.null extern
     table.set $__wbindgen_externrefs
   )
-  (func $alloc (;2;) (type 1) (result i32)
+  (func $alloc (;2;) (type 0) (result i32)
     i32.const 0
   )
   (@custom "target_features" (after code) "\01+\0freference-types")
