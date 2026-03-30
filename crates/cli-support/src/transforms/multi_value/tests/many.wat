@@ -9,12 +9,12 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param i32)))
-  (type (;1;) (func (result i32 f32 f64 i64)))
+  (type (;0;) (func (result i32 f32 f64 i64)))
+  (type (;1;) (func (param i32)))
   (memory (;0;) 1)
   (global (;0;) (mut i32) i32.const 0)
   (export "foo" (func $"foo multivalue shim"))
-  (func $"foo multivalue shim" (;0;) (type 1) (result i32 f32 f64 i64)
+  (func $"foo multivalue shim" (;0;) (type 0) (result i32 f32 f64 i64)
     (local i32)
     global.get 0
     i32.const 32
@@ -36,7 +36,7 @@
     i32.add
     global.set 0
   )
-  (func $foo (;1;) (type 0) (param i32))
+  (func $foo (;1;) (type 1) (param i32))
   (@custom "target_features" (after code) "\01+\0amultivalue")
 )
 ;)

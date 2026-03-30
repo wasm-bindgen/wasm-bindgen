@@ -13,9 +13,9 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param i32) (result i32)))
-  (type (;1;) (func (result i32)))
-  (type (;2;) (func (param i32)))
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (param i32)))
+  (type (;2;) (func (param i32) (result i32)))
   (type (;3;) (func (param externref) (result externref)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (export "foo" (func $"foo externref shim"))
@@ -32,7 +32,7 @@
     local.get 1
     call $dealloc
   )
-  (func $__wbindgen_object_clone_ref (;1;) (type 0) (param i32) (result i32)
+  (func $__wbindgen_object_clone_ref (;1;) (type 2) (param i32) (result i32)
     (local i32)
     call $alloc
     local.tee 1
@@ -41,14 +41,14 @@
     table.set $__wbindgen_externrefs
     local.get 1
   )
-  (func $foo (;2;) (type 0) (param i32) (result i32)
+  (func $foo (;2;) (type 2) (param i32) (result i32)
     local.get 0
     call $__wbindgen_object_clone_ref
   )
-  (func $alloc (;3;) (type 1) (result i32)
+  (func $alloc (;3;) (type 0) (result i32)
     i32.const 0
   )
-  (func $dealloc (;4;) (type 2) (param i32))
+  (func $dealloc (;4;) (type 1) (param i32))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
 ;)

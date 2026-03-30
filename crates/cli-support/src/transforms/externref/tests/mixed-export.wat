@@ -9,8 +9,8 @@
 
 (; CHECK-ALL:
 (module
-  (type (;0;) (func (param f32 i32 i64 i32 i32)))
-  (type (;1;) (func (result i32)))
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (param f32 i32 i64 i32 i32)))
   (type (;2;) (func (param f32 externref i64 externref i32)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (global (;0;) (mut i32) i32.const 1024)
@@ -43,10 +43,10 @@
     i32.add
     global.set 0
   )
-  (func $alloc (;1;) (type 1) (result i32)
+  (func $alloc (;1;) (type 0) (result i32)
     i32.const 0
   )
-  (func $a (;2;) (type 0) (param f32 i32 i64 i32 i32))
+  (func $a (;2;) (type 1) (param f32 i32 i64 i32 i32))
   (@custom "target_features" (after code) "\01+\0freference-types")
 )
 ;)
