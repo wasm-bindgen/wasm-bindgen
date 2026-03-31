@@ -3,6 +3,15 @@
 
 ## Unreleased
 
+### Fixed
+
+* WebIDL generation now correctly propagates `[WbgGeneric]` on a per-signature-expansion
+  basis. When a union type like `foo(A | B)` is expanded into `foo_with_a` and
+  `foo_with_b`, only the expansion whose argument type carries `[WbgGeneric]` gets
+  typed generics; the other expansion remains non-generic. This mirrors how unstable
+  type propagation already works.
+  [#5073](https://github.com/wasm-bindgen/wasm-bindgen/pull/5073)
+
 ## [0.2.116](https://github.com/rustwasm/wasm-bindgen/compare/0.2.115...0.2.116)
 
 ### Added
