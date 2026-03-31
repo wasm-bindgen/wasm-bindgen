@@ -5,11 +5,14 @@
 
 ### Fixed
 
-* WebIDL generation now correctly propagates `[WbgGeneric]` on a per-signature-expansion
-  basis. When a union type like `foo(A | B)` is expanded into `foo_with_a` and
-  `foo_with_b`, only the expansion whose argument type carries `[WbgGeneric]` gets
-  typed generics; the other expansion remains non-generic. This mirrors how unstable
-  type propagation already works.
+* Fixed a backwards-compatibility break introduced in 0.2.116 where
+  `Window::create_image_bitmap_with_*` and the corresponding
+  `WorkerGlobalScope` methods returned `Promise<ImageBitmap>` for non-generic
+  call sites instead of the expected `Promise<JsValue>`, causing
+  `JsFuture::from(promise).await?` to fail to compile. The root cause was that
+  `[WbgGeneric]` was being applied to all expansions of a union-typed signature
+  rather than only those expansions whose argument type is itself `[WbgGeneric]`.
+  [#5064](https://github.com/wasm-bindgen/wasm-bindgen/issues/5064)
   [#5073](https://github.com/wasm-bindgen/wasm-bindgen/pull/5073)
 
 ## [0.2.116](https://github.com/rustwasm/wasm-bindgen/compare/0.2.115...0.2.116)
