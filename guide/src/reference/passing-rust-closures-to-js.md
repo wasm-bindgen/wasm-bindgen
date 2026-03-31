@@ -68,7 +68,7 @@ the closure argument for each `&dyn Fn` and `&mut dyn FnMut` parameter. The
 generated signature is equivalent to:
 
 ```rust
-fn takes_mut_closure<__WbgCb0: MaybeUnwindSafe + FnMut()>(f: &mut __WbgCb0);
+fn takes_mut_closure(f: &mut (impl FnMut() + MaybeUnwindSafe));
 ```
 
 `MaybeUnwindSafe` is a no-op blanket impl when building without `panic=unwind`,
