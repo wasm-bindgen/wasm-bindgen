@@ -5,13 +5,14 @@
 
 ### Fixed
 
-* Fixed a backwards-compatibility break introduced in 0.2.116 where
-  `Window::create_image_bitmap_with_*` and the corresponding
-  `WorkerGlobalScope` methods returned `Promise<ImageBitmap>` for non-generic
-  call sites instead of the expected `Promise<JsValue>`, causing
-  `JsFuture::from(promise).await?` to fail to compile. The root cause was that
-  `[WbgGeneric]` was being applied to all expansions of a union-typed signature
-  rather than only those expansions whose argument type is itself `[WbgGeneric]`.
+* Fixed a regression introduced in #5026 where stable `web-sys` methods that
+  accept a union type containing a `[WbgGeneric]` interface (e.g.
+  `ImageBitmapSource`, which includes `VideoFrame`) incorrectly applied typed
+  generics to all union expansions rather than only those whose argument type
+  is itself `[WbgGeneric]`. In practice this caused `Window::create_image_bitmap_with_*`
+  and the corresponding `WorkerGlobalScope` overloads to return
+  `Promise<ImageBitmap>` instead of `Promise<JsValue>` for the stable
+  (non-`VideoFrame`) call sites, breaking `JsFuture::from(promise).await?`.
   [#5064](https://github.com/wasm-bindgen/wasm-bindgen/issues/5064)
   [#5073](https://github.com/wasm-bindgen/wasm-bindgen/pull/5073)
 
