@@ -279,50 +279,50 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn clear_timeout_with_handle(this: &WorkerGlobalScope, handle: i32);
-    #[cfg(all(feature = "HtmlImageElement", feature = "ImageBitmap",))]
+    #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_image_element(
         this: &WorkerGlobalScope,
         a_image: &HtmlImageElement,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "ImageBitmap", feature = "SvgImageElement",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "SvgImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `SvgImageElement`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `SvgImageElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_svg_image_element(
         this: &WorkerGlobalScope,
         a_image: &SvgImageElement,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "HtmlCanvasElement", feature = "ImageBitmap",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_canvas_element(
         this: &WorkerGlobalScope,
         a_image: &HtmlCanvasElement,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "HtmlVideoElement", feature = "ImageBitmap",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_video_element(
         this: &WorkerGlobalScope,
         a_image: &HtmlVideoElement,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -333,18 +333,18 @@ extern "C" {
     pub fn create_image_bitmap_with_image_bitmap(
         this: &WorkerGlobalScope,
         a_image: &ImageBitmap,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "ImageBitmap", feature = "OffscreenCanvas",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "OffscreenCanvas")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `OffscreenCanvas`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_offscreen_canvas(
         this: &WorkerGlobalScope,
         a_image: &OffscreenCanvas,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(feature = "ImageBitmap", feature = "VideoFrame",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -356,92 +356,76 @@ extern "C" {
         this: &WorkerGlobalScope,
         a_image: &VideoFrame,
     ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "Blob", feature = "ImageBitmap",))]
+    #[cfg(feature = "Blob")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_blob(
         this: &WorkerGlobalScope,
         a_image: &Blob,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "ImageBitmap", feature = "ImageData",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageData`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageData`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_image_data(
         this: &WorkerGlobalScope,
         a_image: &ImageData,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "HtmlImageElement",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "HtmlImageElement", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_image_element_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &HtmlImageElement,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "SvgImageElement",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "SvgImageElement",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `SvgImageElement`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `SvgImageElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_svg_image_element_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &SvgImageElement,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "HtmlCanvasElement",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "HtmlCanvasElement", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_canvas_element_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &HtmlCanvasElement,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "HtmlVideoElement",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "HtmlVideoElement", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_video_element_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &HtmlVideoElement,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(feature = "ImageBitmap", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -453,23 +437,19 @@ extern "C" {
         this: &WorkerGlobalScope,
         a_image: &ImageBitmap,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "OffscreenCanvas",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "OffscreenCanvas",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `OffscreenCanvas`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `OffscreenCanvas`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_offscreen_canvas_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &OffscreenCanvas,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(
         feature = "ImageBitmap",
         feature = "ImageBitmapOptions",
@@ -486,45 +466,37 @@ extern "C" {
         a_image: &VideoFrame,
         a_options: &ImageBitmapOptions,
     ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "Blob",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    #[cfg(all(feature = "Blob", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_blob_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &Blob,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "ImageData",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "ImageData",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `ImageData`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `ImageData`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_image_data_and_image_bitmap_options(
         this: &WorkerGlobalScope,
         a_image: &ImageData,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "HtmlImageElement", feature = "ImageBitmap",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "HtmlImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_image_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &HtmlImageElement,
@@ -532,14 +504,14 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "ImageBitmap", feature = "SvgImageElement",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "SvgImageElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `SvgImageElement`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `SvgImageElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_svg_image_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &SvgImageElement,
@@ -547,14 +519,14 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "HtmlCanvasElement", feature = "ImageBitmap",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "HtmlCanvasElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_canvas_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &HtmlCanvasElement,
@@ -562,14 +534,14 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "HtmlVideoElement", feature = "ImageBitmap",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "HtmlVideoElement")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_video_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &HtmlVideoElement,
@@ -577,7 +549,7 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "ImageBitmap")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -592,14 +564,14 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "ImageBitmap", feature = "OffscreenCanvas",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "OffscreenCanvas")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `OffscreenCanvas`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_offscreen_canvas_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &OffscreenCanvas,
@@ -607,7 +579,7 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(feature = "ImageBitmap", feature = "VideoFrame",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -623,13 +595,13 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
     ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "Blob", feature = "ImageBitmap",))]
+    #[cfg(feature = "Blob")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageBitmap`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_blob_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &Blob,
@@ -637,14 +609,14 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(feature = "ImageBitmap", feature = "ImageData",))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "ImageData")]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageData`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageData`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_image_data_and_a_sx_and_a_sy_and_a_sw_and_a_sh(
         this: &WorkerGlobalScope,
         a_image: &ImageData,
@@ -652,18 +624,14 @@ extern "C" {
         a_sy: i32,
         a_sw: i32,
         a_sh: i32,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "HtmlImageElement",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "HtmlImageElement", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_image_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &HtmlImageElement,
@@ -672,18 +640,14 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "SvgImageElement",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "SvgImageElement",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `SvgImageElement`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `SvgImageElement`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_svg_image_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &SvgImageElement,
@@ -692,18 +656,14 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "HtmlCanvasElement",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "HtmlCanvasElement", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_canvas_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &HtmlCanvasElement,
@@ -712,18 +672,14 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "HtmlVideoElement",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "HtmlVideoElement", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_html_video_element_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &HtmlVideoElement,
@@ -732,7 +688,7 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(feature = "ImageBitmap", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
@@ -748,18 +704,14 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "OffscreenCanvas",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "OffscreenCanvas",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `OffscreenCanvas`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `OffscreenCanvas`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_offscreen_canvas_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &OffscreenCanvas,
@@ -768,7 +720,7 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(all(
         feature = "ImageBitmap",
         feature = "ImageBitmapOptions",
@@ -789,17 +741,13 @@ extern "C" {
         a_sh: i32,
         a_options: &ImageBitmapOptions,
     ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "Blob",
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-    ))]
+    #[cfg(all(feature = "Blob", feature = "ImageBitmapOptions",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageBitmap`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `ImageBitmapOptions`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_blob_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &Blob,
@@ -808,18 +756,14 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
-    #[cfg(all(
-        feature = "ImageBitmap",
-        feature = "ImageBitmapOptions",
-        feature = "ImageData",
-    ))]
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(all(feature = "ImageBitmapOptions", feature = "ImageData",))]
     # [wasm_bindgen (catch , method , structural , js_class = "WorkerGlobalScope" , js_name = createImageBitmap)]
     #[doc = "The `createImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/createImageBitmap)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ImageBitmap`, `ImageBitmapOptions`, `ImageData`, `WorkerGlobalScope`*"]
+    #[doc = "*This API requires the following crate features to be activated: `ImageBitmapOptions`, `ImageData`, `WorkerGlobalScope`*"]
     pub fn create_image_bitmap_with_image_data_and_a_sx_and_a_sy_and_a_sw_and_a_sh_and_a_options(
         this: &WorkerGlobalScope,
         a_image: &ImageData,
@@ -828,7 +772,7 @@ extern "C" {
         a_sw: i32,
         a_sh: i32,
         a_options: &ImageBitmapOptions,
-    ) -> Result<::js_sys::Promise<ImageBitmap>, JsValue>;
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "Request")]
     # [wasm_bindgen (method , structural , js_class = "WorkerGlobalScope" , js_name = fetch)]
     #[doc = "The `fetch()` method."]
