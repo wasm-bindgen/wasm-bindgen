@@ -204,6 +204,26 @@ fn parse(
 
     unstable_definitions.first_pass(&mut first_pass_record, ApiStability::Unstable)?;
 
+    // Gather WbgGeneric type Identifiers from the parsed record so that methods
+    // using these types in their signature expansions can also use typed generics.
+    // Mirrors how unstable_types is gathered above.
+    let wbg_generic_types: HashSet<Identifier> = first_pass_record
+        .interfaces
+        .iter()
+        .filter(|(_, data)| is_wbg_generic(data.definition_attributes))
+        .map(|(name, _)| Identifier(name))
+        .chain(
+            first_pass_record
+                .dictionaries
+                .iter()
+                .filter(|(_, data)| {
+                    data.definition
+                        .is_some_and(|def| is_wbg_generic(def.attributes.as_ref()))
+                })
+                .map(|(name, _)| Identifier(name)),
+        )
+        .collect();
+
     let mut types: BTreeMap<String, Program> = BTreeMap::new();
 
     for (js_name, e) in first_pass_record.enums.iter() {
@@ -219,12 +239,19 @@ fn parse(
     for (js_name, n) in first_pass_record.namespaces.iter() {
         let name = rust_ident(&snake_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_ns(program, name, js_name.to_string(), n);
+        first_pass_record.append_ns(program, name, js_name.to_string(), n, &wbg_generic_types);
     }
     for (js_name, d) in first_pass_record.interfaces.iter() {
         let name = rust_ident(&camel_case_ident(js_name));
         let program = types.entry(name.to_string()).or_default();
-        first_pass_record.append_interface(program, name, js_name.to_string(), &unstable_types, d);
+        first_pass_record.append_interface(
+            program,
+            name,
+            js_name.to_string(),
+            &unstable_types,
+            &wbg_generic_types,
+            d,
+        );
     }
     for (js_name, data) in first_pass_record.callback_interfaces.iter() {
         let name = rust_ident(&camel_case_ident(js_name));
@@ -701,6 +728,7 @@ impl<'src> FirstPassRecord<'src> {
         name: Ident,
         js_name: String,
         ns: &'src first_pass::NamespaceData<'src>,
+        wbg_generic_types: &HashSet<Identifier>,
     ) {
         let unstable = ns.stability.is_unstable();
         let wbg_generic = is_wbg_generic(ns.definition_attributes);
@@ -718,7 +746,14 @@ impl<'src> FirstPassRecord<'src> {
         }
 
         for (id, data) in ns.operations.iter() {
-            self.append_ns_operation(&mut functions, &js_name, id, data, wbg_generic);
+            self.append_ns_operation(
+                &mut functions,
+                &js_name,
+                id,
+                data,
+                wbg_generic,
+                wbg_generic_types,
+            );
         }
 
         if !consts.is_empty() || !attributes.is_empty() || !functions.is_empty() {
@@ -773,6 +808,7 @@ impl<'src> FirstPassRecord<'src> {
         id: &'src OperationId<'src>,
         data: &'src OperationData<'src>,
         wbg_generic: bool,
+        wbg_generic_types: &HashSet<Identifier>,
     ) {
         match id {
             OperationId::Operation(Some(_)) => {}
@@ -787,7 +823,16 @@ impl<'src> FirstPassRecord<'src> {
             }
         }
 
-        for x in self.create_imports(None, None, id, data, false, &HashSet::new(), wbg_generic) {
+        for x in self.create_imports(
+            None,
+            None,
+            id,
+            data,
+            false,
+            &HashSet::new(),
+            wbg_generic,
+            wbg_generic_types,
+        ) {
             functions.push(Function {
                 name: x.name,
                 js_name: x.js_name,
@@ -876,6 +921,7 @@ impl<'src> FirstPassRecord<'src> {
         name: Ident,
         js_name: String,
         unstable_types: &HashSet<Identifier>,
+        wbg_generic_types: &HashSet<Identifier>,
         data: &InterfaceData<'src>,
     ) {
         let unstable = data.stability.is_unstable();
@@ -929,6 +975,7 @@ impl<'src> FirstPassRecord<'src> {
                 op_data,
                 unstable_types,
                 wbg_generic,
+                wbg_generic_types,
             );
         }
 
@@ -965,6 +1012,7 @@ impl<'src> FirstPassRecord<'src> {
                     op_data,
                     unstable_types,
                     wbg_generic,
+                    wbg_generic_types,
                 );
             }
         }
@@ -1128,6 +1176,7 @@ impl<'src> FirstPassRecord<'src> {
         op_data: &'src OperationData<'src>,
         unstable_types: &HashSet<Identifier>,
         wbg_generic: bool,
+        wbg_generic_types: &HashSet<Identifier>,
     ) {
         let attrs = data.definition_attributes;
         let unstable = data.stability.is_unstable();
@@ -1140,6 +1189,7 @@ impl<'src> FirstPassRecord<'src> {
             unstable,
             unstable_types,
             wbg_generic,
+            wbg_generic_types,
         ) {
             // Check if this method would be a duplicate of an existing method.
             // We allow both stable and unstable versions of the same method signature

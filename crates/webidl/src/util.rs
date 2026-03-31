@@ -345,6 +345,7 @@ impl<'src> FirstPassRecord<'src> {
         unstable: bool,
         unstable_types: &HashSet<Identifier>,
         wbg_generic: bool,
+        wbg_generic_types: &HashSet<Identifier>,
     ) -> Vec<InterfaceMethod<'_>> {
         let is_static = data.is_static;
 
@@ -509,6 +510,8 @@ impl<'src> FirstPassRecord<'src> {
         let mut stable_only_sigs: Vec<usize> = Vec::new();
         let mut stable_using_unstable_type_sigs: Vec<usize> = Vec::new();
         let mut from_unstable_idl_sigs: Vec<usize> = Vec::new();
+        // Per-sig wbg_generic flag: true if this expansion uses a [WbgGeneric] type.
+        let mut sig_wbg_generic: Vec<bool> = vec![false; actual_signatures.len()];
 
         for (idx, signature) in actual_signatures.iter().enumerate() {
             let from_unstable_idl = unstable || signature.orig.stability.is_unstable();
@@ -516,6 +519,11 @@ impl<'src> FirstPassRecord<'src> {
                 arg.as_ref()
                     .is_some_and(|arg| is_idl_type_unstable(arg, unstable_types))
             });
+            let has_wbg_generic_type_args = signature.args.iter().any(|arg| {
+                arg.as_ref()
+                    .is_some_and(|arg| is_idl_type_wbg_generic(arg, wbg_generic_types))
+            });
+            sig_wbg_generic[idx] = has_wbg_generic_type_args;
             match (from_unstable_idl, has_unstable_type_args) {
                 // Unstable
                 (true, _) => from_unstable_idl_sigs.push(idx),
@@ -762,8 +770,11 @@ impl<'src> FirstPassRecord<'src> {
                     }
                 }
 
-                // [WbgGeneric] on the operation itself also opts into typed generics.
-                let op_wbg_generic = wbg_generic || is_wbg_generic(signature.orig.attrs.as_ref());
+                // [WbgGeneric] on the operation itself, the parent definition, or any
+                // type in this specific expansion opts into typed generics.
+                let op_wbg_generic = wbg_generic
+                    || is_wbg_generic(signature.orig.attrs.as_ref())
+                    || sig_wbg_generic[sig_idx];
 
                 if let Some(method) = create_method(
                     self,
@@ -969,6 +980,21 @@ fn is_idl_type_unstable(ty: &WbgType, unstable_types: &HashSet<Identifier>) -> b
             ty: IdentifierType::Dictionary(name) | IdentifierType::Interface(name),
             ..
         } => unstable_types.contains(&Identifier(name)),
+        _ => false,
+    }
+}
+
+/// Check if a WbgType uses an interface or dictionary that has the [WbgGeneric] attribute.
+/// This is used to propagate typed generics from types to methods that use them.
+pub(crate) fn is_idl_type_wbg_generic(
+    ty: &WbgType,
+    wbg_generic_types: &HashSet<Identifier>,
+) -> bool {
+    match ty {
+        WbgType::Identifier {
+            ty: IdentifierType::Dictionary(name) | IdentifierType::Interface(name),
+            ..
+        } => wbg_generic_types.contains(&Identifier(name)),
         _ => false,
     }
 }

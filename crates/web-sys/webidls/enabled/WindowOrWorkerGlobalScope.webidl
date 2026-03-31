@@ -36,10 +36,10 @@ interface mixin WindowOrWorkerGlobalScope {
   undefined clearInterval(optional long handle = 0);
 
   // ImageBitmap
-  [Throws, WbgGeneric]
+  [Throws]
   Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage,
                                          optional ImageBitmapOptions aOptions = {});
-  [Throws, WbgGeneric]
+  [Throws]
   Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage,
                                          long aSx, long aSy, long aSw, long aSh,
                                          optional ImageBitmapOptions aOptions = {});
