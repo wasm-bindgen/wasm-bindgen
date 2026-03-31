@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
+
 ### Fixed
 
 * Fixed a regression introduced in #5026 where stable `web-sys` methods that
