@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+### Fixed
+
+* Fixed a panic in the CLI (`failed to find N in function table`) when
+  processing WASM built by rustc 1.94+ for large projects such as Leptos.
+  lld now emits element segment offsets as `global.get $__table_base` or
+  extended const expressions (`global.get + i32.const + i32.add`) for
+  large function tables, neither of which the previous code handled. The
+  fix inlines a small const-expression evaluator in `get_function_table_entry`
+  and also guards the segment-local index calculation against integer underflow
+  in multi-segment tables.
+  [#5076](https://github.com/wasm-bindgen/wasm-bindgen/issues/5076)
+
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
 ### Fixed
