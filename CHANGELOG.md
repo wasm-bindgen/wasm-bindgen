@@ -3,6 +3,12 @@
 
 ## Unreleased
 
+### Added
+
+* Added `Error::stack_trace_limit()` and `Error::set_stack_trace_limit()` bindings
+  to `js-sys` for the non-standard V8 `Error.stackTraceLimit` property.
+  [#5082](https://github.com/wasm-bindgen/wasm-bindgen/pull/5082)
+
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
 ### Fixed
