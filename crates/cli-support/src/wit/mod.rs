@@ -587,8 +587,15 @@ impl<'a> Context<'a> {
                 and discarded by wasm-ld.");
         };
 
-        if export.start {
-            self.add_start_function(id)?;
+        match export.start {
+            decode::StartKind::Public => {
+                self.add_start_function(id)?;
+            }
+            decode::StartKind::Private => {
+                self.add_start_function(id)?;
+                return Ok(());
+            }
+            decode::StartKind::None => {}
         }
 
         let classless_this = matches!(
@@ -676,9 +683,6 @@ impl<'a> Context<'a> {
     }
 
     fn add_start_function(&mut self, id: FunctionId) -> Result<(), Error> {
-        if self.start_found {
-            bail!("cannot specify two `start` functions");
-        }
         self.start_found = true;
 
         // Skip this when we're generating tests
@@ -691,11 +695,6 @@ impl<'a> Context<'a> {
             thread_count.wrap_start(builder, id);
         } else if self.module.start.is_some() {
             let builder = wasm_conventions::get_or_insert_start_builder(self.module);
-
-            // Note that we leave the previous start function, if any, first. This is
-            // because the start function currently only shows up when it's injected
-            // through thread/externref transforms. These injected start functions
-            // need to happen before user code, so we always schedule them first.
             builder.func_body().call(id);
         } else {
             self.module.start = Some(id);

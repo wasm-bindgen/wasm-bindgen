@@ -8,6 +8,22 @@ use std::hash::{Hash, Hasher};
 use syn::Path;
 use wasm_bindgen_shared as shared;
 
+/// Whether a function is a start function, and if so, whether it
+/// should be exported to JS.
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum StartKind {
+    None,
+    Public,
+    Private,
+}
+
+impl StartKind {
+    pub fn is_start(self) -> bool {
+        matches!(self, StartKind::Public | StartKind::Private)
+    }
+}
+
 /// An abstract syntax tree representing a rust program. Contains
 /// extra information for joining up this rust code with javascript.
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
@@ -94,7 +110,7 @@ pub struct Export {
     pub rust_name: Ident,
     /// Whether or not this function should be flagged as the Wasm start
     /// function.
-    pub start: bool,
+    pub start: StartKind,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures

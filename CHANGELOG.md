@@ -3,6 +3,16 @@
 
 ## Unreleased
 
+### Added
+
+* Added support for multiple `#[wasm_bindgen(start)]` functions, which are
+  chained together at initialization.
+  [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
+
+* Added `#[wasm_bindgen(start, private)]` to register a start function without
+  exporting it to JS.
+  [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
+
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
 ### Fixed

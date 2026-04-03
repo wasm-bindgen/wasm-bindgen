@@ -1459,3 +1459,81 @@ describe('reinit handler', () => {
         .assert()
         .success();
 }
+
+#[test]
+fn multiple_start_functions() {
+    let out_dir = Project::new("multiple_start_functions")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(js_namespace = console)]
+                    fn log(data: &str);
+                }
+
+                #[wasm_bindgen(start)]
+                fn start1() {
+                    log("start1");
+                }
+
+                #[wasm_bindgen(start)]
+                fn start2() {
+                    log("start2");
+                }
+            "#,
+        )
+        .wasm_bindgen("--target nodejs")
+        .unwrap();
+
+    Command::new("node")
+        .arg("-e")
+        .arg("require('./multiple_start_functions.js')")
+        .current_dir(out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("start1"))
+        .stdout(str::contains("start2"));
+}
+
+#[test]
+fn private_start_function() {
+    let out_dir = Project::new("private_start_function")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(js_namespace = console)]
+                    fn log(data: &str);
+                }
+
+                #[wasm_bindgen(start, private)]
+                fn my_start() {
+                    log("started");
+                }
+
+                #[wasm_bindgen]
+                pub fn greet() -> String {
+                    "hello".to_string()
+                }
+            "#,
+        )
+        .wasm_bindgen("--target nodejs")
+        .unwrap();
+
+    // The start function should run but not be exported
+    Command::new("node")
+        .arg("-e")
+        .arg(
+            "const m = require('./private_start_function.js'); \
+              console.log(typeof m.my_start); \
+              console.log(m.greet());",
+        )
+        .current_dir(out_dir)
+        .assert()
+        .success()
+        .stdout("started\nundefined\nhello\n");
+}

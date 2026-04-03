@@ -122,6 +122,12 @@ macro_rules! shared_api {
             js_namespace: Option<Vec<&'a str>>,
         }
 
+        enum StartKind {
+            None,
+            Public,
+            Private,
+        }
+
         struct Export<'a> {
             class: Option<&'a str>,
             comments: Vec<&'a str>,
@@ -129,7 +135,7 @@ macro_rules! shared_api {
             function: Function<'a>,
             js_namespace: Option<Vec<&'a str>>,
             method_kind: MethodKind<'a>,
-            start: bool,
+            start: StartKind,
         }
 
         struct Enum<'a> {
