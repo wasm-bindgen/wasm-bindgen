@@ -22,7 +22,7 @@ extern "C" {
     #[wasm_bindgen(thread_local_v2, js_name = document)]
     static DOCUMENT: HTMLDocument;
     #[wasm_bindgen(method, structural)]
-    fn getElementById(this: &HTMLDocument, id: &str) -> Element;
+    fn getElementById(this: &HTMLDocument, id: &str) -> Option<Element>;
 
     type Element;
     #[wasm_bindgen(method, getter = textContent, structural)]
@@ -35,11 +35,97 @@ extern "C" {
     fn stack(this: &BrowserError) -> JsValue;
 }
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = "setTimeout")]
+    fn set_timeout(closure: JsValue, millis: i32);
+}
+
+fn delay_promise(millis: i32) -> js_sys::Promise {
+    js_sys::Promise::new_typed(&mut |resolve, _| {
+        set_timeout(resolve.into(), millis);
+    })
+}
+
+/// Successful result of a [`screenshot`] call.
+#[derive(Debug)]
+pub struct Screenshot;
+
+/// Error returned by [`screenshot`].
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum ScreenshotError {
+    /// The headless test runner is not available (e.g. running in a real
+    /// browser or in Node.js without the `#__wbgtest_screenshot` element).
+    NotSupported,
+    /// The runner attempted the screenshot but it failed.
+    Failed(String),
+}
+
+impl core::fmt::Display for ScreenshotError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ScreenshotError::NotSupported => {
+                f.write_str("screenshots are not supported in this environment")
+            }
+            ScreenshotError::Failed(msg) => write!(f, "screenshot failed: {msg}"),
+        }
+    }
+}
+
+/// Request the test runner to take a screenshot and save it to the given path.
+///
+/// This works by writing `filename:<path>` to a hidden DOM element
+/// (`#__wbgtest_screenshot`). The `filename:` prefix distinguishes requests
+/// from protocol responses, avoiding collisions with filenames like `ok`.
+/// The headless test runner detects this, takes a screenshot via the WebDriver
+/// protocol, saves it, and signals back by writing `ok` or `err:<message>` to
+/// the element. This function polls until the runner responds, then clears the
+/// element and returns the result.
+///
+/// The path is relative to the crate root (where `cargo test` is run).
+///
+/// Returns [`ScreenshotError::NotSupported`] if the `#__wbgtest_screenshot`
+/// element is not present (i.e. not running under the headless test runner).
+/// Callers that want screenshots to be optional can simply call `.ok()` on
+/// the result.
+pub async fn screenshot(path: &str) -> Result<Screenshot, ScreenshotError> {
+    let el = match DOCUMENT.with(|doc| doc.getElementById("__wbgtest_screenshot")) {
+        Some(el) => el,
+        None => return Err(ScreenshotError::NotSupported),
+    };
+    let request = format!("filename:{path}");
+    el.set_text_content(&request);
+
+    loop {
+        wasm_bindgen_futures::JsFuture::from(delay_promise(50))
+            .await
+            .unwrap_throw();
+
+        let content = el.text_content();
+        if content == request {
+            continue;
+        }
+
+        el.set_text_content("");
+
+        if content == "ok" {
+            return Ok(Screenshot);
+        }
+        if let Some(msg) = content.strip_prefix("err:") {
+            return Err(ScreenshotError::Failed(msg.into()));
+        }
+        return Ok(Screenshot);
+    }
+}
+
 impl Browser {
     /// Creates a new instance of `Browser`, assuming that its APIs will work
     /// (requires `Node::new()` to have return `None` first).
     pub fn new() -> Browser {
-        let pre = DOCUMENT.with(|document| document.getElementById("output"));
+        let pre = DOCUMENT
+            .with(|document| document.getElementById("output"))
+            .expect("#output element not found");
         // Append a newline to separate any existing content (e.g., "Loading Wasm module...")
         // from the test output. This matches the worker behavior and allows the headless
         // runner to stream output correctly.

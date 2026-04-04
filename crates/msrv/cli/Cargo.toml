@@ -32,6 +32,12 @@ clap_lex = "=1.0.0"
 # ureq 3.3.0 requires edition 2024 (Rust 1.85+)
 ureq = "=3.2.0"
 
+# zerovec 0.11.6 requires Rust 1.83
+zerovec = "=0.11.5"
+
+# zerotrie 0.2.4 require Rust 1.83
+zerotrie = "=0.2.3"
+
 # enable default feature for icu
 writeable = "0.6.0"
 

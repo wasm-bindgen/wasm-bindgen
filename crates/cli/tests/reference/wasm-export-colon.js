@@ -280,9 +280,9 @@ function __wbg_get_imports() {
                 state0.a = 0;
             }
         },
-        __wbg_getElementById_6551bbc463da4d0b: function(arg0, arg1, arg2) {
+        __wbg_getElementById_742e600cfbc9bd4d: function(arg0, arg1, arg2) {
             const ret = arg0.getElementById(getStringFromWasm0(arg1, arg2));
-            return ret;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
         },
         __wbg_log_38117cf0bac015b5: function(arg0, arg1) {
             console.log(getStringFromWasm0(arg0, arg1));

@@ -3,6 +3,13 @@
 
 ## Unreleased
 
+### Added
+
+* Added `wasm_bindgen_test::screenshot(path)` for taking WebDriver screenshots from
+  browser tests. Returns `Result<Screenshot, ScreenshotError>`, allowing callers to
+  use `?` to fail on error or `.ok()` for portability across headless and non-headless
+  environments.
+
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
 ### Fixed
