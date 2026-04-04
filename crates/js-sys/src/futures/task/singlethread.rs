@@ -62,11 +62,11 @@ impl Task {
             waker,
         });
 
-        crate::queue::Queue::with(|queue| queue.schedule_task(this));
+        crate::futures::queue::Queue::with(|queue| queue.schedule_task(this));
     }
 
     fn force_wake(this: Rc<Self>) {
-        crate::queue::Queue::with(|queue| {
+        crate::futures::queue::Queue::with(|queue| {
             queue.push_task(this);
         });
     }
@@ -146,7 +146,13 @@ impl Task {
         // `poll()` calls, so we use `task.run` on a task created per future.
         #[cfg(debug_assertions)]
         let is_ready = match self.console.as_ref() {
-            Some(console) => console.run(&mut move || inner.is_ready()),
+            // Wrap `inner` in AssertUnwindSafe before capturing it, so the closure
+            // satisfies MaybeUnwindSafe (required when panic=unwind). This is safe:
+            // console.run's poll callback is not invoked inside a panic-catching context.
+            Some(console) => {
+                let mut inner = core::panic::AssertUnwindSafe(inner);
+                console.run(&mut move || inner.is_ready())
+            }
             None => inner.is_ready(),
         };
 

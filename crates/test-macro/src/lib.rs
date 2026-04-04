@@ -134,7 +134,7 @@ fn bindgen(
             const _: () = {
                 #wasm_bindgen_path::__rt::wasm_bindgen::__wbindgen_coverage! {
                 #[export_name = ::core::concat!(#prefix, #ignore_name, "_", ::core::module_path!(), "::", ::core::stringify!(#ident))]
-                #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
+                #[cfg(target_family = "wasm")]
                 extern "C" fn __wbgt_test(cx: &#wasm_bindgen_path::__rt::Context) {
                     let test_name = ::core::concat!(::core::module_path!(), "::", ::core::stringify!(#ident));
                     #test_body
@@ -145,9 +145,7 @@ fn bindgen(
     );
 
     if let Some(path) = attributes.unsupported {
-        tokens.extend(
-            quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #path)] },
-        );
+        tokens.extend(quote! { #[cfg_attr(not(target_family = "wasm"), #path)] });
 
         if let Some(should_panic) = should_panic {
             let should_panic = if let Some(lit) = should_panic {
@@ -156,9 +154,7 @@ fn bindgen(
                 quote! { should_panic }
             };
 
-            tokens.extend(
-                quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #should_panic)] }
-            )
+            tokens.extend(quote! { #[cfg_attr(not(target_family = "wasm"), #should_panic)] })
         }
 
         if let Some(ignore) = ignore {
@@ -168,13 +164,11 @@ fn bindgen(
                 quote! { ignore }
             };
 
-            tokens.extend(
-                quote! { #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), #ignore)] }
-            )
+            tokens.extend(quote! { #[cfg_attr(not(target_family = "wasm"), #ignore)] })
         }
     } else {
         tokens.extend(quote! {
-            #[cfg_attr(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))), allow(dead_code))]
+            #[cfg_attr(not(target_family = "wasm"), allow(dead_code))]
         });
     }
 

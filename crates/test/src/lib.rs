@@ -108,6 +108,14 @@ macro_rules! wasm_bindgen_test_configure {
             $crate::wasm_bindgen_test_configure!($($others)*);
         };
     );
+    (run_in_emscripten $($others:tt)*) => (
+        const _: () = {
+            #[link_section = "__wasm_bindgen_test_unstable"]
+            #[cfg(target_arch = "wasm32")]
+            pub static __WBG_TEST_run_in_emscripten: [u8; 1] = [0x06];
+            $crate::wasm_bindgen_test_configure!($($others)*);
+        };
+    );
     () => ()
 }
 

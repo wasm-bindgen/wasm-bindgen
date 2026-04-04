@@ -5,36 +5,36 @@ export function foo() {
     const ret = wasm.foo();
     return ret;
 }
-export function __wbg___wbindgen_debug_string_5398f5bb970e0daa(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_dd5d2d07ce9e6c57(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 }
-export function __wbg___wbindgen_is_function_3c846841762788c1(arg0) {
+export function __wbg___wbindgen_is_function_49868bde5eb1e745(arg0) {
     const ret = typeof(arg0) === 'function';
     return ret;
 }
-export function __wbg___wbindgen_is_undefined_52709e72fb9f179c(arg0) {
+export function __wbg___wbindgen_is_undefined_c0cca72b82b86f4d(arg0) {
     const ret = arg0 === undefined;
     return ret;
 }
-export function __wbg___wbindgen_throw_6ddd609b62940d55(arg0, arg1) {
+export function __wbg___wbindgen_throw_81fc77679af83bc6(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg__wbg_cb_unref_6b5b6b8576d35cb1(arg0) {
+export function __wbg__wbg_cb_unref_3c3b4f651835fbcb(arg0) {
     arg0._wbg_cb_unref();
 }
-export function __wbg_call_2d781c1f4d5c0ef8() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_d578befcc3145dee() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
-export function __wbg_createTask_6eb3a8b6dd2f87c9() { return handleError(function (arg0, arg1) {
+export function __wbg_createTask_018910f7b0ac4894() { return handleError(function (arg0, arg1) {
     const ret = console.createTask(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments); }
-export function __wbg_new_typed_aaaeaf29cf802876(arg0, arg1) {
+export function __wbg_new_typed_14d7cc391ce53d2c(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {
@@ -52,18 +52,18 @@ export function __wbg_new_typed_aaaeaf29cf802876(arg0, arg1) {
         state0.a = 0;
     }
 }
-export function __wbg_queueMicrotask_0c399741342fb10f(arg0) {
+export function __wbg_queueMicrotask_abaf92f0bd4e80a4(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 }
-export function __wbg_queueMicrotask_a082d78ce798393e(arg0) {
+export function __wbg_queueMicrotask_df5a6dac26d818f3(arg0) {
     queueMicrotask(arg0);
 }
-export function __wbg_resolve_ae8d83246e5bcc12(arg0) {
+export function __wbg_resolve_0a79de24e9d2267b(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 }
-export function __wbg_run_78b7b601add6ed6b(arg0, arg1, arg2) {
+export function __wbg_run_04c1a466c02cbe72(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = () => {
@@ -81,23 +81,23 @@ export function __wbg_run_78b7b601add6ed6b(arg0, arg1, arg2) {
         state0.a = 0;
     }
 }
-export function __wbg_static_accessor_GLOBAL_8adb955bd33fac2f() {
-    const ret = typeof global === 'undefined' ? null : global;
-    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-}
-export function __wbg_static_accessor_GLOBAL_THIS_ad356e0db91c7913() {
+export function __wbg_static_accessor_GLOBAL_THIS_a1248013d790bf5f() {
     const ret = typeof globalThis === 'undefined' ? null : globalThis;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_SELF_f207c857566db248() {
+export function __wbg_static_accessor_GLOBAL_f2e0f995a21329ff() {
+    const ret = typeof global === 'undefined' ? null : global;
+    return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_SELF_24f78b6d23f286ea() {
     const ret = typeof self === 'undefined' ? null : self;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_WINDOW_bb9f1ba69d61b386() {
+export function __wbg_static_accessor_WINDOW_59fd959c540fe405() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_then_098abe61755d12f6(arg0, arg1) {
+export function __wbg_then_a0c8db0381c8994c(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 }

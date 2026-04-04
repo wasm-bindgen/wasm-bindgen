@@ -6,22 +6,29 @@ asynchronous tests are also supported through the `futures` and
 `wasm-bindgen-futures` crates.
 
 Writing an asynchronous test is pretty simple, just use an `async` function!
-You'll also likely want to use the `wasm-bindgen-futures` crate to convert JS
-promises to Rust futures.
+`js_sys::Promise` implements `IntoFuture`, so you can `.await` it directly:
 
 ```rust
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::JsFuture;
 
 #[wasm_bindgen_test]
 async fn my_async_test() {
     // Create a promise that is ready on the next tick of the micro task queue.
     let promise = js_sys::Promise::resolve(&JsValue::from(42));
 
-    // Convert that promise into a future and make the test wait on it.
-    let x = JsFuture::from(promise).await.unwrap();
+    // Await the promise directly — no conversion wrapper needed.
+    let x = promise.await.unwrap();
     assert_eq!(x, 42);
 }
+```
+
+If you need a named `Future` value, `JsFuture` is available from
+`js_sys::futures` or from `wasm_bindgen_futures`:
+
+```rust
+use wasm_bindgen_futures::JsFuture;
+
+let x = JsFuture::from(promise).await.unwrap();
 ```
 
 ## Rust compiler compatibility

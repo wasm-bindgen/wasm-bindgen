@@ -50,9 +50,8 @@ This constructor flexibility allows API consumers to decide on unwind safety beh
 ## `&dyn Fn` and `&mut dyn FnMut`
 
 The `#[wasm_bindgen]` attribute supports passing closures as `&dyn Fn` or
-`&mut dyn FnMut` trait object references directly.
-
-When using this pattern, _unwind safety is assumed_. It is therefore up to the user to ensure that they are using this pattern with unwind safe function usage.
+`&mut dyn FnMut` trait object references directly. These are best suited for
+simple synchronous callbacks that don't outlive the call.
 
 ```rust
 #[wasm_bindgen]
@@ -62,7 +61,43 @@ extern "C" {
 }
 ```
 
-For longer-lived closures, or for closures that support checking unwind safety, use `ScopedClosure` instead.
+### Unwind Safety
+
+The `#[wasm_bindgen]` macro automatically injects a `MaybeUnwindSafe` bound on
+the closure argument for each `&dyn Fn` and `&mut dyn FnMut` parameter. The
+generated signature is equivalent to:
+
+```rust
+fn takes_mut_closure(f: &mut (impl FnMut() + MaybeUnwindSafe));
+```
+
+`MaybeUnwindSafe` is a no-op blanket impl when building without `panic=unwind`,
+so there is **no breaking change** for existing code. When building with
+`panic=unwind`, closures that capture types with interior mutability (e.g.
+`Cell<T>`, `RefCell<T>`) or mutable references (`&mut T`) will require the
+captured values to be wrapped in `std::panic::AssertUnwindSafe` before capture:
+
+```rust
+use std::panic::AssertUnwindSafe;
+
+let mut count = 0i32;
+// &mut i32 is not UnwindSafe — wrap the reference before the closure captures it
+let mut count_ref = AssertUnwindSafe(&mut count);
+takes_mut_closure(&mut move || {
+    **count_ref += 1;
+});
+```
+
+Closures that only capture plain `Copy` types or `UnwindSafe` values compile
+without any wrapping:
+
+```rust
+let message = String::from("hello"); // String: UnwindSafe
+takes_closure(&move || web_sys::console::log_1(&message.clone().into()));
+```
+
+For longer-lived closures or when you need explicit control over unwind safety
+behaviour, use `ScopedClosure` instead.
 
 ## Known-Lifetime Callbacks with `ScopedClosure`
 

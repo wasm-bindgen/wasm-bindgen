@@ -10,30 +10,24 @@ name = "wasm-bindgen-futures"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures"
 rust-version = "1.71"
-version = "0.4.64"
+version = "0.4.67"
 
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-cfg-if = "1.0.0"
-futures-core = { version = '0.3.8', default-features = false, optional = true }
-futures-util = { version = '0.3.31', default-features = false, features = ["std"], optional = true }
-js-sys = { path = "../js-sys", version = '=0.3.91', default-features = false }
-once_cell = { version = "1.12", default-features = false }
-wasm-bindgen = { path = "../..", version = '=0.2.114', default-features = false }
+# Depending on js-sys with the "futures" feature activates IntoFuture for Promise
+# and makes promise.await work automatically.
+js-sys = { path = "../js-sys", version = "=0.3.94", default-features = false, features = [
+  "futures",
+] }
+wasm-bindgen = { path = "../..", version = "=0.2.117", default-features = false }
 
 [features]
 default = ["std"]
-futures-core-03-stream = ['futures-core']
-std = ["wasm-bindgen/std", "js-sys/std", "web-sys/std", "futures-util"]
-
-[target.'cfg(target_feature = "atomics")'.dependencies]
-web-sys = { path = "../web-sys", version = "=0.3.91", default-features = false, features = [
-  "MessageEvent",
-  "Worker",
-] }
+futures-core-03-stream = ["js-sys/futures-core-03-stream"]
+std = ["wasm-bindgen/std", "js-sys/std"]
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 futures-channel = "0.3"

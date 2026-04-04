@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-test"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.71"
-version = "0.3.64"
+version = "0.3.67"
 
 [features]
 default = ["std"]
@@ -15,11 +15,11 @@ std = ["wasm-bindgen/std", "js-sys/std", "wasm-bindgen-futures/std"]
 
 [dependencies]
 gg-alloc = { version = "1.0", optional = true }
-js-sys = { path = '../js-sys', version = '=0.3.91', default-features = false }
-wasm-bindgen = { path = '../..', version = '=0.2.114', default-features = false }
-wasm-bindgen-futures = { path = '../futures', version = '=0.4.64', default-features = false }
-wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.64' }
-wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.114" }
+js-sys = { path = '../js-sys', version = '=0.3.94', default-features = false }
+wasm-bindgen = { path = '../..', version = '=0.2.117', default-features = false }
+wasm-bindgen-futures = { path = '../futures', version = '=0.4.67', default-features = false }
+wasm-bindgen-test-macro = { path = '../test-macro', version = '=0.3.67' }
+wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.117" }
 
 # benchmark required start
 async-trait = "0.1.89"
@@ -36,10 +36,23 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 minicov = "0.3.8"
 
 [dev-dependencies]
-web-sys = { path = '../web-sys', features = ['console', 'Window', 'Performance'] }
+web-sys = { path = "../web-sys", features = [
+  "Blob",
+  "BlobPropertyBag",
+  "ErrorEvent",
+  "MessageEvent",
+  "Performance",
+  "Url",
+  "Window",
+  "Worker",
+  "console",
+] }
 
 [[bench]]
 name = "headless_output"
+
+[[bench]]
+name = "headless_worker_output"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }

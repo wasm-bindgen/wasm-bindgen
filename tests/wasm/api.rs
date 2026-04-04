@@ -205,9 +205,12 @@ fn memory_accessor_appears_to_work() {
     let buf = mem.buffer();
     let slice = Uint8Array::new(&buf);
     let mut v = Vec::new();
-    slice
-        .subarray(ptr, ptr + 4)
-        .for_each(&mut |val, _, _| v.push(val));
+    slice.subarray(ptr, ptr + 4).for_each(&mut {
+        // Wrap v in AssertUnwindSafe: for_each's callback is not called inside a
+        // panic-catching context, so the &mut Vec capture is safe across unwinds.
+        let mut v = core::panic::AssertUnwindSafe(&mut v);
+        move |val, _, _| v.push(val)
+    });
     assert_eq!(v, [3, 0, 0, 0]);
 }
 

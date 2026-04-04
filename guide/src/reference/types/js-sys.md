@@ -158,6 +158,9 @@ See [Passing Rust Closures to JS](../passing-rust-closures-to-js.md) for more de
 
 Typed JavaScript `Promise` that resolves to `T`.
 
+`Promise<T>` implements [`IntoFuture`], so it can be `.await`ed directly in
+any `async` function. The resolved value has type `T` without any cast:
+
 ```rust
 use js_sys::{Promise, Number};
 
@@ -166,8 +169,31 @@ extern "C" {
     fn fetchCount() -> Promise<Number>;
 }
 
-let count: Number = JsFuture::from(fetchCount()).await?;
+async fn example() -> Result<Number, JsValue> {
+    let count: Number = fetchCount().await?;
+    Ok(count)
+}
 ```
+
+This requires the `futures` feature on `js-sys`, which is activated
+automatically when `wasm-bindgen-futures` is a dependency. Enable it directly
+if needed:
+
+```toml
+[dependencies]
+js-sys = { version = "0.3", features = ["futures"] }
+```
+
+If you need a named [`JsFuture`] value, use `JsFuture::from`:
+
+```rust
+use js_sys::futures::JsFuture;
+
+let future: JsFuture<Number> = JsFuture::from(fetchCount());
+```
+
+[`IntoFuture`]: https://doc.rust-lang.org/std/future/trait.IntoFuture.html
+[`JsFuture`]: https://docs.rs/js-sys/*/js_sys/futures/struct.JsFuture.html
 
 ### The Promising trait
 
