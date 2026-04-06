@@ -214,7 +214,11 @@ fn shared_export<'a>(
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
         method_kind,
-        start: export.start,
+        start: match export.start {
+            ast::StartKind::None => StartKind::None,
+            ast::StartKind::Public => StartKind::Public,
+            ast::StartKind::Private => StartKind::Private,
+        },
     })
 }
 

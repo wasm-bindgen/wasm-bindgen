@@ -727,7 +727,7 @@ impl TryToTokens for ast::Export {
         // since we're returning a promise to JS, and this will implicitly
         // require that the function returns a `Future<Output = Result<...>>`
         let (ret_ty, inner_ret_ty, ret_expr) = if self.function.r#async {
-            if self.start {
+            if self.start.is_start() {
                 (
                     quote! { () },
                     quote! { () },
@@ -744,7 +744,7 @@ impl TryToTokens for ast::Export {
                     },
                 )
             }
-        } else if self.start {
+        } else if self.start.is_start() {
             (
                 quote! { () },
                 quote! { () },
@@ -763,7 +763,7 @@ impl TryToTokens for ast::Export {
         };
 
         if self.function.r#async {
-            if self.start {
+            if self.start.is_start() {
                 call = quote! {
                     #wasm_bindgen_futures::spawn_local(async move {
                         #call
@@ -811,7 +811,7 @@ impl TryToTokens for ast::Export {
             .collect::<Vec<_>>();
 
         let mut checks = Vec::new();
-        if self.start {
+        if self.start.is_start() {
             checks.push(quote! { const _ASSERT: fn() = || -> #projection::Abi { loop {} }; });
         };
 

@@ -3,6 +3,14 @@
 
 ## Unreleased
 
+### Added
+
+* Added support for multiple `#[wasm_bindgen(start)]` functions, which are
+  chained together at initialization, as well as a new
+  `#[wasm_bindgen(start, private)]` to register a start function without
+  exporting it as a public export.
+  [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
+
 ### Fixed
 
 * Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
