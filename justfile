@@ -110,7 +110,7 @@ bench:
 
 cov *ARGS="":
   CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage" \
-  WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo +nightly llvm-cov test \
+  WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo llvm-cov test \
   --coverage-target-only \
   -p js-sys \
   -p wasm-bindgen \
