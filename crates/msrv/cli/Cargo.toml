@@ -13,8 +13,6 @@ icu_normalizer_data = "=2.0.0"
 icu_properties = "=2.0.0"
 icu_properties_data = "=2.0.0"
 icu_provider = "=2.0.0"
-zerotrie = "=0.2.3"
-zerovec = "=0.11.5"
 
 # zerovec 0.11.6 requires Rust 1.83
 zerovec = "=0.11.5"
