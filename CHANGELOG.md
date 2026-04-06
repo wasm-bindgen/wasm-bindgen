@@ -5,22 +5,17 @@
 
 ### Fixed
 
-* Fixed a panic in the CLI (`failed to find N in function table`) when
-  processing WASM built by rustc 1.94+ for large projects such as Leptos.
-  lld now emits element segment offsets as `global.get $__table_base` or
-  extended const expressions (`global.get + i32.const + i32.add`) for
-  large function tables, neither of which the previous code handled. The
-  fix inlines a small const-expression evaluator in `get_function_table_entry`
-  and also guards the segment-local index calculation against integer underflow
-  in multi-segment tables.
+* Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
+  a panic (`failed to find N in function table`) caused by lld emitting element
+  segment offsets as `global.get $__table_base` or extended const expressions
+  instead of plain `i32.const N` for large function tables; the fix adds a
+  const-expression evaluator in `get_function_table_entry` and guards against
+  integer underflow in multi-segment tables. Second, the descriptor interpreter
+  now distinguishes `__stack_pointer` from other globals (e.g.
+  `GOT.func.internal.*`) instead of blindly treating all global accesses as
+  stack pointer operations, falling back to the old behavior for modules without
+  the `__stack_pointer` export.
   [#5076](https://github.com/wasm-bindgen/wasm-bindgen/issues/5076)
-
-* Fixed the descriptor interpreter to distinguish `__stack_pointer` from other
-  globals (e.g. `GOT.func.internal.*`). Previously all `global.get` / `global.set`
-  instructions were blindly treated as stack pointer accesses, which produced
-  wrong descriptor results when modules contained additional globals. The
-  interpreter now resolves the `__stack_pointer` export and tracks other globals
-  independently, falling back to the old behavior for modules without the export.
   [#5080](https://github.com/wasm-bindgen/wasm-bindgen/issues/5080)
 
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
