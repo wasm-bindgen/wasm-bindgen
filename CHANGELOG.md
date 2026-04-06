@@ -15,6 +15,14 @@
   in multi-segment tables.
   [#5076](https://github.com/wasm-bindgen/wasm-bindgen/issues/5076)
 
+* Fixed the descriptor interpreter to distinguish `__stack_pointer` from other
+  globals (e.g. `GOT.func.internal.*`). Previously all `global.get` / `global.set`
+  instructions were blindly treated as stack pointer accesses, which produced
+  wrong descriptor results when modules contained additional globals. The
+  interpreter now resolves the `__stack_pointer` export and tracks other globals
+  independently, falling back to the old behavior for modules without the export.
+  [#5080](https://github.com/wasm-bindgen/wasm-bindgen/issues/5080)
+
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
 ### Fixed
