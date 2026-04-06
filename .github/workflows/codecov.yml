@@ -14,10 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
+      # Pinned due to __llvm_profile_runtime regression in newer nightlies
+      RUSTUP_TOOLCHAIN: nightly-2026-02-18
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@nightly
         with:
+          # Pinned due to https://github.com/nickel-lang/minicov/issues/5
+          # __llvm_profile_runtime symbol removal in newer nightlies
+          toolchain: nightly-2026-02-18
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@just
       - uses: taiki-e/install-action@cargo-llvm-cov
