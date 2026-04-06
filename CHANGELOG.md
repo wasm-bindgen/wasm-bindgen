@@ -18,6 +18,10 @@
   [#5064](https://github.com/wasm-bindgen/wasm-bindgen/issues/5064)
   [#5073](https://github.com/wasm-bindgen/wasm-bindgen/pull/5073)
 
+* Fixed handling logic for environment variable `WASM_BINDGEN_TEST_ADDRESS` in
+  the test runner, when running tests in headless mode.
+  [#5087](https://github.com/wasm-bindgen/wasm-bindgen/pull/5087)
+
 ## [0.2.116](https://github.com/rustwasm/wasm-bindgen/compare/0.2.115...0.2.116)
 
 ### Added
