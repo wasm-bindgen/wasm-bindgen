@@ -21,7 +21,8 @@ wasm module is loaded.
 
 Multiple `#[wasm_bindgen(start)]` functions can be specified across a module and
 its dependencies. They will be chained together and all executed during
-initialization.
+initialization. The execution order is arbitrary, so functions should not rely
+on other start functions having run before them.
 
 ```rust
 #[wasm_bindgen(start)]
