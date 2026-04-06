@@ -6,12 +6,25 @@
 ### Added
 
 * Added support for multiple `#[wasm_bindgen(start)]` functions, which are
-  chained together at initialization.
+  chained together at initialization, as well as a new
+  `#[wasm_bindgen(start, private)]` to register a start function without
+  exporting it as a public export.
   [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
 
-* Added `#[wasm_bindgen(start, private)]` to register a start function without
-  exporting it to JS.
-  [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
+### Fixed
+
+* Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
+  a panic (`failed to find N in function table`) caused by lld emitting element
+  segment offsets as `global.get $__table_base` or extended const expressions
+  instead of plain `i32.const N` for large function tables; the fix adds a
+  const-expression evaluator in `get_function_table_entry` and guards against
+  integer underflow in multi-segment tables. Second, the descriptor interpreter
+  now distinguishes `__stack_pointer` from other globals (e.g.
+  `GOT.func.internal.*`) instead of blindly treating all global accesses as
+  stack pointer operations, falling back to the old behavior for modules without
+  the `__stack_pointer` export.
+  [#5076](https://github.com/wasm-bindgen/wasm-bindgen/issues/5076)
+  [#5080](https://github.com/wasm-bindgen/wasm-bindgen/issues/5080)
 
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
