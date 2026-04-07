@@ -119,7 +119,9 @@ impl AuthenticationExtensionsPrfValues {
     pub fn new_with_u8_slice(first: &mut [u8]) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-        ret.set_first_u8_slice(first);
+        unsafe {
+            ret.set_first_u8_slice(first);
+        }
         ret
     }
     #[doc = "Construct a new `AuthenticationExtensionsPrfValues`."]

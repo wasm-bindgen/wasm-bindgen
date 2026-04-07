@@ -198,7 +198,9 @@ impl ImageDecoderInit {
     pub fn new_with_u8_slice(data: &mut [u8], type_: &str) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-        ret.set_data_u8_slice(data);
+        unsafe {
+            ret.set_data_u8_slice(data);
+        }
         ret.set_type(type_);
         ret
     }

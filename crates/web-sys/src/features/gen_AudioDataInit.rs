@@ -217,7 +217,9 @@ impl AudioDataInit {
     ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-        ret.set_data_u8_slice(data);
+        unsafe {
+            ret.set_data_u8_slice(data);
+        }
         ret.set_format(format);
         ret.set_number_of_channels(number_of_channels);
         ret.set_number_of_frames(number_of_frames);
