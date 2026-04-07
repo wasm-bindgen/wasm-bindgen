@@ -116,12 +116,10 @@ impl AuthenticationExtensionsPrfValues {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_u8_slice(first: &mut [u8]) -> Self {
+    pub unsafe fn new_with_u8_slice(first: &mut [u8]) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-        unsafe {
-            ret.set_first_u8_slice(first);
-        }
+        ret.set_first_u8_slice(first);
         ret
     }
     #[doc = "Construct a new `AuthenticationExtensionsPrfValues`."]

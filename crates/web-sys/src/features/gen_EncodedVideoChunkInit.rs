@@ -172,16 +172,14 @@ impl EncodedVideoChunkInit {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_u8_slice(
+    pub unsafe fn new_with_u8_slice(
         data: &mut [u8],
         timestamp: i32,
         type_: EncodedVideoChunkType,
     ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
-        unsafe {
-            ret.set_data_u8_slice(data);
-        }
+        ret.set_data_u8_slice(data);
         ret.set_timestamp(timestamp);
         ret.set_type(type_);
         ret

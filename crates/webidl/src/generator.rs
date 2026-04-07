@@ -33,16 +33,6 @@ fn is_ref_to_primitive_slice(ty: &Type) -> bool {
     )
 }
 
-/// Emit `ret.#set_name(#arg);` or `unsafe { ret.#set_name(#arg); }` depending
-/// on whether the setter is unsafe (unstable + primitive slice).
-fn setter_call(set_name: &Ident, arg_name: &Ident, unstable: bool, ty: &Type) -> TokenStream {
-    if unstable && is_ref_to_primitive_slice(ty) {
-        quote! { unsafe { ret.#set_name(#arg_name); } }
-    } else {
-        quote! { ret.#set_name(#arg_name); }
-    }
-}
-
 fn add_features(features: &mut BTreeSet<String>, ty: &impl TraverseType) {
     ty.traverse_type(&mut |ident| {
         let ident = ident.to_string();
@@ -1120,6 +1110,9 @@ impl Dictionary {
             args: Vec<TokenStream>,
             calls: Vec<TokenStream>,
             features: BTreeSet<String>,
+            /// True when at least one argument is a primitive slice, making the
+            /// constructor `unsafe` for the same reason as the underlying setter.
+            is_unsafe: bool,
         }
 
         // Find the union field (if any) among required fields.
@@ -1131,10 +1124,11 @@ impl Dictionary {
         // the given setter for the union field while keeping all fields in order.
         let build_ctor = |union_setter: Option<&DictionaryFieldSetter>,
                           union_field: Option<&DictionaryField>|
-         -> (Vec<TokenStream>, Vec<TokenStream>, BTreeSet<String>) {
+         -> (Vec<TokenStream>, Vec<TokenStream>, BTreeSet<String>, bool) {
             let mut args = vec![];
             let mut calls = vec![];
             let mut features = BTreeSet::new();
+            let mut is_unsafe = false;
             for field in fields.iter() {
                 if !field.required {
                     continue;
@@ -1148,21 +1142,28 @@ impl Dictionary {
                     };
                     let ty = &setter.ty;
                     args.push(quote!( #arg_name: #ty ));
-                    let call = setter_call(&set_name, &arg_name, field.unstable, ty);
-                    calls.push(call);
+                    calls.push(quote!( ret.#set_name(#arg_name); ));
                     add_features(&mut features, ty);
+                    if field.unstable && is_ref_to_primitive_slice(ty) {
+                        is_unsafe = true;
+                    }
                 } else {
                     let arg_name = rust_ident(&field.name);
                     let set_name = field.setter_name();
-                    let first_setter = field.setter_types.first();
-                    let ty = first_setter.map(|s| &s.ty).unwrap_or(&field.ty);
+                    let ty = field
+                        .setter_types
+                        .first()
+                        .map(|s| &s.ty)
+                        .unwrap_or(&field.ty);
                     args.push(quote!( #arg_name: #ty ));
-                    let call = setter_call(&set_name, &arg_name, field.unstable, ty);
-                    calls.push(call);
+                    calls.push(quote!( ret.#set_name(#arg_name); ));
                     add_features(&mut features, ty);
+                    if field.unstable && is_ref_to_primitive_slice(ty) {
+                        is_unsafe = true;
+                    }
                 }
             }
-            (args, calls, features)
+            (args, calls, features, is_unsafe)
         };
 
         let ctor_variants: Vec<CtorVariant> = if let Some(union_field) = union_field {
@@ -1187,22 +1188,25 @@ impl Dictionary {
                             None => format_ident!("new"),
                         }
                     };
-                    let (args, calls, features) = build_ctor(Some(setter), Some(union_field));
+                    let (args, calls, features, is_unsafe) =
+                        build_ctor(Some(setter), Some(union_field));
                     Some(CtorVariant {
                         ctor_name,
                         args,
                         calls,
                         features,
+                        is_unsafe,
                     })
                 })
                 .collect()
         } else {
-            let (args, calls, features) = build_ctor(None, None);
+            let (args, calls, features, is_unsafe) = build_ctor(None, None);
             vec![CtorVariant {
                 ctor_name: format_ident!("new"),
                 args,
                 calls,
                 features,
+                is_unsafe,
             }]
         };
 
@@ -1247,12 +1251,18 @@ impl Dictionary {
                     *unstable,
                 );
 
+                let ctor_unsafe = if variant.is_unsafe {
+                    quote! { unsafe }
+                } else {
+                    quote! {}
+                };
+
                 quote! {
                     #ctor_cfg_features
                     #ctor_doc_desc
                     #ctor_doc_req
                     #deprecated
-                    pub fn #ctor_name(#(#args),*) -> Self {
+                    pub #ctor_unsafe fn #ctor_name(#(#args),*) -> Self {
                         #[allow(unused_mut)]
                         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
                         #(#calls)*
