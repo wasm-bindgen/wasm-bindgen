@@ -103,6 +103,12 @@ pub fn run(
 
     // Generate wrappers for each import with catch
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
+        // Some imports must not be wrapped (e.g. __wbindgen_reinit which
+        // intentionally sets the terminated flag).
+        if aux.imports_without_catch_wrapper.contains(adapter_id) {
+            continue;
+        }
+
         let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
             WrapperKind::CatchWrapper
         } else if let Some(wrapped_js_tag) = wrapped_js_tag {
@@ -474,6 +480,9 @@ fn emit_catch_handler(
 ///
 /// This checks if `__instance_terminated` is nonzero and traps if so, ensuring
 /// that instance termination is never swallowed by an outer catch handler.
+/// This covers both hard termination (flag = 1) and the reinit sentinel
+/// (flag = 0xFFFFFFFF), since both mean the current instance must stop
+/// executing. The JS-level guard then dispatches based on the flag value.
 fn emit_termination_guard(builder: &mut walrus::InstrSeqBuilder, ctx: CatchContext) {
     let mem_arg = MemArg {
         align: 4,

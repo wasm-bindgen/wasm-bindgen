@@ -654,23 +654,14 @@ pub fn set_on_abort(_f: fn()) -> Option<fn()> {
     None
 }
 
-/// Sentinel written to `__instance_terminated` to signal a reinit.
-/// Distinct from `0` (live) and `1` (hard terminated).
-#[cfg(panic = "unwind")]
-pub const REINIT_SENTINEL: u32 = u32::MAX;
-
-/// Signal that the instance should be reinitialised before the next export
-/// call.
+/// Schedule the instance for reinitialization before the next export call.
 ///
-/// **Experimental — only available when built with `panic=unwind` and when
-/// wasm-bindgen is invoked with `--experimental-reset-state-function`.**
-/// Without that flag the JS guard is not emitted, so the sentinel is written
-/// but never acted upon.  On `panic=abort` builds this is a no-op.
+/// Available when built with `panic=unwind`. The reinit machinery is
+/// automatically emitted when this function is used. On `panic=abort` builds
+/// this is a no-op.
 #[cfg(panic = "unwind")]
-pub fn reinit() {
-    unsafe {
-        __instance_terminated = REINIT_SENTINEL;
-    }
+pub fn schedule_reinit() {
+    crate::__wbindgen_reinit();
 }
 
 /// Stores the Wasm indirect-function-table index of the registered reinit
@@ -680,7 +671,7 @@ pub fn reinit() {
 pub static mut __reinit_handler: u32 = 0;
 
 /// Register a callback invoked on the new instance immediately after
-/// `__wbg_reset_state()` creates it following a [`reinit()`] signal.
+/// `__wbg_reset_state()` creates it following a [`schedule_reinit()`] signal.
 ///
 /// Returns the previously registered handler, or `None` if none was set.
 /// This mirrors the `std::panic::set_hook` convention and lets callers chain
@@ -719,7 +710,7 @@ pub fn set_on_reinit(_f: fn()) -> Option<fn()> {
 
 /// No-op stub for `panic=abort` builds.
 #[cfg(not(panic = "unwind"))]
-pub fn reinit() {}
+pub fn schedule_reinit() {}
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {

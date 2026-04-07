@@ -105,6 +105,13 @@ pub struct Context<'a> {
     /// If exception handling / unwinding is enabled.
     unwind_enabled: bool,
 
+    /// Whether reinit machinery should be emitted. True when `schedule_reinit()`
+    /// is used (auto-detected via the `__wbindgen_reinit` intrinsic) or when
+    /// `--experimental-reset-state-function` is passed. Controls instance-id
+    /// tracking, the `__wbg_instance_id` global, and the private
+    /// `__wbg_reset_state` function.
+    generate_reinit: bool,
+
     /// Mapping from qualified name (used in WasmDescribe) to rust_name (used as exported_classes key).
     pub(crate) qualified_to_rust_name: HashMap<String, String>,
 
@@ -232,6 +239,7 @@ impl<'a> Context<'a> {
             config,
             threads_enabled: threads_xform::is_enabled(module),
             unwind_enabled: has_local_exception_tags(module),
+            generate_reinit: aux.uses_reinit || config.generate_reset_state,
             module,
             npm_dependencies: Default::default(),
             wit,
@@ -1552,7 +1560,7 @@ if (require('worker_threads').isMainThread) {{
         }
 
         if class.wrap_needed {
-            let (ptr_assignment, register_data) = if self.config.generate_reset_state {
+            let (ptr_assignment, register_data) = if self.generate_reinit {
                 (
                     "\
                     obj.__wbg_ptr = ptr;
@@ -1590,7 +1598,7 @@ if (require('worker_threads').isMainThread) {{
             ));
         }
 
-        let finalization_callback = if self.config.generate_reset_state {
+        let finalization_callback = if self.generate_reinit {
             format!(
                 "({{ ptr, instance }}) => {{
                 if (instance === __wbg_instance_id) wasm.{}(ptr >>> 0, 1);
@@ -3182,7 +3190,7 @@ if (require('worker_threads').isMainThread) {{
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
         self.intrinsic("make_mut_closure".into(), "makeMutClosure".into(), {
-            let (state_init, instance_check) = if self.config.generate_reset_state {
+            let (state_init, instance_check) = if self.generate_reinit {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
@@ -3254,7 +3262,7 @@ if (require('worker_threads').isMainThread) {{
         // `this.a` pointer to prevent it being used again the
         // future.
         self.intrinsic("make_closure".into(), "makeClosure".into(), {
-            let (state_init, instance_check) = if self.config.generate_reset_state {
+            let (state_init, instance_check) = if self.generate_reinit {
                 (
                     "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
                     "
@@ -3321,7 +3329,7 @@ if (require('worker_threads').isMainThread) {{
         let dtor = self.export_name_of(func_id);
         let destroy_state = format!("wasm.{dtor}(state.a, state.b)");
         self.intrinsic("closure_finalization".into(), "CLOSURE_DTORS".into(), {
-            let prevent_stale = if self.config.generate_reset_state {
+            let prevent_stale = if self.generate_reinit {
                 format!(
                     "state => {{
                         if (state.instance === __wbg_instance_id) {{
@@ -3379,7 +3387,11 @@ if (require('worker_threads').isMainThread) {{
         });
     }
 
-    fn generate_reset_state(&mut self) -> Result<(), Error> {
+    /// Emit the `__wbg_reset_state` function and instance-id tracking for the
+    /// reinit lifecycle. Called when `schedule_reinit()` is used or
+    /// `--experimental-reset-state-function` is passed. The function is private
+    /// unless the CLI flag is set.
+    fn generate_reinit_wrappers(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
 
         let mut reset_statements = Vec::new();
@@ -3394,7 +3406,6 @@ if (require('worker_threads').isMainThread) {{
             }
         }
 
-        // Conditionally reset globals based on whether they were used
         if self.has_intrinsic("text_decoder") {
             reset_statements.push(
                 "if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;".to_string(),
@@ -3439,10 +3450,6 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
-        // After creating the new instance, invoke the reinit handler if one
-        // was registered. We use __wbg_invoke_handler which reads the u32
-        // table index from the __reinit_handler global address and calls
-        // through the function table — no exported Wasm function needed.
         let reinit_call = if let Ok(invoke_handler) = self.expose_invoke_handler() {
             format!("{invoke_handler}(wasm.__reinit_handler.value);")
         } else {
@@ -3450,6 +3457,7 @@ if (require('worker_threads').isMainThread) {{
         };
         reset_statements.push(format!(
             "
+            __wbg_called_abort = false;
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
@@ -3471,6 +3479,7 @@ if (require('worker_threads').isMainThread) {{
                 definition,
                 ts_definition: "function __wbg_reset_state(): void;\n".to_string(),
                 ts_comments: None,
+                // Only publicly exported when --experimental-reset-state-function is passed
                 private: !self.config.generate_reset_state,
             }),
         )?;
@@ -3767,9 +3776,11 @@ if (require('worker_threads').isMainThread) {{
 
         self.export_destructor();
 
-        // Generate reset state function last, to ensure it knows about all other state.
-        if self.config.generate_reset_state {
-            self.generate_reset_state()?;
+        // Generate reinit wrappers (__wbg_reset_state + instance-id tracking)
+        // when schedule_reinit() is used or --experimental-reset-state-function
+        // is set. Must come last to ensure it knows about all other state.
+        if self.generate_reinit {
+            self.generate_reinit_wrappers()?;
         }
 
         Ok(())
@@ -3867,36 +3878,71 @@ addToLibrary({
         let mem_view = self.expose_int32_memory(memory);
 
         self.global("let __wbg_terminated_addr;");
-
-        let terminated_action = if self.config.generate_reset_state {
-            "__wbg_reset_state()"
-        } else {
-            "throw new Error('Module terminated')"
-        };
-        self.global(&format!(
-            "\
-function __wbg_termination_guard() {{
-    __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
-    if ({mem_view}()[__wbg_terminated_addr]) {{
-        {terminated_action};
-    }}
-}}"
-        ));
+        self.global("let __wbg_called_abort = false;");
 
         // Create a helper function to unwrap and rethrow wrapped JS exceptions
         let invoke_handler = self.expose_invoke_handler()?;
+
+        self.global(&format!(
+            "\
+function __wbg_call_abort_hook() {{
+    __wbg_called_abort = true;
+    try {{ {invoke_handler}(wasm.__abort_handler.value); }} catch(_) {{}}
+}}"
+        ));
+
+        let uses_reinit = self.generate_reinit;
+        if uses_reinit {
+            self.global(&format!(
+                "\
+function __wbg_termination_guard() {{
+    __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
+    const flag = {mem_view}()[__wbg_terminated_addr];
+    if (flag === 1) {{
+        if (!__wbg_called_abort) {{
+            __wbg_call_abort_hook();
+            if ({mem_view}()[__wbg_terminated_addr] === -1) {{
+                __wbg_reset_state();
+                return;
+            }}
+        }}
+        throw new Error('Module terminated');
+    }} else if (flag === -1) {{
+        __wbg_reset_state();
+    }}
+}}"
+            ));
+        } else {
+            self.global(&format!(
+                "\
+function __wbg_termination_guard() {{
+    __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
+    const flag = {mem_view}()[__wbg_terminated_addr];
+    if (flag) {{
+        if (!__wbg_called_abort) {{
+            __wbg_call_abort_hook();
+        }}
+        throw new Error('Module terminated');
+    }}
+}}"
+            ));
+        }
+
         self.global(&format!(
             "\
 function __wbg_handle_catch(e) {{
     if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
         throw e.getArg(__wbindgen_wrapped_jstag, 0);
     }}
-    // Set the terminated flag first so any re-entrant export call from within
-    // the abort handler is immediately blocked by __wbg_termination_guard().
-    {mem_view}()[__wbg_terminated_addr] = 1;
+    // Set the terminated flag to 1 only if it is not already set — this
+    // preserves the reinit sentinel (0xFFFFFFFF / -1) if reinit() was called
+    // before the trap propagated here.
+    if (!{mem_view}()[__wbg_terminated_addr]) {{
+        {mem_view}()[__wbg_terminated_addr] = 1;
+    }}
     // Invoke the Rust-registered abort handler (if any). The try/catch ensures
     // a throwing or panicking handler cannot suppress the original error.
-    try {{ {invoke_handler}(wasm.__abort_handler.value); }} catch(_) {{}}
+    __wbg_call_abort_hook();
     throw e;
 }}"
         ));
@@ -5098,6 +5144,12 @@ function __wbg_handle_catch(e) {{
                 assert_eq!(args.len(), 1);
                 self.expose_panic_error();
                 format!("new PanicError({})", args[0])
+            }
+            Intrinsic::Reinit => {
+                assert_eq!(args.len(), 0);
+                let memory = wasm_conventions::get_memory(self.module)?;
+                let mem_view = self.expose_int32_memory(memory);
+                format!("{mem_view}()[wasm.__instance_terminated.value / 4] = -1")
             }
         };
         Ok(expr)

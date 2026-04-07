@@ -11,6 +11,11 @@
   exporting it as a public export.
   [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
 
+* `wasm_bindgen::handler::schedule_reinit()` (renamed from `reinit()`) now
+  automatically emits the reinit machinery when used, without requiring
+  `--experimental-reset-state-function`. The CLI flag is only needed for the
+  public `__wbg_reset_state()` export.
+
 ### Fixed
 
 * Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
@@ -25,6 +30,23 @@
   the `__stack_pointer` export.
   [#5076](https://github.com/wasm-bindgen/wasm-bindgen/issues/5076)
   [#5080](https://github.com/wasm-bindgen/wasm-bindgen/issues/5080)
+
+* Fixed the termination guard to correctly distinguish hard termination from a
+  scheduled reinit, and to invoke the abort hook on host-initiated
+  termination. Previously, calling `schedule_reinit()` from an abort handler
+  could have the sentinel overwritten to `1` by `__wbg_handle_catch`, losing
+  the reinit intent. The guard now preserves the flag if already set, and when
+  a terminated module is accessed without a prior abort hook call, the hook is
+  invoked first, allowing the abort handler to call `schedule_reinit()` and
+  drive automatic recovery.
+
+### Changed
+
+* With `panic=unwind`, the termination guard no longer automatically
+  reinitializes the module on any terminated state. Hard termination
+  (`flag = 1`) throws `"Module terminated"`, and reinitialization only occurs
+  when `schedule_reinit()` has explicitly requested it, either directly or
+  from within an abort handler.
 
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
