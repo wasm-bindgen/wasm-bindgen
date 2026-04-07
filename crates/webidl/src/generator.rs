@@ -12,6 +12,27 @@ use crate::util::{get_cfg_features, mdn_doc, required_doc_string};
 use crate::wbg_type::WbgType;
 use crate::Options;
 
+/// Returns true if `ty` is a reference to a slice of a primitive numeric type
+/// (`&[u8]`, `&mut [i16]`, etc.) — i.e. the kinds that wasm-bindgen passes as a
+/// raw `TypedArray` view into wasm linear memory rather than as a JS Array of objects.
+fn is_ref_to_primitive_slice(ty: &Type) -> bool {
+    let Type::Reference(r) = ty else { return false };
+    let Type::Slice(s) = &*r.elem else {
+        return false;
+    };
+    let Type::Path(p) = &*s.elem else {
+        return false;
+    };
+    matches!(
+        p.path
+            .segments
+            .last()
+            .map(|s| s.ident.to_string())
+            .as_deref(),
+        Some("u8" | "i8" | "u16" | "i16" | "u32" | "i32" | "f32" | "f64" | "u64" | "i64")
+    )
+}
+
 fn add_features(features: &mut BTreeSet<String>, ty: &impl TraverseType) {
     ty.traverse_type(&mut |ident| {
         let ident = ident.to_string();
@@ -927,6 +948,22 @@ impl DictionaryField {
                 None
             };
 
+            // Slice setters on unstable APIs are `unsafe`: wasm-bindgen passes a
+            // raw TypedArray view into wasm linear memory, so the caller must ensure
+            // the slice remains valid for as long as the JS side may read the field.
+            let (unsafe_token, safety_doc) = if self.unstable && is_ref_to_primitive_slice(ty) {
+                (
+                    quote! { unsafe },
+                    quote! {
+                        #[doc = "# Safety"]
+                        #[doc = ""]
+                        #[doc = "The `val` slice must outlive any use of the dictionary on the JavaScript side. wasm-bindgen passes a raw view into wasm linear memory — if the underlying data is freed or moved before JS is done reading the field, the behaviour is undefined. Prefer the `_array` variant (takes `&Uint8Array`) for a safe alternative that copies the data."]
+                    },
+                )
+            } else {
+                (quote! {}, quote! {})
+            };
+
             quote! {
                 #unstable_attr
                 #setter_cfg_features
@@ -934,8 +971,9 @@ impl DictionaryField {
                 #setter_doc_req
                 #setter_deprecated
                 #deprecated
+                #safety_doc
                 #[wasm_bindgen(method, setter = #js_name)]
-                pub fn #setter_name(this: &#parent_ident, val: #ty);
+                pub #unsafe_token fn #setter_name(this: &#parent_ident, val: #ty);
             }
         });
 
