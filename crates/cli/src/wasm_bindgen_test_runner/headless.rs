@@ -155,8 +155,8 @@ pub fn run(
     // If WASM_BINDGEN_TEST_ADDRESS is set, use it as the local server URL,
     // trying to inherit the port from the server if it isn't specified.
     let mut url = match std::env::var("WASM_BINDGEN_TEST_ADDRESS") {
-        Ok(u) => {
-            let mut url = Url::parse(&u)?;
+        Ok(addr) => {
+            let mut url = Url::parse(&format!("http://{addr}"))?;
             if url.port().is_none() {
                 url.set_port(Some(server.port())).unwrap();
             }

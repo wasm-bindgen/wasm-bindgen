@@ -17,13 +17,40 @@ limitations today the start section of the executable may not literally point to
 `start`, but the `start` function here should be started up automatically when the
 wasm module is loaded.
 
-There's a few caveats to be aware of when using the `start` attribute:
+## Multiple start functions
+
+Multiple `#[wasm_bindgen(start)]` functions can be specified across a module and
+its dependencies. They will be chained together and all executed during
+initialization. The execution order is arbitrary, so functions should not rely
+on other start functions having run before them.
+
+```rust
+#[wasm_bindgen(start)]
+fn init_logging() {
+    // ...
+}
+
+#[wasm_bindgen(start)]
+fn init_state() {
+    // ...
+}
+```
+
+## Private start functions
+
+By default, start functions are also exported to JS as regular functions. To
+register a start function that runs at initialization but is not exported to JS,
+use the `private` attribute:
+
+```rust
+#[wasm_bindgen(start, private)]
+fn my_init() {
+    // runs at startup, but not callable from JS
+}
+```
+
+## Caveats
 
 * The `start` function must take no arguments and must either return `()` or
   `Result<(), JsValue>`
-* Only one `start` function can be placed into a module, including its
-  dependencies. If more than one is specified then `wasm-bindgen` will fail when
-  the CLI is run. It's recommended that only applications use this attribute.
 * The `start` function will not be executed when testing.
-* Note that the `start` function is relatively new, so if you find any bugs with
-  it, please feel free to report an issue!

@@ -1407,7 +1407,15 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     kind: operation_kind(&opts),
                 });
                 let rust_name = f.sig.ident.clone();
-                let start = opts.start().is_some();
+                let start = if opts.start().is_some() {
+                    if opts.private().is_some() {
+                        ast::StartKind::Private
+                    } else {
+                        ast::StartKind::Public
+                    }
+                } else {
+                    ast::StartKind::None
+                };
 
                 if opts.this().is_some() && f.sig.inputs.is_empty() {
                     bail_span!(
@@ -1649,7 +1657,7 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             method_self,
             rust_class: Some(class.clone()),
             rust_name: self.sig.ident.clone(),
-            start: false,
+            start: ast::StartKind::None,
             wasm_bindgen: program.wasm_bindgen.clone(),
             wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
         });

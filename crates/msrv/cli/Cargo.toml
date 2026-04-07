@@ -13,8 +13,12 @@ icu_normalizer_data = "=2.0.0"
 icu_properties = "=2.0.0"
 icu_properties_data = "=2.0.0"
 icu_provider = "=2.0.0"
-zerotrie = "=0.2.3"
+
+# zerovec 0.11.6 requires Rust 1.83
 zerovec = "=0.11.5"
+
+# zerotrie 0.2.4 uses const mut refs which require Rust 1.83
+zerotrie = "=0.2.3"
 
 # Pin time dependencies to versions compatible with Rust 1.82
 time = "=0.3.34"
