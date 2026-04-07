@@ -18,6 +18,7 @@
 
 #![deny(missing_docs)]
 
+use crate::wasm_conventions;
 use anyhow::{bail, ensure};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use walrus::ir::InstrSeqId;
@@ -36,13 +37,19 @@ pub struct Interpreter {
     describe_id: Option<FunctionId>,
     describe_cast_id: Option<FunctionId>,
 
-    // The current stack pointer (global 0) and Wasm memory (the stack). Only
-    // used in a limited capacity.
-    stack_pointer: Option<GlobalId>,
-    globals: HashMap<GlobalId, i32>,
-    sp: i32,
+    // Virtual linear memory used for stack loads/stores during descriptor
+    // execution.
     mem: Vec<i32>,
     scratch: Vec<i32>,
+
+    // GlobalId of __stack_pointer, if found. Only used to validate that the
+    // stack pointer is restored after descriptor execution.
+    stack_pointer: Option<GlobalId>,
+
+    // Live state of all locally-defined i32 globals. The stack pointer
+    // global (if identified) is overridden at init to point to the top of
+    // `mem`.
+    globals: HashMap<GlobalId, i32>,
 
     // The descriptor which we're assembling, a list of `u32` entries. This is
     // very specific to wasm-bindgen and is the purpose for the existence of
@@ -96,28 +103,27 @@ impl Interpreter {
     /// Note that the `module` passed in to this function must be the same as
     /// the `module` passed to `interpret` below.
     pub fn new(module: &Module) -> Result<Interpreter, anyhow::Error> {
-        let mut ret = Interpreter::default();
+        let mut ret = Interpreter {
+            mem: vec![0; 0x8000],
+            ..Default::default()
+        };
 
-        // Give ourselves some memory and set the stack pointer
-        // (the LLVM call stack, now the Wasm stack, global 0) to the top.
-        ret.mem = vec![0; 0x8000];
-        ret.sp = ret.mem.len() as i32;
-
-        // Find the __stack_pointer global and initialize other globals
-        // First check exports to find which global is exported as __stack_pointer
-        for export in module.exports.iter() {
-            if export.name == "__stack_pointer" {
-                if let walrus::ExportItem::Global(id) = export.item {
-                    ret.stack_pointer = Some(id);
-                }
-            }
-        }
+        // Snapshot all locally-defined i32 globals so the interpreter can
+        // read/write them during descriptor execution.
         for global in module.globals.iter() {
             if let GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(n))) =
                 global.kind
             {
                 ret.globals.insert(global.id(), n);
             }
+        }
+
+        // Override the stack pointer to the top of our virtual memory.
+        // Uses the same detection as the rest of cli-support: export name,
+        // then debug/name-section name, then mutable-i32-nonzero heuristic.
+        if let Some(sp) = wasm_conventions::get_stack_pointer(module) {
+            ret.stack_pointer = Some(sp);
+            ret.globals.insert(sp, ret.mem.len() as i32);
         }
 
         // Figure out where the `__wbindgen_describe` imported function is, if
@@ -180,16 +186,15 @@ impl Interpreter {
         self.descriptor.truncate(0);
         self.stopped = false;
 
-        // We should have a blank Wasm and LLVM stack at both the start and end
-        // of the call.
-        assert_eq!(self.sp, self.mem.len() as i32);
-
         let func = module.funcs.get(id);
         let ty = module.types.get(func.ty());
 
         self.call(id, module, &vec![0; ty.params().len()]);
 
-        assert_eq!(self.sp, self.mem.len() as i32);
+        // Validate the stack pointer was restored.
+        if let Some(sp) = self.stack_pointer {
+            assert_eq!(self.globals[&sp], self.mem.len() as i32);
+        }
         &self.descriptor
     }
 
@@ -265,32 +270,16 @@ impl Frame<'_> {
                 }
 
                 Instr::GlobalGet(e) => {
-                    let val = if self.interp.stack_pointer.is_none() {
-                        // No __stack_pointer export found; fall back to the
-                        // old behavior of treating every global as the stack
-                        // pointer.
-                        self.interp.sp
-                    } else if Some(e.global) == self.interp.stack_pointer {
-                        self.interp.sp
-                    } else {
-                        *self.interp.globals.get(&e.global).ok_or_else(|| {
-                            anyhow::anyhow!("unsupported global get {:?}", e.global)
-                        })?
-                    };
+                    let val = *self
+                        .interp
+                        .globals
+                        .get(&e.global)
+                        .ok_or_else(|| anyhow::anyhow!("unsupported global {:?}", e.global))?;
                     stack.push(val);
                 }
                 Instr::GlobalSet(e) => {
                     let val = stack.pop().unwrap();
-                    if self.interp.stack_pointer.is_none() {
-                        // No __stack_pointer export found; fall back to the
-                        // old behavior of treating every global as the stack
-                        // pointer.
-                        self.interp.sp = val;
-                    } else if Some(e.global) == self.interp.stack_pointer {
-                        self.interp.sp = val;
-                    } else {
-                        self.interp.globals.insert(e.global, val);
-                    }
+                    self.interp.globals.insert(e.global, val);
                 }
 
                 // Support simple arithmetic, mainly for the stack pointer
@@ -394,7 +383,9 @@ impl Frame<'_> {
                         log::trace!("__wbindgen_describe_cast()");
                         // `__wbindgen_describe_cast` marks the end of the cast
                         // descriptor. Stop here, ignoring anything on the stack.
-                        self.interp.sp = self.interp.mem.len() as i32;
+                        if let Some(sp) = self.interp.stack_pointer {
+                            self.interp.globals.insert(sp, self.interp.mem.len() as i32);
+                        }
                         self.interp.stopped = true;
                         break;
 
