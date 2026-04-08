@@ -16,26 +16,22 @@ and optionally recovering by reinitializing the module.
 
 ## Termination States
 
-When using `panic=unwind`, the `__instance_terminated` flag in linear memory
-is a simple boolean:
+When using `panic=unwind`, the `(export "__instance_terminated" (global i32))` flag
+points to a boolean in linear memory:
 
 | Value | Meaning | Behavior on next export call |
 |-------|---------|------------------------------|
 | `0` | Live | Normal execution |
 | `1` | Terminated | Abort hook fires (if not already called), then throws `"Module terminated"` |
 
-Any abort will then set the `__instance_terminated` flag.
-
-When this happens, reentrancy guards ensure that the WebAssembly instance cannot again
-execute, immediately throwing if any new call is attempted instead.
-
-The `__instance_terminated` address is a global `u32` export of the Wasm module,
-which provides the address in the first memory of the WebAssembly module at which
-this termination state is tracked.
+Any abort will set this `__instance_terminated` flag. When this happens, reentrancy guards
+ensure that the WebAssembly instance cannot again execute, immediately throwing if any
+new call is attempted instead.
 
 ## `set_on_abort`
 
-`set_on_abort` registers a callback that fires when the instance is aborted.
+`set_on_abort` registers a callback that fires when the instance has been
+aborted.
 
 `set_on_abort` returns the previously registered handler (`None` if none was
 set), mirroring the `std::panic::set_hook` convention.
@@ -118,5 +114,3 @@ the call throws `"Module terminated"`.
 
 - [Catching Panics](./catch-unwind.md) — catching recoverable Rust panics as
   JavaScript exceptions
-- [Command Line Interface](./cli.md#--experimental-reset-state-function) — the
-  `--experimental-reset-state-function` flag
