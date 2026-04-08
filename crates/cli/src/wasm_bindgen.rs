@@ -93,7 +93,6 @@ struct Args {
         help = "Generate __wbg_reset_state function for Wasm reinitialization (experimental)"
     )]
     generate_reset_state: bool,
-
     // The options below are deprecated. They're still parsed for backwards compatibility,
     // but we don't want to show them in `--help` to avoid distracting users.
     #[arg(long, hide = true)]
