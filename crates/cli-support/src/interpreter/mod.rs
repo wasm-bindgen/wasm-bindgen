@@ -281,12 +281,12 @@ impl Frame<'_> {
                 }
 
                 Instr::GlobalGet(e) => {
-                    let val = *self.interp.globals.get(&e.global).ok_or_else(|| {
-                        anyhow::anyhow!(
-                            "unknown global {:?}, this is a bug in wasm-bindgen",
+                    let val = *self.interp.globals.get(&e.global).unwrap_or_else(|| {
+                        panic!(
+                            "global {:?} not found, this is a bug in wasm-bindgen",
                             e.global
                         )
-                    })?;
+                    });
                     stack.push(val);
                 }
                 Instr::GlobalSet(e) => {
