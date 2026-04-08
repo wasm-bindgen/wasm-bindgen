@@ -75,7 +75,7 @@ fn globals() {
             (import "__wbindgen_placeholder__" "__wbindgen_describe"
               (func $__wbindgen_describe (param i32)))
 
-            (global $__stack_pointer (mut i32) (i32.const 0))
+            (global $__stack_pointer (mut i32) (i32.const 32768))
 
             (func $foo
                 (local i32)
@@ -90,7 +90,6 @@ fn globals() {
             (export "foo" (func $foo))
         )
     "#;
-    // The stack pointer is identified by name and overridden to 0x8000 = 32768
     interpret(wat, "foo", &[32768]);
 }
 
@@ -145,7 +144,8 @@ fn loads_and_stores() {
             (import "__wbindgen_placeholder__" "__wbindgen_describe"
               (func $__wbindgen_describe (param i32)))
 
-            (global $__stack_pointer (mut i32) (i32.const 0))
+            ;; 1 page = 65536 bytes; SP starts at the top
+            (global $__stack_pointer (mut i32) (i32.const 65536))
             (memory 1)
 
             (func $foo
@@ -424,7 +424,7 @@ fn multiple_globals_with_stack_pointer() {
             (import "__wbindgen_placeholder__" "__wbindgen_describe"
               (func $__wbindgen_describe (param i32)))
 
-            (global $__stack_pointer (mut i32) (i32.const 0))
+            (global $__stack_pointer (mut i32) (i32.const 32768))
             (global $other1 i32 (i32.const 42))
             (global $other2 (mut i32) (i32.const 100))
 
@@ -477,7 +477,8 @@ fn multiple_globals_with_named_stack_pointer_not_exported() {
             (import "__wbindgen_placeholder__" "__wbindgen_describe"
               (func $__wbindgen_describe (param i32)))
 
-            (global $__stack_pointer (mut i32) (i32.const 0))
+            ;; 1 page = 65536 bytes; SP starts at the top
+            (global $__stack_pointer (mut i32) (i32.const 65536))
             (global $got_entry (mut i32) (i32.const 7))
             (memory 1)
 

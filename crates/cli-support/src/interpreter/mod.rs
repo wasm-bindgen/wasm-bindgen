@@ -37,18 +37,21 @@ pub struct Interpreter {
     describe_id: Option<FunctionId>,
     describe_cast_id: Option<FunctionId>,
 
-    // Virtual linear memory used for stack loads/stores during descriptor
-    // execution.
+    // Linear memory mirroring the module's own, used for stack loads/stores
+    // during descriptor execution.
     mem: Vec<i32>,
     scratch: Vec<i32>,
 
-    // GlobalId of __stack_pointer, if found. Only used to validate that the
-    // stack pointer is restored after descriptor execution.
+    // GlobalId of __stack_pointer, if found. Used to validate that the stack
+    // pointer is restored after each descriptor execution.
     stack_pointer: Option<GlobalId>,
 
-    // Live state of all locally-defined i32 globals. The stack pointer
-    // global (if identified) is overridden at init to point to the top of
-    // `mem`.
+    // The stack pointer value at the start of each interpret_descriptor call,
+    // used to validate restoration and to unwind early exits (describe_cast).
+    stack_pointer_initial: i32,
+
+    // Live state of all locally-defined i32 globals, snapshotted from the
+    // module at construction and mutated freely during interpretation.
     globals: HashMap<GlobalId, i32>,
 
     // The descriptor which we're assembling, a list of `u32` entries. This is
@@ -104,7 +107,15 @@ impl Interpreter {
     /// the `module` passed to `interpret` below.
     pub fn new(module: &Module) -> Result<Interpreter, anyhow::Error> {
         let mut ret = Interpreter {
-            mem: vec![0; 0x8000],
+            // Mirror the module's own linear memory so the stack pointer's
+            // snapshotted value is directly valid as an index. If there is no
+            // memory, descriptor functions can't do any loads/stores, so an
+            // empty vec is fine (any attempted access will panic).
+            mem: module
+                .memories
+                .iter()
+                .next()
+                .map_or(vec![], |m| vec![0; m.initial as usize * 65536 / 4]),
             ..Default::default()
         };
 
@@ -118,12 +129,8 @@ impl Interpreter {
             }
         }
 
-        // Override the stack pointer to the top of our virtual memory.
-        // Uses the same detection as the rest of cli-support: export name,
-        // then debug/name-section name, then mutable-i32-nonzero heuristic.
         if let Some(sp) = wasm_conventions::get_stack_pointer(module) {
             ret.stack_pointer = Some(sp);
-            ret.globals.insert(sp, ret.mem.len() as i32);
         }
 
         // Figure out where the `__wbindgen_describe` imported function is, if
@@ -186,14 +193,18 @@ impl Interpreter {
         self.descriptor.truncate(0);
         self.stopped = false;
 
+        if let Some(sp) = self.stack_pointer {
+            self.stack_pointer_initial = self.globals[&sp];
+        }
+
         let func = module.funcs.get(id);
         let ty = module.types.get(func.ty());
 
         self.call(id, module, &vec![0; ty.params().len()]);
 
-        // Validate the stack pointer was restored.
+        // Validate the stack pointer was restored to its value at function entry.
         if let Some(sp) = self.stack_pointer {
-            assert_eq!(self.globals[&sp], self.mem.len() as i32);
+            assert_eq!(self.globals[&sp], self.stack_pointer_initial);
         }
         &self.descriptor
     }
@@ -270,11 +281,12 @@ impl Frame<'_> {
                 }
 
                 Instr::GlobalGet(e) => {
-                    let val = *self
-                        .interp
-                        .globals
-                        .get(&e.global)
-                        .ok_or_else(|| anyhow::anyhow!("unsupported global {:?}", e.global))?;
+                    let val = *self.interp.globals.get(&e.global).ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "unknown global {:?}, this is a bug in wasm-bindgen",
+                            e.global
+                        )
+                    })?;
                     stack.push(val);
                 }
                 Instr::GlobalSet(e) => {
@@ -383,8 +395,12 @@ impl Frame<'_> {
                         log::trace!("__wbindgen_describe_cast()");
                         // `__wbindgen_describe_cast` marks the end of the cast
                         // descriptor. Stop here, ignoring anything on the stack.
+                        // Restore SP to its entry value since the normal function
+                        // epilogue won't run.
                         if let Some(sp) = self.interp.stack_pointer {
-                            self.interp.globals.insert(sp, self.interp.mem.len() as i32);
+                            self.interp
+                                .globals
+                                .insert(sp, self.interp.stack_pointer_initial);
                         }
                         self.interp.stopped = true;
                         break;
