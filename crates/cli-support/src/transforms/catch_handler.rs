@@ -88,6 +88,12 @@ pub fn run(
     };
     let memory = crate::wasm_conventions::get_memory(module)?;
 
+    // Ensure the function table is populated in aux so that the JS codegen
+    // can emit the __abort_handler table-index call via expose_invoke_handler.
+    if aux.function_table.is_none() {
+        aux.function_table = module.tables.main_function_table().ok().flatten();
+    }
+
     // Import the JSTag
     let js_tag = import_js_tag(module);
     let wrapped_js_tag = Some(import_externref_tag(module, "__wbindgen_wrapped_jstag"));

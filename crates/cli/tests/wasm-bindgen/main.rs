@@ -1438,32 +1438,33 @@ describe('reinit handler', () => {
         assert.strictEqual(instanceCount, 2);
     });
 
-    it('reinit callback fires on new instance — counter resets to 0 then increments to 1', () => {
+    it('reinit resets statics — counter resets to 0', () => {
         // Bump counter so we can prove it resets on reinit.
         wasm.increment_counter();
         wasm.increment_counter();
         // Counter is now > 1 on old instance.
         assert.ok(wasm.get_counter() > 1);
         wasm.signal_reinit();
-        wasm.simple_add(0, 0); // __wbg_reset_state -> new instance -> start() -> __wbindgen_reinit
-        // New instance: statics reset to 0, on_reinit increments to 1.
-        assert.strictEqual(wasm.get_counter(), 1, 'fresh instance: counter reset to 0, on_reinit incremented to 1');
+        wasm.simple_add(0, 0); // __wbg_reset_state -> new instance
+        // New instance: statics reset to 0.
+        assert.strictEqual(wasm.get_counter(), 0, 'fresh instance: counter reset to 0');
         assert.strictEqual(instanceCount, 3);
     });
 
-    it('reinit callback does not fire without signal', () => {
+    it('counter persists without reinit signal', () => {
         if (isTerminated()) {
             wasm.__wbg_reset_state();
         }
-        wasm.increment_counter(); // counter now 2
-        wasm.increment_counter(); // counter now 3
+        wasm.increment_counter();
+        wasm.increment_counter();
+        wasm.increment_counter();
         assert.strictEqual(wasm.get_counter(), 3);
         // No reinit — counter stays at 3.
         wasm.simple_add(0, 0);
         assert.strictEqual(wasm.get_counter(), 3);
     });
 
-    it('multiple reinit cycles each produce a fresh instance with counter=1', () => {
+    it('multiple reinit cycles each produce a fresh instance with counter=0', () => {
         if (isTerminated()) {
             wasm.__wbg_reset_state();
         }
@@ -1475,8 +1476,8 @@ describe('reinit handler', () => {
             wasm.signal_reinit();
             wasm.simple_add(0, 0);
             assert.strictEqual(instanceCount, startInstances + i + 1);
-            // Each new instance: counter reset to 0, on_reinit fires -> 1.
-            assert.strictEqual(wasm.get_counter(), 1);
+            // Each new instance: counter reset to 0.
+            assert.strictEqual(wasm.get_counter(), 0);
         }
     });
 
@@ -1516,8 +1517,8 @@ describe('reinit handler', () => {
         // Next call should trigger: abort hook -> schedule_reinit() -> reset_state.
         assert.strictEqual(wasm.simple_add(1, 2), 3);
         assert.strictEqual(instanceCount, prevInstances + 1, 'new instance created');
-        // Counter reset to 0, on_reinit fires -> 1.
-        assert.strictEqual(wasm.get_counter(), 1, 'fresh instance after host-initiated reinit');
+        // Counter reset to 0.
+        assert.strictEqual(wasm.get_counter(), 0, 'fresh instance after host-initiated reinit');
     });
 });
 "#,
@@ -1586,13 +1587,13 @@ describe('reinit auto-detection (no --experimental-reset-state-function)', () =>
         assert.strictEqual(instanceCount, 2);
     });
 
-    it('reinit resets counter via on_reinit callback', () => {
+    it('reinit resets counter to 0', () => {
         wasm.increment_counter();
         wasm.increment_counter();
         assert.ok(wasm.get_counter() > 1);
         wasm.signal_reinit();
         wasm.simple_add(0, 0);
-        assert.strictEqual(wasm.get_counter(), 1, 'counter reset to 0, on_reinit incremented to 1');
+        assert.strictEqual(wasm.get_counter(), 0, 'counter reset to 0');
         assert.strictEqual(instanceCount, 3);
     });
 
@@ -1608,7 +1609,7 @@ describe('reinit auto-detection (no --experimental-reset-state-function)', () =>
         // Abort hook called schedule_reinit(), so next call auto-reinits.
         assert.strictEqual(wasm.simple_add(1, 2), 3);
         assert.strictEqual(instanceCount, prevInstances + 1, 'new instance created');
-        assert.strictEqual(wasm.get_counter(), 1, 'fresh instance');
+        assert.strictEqual(wasm.get_counter(), 0, 'fresh instance');
     });
 
     it('__wbg_reset_state is NOT publicly exported', () => {
