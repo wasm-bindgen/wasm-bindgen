@@ -846,13 +846,6 @@ impl<'a> Context<'a> {
             self.aux.imports_with_assert_no_shim.insert(adapter);
         }
 
-        // The reinit intrinsic intentionally writes the reinit sentinel to
-        // the terminated flag — it must not be wrapped with a catch handler
-        // that would trap on the nonzero flag.
-        if let AuxImport::Intrinsic(Intrinsic::Reinit) = &aux_import {
-            self.aux.imports_without_catch_wrapper.insert(adapter);
-        }
-
         self.aux.import_map.insert(id, aux_import);
 
         Ok(())

@@ -62,13 +62,17 @@ means the handler fires on the next export call, giving it a chance to respond
 
 ## `schedule_reinit` and `set_on_reinit`
 
-`schedule_reinit()` writes a sentinel value into the termination flag. The next
-call to any export detects this, creates a fresh `WebAssembly.Instance` from
-the same module, and then invokes the registered `set_on_reinit` callback on
-the new instance.
+`schedule_reinit()` schedules the module for reinitialization. The next call to
+any export detects this, creates a fresh `WebAssembly.Instance` from the same
+module, and then invokes the registered `set_on_reinit` callback on the new
+instance.
 
-This is commonly called from within the abort handler to enable automatic
-recovery after a hard abort:
+When called outside of an abort (i.e. during normal execution), the current
+call completes normally and the reset happens on the next export call — no
+abort hook fires.
+
+When called from within the abort handler, the abort hook has already fired and
+the guard proceeds to reinitialize instead of throwing:
 
 ```rust
 use wasm_bindgen::prelude::*;
@@ -96,17 +100,18 @@ instance with all Rust statics reset to their initial values.
 
 ## Termination States
 
-The `__instance_terminated` flag in linear memory can have three values:
+The `__instance_terminated` flag in linear memory is a simple boolean:
 
 | Value | Meaning | Behavior on next export call |
 |-------|---------|------------------------------|
 | `0` | Live | Normal execution |
-| `1` | Hard terminated | Abort hook fires (if not already called), then throws `"Module terminated"` |
-| `0xFFFFFFFF` | Reinit scheduled | Calls `__wbg_reset_state()` to create a fresh instance |
+| `1` | Terminated | Abort hook fires (if not already called), then throws `"Module terminated"` |
 
-When the abort hook is invoked for a hard termination (`1`), if the hook calls
-`schedule_reinit()`, the flag changes to `0xFFFFFFFF` and the guard proceeds to
-reinitialize instead of throwing.
+Reinitialization state is tracked separately and is not visible through the
+`__instance_terminated` address. When the abort hook calls `schedule_reinit()`,
+the guard proceeds to reinitialize instead of throwing. `schedule_reinit()` can
+also be called during normal execution (without any termination), in which case
+the reset happens on the next export call without the abort hook firing.
 
 ## Host-Initiated Termination
 

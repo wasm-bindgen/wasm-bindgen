@@ -80,12 +80,9 @@ pub struct WasmBindgenAux {
 
     /// Whether the `__wbindgen_reinit` intrinsic is used. When true, the
     /// reinit machinery (`__wbg_reset_state` as a private function + the
-    /// sentinel check in `__wbg_termination_guard`) is emitted regardless
+    /// reinit flag check in `__wbg_termination_guard`) is emitted regardless
     /// of `--experimental-reset-state-function`.
     pub uses_reinit: bool,
-
-    /// Adapter IDs that should be excluded from catch wrapper generation.
-    pub imports_without_catch_wrapper: HashSet<AdapterId>,
 }
 
 pub type WasmBindgenAuxId = TypedCustomSectionId<WasmBindgenAux>;

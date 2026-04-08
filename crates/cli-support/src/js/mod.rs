@@ -3455,9 +3455,15 @@ if (require('worker_threads').isMainThread) {{
         } else {
             String::new()
         };
+        let has_catch_handler = self.aux.wrapped_js_tag.is_some();
+        let abort_reset = if has_catch_handler {
+            "__wbg_called_abort = false;\n            __wbg_reinit_scheduled = false;"
+        } else {
+            ""
+        };
         reset_statements.push(format!(
             "
-            __wbg_called_abort = false;
+            {abort_reset}
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
@@ -3879,6 +3885,9 @@ addToLibrary({
 
         self.global("let __wbg_terminated_addr;");
         self.global("let __wbg_called_abort = false;");
+        if self.generate_reinit {
+            self.global("let __wbg_reinit_scheduled = false;");
+        }
 
         // Create a helper function to unwrap and rethrow wrapped JS exceptions
         let invoke_handler = self.expose_invoke_handler()?;
@@ -3898,16 +3907,16 @@ function __wbg_call_abort_hook() {{
 function __wbg_termination_guard() {{
     __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
     const flag = {mem_view}()[__wbg_terminated_addr];
-    if (flag === 1) {{
+    if (flag) {{
         if (!__wbg_called_abort) {{
             __wbg_call_abort_hook();
-            if ({mem_view}()[__wbg_terminated_addr] === -1) {{
-                __wbg_reset_state();
-                return;
-            }}
+        }}
+        if (__wbg_reinit_scheduled) {{
+            __wbg_reset_state();
+            return;
         }}
         throw new Error('Module terminated');
-    }} else if (flag === -1) {{
+    }} else if (__wbg_reinit_scheduled) {{
         __wbg_reset_state();
     }}
 }}"
@@ -3934,12 +3943,7 @@ function __wbg_handle_catch(e) {{
     if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
         throw e.getArg(__wbindgen_wrapped_jstag, 0);
     }}
-    // Set the terminated flag to 1 only if it is not already set — this
-    // preserves the reinit sentinel (0xFFFFFFFF / -1) if reinit() was called
-    // before the trap propagated here.
-    if (!{mem_view}()[__wbg_terminated_addr]) {{
-        {mem_view}()[__wbg_terminated_addr] = 1;
-    }}
+    {mem_view}()[__wbg_terminated_addr] = 1;
     // Invoke the Rust-registered abort handler (if any). The try/catch ensures
     // a throwing or panicking handler cannot suppress the original error.
     __wbg_call_abort_hook();
@@ -5147,9 +5151,7 @@ function __wbg_handle_catch(e) {{
             }
             Intrinsic::Reinit => {
                 assert_eq!(args.len(), 0);
-                let memory = wasm_conventions::get_memory(self.module)?;
-                let mem_view = self.expose_int32_memory(memory);
-                format!("{mem_view}()[wasm.__instance_terminated.value / 4] = -1")
+                "__wbg_reinit_scheduled = true".to_string()
             }
         };
         Ok(expr)

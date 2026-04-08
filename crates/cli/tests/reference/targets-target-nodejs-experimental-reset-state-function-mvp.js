@@ -3,7 +3,6 @@
 function __wbg_reset_state () {
     __wbg_instance_id++;
 
-    __wbg_called_abort = false;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
