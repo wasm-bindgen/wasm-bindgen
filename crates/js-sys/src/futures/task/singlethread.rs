@@ -6,6 +6,9 @@ use core::mem::ManuallyDrop;
 use core::pin::Pin;
 use core::task::{Context, RawWaker, RawWakerVTable, Waker};
 
+#[cfg(debug_assertions)]
+use core::sync::atomic::{AtomicU8, Ordering};
+
 struct Inner {
     future: Pin<Box<dyn Future<Output = ()> + 'static>>,
     waker: Waker,
@@ -30,6 +33,39 @@ extern "C" {
     fn run(this: &ConsoleTask, poll: &mut dyn FnMut() -> bool) -> bool;
 }
 
+#[cfg(debug_assertions)]
+const UNKNOWN: u8 = 0;
+#[cfg(debug_assertions)]
+const SUPPORTED: u8 = 1;
+#[cfg(debug_assertions)]
+const UNSUPPORTED: u8 = 2;
+
+// Cached result of whether `console.createTask` is available. Avoids
+// repeatedly throwing and catching a TypeError in runtimes that lack it
+// (Firefox, Safari, etc.).
+#[cfg(debug_assertions)]
+static CONSOLE_TASK_SUPPORTED: AtomicU8 = AtomicU8::new(UNKNOWN);
+
+#[cfg(debug_assertions)]
+fn try_create_task(name: &str) -> Option<ConsoleTask> {
+    match CONSOLE_TASK_SUPPORTED.load(Ordering::Relaxed) {
+        UNSUPPORTED => None,
+        SUPPORTED => create_task(name).ok(),
+        _ => {
+            let result = create_task(name).ok();
+            CONSOLE_TASK_SUPPORTED.store(
+                if result.is_some() {
+                    SUPPORTED
+                } else {
+                    UNSUPPORTED
+                },
+                Ordering::Relaxed,
+            );
+            result
+        }
+    }
+}
+
 pub(crate) struct Task {
     // Console tracking for this task to avoid deeply nested stacks from individual `poll()` calls.
     // See [Linked Stack Traces](https://developer.chrome.com/blog/devtools-modern-web-debugging#linked_stack_traces).
@@ -50,7 +86,7 @@ impl Task {
     pub(crate) fn spawn<F: Future<Output = ()> + 'static>(future: F) {
         let this = Rc::new(Self {
             #[cfg(debug_assertions)]
-            console: create_task(core::any::type_name::<F>()).ok(),
+            console: try_create_task(core::any::type_name::<F>()),
             inner: RefCell::new(None),
             is_queued: Cell::new(true),
         });
