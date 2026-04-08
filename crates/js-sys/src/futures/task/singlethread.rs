@@ -6,9 +6,6 @@ use core::mem::ManuallyDrop;
 use core::pin::Pin;
 use core::task::{Context, RawWaker, RawWakerVTable, Waker};
 
-#[cfg(debug_assertions)]
-use core::sync::atomic::{AtomicU8, Ordering};
-
 struct Inner {
     future: Pin<Box<dyn Future<Output = ()> + 'static>>,
     waker: Waker,
@@ -26,44 +23,21 @@ impl Inner {
 extern "C" {
     type ConsoleTask;
 
-    #[wasm_bindgen(js_namespace = console, js_name = createTask, catch)]
-    fn create_task(name: &str) -> Result<ConsoleTask, wasm_bindgen::JsValue>;
+    #[wasm_bindgen(thread_local_v2, js_namespace = console, js_name = createTask)]
+    static CREATE_TASK: Option<crate::Function<fn(crate::JsString) -> ConsoleTask>>;
 
     #[wasm_bindgen(method)]
     fn run(this: &ConsoleTask, poll: &mut dyn FnMut() -> bool) -> bool;
 }
 
 #[cfg(debug_assertions)]
-const UNKNOWN: u8 = 0;
-#[cfg(debug_assertions)]
-const SUPPORTED: u8 = 1;
-#[cfg(debug_assertions)]
-const UNSUPPORTED: u8 = 2;
-
-// Cached result of whether `console.createTask` is available. Avoids
-// repeatedly throwing and catching a TypeError in runtimes that lack it
-// (Firefox, Safari, etc.).
-#[cfg(debug_assertions)]
-static CONSOLE_TASK_SUPPORTED: AtomicU8 = AtomicU8::new(UNKNOWN);
-
-#[cfg(debug_assertions)]
 fn try_create_task(name: &str) -> Option<ConsoleTask> {
-    match CONSOLE_TASK_SUPPORTED.load(Ordering::Relaxed) {
-        UNSUPPORTED => None,
-        SUPPORTED => create_task(name).ok(),
-        _ => {
-            let result = create_task(name).ok();
-            CONSOLE_TASK_SUPPORTED.store(
-                if result.is_some() {
-                    SUPPORTED
-                } else {
-                    UNSUPPORTED
-                },
-                Ordering::Relaxed,
-            );
-            result
-        }
-    }
+    CREATE_TASK.with(|create_task| {
+        create_task.as_ref().and_then(|f| {
+            f.call(&wasm_bindgen::JsValue::UNDEFINED, (&name.into(),))
+                .ok()
+        })
+    })
 }
 
 pub(crate) struct Task {
