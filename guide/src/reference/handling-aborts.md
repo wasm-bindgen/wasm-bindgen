@@ -24,13 +24,15 @@ points to a boolean in linear memory:
 | `0` | Live | Normal execution |
 | `1` | Terminated | Abort hook fires (if not already called), then throws `"Module terminated"` |
 
-Any abort will set this `__instance_terminated` flag. When this happens, reentrancy guards
-ensure that the WebAssembly instance cannot again execute, immediately throwing if any
-new call is attempted instead.
+All aborts will set this `__instance_terminated` flag.
 
-## `set_on_abort`
+When the terminated state is set, reentrancy guards call the abort hook and
+ensure that the WebAssembly instance cannot again execute, immediately
+throwing if any new call is attempted instead.
 
-`set_on_abort` registers a callback that fires when the instance has been
+## Abort Handling
+
+`handler::set_on_abort` registers a callback that fires when the instance has been
 aborted.
 
 `set_on_abort` returns the previously registered handler (`None` if none was
@@ -57,12 +59,18 @@ writing directly to the `__instance_terminated` flag from JavaScript. This
 means the handler fires on the next export call, giving it a chance to respond
 (including calling `schedule_reinit()` to trigger automatic recovery).
 
-## `schedule_reinit` and `set_on_reinit`
+## Reinitialization
 
-`schedule_reinit()` schedules the module for reinitialization. The next call to
+`handler::schedule_reinit()` can be used to reinitialize the WebAssembly instance, while
+keeping the JS wrapper bindings in place, performing a transparent reinitialization
+of the library when state loss is acceptable.
+
+`schedule_reinit` may be called at any time, including from within the abort hook
+to create a self-recovering abort handler.
+
+When called, `schedule_reinit()` the module for reinitialization. The next call to
 any export detects this, creates a fresh `WebAssembly.Instance` from the same
-module, and then invokes the registered `set_on_reinit` callback on the new
-instance, while keeping the same JS wrapper bindings in place but updated to
+module, while keeping the same JS wrapper bindings in place but updated to
 the new instance.
 
 When called during normal execution, the current call completes normally and
@@ -79,36 +87,16 @@ fn on_abort() {
     wasm_bindgen::handler::schedule_reinit();
 }
 
-fn on_reinit() {
-    // Called on every fresh instance after reinitialization.
-    // Use this to restore application state.
-}
-
 #[wasm_bindgen(start)]
 pub fn start() {
+    // Register the abort hook
     wasm_bindgen::handler::set_on_abort(on_abort);
-    wasm_bindgen::handler::set_on_reinit(on_reinit);
 }
 ```
 
 With this setup, a hard abort (or host-initiated termination) transparently
 reinitializes the module on the next export call. The caller sees a fresh
 instance with all Rust statics reset to their initial values.
-
-## Host-Initiated Termination
-
-The host (JavaScript) can terminate the instance by writing `1` to the
-`__instance_terminated` flag in linear memory:
-
-```javascript
-const memory = new Int32Array(wasmExports.memory.buffer);
-const addr = wasmExports.__instance_terminated.value;
-memory[addr / 4] = 1;
-```
-
-On the next export call, the abort hook fires (if registered). If the hook
-calls `schedule_reinit()`, the module reinitializes automatically. Otherwise,
-the call throws `"Module terminated"`.
 
 ## See Also
 

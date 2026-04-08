@@ -11,13 +11,13 @@
   exporting it as a public export.
   [#5081](https://github.com/wasm-bindgen/wasm-bindgen/pull/5081)
 
-* Added abort handler, `schedule_reinit()`, and `set_on_reinit()` APIs in
-  `wasm_bindgen::handler` for responding to hard aborts and optionally
-  recovering by reinitializing the module. `schedule_reinit()` auto-detects
-  and emits the reinit machinery without requiring
-  `--experimental-reset-state-function` (that flag is only needed for the
-  public `__wbg_reset_state()` export). The `__instance_terminated` address
-  is a simple boolean (`0` = live, `1` = terminated).
+* Reinitialization is no longer automatically applied when using `panic=unwind`
+  and `--experimental-reset-state-function`, instead it is triggered by any
+  use of the `handler::schedule_reinit()` function under `panic=unwind`,
+  which is supported from within the `on_abort` handler for reinit workflows.
+  Renamed `handler::reinit()` to `handler::schedule_reinit()` and removed
+  the `set_on_reinit()` handler. The `__instance_terminated` address
+  is now always a simple boolean (`0` = live, `1` = terminated).
   [#5083](https://github.com/wasm-bindgen/wasm-bindgen/pull/5083)
 
 ### Fixed
