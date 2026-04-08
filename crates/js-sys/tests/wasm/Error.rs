@@ -68,6 +68,14 @@ fn to_string() {
 }
 
 #[wasm_bindgen_test]
+fn stack_trace_limit() {
+    let orig = Error::stack_trace_limit();
+    Error::set_stack_trace_limit(&JsValue::from(5));
+    assert_eq!(Error::stack_trace_limit(), 5);
+    Error::set_stack_trace_limit(&orig);
+}
+
+#[wasm_bindgen_test]
 fn error_inheritance() {
     let error = Error::new("test");
     assert!(error.is_instance_of::<Error>());

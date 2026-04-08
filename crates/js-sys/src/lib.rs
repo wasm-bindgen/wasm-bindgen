@@ -3580,6 +3580,24 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Error) -> JsString;
+
+    /// The `Error.stackTraceLimit` property controls the number of stack
+    /// frames collected by a stack trace.
+    ///
+    /// This is a non-standard V8/Node.js API.
+    ///
+    /// [V8 documentation](https://v8.dev/docs/stack-trace-api#stack-trace-collection-for-custom-exceptions)
+    #[wasm_bindgen(static_method_of = Error, getter, js_name = stackTraceLimit)]
+    pub fn stack_trace_limit() -> JsValue;
+
+    /// Set `Error.stackTraceLimit` to control the number of stack frames
+    /// collected by a stack trace.
+    ///
+    /// This is a non-standard V8/Node.js API.
+    ///
+    /// [V8 documentation](https://v8.dev/docs/stack-trace-api#stack-trace-collection-for-custom-exceptions)
+    #[wasm_bindgen(static_method_of = Error, setter, js_name = stackTraceLimit)]
+    pub fn set_stack_trace_limit(value: &JsValue);
 }
 
 partialord_ord!(JsString);

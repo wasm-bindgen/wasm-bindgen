@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added `Error::stack_trace_limit()` and `Error::set_stack_trace_limit()` bindings
+  to `js-sys` for the non-standard V8 `Error.stackTraceLimit` property.
+  [#5082](https://github.com/wasm-bindgen/wasm-bindgen/pull/5082)
+
 * Added support for multiple `#[wasm_bindgen(start)]` functions, which are
   chained together at initialization, as well as a new
   `#[wasm_bindgen(start, private)]` to register a start function without
