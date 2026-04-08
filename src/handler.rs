@@ -20,18 +20,13 @@
 //!
 //! [`schedule_reinit()`] writes a sentinel value into the termination flag.
 //! The next call to any export detects this, creates a fresh
-//! `WebAssembly.Instance` from the same module, and then calls
-//! [`set_on_reinit`]'s callback (if any) on the new instance.
+//! `WebAssembly.Instance` from the same module.
 //!
 //! The reinit machinery is automatically emitted when [`schedule_reinit()`] is
 //! used — no CLI flag is required. `--experimental-reset-state-function` is
 //! only needed for the public `__wbg_reset_state()` export.
 //!
-//! Use [`set_on_reinit`] to register a reinit callback; it likewise returns
-//! the previously registered handler.
-//!
-//! [`schedule_reinit()`] and [`set_on_reinit`] are no-ops on `panic=abort`
-//! builds.
+//! [`schedule_reinit()`] is a no-op on `panic=abort` builds.
 #[doc(hidden)]
 pub use crate::__rt::schedule_reinit;
 #[doc(hidden)]
