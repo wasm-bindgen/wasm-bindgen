@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added `Error::stack_trace_limit()` and `Error::set_stack_trace_limit()` bindings
+  to `js-sys` for the non-standard V8 `Error.stackTraceLimit` property.
+  [#5082](https://github.com/wasm-bindgen/wasm-bindgen/pull/5082)
+
 * Added support for multiple `#[wasm_bindgen(start)]` functions, which are
   chained together at initialization, as well as a new
   `#[wasm_bindgen(start, private)]` to register a start function without
@@ -19,12 +23,16 @@
   instead of plain `i32.const N` for large function tables; the fix adds a
   const-expression evaluator in `get_function_table_entry` and guards against
   integer underflow in multi-segment tables. Second, the descriptor interpreter
-  now distinguishes `__stack_pointer` from other globals (e.g.
-  `GOT.func.internal.*`) instead of blindly treating all global accesses as
-  stack pointer operations, falling back to the old behavior for modules without
-  the `__stack_pointer` export.
+  now routes all global reads/writes through a single `globals` HashMap seeded
+  from the module's own globals, and mirrors the module's actual linear memory
+  rather than a fixed 32KB buffer, so the stack pointer's real value is valid
+  without any override. This fixes panics like `failed to find 32752 in function
+  table` caused by `GOT.func.internal.*` globals being misidentified as the
+  stack pointer.
   [#5076](https://github.com/wasm-bindgen/wasm-bindgen/issues/5076)
   [#5080](https://github.com/wasm-bindgen/wasm-bindgen/issues/5080)
+  [#5093](https://github.com/wasm-bindgen/wasm-bindgen/issues/5093)
+  [#5095](https://github.com/wasm-bindgen/wasm-bindgen/pull/5095)
 
 ## [0.2.117](https://github.com/rustwasm/wasm-bindgen/compare/0.2.116...0.2.117)
 
