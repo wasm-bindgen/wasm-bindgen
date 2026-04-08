@@ -24,6 +24,18 @@ impl __t::DurableObject for MyDurableObject {
     type DurableObjectStub = MyDurableObjectStub;
 }
 
+// Extern types with lifetime parameters. Before the fix, codegen would produce
+// invalid impls (missing generics on `From<JsValue>`, missing `ty_generics` on
+// `UpcastFrom` identity impls, and no PhantomData for the lifetime).
+#[wasm_bindgen]
+extern "C" {
+    /// Lifetime-only generic extern type.
+    pub type LifetimeOnly<'a>;
+
+    /// Mixed lifetime + type generic extern type.
+    pub type LifetimeAndType<'a, T>;
+}
+
 #[wasm_bindgen_test]
 fn generic_with_default_import_type() {
     // This test verifies that when an imported type has a generic parameter
@@ -32,4 +44,22 @@ fn generic_with_default_import_type() {
 
     // Just test that the types are properly generated and compile
     // The actual runtime behavior would be tested by JS interop
+}
+
+#[wasm_bindgen_test]
+fn lifetime_generic_extern_types() {
+    // Verify that extern types with lifetime parameters produce valid codegen.
+    // This is a compile-time test: if the generated `From<JsValue>`,
+    // `UpcastFrom`, and `PhantomData` code is wrong, this will not compile.
+    let val = JsValue::NULL;
+
+    // Lifetime-only type: From<JsValue> and upcast must all work.
+    let lo: LifetimeOnly<'_> = val.clone().into();
+    let _: &JsValue = lo.as_ref();
+    let _: JsValue = lo.into();
+
+    // Mixed lifetime + type param: same checks.
+    let lt: LifetimeAndType<'_, JsValue> = val.into();
+    let _: &JsValue = lt.as_ref();
+    let _: JsValue = lt.into();
 }
