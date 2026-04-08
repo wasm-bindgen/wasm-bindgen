@@ -8,7 +8,6 @@ function __wbg_reset_state () {
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
-
 }
 exports.__wbg_reset_state = __wbg_reset_state;
 
@@ -51,14 +50,6 @@ function __wbg_get_imports(memory) {
 }
 
 let __wbg_instance_id = 0;
-
-let cachedInt32ArrayMemory0 = null;
-function getInt32ArrayMemory0() {
-    if (cachedInt32ArrayMemory0 === null || cachedInt32ArrayMemory0.buffer !== wasm.memory.buffer) {
-        cachedInt32ArrayMemory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachedInt32ArrayMemory0;
-}
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;

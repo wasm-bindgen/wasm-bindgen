@@ -11,29 +11,23 @@
 //! termination.  Returns the previously registered handler (`None` if unset),
 //! mirroring the `std::panic::set_hook` convention.
 //!
-//! **Experimental — only available when built with `panic=unwind`.**
+//! **Only available when built with `panic=unwind`.**
 //! [`set_on_abort`] returns `None` and the callback will never fire on
-//! `panic=abort` builds.
+//! `panic=abort` builds. Support for `panic=abort` may be added in a future
+//! release.
 //!
 //! # Reinit
 //!
-//! [`reinit()`] writes a sentinel value (`0xFFFFFFFF`) into the termination
-//! flag.  The next call to any export detects this, creates a fresh
-//! `WebAssembly.Instance` from the same module, and then calls
-//! [`set_on_reinit`]'s callback (if any) on the new instance.
+//! [`schedule_reinit()`] writes a sentinel value into the termination flag.
+//! The next call to any export detects this, creates a fresh
+//! `WebAssembly.Instance` from the same module.
 //!
-//! Use [`set_on_reinit`] to register a reinit callback; it likewise returns
-//! the previously registered handler.
+//! The reinit machinery is automatically emitted when [`schedule_reinit()`] is
+//! used — no CLI flag is required. `--experimental-reset-state-function` is
+//! only needed for the public `__wbg_reset_state()` export.
 //!
-//! **Experimental — only available when built with `panic=unwind` and when
-//! wasm-bindgen is invoked with `--experimental-reset-state-function`.**
-//! Without that flag the JS-side guard that detects the sentinel is not
-//! emitted, so calling [`reinit()`] writes the sentinel but it is never acted
-//! upon.  [`reinit()`] and [`set_on_reinit`] are no-ops on `panic=abort`
-//! builds.
+//! [`schedule_reinit()`] is a no-op on `panic=abort` builds.
 #[doc(hidden)]
-pub use crate::__rt::reinit;
+pub use crate::__rt::schedule_reinit;
 #[doc(hidden)]
 pub use crate::__rt::set_on_abort;
-#[doc(hidden)]
-pub use crate::__rt::set_on_reinit;

@@ -181,7 +181,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js = JsBuilder::new(self.cx, debug_name);
         if let Some(consumes_self) = self.method {
             let _ = params.next();
-            if js.cx.config.generate_reset_state {
+            if js.cx.generate_reinit {
                 js.prelude(
                     "
                     if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
@@ -766,7 +766,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
-        if self.cx.config.generate_reset_state {
+        if self.cx.generate_reinit {
             // Under reset state, we need comprehensive validation
             self.prelude(&format!(
                 "\
@@ -1424,7 +1424,7 @@ fn instruction(
                     // Get the JS identifier for the class, which may be aliased
                     // if the name conflicts with a JS builtin (e.g., `Array` -> `Array2`)
                     let identifier = js.cx.require_class_identifier(class);
-                    let (ptr_assignment, register_data) = if js.cx.config.generate_reset_state {
+                    let (ptr_assignment, register_data) = if js.cx.generate_reinit {
                         (
                             format!(
                                 "\

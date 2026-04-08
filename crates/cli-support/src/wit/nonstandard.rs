@@ -77,6 +77,12 @@ pub struct WasmBindgenAux {
     /// This is a custom WebAssembly.Tag used to wrap exceptions so they can be
     /// distinguished from other JS exceptions.
     pub wrapped_js_tag: Option<walrus::TagId>,
+
+    /// Whether the `__wbindgen_reinit` intrinsic is used. When true, the
+    /// reinit machinery (`__wbg_reset_state` as a private function + the
+    /// reinit flag check in `__wbg_termination_guard`) is emitted regardless
+    /// of `--experimental-reset-state-function`.
+    pub uses_reinit: bool,
 }
 
 pub type WasmBindgenAuxId = TypedCustomSectionId<WasmBindgenAux>;

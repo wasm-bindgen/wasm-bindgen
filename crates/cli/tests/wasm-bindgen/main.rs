@@ -1050,12 +1050,20 @@ describe('termination with reset state', () => {
         assert.strictEqual(globalThis.was_dropped, false);
     });
 
-    it('after fatal error, next call resets state and counter is zero', () => {
+    it('after fatal error, next call throws "Module terminated"', () => {
         assert.strictEqual(isTerminated(), 1);
-        // With --experimental-reset-state-function, calling an export after
-        // termination should auto-reset instead of throwing "Module terminated".
-        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset to zero');
+        // Without --abort-reinit, calling an export after termination should throw.
+        assert.throws(() => wasm.get_counter(), (e) => {
+            assert.match(e.message, /Module terminated/);
+            return true;
+        });
+    });
+
+    it('manual reset via __wbg_reset_state() works', () => {
+        assert.strictEqual(isTerminated(), 1);
+        wasm.__wbg_reset_state();
         assert.strictEqual(isTerminated(), 0);
+        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset to zero');
         assert.strictEqual(wasm.simple_add(2, 3), 5);
     });
 
@@ -1076,7 +1084,7 @@ describe('termination with reset state', () => {
         assert.strictEqual(wasm.get_counter(), 2);
     });
 
-    it('JS-initiated termination resets counter on next call', () => {
+    it('JS-initiated termination throws "Module terminated" on next call', () => {
         assert.strictEqual(wasm.increment_counter(), 3);
 
         // Terminate from JS by writing to the flag.
@@ -1084,12 +1092,18 @@ describe('termination with reset state', () => {
         const terminatedAddr = wasmExports.__instance_terminated.value;
         memory[terminatedAddr / 4] = 1;
 
-        // Next call should reset — counter back to zero.
-        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset after JS-initiated termination');
-        assert.strictEqual(isTerminated(), 0);
+        // Next call should throw — needs explicit reset.
+        assert.throws(() => wasm.get_counter(), (e) => {
+            assert.match(e.message, /Module terminated/);
+            return true;
+        });
     });
 
-    it('nested unreachable terminates and resets counter on next call', () => {
+    it('nested unreachable terminates and throws on next call', () => {
+        // Ensure module is not terminated from previous tests
+        if (isTerminated()) {
+            wasm.__wbg_reset_state();
+        }
         wasm.setup_nested_unreachable();
         assert.strictEqual(wasm.increment_counter(), 1);
 
@@ -1099,12 +1113,18 @@ describe('termination with reset state', () => {
             'outer DropGuard must not have been dropped');
         assert.strictEqual(isTerminated(), 1);
 
-        // Next call should reset — counter back to zero.
-        assert.strictEqual(wasm.get_counter(), 0, 'counter should be reset after nested unreachable');
-        assert.strictEqual(isTerminated(), 0);
+        // Next call should throw — needs explicit reset.
+        assert.throws(() => wasm.get_counter(), (e) => {
+            assert.match(e.message, /Module terminated/);
+            return true;
+        });
     });
 
-    it('multiple fatal-then-reset cycles reset counter each time', () => {
+    it('multiple fatal errors require explicit reset each time', () => {
+        // Ensure module is not terminated from previous tests
+        if (isTerminated()) {
+            wasm.__wbg_reset_state();
+        }
         for (let i = 0; i < 3; i++) {
             // Build up counter state.
             assert.strictEqual(wasm.increment_counter(), 1);
@@ -1116,9 +1136,16 @@ describe('termination with reset state', () => {
             });
             assert.strictEqual(isTerminated(), 1);
 
-            // Auto-resets on next call — counter back to zero.
-            assert.strictEqual(wasm.get_counter(), 0, `cycle ${i}: counter should be reset`);
+            // Next call throws without explicit reset.
+            assert.throws(() => wasm.get_counter(), (e) => {
+                assert.match(e.message, /Module terminated/);
+                return true;
+            });
+
+            // Explicitly reset.
+            wasm.__wbg_reset_state();
             assert.strictEqual(isTerminated(), 0);
+            assert.strictEqual(wasm.get_counter(), 0, `cycle ${i}: counter should be reset`);
         }
     });
 });
@@ -1207,6 +1234,12 @@ const HANDLER_LIB_RS: &str = r#"
         unsafe { __abort_called = 1; }
     }
 
+    fn on_abort_with_reinit() {
+        #[cfg(panic = "unwind")]
+        unsafe { __abort_called = 1; }
+        wasm_bindgen::handler::schedule_reinit();
+    }
+
     /// Returns true if no previous handler was registered (first registration),
     /// false if one was already set (returned Some).
     #[wasm_bindgen]
@@ -1214,22 +1247,15 @@ const HANDLER_LIB_RS: &str = r#"
         wasm_bindgen::handler::set_on_abort(on_abort).is_none()
     }
 
-    // --- reinit handler ---
-
-    fn on_reinit() {
-        unsafe { COUNTER += 1; }
-    }
-
-    /// Runs on every new instance (including ones created by __wbg_reset_state
-    /// after a reinit() signal) so the reinit handler is always registered.
-    #[wasm_bindgen(start)]
-    pub fn start() {
-        wasm_bindgen::handler::set_on_reinit(on_reinit);
+    /// Sets an abort handler that also calls schedule_reinit().
+    #[wasm_bindgen]
+    pub fn setup_abort_reinit_handler() -> bool {
+        wasm_bindgen::handler::set_on_abort(on_abort_with_reinit).is_none()
     }
 
     #[wasm_bindgen]
     pub fn signal_reinit() {
-        wasm_bindgen::handler::reinit();
+        wasm_bindgen::handler::schedule_reinit();
     }
 "#;
 
@@ -1385,14 +1411,25 @@ fn termination_reinit() {
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
+// Monkeypatch WebAssembly.Instance to capture the wasm exports (memory and
+// __instance_terminated) before the generated JS module hides them.
+let wasmExports = null;
 let instanceCount = 0;
 const OrigInstance = WebAssembly.Instance;
 WebAssembly.Instance = function(module, imports) {
     instanceCount++;
-    return new OrigInstance(module, imports);
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
 };
 const wasm = require('./termination_reinit.js');
 assert.strictEqual(instanceCount, 1, 'one instance on load');
+
+function isTerminated() {
+    const memory = new Int32Array(wasmExports.memory.buffer);
+    const terminatedAddr = wasmExports.__instance_terminated.value;
+    return memory[terminatedAddr / 4];
+}
 
 describe('reinit handler', () => {
     it('signal_reinit then export call creates a new instance', () => {
@@ -1401,29 +1438,36 @@ describe('reinit handler', () => {
         assert.strictEqual(instanceCount, 2);
     });
 
-    it('reinit callback fires on new instance — counter resets to 0 then increments to 1', () => {
+    it('reinit resets statics — counter resets to 0', () => {
         // Bump counter so we can prove it resets on reinit.
         wasm.increment_counter();
         wasm.increment_counter();
         // Counter is now > 1 on old instance.
         assert.ok(wasm.get_counter() > 1);
         wasm.signal_reinit();
-        wasm.simple_add(0, 0); // __wbg_reset_state -> new instance -> start() -> __wbindgen_reinit
-        // New instance: statics reset to 0, on_reinit increments to 1.
-        assert.strictEqual(wasm.get_counter(), 1, 'fresh instance: counter reset to 0, on_reinit incremented to 1');
+        wasm.simple_add(0, 0); // __wbg_reset_state -> new instance
+        // New instance: statics reset to 0.
+        assert.strictEqual(wasm.get_counter(), 0, 'fresh instance: counter reset to 0');
         assert.strictEqual(instanceCount, 3);
     });
 
-    it('reinit callback does not fire without signal', () => {
-        wasm.increment_counter(); // counter now 2
-        wasm.increment_counter(); // counter now 3
+    it('counter persists without reinit signal', () => {
+        if (isTerminated()) {
+            wasm.__wbg_reset_state();
+        }
+        wasm.increment_counter();
+        wasm.increment_counter();
+        wasm.increment_counter();
         assert.strictEqual(wasm.get_counter(), 3);
         // No reinit — counter stays at 3.
         wasm.simple_add(0, 0);
         assert.strictEqual(wasm.get_counter(), 3);
     });
 
-    it('multiple reinit cycles each produce a fresh instance with counter=1', () => {
+    it('multiple reinit cycles each produce a fresh instance with counter=0', () => {
+        if (isTerminated()) {
+            wasm.__wbg_reset_state();
+        }
         const startInstances = instanceCount;
         for (let i = 0; i < 3; i++) {
             // Bump counter to prove it resets.
@@ -1432,20 +1476,49 @@ describe('reinit handler', () => {
             wasm.signal_reinit();
             wasm.simple_add(0, 0);
             assert.strictEqual(instanceCount, startInstances + i + 1);
-            // Each new instance: counter reset to 0, on_reinit fires -> 1.
-            assert.strictEqual(wasm.get_counter(), 1);
+            // Each new instance: counter reset to 0.
+            assert.strictEqual(wasm.get_counter(), 0);
         }
     });
 
-    it('hard abort resets the instance (reset-state flag active)', () => {
-        // With --experimental-reset-state-function the guard calls
-        // __wbg_reset_state() for any truthy flag value including 1.
+    it('hard abort terminates instance and requires explicit reset', () => {
+        if (isTerminated()) {
+            wasm.__wbg_reset_state();
+        }
         assert.throws(() => wasm.trigger_unreachable(), (e) => {
             assert.ok(e instanceof WebAssembly.RuntimeError);
             return true;
         });
-        // Next call resets — should work fine.
+        assert.throws(() => wasm.simple_add(1, 2), (e) => {
+            assert.match(e.message, /Module terminated/);
+            return true;
+        });
+        wasm.__wbg_reset_state();
         assert.strictEqual(wasm.simple_add(1, 2), 3);
+    });
+
+    it('host-initiated termination with abort-reinit handler auto-reinits', () => {
+        if (isTerminated()) {
+            wasm.__wbg_reset_state();
+        }
+        // Set up an abort handler that calls schedule_reinit().
+        wasm.setup_abort_reinit_handler();
+        wasm.increment_counter();
+        wasm.increment_counter();
+        assert.ok(wasm.get_counter() > 1);
+
+        const prevInstances = instanceCount;
+
+        // Terminate from JS by writing to the flag.
+        const memory = new Int32Array(wasmExports.memory.buffer);
+        const terminatedAddr = wasmExports.__instance_terminated.value;
+        memory[terminatedAddr / 4] = 1;
+
+        // Next call should trigger: abort hook -> schedule_reinit() -> reset_state.
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+        assert.strictEqual(instanceCount, prevInstances + 1, 'new instance created');
+        // Counter reset to 0.
+        assert.strictEqual(wasm.get_counter(), 0, 'fresh instance after host-initiated reinit');
     });
 });
 "#,
@@ -1455,6 +1528,101 @@ describe('reinit handler', () => {
     Command::new("node")
         .arg("--test")
         .arg("test_reinit.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+/// Tests that schedule_reinit() auto-detects without --experimental-reset-state-function.
+/// Uses the same HANDLER_LIB_RS which calls schedule_reinit() via signal_reinit(), so
+/// the __wbindgen_reinit intrinsic is linked, triggering auto-emission of the
+/// private __wbg_reset_state function.
+#[test]
+fn termination_reinit_auto_detect() {
+    let mut project = Project::new("termination_reinit_auto_detect");
+    project.file("src/lib.rs", HANDLER_LIB_RS);
+    project.file(
+        ".cargo/config.toml",
+        &format!(
+            "
+            [patch.crates-io]
+            wasm-bindgen = {{ path = '{}' }}
+
+            [profile.dev]
+            panic = 'unwind'
+            codegen-units = 1
+            ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    // No --experimental-reset-state-function — reinit is auto-detected.
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+
+    fs::write(
+        out_dir.join("test_reinit_auto.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let instanceCount = 0;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    instanceCount++;
+    return new OrigInstance(module, imports);
+};
+const wasm = require('./termination_reinit_auto_detect.js');
+assert.strictEqual(instanceCount, 1, 'one instance on load');
+
+describe('reinit auto-detection (no --experimental-reset-state-function)', () => {
+    it('signal_reinit + call creates a new instance', () => {
+        wasm.signal_reinit();
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+        assert.strictEqual(instanceCount, 2);
+    });
+
+    it('reinit resets counter to 0', () => {
+        wasm.increment_counter();
+        wasm.increment_counter();
+        assert.ok(wasm.get_counter() > 1);
+        wasm.signal_reinit();
+        wasm.simple_add(0, 0);
+        assert.strictEqual(wasm.get_counter(), 0, 'counter reset to 0');
+        assert.strictEqual(instanceCount, 3);
+    });
+
+    it('abort handler calling schedule_reinit() auto-recovers on next call', () => {
+        wasm.setup_abort_reinit_handler();
+        wasm.increment_counter();
+        const prevInstances = instanceCount;
+
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert.ok(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
+        // Abort hook called schedule_reinit(), so next call auto-reinits.
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+        assert.strictEqual(instanceCount, prevInstances + 1, 'new instance created');
+        assert.strictEqual(wasm.get_counter(), 0, 'fresh instance');
+    });
+
+    it('__wbg_reset_state is NOT publicly exported', () => {
+        assert.strictEqual(wasm.__wbg_reset_state, undefined);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reinit_auto.js")
         .current_dir(&out_dir)
         .assert()
         .success();

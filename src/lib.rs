@@ -1273,6 +1273,8 @@ extern "C" {
     fn __wbindgen_memory() -> JsValue;
     fn __wbindgen_module() -> JsValue;
     fn __wbindgen_function_table() -> JsValue;
+
+    fn __wbindgen_reinit();
 }
 
 // Intrinsics that have to use raw imports because they're matched by other
