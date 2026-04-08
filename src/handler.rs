@@ -36,5 +36,3 @@
 pub use crate::__rt::schedule_reinit;
 #[doc(hidden)]
 pub use crate::__rt::set_on_abort;
-#[doc(hidden)]
-pub use crate::__rt::set_on_reinit;

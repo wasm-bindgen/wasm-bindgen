@@ -3450,11 +3450,6 @@ if (require('worker_threads').isMainThread) {{
             reset_statements.push(heap_reset);
         }
 
-        let reinit_call = if let Ok(invoke_handler) = self.expose_invoke_handler() {
-            format!("{invoke_handler}(wasm.__reinit_handler.value);")
-        } else {
-            String::new()
-        };
         let has_catch_handler = self.aux.wrapped_js_tag.is_some();
         let abort_reset = if has_catch_handler {
             "__wbg_called_abort = false;\n            __wbg_reinit_scheduled = false;"
@@ -3466,7 +3461,6 @@ if (require('worker_threads').isMainThread) {{
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
-            {reinit_call}
             "
         ));
 

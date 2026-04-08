@@ -1257,17 +1257,6 @@ const HANDLER_LIB_RS: &str = r#"
     pub fn signal_reinit() {
         wasm_bindgen::handler::schedule_reinit();
     }
-
-    /// Runs on every new instance (including ones created by __wbg_reset_state
-    /// after a schedule_reinit() signal) so the reinit handler is always registered.
-    fn on_reinit() {
-        unsafe { COUNTER += 1; }
-    }
-
-    #[wasm_bindgen(start)]
-    fn start() {
-        wasm_bindgen::handler::set_on_reinit(on_reinit);
-    }
 "#;
 
 #[test]

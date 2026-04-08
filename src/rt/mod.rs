@@ -664,50 +664,6 @@ pub fn schedule_reinit() {
     crate::__wbindgen_reinit();
 }
 
-/// Stores the Wasm indirect-function-table index of the registered reinit
-/// callback.  Zero means no callback is registered.
-#[cfg(panic = "unwind")]
-#[no_mangle]
-pub static mut __reinit_handler: u32 = 0;
-
-/// Register a callback invoked on the new instance immediately after
-/// `__wbg_reset_state()` creates it following a [`schedule_reinit()`] signal.
-///
-/// Returns the previously registered handler, or `None` if none was set.
-/// This mirrors the `std::panic::set_hook` convention and lets callers chain
-/// or restore handlers.
-///
-/// Because `__wbg_reset_state()` creates a completely fresh
-/// `WebAssembly.Instance`, all Rust statics (including `__reinit_handler`
-/// itself) are reset to their initial values on the new instance.  The
-/// callback should therefore be re-registered on every instance — the
-/// idiomatic way is via a `#[wasm_bindgen(start)]` function that runs
-/// automatically on every instantiation.
-///
-/// **Experimental — only available when built with `panic=unwind` and when
-/// wasm-bindgen is invoked with `--experimental-reset-state-function`.**
-/// Without that flag the JS guard is not emitted and the callback will never
-/// fire.  On `panic=abort` builds the no-op stub always returns `None`.
-#[cfg(panic = "unwind")]
-pub fn set_on_reinit(f: fn()) -> Option<fn()> {
-    // Same table-index cast as set_on_abort.
-    unsafe {
-        let prev = __reinit_handler;
-        __reinit_handler = f as usize as u32;
-        if prev != 0 {
-            Some(core::mem::transmute::<usize, fn()>(prev as usize))
-        } else {
-            None
-        }
-    }
-}
-
-/// No-op stub for `panic=abort` builds.
-#[cfg(not(panic = "unwind"))]
-pub fn set_on_reinit(_f: fn()) -> Option<fn()> {
-    None
-}
-
 /// No-op stub for `panic=abort` builds.
 #[cfg(not(panic = "unwind"))]
 pub fn schedule_reinit() {}
