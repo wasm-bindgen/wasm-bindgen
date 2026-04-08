@@ -3462,8 +3462,7 @@ if (require('worker_threads').isMainThread) {{
             ""
         };
         reset_statements.push(format!(
-            "
-            {abort_reset}
+            "{abort_reset}
             const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
