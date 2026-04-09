@@ -29,6 +29,11 @@
   transparently creates a fresh `WebAssembly.Instance`.
   [#5099](https://github.com/wasm-bindgen/wasm-bindgen/pull/5099)
 
+### Changed
+
+* MSRV bump from 1.71 to 1.76 for the CLI, and 1.82 to 1.86 for the API
+  [#5102](https://github.com/wasm-bindgen/wasm-bindgen/pull/5102)
+
 ### Fixed
 
 * Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
