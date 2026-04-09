@@ -24,6 +24,11 @@
   is now always a simple boolean (`0` = live, `1` = terminated).
   [#5083](https://github.com/wasm-bindgen/wasm-bindgen/pull/5083)
 
+* `handler::schedule_reinit()` now works under `panic=abort` builds. Previously
+  it was a no-op; it now sets the JS-side reinit flag and the next export call
+  transparently creates a fresh `WebAssembly.Instance`.
+  [#5099](https://github.com/wasm-bindgen/wasm-bindgen/pull/5099)
+
 ### Fixed
 
 * Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
