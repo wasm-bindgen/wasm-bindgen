@@ -5,43 +5,7 @@ publish = false
 version = "0.0.0"
 
 [dependencies]
-# Pin ICU dependencies to versions compatible with Rust 1.82
-icu_collections = "=2.0.0"
-icu_locale_core = "=2.0.0"
-icu_normalizer = "=2.0.0"
-icu_normalizer_data = "=2.0.0"
-icu_properties = "=2.0.0"
-icu_properties_data = "=2.0.0"
-icu_provider = "=2.0.0"
-
-# zerovec 0.11.6 requires Rust 1.83
-zerovec = "=0.11.5"
-
-# zerotrie 0.2.4 uses const mut refs which require Rust 1.83
-zerotrie = "=0.2.3"
-
-# Pin time dependencies to versions compatible with Rust 1.82
-time = "=0.3.34"
-time-core = "=0.1.2"
-
-# Pin other problematic dependencies
-rouille = "=3.6.2"
-
-# tempfile 3.25+ depends on getrandom 0.4+ which requires edition 2024 (Rust 1.85+)
-tempfile = "=3.24.0"
-
-# clap 4.6.0 raises the MSRV to Rust 1.85, and clap_builder 4.5.61 will
-# otherwise float clap_lex to 1.1.0 which also requires Rust 1.85
-clap = { version = "=4.5.61", features = ["derive"] }
-clap_lex = "=1.0.0"
-
-# ureq 3.3.0 requires edition 2024 (Rust 1.85+)
-ureq = "=3.2.0"
-
-# indexmap 2.14.0 depends on hashbrown 0.17.0 which requires edition 2024 (Rust 1.85+)
-indexmap = "=2.13.1"
-
-# enable default feature for icu
-writeable = "0.6.0"
+# time 0.3.46 requires Rust 1.88
+time = "=0.3.45"
 
 wasm-bindgen-cli = { path = "../../cli" }

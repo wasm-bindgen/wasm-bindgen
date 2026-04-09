@@ -11,7 +11,7 @@ include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-test-shared"
 repository = "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/test-shared"
-rust-version = "1.71"
+rust-version = "1.77"
 
 version = "0.2.117"
 
