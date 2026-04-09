@@ -53,6 +53,11 @@ Set `WASM_BINDGEN_KEEP_TEST_BUILD=1` to retain the temp build folder on test fai
 
 Add an entry to `CHANGELOG.md` for any user-facing change.
 
+## PR Process
+
+- PRs must come with sufficient tests
+- After posting the PR, add a CHANGELOG.md entry, this is a PR requirement
+
 ## Release PR
 
 1. Bump all crate versions:
