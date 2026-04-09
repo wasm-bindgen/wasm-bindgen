@@ -1628,6 +1628,124 @@ describe('reinit auto-detection (no --experimental-reset-state-function)', () =>
         .success();
 }
 
+/// Tests that schedule_reinit() works under panic=abort builds.
+#[test]
+fn reinit_panic_abort() {
+    let mut project = Project::new("reinit_panic_abort");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                static mut COUNTER: u32 = 0;
+
+                #[wasm_bindgen]
+                pub fn get_counter() -> u32 { unsafe { COUNTER } }
+
+                #[wasm_bindgen]
+                pub fn increment_counter() -> u32 {
+                    unsafe { COUNTER += 1; COUNTER }
+                }
+
+                #[wasm_bindgen]
+                pub fn simple_add(a: u32, b: u32) -> u32 { a + b }
+
+                #[wasm_bindgen]
+                pub fn signal_reinit() {
+                    wasm_bindgen::handler::schedule_reinit();
+                }
+            "#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                [package]
+                name = \"reinit_panic_abort\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{}' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+            ",
+                REPO_ROOT.display(),
+            ),
+        );
+
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+
+    fs::write(
+        out_dir.join("test_reinit_abort.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let instanceCount = 0;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    instanceCount++;
+    return new OrigInstance(module, imports);
+};
+const wasm = require('./reinit_panic_abort.js');
+assert.strictEqual(instanceCount, 1, 'one instance on load');
+
+describe('schedule_reinit under panic=abort', () => {
+    it('signal_reinit then export call creates a new instance', () => {
+        wasm.signal_reinit();
+        assert.strictEqual(wasm.simple_add(1, 2), 3);
+        assert.strictEqual(instanceCount, 2);
+    });
+
+    it('reinit resets statics', () => {
+        wasm.increment_counter();
+        wasm.increment_counter();
+        assert.ok(wasm.get_counter() > 1);
+        wasm.signal_reinit();
+        wasm.simple_add(0, 0);
+        assert.strictEqual(wasm.get_counter(), 0, 'counter reset to 0');
+        assert.strictEqual(instanceCount, 3);
+    });
+
+    it('counter persists without reinit signal', () => {
+        wasm.increment_counter();
+        wasm.increment_counter();
+        wasm.increment_counter();
+        assert.strictEqual(wasm.get_counter(), 3);
+        wasm.simple_add(0, 0);
+        assert.strictEqual(wasm.get_counter(), 3);
+    });
+
+    it('multiple reinit cycles each produce a fresh instance', () => {
+        const startInstances = instanceCount;
+        for (let i = 0; i < 3; i++) {
+            wasm.increment_counter();
+            wasm.increment_counter();
+            wasm.signal_reinit();
+            wasm.simple_add(0, 0);
+            assert.strictEqual(instanceCount, startInstances + i + 1);
+            assert.strictEqual(wasm.get_counter(), 0);
+        }
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reinit_abort.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
 #[test]
 fn multiple_start_functions() {
     let out_dir = Project::new("multiple_start_functions")

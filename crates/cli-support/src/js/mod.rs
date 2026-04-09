@@ -3,6 +3,7 @@ use crate::intrinsic::Intrinsic;
 use crate::transforms::{
     has_local_exception_tags, threads as threads_xform, unstart_start_function,
 };
+use crate::wasm_conventions::get_memory;
 use crate::wit::{
     Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
     AuxValue,
@@ -10,7 +11,7 @@ use crate::wit::{
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
 use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
-use crate::{wasm_conventions, Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
+use crate::{Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
 use std::borrow::Cow;
@@ -1564,7 +1565,7 @@ if (require('worker_threads').isMainThread) {{
                 (
                     "\
                     obj.__wbg_ptr = ptr;
-                    obj.__wbg_inst = __wbg_instance_id;
+                    Object.defineProperty(obj, '__wbg_inst', { value: __wbg_instance_id, writable: true });
                     ",
                     "{ ptr, instance: __wbg_instance_id }",
                 )
@@ -1678,7 +1679,16 @@ if (require('worker_threads').isMainThread) {{
             "wasm.{}(ptr, 0)",
             wasm_bindgen_shared::free_function(qualified)
         );
-        free = binding::maybe_wrap_try_catch(&free, self.aux.wrapped_js_tag.is_some());
+        free = binding::maybe_wrap_export_call(
+            &free,
+            if self.aux.wrapped_js_tag.is_some() {
+                binding::ExportGuard::Abort
+            } else if self.generate_reinit {
+                binding::ExportGuard::GuardOnly
+            } else {
+                binding::ExportGuard::None
+            },
+        );
         dst.push_str(&format!(
             "\
             __destroy_into_raw() {{
@@ -2787,38 +2797,6 @@ if (require('worker_threads').isMainThread) {{
         self.memview("Float64Array", memory)
     }
 
-    /// Emit a `__wbg_invoke_handler(addr)` JS helper that reads a u32 table
-    /// index from linear memory at `addr` and calls through the Wasm
-    /// indirect-function-table.
-    ///
-    /// Used for both the abort handler and the reinit handler.  No exported
-    /// Wasm function is required — the handler is stored as a plain `u32`
-    /// table index in a `#[no_mangle] static` (exported as a Wasm global),
-    /// so JS can read it directly from linear memory via the global's address.
-    ///
-    /// The indirect-function-table lives entirely outside linear memory, so
-    /// calling through it is safe even when linear memory is corrupt (e.g.
-    /// during a hard abort).  This is the key reason we store handlers as
-    /// table indices rather than heap-allocated closures or fat pointers.
-    fn expose_invoke_handler(&mut self) -> Result<String, Error> {
-        let memory = wasm_conventions::get_memory(self.module)?;
-        let mem_view = self.expose_int32_memory(memory);
-        let table = self.export_function_table()?;
-        self.intrinsic(
-            "invoke_handler".into(),
-            "__wbg_invoke_handler".into(),
-            format!(
-                "\
-                function __wbg_invoke_handler(addr) {{
-                    const idx = {mem_view}()[addr / 4];
-                    if (idx) wasm.{table}.get(idx)();
-                }}"
-            )
-            .into(),
-        );
-        Ok("__wbg_invoke_handler".to_string())
-    }
-
     fn expose_dataview_memory(&mut self, memory: MemoryId) -> MemView {
         self.memview("DataView", memory)
     }
@@ -3387,6 +3365,16 @@ if (require('worker_threads').isMainThread) {{
         });
     }
 
+    fn expose_reinit_scheduled(&mut self) {
+        self.intrinsic(
+            "reinit_scheduled".into(),
+            None,
+            "
+            let __wbg_reinit_scheduled = false;
+            ".into(),
+        );
+    }
+
     /// Emit the `__wbg_reset_state` function and instance-id tracking for the
     /// reinit lifecycle. Called when `schedule_reinit()` is used or
     /// `--experimental-reset-state-function` is passed. The function is private
@@ -3452,9 +3440,11 @@ if (require('worker_threads').isMainThread) {{
 
         let has_catch_handler = self.aux.wrapped_js_tag.is_some();
         let abort_reset = if has_catch_handler {
-            "__wbg_called_abort = false;\n            __wbg_reinit_scheduled = false;"
+            "\
+            __wbg_called_abort = false;
+            __wbg_reinit_scheduled = false;"
         } else {
-            ""
+            "__wbg_reinit_scheduled = false;"
         };
         reset_statements.push(format!(
             "{abort_reset}
@@ -3732,6 +3722,7 @@ if (require('worker_threads').isMainThread) {{
 
         self.generate_jstag_import();
         self.generate_wrapped_jstag_import()?;
+        self.maybe_generate_call_guard()?;
 
         for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
             let instrs = match &adapter.kind {
@@ -3854,7 +3845,7 @@ addToLibrary({
     __wbindgen_wrapped_jstag: "(globalThis.__wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] }))",
     
     __wbindgen_wrapped_jstag__postset: `
-        function __wbg_termination_guard() {}
+        function __wbg_call_guard() {}
         
         function __wbg_handle_catch(e) {
             if (e instanceof WebAssembly.Exception && e.is(globalThis.__wbindgen_wrapped_jstag)) {
@@ -3873,81 +3864,91 @@ addToLibrary({
             "const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
         );
 
-        let memory = wasm_conventions::get_memory(self.module).unwrap();
+        let memory = get_memory(self.module).unwrap();
         let mem_view = self.expose_int32_memory(memory);
-
-        self.global("let __wbg_terminated_addr;");
-        self.global("let __wbg_called_abort = false;");
-        if self.generate_reinit {
-            self.global("let __wbg_reinit_scheduled = false;");
-        }
-
-        // Create a helper function to unwrap and rethrow wrapped JS exceptions
-        let invoke_handler = self.expose_invoke_handler()?;
+        let table = self.export_function_table()?;
 
         self.global(&format!(
-            "\
-function __wbg_call_abort_hook() {{
-    __wbg_called_abort = true;
-    try {{ {invoke_handler}(wasm.__abort_handler.value); }} catch(_) {{}}
-}}"
-        ));
+            "
+            let __wbg_terminated_addr;
+            let __wbg_called_abort = false;
+            function __wbg_call_abort_hook() {{
+                __wbg_called_abort = true;
+                try {{ 
+                    const idx = {mem_view}()[wasm.__abort_handler.value / 4];
+                    if (idx) wasm.{table}.get(idx)();
+                }} catch(_) {{}}
+            }}
 
-        let uses_reinit = self.generate_reinit;
-        if uses_reinit {
-            self.global(&format!(
-                "\
-function __wbg_termination_guard() {{
-    __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
-    const flag = {mem_view}()[__wbg_terminated_addr];
-    if (flag) {{
-        if (!__wbg_called_abort) {{
-            __wbg_call_abort_hook();
-        }}
-        if (__wbg_reinit_scheduled) {{
-            __wbg_reset_state();
-            return;
-        }}
-        throw new Error('Module terminated');
-    }} else if (__wbg_reinit_scheduled) {{
-        __wbg_reset_state();
-    }}
-}}"
-            ));
-        } else {
-            self.global(&format!(
-                "\
-function __wbg_termination_guard() {{
-    __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
-    const flag = {mem_view}()[__wbg_terminated_addr];
-    if (flag) {{
-        if (!__wbg_called_abort) {{
-            __wbg_call_abort_hook();
-        }}
-        throw new Error('Module terminated');
-    }}
-}}"
-            ));
-        }
-
-        self.global(&format!(
-            "\
-function __wbg_handle_catch(e) {{
-    if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
-        throw e.getArg(__wbindgen_wrapped_jstag, 0);
-    }}
-    {mem_view}()[__wbg_terminated_addr] = 1;
-    // Invoke the Rust-registered abort handler (if any). The try/catch ensures
-    // a throwing or panicking handler cannot suppress the original error.
-    __wbg_call_abort_hook();
-    throw e;
-}}"
+            function __wbg_handle_catch(e) {{
+                if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
+                    throw e.getArg(__wbindgen_wrapped_jstag, 0);
+                }}
+                {mem_view}()[__wbg_terminated_addr] = 1;
+                __wbg_call_abort_hook();
+                throw e;
+            }}
+            "
         ));
 
         // Use the constant for the import
         self.wasm_import_definitions
             .insert(id, "__wbindgen_wrapped_jstag".to_string());
 
+        Ok(())
+    }
+
+    /// Emit a `__wbg_call_guard`, handling hard aborts and reinitialization
+    /// - Hard aborts are emitted when we are using js exception tagging.
+    /// - For reinitialization, checks __wbg_reinit_scheduled.
+    /// - If neither features are required, no call guard is emitted.
+    fn maybe_generate_call_guard(&mut self) -> Result<(), Error> {
+        // No call guard needed when we dont have hard aborts or reinit
+        if self.aux.wrapped_js_tag.is_none() && !self.generate_reinit {
+            return Ok(());
+        }
+
+        let mut termination_guard = String::from("function __wbg_call_guard() {");
+        // Exception handling tags -> hard aborts
+        if self.aux.wrapped_js_tag.is_some() {
+            let memory = get_memory(self.module)?;
+            let mem_view = self.expose_int32_memory(memory);
+            termination_guard.push_str(&format!(
+                "
+                __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
+                const flag = {mem_view}()[__wbg_terminated_addr];
+                if (flag) {{
+                    if (!__wbg_called_abort) {{
+                        __wbg_call_abort_hook();
+                    }}"
+            ));
+        }
+        // reinit guard
+        if self.generate_reinit {
+            self.expose_reinit_scheduled();
+            termination_guard.push_str(
+                "
+                if (__wbg_reinit_scheduled) {
+                    __wbg_reset_state();
+                    return;
+                }",
+            );
+        }
+        if self.aux.wrapped_js_tag.is_some() {
+            termination_guard.push_str("throw new Error('Module terminated');\n");
+            if self.generate_reinit {
+                termination_guard.push_str(
+                    "
+                    } else if (__wbg_reinit_scheduled) {
+                        __wbg_reset_state();
+                    }",
+                );
+            } else {
+                termination_guard.push_str("}");
+            }
+        }
+        termination_guard.push_str("\n}");
+        self.global(&termination_guard);
         Ok(())
     }
 

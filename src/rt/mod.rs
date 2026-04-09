@@ -656,17 +656,11 @@ pub fn set_on_abort(_f: fn()) -> Option<fn()> {
 
 /// Schedule the instance for reinitialization before the next export call.
 ///
-/// Available when built with `panic=unwind`. The reinit machinery is
-/// automatically emitted when this function is used. On `panic=abort` builds
-/// this is a no-op.
-#[cfg(panic = "unwind")]
+/// The reinit machinery is automatically emitted when this function is used.
+/// Works with both `panic=unwind` and `panic=abort` builds.
 pub fn schedule_reinit() {
     crate::__wbindgen_reinit();
 }
-
-/// No-op stub for `panic=abort` builds.
-#[cfg(not(panic = "unwind"))]
-pub fn schedule_reinit() {}
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {

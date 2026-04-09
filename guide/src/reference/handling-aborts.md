@@ -10,9 +10,10 @@ export call will throw `"Module terminated"`.
 The `wasm_bindgen::handler` module provides hooks for responding to these events
 and optionally recovering by reinitializing the module.
 
-> **Note:** Hard abort detection and the abort handler API currently require
-> `panic=unwind`. Support for `panic=abort` builds may be added in a future
-> release.
+> **Note:** Hard abort detection and the abort handler API (`set_on_abort`)
+> currently require `panic=unwind`. Support for `panic=abort` may be added in
+> a future release. `schedule_reinit()` works with both `panic=unwind` and
+> `panic=abort`.
 
 ## Termination States
 
@@ -63,14 +64,15 @@ means the handler fires on the next export call, giving it a chance to respond
 
 `handler::schedule_reinit()` can be used to reinitialize the WebAssembly instance, while
 keeping the JS wrapper bindings in place, performing a transparent reinitialization
-of the library when state loss is acceptable.
+of the library when state loss is acceptable. Works with both `panic=unwind` and
+`panic=abort` builds.
 
-`schedule_reinit` may be called at any time, including from within the abort hook
-to create a self-recovering abort handler.
+`schedule_reinit` may be called at any time. With `panic=unwind` it can also be
+called from within the abort hook to create a self-recovering abort handler.
 
-When called, `schedule_reinit()` the module for reinitialization. The next call to
-any export detects this, creates a fresh `WebAssembly.Instance` from the same
-module, while keeping the same JS wrapper bindings in place but updated to
+When called, `schedule_reinit()` signals the module for reinitialization. The next
+call to any export detects this, creates a fresh `WebAssembly.Instance` from the
+same module, while keeping the same JS wrapper bindings in place but updated to
 the new instance.
 
 When called during normal execution, the current call completes normally and
