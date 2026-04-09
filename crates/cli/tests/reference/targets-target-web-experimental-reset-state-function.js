@@ -2,11 +2,10 @@
 
 export function __wbg_reset_state () {
     __wbg_instance_id++;
-
+    __wbg_reinit_scheduled = false;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
-
 }
 
 /**
@@ -15,7 +14,9 @@ export function __wbg_reset_state () {
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
+    let ret;
+    __wbg_call_guard();
+    ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
 
@@ -42,21 +43,22 @@ function __wbg_get_imports() {
     };
 }
 
+function __wbg_call_guard() {
+    if (__wbg_reinit_scheduled) {
+        __wbg_reset_state();
+        return;
+    }
+}
+
+
 let __wbg_instance_id = 0;
 
-let cachedInt32ArrayMemory0 = null;
-function getInt32ArrayMemory0() {
-    if (cachedInt32ArrayMemory0 === null || cachedInt32ArrayMemory0.byteLength === 0) {
-        cachedInt32ArrayMemory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachedInt32ArrayMemory0;
-}
+let __wbg_reinit_scheduled = false;
 
 let wasmModule, wasm;
 function __wbg_finalize_init(instance, module) {
     wasm = instance.exports;
     wasmModule = module;
-    cachedInt32ArrayMemory0 = null;
     wasm.__wbindgen_start();
     return wasm;
 }

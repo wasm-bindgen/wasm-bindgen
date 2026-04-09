@@ -797,6 +797,9 @@ impl<'a> Context<'a> {
                         if let Intrinsic::FunctionTable = intrinsic {
                             self.aux.function_table = self.module.tables.main_function_table()?;
                         }
+                        if let Intrinsic::Reinit = intrinsic {
+                            self.aux.uses_reinit = true;
+                        }
                         AuxImport::Intrinsic(intrinsic)
                     }
                     _ => {

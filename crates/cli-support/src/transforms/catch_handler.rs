@@ -88,9 +88,8 @@ pub fn run(
     };
     let memory = crate::wasm_conventions::get_memory(module)?;
 
-    // On panic=unwind builds, ensure the function table is populated in aux
-    // so that the JS codegen can emit the __reinit_handler table-index call
-    // in __wbg_reset_state without needing a separate exported function.
+    // Ensure the function table is populated in aux so that the JS codegen
+    // can emit the __abort_handler table-index call via expose_invoke_handler.
     if aux.function_table.is_none() {
         aux.function_table = module.tables.main_function_table().ok().flatten();
     }

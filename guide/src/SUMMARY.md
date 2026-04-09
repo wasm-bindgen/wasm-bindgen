@@ -51,6 +51,7 @@
   - [Support for Weak References](./reference/weak-references.md)
   - [Support for Reference Types](./reference/reference-types.md)
   - [Catching Panics](./reference/catch-unwind.md)
+  - [Handling Aborts](./reference/handling-aborts.md)
   - [Supported Types](./reference/types.md)
     - [Imported JavaScript Types](./reference/types/imported-js-types.md)
     - [Exported Rust Types](./reference/types/exported-rust-types.md)

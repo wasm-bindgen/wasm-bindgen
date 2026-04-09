@@ -38,6 +38,9 @@ clap_lex = "=1.0.0"
 # ureq 3.3.0 requires edition 2024 (Rust 1.85+)
 ureq = "=3.2.0"
 
+# indexmap 2.14.0 depends on hashbrown 0.17.0 which requires edition 2024 (Rust 1.85+)
+indexmap = "=2.13.1"
+
 # enable default feature for icu
 writeable = "0.6.0"
 

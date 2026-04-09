@@ -96,10 +96,21 @@ pub enum TsReference {
     StringEnum(String),
 }
 
-pub fn wrap_try_catch(call: &str) -> String {
+/// Whether and how to guard an export call against instance termination.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExportGuard {
+    /// No guard wrapping needed.
+    None,
+    /// Wrap with termination guard and try-catch for panic=abort with error handling.
+    Abort,
+    /// Wrap with just termination guard for schedule_reinit() support.
+    GuardOnly,
+}
+
+fn wrap_try_catch(call: &str) -> String {
     format!(
         "\
-        __wbg_termination_guard();
+        __wbg_call_guard();
         try {{
             {call};
         }} catch(e) {{
@@ -109,11 +120,20 @@ pub fn wrap_try_catch(call: &str) -> String {
     )
 }
 
-pub fn maybe_wrap_try_catch(call: &str, should_check_aborted: bool) -> String {
-    if should_check_aborted {
-        wrap_try_catch(call)
-    } else {
-        format!("{call};")
+fn wrap_call_guard(call: &str) -> String {
+    format!(
+        "\
+        __wbg_call_guard();
+        {call};
+        "
+    )
+}
+
+pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
+    match guard {
+        ExportGuard::Abort => wrap_try_catch(call),
+        ExportGuard::GuardOnly => wrap_call_guard(call),
+        ExportGuard::None => format!("{call};"),
     }
 }
 
@@ -181,7 +201,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut js = JsBuilder::new(self.cx, debug_name);
         if let Some(consumes_self) = self.method {
             let _ = params.next();
-            if js.cx.config.generate_reset_state {
+            if js.cx.generate_reinit {
                 js.prelude(
                     "
                     if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
@@ -766,7 +786,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
-        if self.cx.config.generate_reset_state {
+        if self.cx.generate_reinit {
             // Under reset state, we need comprehensive validation
             self.prelude(&format!(
                 "\
@@ -862,11 +882,17 @@ fn instruction(
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
-            let mut should_check_aborted = js.cx.aux.wrapped_js_tag.is_some()
-                && matches!(
-                    instr,
-                    Instruction::CallExport(_) | Instruction::DeferFree { .. }
-                );
+            let is_export_call = matches!(
+                instr,
+                Instruction::CallExport(_) | Instruction::DeferFree { .. }
+            );
+            let mut guard = if js.cx.aux.wrapped_js_tag.is_some() && is_export_call {
+                ExportGuard::Abort
+            } else if js.cx.generate_reinit && is_export_call {
+                ExportGuard::GuardOnly
+            } else {
+                ExportGuard::None
+            };
             let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
 
@@ -899,33 +925,25 @@ fn instruction(
             }
 
             // Call the function through an export of the underlying module.
-            let call = invoc.invoke(
-                js.cx,
-                &args,
-                &mut js.prelude,
-                log_error,
-                &mut should_check_aborted,
-            )?;
+            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error, &mut guard)?;
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
             // return values of the function.
             match (invoc.defer(), results) {
                 (true, 0) => {
-                    js.finally(&maybe_wrap_try_catch(&call, should_check_aborted));
+                    js.finally(&maybe_wrap_export_call(&call, guard));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
-                (false, 0) => js.prelude(&maybe_wrap_try_catch(&call, should_check_aborted)),
+                (false, 0) => js.prelude(&maybe_wrap_export_call(&call, guard)),
                 (false, n) => {
-                    let body = if should_check_aborted {
-                        format!(
-                            "\
-                            let ret;
-                            {}",
-                            &wrap_try_catch(&format!("ret = {call};"))
-                        )
-                    } else {
+                    let body = if matches!(guard, ExportGuard::None) {
                         format!("const ret = {call};")
+                    } else {
+                        format!(
+                            "let ret;\n{}",
+                            &maybe_wrap_export_call(&format!("ret = {call}"), guard)
+                        )
                     };
                     js.prelude(&body);
                     if n == 1 {
@@ -1424,12 +1442,15 @@ fn instruction(
                     // Get the JS identifier for the class, which may be aliased
                     // if the name conflicts with a JS builtin (e.g., `Array` -> `Array2`)
                     let identifier = js.cx.require_class_identifier(class);
-                    let (ptr_assignment, register_data) = if js.cx.config.generate_reset_state {
+                    // When reinit is enabled, define __wbg_inst as non-enumerable
+                    // and non-configurable so it doesn't appear in serialization
+                    // (e.g. toJSON) but remains writable for instance replacement.
+                    let (ptr_assignment, register_data) = if js.cx.generate_reinit {
                         (
                             format!(
                                 "\
                                 this.__wbg_ptr = {val} >>> 0;
-                                this.__wbg_inst = __wbg_instance_id;
+                                Object.defineProperty(this, '__wbg_inst', {{ value: __wbg_instance_id, writable: true }});
                                 "
                             ),
                             format!("{{ ptr: {val} >>> 0, instance: __wbg_instance_id }}"),
@@ -1751,7 +1772,7 @@ impl Invocation {
         args: &[String],
         prelude: &mut String,
         log_error: &mut bool,
-        handle_error: &mut bool,
+        guard: &mut ExportGuard,
     ) -> Result<String, Error> {
         match self {
             Invocation::Core { id, export_id, .. } => {
@@ -1775,7 +1796,7 @@ impl Invocation {
                     *log_error = false;
                 }
                 if cx.import_never_handle_error(import) {
-                    *handle_error = false;
+                    *guard = ExportGuard::None;
                 }
                 cx.invoke_import(import, kind, args, variadic, prelude)
             }

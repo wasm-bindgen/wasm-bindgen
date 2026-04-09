@@ -192,7 +192,7 @@ jobs:
         with:
           targets: wasm32-unknown-emscripten
       - name: Setup Emscripten SDK
-        uses: mymindstorm/setup-emsdk@v15
+        uses: mymindstorm/setup-emsdk@v16
         with:
           version: latest
       - uses: actions/setup-node@v6

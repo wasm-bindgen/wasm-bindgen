@@ -114,11 +114,13 @@ URL of the linked module is without a reference point like `import.meta.url`.
 
 ### `--experimental-reset-state-function`
 
-Generates a `__wbg_reset_state()` function that allows reinitializing the
-entire library state for environments that wish to reuse and reset the same
-JavaScript execution context without reloading the entire library.
+Generates and publicly exports a `__wbg_reset_state()` function that allows
+reinitializing the entire library state for environments that wish to reuse
+and reset the same JavaScript execution context without reloading the entire
+library.
 
-This feature is currently only supported for `--target module`.
+This feature is currently only supported for `--target module`, `--target web`,
+and `--target nodejs`.
 
 When this flag is enabled, the generated code will also associate all objects
 with execution instance identity that validates and throws for stale references,
@@ -129,7 +131,6 @@ an instance id that is changed whenever this function is called.
 
 ```javascript
 import { __wbg_reset_state, inc } from './wbg-lib.js';
-
 
 console.log(inc()); // logs 1
 console.log(inc()); // logs 2
@@ -142,3 +143,6 @@ console.log(inc()); // logs 1
 
 **Note:** This feature adds overhead to the generated code and should only be 
 enabled when needed for environment-specific requirements.
+
+See also [Handling Aborts](./handling-aborts.md) for the `schedule_reinit()` API
+which automatically generates the reinit machinery without this flag.
