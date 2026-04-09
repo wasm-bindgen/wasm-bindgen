@@ -5,15 +5,16 @@ export function __wbg_reset_state () {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
-
+    __wbg_reinit_scheduled = false;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
-
 }
 
 export function exported() {
-    const ret = wasm.exported();
+    let ret;
+    __wbg_call_guard();
+    ret = wasm.exported();
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
@@ -76,20 +77,20 @@ function __wbg_get_imports() {
     };
 }
 
+function __wbg_call_guard() {
+    if (__wbg_reinit_scheduled) {
+        __wbg_reset_state();
+        return;
+    }
+}
+
+
 let __wbg_instance_id = 0;
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
-}
-
-let cachedInt32ArrayMemory0 = null;
-function getInt32ArrayMemory0() {
-    if (cachedInt32ArrayMemory0 === null || cachedInt32ArrayMemory0.byteLength === 0) {
-        cachedInt32ArrayMemory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachedInt32ArrayMemory0;
 }
 
 function getStringFromWasm0(ptr, len) {
@@ -113,6 +114,8 @@ function handleError(f, args) {
         wasm.__wbindgen_exn_store(idx);
     }
 }
+
+let __wbg_reinit_scheduled = false;
 
 function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_externrefs.get(idx);

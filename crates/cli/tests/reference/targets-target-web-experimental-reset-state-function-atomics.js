@@ -4,11 +4,10 @@ export function __wbg_reset_state () {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
-
+    __wbg_reinit_scheduled = false;
     const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
-
 }
 
 /**
@@ -17,7 +16,9 @@ export function __wbg_reset_state () {
  * @returns {number}
  */
 export function add_that_might_fail(a, b) {
-    const ret = wasm.add_that_might_fail(a, b);
+    let ret;
+    __wbg_call_guard();
+    ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
 
@@ -48,15 +49,15 @@ function __wbg_get_imports(memory) {
     };
 }
 
-let __wbg_instance_id = 0;
-
-let cachedInt32ArrayMemory0 = null;
-function getInt32ArrayMemory0() {
-    if (cachedInt32ArrayMemory0 === null || cachedInt32ArrayMemory0.buffer !== wasm.memory.buffer) {
-        cachedInt32ArrayMemory0 = new Int32Array(wasm.memory.buffer);
+function __wbg_call_guard() {
+    if (__wbg_reinit_scheduled) {
+        __wbg_reset_state();
+        return;
     }
-    return cachedInt32ArrayMemory0;
 }
+
+
+let __wbg_instance_id = 0;
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
@@ -70,6 +71,8 @@ function getUint8ArrayMemory0() {
     }
     return cachedUint8ArrayMemory0;
 }
+
+let __wbg_reinit_scheduled = false;
 
 let cachedTextDecoder = (typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }) : undefined);
 if (cachedTextDecoder) cachedTextDecoder.decode();
@@ -90,7 +93,6 @@ let wasmModule, wasm;
 function __wbg_finalize_init(instance, module, thread_stack_size) {
     wasm = instance.exports;
     wasmModule = module;
-    cachedInt32ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
     if (typeof thread_stack_size !== 'undefined' && (typeof thread_stack_size !== 'number' || thread_stack_size === 0 || thread_stack_size % 65536 !== 0)) {
         throw new Error('invalid stack size');

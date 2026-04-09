@@ -87,5 +87,6 @@ intrinsics! {
         ExternrefHeapLiveCount = "__wbindgen_externref_heap_live_count",
         InitExternrefTable = "__wbindgen_init_externref_table",
         PanicError = "__wbindgen_panic_error",
+        Reinit = "__wbindgen_reinit",
     }
 }
