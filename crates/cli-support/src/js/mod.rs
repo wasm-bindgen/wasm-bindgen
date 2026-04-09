@@ -3371,7 +3371,8 @@ if (require('worker_threads').isMainThread) {{
             None,
             "
             let __wbg_reinit_scheduled = false;
-            ".into(),
+            "
+            .into(),
         );
     }
 
@@ -3944,7 +3945,7 @@ addToLibrary({
                     }",
                 );
             } else {
-                termination_guard.push_str("}");
+                termination_guard.push('}');
             }
         }
         termination_guard.push_str("\n}");
