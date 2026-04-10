@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+## [0.2.118](https://github.com/rustwasm/wasm-bindgen/compare/0.2.117...0.2.118)
+
 ### Added
 
 * Added `Error::stack_trace_limit()` and `Error::set_stack_trace_limit()` bindings
