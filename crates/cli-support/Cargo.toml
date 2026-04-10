@@ -10,7 +10,7 @@ include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-cli-support"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/cli-support"
-rust-version = "1.82"
+rust-version = "1.86"
 version = "0.2.117"
 
 [dependencies]
