@@ -1025,12 +1025,7 @@ impl TryToTokens for ast::ImportType {
 
         // For `From<JsValue>`, only include lifetime params so type params
         // fall back to their defaults and callers don't need turbofish.
-        let from_jsvalue_impl_generics = if lifetime_params.is_empty() {
-            quote! {}
-        } else {
-            quote! { <#(#lifetime_params),*> }
-        };
-        let from_jsvalue_ty_generics = if lifetime_params.is_empty() {
+        let from_jsvalue_generics = if lifetime_params.is_empty() {
             quote! {}
         } else {
             quote! { <#(#lifetime_params),*> }
@@ -1175,7 +1170,7 @@ impl TryToTokens for ast::ImportType {
                 // Only include lifetime params here; type params use their
                 // defaults so callers don't need turbofish annotations.
                 #[automatically_derived]
-                impl #from_jsvalue_impl_generics From<JsValue> for #rust_name #from_jsvalue_ty_generics {
+                impl #from_jsvalue_generics From<JsValue> for #rust_name #from_jsvalue_generics {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
