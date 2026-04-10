@@ -41,6 +41,10 @@ macro_rules! region {
 
 pub struct Context<'a> {
     globals: String,
+    /// ES module `import` statements collected during codegen, emitted at the
+    /// top of the output in `finalize()`. In bundler mode these go into the
+    /// `_bg.js` file; the bundler entry file has its own hardcoded imports.
+    es_module_imports: String,
     intrinsics: Option<BTreeMap<Cow<'static, str>, Cow<'static, str>>>,
     emscripten_library: String,
     imports_post: String,
@@ -224,6 +228,7 @@ impl<'a> Context<'a> {
     ) -> Result<Context<'a>, Error> {
         Ok(Context {
             globals: String::new(),
+            es_module_imports: String::new(),
             intrinsics: Some(Default::default()),
             imports_post: String::new(),
             export_name_list: Vec::new(),
@@ -465,10 +470,7 @@ impl<'a> Context<'a> {
         }
 
         if !self.js_imports.is_empty() {
-            region!(self, "js imports", {
-                let imports = self.js_import_header()?;
-                self.globals.push_str(&imports);
-            });
+            self.js_import_header()?;
         }
 
         if !self.exports.is_empty() {
@@ -583,6 +585,25 @@ impl<'a> Context<'a> {
             }
         }
 
+        // Insert collected ES module imports at the top of the output.
+        if !self.es_module_imports.is_empty() {
+            let mut es_imports = std::mem::take(&mut self.es_module_imports);
+            es_imports.push('\n');
+            if let Some(bg_js) = &mut start {
+                // Bundler: self.globals is the entry file (hardcoded imports),
+                // bg_js is the _bg.js glue file that needs these imports.
+                bg_js.insert_str(0, &es_imports);
+            } else {
+                // Other ESM modes: insert after the @ts-self-types directive.
+                let insert_pos = if self.globals.starts_with("/* @ts-self-types") {
+                    self.globals.find('\n').map(|p| p + 1).unwrap_or(0)
+                } else {
+                    0
+                };
+                self.globals.insert_str(insert_pos, &es_imports);
+            }
+        }
+
         let mut ts = String::new();
 
         if self.config.mode.no_modules() {
@@ -672,11 +693,12 @@ impl<'a> Context<'a> {
         for (i, module) in import_modules.enumerate() {
             let i = i + 1;
             if self.config.mode.uses_es_modules() {
-                imports.push_str(&format!(r#"import * as import{i} from "{module}""#));
+                self.es_module_imports
+                    .push_str(&format!("import * as import{i} from \"{module}\"\n"));
             } else {
                 imports.push_str(&format!(r#"const import{i} = require("{module}");"#));
+                imports.push('\n');
             }
-            imports.push('\n');
 
             return_stmt.push_str(&format!(r#""{module}": import{i},"#));
             return_stmt.push('\n');
@@ -693,7 +715,11 @@ impl<'a> Context<'a> {
         fn_def.push_str(&return_stmt);
         fn_def.push_str("}\n");
 
-        format!("{imports}\n{fn_def}\n")
+        if imports.is_empty() {
+            format!("{fn_def}\n")
+        } else {
+            format!("{imports}\n{fn_def}\n")
+        }
     }
 
     fn generate_bundler_imports(&mut self, module_name: &str) -> String {
@@ -791,11 +817,12 @@ impl<'a> Context<'a> {
         }
     }
 
-    fn js_import_header(&self) -> Result<String, Error> {
-        let mut imports = String::new();
-
+    /// Collects JS module import statements from `self.js_imports`.
+    /// For ESM modes, writes `import { ... }` to `self.es_module_imports`.
+    /// For CJS Node / Emscripten, writes inline to `self.globals`.
+    fn js_import_header(&mut self) -> Result<(), Error> {
         if self.config.omit_imports {
-            return Ok(imports);
+            return Ok(());
         }
 
         match &self.config.mode {
@@ -807,32 +834,37 @@ impl<'a> Context<'a> {
 
             OutputMode::Node { module: false } => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
-                    imports.push_str("const { ");
+                    self.globals.push_str("const { ");
                     for (i, (item, rename)) in items.iter().enumerate() {
                         if i > 0 {
-                            imports.push_str(", ");
+                            self.globals.push_str(", ");
                         }
                         if is_valid_ident(item) {
-                            imports.push_str(item);
+                            self.globals.push_str(item);
                         } else {
-                            // Invalid identifiers should already have a valid rename
                             assert!(rename.is_some());
-                            imports.push('\'');
-                            imports.push_str(&escape_string(item));
-                            imports.push('\'');
+                            self.globals.push('\'');
+                            self.globals.push_str(&escape_string(item));
+                            self.globals.push('\'');
                         }
                         if let Some(other) = rename {
-                            imports.push_str(": ");
-                            imports.push_str(other)
+                            self.globals.push_str(": ");
+                            self.globals.push_str(other)
                         }
                     }
                     if module.starts_with('.') || PathBuf::from(module).is_absolute() {
-                        imports.push_str(" } = require(String.raw`");
+                        self.globals.push_str(" } = require(String.raw`");
                     } else {
-                        imports.push_str(" } = require(`");
+                        self.globals.push_str(" } = require(`");
                     }
-                    imports.push_str(module);
-                    imports.push_str("`);\n");
+                    self.globals.push_str(module);
+                    self.globals.push_str("`);\n");
+                }
+            }
+
+            OutputMode::Emscripten => {
+                for (module, items) in crate::sorted_iter(&self.js_imports) {
+                    write_es_import(&mut self.globals, module, items);
                 }
             }
 
@@ -840,33 +872,13 @@ impl<'a> Context<'a> {
             | OutputMode::Node { module: true }
             | OutputMode::Web
             | OutputMode::Module
-            | OutputMode::Deno
-            | OutputMode::Emscripten => {
+            | OutputMode::Deno => {
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
-                    imports.push_str("import { ");
-                    for (i, (item, rename)) in items.iter().enumerate() {
-                        if i > 0 {
-                            imports.push_str(", ");
-                        }
-                        if is_valid_ident(item) {
-                            imports.push_str(item);
-                        } else {
-                            imports.push('\'');
-                            imports.push_str(item);
-                            imports.push('\'');
-                        }
-                        if let Some(other) = rename {
-                            imports.push_str(" as ");
-                            imports.push_str(other);
-                        }
-                    }
-                    imports.push_str(" } from '");
-                    imports.push_str(module);
-                    imports.push_str("';\n");
+                    write_es_import(&mut self.es_module_imports, module, items);
                 }
             }
         }
-        Ok(imports)
+        Ok(())
     }
 
     fn ts_for_init_fn(
@@ -994,15 +1006,20 @@ export const __wbg_memory: WebAssembly.Memory;
         ))
     }
 
-    fn generate_module_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
+    fn generate_module_wasm_loading(
+        &mut self,
+        module_name: &str,
+        needs_manual_start: bool,
+    ) -> String {
+        self.es_module_imports.push_str(&format!(
+            "import source wasmModule from \"./{module_name}_bg.wasm\";\n"
+        ));
         format!(
-            r#"import source wasmModule from "./{module_name}_bg.wasm";
-            const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-            let wasm = wasmInstance.exports;
-            {start}
-            "#,
+            "const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());\n\
+             let wasm = wasmInstance.exports;\n\
+             {start}",
             start = if needs_manual_start {
-                "wasm.__wbindgen_start();"
+                "wasm.__wbindgen_start();\n"
             } else {
                 ""
             },
@@ -1025,14 +1042,15 @@ export const __wbg_memory: WebAssembly.Memory;
         if self.config.typescript {
             // jsr-self-types directive
             start.push_str(&format!(r#"/* @ts-self-types="./{module_name}.d.ts" */"#));
-            start.push_str("\n\n");
+            start.push('\n');
         }
 
         start.push_str(&format!(
-            r#"import * as wasm from "./{module_name}_bg.wasm";
-            import {{ __wbg_set_wasm }} from "./{module_name}_bg.js";
+            "\
+            import * as wasm from \"./{module_name}_bg.wasm\";\n\
+            import {{ __wbg_set_wasm }} from \"./{module_name}_bg.js\";\n\n\
             __wbg_set_wasm(wasm);
-        "#
+            "
         ));
 
         if needs_manual_start {
@@ -1232,12 +1250,17 @@ export const __wbg_memory: WebAssembly.Memory;
     }
 
     fn generate_node_esm_wasm_loading(
-        &self,
+        &mut self,
         module_name: &str,
         needs_manual_start: bool,
     ) -> String {
+        self.es_module_imports
+            .push_str("import { readFileSync } from 'node:fs';\n");
+
         if self.threads_enabled {
-            // For threads: generate initSync that accepts custom memory
+            self.es_module_imports
+                .push_str("import { isMainThread } from 'node:worker_threads';\n");
+
             let start_call = if needs_manual_start {
                 format!(
                     r#"
@@ -1253,10 +1276,7 @@ export const __wbg_memory: WebAssembly.Memory;
             };
 
             format!(
-                r#"import {{ readFileSync }} from 'node:fs';
-import {{ isMainThread }} from 'node:worker_threads';
-
-let wasm;
+                r#"let wasm;
 let wasmModule;
 let memory;
 let __initialized = false;
@@ -1297,12 +1317,12 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
             )
         } else {
             format!(
-                r#"import {{ readFileSync }} from 'node:fs';
-            const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
-            const wasmBytes = readFileSync(wasmUrl);
-            const wasmModule = new WebAssembly.Module(wasmBytes);
-            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
-            {start}"#,
+                "\
+                const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);\n\
+                const wasmBytes = readFileSync(wasmUrl);\n\
+                const wasmModule = new WebAssembly.Module(wasmBytes);\n\
+                let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;\n\
+                {start}",
                 start = if needs_manual_start {
                     "wasm.__wbindgen_start();\n"
                 } else {
@@ -1437,7 +1457,7 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn generate_wasm_loading(
-        &self,
+        &mut self,
         module_name: &str,
         needs_manual_start: bool,
         has_memory: bool,
@@ -5889,4 +5909,27 @@ impl fmt::Display for MemView {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", self.name, self.num)
     }
+}
+
+fn write_es_import(dest: &mut String, module: &str, items: &[(String, Option<String>)]) {
+    dest.push_str("import { ");
+    for (i, (item, rename)) in items.iter().enumerate() {
+        if i > 0 {
+            dest.push_str(", ");
+        }
+        if is_valid_ident(item) {
+            dest.push_str(item);
+        } else {
+            dest.push('\'');
+            dest.push_str(item);
+            dest.push('\'');
+        }
+        if let Some(other) = rename {
+            dest.push_str(" as ");
+            dest.push_str(other);
+        }
+    }
+    dest.push_str(" } from '");
+    dest.push_str(module);
+    dest.push_str("';\n");
 }

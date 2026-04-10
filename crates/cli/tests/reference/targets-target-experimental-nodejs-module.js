@@ -1,4 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
+import { readFileSync } from 'node:fs';
+
 
 /**
  * @param {number} a
@@ -9,7 +11,6 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
@@ -33,7 +34,6 @@ function __wbg_get_imports() {
     };
 }
 
-import { readFileSync } from 'node:fs';
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmBytes = readFileSync(wasmUrl);
 const wasmModule = new WebAssembly.Module(wasmBytes);

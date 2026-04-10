@@ -19,7 +19,6 @@ export function add_that_might_fail(a, b) {
     ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

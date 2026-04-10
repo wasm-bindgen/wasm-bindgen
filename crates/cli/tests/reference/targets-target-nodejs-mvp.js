@@ -10,7 +10,6 @@ function add_that_might_fail(a, b) {
     return ret >>> 0;
 }
 exports.add_that_might_fail = add_that_might_fail;
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

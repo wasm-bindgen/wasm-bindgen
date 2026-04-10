@@ -181,7 +181,6 @@ export function __wbgtest_module_signature() {
     const ret = wasm.__wbgtest_module_signature();
     return ret[0] === 0 ? undefined : BigInt.asUintN(64, ret[1]);
 }
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

@@ -1,5 +1,6 @@
 import { default as _default } from 'tests/wasm/import_class.js';
 
+
 export function exported() {
     const ret = wasm.exported();
     if (ret[1]) {

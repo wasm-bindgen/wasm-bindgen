@@ -1,4 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
+import source wasmModule from "./reference_test_bg.wasm";
+
 
 /**
  * @param {number} a
@@ -9,7 +11,6 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-
 function __wbg_get_imports(memory) {
     const import0 = {
         __proto__: null,
@@ -57,7 +58,6 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();
