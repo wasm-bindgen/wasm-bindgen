@@ -1021,10 +1021,22 @@ impl TryToTokens for ast::ImportType {
 
         let phantom;
         let phantom_init;
-        if !class_generic_params.is_empty() {
-            let generic_param_names = class_generic_params.iter().map(|p| p.0);
+        let lifetime_params = generics::lifetime_params(&self.generics);
 
-            phantom = quote! { generics: ::core::marker::PhantomData<(#(#generic_param_names),*)> };
+        // For `From<JsValue>`, only include lifetime params so type params
+        // fall back to their defaults and callers don't need turbofish.
+        let from_jsvalue_generics = if lifetime_params.is_empty() {
+            quote! {}
+        } else {
+            quote! { <#(#lifetime_params),*> }
+        };
+
+        if !class_generic_params.is_empty() || !lifetime_params.is_empty() {
+            let generic_param_names: Vec<_> = class_generic_params.iter().map(|p| p.0).collect();
+            let lifetime_refs = lifetime_params.iter().map(|lt| quote! { &#lt () });
+            phantom = quote! {
+                generics: ::core::marker::PhantomData<(#(#generic_param_names,)* #(#lifetime_refs),*)>
+            };
             phantom_init = quote! { generics: ::core::marker::PhantomData };
         } else {
             phantom = quote! {};
@@ -1155,8 +1167,10 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 // TODO: remove this on the next major version
+                // Only include lifetime params here; type params use their
+                // defaults so callers don't need turbofish annotations.
                 #[automatically_derived]
-                impl From<JsValue> for #rust_name {
+                impl #from_jsvalue_generics From<JsValue> for #rust_name #from_jsvalue_generics {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
@@ -1282,17 +1296,18 @@ impl TryToTokens for ast::ImportType {
             // 3. For generic types: generate structural covariance
             let type_params: Vec<_> = self.generics.type_params().collect();
             if type_params.is_empty() {
-                // Identity impls for non-generic types
+                // Identity impls for non-generic (or lifetime-only) types.
+                // Always use #ty_generics so that lifetime params are included.
                 (quote! {
                     #[automatically_derived]
-                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name>
-                        for #rust_name
+                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                        for #rust_name #ty_generics
                     #where_clause
                     {
                     }
                     #[automatically_derived]
-                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name>
-                        for #wasm_bindgen::sys::JsOption<#rust_name>
+                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                        for #wasm_bindgen::sys::JsOption<#rust_name #ty_generics>
                     #where_clause
                     {
                     }
@@ -1342,17 +1357,22 @@ impl TryToTokens for ast::ImportType {
 
                 let (impl_generics_split, _, _) = impl_generics_extended.split_for_impl();
 
+                // Build target ty_generics: lifetime params forwarded, type params replaced
+                let target_lifetime_params = generics::lifetime_params(&self.generics);
+                let target_ty_generics =
+                    quote! { <#(#target_lifetime_params,)* #(#target_param_names),*> };
+
                 // Structural covariance - Type<Target0, Target1, ...> can be upcast from Type<T1, T2, ...>
                 (quote! {
                     #[automatically_derived]
                     impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
-                        for #rust_name<#(#target_param_names),*>
+                        for #rust_name #target_ty_generics
                     #where_clause_extended
                     {
                     }
                     #[automatically_derived]
                     impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
-                        for #wasm_bindgen::sys::JsOption<#rust_name<#(#target_param_names),*>>
+                        for #wasm_bindgen::sys::JsOption<#rust_name #target_ty_generics>
                     #where_clause_extended
                     {
                     }
