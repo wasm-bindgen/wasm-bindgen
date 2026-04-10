@@ -23,11 +23,21 @@ impl Inner {
 extern "C" {
     type ConsoleTask;
 
-    #[wasm_bindgen(js_namespace = console, js_name = createTask, catch)]
-    fn create_task(name: &str) -> Result<ConsoleTask, wasm_bindgen::JsValue>;
+    #[wasm_bindgen(thread_local_v2, js_namespace = console, js_name = createTask)]
+    static CREATE_TASK: Option<crate::Function<fn(crate::JsString) -> ConsoleTask>>;
 
     #[wasm_bindgen(method)]
     fn run(this: &ConsoleTask, poll: &mut dyn FnMut() -> bool) -> bool;
+}
+
+#[cfg(debug_assertions)]
+fn try_create_task(name: &str) -> Option<ConsoleTask> {
+    CREATE_TASK.with(|create_task| {
+        create_task.as_ref().and_then(|f| {
+            f.call(&wasm_bindgen::JsValue::UNDEFINED, (&name.into(),))
+                .ok()
+        })
+    })
 }
 
 pub(crate) struct Task {
@@ -50,7 +60,7 @@ impl Task {
     pub(crate) fn spawn<F: Future<Output = ()> + 'static>(future: F) {
         let this = Rc::new(Self {
             #[cfg(debug_assertions)]
-            console: create_task(core::any::type_name::<F>()).ok(),
+            console: try_create_task(core::any::type_name::<F>()),
             inner: RefCell::new(None),
             is_queued: Cell::new(true),
         });

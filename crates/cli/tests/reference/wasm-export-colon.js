@@ -256,10 +256,6 @@ function __wbg_get_imports() {
             const ret = arg0.constructor;
             return ret;
         },
-        __wbg_createTask_018910f7b0ac4894: function() { return handleError(function (arg0, arg1) {
-            const ret = console.createTask(getStringFromWasm0(arg0, arg1));
-            return ret;
-        }, arguments); },
         __wbg_error_334f0e2fd1506fda: function(arg0, arg1) {
             console.error(getStringFromWasm0(arg0, arg1));
         },
@@ -389,6 +385,10 @@ function __wbg_get_imports() {
         __wbg_stack_c8cb4685c35b80ab: function(arg0) {
             const ret = arg0.stack;
             return ret;
+        },
+        __wbg_static_accessor_CREATE_TASK_96bd3cab1cbb6e55: function() {
+            const ret = typeof console === 'undefined' ? null : console?.createTask;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
         },
         __wbg_static_accessor_DOCUMENT_d32ec204d07a803b: function() {
             const ret = document;
