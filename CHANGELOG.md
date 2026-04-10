@@ -36,6 +36,12 @@
 
 ### Fixed
 
+* ES module `import` statements are now hoisted to the top of generated JS
+  files, placed right after the `@ts-self-types` directive. This ensures
+  valid ES module output since `import` declarations must precede other
+  statements.
+  [#5103](https://github.com/wasm-bindgen/wasm-bindgen/pull/5103)
+
 * Fixed two CLI issues affecting WASM modules built by rustc 1.94+. First,
   a panic (`failed to find N in function table`) caused by lld emitting element
   segment offsets as `global.get $__table_base` or extended const expressions
