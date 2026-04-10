@@ -37,7 +37,7 @@ where
     T::Builder: Send,
 {
     let nresamples_sqrt = ceil(sqrt(nresamples as f64)) as usize;
-    let per_chunk = (nresamples + nresamples_sqrt - 1) / nresamples_sqrt;
+    let per_chunk = nresamples.div_ceil(nresamples_sqrt);
 
     let mut a_resamples = Resamples::new(a);
     let mut b_resamples = Resamples::new(b);
