@@ -1,4 +1,6 @@
 /* @ts-self-types="./reference_test.d.ts" */
+import source wasmModule from "./reference_test_bg.wasm";
+
 
 export function __wbg_reset_state () {
     __wbg_instance_id++;
@@ -19,7 +21,6 @@ export function add_that_might_fail(a, b) {
     ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
@@ -46,6 +47,5 @@ let __wbg_instance_id = 0;
 
 let __wbg_reinit_scheduled = false;
 
-import source wasmModule from "./reference_test_bg.wasm";
 const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;

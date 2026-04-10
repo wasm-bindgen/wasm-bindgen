@@ -1,5 +1,10 @@
 /* @ts-self-types="./reference_test.d.ts" */
 import { default as _default } from 'tests/wasm/import_class.js';
+import * as import1 from "tests/wasm/imports.js"
+import * as import2 from "foo-raw"
+import * as import3 from "./snippets/import_reftest-a82831e16a4c30f1/inline0.js"
+import * as import4 from "pure-extern"
+
 
 export function exported() {
     const ret = wasm.exported();
@@ -7,11 +12,6 @@ export function exported() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-import * as import1 from "tests/wasm/imports.js"
-import * as import2 from "foo-raw"
-import * as import3 from "./snippets/import_reftest-a82831e16a4c30f1/inline0.js"
-import * as import4 from "pure-extern"
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

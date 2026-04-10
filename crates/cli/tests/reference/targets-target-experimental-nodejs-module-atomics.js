@@ -1,4 +1,7 @@
 /* @ts-self-types="./reference_test.d.ts" */
+import { readFileSync } from 'node:fs';
+import { isMainThread } from 'node:worker_threads';
+
 
 /**
  * @param {number} a
@@ -9,7 +12,6 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-
 function __wbg_get_imports(memory) {
     const import0 = {
         __proto__: null,
@@ -56,9 +58,6 @@ if (cachedTextDecoder) cachedTextDecoder.decode();
 function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
-
-import { readFileSync } from 'node:fs';
-import { isMainThread } from 'node:worker_threads';
 
 let wasm;
 let wasmModule;

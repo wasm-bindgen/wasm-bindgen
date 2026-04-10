@@ -30,7 +30,6 @@ export function example_128(a) {
     const ret = wasm.example_128(a, a >> BigInt(64));
     return ret[0] === 0 ? undefined : (BigInt.asUintN(64, ret[1]) | (BigInt.asUintN(64, ret[2]) << BigInt(64)));
 }
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
