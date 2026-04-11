@@ -16,12 +16,12 @@ export { MY_CONSTANT }
 
 export { OriginalName as RenamedClass }
 
-function foo() {
+function Snippet__foo() {
     wasm.Snippet__foo();
 }
 
 
-Snippet.foo = foo;
+Snippet.foo = Snippet__foo;
 
 export { Snippet }
 

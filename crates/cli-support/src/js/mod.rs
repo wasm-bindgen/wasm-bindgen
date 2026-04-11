@@ -122,6 +122,8 @@ pub struct Context<'a> {
 
     /// Mapping from qualified name (used in WasmDescribe) to js_name (used for TypeScript output).
     pub(crate) qualified_to_js_name: HashMap<String, String>,
+    /// Mapping from qualified name (used in WasmDescribe) to the unique TS declaration name.
+    pub(crate) qualified_to_ts_name: HashMap<String, String>,
     /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
     /// Must be cleared at the start of `generate_adapter`.
     adapter_deps: BTreeSet<String>,
@@ -146,7 +148,6 @@ struct ExportDefinition {
     /// The identifier for the declaration, if distinct from the export name
     /// This allows invalid identifier export names (like "default").
     identifier: String,
-
     comments: Option<String>,
     definition: String,
 
@@ -255,6 +256,7 @@ impl<'a> Context<'a> {
             stack_pointer_shim_injected: false,
             qualified_to_rust_name: Default::default(),
             qualified_to_js_name: Default::default(),
+            qualified_to_ts_name: Default::default(),
             emscripten_library: String::new(),
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
@@ -1533,17 +1535,14 @@ if (require('worker_threads').isMainThread) {{
             .get(&key)
             .is_none_or(|cls| cls.identifier.is_empty())
         {
-            // Use js_name for the identifier if available, otherwise use the key
-            let js_name = self
+            let identifier_name = self
                 .exported_classes
                 .get(&key)
-                .and_then(|cls| cls.js_name.clone())
+                .and_then(|cls| cls.qualified_name.clone().or_else(|| cls.js_name.clone()))
                 .unwrap_or_else(|| key.clone());
-            let identifier = self.generate_identifier(&js_name);
-            self.exported_classes
-                .entry(key.clone())
-                .or_default()
-                .identifier = identifier;
+            let identifier = self.generate_identifier(&identifier_name);
+            let class = self.exported_classes.entry(key.clone()).or_default();
+            class.identifier = identifier.clone();
         }
         self.exported_classes.get_mut(&key).unwrap()
     }
@@ -1741,13 +1740,13 @@ if (require('worker_threads').isMainThread) {{
                 self.typescript_emscripten_classes.push('\n');
 
                 self.typescript
-                    .push_str(&format!("{js_name}: typeof {js_name};\n"));
+                    .push_str(&format!("{js_name}: typeof {identifier};\n"));
 
                 String::new()
             } else {
                 // For hidden classes, add export type statement
                 if class.private {
-                    ts_dst.push_str(&format!("export type {{ {js_name} }};\n"));
+                    ts_dst.push_str(&format!("export type {{ {identifier} }};\n"));
                 }
                 ts_dst
             }
@@ -1770,7 +1769,7 @@ if (require('worker_threads').isMainThread) {{
             js_name,
             class.js_namespace.as_deref().unwrap_or_default(),
             ExportEntry::Definition(ExportDefinition {
-                identifier: class.identifier,
+                identifier: class.identifier.clone(),
                 comments: Some(class.comments),
                 definition: dst,
                 ts_definition,
@@ -3721,9 +3720,10 @@ if (require('worker_threads').isMainThread) {{
     pub fn generate(&mut self) -> Result<(), Error> {
         self.prestore_global_import_identifiers()?;
 
-        // Set up qualified_name → rust_name and qualified_name → js_name mappings
-        // before processing adapters, so that WasmDescribe lookups (which use
-        // qualified_name) can resolve to the correct exported class.
+        // Set up qualified-name mappings before processing adapters, so that
+        // WasmDescribe lookups can resolve to the right exported class and TS
+        // declaration identifier. For namespaced exports, reuse the same
+        // qualified-name scheme that the wasm symbol names already use.
         for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
@@ -3733,12 +3733,31 @@ if (require('worker_threads').isMainThread) {{
                 self.qualified_to_rust_name
                     .insert(s.name.clone(), s.rust_name.clone());
             }
-            // Pre-populate js_name so require_class can generate the correct
-            // identifier before generate_struct runs.
-            self.exported_classes
+            let needs_identifier = self
+                .exported_classes
+                .get(&s.rust_name)
+                .is_none_or(|class| class.identifier.is_empty());
+            let identifier = if needs_identifier {
+                Some(self.generate_identifier(&s.qualified_name))
+            } else {
+                None
+            };
+            let class = self
+                .exported_classes
                 .entry(s.rust_name.clone())
-                .or_default()
-                .js_name = Some(s.name.clone());
+                .or_default();
+            class.js_name = Some(s.name.clone());
+            class.qualified_name = Some(s.qualified_name.clone());
+            if let Some(identifier) = identifier {
+                class.identifier = identifier;
+            }
+            self.qualified_to_ts_name
+                .insert(s.qualified_name.clone(), class.identifier.clone());
+        }
+        for e in self.aux.enums.values() {
+            let identifier = self.generate_identifier(&e.qualified_name);
+            self.qualified_to_ts_name
+                .insert(e.qualified_name.clone(), identifier);
         }
 
         self.generate_jstag_import();
@@ -4122,8 +4141,11 @@ addToLibrary({
 
                 match &export.kind {
                     AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) => {
-                        let identifier = self.generate_identifier(name);
-
+                        let qualified_name = wasm_bindgen_shared::qualified_name(
+                            export.js_namespace.as_deref(),
+                            name,
+                        );
+                        let identifier = self.generate_identifier(&qualified_name);
                         let (ts_definition, ts_comments) = if let Some(ts_sig) = ts_sig {
                             if matches!(self.config.mode, OutputMode::Emscripten) {
                                 // Emscripten: Write "name(args): ret;" directly to buffer
@@ -4151,7 +4173,7 @@ addToLibrary({
                             name,
                             export.js_namespace.as_deref().unwrap_or_default(),
                             ExportEntry::Definition(ExportDefinition {
-                                identifier,
+                                identifier: identifier.clone(),
                                 comments: Some(js_docs),
                                 definition,
                                 ts_definition,
@@ -5173,8 +5195,11 @@ addToLibrary({
     }
 
     fn generate_enum(&mut self, enum_: &AuxEnum) -> Result<(), Error> {
-        let identifier = self.generate_identifier(&enum_.name);
-
+        let identifier = self
+            .qualified_to_ts_name
+            .get(&enum_.qualified_name)
+            .cloned()
+            .unwrap_or_else(|| self.generate_identifier(&enum_.name));
         let ts_comments = format_doc_comments(&enum_.comments, None);
         let mut typescript = String::new();
         if enum_.generate_typescript {
@@ -5225,7 +5250,7 @@ addToLibrary({
             &enum_.name,
             enum_.js_namespace.as_deref().unwrap_or_default(),
             ExportEntry::Definition(ExportDefinition {
-                identifier,
+                identifier: identifier.clone(),
                 comments: Some(docs),
                 definition,
                 ts_definition: typescript,
@@ -5475,11 +5500,12 @@ addToLibrary({
     }
 
     fn generate_identifier(&mut self, name: &str) -> String {
+        Self::generate_identifier_with(&mut self.defined_identifiers, name)
+    }
+
+    fn generate_identifier_with(identifiers: &mut HashMap<String, usize>, name: &str) -> String {
         let name = to_valid_ident(name);
-        let cnt = self
-            .defined_identifiers
-            .entry(name.to_string())
-            .or_insert(0);
+        let cnt = identifiers.entry(name.to_string()).or_insert(0);
         *cnt += 1;
         let mut suffix = *cnt;
         if suffix == 1 {
@@ -5487,13 +5513,13 @@ addToLibrary({
         } else {
             // Keep incrementing until we find an identifier that isn't already taken
             let mut candidate = format!("{name}{suffix}");
-            while self.defined_identifiers.contains_key(&candidate) {
+            while identifiers.contains_key(&candidate) {
                 suffix += 1;
                 candidate = format!("{name}{suffix}");
             }
             // Update the counter and reserve the candidate
-            *self.defined_identifiers.get_mut(&*name).unwrap() = suffix;
-            self.defined_identifiers.insert(candidate.clone(), 1);
+            *identifiers.get_mut(&*name).unwrap() = suffix;
+            identifiers.insert(candidate.clone(), 1);
             candidate
         }
     }

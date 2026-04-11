@@ -43,19 +43,19 @@ export class PublicStruct {
  */
 export function get_public_struct(): PublicStruct;
 
-declare class NamespacedHidden {
+declare class internal__NamespacedHidden {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
     data: number;
 }
-export type { NamespacedHidden };
+export type { internal__NamespacedHidden };
 
-declare function create_namespaced(): NamespacedHidden;
+declare function internal__create_namespaced(): internal__NamespacedHidden;
 
 export let internal: {
-    NamespacedHidden: typeof NamespacedHidden,
-    create_namespaced: typeof create_namespaced,
+    NamespacedHidden: typeof internal__NamespacedHidden,
+    create_namespaced: typeof internal__create_namespaced,
 };
 
 /**

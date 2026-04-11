@@ -209,6 +209,8 @@ impl AuxReceiverKind {
 pub struct AuxEnum {
     /// The name of this enum
     pub name: String,
+    /// The namespace-qualified name (used for wasm symbol generation)
+    pub qualified_name: String,
     /// The copied Rust comments to forward to JS
     pub comments: String,
     /// A list of variants with their name, value and comments

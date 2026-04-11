@@ -431,7 +431,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut ts,
                             Some(&mut ts_refs),
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_ts_name,
                         );
                         ts.push_str(" | null");
                     }
@@ -441,7 +441,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut ts,
                             Some(&mut ts_refs),
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_ts_name,
                         );
                         omittable = false;
                         arg.push_str(": ");
@@ -489,7 +489,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                         TypePosition::Return,
                         &mut ret,
                         Some(&mut ts_refs),
-                        &self.cx.qualified_to_js_name,
+                        &self.cx.qualified_to_ts_name,
                     ),
                     _ => ret.push_str("[any]"),
                 }
@@ -554,7 +554,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut arg,
                             None,
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_ts_name,
                         );
                         arg.push_str(" | null} ");
                         arg.push('[');
@@ -568,7 +568,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut arg,
                             None,
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_ts_name,
                         );
                         arg.push_str("} ");
                         arg.push_str(name);
@@ -605,7 +605,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                     TypePosition::Argument,
                     &mut ret,
                     None,
-                    &self.cx.qualified_to_js_name,
+                    &self.cx.qualified_to_ts_name,
                 );
             }
             ret.push_str("} ");
@@ -1856,7 +1856,10 @@ fn adapter2ts(
             let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
             dst.push_str(resolved);
         }
-        AdapterType::Enum(name) => dst.push_str(name),
+        AdapterType::Enum(name) => {
+            let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
+            dst.push_str(resolved);
+        }
         AdapterType::StringEnum(name) => {
             if let Some(refs) = refs {
                 refs.insert(TsReference::StringEnum(name.clone()));
