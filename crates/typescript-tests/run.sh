@@ -2,6 +2,8 @@
 
 set -ex
 
+cd `dirname "$0"`
+
 cargo build --target wasm32-unknown-unknown
 
 rm -rf pkg
@@ -48,9 +50,9 @@ for filename in *.ts; do
     # Copy over every line EXCEPT for the import statements (since "no-modules" has no modules to import).
     grep -v -w "import" "$filename" > "$path"
     # Then replace all of the instances of "wbg" (the namespace all the tests use to import the *.d.ts files from "--target web") with "wasm_bindgen" (the namespace the `no-modules` *.d.ts files use).
-    sed -i "s/wbg\./wasm_bindgen./g" "$path"
-    sed -i "s/wbg /wasm_bindgen /g" "$path"
-    sed -i "s/wbg\[/wasm_bindgen[/g" "$path"
+    sed -i'.orig' "s/wbg\./wasm_bindgen./g" "$path"
+    sed -i'.orig' "s/wbg /wasm_bindgen /g" "$path"
+    sed -i'.orig' "s/wbg\[/wasm_bindgen[/g" "$path"
   fi
 done
 cd ..

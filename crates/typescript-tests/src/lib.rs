@@ -6,6 +6,7 @@ pub mod enums;
 pub mod function_attrs;
 pub mod getters_setters;
 pub mod inspectable;
+pub mod number_slice;
 pub mod omit_definition;
 pub mod opt_args_and_ret;
 pub mod optional_fields;
