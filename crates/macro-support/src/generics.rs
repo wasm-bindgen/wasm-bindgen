@@ -723,9 +723,9 @@ mod tests {
         let lifetime_a: syn::Lifetime = syn::parse_quote!('a);
         let lifetimes = [&lifetime_a];
 
-        let ty: syn::Type = syn::parse_quote!(ImmediateClosure<'a, dyn FnMut(T) -> R>);
+        let ty: syn::Type = syn::parse_quote!(ScopedClosure<'a, dyn FnMut(T) -> R>);
         let result = crate::generics::staticize_lifetimes(ty, &lifetimes);
-        let expected: syn::Type = syn::parse_quote!(ImmediateClosure<'static, dyn FnMut(T) -> R>);
+        let expected: syn::Type = syn::parse_quote!(ScopedClosure<'static, dyn FnMut(T) -> R>);
         assert_eq!(
             quote::quote!(#result).to_string(),
             quote::quote!(#expected).to_string()
@@ -779,12 +779,12 @@ mod tests {
         let lifetime_a: syn::Lifetime = syn::parse_quote!('a);
         let lifetimes_to_staticize = [&lifetime_a];
 
-        // ImmediateClosure<'a, dyn FnMut(T)> -> ImmediateClosure<'static, dyn FnMut(JsValue)>
-        let ty: syn::Type = syn::parse_quote!(ImmediateClosure<'a, dyn FnMut(T)>);
+        // ScopedClosure<'a, dyn FnMut(T)> -> ScopedClosure<'static, dyn FnMut(JsValue)>
+        let ty: syn::Type = syn::parse_quote!(ScopedClosure<'a, dyn FnMut(T)>);
         let result =
             crate::generics::generic_to_concrete(ty, &generic_names, &lifetimes_to_staticize)
                 .unwrap();
-        let expected: syn::Type = syn::parse_quote!(ImmediateClosure<'static, dyn FnMut(JsValue)>);
+        let expected: syn::Type = syn::parse_quote!(ScopedClosure<'static, dyn FnMut(JsValue)>);
         assert_eq!(
             quote::quote!(#result).to_string(),
             quote::quote!(#expected).to_string()

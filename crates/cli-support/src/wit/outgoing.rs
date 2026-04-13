@@ -163,7 +163,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
             Descriptor::Function(descriptor) => {
-                // By-value ImmediateClosure<dyn Fn(...)> (immutable)
+                // By-value &dyn Fn(...) (immutable)
                 self.outgoing_function(false, descriptor, None)?;
             }
 
@@ -232,8 +232,8 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
 
-            // ImmediateClosure<dyn FnMut(...)> emits RefMut(Function(...)) to
-            // signal that a reentrancy guard is needed in the JS wrapper.
+            // &mut dyn FnMut(...) emits RefMut(Function(...)) to signal that
+            // a reentrancy guard is needed in the JS wrapper.
             Descriptor::RefMut(inner) => match inner.as_ref() {
                 Descriptor::Function(descriptor) => {
                     self.outgoing_function(true, descriptor, None)?;

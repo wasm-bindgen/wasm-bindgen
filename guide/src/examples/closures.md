@@ -10,11 +10,9 @@ demonstrates different `Closure` APIs for various use cases.
 
 ## Choosing a `Closure` API
 
-- **`ImmediateClosure::new`** / **`ImmediateClosure::new_mut`** — For
-  immediate/synchronous callbacks where JavaScript calls the closure right away
-  and doesn't retain it. Lightweight with no JS wrapper overhead. `new` is for
-  immutable `Fn` closures (easier to satisfy unwind safety), `new_mut` is for
-  mutable `FnMut` closures.
+- **`&dyn Fn`** / **`&mut dyn FnMut`** — For immediate/synchronous callbacks
+  where JavaScript calls the closure right away and doesn't retain it.
+  Lightweight with no JS wrapper overhead. These are unwind safe by default.
 
 - **`ScopedClosure::borrow`** / **`ScopedClosure::borrow_mut`** — For known-lifetime
   callbacks where JavaScript may briefly retain the closure but you control when
