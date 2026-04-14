@@ -6,14 +6,14 @@ export class NamespaceConsumer {
     [Symbol.dispose](): void;
     duplicate_bar_points(points: bar__Point[]): bar__Point[];
     duplicate_foo_points(points: foo__Point[]): foo__Point[];
-    constructor(foo_point: foo__Point, bar_point: bar__Point, foo_status: foo__Status, bar_status: Status);
-    next_bar_status(status: Status): Status;
+    constructor(foo_point: foo__Point, bar_point: bar__Point, foo_status: foo__Status, bar_status: bar__Status);
+    next_bar_status(status: bar__Status): bar__Status;
     next_foo_status(status: foo__Status): foo__Status;
     normalize_bar(point: bar__Point): bar__Point;
     rotate_foo(point: foo__Point): foo__Point;
     bar_point: bar__Point;
     bar_points: bar__Point[];
-    bar_status: Status;
+    bar_status: bar__Status;
     foo_point: foo__Point;
     foo_points: foo__Point[];
     foo_status: foo__Status;
@@ -22,22 +22,20 @@ export class NamespaceConsumer {
 /**
  * A top-level export colliding with an inner namespace export should not collide.
  */
-declare class Point2 {
+export class Point {
     free(): void;
     [Symbol.dispose](): void;
     constructor(value: number);
     value: number;
 }
-export { Point2 as Point }
 
 /**
  * A top-level enum colliding with an inner namespace export should not collide.
  */
-declare enum Status2 {
+export enum Status {
     Ready = 0,
     Done = 1,
 }
-export { Status2 as Status }
 
 declare class bar__Point {
     free(): void;
@@ -57,13 +55,13 @@ declare class RefToFoo {
     foo_status: foo__Status;
 }
 
-declare enum Status {
+declare enum bar__Status {
     Pending = 0,
     Complete = 1,
     Failed = 2,
 }
 
-declare function greet(): string;
+declare function bar__greet(): string;
 
 declare class bar__nested__Point {
     free(): void;
@@ -75,8 +73,8 @@ declare class bar__nested__Point {
 export let bar: {
     Point: typeof bar__Point,
     RefToFoo: typeof RefToFoo,
-    Status: typeof Status,
-    greet: typeof greet,
+    Status: typeof bar__Status,
+    greet: typeof bar__greet,
     nested: {
         Point: typeof bar__nested__Point,
     },
@@ -95,11 +93,11 @@ declare class foo__Point {
 declare class RefToBar {
     free(): void;
     [Symbol.dispose](): void;
-    constructor(bar_point: bar__Point, bar_status: Status);
+    constructor(bar_point: bar__Point, bar_status: bar__Status);
     reflect_point(point: bar__Point): bar__Point;
-    reflect_status(status: Status): Status;
+    reflect_status(status: bar__Status): bar__Status;
     bar_point: bar__Point;
-    bar_status: Status;
+    bar_status: bar__Status;
 }
 
 /**
@@ -118,7 +116,7 @@ declare function foo__greet(): string;
 /**
  * Two structs with the same js_name in nested namespaces should not collide.
  */
-declare class Point {
+declare class foo__nested__Point {
     free(): void;
     [Symbol.dispose](): void;
     constructor(z: number);
@@ -146,7 +144,7 @@ export let foo: {
     Status: typeof foo__Status,
     greet: typeof foo__greet,
     nested: {
-        Point: typeof Point,
+        Point: typeof foo__nested__Point,
         Status: typeof foo__nested__Status,
         deep: {
             Status: typeof foo__nested__deep__Status,
@@ -158,5 +156,4 @@ export let foo: {
 /**
  * A top-level function colliding with an inner namespace export should not collide.
  */
-declare function greet2(): string;
-export { greet2 as greet }
+export function greet(): string;

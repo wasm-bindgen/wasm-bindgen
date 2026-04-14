@@ -3719,9 +3719,12 @@ if (require('worker_threads').isMainThread) {{
 
         // Set up qualified-name mappings before processing adapters, so that
         // WasmDescribe lookups can resolve to the right exported class and TS
-        // declaration identifier. For namespaced exports, reuse the same
-        // qualified-name scheme that the wasm symbol names already use.
-        for s in self.aux.structs.iter() {
+        // declaration identifier. Process non-namespaced exports first so they
+        // win the bare name over namespaced ones (e.g. top-level `Point` beats
+        // `foo::nested::Point` to the identifier `Point`).
+        let mut structs: Vec<_> = self.aux.structs.iter().collect();
+        structs.sort_by_key(|s| s.js_namespace.is_some());
+        for s in structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
             if s.name != s.rust_name {
@@ -3749,10 +3752,33 @@ if (require('worker_threads').isMainThread) {{
             self.qualified_to_identifier
                 .insert(s.qualified_name.clone(), class.identifier.clone());
         }
-        for e in self.aux.enums.values() {
-            let identifier = self.generate_identifier(&e.qualified_name);
-            self.qualified_to_identifier
-                .insert(e.qualified_name.clone(), identifier);
+        let mut enums: Vec<_> = self.aux.enums.values().collect();
+        enums.sort_by_key(|e| e.js_namespace.is_some());
+        for e in enums.iter() {
+            self.get_or_create_identifier(&e.qualified_name);
+        }
+
+        // Pre-register function identifiers with the same priority ordering
+        // so top-level exports win bare names over namespaced ones.
+        let mut func_exports: Vec<_> = self
+            .aux
+            .export_map
+            .iter()
+            .filter(|(_, export)| {
+                matches!(
+                    &export.kind,
+                    AuxExportKind::Function(_) | AuxExportKind::FunctionThis(_)
+                )
+            })
+            .collect();
+        func_exports.sort_by_key(|(_, e)| e.js_namespace.is_some());
+        for (_, export) in func_exports {
+            if let AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) = &export.kind
+            {
+                let qualified_name =
+                    wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), name);
+                self.get_or_create_identifier(&qualified_name);
+            }
         }
 
         self.generate_jstag_import();
@@ -4140,7 +4166,7 @@ addToLibrary({
                             export.js_namespace.as_deref(),
                             name,
                         );
-                        let identifier = self.generate_identifier(&qualified_name);
+                        let identifier = self.get_or_create_identifier(&qualified_name);
                         let (ts_definition, ts_comments) = if let Some(ts_sig) = ts_sig {
                             if matches!(self.config.mode, OutputMode::Emscripten) {
                                 // Emscripten: Write "name(args): ret;" directly to buffer
@@ -5190,11 +5216,7 @@ addToLibrary({
     }
 
     fn generate_enum(&mut self, enum_: &AuxEnum) -> Result<(), Error> {
-        let identifier = self
-            .qualified_to_identifier
-            .get(&enum_.qualified_name)
-            .cloned()
-            .unwrap_or_else(|| self.generate_identifier(&enum_.name));
+        let identifier = self.get_or_create_identifier(&enum_.qualified_name);
         let ts_comments = format_doc_comments(&enum_.comments, None);
         let mut typescript = String::new();
         if enum_.generate_typescript {
@@ -5496,6 +5518,18 @@ addToLibrary({
 
     fn generate_identifier(&mut self, name: &str) -> String {
         Self::generate_identifier_with(&mut self.defined_identifiers, name)
+    }
+
+    /// Returns the identifier for a qualified name, reusing a previously
+    /// registered one or generating (and storing) a new one.
+    fn get_or_create_identifier(&mut self, qualified_name: &str) -> String {
+        if let Some(id) = self.qualified_to_identifier.get(qualified_name) {
+            return id.clone();
+        }
+        let id = self.generate_identifier(qualified_name);
+        self.qualified_to_identifier
+            .insert(qualified_name.to_string(), id.clone());
+        id
     }
 
     fn generate_identifier_with(identifiers: &mut HashMap<String, usize>, name: &str) -> String {

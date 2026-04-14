@@ -25,13 +25,13 @@ declare class Counter {
 
 declare function concat(a: string, b: string): string;
 
-declare function uppercase(s: string): string;
+declare function default__uppercase__uppercase(s: string): string;
 
 declare let _default: {
     Counter: typeof Counter,
     concat: typeof concat,
     uppercase: {
-        uppercase: typeof uppercase,
+        uppercase: typeof default__uppercase__uppercase,
     },
 };
 export default _default;
@@ -93,10 +93,10 @@ export let types: {
     },
 };
 
-declare function utils__string__uppercase(s: string): string;
+declare function uppercase(s: string): string;
 
 export let utils: {
     string: {
-        uppercase: typeof utils__string__uppercase,
+        uppercase: typeof uppercase,
     },
 };

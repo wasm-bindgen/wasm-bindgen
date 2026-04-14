@@ -26,7 +26,7 @@ export class NamespaceConsumer {
         return v1;
     }
     /**
-     * @returns {Status}
+     * @returns {bar__Status}
      */
     get bar_status() {
         const ret = wasm.namespaceconsumer_bar_status(this.__wbg_ptr);
@@ -83,7 +83,7 @@ export class NamespaceConsumer {
      * @param {foo__Point} foo_point
      * @param {bar__Point} bar_point
      * @param {foo__Status} foo_status
-     * @param {Status} bar_status
+     * @param {bar__Status} bar_status
      */
     constructor(foo_point, bar_point, foo_status, bar_status) {
         _assertClass(foo_point, foo__Point);
@@ -96,8 +96,8 @@ export class NamespaceConsumer {
         return this;
     }
     /**
-     * @param {Status} status
-     * @returns {Status}
+     * @param {bar__Status} status
+     * @returns {bar__Status}
      */
     next_bar_status(status) {
         const ret = wasm.namespaceconsumer_next_bar_status(this.__wbg_ptr, status);
@@ -148,7 +148,7 @@ export class NamespaceConsumer {
         wasm.namespaceconsumer_set_bar_points(this.__wbg_ptr, ptr0, len0);
     }
     /**
-     * @param {Status} bar_status
+     * @param {bar__Status} bar_status
      */
     set bar_status(bar_status) {
         wasm.namespaceconsumer_set_bar_status(this.__wbg_ptr, bar_status);
@@ -181,11 +181,11 @@ if (Symbol.dispose) NamespaceConsumer.prototype[Symbol.dispose] = NamespaceConsu
 /**
  * A top-level export colliding with an inner namespace export should not collide.
  */
-class Point2 {
+export class Point {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        Point2Finalization.unregister(this);
+        PointFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -210,23 +210,19 @@ class Point2 {
      */
     constructor(value) {
         const ret = wasm.toplevelpoint_new(value);
-        this.__wbg_ptr = ret >>> 0;
-        Point2Finalization.register(this, this.__wbg_ptr, this);
-        return this;
+        return bar__nested__Point.__wrap(ret);
     }
 }
-if (Symbol.dispose) Point2.prototype[Symbol.dispose] = Point2.prototype.free;
-export { Point2 as Point }
+if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
 
 /**
  * A top-level enum colliding with an inner namespace export should not collide.
  * @enum {0 | 1}
  */
-const Status2 = Object.freeze({
+export const Status = Object.freeze({
     Ready: 0, "0": "Ready",
     Done: 1, "1": "Done",
 });
-export { Status2 as Status }
 
 class bar__Point {
     static __wrap(ptr) {
@@ -366,7 +362,7 @@ if (Symbol.dispose) RefToFoo.prototype[Symbol.dispose] = RefToFoo.prototype.free
 /**
  * @enum {0 | 1 | 2}
  */
-const Status = Object.freeze({
+const bar__Status = Object.freeze({
     Pending: 0, "0": "Pending",
     Complete: 1, "1": "Complete",
     Failed: 2, "2": "Failed",
@@ -375,7 +371,7 @@ const Status = Object.freeze({
 /**
  * @returns {string}
  */
-function greet() {
+function bar__greet() {
     let deferred1_0;
     let deferred1_1;
     try {
@@ -389,6 +385,13 @@ function greet() {
 }
 
 class bar__nested__Point {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(bar__nested__Point.prototype);
+        obj.__wbg_ptr = ptr;
+        bar__nested__PointFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -427,8 +430,8 @@ if (Symbol.dispose) bar__nested__Point.prototype[Symbol.dispose] = bar__nested__
 export const bar = {};
 bar.Point = bar__Point;
 bar.RefToFoo = RefToFoo;
-bar.Status = Status;
-bar.greet = greet;
+bar.Status = bar__Status;
+bar.greet = bar__greet;
 bar.nested = {};
 bar.nested.Point = bar__nested__Point;
 
@@ -503,7 +506,7 @@ class RefToBar {
         return bar__Point.__wrap(ret);
     }
     /**
-     * @returns {Status}
+     * @returns {bar__Status}
      */
     get bar_status() {
         const ret = wasm.reftobar_bar_status(this.__wbg_ptr);
@@ -511,7 +514,7 @@ class RefToBar {
     }
     /**
      * @param {bar__Point} bar_point
-     * @param {Status} bar_status
+     * @param {bar__Status} bar_status
      */
     constructor(bar_point, bar_status) {
         _assertClass(bar_point, bar__Point);
@@ -532,8 +535,8 @@ class RefToBar {
         return bar__Point.__wrap(ret);
     }
     /**
-     * @param {Status} status
-     * @returns {Status}
+     * @param {bar__Status} status
+     * @returns {bar__Status}
      */
     reflect_status(status) {
         const ret = wasm.reftobar_reflect_status(this.__wbg_ptr, status);
@@ -548,7 +551,7 @@ class RefToBar {
         wasm.reftobar_set_bar_point(this.__wbg_ptr, ptr0);
     }
     /**
-     * @param {Status} bar_status
+     * @param {bar__Status} bar_status
      */
     set bar_status(bar_status) {
         wasm.reftobar_set_bar_status(this.__wbg_ptr, bar_status);
@@ -585,11 +588,11 @@ function foo__greet() {
 /**
  * Two structs with the same js_name in nested namespaces should not collide.
  */
-class Point {
+class foo__nested__Point {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        PointFinalization.unregister(this);
+        foo__nested__PointFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -602,7 +605,7 @@ class Point {
     constructor(z) {
         const ret = wasm.foonestedpoint_new(z);
         this.__wbg_ptr = ret >>> 0;
-        PointFinalization.register(this, this.__wbg_ptr, this);
+        foo__nested__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
@@ -619,7 +622,7 @@ class Point {
         wasm.__wbg_set_foo__nested__point_z(this.__wbg_ptr, arg0);
     }
 }
-if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
+if (Symbol.dispose) foo__nested__Point.prototype[Symbol.dispose] = foo__nested__Point.prototype.free;
 
 /**
  * Same js_name reused across different namespace depths should not collide.
@@ -669,7 +672,7 @@ foo.RefToBar = RefToBar;
 foo.Status = foo__Status;
 foo.greet = foo__greet;
 foo.nested = {};
-foo.nested.Point = Point;
+foo.nested.Point = foo__nested__Point;
 foo.nested.Status = foo__nested__Status;
 foo.nested.deep = {};
 foo.nested.deep.Status = foo__nested__deep__Status;
@@ -679,7 +682,7 @@ foo.nested.greet = foo__nested__greet;
  * A top-level function colliding with an inner namespace export should not collide.
  * @returns {string}
  */
-function greet2() {
+export function greet() {
     let deferred1_0;
     let deferred1_1;
     try {
@@ -691,7 +694,6 @@ function greet2() {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
 }
-export { greet2 as greet }
 export function __wbg___wbindgen_debug_string_ab4b34d23d6778bd(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -739,7 +741,7 @@ const bar__PointFinalization = (typeof FinalizationRegistry === 'undefined')
 const RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo__reftobar_free(ptr >>> 0, 1));
-const PointFinalization = (typeof FinalizationRegistry === 'undefined')
+const foo__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo__nested__point_free(ptr >>> 0, 1));
 const foo__PointFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -748,7 +750,7 @@ const foo__PointFinalization = (typeof FinalizationRegistry === 'undefined')
 const NamespaceConsumerFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_namespaceconsumer_free(ptr >>> 0, 1));
-const Point2Finalization = (typeof FinalizationRegistry === 'undefined')
+const PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr >>> 0, 1));
 
