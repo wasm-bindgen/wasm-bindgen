@@ -3723,10 +3723,6 @@ if (require('worker_threads').isMainThread) {{
         for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
-            if s.name != s.rust_name {
-                self.qualified_to_rust_name
-                    .insert(s.name.clone(), s.rust_name.clone());
-            }
             let needs_identifier = self
                 .exported_classes
                 .get(&s.rust_name)

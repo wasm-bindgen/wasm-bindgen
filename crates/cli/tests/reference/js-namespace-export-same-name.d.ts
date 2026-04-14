@@ -46,13 +46,9 @@ declare class bar__Point {
 }
 
 declare class bar__RefToFoo {
+    private constructor();
     free(): void;
     [Symbol.dispose](): void;
-    constructor(foo_point: foo__Point, foo_status: foo__Status);
-    reflect_point(point: foo__Point): foo__Point;
-    reflect_status(status: foo__Status): foo__Status;
-    foo_point: foo__Point;
-    foo_status: foo__Status;
 }
 
 declare enum bar__Status {
@@ -91,13 +87,9 @@ declare class foo__Point {
 }
 
 declare class foo__RefToBar {
+    private constructor();
     free(): void;
     [Symbol.dispose](): void;
-    constructor(bar_point: bar__Point, bar_status: bar__Status);
-    reflect_point(point: bar__Point): bar__Point;
-    reflect_status(status: bar__Status): bar__Status;
-    bar_point: bar__Point;
-    bar_status: bar__Status;
 }
 
 /**
