@@ -120,10 +120,8 @@ pub struct Context<'a> {
     /// Mapping from qualified name (used in WasmDescribe) to rust_name (used as exported_classes key).
     pub(crate) qualified_to_rust_name: HashMap<String, String>,
 
-    /// Mapping from qualified name (used in WasmDescribe) to js_name (used for TypeScript output).
-    pub(crate) qualified_to_js_name: HashMap<String, String>,
-    /// Mapping from qualified name (used in WasmDescribe) to the unique TS declaration name.
-    pub(crate) qualified_to_ts_name: HashMap<String, String>,
+    /// Mapping from qualified name (used in WasmDescribe) to the unique declaration identifier.
+    pub(crate) qualified_to_identifier: HashMap<String, String>,
     /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
     /// Must be cleared at the start of `generate_adapter`.
     adapter_deps: BTreeSet<String>,
@@ -255,8 +253,7 @@ impl<'a> Context<'a> {
             table_indices: Default::default(),
             stack_pointer_shim_injected: false,
             qualified_to_rust_name: Default::default(),
-            qualified_to_js_name: Default::default(),
-            qualified_to_ts_name: Default::default(),
+            qualified_to_identifier: Default::default(),
             emscripten_library: String::new(),
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
@@ -3727,8 +3724,6 @@ if (require('worker_threads').isMainThread) {{
         for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
-            self.qualified_to_js_name
-                .insert(s.qualified_name.clone(), s.name.clone());
             if s.name != s.rust_name {
                 self.qualified_to_rust_name
                     .insert(s.name.clone(), s.rust_name.clone());
@@ -3751,12 +3746,12 @@ if (require('worker_threads').isMainThread) {{
             if let Some(identifier) = identifier {
                 class.identifier = identifier;
             }
-            self.qualified_to_ts_name
+            self.qualified_to_identifier
                 .insert(s.qualified_name.clone(), class.identifier.clone());
         }
         for e in self.aux.enums.values() {
             let identifier = self.generate_identifier(&e.qualified_name);
-            self.qualified_to_ts_name
+            self.qualified_to_identifier
                 .insert(e.qualified_name.clone(), identifier);
         }
 
@@ -5196,7 +5191,7 @@ addToLibrary({
 
     fn generate_enum(&mut self, enum_: &AuxEnum) -> Result<(), Error> {
         let identifier = self
-            .qualified_to_ts_name
+            .qualified_to_identifier
             .get(&enum_.qualified_name)
             .cloned()
             .unwrap_or_else(|| self.generate_identifier(&enum_.name));

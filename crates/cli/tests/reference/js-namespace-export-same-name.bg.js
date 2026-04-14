@@ -210,7 +210,9 @@ export class Point {
      */
     constructor(value) {
         const ret = wasm.toplevelpoint_new(value);
-        return bar__Point.__wrap(ret);
+        this.__wbg_ptr = ret >>> 0;
+        PointFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
 }
 if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
