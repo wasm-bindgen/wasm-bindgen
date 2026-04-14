@@ -8,10 +8,10 @@ export let MY_CONSTANT: unknown;
 declare let OriginalName: unknown;
 export { OriginalName as RenamedClass }
 
-declare function foo(): void;
+declare function Snippet__foo(): void;
 
 export let Snippet: {
-    foo: typeof foo,
+    foo: typeof Snippet__foo,
 };
 
 declare let _default: unknown;

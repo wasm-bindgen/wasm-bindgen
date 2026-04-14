@@ -92,18 +92,18 @@ export function get_public_struct() {
     return PublicStruct.__wrap(ret);
 }
 
-class NamespacedHidden {
+class internal__NamespacedHidden {
     static __wrap(ptr) {
         ptr = ptr >>> 0;
-        const obj = Object.create(NamespacedHidden.prototype);
+        const obj = Object.create(internal__NamespacedHidden.prototype);
         obj.__wbg_ptr = ptr;
-        NamespacedHiddenFinalization.register(obj, obj.__wbg_ptr, obj);
+        internal__NamespacedHiddenFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        NamespacedHiddenFinalization.unregister(this);
+        internal__NamespacedHiddenFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -124,19 +124,19 @@ class NamespacedHidden {
         wasm.__wbg_set_internal__namespacedhidden_data(this.__wbg_ptr, arg0);
     }
 }
-if (Symbol.dispose) NamespacedHidden.prototype[Symbol.dispose] = NamespacedHidden.prototype.free;
+if (Symbol.dispose) internal__NamespacedHidden.prototype[Symbol.dispose] = internal__NamespacedHidden.prototype.free;
 
 /**
- * @returns {NamespacedHidden}
+ * @returns {internal__NamespacedHidden}
  */
-function create_namespaced() {
+function internal__create_namespaced() {
     const ret = wasm.internal__create_namespaced();
-    return NamespacedHidden.__wrap(ret);
+    return internal__NamespacedHidden.__wrap(ret);
 }
 
 export const internal = {};
-internal.NamespacedHidden = NamespacedHidden;
-internal.create_namespaced = create_namespaced;
+internal.NamespacedHidden = internal__NamespacedHidden;
+internal.create_namespaced = internal__create_namespaced;
 
 /**
  * Function that takes a hidden enum as an argument
@@ -174,7 +174,7 @@ export function __wbindgen_init_externref_table() {
 const HiddenStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr >>> 0, 1));
-const NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
+const internal__NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_internal__namespacedhidden_free(ptr >>> 0, 1));
 const PublicStructFinalization = (typeof FinalizationRegistry === 'undefined')

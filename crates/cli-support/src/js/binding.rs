@@ -15,6 +15,7 @@ use anyhow::{bail, Error};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use walrus::{Module, ValType};
+use wasm_bindgen_shared::identifier::is_valid_ident;
 
 /// A one-size-fits-all builder for processing WebIDL bindings and generating
 /// JS.
@@ -431,7 +432,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut ts,
                             Some(&mut ts_refs),
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_identifier,
                         );
                         ts.push_str(" | null");
                     }
@@ -441,7 +442,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut ts,
                             Some(&mut ts_refs),
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_identifier,
                         );
                         omittable = false;
                         arg.push_str(": ");
@@ -489,7 +490,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                         TypePosition::Return,
                         &mut ret,
                         Some(&mut ts_refs),
-                        &self.cx.qualified_to_js_name,
+                        &self.cx.qualified_to_identifier,
                     ),
                     _ => ret.push_str("[any]"),
                 }
@@ -554,7 +555,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut arg,
                             None,
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_identifier,
                         );
                         arg.push_str(" | null} ");
                         arg.push('[');
@@ -568,7 +569,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             TypePosition::Argument,
                             &mut arg,
                             None,
-                            &self.cx.qualified_to_js_name,
+                            &self.cx.qualified_to_identifier,
                         );
                         arg.push_str("} ");
                         arg.push_str(name);
@@ -605,7 +606,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                     TypePosition::Argument,
                     &mut ret,
                     None,
-                    &self.cx.qualified_to_js_name,
+                    &self.cx.qualified_to_identifier,
                 );
             }
             ret.push_str("} ");
@@ -1843,7 +1844,17 @@ fn adapter2ts(
         AdapterType::String => dst.push_str("string"),
         AdapterType::Externref => dst.push_str("any"),
         AdapterType::Bool => dst.push_str("boolean"),
-        AdapterType::Vector(kind) => dst.push_str(&kind.js_ty()),
+        AdapterType::Vector(kind) => match kind {
+            VectorKind::NamedExternref(name) => {
+                let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
+                if is_valid_ident(resolved) {
+                    dst.push_str(&format!("{resolved}[]"));
+                } else {
+                    dst.push_str(&format!("({resolved})[]"));
+                }
+            }
+            _ => dst.push_str(&kind.js_ty()),
+        },
         AdapterType::Option(ty) => {
             adapter2ts(ty, position, dst, refs, name_map);
             dst.push_str(match position {
@@ -1852,11 +1863,10 @@ fn adapter2ts(
             });
         }
         AdapterType::NamedExternref(name) => dst.push_str(name),
-        AdapterType::Struct(name) => {
+        AdapterType::Struct(name) | AdapterType::Enum(name) => {
             let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
             dst.push_str(resolved);
         }
-        AdapterType::Enum(name) => dst.push_str(name),
         AdapterType::StringEnum(name) => {
             if let Some(refs) = refs {
                 refs.insert(TsReference::StringEnum(name.clone()));

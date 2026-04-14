@@ -24,6 +24,7 @@ use std::hash::Hasher;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::LazyLock;
+use walrus::{ModuleConfig, RawCustomSection};
 use wasmparser::Payload;
 
 static TARGET_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
@@ -1822,4 +1823,93 @@ fn private_start_function() {
         .assert()
         .success()
         .stdout("started\nundefined\nhello\n");
+}
+
+#[test]
+fn private_namespaced_classes_export_actual_ts_identifier() {
+    let mut project = Project::new("private_namespaced_classes_export_actual_ts_identifier");
+    let out_dir = project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen(private, js_namespace = foo, js_name = "Point")]
+                pub struct FooPoint {
+                    pub x: i32,
+                }
+
+                #[wasm_bindgen(private, js_namespace = bar, js_name = "Point")]
+                pub struct BarPoint {
+                    pub y: i32,
+                }
+
+                #[wasm_bindgen(js_namespace = foo)]
+                pub fn make_foo() -> FooPoint {
+                    FooPoint { x: 1 }
+                }
+
+                #[wasm_bindgen(js_namespace = bar)]
+                pub fn make_bar() -> BarPoint {
+                    BarPoint { y: 2 }
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap();
+
+    let d_ts = fs::read_to_string(
+        out_dir.join("private_namespaced_classes_export_actual_ts_identifier.d.ts"),
+    )
+    .unwrap();
+
+    assert!(d_ts.contains("export type { foo__Point };"));
+    assert!(d_ts.contains("export type { bar__Point };"));
+}
+
+#[test]
+fn emscripten_namespaced_classes_use_actual_ts_identifier() {
+    let mut project = Project::new("emscripten_namespaced_classes_use_actual_ts_identifier");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen(js_namespace = foo, js_name = "Point")]
+            pub struct FooPoint {
+                pub x: i32,
+            }
+
+            #[wasm_bindgen(js_namespace = bar, js_name = "Point")]
+            pub struct BarPoint {
+                pub y: i32,
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let d_ts = fs::read_to_string(out_dir.join("emscripten_input.d.ts")).unwrap();
+
+    assert!(d_ts.contains("Point: typeof foo__Point"));
+    assert!(d_ts.contains("Point: typeof bar__Point"));
+    assert!(!d_ts.contains("Point: typeof Point"));
 }

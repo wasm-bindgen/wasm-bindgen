@@ -3,6 +3,13 @@
 
 ## Unreleased
 
+### Fixed
+
+* Fixed namespaced export identifiers in generated JS/TS to use qualified names
+  consistently, resolving order-dependent codegen issues across platforms. Also
+  fixed `Vec<T>` types in TS signatures to resolve through the identifier map.
+  [#5106](https://github.com/wasm-bindgen/wasm-bindgen/pull/5106)
+
 ## [0.2.118](https://github.com/rustwasm/wasm-bindgen/compare/0.2.117...0.2.118)
 
 ### Added

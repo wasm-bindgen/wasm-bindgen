@@ -4,3 +4,6 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
+export {
+    NamespaceConsumer, Point, RefToBar, RefToFoo, Status, greet
+} from "./reference_test_bg.js";

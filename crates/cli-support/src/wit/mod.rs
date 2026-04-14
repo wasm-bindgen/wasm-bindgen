@@ -1130,6 +1130,7 @@ impl<'a> Context<'a> {
             wasm_bindgen_shared::qualified_name(enum_.js_namespace.as_deref(), enum_.name);
         let aux = AuxEnum {
             name: enum_.name.to_string(),
+            qualified_name: qualified_name.clone(),
             comments: concatenate_comments(&enum_.comments),
             variants: enum_
                 .variants
