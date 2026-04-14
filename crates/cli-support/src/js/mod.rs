@@ -3719,12 +3719,8 @@ if (require('worker_threads').isMainThread) {{
 
         // Set up qualified-name mappings before processing adapters, so that
         // WasmDescribe lookups can resolve to the right exported class and TS
-        // declaration identifier. Process non-namespaced exports first so they
-        // win the bare name over namespaced ones (e.g. top-level `Point` beats
-        // `foo::nested::Point` to the identifier `Point`).
-        let mut structs: Vec<_> = self.aux.structs.iter().collect();
-        structs.sort_by_key(|s| s.js_namespace.is_some());
-        for s in structs.iter() {
+        // declaration identifier.
+        for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
             if s.name != s.rust_name {
@@ -3752,33 +3748,8 @@ if (require('worker_threads').isMainThread) {{
             self.qualified_to_identifier
                 .insert(s.qualified_name.clone(), class.identifier.clone());
         }
-        let mut enums: Vec<_> = self.aux.enums.values().collect();
-        enums.sort_by_key(|e| e.js_namespace.is_some());
-        for e in enums.iter() {
+        for e in self.aux.enums.values() {
             self.get_or_create_identifier(&e.qualified_name);
-        }
-
-        // Pre-register function identifiers with the same priority ordering
-        // so top-level exports win bare names over namespaced ones.
-        let mut func_exports: Vec<_> = self
-            .aux
-            .export_map
-            .iter()
-            .filter(|(_, export)| {
-                matches!(
-                    &export.kind,
-                    AuxExportKind::Function(_) | AuxExportKind::FunctionThis(_)
-                )
-            })
-            .collect();
-        func_exports.sort_by_key(|(_, e)| e.js_namespace.is_some());
-        for (_, export) in func_exports {
-            if let AuxExportKind::Function(name) | AuxExportKind::FunctionThis(name) = &export.kind
-            {
-                let qualified_name =
-                    wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), name);
-                self.get_or_create_identifier(&qualified_name);
-            }
         }
 
         self.generate_jstag_import();
@@ -5533,19 +5504,6 @@ addToLibrary({
     }
 
     fn generate_identifier_with(identifiers: &mut HashMap<String, usize>, name: &str) -> String {
-        // For qualified names (e.g. "foo__Point"), try the bare name first so
-        // that non-colliding exports get clean debug names like `class Point`.
-        // Only fall back to the full qualified form when the bare name is taken.
-        if let Some((prefix, suffix)) = name.rsplit_once("__") {
-            if !prefix.is_empty() && !suffix.is_empty() {
-                let bare = to_valid_ident(suffix);
-                if !identifiers.contains_key(&*bare) {
-                    identifiers.insert(bare.to_string(), 1);
-                    return bare.to_string();
-                }
-            }
-        }
-
         let name = to_valid_ident(name);
         let cnt = identifiers.entry(name.to_string()).or_insert(0);
         *cnt += 1;

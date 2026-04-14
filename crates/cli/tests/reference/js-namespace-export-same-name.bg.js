@@ -210,7 +210,9 @@ export class Point {
      */
     constructor(value) {
         const ret = wasm.toplevelpoint_new(value);
-        return bar__nested__Point.__wrap(ret);
+        this.__wbg_ptr = ret >>> 0;
+        PointFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
 }
 if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
@@ -287,11 +289,11 @@ class bar__Point {
 }
 if (Symbol.dispose) bar__Point.prototype[Symbol.dispose] = bar__Point.prototype.free;
 
-class RefToFoo {
+class bar__RefToFoo {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        RefToFooFinalization.unregister(this);
+        bar__RefToFooFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -321,7 +323,7 @@ class RefToFoo {
         var ptr0 = foo_point.__destroy_into_raw();
         const ret = wasm.reftofoo_new(ptr0, foo_status);
         this.__wbg_ptr = ret >>> 0;
-        RefToFooFinalization.register(this, this.__wbg_ptr, this);
+        bar__RefToFooFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
@@ -357,7 +359,7 @@ class RefToFoo {
         wasm.reftofoo_set_foo_status(this.__wbg_ptr, foo_status);
     }
 }
-if (Symbol.dispose) RefToFoo.prototype[Symbol.dispose] = RefToFoo.prototype.free;
+if (Symbol.dispose) bar__RefToFoo.prototype[Symbol.dispose] = bar__RefToFoo.prototype.free;
 
 /**
  * @enum {0 | 1 | 2}
@@ -385,13 +387,6 @@ function bar__greet() {
 }
 
 class bar__nested__Point {
-    static __wrap(ptr) {
-        ptr = ptr >>> 0;
-        const obj = Object.create(bar__nested__Point.prototype);
-        obj.__wbg_ptr = ptr;
-        bar__nested__PointFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -429,7 +424,7 @@ if (Symbol.dispose) bar__nested__Point.prototype[Symbol.dispose] = bar__nested__
 
 export const bar = {};
 bar.Point = bar__Point;
-bar.RefToFoo = RefToFoo;
+bar.RefToFoo = bar__RefToFoo;
 bar.Status = bar__Status;
 bar.greet = bar__greet;
 bar.nested = {};
@@ -487,11 +482,11 @@ class foo__Point {
 }
 if (Symbol.dispose) foo__Point.prototype[Symbol.dispose] = foo__Point.prototype.free;
 
-class RefToBar {
+class foo__RefToBar {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        RefToBarFinalization.unregister(this);
+        foo__RefToBarFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -521,7 +516,7 @@ class RefToBar {
         var ptr0 = bar_point.__destroy_into_raw();
         const ret = wasm.reftobar_new(ptr0, bar_status);
         this.__wbg_ptr = ret >>> 0;
-        RefToBarFinalization.register(this, this.__wbg_ptr, this);
+        foo__RefToBarFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
@@ -557,7 +552,7 @@ class RefToBar {
         wasm.reftobar_set_bar_status(this.__wbg_ptr, bar_status);
     }
 }
-if (Symbol.dispose) RefToBar.prototype[Symbol.dispose] = RefToBar.prototype.free;
+if (Symbol.dispose) foo__RefToBar.prototype[Symbol.dispose] = foo__RefToBar.prototype.free;
 
 /**
  * Two enums with the same js_name in different namespaces should not collide.
@@ -668,7 +663,7 @@ function foo__nested__greet() {
 
 export const foo = {};
 foo.Point = foo__Point;
-foo.RefToBar = RefToBar;
+foo.RefToBar = foo__RefToBar;
 foo.Status = foo__Status;
 foo.greet = foo__greet;
 foo.nested = {};
@@ -729,7 +724,7 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-const RefToFooFinalization = (typeof FinalizationRegistry === 'undefined')
+const bar__RefToFooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_bar__reftofoo_free(ptr >>> 0, 1));
 const bar__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -738,7 +733,7 @@ const bar__nested__PointFinalization = (typeof FinalizationRegistry === 'undefin
 const bar__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_bar__point_free(ptr >>> 0, 1));
-const RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
+const foo__RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo__reftobar_free(ptr >>> 0, 1));
 const foo__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')

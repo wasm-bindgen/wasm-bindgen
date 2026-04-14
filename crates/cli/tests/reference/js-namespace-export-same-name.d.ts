@@ -45,7 +45,7 @@ declare class bar__Point {
     y: number;
 }
 
-declare class RefToFoo {
+declare class bar__RefToFoo {
     free(): void;
     [Symbol.dispose](): void;
     constructor(foo_point: foo__Point, foo_status: foo__Status);
@@ -72,7 +72,7 @@ declare class bar__nested__Point {
 
 export let bar: {
     Point: typeof bar__Point,
-    RefToFoo: typeof RefToFoo,
+    RefToFoo: typeof bar__RefToFoo,
     Status: typeof bar__Status,
     greet: typeof bar__greet,
     nested: {
@@ -90,7 +90,7 @@ declare class foo__Point {
     x: number;
 }
 
-declare class RefToBar {
+declare class foo__RefToBar {
     free(): void;
     [Symbol.dispose](): void;
     constructor(bar_point: bar__Point, bar_status: bar__Status);
@@ -140,7 +140,7 @@ declare function foo__nested__greet(): string;
 
 export let foo: {
     Point: typeof foo__Point,
-    RefToBar: typeof RefToBar,
+    RefToBar: typeof foo__RefToBar,
     Status: typeof foo__Status,
     greet: typeof foo__greet,
     nested: {
