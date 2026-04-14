@@ -5499,6 +5499,19 @@ addToLibrary({
     }
 
     fn generate_identifier_with(identifiers: &mut HashMap<String, usize>, name: &str) -> String {
+        // For qualified names (e.g. "foo__Point"), try the bare name first so
+        // that non-colliding exports get clean debug names like `class Point`.
+        // Only fall back to the full qualified form when the bare name is taken.
+        if let Some((prefix, suffix)) = name.rsplit_once("__") {
+            if !prefix.is_empty() && !suffix.is_empty() {
+                let bare = to_valid_ident(suffix);
+                if !identifiers.contains_key(&*bare) {
+                    identifiers.insert(bare.to_string(), 1);
+                    return bare.to_string();
+                }
+            }
+        }
+
         let name = to_valid_ident(name);
         let cnt = identifiers.entry(name.to_string()).or_insert(0);
         *cnt += 1;

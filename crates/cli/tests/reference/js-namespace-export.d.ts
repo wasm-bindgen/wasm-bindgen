@@ -15,7 +15,7 @@ export class Rectangle {
     width: number;
 }
 
-declare class default__Counter {
+declare class Counter {
     free(): void;
     [Symbol.dispose](): void;
     increment(): void;
@@ -23,32 +23,32 @@ declare class default__Counter {
     value: number;
 }
 
-declare function default__concat(a: string, b: string): string;
+declare function concat(a: string, b: string): string;
 
-declare function default__uppercase__uppercase(s: string): string;
+declare function uppercase(s: string): string;
 
 declare let _default: {
-    Counter: typeof default__Counter,
-    concat: typeof default__concat,
+    Counter: typeof Counter,
+    concat: typeof concat,
     uppercase: {
-        uppercase: typeof default__uppercase__uppercase,
+        uppercase: typeof uppercase,
     },
 };
 export default _default;
 
-declare function math__add(a: number, b: number): number;
+declare function add(a: number, b: number): number;
 
-declare function math__divide(a: number, b: number): number;
+declare function divide(a: number, b: number): number;
 
-declare function math__multiply(a: number, b: number): number;
+declare function multiply(a: number, b: number): number;
 
 export let math: {
-    add: typeof math__add,
-    divide: typeof math__divide,
-    multiply: typeof math__multiply,
+    add: typeof add,
+    divide: typeof divide,
+    multiply: typeof multiply,
 };
 
-declare class models__3d__Point3D {
+declare class Point3D {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
@@ -57,7 +57,7 @@ declare class models__3d__Point3D {
     z: number;
 }
 
-declare class models__Point {
+declare class Point {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
@@ -67,29 +67,29 @@ declare class models__Point {
 
 export let models: {
     '3d': {
-        Point3D: typeof models__3d__Point3D,
+        Point3D: typeof Point3D,
     },
-    Point: typeof models__Point,
+    Point: typeof Point,
 };
 
 export function regular_function(): number;
 
-declare enum types__Status {
+declare enum Status {
     Pending = 0,
     Active = 1,
     Complete = 2,
 }
 
-declare enum types__http__HttpStatus {
+declare enum HttpStatus {
     Ok = 200,
     NotFound = 404,
     ServerError = 500,
 }
 
 export let types: {
-    Status: typeof types__Status,
+    Status: typeof Status,
     http: {
-        HttpStatus: typeof types__http__HttpStatus,
+        HttpStatus: typeof HttpStatus,
     },
 };
 

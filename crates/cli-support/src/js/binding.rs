@@ -15,6 +15,7 @@ use anyhow::{bail, Error};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use walrus::{Module, ValType};
+use wasm_bindgen_shared::identifier::is_valid_ident;
 
 /// A one-size-fits-all builder for processing WebIDL bindings and generating
 /// JS.
@@ -1843,7 +1844,17 @@ fn adapter2ts(
         AdapterType::String => dst.push_str("string"),
         AdapterType::Externref => dst.push_str("any"),
         AdapterType::Bool => dst.push_str("boolean"),
-        AdapterType::Vector(kind) => dst.push_str(&kind.js_ty()),
+        AdapterType::Vector(kind) => match kind {
+            VectorKind::NamedExternref(name) => {
+                let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);
+                if is_valid_ident(resolved) {
+                    dst.push_str(&format!("{resolved}[]"));
+                } else {
+                    dst.push_str(&format!("({resolved})[]"));
+                }
+            }
+            _ => dst.push_str(&kind.js_ty()),
+        },
         AdapterType::Option(ty) => {
             adapter2ts(ty, position, dst, refs, name_map);
             dst.push_str(match position {

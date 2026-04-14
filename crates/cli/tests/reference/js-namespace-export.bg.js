@@ -47,11 +47,11 @@ export class Rectangle {
 }
 if (Symbol.dispose) Rectangle.prototype[Symbol.dispose] = Rectangle.prototype.free;
 
-class default__Counter {
+class Counter {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        default__CounterFinalization.unregister(this);
+        CounterFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -67,7 +67,7 @@ class default__Counter {
     constructor(initial) {
         const ret = wasm.counter_new(initial);
         this.__wbg_ptr = ret >>> 0;
-        default__CounterFinalization.register(this, this.__wbg_ptr, this);
+        CounterFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
@@ -84,14 +84,14 @@ class default__Counter {
         return ret;
     }
 }
-if (Symbol.dispose) default__Counter.prototype[Symbol.dispose] = default__Counter.prototype.free;
+if (Symbol.dispose) Counter.prototype[Symbol.dispose] = Counter.prototype.free;
 
 /**
  * @param {string} a
  * @param {string} b
  * @returns {string}
  */
-function default__concat(a, b) {
+function concat(a, b) {
     let deferred3_0;
     let deferred3_1;
     try {
@@ -112,7 +112,7 @@ function default__concat(a, b) {
  * @param {string} s
  * @returns {string}
  */
-function default__uppercase__uppercase(s) {
+function uppercase(s) {
     let deferred2_0;
     let deferred2_1;
     try {
@@ -128,10 +128,10 @@ function default__uppercase__uppercase(s) {
 }
 
 const _default = {};
-_default.Counter = default__Counter;
-_default.concat = default__concat;
+_default.Counter = Counter;
+_default.concat = concat;
 _default.uppercase = {};
-_default.uppercase.uppercase = default__uppercase__uppercase;
+_default.uppercase.uppercase = uppercase;
 export { _default as default }
 
 /**
@@ -139,7 +139,7 @@ export { _default as default }
  * @param {number} b
  * @returns {number}
  */
-function math__add(a, b) {
+function add(a, b) {
     const ret = wasm.math__add(a, b);
     return ret;
 }
@@ -149,7 +149,7 @@ function math__add(a, b) {
  * @param {number} b
  * @returns {number}
  */
-function math__divide(a, b) {
+function divide(a, b) {
     const ret = wasm.math__divide(a, b);
     return ret;
 }
@@ -159,21 +159,21 @@ function math__divide(a, b) {
  * @param {number} b
  * @returns {number}
  */
-function math__multiply(a, b) {
+function multiply(a, b) {
     const ret = wasm.math__multiply(a, b);
     return ret;
 }
 
 export const math = {};
-math.add = math__add;
-math.divide = math__divide;
-math.multiply = math__multiply;
+math.add = add;
+math.divide = divide;
+math.multiply = multiply;
 
-class models__3d__Point3D {
+class Point3D {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        models__3d__Point3DFinalization.unregister(this);
+        Point3DFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -220,13 +220,13 @@ class models__3d__Point3D {
         wasm.__wbg_set_models__3d__point3d_z(this.__wbg_ptr, arg0);
     }
 }
-if (Symbol.dispose) models__3d__Point3D.prototype[Symbol.dispose] = models__3d__Point3D.prototype.free;
+if (Symbol.dispose) Point3D.prototype[Symbol.dispose] = Point3D.prototype.free;
 
-class models__Point {
+class Point {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        models__PointFinalization.unregister(this);
+        PointFinalization.unregister(this);
         return ptr;
     }
     free() {
@@ -260,12 +260,12 @@ class models__Point {
         wasm.__wbg_set_models__point_y(this.__wbg_ptr, arg0);
     }
 }
-if (Symbol.dispose) models__Point.prototype[Symbol.dispose] = models__Point.prototype.free;
+if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
 
 export const models = {};
 models['3d'] = {};
-models['3d'].Point3D = models__3d__Point3D;
-models.Point = models__Point;
+models['3d'].Point3D = Point3D;
+models.Point = Point;
 
 /**
  * @returns {number}
@@ -278,7 +278,7 @@ export function regular_function() {
 /**
  * @enum {0 | 1 | 2}
  */
-const types__Status = Object.freeze({
+const Status = Object.freeze({
     Pending: 0, "0": "Pending",
     Active: 1, "1": "Active",
     Complete: 2, "2": "Complete",
@@ -287,16 +287,16 @@ const types__Status = Object.freeze({
 /**
  * @enum {200 | 404 | 500}
  */
-const types__http__HttpStatus = Object.freeze({
+const HttpStatus = Object.freeze({
     Ok: 200, "200": "Ok",
     NotFound: 404, "404": "NotFound",
     ServerError: 500, "500": "ServerError",
 });
 
 export const types = {};
-types.Status = types__Status;
+types.Status = Status;
 types.http = {};
-types.http.HttpStatus = types__http__HttpStatus;
+types.http.HttpStatus = HttpStatus;
 
 /**
  * @param {string} s
@@ -332,13 +332,13 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-const default__CounterFinalization = (typeof FinalizationRegistry === 'undefined')
+const CounterFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_default__counter_free(ptr >>> 0, 1));
-const models__PointFinalization = (typeof FinalizationRegistry === 'undefined')
+const PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_models__point_free(ptr >>> 0, 1));
-const models__3d__Point3DFinalization = (typeof FinalizationRegistry === 'undefined')
+const Point3DFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_models__3d__point3d_free(ptr >>> 0, 1));
 const RectangleFinalization = (typeof FinalizationRegistry === 'undefined')
