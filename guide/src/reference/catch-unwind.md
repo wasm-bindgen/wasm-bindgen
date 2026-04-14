@@ -108,27 +108,41 @@ try {
 
 ## Closures
 
-When built with `panic=unwind`, certain `ScopedClosure` and `ImmediateClosure` constructors
-catch panics and convert them to JavaScript `PanicError` exceptions. The panic-catching
-constructors are:
+When built with `panic=unwind`, all closure types catch panics by default and
+convert them to JavaScript `PanicError` exceptions.
 
-- `Closure::new`, `Closure::own`, `Closure::once`, `Closure::once_into_js`
-- `Closure::wrap`, `Closure::wrap_assert_unwind_safe`
-- `Closure::own_assert_unwind_safe`, `Closure::once_assert_unwind_safe`
-- `Closure::borrow` (Fn), `Closure::borrow_mut` (FnMut)
-- `Closure::borrow_assert_unwind_safe`, `Closure::borrow_mut_assert_unwind_safe`
-- `ImmediateClosure::new` (Fn), `ImmediateClosure::new_mut` (FnMut)
-- `ImmediateClosure::new_assert_unwind_safe` (Fn), `ImmediateClosure::new_mut_assert_unwind_safe` (FnMut)
+### Direct closures (`&dyn Fn` / `&mut dyn FnMut`)
 
-The `*_aborting` variants (`own_aborting`, `once_aborting`, `wrap_aborting`, `borrow_aborting`,
-`borrow_mut_aborting`, `ImmediateClosure::new_aborting`, `ImmediateClosure::new_mut_aborting`)
-do NOT catch panics and will abort if the closure panics. These variants also don't require
-the `MaybeUnwindSafe` bound.
+Direct closure arguments (`&dyn Fn` and `&mut dyn FnMut`) are unwind safe by
+default. The `#[wasm_bindgen]` macro auto-injects a `MaybeUnwindSafe` bound,
+so the compiler will require callers to wrap non-unwind-safe captured values
+(e.g. `Cell<T>`, `&mut T`) in `std::panic::AssertUnwindSafe`. See
+[Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md#unwind-safety)
+for details and examples.
 
-Note: `Closure::new` is an alias for `Closure::own` and catches panics (requires `MaybeUnwindSafe`).
+```rust
+use wasm_bindgen::prelude::*;
 
-Catching panics in closures requires the closure to satisfy the `UnwindSafe` trait,
-or you can use the `*_assert_unwind_safe` variants which skip this check.
+#[wasm_bindgen]
+extern "C" {
+    fn forEach(cb: &mut dyn FnMut(u32));
+}
+
+forEach(&mut |x| {
+    if x == 0 {
+        panic!("zero not allowed!");
+    }
+});
+```
+
+### `ScopedClosure` constructors
+
+All default `ScopedClosure` constructors (`new`/`own`, `wrap`, `once`,
+`once_into_js`, `borrow`, `borrow_mut`) catch panics and require `UnwindSafe`.
+Each has two alternative suffixed variants:
+
+- `*_assert_unwind_safe` — catches panics but skips the `UnwindSafe` check
+- `*_aborting` — does not catch panics (aborts instead) and does not require `UnwindSafe`
 
 ```rust
 use wasm_bindgen::prelude::*;
@@ -152,38 +166,6 @@ try {
     console.log(e.message); // "closure panicked!"
 }
 ```
-
-`ImmediateClosure` also catches panics for immediate/synchronous callbacks:
-
-```rust
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    fn forEach(cb: ImmediateClosure<dyn FnMut(u32)>);
-}
-
-forEach(ImmediateClosure::new_mut(&mut |x| {
-    if x == 0 {
-        panic!("zero not allowed!");
-    }
-}));
-```
-
-For closures that should not catch panics (and abort the program instead), use
-the `*_aborting` variants: `Closure::own_aborting`, `Closure::wrap_aborting`,
-`Closure::once_aborting`,
-`ScopedClosure::borrow_aborting`, `ScopedClosure::borrow_mut_aborting`,
-`ImmediateClosure::new_aborting`, and `ImmediateClosure::new_mut_aborting`.
-These do not require `UnwindSafe`.
-
-> **Note**: `&dyn Fn` and `&mut dyn FnMut` arguments are unwind safe when
-> `panic=unwind` is active. The `#[wasm_bindgen]` macro auto-injects a
-> `MaybeUnwindSafe` bound, so the compiler will require callers to wrap
-> non-unwind-safe captured values (e.g. `Cell<T>`, `&mut T`) in
-> `std::panic::AssertUnwindSafe`. See
-> [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md#unwind-safety)
-> for details and examples.
 
 See [Passing Rust Closures to JavaScript](./passing-rust-closures-to-js.md) for
 more details on closure APIs and the `UnwindSafe` requirement.

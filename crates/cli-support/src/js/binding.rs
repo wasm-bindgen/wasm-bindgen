@@ -1577,7 +1577,7 @@ fn instruction(
                 match dtor {
                     ClosureDtor::OwnClosure => unreachable!(),
                     ClosureDtor::Immediate => {
-                        // Wrapper for ImmediateClosure or raw &dyn FnMut/&dyn Fn closure
+                        // Wrapper for &dyn FnMut/&dyn Fn closure
                         // used as an argument to a JS function. Make sure to null out our
                         // internal pointers when we return back to Rust to
                         // ensure that any lingering references to the closure

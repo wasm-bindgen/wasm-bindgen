@@ -230,7 +230,7 @@ exports.closure_fn_with_call_arg = (f, value) => {
   f(value);
 };
 
-// Test for ImmediateClosure
+// Test for direct &dyn Fn/&mut dyn FnMut closures
 exports.immediate_closure_call = f => {
   f();
 };
