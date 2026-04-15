@@ -30,7 +30,7 @@ export function __wbg_call_a24592a6f349a97e() { return handleError(function (arg
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
-export function __wbg_new_typed_323f37fd55ab048d(arg0, arg1) {
+export function __wbg_new_typed_f83251c19eb777b9(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {

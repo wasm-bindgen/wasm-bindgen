@@ -992,6 +992,7 @@ impl TryToTokens for ast::ImportType {
 
         let no_deref = self.no_deref;
         let no_promising = self.no_promising;
+        let no_into_js_generic = self.no_into_js_generic;
 
         let doc = if doc_comment.is_empty() {
             quote! {}
@@ -1042,6 +1043,60 @@ impl TryToTokens for ast::ImportType {
             phantom = quote! {};
             phantom_init = quote! {};
         }
+
+        // Identity implementation of `IntoJsGeneric`. Declaring this per-type,
+        // rather than via a blanket over `T: JsGeneric`, preserves the option
+        // for future wrapper types to pick a non-identity `JsCanon`.
+        //
+        // The body goes through `JsValue` rather than `Clone::clone(self)`:
+        // every `#[wasm_bindgen]` type has an auto-generated
+        // `AsRef<JsValue>` impl, and `JsValue` is always refcount-cloneable.
+        // This lets the impl apply uniformly to types that do not implement
+        // Rust-level `Clone` (e.g. generic types whose parameters aren't
+        // `Clone`, or plain handle wrappers that simply don't derive
+        // `Clone`), while still performing the single boundary-crossing
+        // refcount op that any JS handle would require.
+        //
+        // Types whose Rust wrapper enforces owned-once destruction semantics
+        // (currently just `JsClosure`) opt out via the
+        // `#[wasm_bindgen(no_into_js_generic)]` attribute — producing a
+        // second wrapper over the same handle would violate those semantics.
+        //
+        // The extra `Self: JsGeneric` predicate propagates any generic
+        // type-parameter requirements the `JsGeneric` blanket imposes
+        // through `ErasableGeneric<Repr = JsValue>` etc.
+        let into_js_generic_impl = if no_into_js_generic {
+            quote! {}
+        } else {
+            let mut clause =
+                self.generics
+                    .where_clause
+                    .clone()
+                    .unwrap_or_else(|| syn::WhereClause {
+                        where_token: Default::default(),
+                        predicates: Default::default(),
+                    });
+            let self_ty_generics = &ty_generics;
+            let self_ty: syn::Type = syn::parse_quote!(#rust_name #self_ty_generics);
+            let wasm_bindgen_path: syn::Path = syn::parse_quote!(#wasm_bindgen);
+            clause.predicates.push(syn::parse_quote!(
+                #self_ty: #wasm_bindgen_path::JsGeneric
+            ));
+            quote! {
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::IntoJsGeneric
+                    for #rust_name #ty_generics
+                #clause
+                {
+                    type JsCanon = #rust_name #ty_generics;
+                    #[inline]
+                    fn to_js(&self) -> #rust_name #ty_generics {
+                        let js: JsValue = AsRef::<JsValue>::as_ref(self).clone();
+                        <#rust_name #ty_generics as JsCast>::unchecked_from_js(js)
+                    }
+                }
+            }
+        };
 
         (quote! {
             #(#attrs)*
@@ -1165,6 +1220,8 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn as_ref(&self) -> &#rust_name #ty_generics { self }
                 }
+
+                #into_js_generic_impl
 
                 // TODO: remove this on the next major version
                 // Only include lifetime params here; type params use their
@@ -2230,29 +2287,28 @@ impl ast::ImportFunction {
             return None;
         }
 
-        // For static methods, only infer class hoisting when all type args are
-        // bare generic param idents — not associated types like `I::Item`.
-        if is_static {
-            if let syn::PathArguments::AngleBracketed(ref gen_args) = seg.arguments {
-                let fn_params: Vec<&Ident> = generics::generic_params(&self.generics)
-                    .iter()
-                    .map(|p| p.0)
-                    .collect();
-                for arg in &gen_args.args {
-                    match arg {
-                        syn::GenericArgument::Lifetime(_) => {}
-                        syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
-                            qself: None,
-                            path: arg_path,
-                        })) if arg_path.segments.len() == 1
-                            && matches!(
-                                arg_path.segments[0].arguments,
-                                syn::PathArguments::None
-                            )
-                            && fn_params.iter().any(|p| *p == &arg_path.segments[0].ident) => {}
-                        _ => return None,
-                    }
-                }
+        // Only hoist fn generics onto the class impl header when every fn
+        // generic mentioned in the return type's args appears in a
+        // *structurally constraining* position (per E0207 / RFC 0447).
+        //
+        // Non-constraining positions — projections (`<T as Trait>::Assoc`,
+        // `T::Item`), fn-ptr slots (`fn(T)` / `Fn(T)` sugar), associated-type
+        // binding RHS, etc. — would produce an `impl<T> Ret<...>` whose `T`
+        // is not determinable from `Self`, yielding a borrow-check-level
+        // compilation error. When we detect such a shape, bail so the
+        // parameter stays function-level.
+        //
+        // This replaces the earlier "static methods must have only bare
+        // idents" heuristic, which was both too strict (rejected valid
+        // shapes like `Array<Option<T>>`) and too narrow (didn't apply to
+        // constructors, leading to E0207 for `Promise<<T as Promising>::Resolution>`).
+        if let syn::PathArguments::AngleBracketed(ref gen_args) = seg.arguments {
+            let fn_params: Vec<&Ident> = generics::generic_params(&self.generics)
+                .iter()
+                .map(|p| p.0)
+                .collect();
+            if !generics::args_are_constraining_for(&gen_args.args, &fn_params) {
+                return None;
             }
         }
 

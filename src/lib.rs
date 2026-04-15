@@ -136,7 +136,7 @@ mod externref;
 use externref::__wbindgen_externref_heap_live_count;
 
 pub use crate::__rt::marker::ErasableGeneric;
-pub use crate::convert::JsGeneric;
+pub use crate::convert::{IntoJsGeneric, JsGeneric};
 
 #[doc(hidden)]
 pub mod handler;
@@ -1771,6 +1771,7 @@ impl<T> DerefMut for Clamped<T> {
 ///
 /// ```
 #[derive(Clone, Debug)]
+#[repr(transparent)]
 pub struct JsError {
     value: JsValue,
 }

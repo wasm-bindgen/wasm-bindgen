@@ -3,6 +3,21 @@
 
 ## Unreleased
 
+### Added
+
+* Promise ergonomics: `Promise::all_tuple` and `Promise::all_settled_tuple`
+  for heterogeneous concurrent awaits (arity 1..=8, destructure via
+  `.into_parts()`), typed `FromIterator` / `Extend` on `js_sys::Array<T>` so
+  the canonical `Promise::all_iterable(&iter.collect::<Array<_>>()).await`
+  one-liner infers element types without turbofish, and a new
+  `wasm_bindgen::IntoJsGeneric` trait underpinning the inference (with
+  codegen-emitted identity impls and a `#[wasm_bindgen(no_into_js_generic)]`
+  opt-out for types like `JsClosure`). Also re-exports `JsGeneric` from the
+  prelude. Fixes [#5042](https://github.com/wasm-bindgen/wasm-bindgen/issues/5042).
+  Callers that relied on `.collect::<Array>()` implicitly erasing typed
+  items into `Array<JsValue>` now need `.map(JsValue::from)`.
+  [#5113](https://github.com/wasm-bindgen/wasm-bindgen/pull/5113)
+
 ### Fixed
 
 * Fixed namespaced export identifiers in generated JS/TS to use qualified names
@@ -15,6 +30,7 @@
   no longer uses stderr output to determine if a driver has failed; instead a
   per-attempt timeout detects stuck drivers and retries on a new port.
   [#5111](https://github.com/wasm-bindgen/wasm-bindgen/pull/5111)
+
 ## [0.2.118](https://github.com/rustwasm/wasm-bindgen/compare/0.2.117...0.2.118)
 
 ### Added

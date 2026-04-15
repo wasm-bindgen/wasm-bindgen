@@ -59,6 +59,11 @@ use core::panic::AssertUnwindSafe;
 
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate)]
 extern "C" {
+    // `no_into_js_generic` is required because closures are deliberately
+    // not `Clone`: duplicating the Rust wrapper over a JS callback would
+    // break the "owned once" destruction semantics the type is designed
+    // to enforce.
+    #[wasm_bindgen(no_into_js_generic)]
     type JsClosure;
 
     #[wasm_bindgen(method)]

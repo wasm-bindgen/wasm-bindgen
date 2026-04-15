@@ -56,7 +56,7 @@ use wasm_bindgen::JsError;
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsOption, Null, Promising, Undefined};
-pub use wasm_bindgen::JsGeneric;
+pub use wasm_bindgen::{IntoJsGeneric, JsGeneric};
 
 // When adding new imports:
 //
@@ -1944,73 +1944,44 @@ impl<T: JsGeneric> core::iter::IntoIterator for Array<T> {
     }
 }
 
-#[cfg(not(js_sys_unstable_apis))]
-impl<A> core::iter::FromIterator<A> for Array
-where
-    A: AsRef<JsValue>,
-{
-    fn from_iter<I>(iter: I) -> Array
+// `FromIterator` / `Extend` for `Array<T>` project every input value through
+// its canonical [`JsGeneric`] via [`IntoJsGeneric`].
+//
+// Using an associated type (`A::JsCanon`) rather than a free type parameter
+// bound by `AsRef<T>` is what lets inference pick `T` uniquely from the
+// iterator item — no turbofish, no intermediate `Vec`, no `AsRef<T>` ambiguity
+// across the auto-generated `AsRef<JsValue>` / `AsRef<Self>` /
+// `AsRef<Superclass>` impls on `#[wasm_bindgen]` types. This fixes the
+// `A: AsRef<T>` E0283 regression that the earlier unstable impl suffered
+// from (see #5042).
+//
+// The reference-iteration case (`Item = &T`) is handled transparently by the
+// `&T: IntoJsGeneric` blanket in `wasm-bindgen` core.
+//
+// Compared to the pre-existing stable impl `impl<A> FromIterator<A> for Array
+// where A: AsRef<JsValue>`, this changes the target type from the untyped
+// `Array<JsValue>` (implicit erasure) to the typed `Array<A::JsCanon>`.
+// Call sites that want erasure now opt in via `.map(JsValue::from)` at the
+// call site.
+
+impl<A: IntoJsGeneric> core::iter::FromIterator<A> for Array<A::JsCanon> {
+    fn from_iter<I>(iter: I) -> Array<A::JsCanon>
     where
         I: IntoIterator<Item = A>,
     {
-        let mut out = Array::new();
+        let mut out = Array::<A::JsCanon>::new_typed();
         out.extend(iter);
         out
     }
 }
 
-#[cfg(js_sys_unstable_apis)]
-impl<A, T: JsGeneric> core::iter::FromIterator<A> for Array<T>
-where
-    A: AsRef<T>,
-{
-    fn from_iter<I>(iter: I) -> Array<T>
-    where
-        I: IntoIterator<Item = A>,
-    {
-        let iter = iter.into_iter();
-        let (lower, upper) = iter.size_hint();
-        let capacity = upper.unwrap_or(lower);
-        let out = Array::new_with_length_typed(capacity as u32);
-        let mut i = 0;
-        for value in iter {
-            out.set(i, value.as_ref());
-            i += 1;
-        }
-        // Trim to the actual number of items written, in case size_hint over-estimated.
-        if i < capacity as u32 {
-            out.set_length(i);
-        }
-        out
-    }
-}
-
-#[cfg(not(js_sys_unstable_apis))]
-impl<A> core::iter::Extend<A> for Array
-where
-    A: AsRef<JsValue>,
-{
+impl<A: IntoJsGeneric> core::iter::Extend<A> for Array<A::JsCanon> {
     fn extend<I>(&mut self, iter: I)
     where
         I: IntoIterator<Item = A>,
     {
         for value in iter {
-            self.push(value.as_ref());
-        }
-    }
-}
-
-#[cfg(js_sys_unstable_apis)]
-impl<A, T: JsGeneric> core::iter::Extend<A> for Array<T>
-where
-    A: AsRef<T>,
-{
-    fn extend<I>(&mut self, iter: I)
-    where
-        I: IntoIterator<Item = A>,
-    {
-        for value in iter {
-            self.push(value.as_ref());
+            self.push(&value.to_js());
         }
     }
 }
@@ -5167,6 +5138,7 @@ impl Iterator {
     fn looks_like_iterator(it: &JsValue) -> bool {
         #[wasm_bindgen]
         extern "C" {
+            #[derive(Clone, Debug)]
             type MaybeIterator;
 
             #[wasm_bindgen(method, getter)]
@@ -10551,6 +10523,7 @@ pub mod Intl {
     #[wasm_bindgen]
     extern "C" {
         #[wasm_bindgen(extends = CollatorOptions)]
+        #[derive(Clone, Debug)]
         pub type ResolvedCollatorOptions;
 
         #[wasm_bindgen(method, getter = locale)]
@@ -12869,9 +12842,9 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[wasm_bindgen(constructor)]
-    pub fn new_typed<T: JsGeneric>(
+    pub fn new_typed<T: Promising + JsGeneric>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
-    ) -> Promise<T>;
+    ) -> Promise<<T as Promising>::Resolution>;
 
     /// The `Promise.all(iterable)` method returns a single `Promise` that
     /// resolves when all of the promises in the iterable argument have resolved
@@ -12971,7 +12944,6 @@ extern "C" {
     /// `AggregateError` if all promises in the iterable rejected.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)
-    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Promise, js_name = any)]
     pub fn any_iterable<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution>
     where
@@ -13144,6 +13116,129 @@ impl<T: JsGeneric> Promising for Promise<T> {
     type Resolution = T;
 }
 
+/// Internal: maps a tuple of `Promise<T_i>` to the result shapes of
+/// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].
+///
+/// Implemented for every tuple arity 1..=8 of `Promise<T: JsGeneric>`. The
+/// associated `Joined` / `Settled` types pin down the [`ArrayTuple`] shape
+/// of the result so the one [`JsCast::unchecked_into`] needed to reinterpret
+/// the [`Array<JsValue>`] returned by `Promise.all` / `Promise.allSettled`
+/// is encapsulated inside each impl — the caller sees a fully-typed
+/// `Promise<ArrayTuple<...>>`.
+///
+/// The soundness of the `unchecked_into`s here rests on `Promise.all` and
+/// `Promise.allSettled` preserving input order and arity, which they do by
+/// spec.
+///
+/// You normally call [`Promise::all_tuple`] / [`Promise::all_settled_tuple`]
+/// rather than using this trait directly.
+#[doc(hidden)]
+pub trait PromiseTuple {
+    /// The typed `ArrayTuple` shape the joined promise resolves to.
+    ///
+    /// For a tuple `(Promise<T1>, Promise<T2>, ...)` this is
+    /// `ArrayTuple<(T1, T2, ...)>`.
+    type Joined: JsGeneric;
+
+    /// The typed `ArrayTuple` shape the all-settled promise resolves to.
+    ///
+    /// For a tuple `(Promise<T1>, Promise<T2>, ...)` this is
+    /// `ArrayTuple<(PromiseState<T1>, PromiseState<T2>, ...)>`.
+    type Settled: JsGeneric;
+
+    /// Internal: join via `Promise.all`, returning a typed `Promise`.
+    #[doc(hidden)]
+    fn __all(self) -> Promise<Self::Joined>;
+
+    /// Internal: settle via `Promise.allSettled`, returning a typed `Promise`.
+    #[doc(hidden)]
+    fn __all_settled(self) -> Promise<Self::Settled>;
+}
+
+macro_rules! impl_promise_tuple {
+    ([$($T:ident)+] [$($idx:tt)+]) => {
+        impl<$($T: JsGeneric),+> PromiseTuple for ($(Promise<$T>,)+) {
+            type Joined = ArrayTuple<($($T,)+)>;
+            type Settled = ArrayTuple<($(PromiseState<$T>,)+)>;
+
+            fn __all(self) -> Promise<Self::Joined> {
+                // Build the heterogeneous `ArrayTuple` of promises via the
+                // existing `From<(...)>` impl (each element upcasts through
+                // `JsGeneric`), hand it to `Promise.all_iterable`, and
+                // reinterpret the result `Array<JsValue>` as the intended
+                // `ArrayTuple<(T1, T2, ...)>`. The reinterpret is safe
+                // because `Promise.all` preserves order and arity by spec.
+                let tuple: ArrayTuple<($(Promise<$T>,)+)> = ($(self.$idx,)+).into();
+                use wasm_bindgen::JsCast;
+                Promise::all_iterable(&tuple).unchecked_into()
+            }
+
+            fn __all_settled(self) -> Promise<Self::Settled> {
+                let tuple: ArrayTuple<($(Promise<$T>,)+)> = ($(self.$idx,)+).into();
+                use wasm_bindgen::JsCast;
+                Promise::all_settled_iterable(&tuple).unchecked_into()
+            }
+        }
+    };
+}
+
+impl_promise_tuple!([T1][0]);
+impl_promise_tuple!([T1 T2] [0 1]);
+impl_promise_tuple!([T1 T2 T3] [0 1 2]);
+impl_promise_tuple!([T1 T2 T3 T4] [0 1 2 3]);
+impl_promise_tuple!([T1 T2 T3 T4 T5] [0 1 2 3 4]);
+impl_promise_tuple!([T1 T2 T3 T4 T5 T6] [0 1 2 3 4 5]);
+impl_promise_tuple!([T1 T2 T3 T4 T5 T6 T7] [0 1 2 3 4 5 6]);
+impl_promise_tuple!([T1 T2 T3 T4 T5 T6 T7 T8] [0 1 2 3 4 5 6 7]);
+
+impl Promise {
+    /// Heterogeneous counterpart to [`Promise::all_iterable`]: accepts a Rust
+    /// tuple of `Promise<T_i>` and returns a single [`Promise`] resolving to a
+    /// typed [`ArrayTuple<(T_1, T_2, ..., T_n)>`].
+    ///
+    /// Destructure the awaited result via [`ArrayTuple::into_parts`] to get
+    /// the individual values back as a native Rust tuple. Implemented for
+    /// arity 1..=8.
+    ///
+    /// Rejects with the first rejection, matching `Promise.all` semantics.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use js_sys::Promise;
+    ///
+    /// let (response, buffer) = Promise::all_tuple((fetch_promise, buffer_promise))
+    ///     .await?
+    ///     .into_parts();
+    /// ```
+    #[inline]
+    pub fn all_tuple<T: PromiseTuple>(promises: T) -> Promise<T::Joined> {
+        promises.__all()
+    }
+
+    /// Heterogeneous counterpart to [`Promise::all_settled_iterable`]: accepts
+    /// a Rust tuple of `Promise<T_i>` and returns a single [`Promise`]
+    /// resolving to a typed
+    /// `ArrayTuple<(PromiseState<T_1>, ..., PromiseState<T_n>)>`.
+    ///
+    /// Unlike [`Promise::all_tuple`], this never rejects early: every input
+    /// settles (fulfills or rejects) and is reflected by its [`PromiseState`]
+    /// slot in the result tuple. Implemented for arity 1..=8.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use js_sys::Promise;
+    ///
+    /// let results = Promise::all_settled_tuple((fetch_promise, buffer_promise)).await?;
+    /// let (response_state, buffer_state) = results.into_parts();
+    /// ```
+    #[inline]
+    pub fn all_settled_tuple<T: PromiseTuple>(promises: T) -> Promise<T::Settled> {
+        promises.__all_settled()
+    }
+}
+
 /// Returns a handle to the global scope object.
 ///
 /// This allows access to the global properties and global names by accessing
@@ -13176,6 +13271,7 @@ pub fn global() -> Object {
         // the end which triggers CSP errors.
         #[wasm_bindgen]
         extern "C" {
+            #[derive(Clone, Debug)]
             type Global;
 
             #[wasm_bindgen(thread_local_v2, js_name = globalThis)]

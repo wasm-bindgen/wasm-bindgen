@@ -543,3 +543,77 @@ impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCa
     JsGeneric for T
 {
 }
+
+/// Value conversion from a type into its canonical [`JsGeneric`] form.
+///
+/// This trait lets APIs that operate over a generic JavaScript element type
+/// (for example [`js_sys::Array<T>`], [`js_sys::Set<T>`], combinators like
+/// `Promise.all`, etc.) project every input value through a single,
+/// functionally-determined target [`JsGeneric`].
+///
+/// The single associated type — rather than a free type parameter bounded by
+/// `AsRef<T>` — is what makes collection-style APIs infer annotation-free.
+/// Given an input `A`, there is exactly one `A::JsCanon`, so rustc never has
+/// to search across multiple `AsRef` impls to pick a target element type.
+///
+/// # Implementations
+///
+/// Provided impls (all by-value, no `Clone`):
+/// - [`JsValue`] in this crate.
+/// - Every `#[wasm_bindgen]`-imported type (identity — emitted by the macro).
+/// - Every generic `js_sys` container (`Array<T>`, `Promise<T>`, `Set<T>`, …)
+///   provides its own identity impl owned by `js_sys`.
+///
+/// This trait is deliberately *not* blanket-implemented over all [`JsGeneric`]
+/// types: each implementor explicitly opts in, which leaves room for future
+/// wrapper types to pick a non-identity [`Self::JsCanon`].
+///
+/// # Example
+///
+/// ```ignore
+/// use js_sys::{Array, Number};
+///
+/// // No intermediate `Vec`, no annotations: the iterator's item type pins
+/// // `Array<A::JsCanon>` uniquely.
+/// let arr: Array<Number> = (0..10).map(Number::from).collect();
+/// ```
+pub trait IntoJsGeneric {
+    /// The canonical [`JsGeneric`] form of this type.
+    type JsCanon: JsGeneric;
+
+    /// Produce the canonical [`JsGeneric`] value for `self`.
+    ///
+    /// Takes `&self` because crossing into a JS-side handle is already a
+    /// refcount-level operation (every [`JsGeneric`] is an `Rc`-backed
+    /// externref handle). The "clone" that happens inside each impl body is
+    /// the boundary-crossing refcount, not an extra copy — this is the
+    /// `to_js` (borrow → owned) shape rather than `into_js` (consume → owned),
+    /// matching Rust's naming conventions for value conversion from a
+    /// reference.
+    fn to_js(&self) -> Self::JsCanon;
+}
+
+impl IntoJsGeneric for JsValue {
+    type JsCanon = JsValue;
+    #[inline]
+    fn to_js(&self) -> JsValue {
+        self.clone()
+    }
+}
+
+// Reference blanket delegates through deref — no extra clone, the underlying
+// `T` impl already performs the one refcount op that boundary-crossing
+// requires.
+impl<T: IntoJsGeneric + ?Sized> IntoJsGeneric for &T {
+    type JsCanon = T::JsCanon;
+    #[inline]
+    fn to_js(&self) -> T::JsCanon {
+        (**self).to_js()
+    }
+}
+
+// Intentionally not a blanket `impl<T: JsGeneric> IntoJsGeneric for T`:
+// that would lock in identity for every current and future `JsGeneric` type
+// and prevent wrapper types from canonicalising to a different target.
+// Instead, implementations are provided explicitly by each owning crate
+// (macro-generated for user types; hand-written for `js_sys` containers).
