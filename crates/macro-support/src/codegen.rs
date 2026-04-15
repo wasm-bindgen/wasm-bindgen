@@ -578,6 +578,12 @@ impl TryToTokens for ast::Export {
         let name = &self.rust_name;
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
+        let js_sys = &self.js_sys;
+        let futures = if ast::use_js_sys_futures() {
+            quote! { #js_sys::futures }
+        } else {
+            quote! { #wasm_bindgen_futures }
+        };
         let receiver = match self.method_self {
             Some(ast::MethodSelf::ByValue) => {
                 let class = self.rust_class.as_ref().unwrap();
@@ -765,13 +771,13 @@ impl TryToTokens for ast::Export {
         if self.function.r#async {
             if self.start.is_start() {
                 call = quote! {
-                    #wasm_bindgen_futures::spawn_local(async move {
+                    #futures::spawn_local(async move {
                         #call
                     })
                 }
             } else {
                 call = quote! {
-                    #wasm_bindgen_futures::future_to_promise(async move {
+                    #futures::future_to_promise(async move {
                         #call
                     }).into()
                 }
@@ -1629,6 +1635,17 @@ impl TryToTokens for ast::ImportFunction {
         let ret_ident = Ident::new("_ret", Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
+        let js_sys = &self.js_sys;
+        let futures = if ast::use_js_sys_futures() {
+            quote! { #js_sys::futures }
+        } else {
+            quote! { #wasm_bindgen_futures }
+        };
+        let promise = if ast::use_js_sys_futures() {
+            quote! { #js_sys::Promise }
+        } else {
+            quote! { #wasm_bindgen_futures::js_sys::Promise }
+        };
 
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = &*arg.pat_type.ty;
@@ -1760,8 +1777,7 @@ impl TryToTokens for ast::ImportFunction {
             Some(ref original_ty) => {
                 let maybe_async_wrapped;
                 let ty = if self.function.r#async {
-                    maybe_async_wrapped =
-                        parse_quote!(wasm_bindgen_futures::js_sys::Promise<#original_ty>);
+                    maybe_async_wrapped = parse_quote!(#promise<#original_ty>);
                     &maybe_async_wrapped
                 } else {
                     original_ty
@@ -1785,8 +1801,8 @@ impl TryToTokens for ast::ImportFunction {
                 }
                 if self.function.r#async {
                     convert_ret = quote! {
-                        #wasm_bindgen_futures::JsFuture::from(
-                            <#wasm_bindgen_futures::js_sys::Promise<#original_ty> as #wasm_bindgen::convert::FromWasmAbi>
+                        #futures::JsFuture::from(
+                            <#promise<#original_ty> as #wasm_bindgen::convert::FromWasmAbi>
                                 ::from_abi(#ret_ident.join())
                         ).await
                     };
@@ -1800,11 +1816,11 @@ impl TryToTokens for ast::ImportFunction {
             None => {
                 if self.function.r#async {
                     abi_ret = quote! {
-                        #wasm_bindgen::convert::WasmRet<<#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+                        #wasm_bindgen::convert::WasmRet<<#promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
                     };
                     let future = quote! {
-                        #wasm_bindgen_futures::JsFuture::from(
-                            <#wasm_bindgen_futures::js_sys::Promise as #wasm_bindgen::convert::FromWasmAbi>
+                        #futures::JsFuture::from(
+                            <#promise as #wasm_bindgen::convert::FromWasmAbi>
                                 ::from_abi(#ret_ident.join())
                         ).await
                     };

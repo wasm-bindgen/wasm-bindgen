@@ -23,18 +23,17 @@ test = false
 [features]
 # TODO: remove unsafe-eval for 1.0 release
 default = ["std", "unsafe-eval"]
-std = ["wasm-bindgen/std"]
+std = ["wasm-bindgen/std", "dep:futures-util"]
 # It has been agreed to gate functionnality requiring CSP unsafe-eval behind this feature
 # See https://github.com/wasm-bindgen/wasm-bindgen/issues/1647#issuecomment-3775469177
 unsafe-eval = []
-# Enables JsFuture, spawn_local, future_to_promise, and IntoFuture for Promise.
-# Automatically enabled when depending on wasm-bindgen-futures.
-futures = ["dep:cfg-if", "dep:futures-util"]
-# Enables JsStream (AsyncIterator -> Stream bridge). Implies futures.
-futures-core-03-stream = ["futures", "dep:futures-core"]
+# Backwards-compatible alias — futures support is now always enabled.
+futures = []
+# Enables JsStream (AsyncIterator -> Stream bridge).
+futures-core-03-stream = ["dep:futures-core"]
 
 [dependencies]
-cfg-if = { version = "1.0.0", optional = true }
+cfg-if = "1.0.0"
 futures-core = { version = "0.3.8", default-features = false, optional = true }
 futures-util = { version = "0.3.31", default-features = false, features = ["std"], optional = true }
 once_cell = { version = "1.12", default-features = false }

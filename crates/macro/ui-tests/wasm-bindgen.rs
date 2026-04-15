@@ -34,6 +34,12 @@ pub async fn good8() {}
 #[wasm_bindgen(wasm_bindgen = wasm_bindgen, wasm_bindgen_futures = wasm_bindgen_futures)]
 pub async fn good9() {}
 
+#[wasm_bindgen(js_sys = ::js_sys)]
+pub async fn good10() {}
+
+#[wasm_bindgen(js_sys = ::js_sys)]
+pub async fn good11() {}
+
 #[wasm_bindgen(wasm_bindgen = test)]
 pub fn bad1() {}
 

@@ -127,6 +127,7 @@ struct ClassMarker {
     js_class: String,
     wasm_bindgen: syn::Path,
     wasm_bindgen_futures: syn::Path,
+    js_sys: syn::Path,
 }
 
 impl Parse for ClassMarker {
@@ -141,6 +142,7 @@ impl Parse for ClassMarker {
 
         let mut wasm_bindgen = None;
         let mut wasm_bindgen_futures = None;
+        let mut js_sys = None;
 
         loop {
             if input.parse::<Option<Token![,]>>()?.is_some() {
@@ -166,10 +168,17 @@ impl Parse for ClassMarker {
 
                     input.parse::<Token![=]>()?;
                     wasm_bindgen_futures = Some(input.parse::<syn::Path>()?);
+                } else if ident == "js_sys" {
+                    if js_sys.is_some() {
+                        return Err(syn::Error::new(ident.span(), "found duplicate `js_sys`"));
+                    }
+
+                    input.parse::<Token![=]>()?;
+                    js_sys = Some(input.parse::<syn::Path>()?);
                 } else {
                     return Err(syn::Error::new(
                         ident.span(),
-                        "expected `wasm_bindgen` or `wasm_bindgen_futures`",
+                        "expected `wasm_bindgen`, `wasm_bindgen_futures`, or `js_sys`",
                     ));
                 }
             } else {
@@ -183,6 +192,7 @@ impl Parse for ClassMarker {
             wasm_bindgen: wasm_bindgen.unwrap_or_else(|| syn::parse_quote! { wasm_bindgen }),
             wasm_bindgen_futures: wasm_bindgen_futures
                 .unwrap_or_else(|| syn::parse_quote! { wasm_bindgen_futures }),
+            js_sys: js_sys.unwrap_or_else(|| syn::parse_quote! { js_sys }),
         })
     }
 }

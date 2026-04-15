@@ -8,6 +8,10 @@ use std::hash::{Hash, Hasher};
 use syn::Path;
 use wasm_bindgen_shared as shared;
 
+pub fn use_js_sys_futures() -> bool {
+    cfg!(feature = "js-sys")
+}
+
 /// Whether a function is a start function, and if so, whether it
 /// should be exported to JS.
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
@@ -115,6 +119,8 @@ pub struct Export {
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures
     pub wasm_bindgen_futures: Path,
+    /// Path to js_sys
+    pub js_sys: Path,
 }
 
 /// The 3 types variations of `self`.
@@ -212,6 +218,8 @@ pub struct ImportFunction {
     pub wasm_bindgen: Path,
     /// Path to wasm_bindgen_futures
     pub wasm_bindgen_futures: Path,
+    /// Path to js_sys
+    pub js_sys: Path,
     /// Generic parameters as validated simple type parameters for this function
     pub generics: syn::Generics,
 }
