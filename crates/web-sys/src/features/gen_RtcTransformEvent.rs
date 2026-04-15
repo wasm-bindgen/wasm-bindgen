@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = RTCTransformEvent , typescript_type = "RTCTransformEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "RTCTransformEvent",
+        typescript_type = "RTCTransformEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `RtcTransformEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type RtcTransformEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "RtcRtpScriptTransformer")]
-    # [wasm_bindgen (structural , method , getter , js_class = "RTCTransformEvent" , js_name = transformer)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "RTCTransformEvent",
+        js_name = "transformer"
+    )]
     #[doc = "Getter for the `transformer` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCTransformEvent/transformer)"]

@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGFEFloodElement , typescript_type = "SVGFEFloodElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGFEFloodElement",
+        typescript_type = "SVGFEFloodElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgfeFloodElement` class."]
     #[doc = ""]
@@ -13,7 +21,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgfeFloodElement`*"]
     pub type SvgfeFloodElement;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEFloodElement" , js_name = x)]
+    #[wasm_bindgen(method, getter, js_class = "SVGFEFloodElement", js_name = "x")]
     #[doc = "Getter for the `x` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEFloodElement/x)"]
@@ -21,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeFloodElement`*"]
     pub fn x(this: &SvgfeFloodElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEFloodElement" , js_name = y)]
+    #[wasm_bindgen(method, getter, js_class = "SVGFEFloodElement", js_name = "y")]
     #[doc = "Getter for the `y` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEFloodElement/y)"]
@@ -29,7 +37,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeFloodElement`*"]
     pub fn y(this: &SvgfeFloodElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEFloodElement" , js_name = width)]
+    #[wasm_bindgen(method, getter, js_class = "SVGFEFloodElement", js_name = "width")]
     #[doc = "Getter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEFloodElement/width)"]
@@ -37,7 +45,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeFloodElement`*"]
     pub fn width(this: &SvgfeFloodElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEFloodElement" , js_name = height)]
+    #[wasm_bindgen(method, getter, js_class = "SVGFEFloodElement", js_name = "height")]
     #[doc = "Getter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEFloodElement/height)"]
@@ -45,7 +53,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeFloodElement`*"]
     pub fn height(this: &SvgfeFloodElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedString")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEFloodElement" , js_name = result)]
+    #[wasm_bindgen(method, getter, js_class = "SVGFEFloodElement", js_name = "result")]
     #[doc = "Getter for the `result` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEFloodElement/result)"]

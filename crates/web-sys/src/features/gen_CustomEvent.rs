@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = CustomEvent , typescript_type = "CustomEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "CustomEvent",
+        typescript_type = "CustomEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CustomEvent` class."]
     #[doc = ""]
@@ -12,7 +17,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CustomEvent`*"]
     pub type CustomEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "CustomEvent" , js_name = detail)]
+    #[wasm_bindgen(method, getter, js_class = "CustomEvent", js_name = "detail")]
     #[doc = "Getter for the `detail` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail)"]
@@ -37,21 +42,21 @@ extern "C" {
         type_: &str,
         event_init_dict: &CustomEventInit,
     ) -> Result<CustomEvent, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "CustomEvent" , js_name = initCustomEvent)]
+    #[wasm_bindgen(method, js_class = "CustomEvent", js_name = "initCustomEvent")]
     #[doc = "The `initCustomEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/initCustomEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CustomEvent`*"]
     pub fn init_custom_event(this: &CustomEvent, type_: &str);
-    # [wasm_bindgen (method , structural , js_class = "CustomEvent" , js_name = initCustomEvent)]
+    #[wasm_bindgen(method, js_class = "CustomEvent", js_name = "initCustomEvent")]
     #[doc = "The `initCustomEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/initCustomEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CustomEvent`*"]
     pub fn init_custom_event_with_can_bubble(this: &CustomEvent, type_: &str, can_bubble: bool);
-    # [wasm_bindgen (method , structural , js_class = "CustomEvent" , js_name = initCustomEvent)]
+    #[wasm_bindgen(method, js_class = "CustomEvent", js_name = "initCustomEvent")]
     #[doc = "The `initCustomEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/initCustomEvent)"]
@@ -63,7 +68,7 @@ extern "C" {
         can_bubble: bool,
         cancelable: bool,
     );
-    # [wasm_bindgen (method , structural , js_class = "CustomEvent" , js_name = initCustomEvent)]
+    #[wasm_bindgen(method, js_class = "CustomEvent", js_name = "initCustomEvent")]
     #[doc = "The `initCustomEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/initCustomEvent)"]

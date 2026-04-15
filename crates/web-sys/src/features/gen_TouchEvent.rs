@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = TouchEvent , typescript_type = "TouchEvent")]
+    #[wasm_bindgen(
+        extends = "UiEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "TouchEvent",
+        typescript_type = "TouchEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TouchEvent` class."]
     #[doc = ""]
@@ -13,7 +19,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub type TouchEvent;
     #[cfg(feature = "TouchList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = touches)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "touches")]
     #[doc = "Getter for the `touches` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches)"]
@@ -21,7 +27,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`*"]
     pub fn touches(this: &TouchEvent) -> TouchList;
     #[cfg(feature = "TouchList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = targetTouches)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "targetTouches")]
     #[doc = "Getter for the `targetTouches` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/targetTouches)"]
@@ -29,35 +35,35 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`*"]
     pub fn target_touches(this: &TouchEvent) -> TouchList;
     #[cfg(feature = "TouchList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = changedTouches)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "changedTouches")]
     #[doc = "Getter for the `changedTouches` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/changedTouches)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`*"]
     pub fn changed_touches(this: &TouchEvent) -> TouchList;
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = altKey)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "altKey")]
     #[doc = "Getter for the `altKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/altKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn alt_key(this: &TouchEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = metaKey)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "metaKey")]
     #[doc = "Getter for the `metaKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/metaKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn meta_key(this: &TouchEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = ctrlKey)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "ctrlKey")]
     #[doc = "Getter for the `ctrlKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/ctrlKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn ctrl_key(this: &TouchEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "TouchEvent" , js_name = shiftKey)]
+    #[wasm_bindgen(method, getter, js_class = "TouchEvent", js_name = "shiftKey")]
     #[doc = "Getter for the `shiftKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/shiftKey)"]
@@ -82,21 +88,21 @@ extern "C" {
         type_: &str,
         event_init_dict: &TouchEventInit,
     ) -> Result<TouchEvent, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn init_touch_event(this: &TouchEvent, type_: &str);
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn init_touch_event_with_can_bubble(this: &TouchEvent, type_: &str, can_bubble: bool);
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -109,7 +115,7 @@ extern "C" {
         cancelable: bool,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -123,7 +129,7 @@ extern "C" {
         view: Option<&Window>,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -138,7 +144,7 @@ extern "C" {
         detail: i32,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -154,7 +160,7 @@ extern "C" {
         ctrl_key: bool,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -171,7 +177,7 @@ extern "C" {
         alt_key: bool,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -189,7 +195,7 @@ extern "C" {
         shift_key: bool,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -208,7 +214,7 @@ extern "C" {
         meta_key: bool,
     );
     #[cfg(all(feature = "TouchList", feature = "Window",))]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -228,7 +234,7 @@ extern "C" {
         touches: Option<&TouchList>,
     );
     #[cfg(all(feature = "TouchList", feature = "Window",))]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
@@ -249,7 +255,7 @@ extern "C" {
         target_touches: Option<&TouchList>,
     );
     #[cfg(all(feature = "TouchList", feature = "Window",))]
-    # [wasm_bindgen (method , structural , js_class = "TouchEvent" , js_name = initTouchEvent)]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]

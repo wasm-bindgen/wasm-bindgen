@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = MediaStreamAudioSourceNode , typescript_type = "MediaStreamAudioSourceNode")]
+    #[wasm_bindgen(
+        extends = "AudioNode",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "MediaStreamAudioSourceNode",
+        typescript_type = "MediaStreamAudioSourceNode"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaStreamAudioSourceNode` class."]
     #[doc = ""]

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUOrigin2DDict)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "GPUOrigin2DDict")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuOrigin2dDict` dictionary."]
     #[doc = ""]

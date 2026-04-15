@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = DomException , extends = :: js_sys :: Object , js_name = GPUPipelineError , typescript_type = "GPUPipelineError")]
+    #[wasm_bindgen(
+        extends = "DomException",
+        extends = "::js_sys::Object",
+        js_name = "GPUPipelineError",
+        typescript_type = "GPUPipelineError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuPipelineError` class."]
     #[doc = ""]
@@ -18,7 +23,7 @@ extern "C" {
     pub type GpuPipelineError;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuPipelineErrorReason")]
-    # [wasm_bindgen (structural , method , getter , js_class = "GPUPipelineError" , js_name = reason)]
+    #[wasm_bindgen(method, getter, js_class = "GPUPipelineError", js_name = "reason")]
     #[doc = "Getter for the `reason` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUPipelineError/reason)"]

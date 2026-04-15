@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SVGTransform , typescript_type = "SVGTransform")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SVGTransform",
+        typescript_type = "SVGTransform"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgTransform` class."]
     #[doc = ""]
@@ -12,7 +16,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub type SvgTransform;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGTransform" , js_name = type)]
+    #[wasm_bindgen(method, getter, js_class = "SVGTransform", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/type)"]
@@ -20,14 +24,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub fn type_(this: &SvgTransform) -> u16;
     #[cfg(feature = "SvgMatrix")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGTransform" , js_name = matrix)]
+    #[wasm_bindgen(method, getter, js_class = "SVGTransform", js_name = "matrix")]
     #[doc = "Getter for the `matrix` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/matrix)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgMatrix`, `SvgTransform`*"]
     pub fn matrix(this: &SvgTransform) -> SvgMatrix;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGTransform" , js_name = angle)]
+    #[wasm_bindgen(method, getter, js_class = "SVGTransform", js_name = "angle")]
     #[doc = "Getter for the `angle` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/angle)"]
@@ -35,42 +39,42 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub fn angle(this: &SvgTransform) -> f32;
     #[cfg(feature = "SvgMatrix")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransform" , js_name = setMatrix)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransform", js_name = "setMatrix")]
     #[doc = "The `setMatrix()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/setMatrix)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgMatrix`, `SvgTransform`*"]
     pub fn set_matrix(this: &SvgTransform, matrix: &SvgMatrix) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransform" , js_name = setRotate)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransform", js_name = "setRotate")]
     #[doc = "The `setRotate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/setRotate)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub fn set_rotate(this: &SvgTransform, angle: f32, cx: f32, cy: f32) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransform" , js_name = setScale)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransform", js_name = "setScale")]
     #[doc = "The `setScale()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/setScale)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub fn set_scale(this: &SvgTransform, sx: f32, sy: f32) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransform" , js_name = setSkewX)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransform", js_name = "setSkewX")]
     #[doc = "The `setSkewX()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/setSkewX)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub fn set_skew_x(this: &SvgTransform, angle: f32) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransform" , js_name = setSkewY)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransform", js_name = "setSkewY")]
     #[doc = "The `setSkewY()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/setSkewY)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`*"]
     pub fn set_skew_y(this: &SvgTransform, angle: f32) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransform" , js_name = setTranslate)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransform", js_name = "setTranslate")]
     #[doc = "The `setTranslate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransform/setTranslate)"]

@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = AudioWorkletProcessor , typescript_type = "AudioWorkletProcessor")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "AudioWorkletProcessor",
+        typescript_type = "AudioWorkletProcessor"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AudioWorkletProcessor` class."]
     #[doc = ""]
@@ -13,7 +17,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioWorkletProcessor`*"]
     pub type AudioWorkletProcessor;
     #[cfg(feature = "MessagePort")]
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "AudioWorkletProcessor" , js_name = port)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "AudioWorkletProcessor",
+        js_name = "port"
+    )]
     #[doc = "Getter for the `port` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/port)"]

@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = XRSpace , typescript_type = "XRSpace")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "XRSpace",
+        typescript_type = "XRSpace"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrSpace` class."]
     #[doc = ""]

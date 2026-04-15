@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPURenderBundleDescriptor)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "GPURenderBundleDescriptor")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuRenderBundleDescriptor` dictionary."]
     #[doc = ""]

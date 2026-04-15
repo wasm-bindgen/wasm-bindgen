@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = CSSPseudoElement , typescript_type = "CSSPseudoElement")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "CSSPseudoElement",
+        typescript_type = "CSSPseudoElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CssPseudoElement` class."]
     #[doc = ""]
@@ -12,7 +16,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssPseudoElement`*"]
     pub type CssPseudoElement;
-    # [wasm_bindgen (structural , method , getter , js_class = "CSSPseudoElement" , js_name = type)]
+    #[wasm_bindgen(method, getter, js_class = "CSSPseudoElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/type)"]
@@ -20,7 +24,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CssPseudoElement`*"]
     pub fn type_(this: &CssPseudoElement) -> ::alloc::string::String;
     #[cfg(feature = "Element")]
-    # [wasm_bindgen (structural , method , getter , js_class = "CSSPseudoElement" , js_name = parentElement)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CSSPseudoElement",
+        js_name = "parentElement"
+    )]
     #[doc = "Getter for the `parentElement` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/parentElement)"]
@@ -29,7 +38,7 @@ extern "C" {
     pub fn parent_element(this: &CssPseudoElement) -> Element;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Animation")]
-    # [wasm_bindgen (method , structural , js_class = "CSSPseudoElement" , js_name = animate)]
+    #[wasm_bindgen(method, js_class = "CSSPseudoElement")]
     #[doc = "The `animate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/animate)"]
@@ -41,7 +50,7 @@ extern "C" {
     pub fn animate(this: &CssPseudoElement, keyframes: Option<&::js_sys::Object>) -> Animation;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Animation")]
-    # [wasm_bindgen (method , structural , js_class = "CSSPseudoElement" , js_name = animate)]
+    #[wasm_bindgen(method, js_class = "CSSPseudoElement", js_name = "animate")]
     #[doc = "The `animate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/animate)"]
@@ -57,7 +66,7 @@ extern "C" {
     ) -> Animation;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "Animation", feature = "KeyframeAnimationOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "CSSPseudoElement" , js_name = animate)]
+    #[wasm_bindgen(method, js_class = "CSSPseudoElement", js_name = "animate")]
     #[doc = "The `animate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/animate)"]
@@ -73,7 +82,7 @@ extern "C" {
     ) -> Animation;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Animation")]
-    # [wasm_bindgen (method , structural , js_class = "CSSPseudoElement" , js_name = getAnimations)]
+    #[wasm_bindgen(method, js_class = "CSSPseudoElement", js_name = "getAnimations")]
     #[doc = "The `getAnimations()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/getAnimations)"]
@@ -85,7 +94,7 @@ extern "C" {
     pub fn get_animations(this: &CssPseudoElement) -> ::js_sys::Array<Animation>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "Animation", feature = "GetAnimationsOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "CSSPseudoElement" , js_name = getAnimations)]
+    #[wasm_bindgen(method, js_class = "CSSPseudoElement", js_name = "getAnimations")]
     #[doc = "The `getAnimations()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSPseudoElement/getAnimations)"]

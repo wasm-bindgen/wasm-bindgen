@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = ToggleEvent , typescript_type = "ToggleEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "ToggleEvent",
+        typescript_type = "ToggleEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ToggleEvent` class."]
     #[doc = ""]
@@ -12,14 +17,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ToggleEvent`*"]
     pub type ToggleEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "ToggleEvent" , js_name = oldState)]
+    #[wasm_bindgen(method, getter, js_class = "ToggleEvent", js_name = "oldState")]
     #[doc = "Getter for the `oldState` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ToggleEvent/oldState)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ToggleEvent`*"]
     pub fn old_state(this: &ToggleEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "ToggleEvent" , js_name = newState)]
+    #[wasm_bindgen(method, getter, js_class = "ToggleEvent", js_name = "newState")]
     #[doc = "Getter for the `newState` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ToggleEvent/newState)"]

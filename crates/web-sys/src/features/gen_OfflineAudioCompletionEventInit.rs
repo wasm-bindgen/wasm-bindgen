@@ -4,7 +4,10 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = OfflineAudioCompletionEventInit)]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "OfflineAudioCompletionEventInit"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OfflineAudioCompletionEventInit` dictionary."]
     #[doc = ""]

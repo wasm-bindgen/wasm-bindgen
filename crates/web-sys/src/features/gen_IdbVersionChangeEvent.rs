@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = IDBVersionChangeEvent , typescript_type = "IDBVersionChangeEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "IDBVersionChangeEvent",
+        typescript_type = "IDBVersionChangeEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `IdbVersionChangeEvent` class."]
     #[doc = ""]
@@ -12,14 +17,24 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbVersionChangeEvent`*"]
     pub type IdbVersionChangeEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "IDBVersionChangeEvent" , js_name = oldVersion)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "IDBVersionChangeEvent",
+        js_name = "oldVersion"
+    )]
     #[doc = "Getter for the `oldVersion` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBVersionChangeEvent/oldVersion)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbVersionChangeEvent`*"]
     pub fn old_version(this: &IdbVersionChangeEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "IDBVersionChangeEvent" , js_name = newVersion)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "IDBVersionChangeEvent",
+        js_name = "newVersion"
+    )]
     #[doc = "Getter for the `newVersion` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBVersionChangeEvent/newVersion)"]

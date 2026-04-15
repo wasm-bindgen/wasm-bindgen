@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = BluetoothAdvertisingEvent , typescript_type = "BluetoothAdvertisingEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "BluetoothAdvertisingEvent",
+        typescript_type = "BluetoothAdvertisingEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `BluetoothAdvertisingEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type BluetoothAdvertisingEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothDevice")]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = device)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "device"
+    )]
     #[doc = "Getter for the `device` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/device)"]
@@ -29,7 +39,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device(this: &BluetoothAdvertisingEvent) -> BluetoothDevice;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = uuids)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "uuids"
+    )]
     #[doc = "Getter for the `uuids` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/uuids)"]
@@ -40,7 +55,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn uuids(this: &BluetoothAdvertisingEvent) -> ::js_sys::Array<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = name)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "name"
+    )]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/name)"]
@@ -51,7 +71,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn name(this: &BluetoothAdvertisingEvent) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = appearance)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "appearance"
+    )]
     #[doc = "Getter for the `appearance` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/appearance)"]
@@ -62,7 +87,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn appearance(this: &BluetoothAdvertisingEvent) -> Option<u16>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = txPower)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "txPower"
+    )]
     #[doc = "Getter for the `txPower` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/txPower)"]
@@ -73,7 +103,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn tx_power(this: &BluetoothAdvertisingEvent) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = rssi)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "rssi"
+    )]
     #[doc = "Getter for the `rssi` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/rssi)"]
@@ -85,7 +120,12 @@ extern "C" {
     pub fn rssi(this: &BluetoothAdvertisingEvent) -> Option<i8>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothManufacturerDataMap")]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = manufacturerData)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "manufacturerData"
+    )]
     #[doc = "Getter for the `manufacturerData` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/manufacturerData)"]
@@ -97,7 +137,12 @@ extern "C" {
     pub fn manufacturer_data(this: &BluetoothAdvertisingEvent) -> BluetoothManufacturerDataMap;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothServiceDataMap")]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothAdvertisingEvent" , js_name = serviceData)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
+        js_name = "serviceData"
+    )]
     #[doc = "Getter for the `serviceData` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/serviceData)"]

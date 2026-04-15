@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGViewElement , typescript_type = "SVGViewElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGViewElement",
+        typescript_type = "SVGViewElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgViewElement` class."]
     #[doc = ""]
@@ -13,7 +21,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgViewElement`*"]
     pub type SvgViewElement;
     #[cfg(feature = "SvgAnimatedRect")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGViewElement" , js_name = viewBox)]
+    #[wasm_bindgen(method, getter, js_class = "SVGViewElement", js_name = "viewBox")]
     #[doc = "Getter for the `viewBox` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGViewElement/viewBox)"]
@@ -21,21 +29,26 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedRect`, `SvgViewElement`*"]
     pub fn view_box(this: &SvgViewElement) -> SvgAnimatedRect;
     #[cfg(feature = "SvgAnimatedPreserveAspectRatio")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGViewElement" , js_name = preserveAspectRatio)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGViewElement",
+        js_name = "preserveAspectRatio"
+    )]
     #[doc = "Getter for the `preserveAspectRatio` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGViewElement/preserveAspectRatio)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedPreserveAspectRatio`, `SvgViewElement`*"]
     pub fn preserve_aspect_ratio(this: &SvgViewElement) -> SvgAnimatedPreserveAspectRatio;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGViewElement" , js_name = zoomAndPan)]
+    #[wasm_bindgen(method, getter, js_class = "SVGViewElement", js_name = "zoomAndPan")]
     #[doc = "Getter for the `zoomAndPan` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGViewElement/zoomAndPan)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgViewElement`*"]
     pub fn zoom_and_pan(this: &SvgViewElement) -> u16;
-    # [wasm_bindgen (structural , method , setter , js_class = "SVGViewElement" , js_name = zoomAndPan)]
+    #[wasm_bindgen(method, setter, js_class = "SVGViewElement", js_name = "zoomAndPan")]
     #[doc = "Setter for the `zoomAndPan` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGViewElement/zoomAndPan)"]

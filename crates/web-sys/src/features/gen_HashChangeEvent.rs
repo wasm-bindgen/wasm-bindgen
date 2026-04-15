@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = HashChangeEvent , typescript_type = "HashChangeEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "HashChangeEvent",
+        typescript_type = "HashChangeEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HashChangeEvent` class."]
     #[doc = ""]
@@ -12,14 +17,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub type HashChangeEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "HashChangeEvent" , js_name = oldURL)]
+    #[wasm_bindgen(method, getter, js_class = "HashChangeEvent", js_name = "oldURL")]
     #[doc = "Getter for the `oldURL` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/oldURL)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn old_url(this: &HashChangeEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "HashChangeEvent" , js_name = newURL)]
+    #[wasm_bindgen(method, getter, js_class = "HashChangeEvent", js_name = "newURL")]
     #[doc = "Getter for the `newURL` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/newURL)"]
@@ -44,14 +49,14 @@ extern "C" {
         type_: &str,
         event_init_dict: &HashChangeEventInit,
     ) -> Result<HashChangeEvent, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "HashChangeEvent" , js_name = initHashChangeEvent)]
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn init_hash_change_event(this: &HashChangeEvent, type_arg: &str);
-    # [wasm_bindgen (method , structural , js_class = "HashChangeEvent" , js_name = initHashChangeEvent)]
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
@@ -62,7 +67,7 @@ extern "C" {
         type_arg: &str,
         can_bubble_arg: bool,
     );
-    # [wasm_bindgen (method , structural , js_class = "HashChangeEvent" , js_name = initHashChangeEvent)]
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
@@ -74,7 +79,7 @@ extern "C" {
         can_bubble_arg: bool,
         cancelable_arg: bool,
     );
-    # [wasm_bindgen (method , structural , js_class = "HashChangeEvent" , js_name = initHashChangeEvent)]
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
@@ -87,7 +92,7 @@ extern "C" {
         cancelable_arg: bool,
         old_url_arg: &str,
     );
-    # [wasm_bindgen (method , structural , js_class = "HashChangeEvent" , js_name = initHashChangeEvent)]
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]

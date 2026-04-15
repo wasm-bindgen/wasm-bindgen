@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = USBIsochronousInTransferPacket , typescript_type = "USBIsochronousInTransferPacket")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "USBIsochronousInTransferPacket",
+        typescript_type = "USBIsochronousInTransferPacket"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UsbIsochronousInTransferPacket` class."]
     #[doc = ""]
@@ -17,7 +21,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type UsbIsochronousInTransferPacket;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBIsochronousInTransferPacket" , js_name = data)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "USBIsochronousInTransferPacket",
+        js_name = "data"
+    )]
     #[doc = "Getter for the `data` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBIsochronousInTransferPacket/data)"]
@@ -29,7 +38,12 @@ extern "C" {
     pub fn data(this: &UsbIsochronousInTransferPacket) -> Option<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbTransferStatus")]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBIsochronousInTransferPacket" , js_name = status)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "USBIsochronousInTransferPacket",
+        js_name = "status"
+    )]
     #[doc = "Getter for the `status` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBIsochronousInTransferPacket/status)"]

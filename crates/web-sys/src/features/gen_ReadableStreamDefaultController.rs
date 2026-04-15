@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = ReadableStreamDefaultController , typescript_type = "ReadableStreamDefaultController")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "ReadableStreamDefaultController",
+        typescript_type = "ReadableStreamDefaultController"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ReadableStreamDefaultController` class."]
     #[doc = ""]
@@ -12,28 +16,38 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStreamDefaultController`*"]
     pub type ReadableStreamDefaultController;
-    # [wasm_bindgen (structural , method , getter , js_class = "ReadableStreamDefaultController" , js_name = desiredSize)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ReadableStreamDefaultController",
+        js_name = "desiredSize"
+    )]
     #[doc = "Getter for the `desiredSize` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/desiredSize)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStreamDefaultController`*"]
     pub fn desired_size(this: &ReadableStreamDefaultController) -> Option<f64>;
-    # [wasm_bindgen (catch , method , structural , js_class = "ReadableStreamDefaultController" , js_name = close)]
+    #[wasm_bindgen(catch, method, js_class = "ReadableStreamDefaultController")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/close)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStreamDefaultController`*"]
     pub fn close(this: &ReadableStreamDefaultController) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "ReadableStreamDefaultController" , js_name = enqueue)]
+    #[wasm_bindgen(catch, method, js_class = "ReadableStreamDefaultController")]
     #[doc = "The `enqueue()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/enqueue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStreamDefaultController`*"]
     pub fn enqueue(this: &ReadableStreamDefaultController) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "ReadableStreamDefaultController" , js_name = enqueue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "ReadableStreamDefaultController",
+        js_name = "enqueue"
+    )]
     #[doc = "The `enqueue()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/enqueue)"]
@@ -43,14 +57,18 @@ extern "C" {
         this: &ReadableStreamDefaultController,
         chunk: &::wasm_bindgen::JsValue,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "ReadableStreamDefaultController" , js_name = error)]
+    #[wasm_bindgen(method, js_class = "ReadableStreamDefaultController")]
     #[doc = "The `error()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/error)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStreamDefaultController`*"]
     pub fn error(this: &ReadableStreamDefaultController);
-    # [wasm_bindgen (method , structural , js_class = "ReadableStreamDefaultController" , js_name = error)]
+    #[wasm_bindgen(
+        method,
+        js_class = "ReadableStreamDefaultController",
+        js_name = "error"
+    )]
     #[doc = "The `error()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/error)"]

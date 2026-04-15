@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = FileSystemHandle , extends = :: js_sys :: Object , js_name = FileSystemDirectoryHandle , typescript_type = "FileSystemDirectoryHandle")]
+    #[wasm_bindgen(
+        extends = "FileSystemHandle",
+        extends = "::js_sys::Object",
+        js_name = "FileSystemDirectoryHandle",
+        typescript_type = "FileSystemDirectoryHandle"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FileSystemDirectoryHandle` class."]
     #[doc = ""]
@@ -12,7 +17,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub type FileSystemDirectoryHandle;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = getDirectoryHandle)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getDirectoryHandle"
+    )]
     #[doc = "The `getDirectoryHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getDirectoryHandle)"]
@@ -20,7 +29,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn get_directory_handle(this: &FileSystemDirectoryHandle, name: &str) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemGetDirectoryOptions")]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = getDirectoryHandle)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getDirectoryHandle"
+    )]
     #[doc = "The `getDirectoryHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getDirectoryHandle)"]
@@ -31,7 +44,11 @@ extern "C" {
         name: &str,
         options: &FileSystemGetDirectoryOptions,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = getFileHandle)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getFileHandle"
+    )]
     #[doc = "The `getFileHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getFileHandle)"]
@@ -39,7 +56,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn get_file_handle(this: &FileSystemDirectoryHandle, name: &str) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemGetFileOptions")]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = getFileHandle)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getFileHandle"
+    )]
     #[doc = "The `getFileHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getFileHandle)"]
@@ -50,7 +71,11 @@ extern "C" {
         name: &str,
         options: &FileSystemGetFileOptions,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = removeEntry)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "removeEntry"
+    )]
     #[doc = "The `removeEntry()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/removeEntry)"]
@@ -58,7 +83,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn remove_entry(this: &FileSystemDirectoryHandle, name: &str) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemRemoveOptions")]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = removeEntry)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "removeEntry"
+    )]
     #[doc = "The `removeEntry()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/removeEntry)"]
@@ -69,7 +98,7 @@ extern "C" {
         name: &str,
         options: &FileSystemRemoveOptions,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = resolve)]
+    #[wasm_bindgen(method, js_class = "FileSystemDirectoryHandle")]
     #[doc = "The `resolve()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/resolve)"]
@@ -79,21 +108,21 @@ extern "C" {
         this: &FileSystemDirectoryHandle,
         possible_descendant: &FileSystemHandle,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = entries)]
+    #[wasm_bindgen(method, js_class = "FileSystemDirectoryHandle")]
     #[doc = "The `entries()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/entries)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn entries(this: &FileSystemDirectoryHandle) -> ::js_sys::AsyncIterator;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = keys)]
+    #[wasm_bindgen(method, js_class = "FileSystemDirectoryHandle")]
     #[doc = "The `keys()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/keys)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn keys(this: &FileSystemDirectoryHandle) -> ::js_sys::AsyncIterator;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemDirectoryHandle" , js_name = values)]
+    #[wasm_bindgen(method, js_class = "FileSystemDirectoryHandle")]
     #[doc = "The `values()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/values)"]

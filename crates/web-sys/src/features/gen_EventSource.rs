@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = EventSource , typescript_type = "EventSource")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "EventSource",
+        typescript_type = "EventSource"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `EventSource` class."]
     #[doc = ""]
@@ -12,63 +17,63 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub type EventSource;
-    # [wasm_bindgen (structural , method , getter , js_class = "EventSource" , js_name = url)]
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "url")]
     #[doc = "Getter for the `url` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/url)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn url(this: &EventSource) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "EventSource" , js_name = withCredentials)]
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "withCredentials")]
     #[doc = "Getter for the `withCredentials` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/withCredentials)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn with_credentials(this: &EventSource) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "EventSource" , js_name = readyState)]
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "readyState")]
     #[doc = "Getter for the `readyState` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/readyState)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn ready_state(this: &EventSource) -> u16;
-    # [wasm_bindgen (structural , method , getter , js_class = "EventSource" , js_name = onopen)]
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "onopen")]
     #[doc = "Getter for the `onopen` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onopen)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn onopen(this: &EventSource) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "EventSource" , js_name = onopen)]
+    #[wasm_bindgen(method, setter, js_class = "EventSource", js_name = "onopen")]
     #[doc = "Setter for the `onopen` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onopen)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn set_onopen(this: &EventSource, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "EventSource" , js_name = onmessage)]
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "onmessage")]
     #[doc = "Getter for the `onmessage` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onmessage)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn onmessage(this: &EventSource) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "EventSource" , js_name = onmessage)]
+    #[wasm_bindgen(method, setter, js_class = "EventSource", js_name = "onmessage")]
     #[doc = "Setter for the `onmessage` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onmessage)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn set_onmessage(this: &EventSource, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "EventSource" , js_name = onerror)]
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "onerror")]
     #[doc = "Getter for the `onerror` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onerror)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn onerror(this: &EventSource) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "EventSource" , js_name = onerror)]
+    #[wasm_bindgen(method, setter, js_class = "EventSource", js_name = "onerror")]
     #[doc = "Setter for the `onerror` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onerror)"]
@@ -93,7 +98,7 @@ extern "C" {
         url: &str,
         event_source_init_dict: &EventSourceInit,
     ) -> Result<EventSource, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "EventSource" , js_name = close)]
+    #[wasm_bindgen(method, js_class = "EventSource")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/close)"]

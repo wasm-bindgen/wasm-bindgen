@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = Serial , typescript_type = "Serial")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "Serial",
+        typescript_type = "Serial"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Serial` class."]
     #[doc = ""]
@@ -17,7 +22,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type Serial;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "Serial" , js_name = onconnect)]
+    #[wasm_bindgen(method, getter, js_class = "Serial", js_name = "onconnect")]
     #[doc = "Getter for the `onconnect` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/onconnect)"]
@@ -28,7 +33,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn onconnect(this: &Serial) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "Serial" , js_name = onconnect)]
+    #[wasm_bindgen(method, setter, js_class = "Serial", js_name = "onconnect")]
     #[doc = "Setter for the `onconnect` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/onconnect)"]
@@ -39,7 +44,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_onconnect(this: &Serial, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "Serial" , js_name = ondisconnect)]
+    #[wasm_bindgen(method, getter, js_class = "Serial", js_name = "ondisconnect")]
     #[doc = "Getter for the `ondisconnect` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/ondisconnect)"]
@@ -50,7 +55,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ondisconnect(this: &Serial) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "Serial" , js_name = ondisconnect)]
+    #[wasm_bindgen(method, setter, js_class = "Serial", js_name = "ondisconnect")]
     #[doc = "Setter for the `ondisconnect` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/ondisconnect)"]
@@ -62,7 +67,7 @@ extern "C" {
     pub fn set_ondisconnect(this: &Serial, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SerialPort")]
-    # [wasm_bindgen (method , structural , js_class = "Serial" , js_name = getPorts)]
+    #[wasm_bindgen(method, js_class = "Serial", js_name = "getPorts")]
     #[doc = "The `getPorts()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/getPorts)"]
@@ -74,7 +79,7 @@ extern "C" {
     pub fn get_ports(this: &Serial) -> ::js_sys::Promise<::js_sys::Array<SerialPort>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SerialPort")]
-    # [wasm_bindgen (method , structural , js_class = "Serial" , js_name = requestPort)]
+    #[wasm_bindgen(method, js_class = "Serial", js_name = "requestPort")]
     #[doc = "The `requestPort()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/requestPort)"]
@@ -86,7 +91,7 @@ extern "C" {
     pub fn request_port(this: &Serial) -> ::js_sys::Promise<SerialPort>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "SerialPort", feature = "SerialPortRequestOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "Serial" , js_name = requestPort)]
+    #[wasm_bindgen(method, js_class = "Serial", js_name = "requestPort")]
     #[doc = "The `requestPort()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Serial/requestPort)"]

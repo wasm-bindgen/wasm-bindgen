@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = TCPSocketErrorEvent , typescript_type = "TCPSocketErrorEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "TCPSocketErrorEvent",
+        typescript_type = "TCPSocketErrorEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TcpSocketErrorEvent` class."]
     #[doc = ""]
@@ -12,14 +17,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TcpSocketErrorEvent`*"]
     pub type TcpSocketErrorEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "TCPSocketErrorEvent" , js_name = name)]
+    #[wasm_bindgen(method, getter, js_class = "TCPSocketErrorEvent", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPSocketErrorEvent/name)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TcpSocketErrorEvent`*"]
     pub fn name(this: &TcpSocketErrorEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "TCPSocketErrorEvent" , js_name = message)]
+    #[wasm_bindgen(method, getter, js_class = "TCPSocketErrorEvent", js_name = "message")]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPSocketErrorEvent/message)"]

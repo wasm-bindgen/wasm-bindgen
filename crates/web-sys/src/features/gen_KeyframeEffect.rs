@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = AnimationEffect , extends = :: js_sys :: Object , js_name = KeyframeEffect , typescript_type = "KeyframeEffect")]
+    #[wasm_bindgen(
+        extends = "AnimationEffect",
+        extends = "::js_sys::Object",
+        js_name = "KeyframeEffect",
+        typescript_type = "KeyframeEffect"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `KeyframeEffect` class."]
     #[doc = ""]
@@ -12,14 +17,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeEffect`*"]
     pub type KeyframeEffect;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyframeEffect" , js_name = target)]
+    #[wasm_bindgen(method, getter, js_class = "KeyframeEffect", js_name = "target")]
     #[doc = "Getter for the `target` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/target)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeEffect`*"]
     pub fn target(this: &KeyframeEffect) -> Option<::js_sys::Object>;
-    # [wasm_bindgen (structural , method , setter , js_class = "KeyframeEffect" , js_name = target)]
+    #[wasm_bindgen(method, setter, js_class = "KeyframeEffect", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/target)"]
@@ -28,7 +33,7 @@ extern "C" {
     #[deprecated]
     pub fn set_target(this: &KeyframeEffect, value: Option<&::js_sys::Object>);
     #[cfg(feature = "Element")]
-    # [wasm_bindgen (structural , method , setter , js_class = "KeyframeEffect" , js_name = target)]
+    #[wasm_bindgen(method, setter, js_class = "KeyframeEffect", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/target)"]
@@ -36,7 +41,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Element`, `KeyframeEffect`*"]
     pub fn set_target_opt_element(this: &KeyframeEffect, value: Option<&Element>);
     #[cfg(feature = "CssPseudoElement")]
-    # [wasm_bindgen (structural , method , setter , js_class = "KeyframeEffect" , js_name = target)]
+    #[wasm_bindgen(method, setter, js_class = "KeyframeEffect", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/target)"]
@@ -47,7 +52,12 @@ extern "C" {
         value: Option<&CssPseudoElement>,
     );
     #[cfg(feature = "IterationCompositeOperation")]
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyframeEffect" , js_name = iterationComposite)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "KeyframeEffect",
+        js_name = "iterationComposite"
+    )]
     #[doc = "Getter for the `iterationComposite` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/iterationComposite)"]
@@ -55,7 +65,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IterationCompositeOperation`, `KeyframeEffect`*"]
     pub fn iteration_composite(this: &KeyframeEffect) -> IterationCompositeOperation;
     #[cfg(feature = "IterationCompositeOperation")]
-    # [wasm_bindgen (structural , method , setter , js_class = "KeyframeEffect" , js_name = iterationComposite)]
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "KeyframeEffect",
+        js_name = "iterationComposite"
+    )]
     #[doc = "Setter for the `iterationComposite` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/iterationComposite)"]
@@ -63,7 +78,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IterationCompositeOperation`, `KeyframeEffect`*"]
     pub fn set_iteration_composite(this: &KeyframeEffect, value: IterationCompositeOperation);
     #[cfg(feature = "CompositeOperation")]
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyframeEffect" , js_name = composite)]
+    #[wasm_bindgen(method, getter, js_class = "KeyframeEffect", js_name = "composite")]
     #[doc = "Getter for the `composite` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/composite)"]
@@ -71,7 +86,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CompositeOperation`, `KeyframeEffect`*"]
     pub fn composite(this: &KeyframeEffect) -> CompositeOperation;
     #[cfg(feature = "CompositeOperation")]
-    # [wasm_bindgen (structural , method , setter , js_class = "KeyframeEffect" , js_name = composite)]
+    #[wasm_bindgen(method, setter, js_class = "KeyframeEffect", js_name = "composite")]
     #[doc = "Setter for the `composite` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/composite)"]
@@ -155,14 +170,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeEffect`*"]
     pub fn new_with_source(source: &KeyframeEffect) -> Result<KeyframeEffect, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyframeEffect" , js_name = getKeyframes)]
+    #[wasm_bindgen(catch, method, js_class = "KeyframeEffect", js_name = "getKeyframes")]
     #[doc = "The `getKeyframes()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/getKeyframes)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeEffect`*"]
     pub fn get_keyframes(this: &KeyframeEffect) -> Result<::js_sys::Array, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyframeEffect" , js_name = setKeyframes)]
+    #[wasm_bindgen(catch, method, js_class = "KeyframeEffect", js_name = "setKeyframes")]
     #[doc = "The `setKeyframes()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/setKeyframes)"]

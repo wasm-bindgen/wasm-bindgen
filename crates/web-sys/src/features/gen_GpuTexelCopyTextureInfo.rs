@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUTexelCopyTextureInfo)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "GPUTexelCopyTextureInfo")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuTexelCopyTextureInfo` dictionary."]
     #[doc = ""]

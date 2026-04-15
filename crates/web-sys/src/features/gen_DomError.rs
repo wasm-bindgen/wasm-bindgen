@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = DOMError , typescript_type = "DOMError")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "DOMError",
+        typescript_type = "DOMError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomError` class."]
     #[doc = ""]
@@ -12,14 +16,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomError`*"]
     pub type DomError;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMError" , js_name = name)]
+    #[wasm_bindgen(method, getter, js_class = "DOMError", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMError/name)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomError`*"]
     pub fn name(this: &DomError) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMError" , js_name = message)]
+    #[wasm_bindgen(method, getter, js_class = "DOMError", js_name = "message")]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMError/message)"]

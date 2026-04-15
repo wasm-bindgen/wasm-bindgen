@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = OES_texture_float , typescript_type = "OES_texture_float")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "OES_texture_float" , typescript_type = "OES_texture_float")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OesTextureFloat` class."]
     #[doc = ""]

@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = TCPServerSocketEvent , typescript_type = "TCPServerSocketEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "TCPServerSocketEvent",
+        typescript_type = "TCPServerSocketEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TcpServerSocketEvent` class."]
     #[doc = ""]
@@ -13,7 +18,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TcpServerSocketEvent`*"]
     pub type TcpServerSocketEvent;
     #[cfg(feature = "TcpSocket")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TCPServerSocketEvent" , js_name = socket)]
+    #[wasm_bindgen(method, getter, js_class = "TCPServerSocketEvent", js_name = "socket")]
     #[doc = "Getter for the `socket` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPServerSocketEvent/socket)"]

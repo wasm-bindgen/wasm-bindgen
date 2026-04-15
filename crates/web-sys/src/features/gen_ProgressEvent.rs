@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = ProgressEvent , typescript_type = "ProgressEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "ProgressEvent",
+        typescript_type = "ProgressEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ProgressEvent` class."]
     #[doc = ""]
@@ -12,21 +17,26 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProgressEvent`*"]
     pub type ProgressEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "ProgressEvent" , js_name = lengthComputable)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ProgressEvent",
+        js_name = "lengthComputable"
+    )]
     #[doc = "Getter for the `lengthComputable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent/lengthComputable)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProgressEvent`*"]
     pub fn length_computable(this: &ProgressEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "ProgressEvent" , js_name = loaded)]
+    #[wasm_bindgen(method, getter, js_class = "ProgressEvent", js_name = "loaded")]
     #[doc = "Getter for the `loaded` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent/loaded)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProgressEvent`*"]
     pub fn loaded(this: &ProgressEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "ProgressEvent" , js_name = total)]
+    #[wasm_bindgen(method, getter, js_class = "ProgressEvent", js_name = "total")]
     #[doc = "Getter for the `total` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent/total)"]

@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = ExtendableEvent , extends = Event , extends = :: js_sys :: Object , js_name = ExtendableMessageEvent , typescript_type = "ExtendableMessageEvent")]
+    #[wasm_bindgen(
+        extends = "ExtendableEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "ExtendableMessageEvent",
+        typescript_type = "ExtendableMessageEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ExtendableMessageEvent` class."]
     #[doc = ""]
@@ -12,35 +18,50 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub type ExtendableMessageEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableMessageEvent" , js_name = data)]
+    #[wasm_bindgen(method, getter, js_class = "ExtendableMessageEvent", js_name = "data")]
     #[doc = "Getter for the `data` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/data)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub fn data(this: &ExtendableMessageEvent) -> ::wasm_bindgen::JsValue;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableMessageEvent" , js_name = origin)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableMessageEvent",
+        js_name = "origin"
+    )]
     #[doc = "Getter for the `origin` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/origin)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub fn origin(this: &ExtendableMessageEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableMessageEvent" , js_name = lastEventId)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableMessageEvent",
+        js_name = "lastEventId"
+    )]
     #[doc = "Getter for the `lastEventId` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/lastEventId)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub fn last_event_id(this: &ExtendableMessageEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableMessageEvent" , js_name = source)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableMessageEvent",
+        js_name = "source"
+    )]
     #[doc = "Getter for the `source` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/source)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub fn source(this: &ExtendableMessageEvent) -> Option<::js_sys::Object>;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableMessageEvent" , js_name = ports)]
+    #[wasm_bindgen(method, getter, js_class = "ExtendableMessageEvent", js_name = "ports")]
     #[doc = "Getter for the `ports` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/ports)"]

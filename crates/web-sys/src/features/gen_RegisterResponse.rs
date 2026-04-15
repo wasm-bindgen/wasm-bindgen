@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = RegisterResponse)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "RegisterResponse")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `RegisterResponse` dictionary."]
     #[doc = ""]

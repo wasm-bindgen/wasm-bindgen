@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = Response , typescript_type = "Response")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "Response",
+        typescript_type = "Response"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Response` class."]
     #[doc = ""]
@@ -13,42 +17,42 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub type Response;
     #[cfg(feature = "ResponseType")]
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = type)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/type)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`, `ResponseType`*"]
     pub fn type_(this: &Response) -> ResponseType;
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = url)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "url")]
     #[doc = "Getter for the `url` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/url)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn url(this: &Response) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = redirected)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "redirected")]
     #[doc = "Getter for the `redirected` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/redirected)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn redirected(this: &Response) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = status)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "status")]
     #[doc = "Getter for the `status` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/status)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn status(this: &Response) -> u16;
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = ok)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "ok")]
     #[doc = "Getter for the `ok` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn ok(this: &Response) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = statusText)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "statusText")]
     #[doc = "Getter for the `statusText` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/statusText)"]
@@ -56,14 +60,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn status_text(this: &Response) -> ::alloc::string::String;
     #[cfg(feature = "Headers")]
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = headers)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "headers")]
     #[doc = "Getter for the `headers` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/headers)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`, `Response`*"]
     pub fn headers(this: &Response) -> Headers;
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = bodyUsed)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "bodyUsed")]
     #[doc = "Getter for the `bodyUsed` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/bodyUsed)"]
@@ -71,7 +75,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn body_used(this: &Response) -> bool;
     #[cfg(feature = "ReadableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "Response" , js_name = body)]
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "body")]
     #[doc = "Getter for the `body` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/body)"]
@@ -239,63 +243,68 @@ extern "C" {
         body: Option<&ReadableStream>,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Response" , js_name = clone)]
+    #[wasm_bindgen(catch, method, js_class = "Response")]
     #[doc = "The `clone()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/clone)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn clone(this: &Response) -> Result<Response, JsValue>;
-    # [wasm_bindgen (static_method_of = Response , js_class = "Response" , js_name = error)]
+    #[wasm_bindgen(static_method_of = "Response", js_class = "Response")]
     #[doc = "The `error()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/error_static)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn error() -> Response;
-    # [wasm_bindgen (catch , static_method_of = Response , js_class = "Response" , js_name = redirect)]
+    #[wasm_bindgen(catch, static_method_of = "Response", js_class = "Response")]
     #[doc = "The `redirect()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect_static)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn redirect(url: &str) -> Result<Response, JsValue>;
-    # [wasm_bindgen (catch , static_method_of = Response , js_class = "Response" , js_name = redirect)]
+    #[wasm_bindgen(
+        catch,
+        static_method_of = "Response",
+        js_class = "Response",
+        js_name = "redirect"
+    )]
     #[doc = "The `redirect()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect_static)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn redirect_with_status(url: &str, status: u16) -> Result<Response, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Response" , js_name = arrayBuffer)]
+    #[wasm_bindgen(catch, method, js_class = "Response", js_name = "arrayBuffer")]
     #[doc = "The `arrayBuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/arrayBuffer)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn array_buffer(this: &Response) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Response" , js_name = blob)]
+    #[wasm_bindgen(catch, method, js_class = "Response")]
     #[doc = "The `blob()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn blob(this: &Response) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Response" , js_name = formData)]
+    #[wasm_bindgen(catch, method, js_class = "Response", js_name = "formData")]
     #[doc = "The `formData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/formData)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn form_data(this: &Response) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Response" , js_name = json)]
+    #[wasm_bindgen(catch, method, js_class = "Response")]
     #[doc = "The `json()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn json(this: &Response) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Response" , js_name = text)]
+    #[wasm_bindgen(catch, method, js_class = "Response")]
     #[doc = "The `text()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)"]

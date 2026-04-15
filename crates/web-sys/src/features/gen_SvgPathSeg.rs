@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = SVGPathSeg , typescript_type = "SVGPathSeg")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "SVGPathSeg" , typescript_type = "SVGPathSeg")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgPathSeg` class."]
     #[doc = ""]
@@ -12,14 +12,19 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSeg`*"]
     pub type SvgPathSeg;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGPathSeg" , js_name = pathSegType)]
+    #[wasm_bindgen(method, getter, js_class = "SVGPathSeg", js_name = "pathSegType")]
     #[doc = "Getter for the `pathSegType` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSeg/pathSegType)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSeg`*"]
     pub fn path_seg_type(this: &SvgPathSeg) -> u16;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGPathSeg" , js_name = pathSegTypeAsLetter)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGPathSeg",
+        js_name = "pathSegTypeAsLetter"
+    )]
     #[doc = "Getter for the `pathSegTypeAsLetter` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSeg/pathSegTypeAsLetter)"]

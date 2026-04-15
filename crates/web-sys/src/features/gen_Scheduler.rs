@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = Scheduler , typescript_type = "Scheduler")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "Scheduler",
+        typescript_type = "Scheduler"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Scheduler` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type Scheduler;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "Scheduler" , js_name = postTask)]
+    #[wasm_bindgen(method, js_class = "Scheduler", js_name = "postTask")]
     #[doc = "The `postTask()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/postTask)"]
@@ -32,7 +36,7 @@ extern "C" {
     ) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SchedulerPostTaskOptions")]
-    # [wasm_bindgen (method , structural , js_class = "Scheduler" , js_name = postTask)]
+    #[wasm_bindgen(method, js_class = "Scheduler", js_name = "postTask")]
     #[doc = "The `postTask()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/postTask)"]

@@ -5,7 +5,13 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = GestureEvent , typescript_type = "GestureEvent")]
+    #[wasm_bindgen(
+        extends = "UiEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "GestureEvent",
+        typescript_type = "GestureEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GestureEvent` class."]
     #[doc = ""]
@@ -17,7 +23,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GestureEvent;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = scale)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "scale")]
     #[doc = "Getter for the `scale` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/scale)"]
@@ -28,7 +34,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn scale(this: &GestureEvent) -> f32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = rotation)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "rotation")]
     #[doc = "Getter for the `rotation` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/rotation)"]
@@ -39,7 +45,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn rotation(this: &GestureEvent) -> f32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = ctrlKey)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "ctrlKey")]
     #[doc = "Getter for the `ctrlKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/ctrlKey)"]
@@ -50,7 +56,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ctrl_key(this: &GestureEvent) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = shiftKey)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "shiftKey")]
     #[doc = "Getter for the `shiftKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/shiftKey)"]
@@ -61,7 +67,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn shift_key(this: &GestureEvent) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = altKey)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "altKey")]
     #[doc = "Getter for the `altKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/altKey)"]
@@ -72,7 +78,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn alt_key(this: &GestureEvent) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = metaKey)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "metaKey")]
     #[doc = "Getter for the `metaKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/metaKey)"]
@@ -83,7 +89,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn meta_key(this: &GestureEvent) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = clientX)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "clientX")]
     #[doc = "Getter for the `clientX` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/clientX)"]
@@ -94,7 +100,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn client_x(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = clientY)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "clientY")]
     #[doc = "Getter for the `clientY` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/clientY)"]
@@ -105,7 +111,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn client_y(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = screenX)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "screenX")]
     #[doc = "Getter for the `screenX` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/screenX)"]
@@ -116,7 +122,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn screen_x(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GestureEvent" , js_name = screenY)]
+    #[wasm_bindgen(method, getter, js_class = "GestureEvent", js_name = "screenY")]
     #[doc = "Getter for the `screenY` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/screenY)"]
@@ -128,7 +134,7 @@ extern "C" {
     pub fn screen_y(this: &GestureEvent) -> i32;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "EventTarget", feature = "Window",))]
-    # [wasm_bindgen (method , structural , js_class = "GestureEvent" , js_name = initGestureEvent)]
+    #[wasm_bindgen(method, js_class = "GestureEvent", js_name = "initGestureEvent")]
     #[doc = "The `initGestureEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GestureEvent/initGestureEvent)"]

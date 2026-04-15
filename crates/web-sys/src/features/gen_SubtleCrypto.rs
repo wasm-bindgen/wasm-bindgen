@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SubtleCrypto , typescript_type = "SubtleCrypto")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SubtleCrypto",
+        typescript_type = "SubtleCrypto"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SubtleCrypto` class."]
     #[doc = ""]
@@ -13,7 +17,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SubtleCrypto`*"]
     pub type SubtleCrypto;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = decrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "decrypt")]
     #[doc = "The `decrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt)"]
@@ -26,7 +30,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = decrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "decrypt")]
     #[doc = "The `decrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt)"]
@@ -39,7 +43,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = decrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "decrypt")]
     #[doc = "The `decrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt)"]
@@ -52,7 +56,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = decrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "decrypt")]
     #[doc = "The `decrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt)"]
@@ -65,7 +69,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = decrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "decrypt")]
     #[doc = "The `decrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt)"]
@@ -78,7 +82,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = decrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "decrypt")]
     #[doc = "The `decrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt)"]
@@ -91,7 +95,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = deriveBits)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "deriveBits")]
     #[doc = "The `deriveBits()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveBits)"]
@@ -104,7 +108,7 @@ extern "C" {
         length: u32,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = deriveBits)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "deriveBits")]
     #[doc = "The `deriveBits()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveBits)"]
@@ -117,7 +121,7 @@ extern "C" {
         length: u32,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = deriveKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "deriveKey")]
     #[doc = "The `deriveKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey)"]
@@ -132,7 +136,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = deriveKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "deriveKey")]
     #[doc = "The `deriveKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey)"]
@@ -147,7 +151,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = deriveKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "deriveKey")]
     #[doc = "The `deriveKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey)"]
@@ -162,7 +166,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = deriveKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "deriveKey")]
     #[doc = "The `deriveKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey)"]
@@ -176,7 +180,7 @@ extern "C" {
         extractable: bool,
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = digest)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "digest")]
     #[doc = "The `digest()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)"]
@@ -187,7 +191,7 @@ extern "C" {
         algorithm: &::js_sys::Object,
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = digest)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "digest")]
     #[doc = "The `digest()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)"]
@@ -198,7 +202,7 @@ extern "C" {
         algorithm: &str,
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = digest)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "digest")]
     #[doc = "The `digest()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)"]
@@ -209,7 +213,7 @@ extern "C" {
         algorithm: &::js_sys::Object,
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = digest)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "digest")]
     #[doc = "The `digest()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)"]
@@ -220,7 +224,7 @@ extern "C" {
         algorithm: &str,
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = digest)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "digest")]
     #[doc = "The `digest()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)"]
@@ -231,7 +235,7 @@ extern "C" {
         algorithm: &::js_sys::Object,
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = digest)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "digest")]
     #[doc = "The `digest()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)"]
@@ -243,7 +247,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = encrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "encrypt")]
     #[doc = "The `encrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt)"]
@@ -256,7 +260,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = encrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "encrypt")]
     #[doc = "The `encrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt)"]
@@ -269,7 +273,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = encrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "encrypt")]
     #[doc = "The `encrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt)"]
@@ -282,7 +286,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = encrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "encrypt")]
     #[doc = "The `encrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt)"]
@@ -295,7 +299,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = encrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "encrypt")]
     #[doc = "The `encrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt)"]
@@ -308,7 +312,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = encrypt)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "encrypt")]
     #[doc = "The `encrypt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt)"]
@@ -321,7 +325,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = exportKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "exportKey")]
     #[doc = "The `exportKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/exportKey)"]
@@ -332,7 +336,7 @@ extern "C" {
         format: &str,
         key: &CryptoKey,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = generateKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "generateKey")]
     #[doc = "The `generateKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey)"]
@@ -344,7 +348,7 @@ extern "C" {
         extractable: bool,
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = generateKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "generateKey")]
     #[doc = "The `generateKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey)"]
@@ -356,7 +360,7 @@ extern "C" {
         extractable: bool,
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = importKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "importKey")]
     #[doc = "The `importKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey)"]
@@ -370,7 +374,7 @@ extern "C" {
         extractable: bool,
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = importKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "importKey")]
     #[doc = "The `importKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey)"]
@@ -385,7 +389,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign)"]
@@ -398,7 +402,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign)"]
@@ -411,7 +415,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign)"]
@@ -424,7 +428,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign)"]
@@ -437,7 +441,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign)"]
@@ -450,7 +454,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign)"]
@@ -463,7 +467,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -480,7 +484,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -497,7 +501,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -514,7 +518,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -531,7 +535,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -548,7 +552,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -565,7 +569,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -582,7 +586,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -599,7 +603,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -616,7 +620,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -633,7 +637,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -650,7 +654,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = unwrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "unwrapKey")]
     #[doc = "The `unwrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/unwrapKey)"]
@@ -667,7 +671,7 @@ extern "C" {
         key_usages: &::wasm_bindgen::JsValue,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -681,7 +685,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -695,7 +699,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -709,7 +713,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -723,7 +727,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -737,7 +741,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -751,7 +755,7 @@ extern "C" {
         data: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -765,7 +769,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -779,7 +783,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -793,7 +797,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -807,7 +811,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -821,7 +825,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -835,7 +839,7 @@ extern "C" {
         data: &[u8],
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -849,7 +853,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -863,7 +867,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -877,7 +881,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -891,7 +895,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -905,7 +909,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = verify)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "verify")]
     #[doc = "The `verify()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)"]
@@ -919,7 +923,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = wrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "wrapKey")]
     #[doc = "The `wrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/wrapKey)"]
@@ -933,7 +937,7 @@ extern "C" {
         wrap_algorithm: &::js_sys::Object,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SubtleCrypto" , js_name = wrapKey)]
+    #[wasm_bindgen(catch, method, js_class = "SubtleCrypto", js_name = "wrapKey")]
     #[doc = "The `wrapKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/wrapKey)"]

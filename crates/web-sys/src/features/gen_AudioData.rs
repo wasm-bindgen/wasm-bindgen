@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = AudioData , typescript_type = "AudioData")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "AudioData",
+        typescript_type = "AudioData"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AudioData` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type AudioData;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioSampleFormat")]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioData" , js_name = format)]
+    #[wasm_bindgen(method, getter, js_class = "AudioData", js_name = "format")]
     #[doc = "Getter for the `format` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/format)"]
@@ -29,7 +33,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn format(this: &AudioData) -> Option<AudioSampleFormat>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioData" , js_name = sampleRate)]
+    #[wasm_bindgen(method, getter, js_class = "AudioData", js_name = "sampleRate")]
     #[doc = "Getter for the `sampleRate` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/sampleRate)"]
@@ -40,7 +44,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn sample_rate(this: &AudioData) -> f32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioData" , js_name = numberOfFrames)]
+    #[wasm_bindgen(method, getter, js_class = "AudioData", js_name = "numberOfFrames")]
     #[doc = "Getter for the `numberOfFrames` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/numberOfFrames)"]
@@ -51,7 +55,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn number_of_frames(this: &AudioData) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioData" , js_name = numberOfChannels)]
+    #[wasm_bindgen(method, getter, js_class = "AudioData", js_name = "numberOfChannels")]
     #[doc = "Getter for the `numberOfChannels` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/numberOfChannels)"]
@@ -62,7 +66,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn number_of_channels(this: &AudioData) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioData" , js_name = duration)]
+    #[wasm_bindgen(method, getter, js_class = "AudioData", js_name = "duration")]
     #[doc = "Getter for the `duration` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/duration)"]
@@ -73,7 +77,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn duration(this: &AudioData) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioData" , js_name = timestamp)]
+    #[wasm_bindgen(method, getter, js_class = "AudioData", js_name = "timestamp")]
     #[doc = "Getter for the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/timestamp)"]
@@ -97,7 +101,7 @@ extern "C" {
     pub fn new(init: &AudioDataInit) -> Result<AudioData, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioDataCopyToOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioData" , js_name = allocationSize)]
+    #[wasm_bindgen(catch, method, js_class = "AudioData", js_name = "allocationSize")]
     #[doc = "The `allocationSize()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/allocationSize)"]
@@ -111,7 +115,7 @@ extern "C" {
         options: &AudioDataCopyToOptions,
     ) -> Result<u32, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioData" , js_name = clone)]
+    #[wasm_bindgen(catch, method, js_class = "AudioData")]
     #[doc = "The `clone()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/clone)"]
@@ -122,7 +126,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn clone(this: &AudioData) -> Result<AudioData, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "AudioData" , js_name = close)]
+    #[wasm_bindgen(method, js_class = "AudioData")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/close)"]
@@ -134,7 +138,7 @@ extern "C" {
     pub fn close(this: &AudioData);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioDataCopyToOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioData" , js_name = copyTo)]
+    #[wasm_bindgen(catch, method, js_class = "AudioData", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/copyTo)"]
@@ -150,7 +154,7 @@ extern "C" {
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioDataCopyToOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioData" , js_name = copyTo)]
+    #[wasm_bindgen(catch, method, js_class = "AudioData", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/copyTo)"]
@@ -166,7 +170,7 @@ extern "C" {
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioDataCopyToOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioData" , js_name = copyTo)]
+    #[wasm_bindgen(catch, method, js_class = "AudioData", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/copyTo)"]

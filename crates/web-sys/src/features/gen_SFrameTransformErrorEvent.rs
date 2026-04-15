@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = SFrameTransformErrorEvent , typescript_type = "SFrameTransformErrorEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "SFrameTransformErrorEvent",
+        typescript_type = "SFrameTransformErrorEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SFrameTransformErrorEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type SFrameTransformErrorEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SFrameTransformErrorEventType")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SFrameTransformErrorEvent" , js_name = errorType)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SFrameTransformErrorEvent",
+        js_name = "errorType"
+    )]
     #[doc = "Getter for the `errorType` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransformErrorEvent/errorType)"]
@@ -29,7 +39,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn error_type(this: &SFrameTransformErrorEvent) -> SFrameTransformErrorEventType;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "SFrameTransformErrorEvent" , js_name = keyID)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SFrameTransformErrorEvent",
+        js_name = "keyID"
+    )]
     #[doc = "Getter for the `keyID` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransformErrorEvent/keyID)"]
@@ -40,7 +55,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn key_id(this: &SFrameTransformErrorEvent) -> ::wasm_bindgen::JsValue;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "SFrameTransformErrorEvent" , js_name = frame)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SFrameTransformErrorEvent",
+        js_name = "frame"
+    )]
     #[doc = "Getter for the `frame` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransformErrorEvent/frame)"]

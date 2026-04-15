@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = USBDeviceRequestOptions)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "USBDeviceRequestOptions")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UsbDeviceRequestOptions` dictionary."]
     #[doc = ""]

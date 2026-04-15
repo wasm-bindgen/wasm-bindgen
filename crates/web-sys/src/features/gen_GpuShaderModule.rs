@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUShaderModule , typescript_type = "GPUShaderModule")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "GPUShaderModule",
+        typescript_type = "GPUShaderModule"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuShaderModule` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GpuShaderModule;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GPUShaderModule" , js_name = label)]
+    #[wasm_bindgen(method, getter, js_class = "GPUShaderModule", js_name = "label")]
     #[doc = "Getter for the `label` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUShaderModule/label)"]
@@ -28,7 +32,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(this: &GpuShaderModule) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "GPUShaderModule" , js_name = label)]
+    #[wasm_bindgen(method, setter, js_class = "GPUShaderModule", js_name = "label")]
     #[doc = "Setter for the `label` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUShaderModule/label)"]
@@ -40,7 +44,7 @@ extern "C" {
     pub fn set_label(this: &GpuShaderModule, value: &str);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCompilationInfo")]
-    # [wasm_bindgen (method , structural , js_class = "GPUShaderModule" , js_name = getCompilationInfo)]
+    #[wasm_bindgen(method, js_class = "GPUShaderModule", js_name = "getCompilationInfo")]
     #[doc = "The `getCompilationInfo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUShaderModule/getCompilationInfo)"]

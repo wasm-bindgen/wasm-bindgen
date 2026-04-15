@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = PictureInPictureWindow , typescript_type = "PictureInPictureWindow")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "PictureInPictureWindow",
+        typescript_type = "PictureInPictureWindow"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PictureInPictureWindow` class."]
     #[doc = ""]
@@ -17,7 +22,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type PictureInPictureWindow;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "PictureInPictureWindow" , js_name = width)]
+    #[wasm_bindgen(method, getter, js_class = "PictureInPictureWindow", js_name = "width")]
     #[doc = "Getter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PictureInPictureWindow/width)"]
@@ -28,7 +33,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn width(this: &PictureInPictureWindow) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "PictureInPictureWindow" , js_name = height)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PictureInPictureWindow",
+        js_name = "height"
+    )]
     #[doc = "Getter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PictureInPictureWindow/height)"]
@@ -39,7 +49,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn height(this: &PictureInPictureWindow) -> i32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "PictureInPictureWindow" , js_name = onresize)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PictureInPictureWindow",
+        js_name = "onresize"
+    )]
     #[doc = "Getter for the `onresize` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PictureInPictureWindow/onresize)"]
@@ -50,7 +65,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn onresize(this: &PictureInPictureWindow) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "PictureInPictureWindow" , js_name = onresize)]
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "PictureInPictureWindow",
+        js_name = "onresize"
+    )]
     #[doc = "Setter for the `onresize` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PictureInPictureWindow/onresize)"]

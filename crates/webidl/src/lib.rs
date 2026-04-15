@@ -25,10 +25,9 @@ use crate::generator::{
 };
 use crate::traverse::TraverseType;
 use crate::util::{
-    camel_case_ident, get_rust_deprecated, getter_throws, is_structural, is_type_unstable,
-    is_wbg_generic, optional_return_ty, read_dir, rust_ident, setter_throws,
-    shouty_snake_case_ident, snake_case_ident, throws, webidl_const_v_to_backend_const_v,
-    TypePosition,
+    camel_case_ident, get_rust_deprecated, getter_throws, is_type_unstable, is_wbg_generic,
+    optional_return_ty, read_dir, rust_ident, setter_throws, shouty_snake_case_ident,
+    snake_case_ident, throws, webidl_const_v_to_backend_const_v, TypePosition,
 };
 use crate::wbg_type::ToWbgType;
 use anyhow::Context;
@@ -369,7 +368,7 @@ impl<'src> FirstPassRecord<'src> {
 
             #[wasm_bindgen]
             extern "C" {
-                #[wasm_bindgen(extends = ::js_sys::Object, js_name = #name)]
+                #[wasm_bindgen(extends = "::js_sys::Object", js_name = #js_name)]
                 #[derive(Debug, Clone, PartialEq, Eq)]
                 #[doc = #type_doc]
                 pub type #name;
@@ -1056,7 +1055,7 @@ impl<'src> FirstPassRecord<'src> {
         type_: &'src weedle::types::AttributedType<'src>,
         js_name: String,
         attrs: &'src Option<ExtendedAttributeList<'src>>,
-        container_attrs: Option<&'src ExtendedAttributeList<'src>>,
+        _container_attrs: Option<&'src ExtendedAttributeList<'src>>,
         parent_js_name: &str,
         unstable: bool,
         wbg_generic: bool,
@@ -1069,8 +1068,6 @@ impl<'src> FirstPassRecord<'src> {
             Some(Static(_)) => true,
             None => false,
         };
-
-        let structural = is_structural(attrs.as_ref(), container_attrs);
 
         let catch = throws(attrs);
         let deprecated: Option<Option<String>> = get_rust_deprecated(attrs);
@@ -1091,7 +1088,6 @@ impl<'src> FirstPassRecord<'src> {
             let kind = InterfaceAttributeKind::Getter;
             attributes.push(InterfaceAttribute {
                 is_static,
-                structural,
                 catch: catch || getter_throws(parent_js_name, &js_name, attrs),
                 ty,
                 js_name: js_name.clone(),
@@ -1123,7 +1119,6 @@ impl<'src> FirstPassRecord<'src> {
                 if let Some(ty) = ty {
                     attributes.push(InterfaceAttribute {
                         is_static,
-                        structural,
                         catch: catch || setter_throws(parent_js_name, &js_name, attrs),
                         ty,
                         js_name: js_name.clone(),
@@ -1153,7 +1148,6 @@ impl<'src> FirstPassRecord<'src> {
 
                 attributes.push(InterfaceAttribute {
                     is_static,
-                    structural,
                     catch: catch || setter_throws(parent_js_name, &js_name, attrs),
                     ty,
                     js_name: js_name.clone(),
@@ -1229,7 +1223,6 @@ pub fn generate(from: &Path, to: &Path, options: Options) -> Result<String> {
 
     for (name, feature) in features.iter() {
         let out_file_path = to.join(format!("gen_{name}.rs"));
-
         fs::write(&out_file_path, &feature.code)?;
     }
 

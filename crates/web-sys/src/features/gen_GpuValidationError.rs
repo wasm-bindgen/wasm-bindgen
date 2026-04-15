@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = GpuError , extends = :: js_sys :: Object , js_name = GPUValidationError , typescript_type = "GPUValidationError")]
+    #[wasm_bindgen(
+        extends = "GpuError",
+        extends = "::js_sys::Object",
+        js_name = "GPUValidationError",
+        typescript_type = "GPUValidationError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuValidationError` class."]
     #[doc = ""]

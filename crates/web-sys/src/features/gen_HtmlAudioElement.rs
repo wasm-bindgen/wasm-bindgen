@@ -4,7 +4,16 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = HtmlMediaElement , extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLAudioElement , typescript_type = "HTMLAudioElement")]
+    #[wasm_bindgen(
+        extends = "HtmlMediaElement",
+        extends = "HtmlElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "HTMLAudioElement",
+        typescript_type = "HTMLAudioElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlAudioElement` class."]
     #[doc = ""]

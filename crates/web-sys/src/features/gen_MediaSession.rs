@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = MediaSession , typescript_type = "MediaSession")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "MediaSession",
+        typescript_type = "MediaSession"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaSession` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type MediaSession;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaMetadata")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaSession" , js_name = metadata)]
+    #[wasm_bindgen(method, getter, js_class = "MediaSession", js_name = "metadata")]
     #[doc = "Getter for the `metadata` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/metadata)"]
@@ -30,7 +34,7 @@ extern "C" {
     pub fn metadata(this: &MediaSession) -> Option<MediaMetadata>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaMetadata")]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaSession" , js_name = metadata)]
+    #[wasm_bindgen(method, setter, js_class = "MediaSession", js_name = "metadata")]
     #[doc = "Setter for the `metadata` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/metadata)"]
@@ -42,7 +46,7 @@ extern "C" {
     pub fn set_metadata(this: &MediaSession, value: Option<&MediaMetadata>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaSessionPlaybackState")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaSession" , js_name = playbackState)]
+    #[wasm_bindgen(method, getter, js_class = "MediaSession", js_name = "playbackState")]
     #[doc = "Getter for the `playbackState` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/playbackState)"]
@@ -54,7 +58,7 @@ extern "C" {
     pub fn playback_state(this: &MediaSession) -> MediaSessionPlaybackState;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaSessionPlaybackState")]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaSession" , js_name = playbackState)]
+    #[wasm_bindgen(method, setter, js_class = "MediaSession", js_name = "playbackState")]
     #[doc = "Setter for the `playbackState` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/playbackState)"]
@@ -66,7 +70,7 @@ extern "C" {
     pub fn set_playback_state(this: &MediaSession, value: MediaSessionPlaybackState);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "MediaSessionAction", feature = "MediaSessionActionDetails",))]
-    # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setActionHandler)]
+    #[wasm_bindgen(method, js_class = "MediaSession", js_name = "setActionHandler")]
     #[doc = "The `setActionHandler()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/setActionHandler)"]
@@ -81,7 +85,7 @@ extern "C" {
         handler: Option<&::js_sys::Function<fn(MediaSessionActionDetails) -> ::js_sys::Undefined>>,
     );
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setCameraActive)]
+    #[wasm_bindgen(method, js_class = "MediaSession", js_name = "setCameraActive")]
     #[doc = "The `setCameraActive()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/setCameraActive)"]
@@ -92,7 +96,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_camera_active(this: &MediaSession, active: bool);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setMicrophoneActive)]
+    #[wasm_bindgen(method, js_class = "MediaSession", js_name = "setMicrophoneActive")]
     #[doc = "The `setMicrophoneActive()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/setMicrophoneActive)"]
@@ -103,7 +107,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_microphone_active(this: &MediaSession, active: bool);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setPositionState)]
+    #[wasm_bindgen(method, js_class = "MediaSession", js_name = "setPositionState")]
     #[doc = "The `setPositionState()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/setPositionState)"]
@@ -115,7 +119,7 @@ extern "C" {
     pub fn set_position_state(this: &MediaSession);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaPositionState")]
-    # [wasm_bindgen (method , structural , js_class = "MediaSession" , js_name = setPositionState)]
+    #[wasm_bindgen(method, js_class = "MediaSession", js_name = "setPositionState")]
     #[doc = "The `setPositionState()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/setPositionState)"]

@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = WEBGL_compressed_texture_etc , typescript_type = "WEBGL_compressed_texture_etc")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "WEBGL_compressed_texture_etc" , typescript_type = "WEBGL_compressed_texture_etc")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebglCompressedTextureEtc` class."]
     #[doc = ""]

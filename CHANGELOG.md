@@ -41,6 +41,18 @@
   be able to resolve the generated `::js_sys` path.
   [#5112](https://github.com/wasm-bindgen/wasm-bindgen/pull/5112)
 
+### Changed
+
+* Simplified generated `web-sys` bindings by omitting redundant
+  `#[wasm_bindgen]` attributes when they match wasm-bindgen defaults, including
+  structural method annotations and matching `js_name` entries. The
+  `#[wasm_bindgen]` attribute parser now also accepts string-literal forms for
+  `extends`, `static_method_of`, and `vendor_prefix` (alongside the existing
+  bare-path/ident syntax), and the generator emits these arguments along with
+  `js_name` as string literals so `rustfmt` can format the generated
+  `#[wasm_bindgen(...)]` attributes uniformly.
+  [#5122](https://github.com/wasm-bindgen/wasm-bindgen/pull/5122)
+
 ### Fixed
 
 * Fixed namespaced export identifiers in generated JS/TS to use qualified names

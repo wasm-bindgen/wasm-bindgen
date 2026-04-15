@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = RTCEncodedAudioFrame , typescript_type = "RTCEncodedAudioFrame")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "RTCEncodedAudioFrame",
+        typescript_type = "RTCEncodedAudioFrame"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `RtcEncodedAudioFrame` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type RtcEncodedAudioFrame;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "RTCEncodedAudioFrame" , js_name = data)]
+    #[wasm_bindgen(method, getter, js_class = "RTCEncodedAudioFrame", js_name = "data")]
     #[doc = "Getter for the `data` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCEncodedAudioFrame/data)"]
@@ -28,7 +32,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn data(this: &RtcEncodedAudioFrame) -> ::js_sys::ArrayBuffer;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "RTCEncodedAudioFrame" , js_name = data)]
+    #[wasm_bindgen(method, setter, js_class = "RTCEncodedAudioFrame", js_name = "data")]
     #[doc = "Setter for the `data` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCEncodedAudioFrame/data)"]
@@ -66,7 +70,7 @@ extern "C" {
     ) -> Result<RtcEncodedAudioFrame, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "RtcEncodedAudioFrameMetadata")]
-    # [wasm_bindgen (method , structural , js_class = "RTCEncodedAudioFrame" , js_name = getMetadata)]
+    #[wasm_bindgen(method, js_class = "RTCEncodedAudioFrame", js_name = "getMetadata")]
     #[doc = "The `getMetadata()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCEncodedAudioFrame/getMetadata)"]

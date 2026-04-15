@@ -346,7 +346,17 @@ impl Parse for BindgenAttr {
 
             (@parser $variant:ident(Span, Ident)) => ({
                 input.parse::<Token![=]>()?;
-                let ident = input.parse::<AnyIdent>()?.0;
+                // Accept either a bare ident or a string literal containing one.
+                // The string-literal form lets `rustfmt` format the surrounding
+                // attribute, since rustfmt only handles `name = <literal>` arms.
+                let ident = if input.peek(syn::LitStr) {
+                    let litstr = input.parse::<syn::LitStr>()?;
+                    syn::parse_str::<Ident>(&litstr.value()).map_err(|e| {
+                        syn::Error::new(litstr.span(), format!("expected an identifier: {e}"))
+                    })?
+                } else {
+                    input.parse::<AnyIdent>()?.0
+                };
                 return Ok(BindgenAttr::$variant(attr_span, ident))
             });
 
@@ -366,7 +376,18 @@ impl Parse for BindgenAttr {
 
             (@parser $variant:ident(Span, syn::Path)) => ({
                 input.parse::<Token![=]>()?;
-                return Ok(BindgenAttr::$variant(attr_span, input.parse()?));
+                // Accept either a bare path or a string literal containing one.
+                // The string-literal form lets `rustfmt` format the surrounding
+                // attribute, since rustfmt only handles `name = <literal>` arms.
+                let path = if input.peek(syn::LitStr) {
+                    let litstr = input.parse::<syn::LitStr>()?;
+                    syn::parse_str::<syn::Path>(&litstr.value()).map_err(|e| {
+                        syn::Error::new(litstr.span(), format!("expected a path: {e}"))
+                    })?
+                } else {
+                    input.parse()?
+                };
+                return Ok(BindgenAttr::$variant(attr_span, path));
             });
 
             (@parser $variant:ident(Span, syn::Expr)) => ({

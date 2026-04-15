@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = TaskPriorityChangeEvent , typescript_type = "TaskPriorityChangeEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "TaskPriorityChangeEvent",
+        typescript_type = "TaskPriorityChangeEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TaskPriorityChangeEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type TaskPriorityChangeEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "TaskPriority")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TaskPriorityChangeEvent" , js_name = previousPriority)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "TaskPriorityChangeEvent",
+        js_name = "previousPriority"
+    )]
     #[doc = "Getter for the `previousPriority` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TaskPriorityChangeEvent/previousPriority)"]

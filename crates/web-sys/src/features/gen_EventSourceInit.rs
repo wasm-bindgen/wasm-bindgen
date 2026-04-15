@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = EventSourceInit)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "EventSourceInit")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `EventSourceInit` dictionary."]
     #[doc = ""]

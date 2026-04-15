@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = PerformanceEntry , extends = :: js_sys :: Object , js_name = PerformanceMark , typescript_type = "PerformanceMark")]
+    #[wasm_bindgen(
+        extends = "PerformanceEntry",
+        extends = "::js_sys::Object",
+        js_name = "PerformanceMark",
+        typescript_type = "PerformanceMark"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PerformanceMark` class."]
     #[doc = ""]
@@ -17,7 +22,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type PerformanceMark;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "PerformanceMark" , js_name = detail)]
+    #[wasm_bindgen(method, getter, js_class = "PerformanceMark", js_name = "detail")]
     #[doc = "Getter for the `detail` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceMark/detail)"]

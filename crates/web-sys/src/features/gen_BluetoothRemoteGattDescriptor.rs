@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = BluetoothRemoteGATTDescriptor , typescript_type = "BluetoothRemoteGATTDescriptor")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "BluetoothRemoteGATTDescriptor",
+        typescript_type = "BluetoothRemoteGATTDescriptor"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `BluetoothRemoteGattDescriptor` class."]
     #[doc = ""]
@@ -18,7 +22,12 @@ extern "C" {
     pub type BluetoothRemoteGattDescriptor;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothRemoteGattCharacteristic")]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothRemoteGATTDescriptor" , js_name = characteristic)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "characteristic"
+    )]
     #[doc = "Getter for the `characteristic` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/characteristic)"]
@@ -31,7 +40,12 @@ extern "C" {
         this: &BluetoothRemoteGattDescriptor,
     ) -> BluetoothRemoteGattCharacteristic;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothRemoteGATTDescriptor" , js_name = uuid)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "uuid"
+    )]
     #[doc = "Getter for the `uuid` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/uuid)"]
@@ -42,7 +56,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn uuid(this: &BluetoothRemoteGattDescriptor) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothRemoteGATTDescriptor" , js_name = value)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "value"
+    )]
     #[doc = "Getter for the `value` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/value)"]
@@ -53,7 +72,11 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn value(this: &BluetoothRemoteGattDescriptor) -> Option<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = readValue)]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "readValue"
+    )]
     #[doc = "The `readValue()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/readValue)"]
@@ -66,7 +89,12 @@ extern "C" {
         this: &BluetoothRemoteGattDescriptor,
     ) -> ::js_sys::Promise<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = writeValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "writeValue"
+    )]
     #[doc = "The `writeValue()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/writeValue)"]
@@ -80,7 +108,12 @@ extern "C" {
         value: &::js_sys::Object,
     ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = writeValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "writeValue"
+    )]
     #[doc = "The `writeValue()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/writeValue)"]
@@ -94,7 +127,12 @@ extern "C" {
         value: &mut [u8],
     ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "BluetoothRemoteGATTDescriptor" , js_name = writeValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "BluetoothRemoteGATTDescriptor",
+        js_name = "writeValue"
+    )]
     #[doc = "The `writeValue()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTDescriptor/writeValue)"]

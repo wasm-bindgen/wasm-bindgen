@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WorkletGlobalScope , typescript_type = "WorkletGlobalScope")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "WorkletGlobalScope",
+        typescript_type = "WorkletGlobalScope"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WorkletGlobalScope` class."]
     #[doc = ""]

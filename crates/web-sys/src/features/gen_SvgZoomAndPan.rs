@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SVGZoomAndPan , typescript_type = "SVGZoomAndPan")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SVGZoomAndPan",
+        typescript_type = "SVGZoomAndPan"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgZoomAndPan` class."]
     #[doc = ""]
@@ -12,14 +16,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgZoomAndPan`*"]
     pub type SvgZoomAndPan;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGZoomAndPan" , js_name = zoomAndPan)]
+    #[wasm_bindgen(method, getter, js_class = "SVGZoomAndPan", js_name = "zoomAndPan")]
     #[doc = "Getter for the `zoomAndPan` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGZoomAndPan/zoomAndPan)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgZoomAndPan`*"]
     pub fn zoom_and_pan(this: &SvgZoomAndPan) -> u16;
-    # [wasm_bindgen (structural , method , setter , js_class = "SVGZoomAndPan" , js_name = zoomAndPan)]
+    #[wasm_bindgen(method, setter, js_class = "SVGZoomAndPan", js_name = "zoomAndPan")]
     #[doc = "Setter for the `zoomAndPan` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGZoomAndPan/zoomAndPan)"]

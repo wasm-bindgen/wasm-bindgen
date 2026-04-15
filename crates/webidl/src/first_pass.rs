@@ -100,7 +100,6 @@ impl<'src> FirstPassRecord<'src> {
                 ret_wbg_ty: Some(ret_wbg_ty),
                 kind: InterfaceMethodKind::Regular,
                 is_static: false,
-                structural: true,
                 catch: false,
                 variadic: false,
                 unstable: stability.is_unstable(),

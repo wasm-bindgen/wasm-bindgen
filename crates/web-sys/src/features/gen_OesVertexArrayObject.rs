@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = OES_vertex_array_object , typescript_type = "OES_vertex_array_object")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "OES_vertex_array_object" , typescript_type = "OES_vertex_array_object")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OesVertexArrayObject` class."]
     #[doc = ""]
@@ -13,7 +13,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OesVertexArrayObject`*"]
     pub type OesVertexArrayObject;
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "OES_vertex_array_object" , js_name = bindVertexArrayOES)]
+    #[wasm_bindgen(
+        method,
+        js_class = "OES_vertex_array_object",
+        js_name = "bindVertexArrayOES"
+    )]
     #[doc = "The `bindVertexArrayOES()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object/bindVertexArrayOES)"]
@@ -24,7 +28,11 @@ extern "C" {
         array_object: Option<&WebGlVertexArrayObject>,
     );
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "OES_vertex_array_object" , js_name = createVertexArrayOES)]
+    #[wasm_bindgen(
+        method,
+        js_class = "OES_vertex_array_object",
+        js_name = "createVertexArrayOES"
+    )]
     #[doc = "The `createVertexArrayOES()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object/createVertexArrayOES)"]
@@ -32,7 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OesVertexArrayObject`, `WebGlVertexArrayObject`*"]
     pub fn create_vertex_array_oes(this: &OesVertexArrayObject) -> Option<WebGlVertexArrayObject>;
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "OES_vertex_array_object" , js_name = deleteVertexArrayOES)]
+    #[wasm_bindgen(
+        method,
+        js_class = "OES_vertex_array_object",
+        js_name = "deleteVertexArrayOES"
+    )]
     #[doc = "The `deleteVertexArrayOES()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object/deleteVertexArrayOES)"]
@@ -43,7 +55,11 @@ extern "C" {
         array_object: Option<&WebGlVertexArrayObject>,
     );
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "OES_vertex_array_object" , js_name = isVertexArrayOES)]
+    #[wasm_bindgen(
+        method,
+        js_class = "OES_vertex_array_object",
+        js_name = "isVertexArrayOES"
+    )]
     #[doc = "The `isVertexArrayOES()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object/isVertexArrayOES)"]

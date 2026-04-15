@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUCompilationInfo , typescript_type = "GPUCompilationInfo")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "GPUCompilationInfo",
+        typescript_type = "GPUCompilationInfo"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuCompilationInfo` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type GpuCompilationInfo;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCompilationMessage")]
-    # [wasm_bindgen (structural , method , getter , js_class = "GPUCompilationInfo" , js_name = messages)]
+    #[wasm_bindgen(method, getter, js_class = "GPUCompilationInfo", js_name = "messages")]
     #[doc = "Getter for the `messages` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCompilationInfo/messages)"]

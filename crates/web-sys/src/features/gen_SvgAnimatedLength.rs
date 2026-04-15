@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SVGAnimatedLength , typescript_type = "SVGAnimatedLength")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SVGAnimatedLength",
+        typescript_type = "SVGAnimatedLength"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgAnimatedLength` class."]
     #[doc = ""]
@@ -13,7 +17,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`*"]
     pub type SvgAnimatedLength;
     #[cfg(feature = "SvgLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGAnimatedLength" , js_name = baseVal)]
+    #[wasm_bindgen(method, getter, js_class = "SVGAnimatedLength", js_name = "baseVal")]
     #[doc = "Getter for the `baseVal` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAnimatedLength/baseVal)"]
@@ -21,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgLength`*"]
     pub fn base_val(this: &SvgAnimatedLength) -> SvgLength;
     #[cfg(feature = "SvgLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGAnimatedLength" , js_name = animVal)]
+    #[wasm_bindgen(method, getter, js_class = "SVGAnimatedLength", js_name = "animVal")]
     #[doc = "Getter for the `animVal` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAnimatedLength/animVal)"]

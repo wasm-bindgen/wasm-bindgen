@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SpeechSynthesisEvent , extends = Event , extends = :: js_sys :: Object , js_name = SpeechSynthesisErrorEvent , typescript_type = "SpeechSynthesisErrorEvent")]
+    #[wasm_bindgen(
+        extends = "SpeechSynthesisEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "SpeechSynthesisErrorEvent",
+        typescript_type = "SpeechSynthesisErrorEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SpeechSynthesisErrorEvent` class."]
     #[doc = ""]
@@ -13,7 +19,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisErrorEvent`*"]
     pub type SpeechSynthesisErrorEvent;
     #[cfg(feature = "SpeechSynthesisErrorCode")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SpeechSynthesisErrorEvent" , js_name = error)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SpeechSynthesisErrorEvent",
+        js_name = "error"
+    )]
     #[doc = "Getter for the `error` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisErrorEvent/error)"]

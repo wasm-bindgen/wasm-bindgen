@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = MediaMetadata , typescript_type = "MediaMetadata")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "MediaMetadata",
+        typescript_type = "MediaMetadata"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaMetadata` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type MediaMetadata;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaMetadata" , js_name = title)]
+    #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "title")]
     #[doc = "Getter for the `title` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/title)"]
@@ -28,7 +32,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn title(this: &MediaMetadata) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaMetadata" , js_name = title)]
+    #[wasm_bindgen(method, setter, js_class = "MediaMetadata", js_name = "title")]
     #[doc = "Setter for the `title` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/title)"]
@@ -39,7 +43,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_title(this: &MediaMetadata, value: &str);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaMetadata" , js_name = artist)]
+    #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "artist")]
     #[doc = "Getter for the `artist` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/artist)"]
@@ -50,7 +54,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn artist(this: &MediaMetadata) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaMetadata" , js_name = artist)]
+    #[wasm_bindgen(method, setter, js_class = "MediaMetadata", js_name = "artist")]
     #[doc = "Setter for the `artist` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/artist)"]
@@ -61,7 +65,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_artist(this: &MediaMetadata, value: &str);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaMetadata" , js_name = album)]
+    #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "album")]
     #[doc = "Getter for the `album` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/album)"]
@@ -72,7 +76,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn album(this: &MediaMetadata) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaMetadata" , js_name = album)]
+    #[wasm_bindgen(method, setter, js_class = "MediaMetadata", js_name = "album")]
     #[doc = "Setter for the `album` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/album)"]
@@ -84,7 +88,7 @@ extern "C" {
     pub fn set_album(this: &MediaMetadata, value: &str);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaImage")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaMetadata" , js_name = artwork)]
+    #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "artwork")]
     #[doc = "Getter for the `artwork` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/artwork)"]
@@ -96,7 +100,7 @@ extern "C" {
     pub fn artwork(this: &MediaMetadata) -> ::js_sys::Array<MediaImage>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaImage")]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaMetadata" , js_name = artwork)]
+    #[wasm_bindgen(method, setter, js_class = "MediaMetadata", js_name = "artwork")]
     #[doc = "Setter for the `artwork` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaMetadata/artwork)"]

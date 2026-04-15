@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = AudioEncoder , typescript_type = "AudioEncoder")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "AudioEncoder",
+        typescript_type = "AudioEncoder"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AudioEncoder` class."]
     #[doc = ""]
@@ -18,7 +23,7 @@ extern "C" {
     pub type AudioEncoder;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CodecState")]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioEncoder" , js_name = state)]
+    #[wasm_bindgen(method, getter, js_class = "AudioEncoder", js_name = "state")]
     #[doc = "Getter for the `state` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/state)"]
@@ -29,7 +34,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn state(this: &AudioEncoder) -> CodecState;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioEncoder" , js_name = encodeQueueSize)]
+    #[wasm_bindgen(method, getter, js_class = "AudioEncoder", js_name = "encodeQueueSize")]
     #[doc = "Getter for the `encodeQueueSize` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/encodeQueueSize)"]
@@ -40,7 +45,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn encode_queue_size(this: &AudioEncoder) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioEncoder" , js_name = ondequeue)]
+    #[wasm_bindgen(method, getter, js_class = "AudioEncoder", js_name = "ondequeue")]
     #[doc = "Getter for the `ondequeue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/ondequeue)"]
@@ -51,7 +56,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ondequeue(this: &AudioEncoder) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "AudioEncoder" , js_name = ondequeue)]
+    #[wasm_bindgen(method, setter, js_class = "AudioEncoder", js_name = "ondequeue")]
     #[doc = "Setter for the `ondequeue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/ondequeue)"]
@@ -74,7 +79,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(init: &AudioEncoderInit) -> Result<AudioEncoder, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioEncoder" , js_name = close)]
+    #[wasm_bindgen(catch, method, js_class = "AudioEncoder")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/close)"]
@@ -86,7 +91,7 @@ extern "C" {
     pub fn close(this: &AudioEncoder) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioEncoderConfig")]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioEncoder" , js_name = configure)]
+    #[wasm_bindgen(catch, method, js_class = "AudioEncoder")]
     #[doc = "The `configure()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/configure)"]
@@ -98,7 +103,7 @@ extern "C" {
     pub fn configure(this: &AudioEncoder, config: &AudioEncoderConfig) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioEncoder" , js_name = encode)]
+    #[wasm_bindgen(catch, method, js_class = "AudioEncoder")]
     #[doc = "The `encode()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/encode)"]
@@ -109,7 +114,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn encode(this: &AudioEncoder, data: &AudioData) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "AudioEncoder" , js_name = flush)]
+    #[wasm_bindgen(method, js_class = "AudioEncoder")]
     #[doc = "The `flush()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/flush)"]
@@ -121,7 +126,11 @@ extern "C" {
     pub fn flush(this: &AudioEncoder) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "AudioEncoderConfig", feature = "AudioEncoderSupport",))]
-    # [wasm_bindgen (static_method_of = AudioEncoder , js_class = "AudioEncoder" , js_name = isConfigSupported)]
+    #[wasm_bindgen(
+        static_method_of = "AudioEncoder",
+        js_class = "AudioEncoder",
+        js_name = "isConfigSupported"
+    )]
     #[doc = "The `isConfigSupported()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/isConfigSupported_static)"]
@@ -134,7 +143,7 @@ extern "C" {
         config: &AudioEncoderConfig,
     ) -> ::js_sys::Promise<AudioEncoderSupport>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "AudioEncoder" , js_name = reset)]
+    #[wasm_bindgen(catch, method, js_class = "AudioEncoder")]
     #[doc = "The `reset()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder/reset)"]

@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WebGL2RenderingContext , typescript_type = "WebGL2RenderingContext")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "WebGL2RenderingContext",
+        typescript_type = "WebGL2RenderingContext"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebGl2RenderingContext` class."]
     #[doc = ""]
@@ -12,21 +16,36 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub type WebGl2RenderingContext;
-    # [wasm_bindgen (structural , method , getter , js_class = "WebGL2RenderingContext" , js_name = canvas)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "WebGL2RenderingContext",
+        js_name = "canvas"
+    )]
     #[doc = "Getter for the `canvas` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/canvas)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn canvas(this: &WebGl2RenderingContext) -> Option<::js_sys::Object>;
-    # [wasm_bindgen (structural , method , getter , js_class = "WebGL2RenderingContext" , js_name = drawingBufferWidth)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawingBufferWidth"
+    )]
     #[doc = "Getter for the `drawingBufferWidth` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawingBufferWidth)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn drawing_buffer_width(this: &WebGl2RenderingContext) -> i32;
-    # [wasm_bindgen (structural , method , getter , js_class = "WebGL2RenderingContext" , js_name = drawingBufferHeight)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawingBufferHeight"
+    )]
     #[doc = "Getter for the `drawingBufferHeight` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawingBufferHeight)"]
@@ -34,14 +53,18 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn drawing_buffer_height(this: &WebGl2RenderingContext) -> i32;
     #[cfg(feature = "WebGlQuery")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = beginQuery)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "beginQuery")]
     #[doc = "The `beginQuery()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/beginQuery)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlQuery`*"]
     pub fn begin_query(this: &WebGl2RenderingContext, target: u32, query: &WebGlQuery);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = beginTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "beginTransformFeedback"
+    )]
     #[doc = "The `beginTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/beginTransformFeedback)"]
@@ -49,7 +72,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn begin_transform_feedback(this: &WebGl2RenderingContext, primitive_mode: u32);
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindBufferBase)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindBufferBase"
+    )]
     #[doc = "The `bindBufferBase()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindBufferBase)"]
@@ -62,7 +89,11 @@ extern "C" {
         buffer: Option<&WebGlBuffer>,
     );
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindBufferRange)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindBufferRange"
+    )]
     #[doc = "The `bindBufferRange()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindBufferRange)"]
@@ -77,7 +108,11 @@ extern "C" {
         size: i32,
     );
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindBufferRange)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindBufferRange"
+    )]
     #[doc = "The `bindBufferRange()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindBufferRange)"]
@@ -92,7 +127,11 @@ extern "C" {
         size: i32,
     );
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindBufferRange)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindBufferRange"
+    )]
     #[doc = "The `bindBufferRange()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindBufferRange)"]
@@ -107,7 +146,11 @@ extern "C" {
         size: f64,
     );
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindBufferRange)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindBufferRange"
+    )]
     #[doc = "The `bindBufferRange()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindBufferRange)"]
@@ -122,7 +165,7 @@ extern "C" {
         size: f64,
     );
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindSampler)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bindSampler")]
     #[doc = "The `bindSampler()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindSampler)"]
@@ -130,7 +173,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlSampler`*"]
     pub fn bind_sampler(this: &WebGl2RenderingContext, unit: u32, sampler: Option<&WebGlSampler>);
     #[cfg(feature = "WebGlTransformFeedback")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindTransformFeedback"
+    )]
     #[doc = "The `bindTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindTransformFeedback)"]
@@ -142,14 +189,22 @@ extern "C" {
         tf: Option<&WebGlTransformFeedback>,
     );
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindVertexArray)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindVertexArray"
+    )]
     #[doc = "The `bindVertexArray()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindVertexArray)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlVertexArrayObject`*"]
     pub fn bind_vertex_array(this: &WebGl2RenderingContext, array: Option<&WebGlVertexArrayObject>);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = blitFramebuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "blitFramebuffer"
+    )]
     #[doc = "The `blitFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blitFramebuffer)"]
@@ -168,21 +223,21 @@ extern "C" {
         mask: u32,
         filter: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn buffer_data_with_i32(this: &WebGl2RenderingContext, target: u32, size: i32, usage: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn buffer_data_with_f64(this: &WebGl2RenderingContext, target: u32, size: f64, usage: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -194,7 +249,7 @@ extern "C" {
         src_data: Option<&::js_sys::ArrayBuffer>,
         usage: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -206,7 +261,7 @@ extern "C" {
         src_data: &::js_sys::Object,
         usage: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -218,7 +273,7 @@ extern "C" {
         src_data: &[u8],
         usage: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -230,7 +285,7 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         usage: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -243,7 +298,7 @@ extern "C" {
         usage: u32,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -256,7 +311,7 @@ extern "C" {
         usage: u32,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -269,7 +324,7 @@ extern "C" {
         usage: u32,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -283,7 +338,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -297,7 +352,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferData")]
     #[doc = "The `bufferData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData)"]
@@ -311,7 +366,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -323,7 +378,7 @@ extern "C" {
         offset: i32,
         src_data: &::js_sys::ArrayBuffer,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -335,7 +390,7 @@ extern "C" {
         offset: f64,
         src_data: &::js_sys::ArrayBuffer,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -347,7 +402,7 @@ extern "C" {
         offset: i32,
         src_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -359,7 +414,7 @@ extern "C" {
         offset: f64,
         src_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -371,7 +426,7 @@ extern "C" {
         offset: i32,
         src_data: &[u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -383,7 +438,7 @@ extern "C" {
         offset: f64,
         src_data: &[u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -395,7 +450,7 @@ extern "C" {
         offset: i32,
         src_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -407,7 +462,7 @@ extern "C" {
         offset: f64,
         src_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -420,7 +475,7 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -433,7 +488,7 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -446,7 +501,7 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -459,7 +514,7 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -472,7 +527,7 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -485,7 +540,7 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -499,7 +554,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -513,7 +568,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -527,7 +582,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -541,7 +596,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -555,7 +610,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bufferSubData)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bufferSubData")]
     #[doc = "The `bufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData)"]
@@ -569,7 +624,7 @@ extern "C" {
         src_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfi)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfi")]
     #[doc = "The `clearBufferfi()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfi)"]
@@ -582,7 +637,7 @@ extern "C" {
         depth: f32,
         stencil: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfv")]
     #[doc = "The `clearBufferfv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfv)"]
@@ -594,7 +649,7 @@ extern "C" {
         drawbuffer: i32,
         values: &[f32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfv")]
     #[doc = "The `clearBufferfv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfv)"]
@@ -606,7 +661,7 @@ extern "C" {
         drawbuffer: i32,
         values: &::js_sys::Float32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfv")]
     #[doc = "The `clearBufferfv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfv)"]
@@ -618,7 +673,7 @@ extern "C" {
         drawbuffer: i32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfv")]
     #[doc = "The `clearBufferfv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfv)"]
@@ -631,7 +686,7 @@ extern "C" {
         values: &[f32],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfv")]
     #[doc = "The `clearBufferfv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfv)"]
@@ -644,7 +699,7 @@ extern "C" {
         values: &::js_sys::Float32Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferfv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferfv")]
     #[doc = "The `clearBufferfv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferfv)"]
@@ -657,7 +712,7 @@ extern "C" {
         values: &::wasm_bindgen::JsValue,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferiv")]
     #[doc = "The `clearBufferiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferiv)"]
@@ -669,7 +724,7 @@ extern "C" {
         drawbuffer: i32,
         values: &[i32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferiv")]
     #[doc = "The `clearBufferiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferiv)"]
@@ -681,7 +736,7 @@ extern "C" {
         drawbuffer: i32,
         values: &::js_sys::Int32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferiv")]
     #[doc = "The `clearBufferiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferiv)"]
@@ -693,7 +748,7 @@ extern "C" {
         drawbuffer: i32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferiv")]
     #[doc = "The `clearBufferiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferiv)"]
@@ -706,7 +761,7 @@ extern "C" {
         values: &[i32],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferiv")]
     #[doc = "The `clearBufferiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferiv)"]
@@ -719,7 +774,7 @@ extern "C" {
         values: &::js_sys::Int32Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearBufferiv")]
     #[doc = "The `clearBufferiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferiv)"]
@@ -732,7 +787,11 @@ extern "C" {
         values: &::wasm_bindgen::JsValue,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferuiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clearBufferuiv"
+    )]
     #[doc = "The `clearBufferuiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferuiv)"]
@@ -744,7 +803,11 @@ extern "C" {
         drawbuffer: i32,
         values: &[u32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferuiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clearBufferuiv"
+    )]
     #[doc = "The `clearBufferuiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferuiv)"]
@@ -756,7 +819,11 @@ extern "C" {
         drawbuffer: i32,
         values: &::js_sys::Uint32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferuiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clearBufferuiv"
+    )]
     #[doc = "The `clearBufferuiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferuiv)"]
@@ -768,7 +835,11 @@ extern "C" {
         drawbuffer: i32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferuiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clearBufferuiv"
+    )]
     #[doc = "The `clearBufferuiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferuiv)"]
@@ -781,7 +852,11 @@ extern "C" {
         values: &[u32],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferuiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clearBufferuiv"
+    )]
     #[doc = "The `clearBufferuiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferuiv)"]
@@ -794,7 +869,11 @@ extern "C" {
         values: &::js_sys::Uint32Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearBufferuiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clearBufferuiv"
+    )]
     #[doc = "The `clearBufferuiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBufferuiv)"]
@@ -808,7 +887,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clientWaitSync)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clientWaitSync"
+    )]
     #[doc = "The `clientWaitSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clientWaitSync)"]
@@ -821,7 +904,11 @@ extern "C" {
         timeout: u32,
     ) -> u32;
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clientWaitSync)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "clientWaitSync"
+    )]
     #[doc = "The `clientWaitSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clientWaitSync)"]
@@ -833,7 +920,11 @@ extern "C" {
         flags: u32,
         timeout: f64,
     ) -> u32;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -850,7 +941,11 @@ extern "C" {
         image_size: i32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -867,7 +962,11 @@ extern "C" {
         image_size: i32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -883,7 +982,11 @@ extern "C" {
         border: i32,
         src_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -899,7 +1002,11 @@ extern "C" {
         border: i32,
         src_data: &[u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -915,7 +1022,11 @@ extern "C" {
         border: i32,
         src_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -932,7 +1043,11 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -949,7 +1064,11 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -966,7 +1085,11 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -984,7 +1107,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -1002,7 +1129,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage2D"
+    )]
     #[doc = "The `compressedTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage2D)"]
@@ -1020,7 +1151,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1038,7 +1173,11 @@ extern "C" {
         image_size: i32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1056,7 +1195,11 @@ extern "C" {
         image_size: i32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1073,7 +1216,11 @@ extern "C" {
         border: i32,
         src_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1090,7 +1237,11 @@ extern "C" {
         border: i32,
         src_data: &[u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1107,7 +1258,11 @@ extern "C" {
         border: i32,
         src_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1125,7 +1280,11 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1143,7 +1302,11 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1161,7 +1324,11 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1180,7 +1347,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1199,7 +1370,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexImage3D"
+    )]
     #[doc = "The `compressedTexImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexImage3D)"]
@@ -1218,7 +1393,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1236,7 +1415,11 @@ extern "C" {
         image_size: i32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1254,7 +1437,11 @@ extern "C" {
         image_size: i32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1271,7 +1458,11 @@ extern "C" {
         format: u32,
         src_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1288,7 +1479,11 @@ extern "C" {
         format: u32,
         src_data: &mut [u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1305,7 +1500,11 @@ extern "C" {
         format: u32,
         src_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1323,7 +1522,11 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1341,7 +1544,11 @@ extern "C" {
         src_data: &mut [u8],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1359,7 +1566,11 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1378,7 +1589,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1397,7 +1612,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage2D"
+    )]
     #[doc = "The `compressedTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage2D)"]
@@ -1416,7 +1635,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1436,7 +1659,11 @@ extern "C" {
         image_size: i32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1456,7 +1683,11 @@ extern "C" {
         image_size: i32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1475,7 +1706,11 @@ extern "C" {
         format: u32,
         src_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1494,7 +1729,11 @@ extern "C" {
         format: u32,
         src_data: &mut [u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1513,7 +1752,11 @@ extern "C" {
         format: u32,
         src_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1533,7 +1776,11 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1553,7 +1800,11 @@ extern "C" {
         src_data: &mut [u8],
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1573,7 +1824,11 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1594,7 +1849,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1615,7 +1874,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compressedTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "compressedTexSubImage3D"
+    )]
     #[doc = "The `compressedTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compressedTexSubImage3D)"]
@@ -1636,7 +1899,11 @@ extern "C" {
         src_offset: u32,
         src_length_override: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1650,7 +1917,11 @@ extern "C" {
         write_offset: i32,
         size: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1664,7 +1935,11 @@ extern "C" {
         write_offset: i32,
         size: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1678,7 +1953,11 @@ extern "C" {
         write_offset: f64,
         size: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1692,7 +1971,11 @@ extern "C" {
         write_offset: f64,
         size: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1706,7 +1989,11 @@ extern "C" {
         write_offset: i32,
         size: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1720,7 +2007,11 @@ extern "C" {
         write_offset: i32,
         size: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1734,7 +2025,11 @@ extern "C" {
         write_offset: f64,
         size: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyBufferSubData"
+    )]
     #[doc = "The `copyBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyBufferSubData)"]
@@ -1748,7 +2043,11 @@ extern "C" {
         write_offset: f64,
         size: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyTexSubImage3D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyTexSubImage3D"
+    )]
     #[doc = "The `copyTexSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyTexSubImage3D)"]
@@ -1767,7 +2066,7 @@ extern "C" {
         height: i32,
     );
     #[cfg(feature = "WebGlQuery")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createQuery)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "createQuery")]
     #[doc = "The `createQuery()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createQuery)"]
@@ -1775,7 +2074,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlQuery`*"]
     pub fn create_query(this: &WebGl2RenderingContext) -> Option<WebGlQuery>;
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createSampler)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "createSampler")]
     #[doc = "The `createSampler()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createSampler)"]
@@ -1783,7 +2082,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlSampler`*"]
     pub fn create_sampler(this: &WebGl2RenderingContext) -> Option<WebGlSampler>;
     #[cfg(feature = "WebGlTransformFeedback")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "createTransformFeedback"
+    )]
     #[doc = "The `createTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createTransformFeedback)"]
@@ -1793,7 +2096,11 @@ extern "C" {
         this: &WebGl2RenderingContext,
     ) -> Option<WebGlTransformFeedback>;
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createVertexArray)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "createVertexArray"
+    )]
     #[doc = "The `createVertexArray()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createVertexArray)"]
@@ -1801,7 +2108,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlVertexArrayObject`*"]
     pub fn create_vertex_array(this: &WebGl2RenderingContext) -> Option<WebGlVertexArrayObject>;
     #[cfg(feature = "WebGlQuery")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteQuery)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteQuery")]
     #[doc = "The `deleteQuery()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteQuery)"]
@@ -1809,7 +2116,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlQuery`*"]
     pub fn delete_query(this: &WebGl2RenderingContext, query: Option<&WebGlQuery>);
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteSampler)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteSampler")]
     #[doc = "The `deleteSampler()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteSampler)"]
@@ -1817,7 +2124,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlSampler`*"]
     pub fn delete_sampler(this: &WebGl2RenderingContext, sampler: Option<&WebGlSampler>);
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteSync)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteSync")]
     #[doc = "The `deleteSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteSync)"]
@@ -1825,7 +2132,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlSync`*"]
     pub fn delete_sync(this: &WebGl2RenderingContext, sync: Option<&WebGlSync>);
     #[cfg(feature = "WebGlTransformFeedback")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "deleteTransformFeedback"
+    )]
     #[doc = "The `deleteTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteTransformFeedback)"]
@@ -1836,7 +2147,11 @@ extern "C" {
         tf: Option<&WebGlTransformFeedback>,
     );
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteVertexArray)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "deleteVertexArray"
+    )]
     #[doc = "The `deleteVertexArray()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteVertexArray)"]
@@ -1846,7 +2161,11 @@ extern "C" {
         this: &WebGl2RenderingContext,
         vertex_array: Option<&WebGlVertexArrayObject>,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawArraysInstanced)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawArraysInstanced"
+    )]
     #[doc = "The `drawArraysInstanced()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawArraysInstanced)"]
@@ -1859,14 +2178,18 @@ extern "C" {
         count: i32,
         instance_count: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawBuffers)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "drawBuffers")]
     #[doc = "The `drawBuffers()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawBuffers)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn draw_buffers(this: &WebGl2RenderingContext, buffers: &::wasm_bindgen::JsValue);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawElementsInstanced)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawElementsInstanced"
+    )]
     #[doc = "The `drawElementsInstanced()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawElementsInstanced)"]
@@ -1880,7 +2203,11 @@ extern "C" {
         offset: i32,
         instance_count: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawElementsInstanced)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawElementsInstanced"
+    )]
     #[doc = "The `drawElementsInstanced()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawElementsInstanced)"]
@@ -1894,7 +2221,11 @@ extern "C" {
         offset: f64,
         instance_count: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawRangeElements)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawRangeElements"
+    )]
     #[doc = "The `drawRangeElements()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawRangeElements)"]
@@ -1909,7 +2240,11 @@ extern "C" {
         type_: u32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawRangeElements)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "drawRangeElements"
+    )]
     #[doc = "The `drawRangeElements()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawRangeElements)"]
@@ -1924,14 +2259,18 @@ extern "C" {
         type_: u32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = endQuery)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "endQuery")]
     #[doc = "The `endQuery()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/endQuery)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn end_query(this: &WebGl2RenderingContext, target: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = endTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "endTransformFeedback"
+    )]
     #[doc = "The `endTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/endTransformFeedback)"]
@@ -1939,7 +2278,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn end_transform_feedback(this: &WebGl2RenderingContext);
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = fenceSync)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "fenceSync")]
     #[doc = "The `fenceSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/fenceSync)"]
@@ -1951,7 +2290,11 @@ extern "C" {
         flags: u32,
     ) -> Option<WebGlSync>;
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = framebufferTextureLayer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "framebufferTextureLayer"
+    )]
     #[doc = "The `framebufferTextureLayer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/framebufferTextureLayer)"]
@@ -1966,7 +2309,11 @@ extern "C" {
         layer: i32,
     );
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getActiveUniformBlockName)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getActiveUniformBlockName"
+    )]
     #[doc = "The `getActiveUniformBlockName()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getActiveUniformBlockName)"]
@@ -1978,7 +2325,12 @@ extern "C" {
         uniform_block_index: u32,
     ) -> Option<::alloc::string::String>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getActiveUniformBlockParameter)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getActiveUniformBlockParameter"
+    )]
     #[doc = "The `getActiveUniformBlockParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getActiveUniformBlockParameter)"]
@@ -1991,7 +2343,11 @@ extern "C" {
         pname: u32,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getActiveUniforms)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getActiveUniforms"
+    )]
     #[doc = "The `getActiveUniforms()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getActiveUniforms)"]
@@ -2003,7 +2359,11 @@ extern "C" {
         uniform_indices: &::wasm_bindgen::JsValue,
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2015,7 +2375,11 @@ extern "C" {
         src_byte_offset: i32,
         dst_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2027,7 +2391,11 @@ extern "C" {
         src_byte_offset: f64,
         dst_data: &::js_sys::Object,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2039,7 +2407,11 @@ extern "C" {
         src_byte_offset: i32,
         dst_data: &mut [u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2051,7 +2423,11 @@ extern "C" {
         src_byte_offset: f64,
         dst_data: &mut [u8],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2063,7 +2439,11 @@ extern "C" {
         src_byte_offset: i32,
         dst_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2075,7 +2455,11 @@ extern "C" {
         src_byte_offset: f64,
         dst_data: &::js_sys::Uint8Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2088,7 +2472,11 @@ extern "C" {
         dst_data: &::js_sys::Object,
         dst_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2101,7 +2489,11 @@ extern "C" {
         dst_data: &::js_sys::Object,
         dst_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2114,7 +2506,11 @@ extern "C" {
         dst_data: &mut [u8],
         dst_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2127,7 +2523,11 @@ extern "C" {
         dst_data: &mut [u8],
         dst_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2140,7 +2540,11 @@ extern "C" {
         dst_data: &::js_sys::Uint8Array,
         dst_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2153,7 +2557,11 @@ extern "C" {
         dst_data: &::js_sys::Uint8Array,
         dst_offset: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2167,7 +2575,11 @@ extern "C" {
         dst_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2181,7 +2593,11 @@ extern "C" {
         dst_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2195,7 +2611,11 @@ extern "C" {
         dst_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2209,7 +2629,11 @@ extern "C" {
         dst_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2223,7 +2647,11 @@ extern "C" {
         dst_offset: u32,
         length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferSubData)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferSubData"
+    )]
     #[doc = "The `getBufferSubData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData)"]
@@ -2238,7 +2666,11 @@ extern "C" {
         length: u32,
     );
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getFragDataLocation)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getFragDataLocation"
+    )]
     #[doc = "The `getFragDataLocation()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getFragDataLocation)"]
@@ -2249,7 +2681,12 @@ extern "C" {
         program: &WebGlProgram,
         name: &str,
     ) -> i32;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getIndexedParameter)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getIndexedParameter"
+    )]
     #[doc = "The `getIndexedParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getIndexedParameter)"]
@@ -2260,7 +2697,12 @@ extern "C" {
         target: u32,
         index: u32,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getInternalformatParameter)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getInternalformatParameter"
+    )]
     #[doc = "The `getInternalformatParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getInternalformatParameter)"]
@@ -2272,7 +2714,7 @@ extern "C" {
         internalformat: u32,
         pname: u32,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getQuery)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "getQuery")]
     #[doc = "The `getQuery()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getQuery)"]
@@ -2284,7 +2726,11 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "WebGlQuery")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getQueryParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getQueryParameter"
+    )]
     #[doc = "The `getQueryParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getQueryParameter)"]
@@ -2296,7 +2742,11 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getSamplerParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getSamplerParameter"
+    )]
     #[doc = "The `getSamplerParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getSamplerParameter)"]
@@ -2308,7 +2758,11 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getSyncParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getSyncParameter"
+    )]
     #[doc = "The `getSyncParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getSyncParameter)"]
@@ -2320,7 +2774,11 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(all(feature = "WebGlActiveInfo", feature = "WebGlProgram",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getTransformFeedbackVarying)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getTransformFeedbackVarying"
+    )]
     #[doc = "The `getTransformFeedbackVarying()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getTransformFeedbackVarying)"]
@@ -2332,7 +2790,11 @@ extern "C" {
         index: u32,
     ) -> Option<WebGlActiveInfo>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getUniformBlockIndex)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getUniformBlockIndex"
+    )]
     #[doc = "The `getUniformBlockIndex()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getUniformBlockIndex)"]
@@ -2344,7 +2806,11 @@ extern "C" {
         uniform_block_name: &str,
     ) -> u32;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getUniformIndices)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getUniformIndices"
+    )]
     #[doc = "The `getUniformIndices()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getUniformIndices)"]
@@ -2355,7 +2821,12 @@ extern "C" {
         program: &WebGlProgram,
         uniform_names: &::wasm_bindgen::JsValue,
     ) -> Option<::js_sys::Array>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = invalidateFramebuffer)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "invalidateFramebuffer"
+    )]
     #[doc = "The `invalidateFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/invalidateFramebuffer)"]
@@ -2366,7 +2837,12 @@ extern "C" {
         target: u32,
         attachments: &::wasm_bindgen::JsValue,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = invalidateSubFramebuffer)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "invalidateSubFramebuffer"
+    )]
     #[doc = "The `invalidateSubFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/invalidateSubFramebuffer)"]
@@ -2382,7 +2858,7 @@ extern "C" {
         height: i32,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "WebGlQuery")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isQuery)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isQuery")]
     #[doc = "The `isQuery()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isQuery)"]
@@ -2390,7 +2866,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlQuery`*"]
     pub fn is_query(this: &WebGl2RenderingContext, query: Option<&WebGlQuery>) -> bool;
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isSampler)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isSampler")]
     #[doc = "The `isSampler()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isSampler)"]
@@ -2398,7 +2874,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlSampler`*"]
     pub fn is_sampler(this: &WebGl2RenderingContext, sampler: Option<&WebGlSampler>) -> bool;
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isSync)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isSync")]
     #[doc = "The `isSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isSync)"]
@@ -2406,7 +2882,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlSync`*"]
     pub fn is_sync(this: &WebGl2RenderingContext, sync: Option<&WebGlSync>) -> bool;
     #[cfg(feature = "WebGlTransformFeedback")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "isTransformFeedback"
+    )]
     #[doc = "The `isTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isTransformFeedback)"]
@@ -2417,7 +2897,7 @@ extern "C" {
         tf: Option<&WebGlTransformFeedback>,
     ) -> bool;
     #[cfg(feature = "WebGlVertexArrayObject")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isVertexArray)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isVertexArray")]
     #[doc = "The `isVertexArray()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isVertexArray)"]
@@ -2427,21 +2907,30 @@ extern "C" {
         this: &WebGl2RenderingContext,
         vertex_array: Option<&WebGlVertexArrayObject>,
     ) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = pauseTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "pauseTransformFeedback"
+    )]
     #[doc = "The `pauseTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/pauseTransformFeedback)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn pause_transform_feedback(this: &WebGl2RenderingContext);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = readBuffer)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "readBuffer")]
     #[doc = "The `readBuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readBuffer)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn read_buffer(this: &WebGl2RenderingContext, src: u32);
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2457,7 +2946,12 @@ extern "C" {
         type_: u32,
         dst_data: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2473,7 +2967,12 @@ extern "C" {
         type_: u32,
         dst_data: Option<&mut [u8]>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2489,7 +2988,12 @@ extern "C" {
         type_: u32,
         dst_data: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2505,7 +3009,12 @@ extern "C" {
         type_: u32,
         offset: i32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2521,7 +3030,12 @@ extern "C" {
         type_: u32,
         offset: f64,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2538,7 +3052,12 @@ extern "C" {
         dst_data: &::js_sys::Object,
         dst_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2555,7 +3074,12 @@ extern "C" {
         dst_data: &mut [u8],
         dst_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = readPixels)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "readPixels"
+    )]
     #[doc = "The `readPixels()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/readPixels)"]
@@ -2572,7 +3096,11 @@ extern "C" {
         dst_data: &::js_sys::Uint8Array,
         dst_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = renderbufferStorageMultisample)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "renderbufferStorageMultisample"
+    )]
     #[doc = "The `renderbufferStorageMultisample()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/renderbufferStorageMultisample)"]
@@ -2586,7 +3114,11 @@ extern "C" {
         width: i32,
         height: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = resumeTransformFeedback)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "resumeTransformFeedback"
+    )]
     #[doc = "The `resumeTransformFeedback()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/resumeTransformFeedback)"]
@@ -2594,7 +3126,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn resume_transform_feedback(this: &WebGl2RenderingContext);
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = samplerParameterf)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "samplerParameterf"
+    )]
     #[doc = "The `samplerParameterf()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/samplerParameterf)"]
@@ -2607,7 +3143,11 @@ extern "C" {
         param: f32,
     );
     #[cfg(feature = "WebGlSampler")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = samplerParameteri)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "samplerParameteri"
+    )]
     #[doc = "The `samplerParameteri()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/samplerParameteri)"]
@@ -2619,7 +3159,12 @@ extern "C" {
         pname: u32,
         param: i32,
     );
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2637,7 +3182,12 @@ extern "C" {
         type_: u32,
         pixels: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2655,7 +3205,12 @@ extern "C" {
         type_: u32,
         pixels: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2674,7 +3229,12 @@ extern "C" {
         pixels: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlCanvasElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2690,7 +3250,12 @@ extern "C" {
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2706,7 +3271,12 @@ extern "C" {
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlVideoElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2722,7 +3292,12 @@ extern "C" {
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2738,7 +3313,12 @@ extern "C" {
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2754,7 +3334,12 @@ extern "C" {
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2769,7 +3354,12 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2787,7 +3377,12 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2806,7 +3401,12 @@ extern "C" {
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlCanvasElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2825,7 +3425,12 @@ extern "C" {
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2844,7 +3449,12 @@ extern "C" {
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlVideoElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2863,7 +3473,12 @@ extern "C" {
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2882,7 +3497,12 @@ extern "C" {
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2901,7 +3521,12 @@ extern "C" {
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2919,7 +3544,12 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2938,7 +3568,12 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2957,7 +3592,12 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage2D"
+    )]
     #[doc = "The `texImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage2D)"]
@@ -2976,7 +3616,12 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -2995,7 +3640,12 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3015,7 +3665,12 @@ extern "C" {
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlCanvasElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3035,7 +3690,12 @@ extern "C" {
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3055,7 +3715,12 @@ extern "C" {
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlVideoElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3075,7 +3740,12 @@ extern "C" {
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3095,7 +3765,12 @@ extern "C" {
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3115,7 +3790,12 @@ extern "C" {
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3134,7 +3814,12 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3153,7 +3838,12 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3172,7 +3862,12 @@ extern "C" {
         type_: u32,
         src_data: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3191,7 +3886,12 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3211,7 +3911,12 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3231,7 +3936,12 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texImage3D"
+    )]
     #[doc = "The `texImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texImage3D)"]
@@ -3251,7 +3961,7 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = texStorage2D)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "texStorage2D")]
     #[doc = "The `texStorage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texStorage2D)"]
@@ -3265,7 +3975,7 @@ extern "C" {
         width: i32,
         height: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = texStorage3D)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "texStorage3D")]
     #[doc = "The `texStorage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texStorage3D)"]
@@ -3280,7 +3990,12 @@ extern "C" {
         height: i32,
         depth: i32,
     );
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3298,7 +4013,12 @@ extern "C" {
         type_: u32,
         pixels: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3316,7 +4036,12 @@ extern "C" {
         type_: u32,
         pixels: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3335,7 +4060,12 @@ extern "C" {
         pixels: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlCanvasElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3352,7 +4082,12 @@ extern "C" {
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3369,7 +4104,12 @@ extern "C" {
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlVideoElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3386,7 +4126,12 @@ extern "C" {
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3403,7 +4148,12 @@ extern "C" {
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3420,7 +4170,12 @@ extern "C" {
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3436,7 +4191,12 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3454,7 +4214,12 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3473,7 +4238,12 @@ extern "C" {
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlCanvasElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3492,7 +4262,12 @@ extern "C" {
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3511,7 +4286,12 @@ extern "C" {
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlVideoElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3530,7 +4310,12 @@ extern "C" {
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3549,7 +4334,12 @@ extern "C" {
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3568,7 +4358,12 @@ extern "C" {
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3586,7 +4381,12 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3605,7 +4405,12 @@ extern "C" {
         src_data: &::js_sys::Object,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3624,7 +4429,12 @@ extern "C" {
         src_data: &[u8],
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage2D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage2D"
+    )]
     #[doc = "The `texSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage2D)"]
@@ -3643,7 +4453,12 @@ extern "C" {
         src_data: &::js_sys::Uint8Array,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3663,7 +4478,12 @@ extern "C" {
         type_: u32,
         pbo_offset: i32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3684,7 +4504,12 @@ extern "C" {
         pbo_offset: f64,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlCanvasElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3705,7 +4530,12 @@ extern "C" {
         source: &HtmlCanvasElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlImageElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3726,7 +4556,12 @@ extern "C" {
         source: &HtmlImageElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "HtmlVideoElement")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3747,7 +4582,12 @@ extern "C" {
         source: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3768,7 +4608,12 @@ extern "C" {
         source: &VideoFrame,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3789,7 +4634,12 @@ extern "C" {
         source: &ImageBitmap,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ImageData")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3809,7 +4659,12 @@ extern "C" {
         type_: u32,
         source: &ImageData,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3829,7 +4684,12 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Object>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3849,7 +4709,12 @@ extern "C" {
         type_: u32,
         src_data: Option<&[u8]>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3869,7 +4734,12 @@ extern "C" {
         type_: u32,
         src_data: Option<&::js_sys::Uint8Array>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3890,7 +4760,12 @@ extern "C" {
         src_data: Option<&::js_sys::Object>,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3911,7 +4786,12 @@ extern "C" {
         src_data: Option<&[u8]>,
         src_offset: u32,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = texSubImage3D)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "texSubImage3D"
+    )]
     #[doc = "The `texSubImage3D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texSubImage3D)"]
@@ -3933,7 +4813,11 @@ extern "C" {
         src_offset: u32,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = transformFeedbackVaryings)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "transformFeedbackVaryings"
+    )]
     #[doc = "The `transformFeedbackVaryings()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/transformFeedbackVaryings)"]
@@ -3946,7 +4830,7 @@ extern "C" {
         buffer_mode: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -3958,7 +4842,7 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -3970,7 +4854,7 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -3982,7 +4866,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -3995,7 +4879,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -4008,7 +4892,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -4021,7 +4905,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -4035,7 +4919,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -4049,7 +4933,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1fv")]
     #[doc = "The `uniform1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1fv)"]
@@ -4063,7 +4947,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4075,7 +4959,7 @@ extern "C" {
         data: &[i32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4087,7 +4971,7 @@ extern "C" {
         data: &::js_sys::Int32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4099,7 +4983,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4112,7 +4996,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4125,7 +5009,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4138,7 +5022,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4152,7 +5036,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4166,7 +5050,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1iv")]
     #[doc = "The `uniform1iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1iv)"]
@@ -4180,7 +5064,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1ui)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform1ui()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1ui)"]
@@ -4192,7 +5076,7 @@ extern "C" {
         v0: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4204,7 +5088,7 @@ extern "C" {
         data: &[u32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4216,7 +5100,7 @@ extern "C" {
         data: &::js_sys::Uint32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4228,7 +5112,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4241,7 +5125,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4254,7 +5138,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4267,7 +5151,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4281,7 +5165,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4295,7 +5179,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform1uiv")]
     #[doc = "The `uniform1uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1uiv)"]
@@ -4309,7 +5193,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4321,7 +5205,7 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4333,7 +5217,7 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4345,7 +5229,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4358,7 +5242,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4371,7 +5255,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4384,7 +5268,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4398,7 +5282,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4412,7 +5296,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2fv")]
     #[doc = "The `uniform2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2fv)"]
@@ -4426,7 +5310,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4438,7 +5322,7 @@ extern "C" {
         data: &[i32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4450,7 +5334,7 @@ extern "C" {
         data: &::js_sys::Int32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4462,7 +5346,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4475,7 +5359,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4488,7 +5372,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4501,7 +5385,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4515,7 +5399,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4529,7 +5413,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2iv")]
     #[doc = "The `uniform2iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2iv)"]
@@ -4543,7 +5427,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2ui)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform2ui()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2ui)"]
@@ -4556,7 +5440,7 @@ extern "C" {
         v1: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4568,7 +5452,7 @@ extern "C" {
         data: &[u32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4580,7 +5464,7 @@ extern "C" {
         data: &::js_sys::Uint32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4592,7 +5476,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4605,7 +5489,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4618,7 +5502,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4631,7 +5515,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4645,7 +5529,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4659,7 +5543,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform2uiv")]
     #[doc = "The `uniform2uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2uiv)"]
@@ -4673,7 +5557,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4685,7 +5569,7 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4697,7 +5581,7 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4709,7 +5593,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4722,7 +5606,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4735,7 +5619,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4748,7 +5632,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4762,7 +5646,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4776,7 +5660,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3fv")]
     #[doc = "The `uniform3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3fv)"]
@@ -4790,7 +5674,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4802,7 +5686,7 @@ extern "C" {
         data: &[i32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4814,7 +5698,7 @@ extern "C" {
         data: &::js_sys::Int32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4826,7 +5710,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4839,7 +5723,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4852,7 +5736,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4865,7 +5749,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4879,7 +5763,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4893,7 +5777,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3iv")]
     #[doc = "The `uniform3iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3iv)"]
@@ -4907,7 +5791,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3ui)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform3ui()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3ui)"]
@@ -4921,7 +5805,7 @@ extern "C" {
         v2: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -4933,7 +5817,7 @@ extern "C" {
         data: &[u32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -4945,7 +5829,7 @@ extern "C" {
         data: &::js_sys::Uint32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -4957,7 +5841,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -4970,7 +5854,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -4983,7 +5867,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -4996,7 +5880,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -5010,7 +5894,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -5024,7 +5908,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform3uiv")]
     #[doc = "The `uniform3uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3uiv)"]
@@ -5038,7 +5922,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5050,7 +5934,7 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5062,7 +5946,7 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5074,7 +5958,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5087,7 +5971,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5100,7 +5984,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5113,7 +5997,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5127,7 +6011,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5141,7 +6025,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4fv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4fv")]
     #[doc = "The `uniform4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4fv)"]
@@ -5155,7 +6039,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5167,7 +6051,7 @@ extern "C" {
         data: &[i32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5179,7 +6063,7 @@ extern "C" {
         data: &::js_sys::Int32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5191,7 +6075,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5204,7 +6088,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5217,7 +6101,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5230,7 +6114,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5244,7 +6128,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5258,7 +6142,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4iv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4iv")]
     #[doc = "The `uniform4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4iv)"]
@@ -5272,7 +6156,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4ui)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform4ui()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4ui)"]
@@ -5287,7 +6171,7 @@ extern "C" {
         v3: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5299,7 +6183,7 @@ extern "C" {
         data: &[u32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5311,7 +6195,7 @@ extern "C" {
         data: &::js_sys::Uint32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5323,7 +6207,7 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5336,7 +6220,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5349,7 +6233,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5362,7 +6246,7 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5376,7 +6260,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5390,7 +6274,7 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4uiv)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "uniform4uiv")]
     #[doc = "The `uniform4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4uiv)"]
@@ -5404,7 +6288,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformBlockBinding)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformBlockBinding"
+    )]
     #[doc = "The `uniformBlockBinding()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformBlockBinding)"]
@@ -5417,7 +6305,11 @@ extern "C" {
         uniform_block_binding: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5430,7 +6322,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5443,7 +6339,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5456,7 +6356,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5470,7 +6374,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5484,7 +6392,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5498,7 +6410,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5513,7 +6429,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5528,7 +6448,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2fv"
+    )]
     #[doc = "The `uniformMatrix2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2fv)"]
@@ -5543,7 +6467,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5556,7 +6484,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5569,7 +6501,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5582,7 +6518,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5596,7 +6536,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5610,7 +6554,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5624,7 +6572,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5639,7 +6591,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5654,7 +6610,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x3fv"
+    )]
     #[doc = "The `uniformMatrix2x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x3fv)"]
@@ -5669,7 +6629,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5682,7 +6646,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5695,7 +6663,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5708,7 +6680,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5722,7 +6698,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5736,7 +6716,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5750,7 +6734,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5765,7 +6753,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5780,7 +6772,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix2x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix2x4fv"
+    )]
     #[doc = "The `uniformMatrix2x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix2x4fv)"]
@@ -5795,7 +6791,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5808,7 +6808,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5821,7 +6825,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5834,7 +6842,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5848,7 +6860,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5862,7 +6878,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5876,7 +6896,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5891,7 +6915,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5906,7 +6934,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3fv"
+    )]
     #[doc = "The `uniformMatrix3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3fv)"]
@@ -5921,7 +6953,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -5934,7 +6970,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -5947,7 +6987,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -5960,7 +7004,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -5974,7 +7022,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -5988,7 +7040,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -6002,7 +7058,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -6017,7 +7077,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -6032,7 +7096,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x2fv"
+    )]
     #[doc = "The `uniformMatrix3x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x2fv)"]
@@ -6047,7 +7115,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6060,7 +7132,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6073,7 +7149,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6086,7 +7166,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6100,7 +7184,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6114,7 +7202,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6128,7 +7220,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6143,7 +7239,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6158,7 +7258,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix3x4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix3x4fv"
+    )]
     #[doc = "The `uniformMatrix3x4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix3x4fv)"]
@@ -6173,7 +7277,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6186,7 +7294,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6199,7 +7311,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6212,7 +7328,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6226,7 +7346,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6240,7 +7364,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6254,7 +7382,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6269,7 +7401,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6284,7 +7420,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4fv"
+    )]
     #[doc = "The `uniformMatrix4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4fv)"]
@@ -6299,7 +7439,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6312,7 +7456,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6325,7 +7473,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6338,7 +7490,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6352,7 +7508,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6366,7 +7526,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6380,7 +7544,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6395,7 +7563,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6410,7 +7582,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x2fv"
+    )]
     #[doc = "The `uniformMatrix4x2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x2fv)"]
@@ -6425,7 +7601,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6438,7 +7618,11 @@ extern "C" {
         data: &[f32],
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6451,7 +7635,11 @@ extern "C" {
         data: &::js_sys::Float32Array,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6464,7 +7652,11 @@ extern "C" {
         data: &::wasm_bindgen::JsValue,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6478,7 +7670,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6492,7 +7688,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6506,7 +7706,11 @@ extern "C" {
         src_offset: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6521,7 +7725,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6536,7 +7744,11 @@ extern "C" {
         src_length: u32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniformMatrix4x3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "uniformMatrix4x3fv"
+    )]
     #[doc = "The `uniformMatrix4x3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniformMatrix4x3fv)"]
@@ -6550,14 +7762,22 @@ extern "C" {
         src_offset: u32,
         src_length: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribDivisor)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribDivisor"
+    )]
     #[doc = "The `vertexAttribDivisor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribDivisor)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn vertex_attrib_divisor(this: &WebGl2RenderingContext, index: u32, divisor: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4i)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4i"
+    )]
     #[doc = "The `vertexAttribI4i()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4i)"]
@@ -6571,7 +7791,11 @@ extern "C" {
         z: i32,
         w: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4iv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4iv"
+    )]
     #[doc = "The `vertexAttribI4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4iv)"]
@@ -6582,7 +7806,11 @@ extern "C" {
         index: u32,
         values: &mut [i32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4iv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4iv"
+    )]
     #[doc = "The `vertexAttribI4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4iv)"]
@@ -6593,7 +7821,11 @@ extern "C" {
         index: u32,
         values: &::js_sys::Int32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4iv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4iv"
+    )]
     #[doc = "The `vertexAttribI4iv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4iv)"]
@@ -6604,7 +7836,11 @@ extern "C" {
         index: u32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4ui)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4ui"
+    )]
     #[doc = "The `vertexAttribI4ui()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4ui)"]
@@ -6618,7 +7854,11 @@ extern "C" {
         z: u32,
         w: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4uiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4uiv"
+    )]
     #[doc = "The `vertexAttribI4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4uiv)"]
@@ -6629,7 +7869,11 @@ extern "C" {
         index: u32,
         values: &mut [u32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4uiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4uiv"
+    )]
     #[doc = "The `vertexAttribI4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4uiv)"]
@@ -6640,7 +7884,11 @@ extern "C" {
         index: u32,
         values: &::js_sys::Uint32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribI4uiv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribI4uiv"
+    )]
     #[doc = "The `vertexAttribI4uiv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribI4uiv)"]
@@ -6651,7 +7899,11 @@ extern "C" {
         index: u32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribIPointer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribIPointer"
+    )]
     #[doc = "The `vertexAttribIPointer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribIPointer)"]
@@ -6665,7 +7917,11 @@ extern "C" {
         stride: i32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribIPointer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribIPointer"
+    )]
     #[doc = "The `vertexAttribIPointer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribIPointer)"]
@@ -6680,7 +7936,7 @@ extern "C" {
         offset: f64,
     );
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = waitSync)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "waitSync")]
     #[doc = "The `waitSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/waitSync)"]
@@ -6693,7 +7949,7 @@ extern "C" {
         timeout: i32,
     );
     #[cfg(feature = "WebGlSync")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = waitSync)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "waitSync")]
     #[doc = "The `waitSync()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/waitSync)"]
@@ -6705,7 +7961,7 @@ extern "C" {
         flags: u32,
         timeout: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = activeTexture)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "activeTexture")]
     #[doc = "The `activeTexture()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/activeTexture)"]
@@ -6713,7 +7969,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn active_texture(this: &WebGl2RenderingContext, texture: u32);
     #[cfg(all(feature = "WebGlProgram", feature = "WebGlShader",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = attachShader)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "attachShader")]
     #[doc = "The `attachShader()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/attachShader)"]
@@ -6725,7 +7981,11 @@ extern "C" {
         shader: &WebGlShader,
     );
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindAttribLocation)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindAttribLocation"
+    )]
     #[doc = "The `bindAttribLocation()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindAttribLocation)"]
@@ -6738,7 +7998,7 @@ extern "C" {
         name: &str,
     );
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindBuffer)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bindBuffer")]
     #[doc = "The `bindBuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindBuffer)"]
@@ -6746,7 +8006,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlBuffer`*"]
     pub fn bind_buffer(this: &WebGl2RenderingContext, target: u32, buffer: Option<&WebGlBuffer>);
     #[cfg(feature = "WebGlFramebuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindFramebuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindFramebuffer"
+    )]
     #[doc = "The `bindFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindFramebuffer)"]
@@ -6758,7 +8022,11 @@ extern "C" {
         framebuffer: Option<&WebGlFramebuffer>,
     );
     #[cfg(feature = "WebGlRenderbuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindRenderbuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindRenderbuffer"
+    )]
     #[doc = "The `bindRenderbuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindRenderbuffer)"]
@@ -6770,42 +8038,50 @@ extern "C" {
         renderbuffer: Option<&WebGlRenderbuffer>,
     );
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = bindTexture)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bindTexture")]
     #[doc = "The `bindTexture()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindTexture)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlTexture`*"]
     pub fn bind_texture(this: &WebGl2RenderingContext, target: u32, texture: Option<&WebGlTexture>);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = blendColor)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "blendColor")]
     #[doc = "The `blendColor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blendColor)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn blend_color(this: &WebGl2RenderingContext, red: f32, green: f32, blue: f32, alpha: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = blendEquation)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "blendEquation")]
     #[doc = "The `blendEquation()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blendEquation)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn blend_equation(this: &WebGl2RenderingContext, mode: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = blendEquationSeparate)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "blendEquationSeparate"
+    )]
     #[doc = "The `blendEquationSeparate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blendEquationSeparate)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn blend_equation_separate(this: &WebGl2RenderingContext, mode_rgb: u32, mode_alpha: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = blendFunc)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "blendFunc")]
     #[doc = "The `blendFunc()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blendFunc)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn blend_func(this: &WebGl2RenderingContext, sfactor: u32, dfactor: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = blendFuncSeparate)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "blendFuncSeparate"
+    )]
     #[doc = "The `blendFuncSeparate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blendFuncSeparate)"]
@@ -6818,42 +8094,46 @@ extern "C" {
         src_alpha: u32,
         dst_alpha: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = checkFramebufferStatus)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "checkFramebufferStatus"
+    )]
     #[doc = "The `checkFramebufferStatus()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/checkFramebufferStatus)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn check_framebuffer_status(this: &WebGl2RenderingContext, target: u32) -> u32;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clear)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clear)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn clear(this: &WebGl2RenderingContext, mask: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearColor)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearColor")]
     #[doc = "The `clearColor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearColor)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn clear_color(this: &WebGl2RenderingContext, red: f32, green: f32, blue: f32, alpha: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearDepth)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearDepth")]
     #[doc = "The `clearDepth()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearDepth)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn clear_depth(this: &WebGl2RenderingContext, depth: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = clearStencil)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "clearStencil")]
     #[doc = "The `clearStencil()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearStencil)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn clear_stencil(this: &WebGl2RenderingContext, s: i32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = colorMask)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "colorMask")]
     #[doc = "The `colorMask()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/colorMask)"]
@@ -6867,14 +8147,18 @@ extern "C" {
         alpha: bool,
     );
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = compileShader)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "compileShader")]
     #[doc = "The `compileShader()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/compileShader)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
     pub fn compile_shader(this: &WebGl2RenderingContext, shader: &WebGlShader);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyTexImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyTexImage2D"
+    )]
     #[doc = "The `copyTexImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyTexImage2D)"]
@@ -6891,7 +8175,11 @@ extern "C" {
         height: i32,
         border: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = copyTexSubImage2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "copyTexSubImage2D"
+    )]
     #[doc = "The `copyTexSubImage2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/copyTexSubImage2D)"]
@@ -6909,7 +8197,7 @@ extern "C" {
         height: i32,
     );
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createBuffer)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "createBuffer")]
     #[doc = "The `createBuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createBuffer)"]
@@ -6917,7 +8205,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlBuffer`*"]
     pub fn create_buffer(this: &WebGl2RenderingContext) -> Option<WebGlBuffer>;
     #[cfg(feature = "WebGlFramebuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createFramebuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "createFramebuffer"
+    )]
     #[doc = "The `createFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createFramebuffer)"]
@@ -6925,7 +8217,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlFramebuffer`*"]
     pub fn create_framebuffer(this: &WebGl2RenderingContext) -> Option<WebGlFramebuffer>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createProgram)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "createProgram")]
     #[doc = "The `createProgram()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createProgram)"]
@@ -6933,7 +8225,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
     pub fn create_program(this: &WebGl2RenderingContext) -> Option<WebGlProgram>;
     #[cfg(feature = "WebGlRenderbuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createRenderbuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "createRenderbuffer"
+    )]
     #[doc = "The `createRenderbuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createRenderbuffer)"]
@@ -6941,7 +8237,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlRenderbuffer`*"]
     pub fn create_renderbuffer(this: &WebGl2RenderingContext) -> Option<WebGlRenderbuffer>;
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createShader)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "createShader")]
     #[doc = "The `createShader()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createShader)"]
@@ -6949,14 +8245,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
     pub fn create_shader(this: &WebGl2RenderingContext, type_: u32) -> Option<WebGlShader>;
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = createTexture)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "createTexture")]
     #[doc = "The `createTexture()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/createTexture)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlTexture`*"]
     pub fn create_texture(this: &WebGl2RenderingContext) -> Option<WebGlTexture>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = cullFace)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "cullFace")]
     #[doc = "The `cullFace()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/cullFace)"]
@@ -6964,7 +8260,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn cull_face(this: &WebGl2RenderingContext, mode: u32);
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteBuffer)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteBuffer")]
     #[doc = "The `deleteBuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteBuffer)"]
@@ -6972,7 +8268,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlBuffer`*"]
     pub fn delete_buffer(this: &WebGl2RenderingContext, buffer: Option<&WebGlBuffer>);
     #[cfg(feature = "WebGlFramebuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteFramebuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "deleteFramebuffer"
+    )]
     #[doc = "The `deleteFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteFramebuffer)"]
@@ -6983,7 +8283,7 @@ extern "C" {
         framebuffer: Option<&WebGlFramebuffer>,
     );
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteProgram)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteProgram")]
     #[doc = "The `deleteProgram()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteProgram)"]
@@ -6991,7 +8291,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
     pub fn delete_program(this: &WebGl2RenderingContext, program: Option<&WebGlProgram>);
     #[cfg(feature = "WebGlRenderbuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteRenderbuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "deleteRenderbuffer"
+    )]
     #[doc = "The `deleteRenderbuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteRenderbuffer)"]
@@ -7002,7 +8306,7 @@ extern "C" {
         renderbuffer: Option<&WebGlRenderbuffer>,
     );
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteShader)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteShader")]
     #[doc = "The `deleteShader()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteShader)"]
@@ -7010,28 +8314,28 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
     pub fn delete_shader(this: &WebGl2RenderingContext, shader: Option<&WebGlShader>);
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = deleteTexture)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "deleteTexture")]
     #[doc = "The `deleteTexture()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/deleteTexture)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlTexture`*"]
     pub fn delete_texture(this: &WebGl2RenderingContext, texture: Option<&WebGlTexture>);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = depthFunc)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "depthFunc")]
     #[doc = "The `depthFunc()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/depthFunc)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn depth_func(this: &WebGl2RenderingContext, func: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = depthMask)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "depthMask")]
     #[doc = "The `depthMask()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/depthMask)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn depth_mask(this: &WebGl2RenderingContext, flag: bool);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = depthRange)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "depthRange")]
     #[doc = "The `depthRange()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/depthRange)"]
@@ -7039,7 +8343,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn depth_range(this: &WebGl2RenderingContext, z_near: f32, z_far: f32);
     #[cfg(all(feature = "WebGlProgram", feature = "WebGlShader",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = detachShader)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "detachShader")]
     #[doc = "The `detachShader()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/detachShader)"]
@@ -7050,28 +8354,32 @@ extern "C" {
         program: &WebGlProgram,
         shader: &WebGlShader,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = disable)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `disable()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/disable)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn disable(this: &WebGl2RenderingContext, cap: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = disableVertexAttribArray)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "disableVertexAttribArray"
+    )]
     #[doc = "The `disableVertexAttribArray()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/disableVertexAttribArray)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn disable_vertex_attrib_array(this: &WebGl2RenderingContext, index: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawArrays)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "drawArrays")]
     #[doc = "The `drawArrays()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawArrays)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn draw_arrays(this: &WebGl2RenderingContext, mode: u32, first: i32, count: i32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawElements)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "drawElements")]
     #[doc = "The `drawElements()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawElements)"]
@@ -7084,7 +8392,7 @@ extern "C" {
         type_: u32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = drawElements)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "drawElements")]
     #[doc = "The `drawElements()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawElements)"]
@@ -7097,28 +8405,32 @@ extern "C" {
         type_: u32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = enable)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `enable()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/enable)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn enable(this: &WebGl2RenderingContext, cap: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = enableVertexAttribArray)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "enableVertexAttribArray"
+    )]
     #[doc = "The `enableVertexAttribArray()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/enableVertexAttribArray)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn enable_vertex_attrib_array(this: &WebGl2RenderingContext, index: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = finish)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `finish()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/finish)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn finish(this: &WebGl2RenderingContext);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = flush)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `flush()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/flush)"]
@@ -7126,7 +8438,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn flush(this: &WebGl2RenderingContext);
     #[cfg(feature = "WebGlRenderbuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = framebufferRenderbuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "framebufferRenderbuffer"
+    )]
     #[doc = "The `framebufferRenderbuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/framebufferRenderbuffer)"]
@@ -7140,7 +8456,11 @@ extern "C" {
         renderbuffer: Option<&WebGlRenderbuffer>,
     );
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = framebufferTexture2D)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "framebufferTexture2D"
+    )]
     #[doc = "The `framebufferTexture2D()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/framebufferTexture2D)"]
@@ -7154,14 +8474,18 @@ extern "C" {
         texture: Option<&WebGlTexture>,
         level: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = frontFace)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "frontFace")]
     #[doc = "The `frontFace()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/frontFace)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn front_face(this: &WebGl2RenderingContext, mode: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = generateMipmap)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "generateMipmap"
+    )]
     #[doc = "The `generateMipmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/generateMipmap)"]
@@ -7169,7 +8493,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn generate_mipmap(this: &WebGl2RenderingContext, target: u32);
     #[cfg(all(feature = "WebGlActiveInfo", feature = "WebGlProgram",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getActiveAttrib)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getActiveAttrib"
+    )]
     #[doc = "The `getActiveAttrib()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getActiveAttrib)"]
@@ -7181,7 +8509,11 @@ extern "C" {
         index: u32,
     ) -> Option<WebGlActiveInfo>;
     #[cfg(all(feature = "WebGlActiveInfo", feature = "WebGlProgram",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getActiveUniform)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getActiveUniform"
+    )]
     #[doc = "The `getActiveUniform()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getActiveUniform)"]
@@ -7193,7 +8525,11 @@ extern "C" {
         index: u32,
     ) -> Option<WebGlActiveInfo>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getAttachedShaders)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getAttachedShaders"
+    )]
     #[doc = "The `getAttachedShaders()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getAttachedShaders)"]
@@ -7204,7 +8540,11 @@ extern "C" {
         program: &WebGlProgram,
     ) -> Option<::js_sys::Array>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getAttribLocation)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getAttribLocation"
+    )]
     #[doc = "The `getAttribLocation()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getAttribLocation)"]
@@ -7215,7 +8555,11 @@ extern "C" {
         program: &WebGlProgram,
         name: &str,
     ) -> i32;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getBufferParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getBufferParameter"
+    )]
     #[doc = "The `getBufferParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferParameter)"]
@@ -7227,21 +8571,30 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "WebGlContextAttributes")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getContextAttributes)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getContextAttributes"
+    )]
     #[doc = "The `getContextAttributes()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getContextAttributes)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlContextAttributes`*"]
     pub fn get_context_attributes(this: &WebGl2RenderingContext) -> Option<WebGlContextAttributes>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getError)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "getError")]
     #[doc = "The `getError()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getError)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn get_error(this: &WebGl2RenderingContext) -> u32;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getExtension)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getExtension"
+    )]
     #[doc = "The `getExtension()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getExtension)"]
@@ -7251,7 +8604,12 @@ extern "C" {
         this: &WebGl2RenderingContext,
         name: &str,
     ) -> Result<Option<::js_sys::Object>, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getFramebufferAttachmentParameter)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getFramebufferAttachmentParameter"
+    )]
     #[doc = "The `getFramebufferAttachmentParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getFramebufferAttachmentParameter)"]
@@ -7263,7 +8621,12 @@ extern "C" {
         attachment: u32,
         pname: u32,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getParameter)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getParameter"
+    )]
     #[doc = "The `getParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getParameter)"]
@@ -7274,7 +8637,11 @@ extern "C" {
         pname: u32,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getProgramInfoLog)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getProgramInfoLog"
+    )]
     #[doc = "The `getProgramInfoLog()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getProgramInfoLog)"]
@@ -7285,7 +8652,11 @@ extern "C" {
         program: &WebGlProgram,
     ) -> Option<::alloc::string::String>;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getProgramParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getProgramParameter"
+    )]
     #[doc = "The `getProgramParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getProgramParameter)"]
@@ -7296,7 +8667,11 @@ extern "C" {
         program: &WebGlProgram,
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getRenderbufferParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getRenderbufferParameter"
+    )]
     #[doc = "The `getRenderbufferParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getRenderbufferParameter)"]
@@ -7308,7 +8683,11 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getShaderInfoLog)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getShaderInfoLog"
+    )]
     #[doc = "The `getShaderInfoLog()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getShaderInfoLog)"]
@@ -7319,7 +8698,11 @@ extern "C" {
         shader: &WebGlShader,
     ) -> Option<::alloc::string::String>;
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getShaderParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getShaderParameter"
+    )]
     #[doc = "The `getShaderParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getShaderParameter)"]
@@ -7331,7 +8714,11 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "WebGlShaderPrecisionFormat")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getShaderPrecisionFormat)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getShaderPrecisionFormat"
+    )]
     #[doc = "The `getShaderPrecisionFormat()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getShaderPrecisionFormat)"]
@@ -7343,7 +8730,11 @@ extern "C" {
         precisiontype: u32,
     ) -> Option<WebGlShaderPrecisionFormat>;
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getShaderSource)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getShaderSource"
+    )]
     #[doc = "The `getShaderSource()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getShaderSource)"]
@@ -7353,14 +8744,22 @@ extern "C" {
         this: &WebGl2RenderingContext,
         shader: &WebGlShader,
     ) -> Option<::alloc::string::String>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getSupportedExtensions)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getSupportedExtensions"
+    )]
     #[doc = "The `getSupportedExtensions()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getSupportedExtensions)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn get_supported_extensions(this: &WebGl2RenderingContext) -> Option<::js_sys::Array>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getTexParameter)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getTexParameter"
+    )]
     #[doc = "The `getTexParameter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getTexParameter)"]
@@ -7372,7 +8771,7 @@ extern "C" {
         pname: u32,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(all(feature = "WebGlProgram", feature = "WebGlUniformLocation",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getUniform)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "getUniform")]
     #[doc = "The `getUniform()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getUniform)"]
@@ -7384,7 +8783,11 @@ extern "C" {
         location: &WebGlUniformLocation,
     ) -> ::wasm_bindgen::JsValue;
     #[cfg(all(feature = "WebGlProgram", feature = "WebGlUniformLocation",))]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getUniformLocation)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getUniformLocation"
+    )]
     #[doc = "The `getUniformLocation()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getUniformLocation)"]
@@ -7395,7 +8798,12 @@ extern "C" {
         program: &WebGlProgram,
         name: &str,
     ) -> Option<WebGlUniformLocation>;
-    # [wasm_bindgen (catch , method , structural , js_class = "WebGL2RenderingContext" , js_name = getVertexAttrib)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getVertexAttrib"
+    )]
     #[doc = "The `getVertexAttrib()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getVertexAttrib)"]
@@ -7406,14 +8814,18 @@ extern "C" {
         index: u32,
         pname: u32,
     ) -> Result<::wasm_bindgen::JsValue, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = getVertexAttribOffset)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getVertexAttribOffset"
+    )]
     #[doc = "The `getVertexAttribOffset()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getVertexAttribOffset)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn get_vertex_attrib_offset(this: &WebGl2RenderingContext, index: u32, pname: u32) -> f64;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = hint)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `hint()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/hint)"]
@@ -7421,21 +8833,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn hint(this: &WebGl2RenderingContext, target: u32, mode: u32);
     #[cfg(feature = "WebGlBuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isBuffer)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isBuffer")]
     #[doc = "The `isBuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isBuffer)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlBuffer`*"]
     pub fn is_buffer(this: &WebGl2RenderingContext, buffer: Option<&WebGlBuffer>) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isContextLost)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isContextLost")]
     #[doc = "The `isContextLost()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isContextLost)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn is_context_lost(this: &WebGl2RenderingContext) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isEnabled)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isEnabled")]
     #[doc = "The `isEnabled()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isEnabled)"]
@@ -7443,7 +8855,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn is_enabled(this: &WebGl2RenderingContext, cap: u32) -> bool;
     #[cfg(feature = "WebGlFramebuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isFramebuffer)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isFramebuffer")]
     #[doc = "The `isFramebuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isFramebuffer)"]
@@ -7454,7 +8866,7 @@ extern "C" {
         framebuffer: Option<&WebGlFramebuffer>,
     ) -> bool;
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isProgram)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isProgram")]
     #[doc = "The `isProgram()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isProgram)"]
@@ -7462,7 +8874,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
     pub fn is_program(this: &WebGl2RenderingContext, program: Option<&WebGlProgram>) -> bool;
     #[cfg(feature = "WebGlRenderbuffer")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isRenderbuffer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "isRenderbuffer"
+    )]
     #[doc = "The `isRenderbuffer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isRenderbuffer)"]
@@ -7473,7 +8889,7 @@ extern "C" {
         renderbuffer: Option<&WebGlRenderbuffer>,
     ) -> bool;
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isShader)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isShader")]
     #[doc = "The `isShader()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isShader)"]
@@ -7481,14 +8897,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
     pub fn is_shader(this: &WebGl2RenderingContext, shader: Option<&WebGlShader>) -> bool;
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = isTexture)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "isTexture")]
     #[doc = "The `isTexture()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/isTexture)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlTexture`*"]
     pub fn is_texture(this: &WebGl2RenderingContext, texture: Option<&WebGlTexture>) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = lineWidth)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "lineWidth")]
     #[doc = "The `lineWidth()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/lineWidth)"]
@@ -7496,7 +8912,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn line_width(this: &WebGl2RenderingContext, width: f32);
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = linkProgram)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "linkProgram")]
     #[doc = "The `linkProgram()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/linkProgram)"]
@@ -7504,7 +8920,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
     pub fn link_program(this: &WebGl2RenderingContext, program: &WebGlProgram);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = makeXRCompatible)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "makeXRCompatible"
+    )]
     #[doc = "The `makeXRCompatible()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/makeXRCompatible)"]
@@ -7516,21 +8936,25 @@ extern "C" {
     pub fn make_xr_compatible(
         this: &WebGl2RenderingContext,
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = pixelStorei)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "pixelStorei")]
     #[doc = "The `pixelStorei()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/pixelStorei)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn pixel_storei(this: &WebGl2RenderingContext, pname: u32, param: i32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = polygonOffset)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "polygonOffset")]
     #[doc = "The `polygonOffset()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/polygonOffset)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn polygon_offset(this: &WebGl2RenderingContext, factor: f32, units: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = renderbufferStorage)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "renderbufferStorage"
+    )]
     #[doc = "The `renderbufferStorage()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/renderbufferStorage)"]
@@ -7543,14 +8967,18 @@ extern "C" {
         width: i32,
         height: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = sampleCoverage)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "sampleCoverage"
+    )]
     #[doc = "The `sampleCoverage()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/sampleCoverage)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn sample_coverage(this: &WebGl2RenderingContext, value: f32, invert: bool);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = scissor)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `scissor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/scissor)"]
@@ -7558,21 +8986,25 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn scissor(this: &WebGl2RenderingContext, x: i32, y: i32, width: i32, height: i32);
     #[cfg(feature = "WebGlShader")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = shaderSource)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "shaderSource")]
     #[doc = "The `shaderSource()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/shaderSource)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
     pub fn shader_source(this: &WebGl2RenderingContext, shader: &WebGlShader, source: &str);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = stencilFunc)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "stencilFunc")]
     #[doc = "The `stencilFunc()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/stencilFunc)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn stencil_func(this: &WebGl2RenderingContext, func: u32, ref_: i32, mask: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = stencilFuncSeparate)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "stencilFuncSeparate"
+    )]
     #[doc = "The `stencilFuncSeparate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/stencilFuncSeparate)"]
@@ -7585,28 +9017,36 @@ extern "C" {
         ref_: i32,
         mask: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = stencilMask)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "stencilMask")]
     #[doc = "The `stencilMask()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/stencilMask)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn stencil_mask(this: &WebGl2RenderingContext, mask: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = stencilMaskSeparate)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "stencilMaskSeparate"
+    )]
     #[doc = "The `stencilMaskSeparate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/stencilMaskSeparate)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn stencil_mask_separate(this: &WebGl2RenderingContext, face: u32, mask: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = stencilOp)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "stencilOp")]
     #[doc = "The `stencilOp()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/stencilOp)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn stencil_op(this: &WebGl2RenderingContext, fail: u32, zfail: u32, zpass: u32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = stencilOpSeparate)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "stencilOpSeparate"
+    )]
     #[doc = "The `stencilOpSeparate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/stencilOpSeparate)"]
@@ -7619,14 +9059,14 @@ extern "C" {
         zfail: u32,
         zpass: u32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = texParameterf)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "texParameterf")]
     #[doc = "The `texParameterf()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texParameterf)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn tex_parameterf(this: &WebGl2RenderingContext, target: u32, pname: u32, param: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = texParameteri)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "texParameteri")]
     #[doc = "The `texParameteri()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/texParameteri)"]
@@ -7634,7 +9074,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn tex_parameteri(this: &WebGl2RenderingContext, target: u32, pname: u32, param: i32);
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1f)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform1f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1f)"]
@@ -7646,7 +9086,7 @@ extern "C" {
         x: f32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform1i)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform1i()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform1i)"]
@@ -7658,7 +9098,7 @@ extern "C" {
         x: i32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2f)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform2f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2f)"]
@@ -7671,7 +9111,7 @@ extern "C" {
         y: f32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform2i)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform2i()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform2i)"]
@@ -7684,7 +9124,7 @@ extern "C" {
         y: i32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3f)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform3f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3f)"]
@@ -7698,7 +9138,7 @@ extern "C" {
         z: f32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform3i)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform3i()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform3i)"]
@@ -7712,7 +9152,7 @@ extern "C" {
         z: i32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4f)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform4f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4f)"]
@@ -7727,7 +9167,7 @@ extern "C" {
         w: f32,
     );
     #[cfg(feature = "WebGlUniformLocation")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = uniform4i)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `uniform4i()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/uniform4i)"]
@@ -7742,7 +9182,7 @@ extern "C" {
         w: i32,
     );
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = useProgram)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "useProgram")]
     #[doc = "The `useProgram()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/useProgram)"]
@@ -7750,21 +9190,33 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
     pub fn use_program(this: &WebGl2RenderingContext, program: Option<&WebGlProgram>);
     #[cfg(feature = "WebGlProgram")]
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = validateProgram)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "validateProgram"
+    )]
     #[doc = "The `validateProgram()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/validateProgram)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
     pub fn validate_program(this: &WebGl2RenderingContext, program: &WebGlProgram);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib1f)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib1f"
+    )]
     #[doc = "The `vertexAttrib1f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib1f)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn vertex_attrib1f(this: &WebGl2RenderingContext, indx: u32, x: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib1fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib1fv"
+    )]
     #[doc = "The `vertexAttrib1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib1fv)"]
@@ -7775,7 +9227,11 @@ extern "C" {
         indx: u32,
         values: &[f32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib1fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib1fv"
+    )]
     #[doc = "The `vertexAttrib1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib1fv)"]
@@ -7786,7 +9242,11 @@ extern "C" {
         indx: u32,
         values: &::js_sys::Float32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib1fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib1fv"
+    )]
     #[doc = "The `vertexAttrib1fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib1fv)"]
@@ -7797,14 +9257,22 @@ extern "C" {
         indx: u32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib2f)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib2f"
+    )]
     #[doc = "The `vertexAttrib2f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib2f)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn vertex_attrib2f(this: &WebGl2RenderingContext, indx: u32, x: f32, y: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib2fv"
+    )]
     #[doc = "The `vertexAttrib2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib2fv)"]
@@ -7815,7 +9283,11 @@ extern "C" {
         indx: u32,
         values: &[f32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib2fv"
+    )]
     #[doc = "The `vertexAttrib2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib2fv)"]
@@ -7826,7 +9298,11 @@ extern "C" {
         indx: u32,
         values: &::js_sys::Float32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib2fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib2fv"
+    )]
     #[doc = "The `vertexAttrib2fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib2fv)"]
@@ -7837,14 +9313,22 @@ extern "C" {
         indx: u32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib3f)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib3f"
+    )]
     #[doc = "The `vertexAttrib3f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib3f)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
     pub fn vertex_attrib3f(this: &WebGl2RenderingContext, indx: u32, x: f32, y: f32, z: f32);
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib3fv"
+    )]
     #[doc = "The `vertexAttrib3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib3fv)"]
@@ -7855,7 +9339,11 @@ extern "C" {
         indx: u32,
         values: &[f32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib3fv"
+    )]
     #[doc = "The `vertexAttrib3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib3fv)"]
@@ -7866,7 +9354,11 @@ extern "C" {
         indx: u32,
         values: &::js_sys::Float32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib3fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib3fv"
+    )]
     #[doc = "The `vertexAttrib3fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib3fv)"]
@@ -7877,7 +9369,11 @@ extern "C" {
         indx: u32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib4f)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib4f"
+    )]
     #[doc = "The `vertexAttrib4f()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib4f)"]
@@ -7891,7 +9387,11 @@ extern "C" {
         z: f32,
         w: f32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib4fv"
+    )]
     #[doc = "The `vertexAttrib4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib4fv)"]
@@ -7902,7 +9402,11 @@ extern "C" {
         indx: u32,
         values: &[f32],
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib4fv"
+    )]
     #[doc = "The `vertexAttrib4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib4fv)"]
@@ -7913,7 +9417,11 @@ extern "C" {
         indx: u32,
         values: &::js_sys::Float32Array,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttrib4fv)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttrib4fv"
+    )]
     #[doc = "The `vertexAttrib4fv()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttrib4fv)"]
@@ -7924,7 +9432,11 @@ extern "C" {
         indx: u32,
         values: &::wasm_bindgen::JsValue,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribPointer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribPointer"
+    )]
     #[doc = "The `vertexAttribPointer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribPointer)"]
@@ -7939,7 +9451,11 @@ extern "C" {
         stride: i32,
         offset: i32,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = vertexAttribPointer)]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "vertexAttribPointer"
+    )]
     #[doc = "The `vertexAttribPointer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribPointer)"]
@@ -7954,7 +9470,7 @@ extern "C" {
         stride: i32,
         offset: f64,
     );
-    # [wasm_bindgen (method , structural , js_class = "WebGL2RenderingContext" , js_name = viewport)]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext")]
     #[doc = "The `viewport()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/viewport)"]

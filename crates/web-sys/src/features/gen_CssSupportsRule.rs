@@ -4,7 +4,14 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = CssConditionRule , extends = CssGroupingRule , extends = CssRule , extends = :: js_sys :: Object , js_name = CSSSupportsRule , typescript_type = "CSSSupportsRule")]
+    #[wasm_bindgen(
+        extends = "CssConditionRule",
+        extends = "CssGroupingRule",
+        extends = "CssRule",
+        extends = "::js_sys::Object",
+        js_name = "CSSSupportsRule",
+        typescript_type = "CSSSupportsRule"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CssSupportsRule` class."]
     #[doc = ""]

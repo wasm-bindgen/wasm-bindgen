@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = XRView , typescript_type = "XRView")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "XRView",
+        typescript_type = "XRView"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrView` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type XrView;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrEye")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRView" , js_name = eye)]
+    #[wasm_bindgen(method, getter, js_class = "XRView", js_name = "eye")]
     #[doc = "Getter for the `eye` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRView/eye)"]
@@ -29,7 +33,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn eye(this: &XrView) -> XrEye;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRView" , js_name = projectionMatrix)]
+    #[wasm_bindgen(method, getter, js_class = "XRView", js_name = "projectionMatrix")]
     #[doc = "Getter for the `projectionMatrix` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRView/projectionMatrix)"]
@@ -41,7 +45,7 @@ extern "C" {
     pub fn projection_matrix(this: &XrView) -> ::alloc::vec::Vec<f32>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrRigidTransform")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRView" , js_name = transform)]
+    #[wasm_bindgen(method, getter, js_class = "XRView", js_name = "transform")]
     #[doc = "Getter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRView/transform)"]
@@ -52,7 +56,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn transform(this: &XrView) -> XrRigidTransform;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRView" , js_name = recommendedViewportScale)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRView",
+        js_name = "recommendedViewportScale"
+    )]
     #[doc = "Getter for the `recommendedViewportScale` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRView/recommendedViewportScale)"]
@@ -63,7 +72,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn recommended_viewport_scale(this: &XrView) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "XRView" , js_name = requestViewportScale)]
+    #[wasm_bindgen(method, js_class = "XRView", js_name = "requestViewportScale")]
     #[doc = "The `requestViewportScale()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRView/requestViewportScale)"]

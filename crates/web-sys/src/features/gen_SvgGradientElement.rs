@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGGradientElement , typescript_type = "SVGGradientElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGGradientElement",
+        typescript_type = "SVGGradientElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgGradientElement` class."]
     #[doc = ""]
@@ -13,7 +21,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGradientElement`*"]
     pub type SvgGradientElement;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGradientElement" , js_name = gradientUnits)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGradientElement",
+        js_name = "gradientUnits"
+    )]
     #[doc = "Getter for the `gradientUnits` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGradientElement/gradientUnits)"]
@@ -21,7 +34,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgGradientElement`*"]
     pub fn gradient_units(this: &SvgGradientElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedTransformList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGradientElement" , js_name = gradientTransform)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGradientElement",
+        js_name = "gradientTransform"
+    )]
     #[doc = "Getter for the `gradientTransform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGradientElement/gradientTransform)"]
@@ -29,7 +47,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedTransformList`, `SvgGradientElement`*"]
     pub fn gradient_transform(this: &SvgGradientElement) -> SvgAnimatedTransformList;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGradientElement" , js_name = spreadMethod)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGradientElement",
+        js_name = "spreadMethod"
+    )]
     #[doc = "Getter for the `spreadMethod` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGradientElement/spreadMethod)"]
@@ -37,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgGradientElement`*"]
     pub fn spread_method(this: &SvgGradientElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedString")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGradientElement" , js_name = href)]
+    #[wasm_bindgen(method, getter, js_class = "SVGGradientElement", js_name = "href")]
     #[doc = "Getter for the `href` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGradientElement/href)"]

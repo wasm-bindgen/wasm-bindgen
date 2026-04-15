@@ -4,7 +4,10 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = PerformanceEntryFilterOptions)]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "PerformanceEntryFilterOptions"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PerformanceEntryFilterOptions` dictionary."]
     #[doc = ""]

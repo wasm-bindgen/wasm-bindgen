@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = ImageCaptureErrorEvent , typescript_type = "ImageCaptureErrorEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "ImageCaptureErrorEvent",
+        typescript_type = "ImageCaptureErrorEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ImageCaptureErrorEvent` class."]
     #[doc = ""]
@@ -13,7 +18,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCaptureErrorEvent`*"]
     pub type ImageCaptureErrorEvent;
     #[cfg(feature = "ImageCaptureError")]
-    # [wasm_bindgen (structural , method , getter , js_class = "ImageCaptureErrorEvent" , js_name = imageCaptureError)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ImageCaptureErrorEvent",
+        js_name = "imageCaptureError"
+    )]
     #[doc = "Getter for the `imageCaptureError` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCaptureErrorEvent/imageCaptureError)"]

@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = ImageCapture , typescript_type = "ImageCapture")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "ImageCapture",
+        typescript_type = "ImageCapture"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ImageCapture` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type ImageCapture;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaStreamTrack")]
-    # [wasm_bindgen (structural , method , getter , js_class = "ImageCapture" , js_name = track)]
+    #[wasm_bindgen(method, getter, js_class = "ImageCapture", js_name = "track")]
     #[doc = "Getter for the `track` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/track)"]
@@ -42,7 +46,7 @@ extern "C" {
     pub fn new(video_track: &MediaStreamTrack) -> Result<ImageCapture, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PhotoCapabilities")]
-    # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = getPhotoCapabilities)]
+    #[wasm_bindgen(method, js_class = "ImageCapture", js_name = "getPhotoCapabilities")]
     #[doc = "The `getPhotoCapabilities()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/getPhotoCapabilities)"]
@@ -54,7 +58,7 @@ extern "C" {
     pub fn get_photo_capabilities(this: &ImageCapture) -> ::js_sys::Promise<PhotoCapabilities>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PhotoSettings")]
-    # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = getPhotoSettings)]
+    #[wasm_bindgen(method, js_class = "ImageCapture", js_name = "getPhotoSettings")]
     #[doc = "The `getPhotoSettings()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/getPhotoSettings)"]
@@ -66,7 +70,7 @@ extern "C" {
     pub fn get_photo_settings(this: &ImageCapture) -> ::js_sys::Promise<PhotoSettings>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = grabFrame)]
+    #[wasm_bindgen(method, js_class = "ImageCapture", js_name = "grabFrame")]
     #[doc = "The `grabFrame()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/grabFrame)"]
@@ -78,7 +82,7 @@ extern "C" {
     pub fn grab_frame(this: &ImageCapture) -> ::js_sys::Promise<ImageBitmap>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Blob")]
-    # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = takePhoto)]
+    #[wasm_bindgen(method, js_class = "ImageCapture", js_name = "takePhoto")]
     #[doc = "The `takePhoto()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/takePhoto)"]
@@ -90,7 +94,7 @@ extern "C" {
     pub fn take_photo(this: &ImageCapture) -> ::js_sys::Promise<Blob>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "Blob", feature = "PhotoSettings",))]
-    # [wasm_bindgen (method , structural , js_class = "ImageCapture" , js_name = takePhoto)]
+    #[wasm_bindgen(method, js_class = "ImageCapture", js_name = "takePhoto")]
     #[doc = "The `takePhoto()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture/takePhoto)"]

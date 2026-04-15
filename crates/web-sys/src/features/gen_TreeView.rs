@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = TreeView , typescript_type = "TreeView")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "TreeView" , typescript_type = "TreeView")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TreeView` class."]
     #[doc = ""]
@@ -12,7 +12,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub type TreeView;
-    # [wasm_bindgen (structural , method , getter , js_class = "TreeView" , js_name = rowCount)]
+    #[wasm_bindgen(method, getter, js_class = "TreeView", js_name = "rowCount")]
     #[doc = "Getter for the `rowCount` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/rowCount)"]
@@ -20,7 +20,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn row_count(this: &TreeView) -> i32;
     #[cfg(feature = "DataTransfer")]
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = canDrop)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "canDrop")]
     #[doc = "The `canDrop()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/canDrop)"]
@@ -33,7 +33,7 @@ extern "C" {
         data_transfer: Option<&DataTransfer>,
     ) -> Result<bool, JsValue>;
     #[cfg(feature = "DataTransfer")]
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = drop)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView")]
     #[doc = "The `drop()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/drop)"]
@@ -45,21 +45,21 @@ extern "C" {
         orientation: i32,
         data_transfer: Option<&DataTransfer>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = getLevel)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "getLevel")]
     #[doc = "The `getLevel()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/getLevel)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn get_level(this: &TreeView, row: i32) -> Result<i32, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = getParentIndex)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "getParentIndex")]
     #[doc = "The `getParentIndex()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/getParentIndex)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn get_parent_index(this: &TreeView, row: i32) -> Result<i32, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = getRowProperties)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "getRowProperties")]
     #[doc = "The `getRowProperties()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/getRowProperties)"]
@@ -69,63 +69,63 @@ extern "C" {
         this: &TreeView,
         row: i32,
     ) -> Result<::alloc::string::String, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = hasNextSibling)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "hasNextSibling")]
     #[doc = "The `hasNextSibling()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/hasNextSibling)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn has_next_sibling(this: &TreeView, row: i32, after_index: i32) -> Result<bool, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = isContainer)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "isContainer")]
     #[doc = "The `isContainer()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/isContainer)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn is_container(this: &TreeView, row: i32) -> Result<bool, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = isContainerEmpty)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "isContainerEmpty")]
     #[doc = "The `isContainerEmpty()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/isContainerEmpty)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn is_container_empty(this: &TreeView, row: i32) -> Result<bool, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = isContainerOpen)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "isContainerOpen")]
     #[doc = "The `isContainerOpen()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/isContainerOpen)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn is_container_open(this: &TreeView, row: i32) -> Result<bool, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = isSeparator)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "isSeparator")]
     #[doc = "The `isSeparator()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/isSeparator)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn is_separator(this: &TreeView, row: i32) -> Result<bool, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "TreeView" , js_name = isSorted)]
+    #[wasm_bindgen(method, js_class = "TreeView", js_name = "isSorted")]
     #[doc = "The `isSorted()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/isSorted)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn is_sorted(this: &TreeView) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "TreeView" , js_name = performAction)]
+    #[wasm_bindgen(method, js_class = "TreeView", js_name = "performAction")]
     #[doc = "The `performAction()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/performAction)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn perform_action(this: &TreeView, action: &str);
-    # [wasm_bindgen (method , structural , js_class = "TreeView" , js_name = performActionOnRow)]
+    #[wasm_bindgen(method, js_class = "TreeView", js_name = "performActionOnRow")]
     #[doc = "The `performActionOnRow()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/performActionOnRow)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn perform_action_on_row(this: &TreeView, action: &str, row: i32);
-    # [wasm_bindgen (method , structural , js_class = "TreeView" , js_name = selectionChanged)]
+    #[wasm_bindgen(method, js_class = "TreeView", js_name = "selectionChanged")]
     #[doc = "The `selectionChanged()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/selectionChanged)"]
@@ -133,14 +133,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn selection_changed(this: &TreeView);
     #[cfg(feature = "TreeBoxObject")]
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = setTree)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "setTree")]
     #[doc = "The `setTree()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/setTree)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeBoxObject`, `TreeView`*"]
     pub fn set_tree(this: &TreeView, tree: Option<&TreeBoxObject>) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "TreeView" , js_name = toggleOpenState)]
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "toggleOpenState")]
     #[doc = "The `toggleOpenState()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/toggleOpenState)"]

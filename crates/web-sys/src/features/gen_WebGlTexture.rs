@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WebGLTexture , typescript_type = "WebGLTexture")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "WebGLTexture",
+        typescript_type = "WebGLTexture"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebGlTexture` class."]
     #[doc = ""]

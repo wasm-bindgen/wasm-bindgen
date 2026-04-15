@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = ChannelMergerNode , typescript_type = "ChannelMergerNode")]
+    #[wasm_bindgen(
+        extends = "AudioNode",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "ChannelMergerNode",
+        typescript_type = "ChannelMergerNode"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ChannelMergerNode` class."]
     #[doc = ""]

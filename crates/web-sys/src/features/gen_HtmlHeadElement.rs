@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLHeadElement , typescript_type = "HTMLHeadElement")]
+    #[wasm_bindgen(
+        extends = "HtmlElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "HTMLHeadElement",
+        typescript_type = "HTMLHeadElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlHeadElement` class."]
     #[doc = ""]

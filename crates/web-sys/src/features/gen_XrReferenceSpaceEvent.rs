@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = XRReferenceSpaceEvent , typescript_type = "XRReferenceSpaceEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "XRReferenceSpaceEvent",
+        typescript_type = "XRReferenceSpaceEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrReferenceSpaceEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type XrReferenceSpaceEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrReferenceSpace")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRReferenceSpaceEvent" , js_name = referenceSpace)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRReferenceSpaceEvent",
+        js_name = "referenceSpace"
+    )]
     #[doc = "Getter for the `referenceSpace` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceEvent/referenceSpace)"]
@@ -30,7 +40,12 @@ extern "C" {
     pub fn reference_space(this: &XrReferenceSpaceEvent) -> XrReferenceSpace;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrRigidTransform")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRReferenceSpaceEvent" , js_name = transform)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRReferenceSpaceEvent",
+        js_name = "transform"
+    )]
     #[doc = "Getter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceEvent/transform)"]

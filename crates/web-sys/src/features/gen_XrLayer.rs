@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = XRLayer , typescript_type = "XRLayer")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "XRLayer",
+        typescript_type = "XRLayer"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrLayer` class."]
     #[doc = ""]

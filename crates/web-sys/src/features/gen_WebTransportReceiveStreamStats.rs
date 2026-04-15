@@ -5,7 +5,10 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WebTransportReceiveStreamStats)]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "WebTransportReceiveStreamStats"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebTransportReceiveStreamStats` dictionary."]
     #[doc = ""]

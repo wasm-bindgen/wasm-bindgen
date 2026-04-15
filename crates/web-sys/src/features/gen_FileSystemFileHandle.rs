@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = FileSystemHandle , extends = :: js_sys :: Object , js_name = FileSystemFileHandle , typescript_type = "FileSystemFileHandle")]
+    #[wasm_bindgen(
+        extends = "FileSystemHandle",
+        extends = "::js_sys::Object",
+        js_name = "FileSystemFileHandle",
+        typescript_type = "FileSystemFileHandle"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FileSystemFileHandle` class."]
     #[doc = ""]
@@ -12,7 +17,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemFileHandle`*"]
     pub type FileSystemFileHandle;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = createSyncAccessHandle)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemFileHandle",
+        js_name = "createSyncAccessHandle"
+    )]
     #[doc = "The `createSyncAccessHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/createSyncAccessHandle)"]
@@ -24,7 +33,11 @@ extern "C" {
         feature = "FileSystemSyncAccessHandle",
         feature = "FileSystemSyncAccessHandleOptions",
     ))]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = createSyncAccessHandle)]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemFileHandle",
+        js_name = "createSyncAccessHandle"
+    )]
     #[doc = "The `createSyncAccessHandle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/createSyncAccessHandle)"]
@@ -37,7 +50,7 @@ extern "C" {
         this: &FileSystemFileHandle,
         options: &FileSystemSyncAccessHandleOptions,
     ) -> ::js_sys::Promise<FileSystemSyncAccessHandle>;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = createWritable)]
+    #[wasm_bindgen(method, js_class = "FileSystemFileHandle", js_name = "createWritable")]
     #[doc = "The `createWritable()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/createWritable)"]
@@ -45,7 +58,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemFileHandle`*"]
     pub fn create_writable(this: &FileSystemFileHandle) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemCreateWritableOptions")]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = createWritable)]
+    #[wasm_bindgen(method, js_class = "FileSystemFileHandle", js_name = "createWritable")]
     #[doc = "The `createWritable()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/createWritable)"]
@@ -55,7 +68,7 @@ extern "C" {
         this: &FileSystemFileHandle,
         options: &FileSystemCreateWritableOptions,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemFileHandle" , js_name = getFile)]
+    #[wasm_bindgen(method, js_class = "FileSystemFileHandle", js_name = "getFile")]
     #[doc = "The `getFile()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle/getFile)"]

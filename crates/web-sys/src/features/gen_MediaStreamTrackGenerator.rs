@@ -5,7 +5,13 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = MediaStreamTrack , extends = EventTarget , extends = :: js_sys :: Object , js_name = MediaStreamTrackGenerator , typescript_type = "MediaStreamTrackGenerator")]
+    #[wasm_bindgen(
+        extends = "MediaStreamTrack",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "MediaStreamTrackGenerator",
+        typescript_type = "MediaStreamTrackGenerator"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaStreamTrackGenerator` class."]
     #[doc = ""]
@@ -18,7 +24,12 @@ extern "C" {
     pub type MediaStreamTrackGenerator;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WritableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaStreamTrackGenerator" , js_name = writable)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaStreamTrackGenerator",
+        js_name = "writable"
+    )]
     #[doc = "Getter for the `writable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrackGenerator/writable)"]
@@ -30,7 +41,12 @@ extern "C" {
     pub fn writable(this: &MediaStreamTrackGenerator) -> WritableStream;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WritableStream")]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaStreamTrackGenerator" , js_name = writable)]
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "MediaStreamTrackGenerator",
+        js_name = "writable"
+    )]
     #[doc = "Setter for the `writable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrackGenerator/writable)"]

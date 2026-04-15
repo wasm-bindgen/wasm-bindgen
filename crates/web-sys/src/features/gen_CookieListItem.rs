@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = CookieListItem)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "CookieListItem")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CookieListItem` dictionary."]
     #[doc = ""]

@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = PopStateEvent , typescript_type = "PopStateEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "PopStateEvent",
+        typescript_type = "PopStateEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PopStateEvent` class."]
     #[doc = ""]
@@ -12,7 +17,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopStateEvent`*"]
     pub type PopStateEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "PopStateEvent" , js_name = state)]
+    #[wasm_bindgen(method, getter, js_class = "PopStateEvent", js_name = "state")]
     #[doc = "Getter for the `state` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PopStateEvent/state)"]

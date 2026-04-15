@@ -5,7 +5,13 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = XrLayer , extends = EventTarget , extends = :: js_sys :: Object , js_name = XRWebGLLayer , typescript_type = "XRWebGLLayer")]
+    #[wasm_bindgen(
+        extends = "XrLayer",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "XRWebGLLayer",
+        typescript_type = "XRWebGLLayer"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrWebGlLayer` class."]
     #[doc = ""]
@@ -17,7 +23,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type XrWebGlLayer;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRWebGLLayer" , js_name = antialias)]
+    #[wasm_bindgen(method, getter, js_class = "XRWebGLLayer", js_name = "antialias")]
     #[doc = "Getter for the `antialias` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/antialias)"]
@@ -28,7 +34,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn antialias(this: &XrWebGlLayer) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRWebGLLayer" , js_name = ignoreDepthValues)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRWebGLLayer",
+        js_name = "ignoreDepthValues"
+    )]
     #[doc = "Getter for the `ignoreDepthValues` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/ignoreDepthValues)"]
@@ -39,7 +50,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ignore_depth_values(this: &XrWebGlLayer) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRWebGLLayer" , js_name = fixedFoveation)]
+    #[wasm_bindgen(method, getter, js_class = "XRWebGLLayer", js_name = "fixedFoveation")]
     #[doc = "Getter for the `fixedFoveation` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/fixedFoveation)"]
@@ -50,7 +61,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn fixed_foveation(this: &XrWebGlLayer) -> Option<f32>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "XRWebGLLayer" , js_name = fixedFoveation)]
+    #[wasm_bindgen(method, setter, js_class = "XRWebGLLayer", js_name = "fixedFoveation")]
     #[doc = "Setter for the `fixedFoveation` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/fixedFoveation)"]
@@ -62,7 +73,7 @@ extern "C" {
     pub fn set_fixed_foveation(this: &XrWebGlLayer, value: Option<f32>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WebGlFramebuffer")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRWebGLLayer" , js_name = framebuffer)]
+    #[wasm_bindgen(method, getter, js_class = "XRWebGLLayer", js_name = "framebuffer")]
     #[doc = "Getter for the `framebuffer` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/framebuffer)"]
@@ -73,7 +84,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn framebuffer(this: &XrWebGlLayer) -> Option<WebGlFramebuffer>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRWebGLLayer" , js_name = framebufferWidth)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRWebGLLayer",
+        js_name = "framebufferWidth"
+    )]
     #[doc = "Getter for the `framebufferWidth` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/framebufferWidth)"]
@@ -84,7 +100,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn framebuffer_width(this: &XrWebGlLayer) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRWebGLLayer" , js_name = framebufferHeight)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRWebGLLayer",
+        js_name = "framebufferHeight"
+    )]
     #[doc = "Getter for the `framebufferHeight` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/framebufferHeight)"]
@@ -166,7 +187,11 @@ extern "C" {
     ) -> Result<XrWebGlLayer, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrSession")]
-    # [wasm_bindgen (static_method_of = XrWebGlLayer , js_class = "XRWebGLLayer" , js_name = getNativeFramebufferScaleFactor)]
+    #[wasm_bindgen(
+        static_method_of = "XrWebGlLayer",
+        js_class = "XRWebGLLayer",
+        js_name = "getNativeFramebufferScaleFactor"
+    )]
     #[doc = "The `getNativeFramebufferScaleFactor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor_static)"]
@@ -178,7 +203,7 @@ extern "C" {
     pub fn get_native_framebuffer_scale_factor(session: &XrSession) -> f64;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "XrView", feature = "XrViewport",))]
-    # [wasm_bindgen (method , structural , js_class = "XRWebGLLayer" , js_name = getViewport)]
+    #[wasm_bindgen(method, js_class = "XRWebGLLayer", js_name = "getViewport")]
     #[doc = "The `getViewport()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getViewport)"]

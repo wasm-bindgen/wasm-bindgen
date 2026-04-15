@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = EncodedAudioChunk , typescript_type = "EncodedAudioChunk")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "EncodedAudioChunk",
+        typescript_type = "EncodedAudioChunk"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `EncodedAudioChunk` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type EncodedAudioChunk;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "EncodedAudioChunkType")]
-    # [wasm_bindgen (structural , method , getter , js_class = "EncodedAudioChunk" , js_name = type)]
+    #[wasm_bindgen(method, getter, js_class = "EncodedAudioChunk", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/type)"]
@@ -29,7 +33,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn type_(this: &EncodedAudioChunk) -> EncodedAudioChunkType;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "EncodedAudioChunk" , js_name = timestamp)]
+    #[wasm_bindgen(method, getter, js_class = "EncodedAudioChunk", js_name = "timestamp")]
     #[doc = "Getter for the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/timestamp)"]
@@ -40,7 +44,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn timestamp(this: &EncodedAudioChunk) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "EncodedAudioChunk" , js_name = duration)]
+    #[wasm_bindgen(method, getter, js_class = "EncodedAudioChunk", js_name = "duration")]
     #[doc = "Getter for the `duration` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/duration)"]
@@ -51,7 +55,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn duration(this: &EncodedAudioChunk) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "EncodedAudioChunk" , js_name = byteLength)]
+    #[wasm_bindgen(method, getter, js_class = "EncodedAudioChunk", js_name = "byteLength")]
     #[doc = "Getter for the `byteLength` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/byteLength)"]
@@ -74,7 +78,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(init: &EncodedAudioChunkInit) -> Result<EncodedAudioChunk, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "EncodedAudioChunk" , js_name = copyTo)]
+    #[wasm_bindgen(catch, method, js_class = "EncodedAudioChunk", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/copyTo)"]
@@ -88,7 +92,7 @@ extern "C" {
         destination: &::js_sys::Object,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "EncodedAudioChunk" , js_name = copyTo)]
+    #[wasm_bindgen(catch, method, js_class = "EncodedAudioChunk", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/copyTo)"]
@@ -102,7 +106,7 @@ extern "C" {
         destination: &mut [u8],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "EncodedAudioChunk" , js_name = copyTo)]
+    #[wasm_bindgen(catch, method, js_class = "EncodedAudioChunk", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EncodedAudioChunk/copyTo)"]

@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = U2FClientData)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "U2FClientData")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `U2fClientData` dictionary."]
     #[doc = ""]

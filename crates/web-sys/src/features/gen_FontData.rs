@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = FontData , typescript_type = "FontData")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "FontData",
+        typescript_type = "FontData"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FontData` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type FontData;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "FontData" , js_name = postscriptName)]
+    #[wasm_bindgen(method, getter, js_class = "FontData", js_name = "postscriptName")]
     #[doc = "Getter for the `postscriptName` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontData/postscriptName)"]
@@ -28,7 +32,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn postscript_name(this: &FontData) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "FontData" , js_name = fullName)]
+    #[wasm_bindgen(method, getter, js_class = "FontData", js_name = "fullName")]
     #[doc = "Getter for the `fullName` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontData/fullName)"]
@@ -39,7 +43,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn full_name(this: &FontData) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "FontData" , js_name = family)]
+    #[wasm_bindgen(method, getter, js_class = "FontData", js_name = "family")]
     #[doc = "Getter for the `family` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontData/family)"]
@@ -50,7 +54,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn family(this: &FontData) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "FontData" , js_name = style)]
+    #[wasm_bindgen(method, getter, js_class = "FontData", js_name = "style")]
     #[doc = "Getter for the `style` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontData/style)"]
@@ -62,7 +66,7 @@ extern "C" {
     pub fn style(this: &FontData) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Blob")]
-    # [wasm_bindgen (method , structural , js_class = "FontData" , js_name = blob)]
+    #[wasm_bindgen(method, js_class = "FontData")]
     #[doc = "The `blob()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontData/blob)"]

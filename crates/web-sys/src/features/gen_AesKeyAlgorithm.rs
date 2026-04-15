@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = AesKeyAlgorithm)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "AesKeyAlgorithm")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AesKeyAlgorithm` dictionary."]
     #[doc = ""]
