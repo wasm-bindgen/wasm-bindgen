@@ -10,6 +10,11 @@
   fixed `Vec<T>` types in TS signatures to resolve through the identifier map.
   [#5106](https://github.com/wasm-bindgen/wasm-bindgen/pull/5106)
 
+* Fixed `wasm-bindgen-test-runner` treating ChromeDriver stderr warnings as
+  startup failures on macOS, causing a restart loop until timeout. The runner
+  no longer uses stderr output to determine if a driver has failed; instead a
+  per-attempt timeout detects stuck drivers and retries on a new port.
+  [#5111](https://github.com/wasm-bindgen/wasm-bindgen/pull/5111)
 ## [0.2.118](https://github.com/rustwasm/wasm-bindgen/compare/0.2.117...0.2.118)
 
 ### Added

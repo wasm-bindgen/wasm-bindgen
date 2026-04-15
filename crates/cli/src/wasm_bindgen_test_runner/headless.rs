@@ -6,12 +6,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value as Json};
 use std::env;
 use std::fs::File;
-use std::io::{self, Cursor, ErrorKind, Read, Write};
+use std::io::{self, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 use ureq::Agent;
@@ -74,6 +72,12 @@ pub fn run(
             let start = Instant::now();
             let max = Duration::new(driver_timeout, 0);
 
+            // Each individual driver spawn gets this long to bind its port
+            // before we kill it and retry. This handles drivers that get stuck
+            // (e.g. macOS blocking Safari's WebDriver with a permissions dialog)
+            // without waiting for the entire `driver_timeout`.
+            let per_attempt = Duration::from_secs(10);
+
             let (driver_addr, mut child) = 'outer: loop {
                 // Allow tests to run in parallel (in theory) by finding any open port
                 // available for our driver. We can't bind the port for the driver, but
@@ -84,6 +88,7 @@ pub fn run(
                 let mut cmd = Command::new(path);
                 cmd.args(args).arg(format!("--port={}", driver_addr.port()));
                 let mut child = BackgroundChild::spawn(path, &mut cmd, shell)?;
+                let attempt_start = Instant::now();
 
                 // Wait for the driver to come online and bind its port before we try to
                 // connect to it.
@@ -101,6 +106,12 @@ pub fn run(
                         break 'outer (driver_addr, child);
                     } else if start.elapsed() >= max {
                         bail!("driver failed to bind port during startup")
+                    } else if attempt_start.elapsed() >= per_attempt {
+                        println!(
+                            "Driver has not bound port after {}s, restarting ...",
+                            per_attempt.as_secs()
+                        );
+                        break;
                     } else {
                         thread::sleep(Duration::from_millis(100));
                     }
@@ -754,7 +765,6 @@ struct BackgroundChild<'a> {
     child: Child,
     stdout: Option<thread::JoinHandle<io::Result<Vec<u8>>>>,
     stderr: Option<thread::JoinHandle<io::Result<Vec<u8>>>>,
-    any_stderr: Arc<AtomicBool>,
     shell: &'a Shell,
     print_stdio_on_drop: bool,
 }
@@ -779,31 +789,15 @@ impl<'a> BackgroundChild<'a> {
             stdout.read_to_end(&mut dst)?;
             Ok(dst)
         }));
-        let any_stderr = Arc::new(AtomicBool::new(false));
-        let any_stderr_clone = Arc::clone(&any_stderr);
         let stderr = Some(thread::spawn(move || {
-            let mut dst = Cursor::new(Vec::new());
-            let mut buffer = [0];
-
-            match stderr.read_exact(&mut buffer) {
-                Ok(()) => {
-                    dst.write_all(&buffer).unwrap();
-                    any_stderr_clone.store(true, Ordering::Relaxed);
-                }
-                Err(error) if error.kind() == ErrorKind::UnexpectedEof => {
-                    return Ok(dst.into_inner())
-                }
-                Err(error) => return Err(error),
-            }
-
-            io::copy(&mut stderr, &mut dst)?;
-            Ok(dst.into_inner())
+            let mut dst = Vec::new();
+            stderr.read_to_end(&mut dst)?;
+            Ok(dst)
         }));
         Ok(BackgroundChild {
             child,
             stdout,
             stderr,
-            any_stderr,
             shell,
             print_stdio_on_drop: true,
         })
@@ -812,7 +806,10 @@ impl<'a> BackgroundChild<'a> {
     fn has_failed(&mut self) -> bool {
         match self.child.try_wait() {
             Ok(Some(status)) => !status.success(),
-            Ok(None) => self.any_stderr.load(Ordering::Relaxed),
+            // The child is still running. Stderr output alone does not indicate
+            // failure — drivers like ChromeDriver routinely emit warnings (e.g.
+            // "[WARNING]: FromSockAddr failed on netmask") during normal startup.
+            Ok(None) => false,
             Err(_) => true,
         }
     }
