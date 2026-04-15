@@ -316,6 +316,146 @@ pub(crate) fn used_generic_params<'a>(
     used_params
 }
 
+/// Checks whether every occurrence of each ident in `generic_names` that appears
+/// anywhere inside `args` is in a *structurally constraining* position —
+/// i.e. a position from which rustc can read the parameter off of the
+/// constructed type. This mirrors the E0207 rule for type parameters on
+/// `impl` blocks: a parameter must appear in `Self` (or a trait ref) in a
+/// structurally determined slot, otherwise Rust can't infer it at use sites.
+///
+/// Constraining positions (for a param appearing somewhere inside):
+///   - Bare: `T`
+///   - As a type argument of a nominal path `Foo<..., T, ...>` (recursive)
+///   - Under references, arrays, slices, tuples, parens (recursive)
+///
+/// Non-constraining positions:
+///   - Under a QSelf / projection: `<T as Trait>::X` or `T::X`
+///   - Inside a `fn(T) -> U` / `dyn Fn(T)` / `impl Fn(T)` — function-pointer
+///     and trait-object / `impl Trait` slots do not constrain.
+///   - Inside an associated-type binding's RHS (those project through the
+///     outer trait, so they are not injective).
+///
+/// Returns `true` if the args are safe to hoist (all occurrences constraining,
+/// or no occurrences at all), `false` if any occurrence is non-constraining.
+pub(crate) fn args_are_constraining_for(
+    args: &syn::punctuated::Punctuated<syn::GenericArgument, syn::Token![,]>,
+    generic_names: &[&Ident],
+) -> bool {
+    for arg in args {
+        match arg {
+            syn::GenericArgument::Type(ty) => {
+                if !type_is_constraining(ty, generic_names) {
+                    return false;
+                }
+            }
+            syn::GenericArgument::Lifetime(_) => {}
+            syn::GenericArgument::Const(_) => {}
+            // Associated type bindings (`Trait<Item = T>`) project through the
+            // outer trait, so any fn generics inside the RHS are behind a
+            // projection — not constraining.
+            syn::GenericArgument::AssocType(binding) => {
+                if type_mentions_any(&binding.ty, generic_names) {
+                    return false;
+                }
+            }
+            _ => {
+                // Unknown / future arg kinds: be conservative, treat any
+                // occurrence as non-constraining.
+                // We currently don't encounter these in practice.
+            }
+        }
+    }
+    true
+}
+
+/// A type is "constraining" for the fn generics it contains iff every
+/// occurrence of any `generic_names` ident within it is in a constraining
+/// position. See [`args_are_constraining_for`] for the rules.
+fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
+    match ty {
+        syn::Type::Path(type_path) => {
+            // QSelf -> projection like `<T as Trait>::Assoc`. Any fn generic
+            // appearing anywhere inside is behind a projection.
+            if type_path.qself.is_some() {
+                return !type_mentions_any(ty, generic_names);
+            }
+
+            // Bare `T` where T is a fn generic: constraining.
+            if type_path.path.segments.len() == 1 {
+                let seg = &type_path.path.segments[0];
+                if matches!(seg.arguments, syn::PathArguments::None)
+                    && generic_names.contains(&&seg.ident)
+                {
+                    return true;
+                }
+            }
+
+            // `T::Foo...` (multi-segment path whose head is a fn generic)
+            // is a projection through the head's implicit trait — any fn
+            // generic inside is non-constraining.
+            if type_path.path.segments.len() > 1 {
+                if let Some(first) = type_path.path.segments.first() {
+                    if generic_names.contains(&&first.ident) {
+                        return !type_mentions_any(ty, generic_names);
+                    }
+                }
+            }
+
+            // Nominal path `Foo<..args..>`: recurse into the last segment's
+            // args. Leading segments (module path) don't carry generics that
+            // mention fn params.
+            for seg in &type_path.path.segments {
+                match &seg.arguments {
+                    syn::PathArguments::None => {}
+                    syn::PathArguments::AngleBracketed(a) => {
+                        if !args_are_constraining_for(&a.args, generic_names) {
+                            return false;
+                        }
+                    }
+                    syn::PathArguments::Parenthesized(p) => {
+                        // `Fn(T) -> U` sugar: function-pointer-like,
+                        // non-constraining.
+                        for input in &p.inputs {
+                            if type_mentions_any(input, generic_names) {
+                                return false;
+                            }
+                        }
+                        if let syn::ReturnType::Type(_, ret) = &p.output {
+                            if type_mentions_any(ret, generic_names) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            true
+        }
+        syn::Type::Reference(r) => type_is_constraining(&r.elem, generic_names),
+        syn::Type::Array(a) => type_is_constraining(&a.elem, generic_names),
+        syn::Type::Slice(s) => type_is_constraining(&s.elem, generic_names),
+        syn::Type::Group(g) => type_is_constraining(&g.elem, generic_names),
+        syn::Type::Paren(p) => type_is_constraining(&p.elem, generic_names),
+        syn::Type::Tuple(t) => t
+            .elems
+            .iter()
+            .all(|e| type_is_constraining(e, generic_names)),
+        // Pointer / BareFn / TraitObject / ImplTrait / Infer / Never / Macro:
+        // any fn-generic mention here is non-constraining (fn-ptr, dyn, impl
+        // Trait are explicitly non-constraining per RFC 0447; the rest are
+        // handled conservatively).
+        _ => !type_mentions_any(ty, generic_names),
+    }
+}
+
+/// Whether `ty` mentions any of the given idents anywhere (constraining or not).
+fn type_mentions_any(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
+    let vec: Vec<&Ident> = generic_names.to_vec();
+    let mut found = BTreeSet::new();
+    let mut visitor = GenericNameVisitor::new(&vec, &mut found);
+    visitor.visit_type(ty);
+    !found.is_empty()
+}
+
 /// Usage visitor for generic bounds
 pub(crate) fn generics_predicate_uses(
     predicate: &syn::WherePredicate,
@@ -801,5 +941,97 @@ mod tests {
             quote::quote!(#result).to_string(),
             quote::quote!(#expected).to_string()
         );
+    }
+
+    /// Parse a type whose last path segment carries generic args and hand them
+    /// to `args_are_constraining_for`. This mirrors how `class_return_path()`
+    /// feeds the gate.
+    fn args_are_constraining(ty_src: &str, params: &[&str]) -> bool {
+        let ty: syn::Type = syn::parse_str(ty_src).expect("valid type");
+        let path = match ty {
+            syn::Type::Path(syn::TypePath { qself: None, path }) => path,
+            _ => panic!("test helper expects a bare path type"),
+        };
+        let seg = path.segments.last().expect("at least one segment");
+        let args = match &seg.arguments {
+            syn::PathArguments::AngleBracketed(a) => a.args.clone(),
+            syn::PathArguments::None => Default::default(),
+            syn::PathArguments::Parenthesized(_) => {
+                panic!("test helper doesn't handle paren-style args at the top")
+            }
+        };
+        let idents: Vec<syn::Ident> = params
+            .iter()
+            .map(|p| syn::Ident::new(p, proc_macro2::Span::call_site()))
+            .collect();
+        let refs: Vec<&syn::Ident> = idents.iter().collect();
+        crate::generics::args_are_constraining_for(&args, &refs)
+    }
+
+    #[test]
+    fn hoist_gate_accepts_bare_idents() {
+        // `Array<T>` — bare param, trivially constraining.
+        assert!(args_are_constraining("Array<T>", &["T"]));
+        // Multiple bare params.
+        assert!(args_are_constraining("Map<K, V>", &["K", "V"]));
+    }
+
+    #[test]
+    fn hoist_gate_accepts_nested_nominal() {
+        // `Array<Option<T>>` — T is nested inside a nominal path, still
+        // constraining. This was wrongly rejected by the old bare-ident gate.
+        assert!(args_are_constraining("Array<Option<T>>", &["T"]));
+        // Deeply nested.
+        assert!(args_are_constraining("Array<Vec<Box<T>>>", &["T"]));
+        // References, arrays, tuples preserve constraining-ness.
+        assert!(args_are_constraining("Foo<&T>", &["T"]));
+        assert!(args_are_constraining("Foo<[T; 4]>", &["T"]));
+        assert!(args_are_constraining("Foo<(T, U)>", &["T", "U"]));
+    }
+
+    #[test]
+    fn hoist_gate_accepts_when_param_absent() {
+        // T doesn't appear at all → nothing to hoist → vacuously safe.
+        assert!(args_are_constraining("Array<i32>", &["T"]));
+        assert!(args_are_constraining("Promise<JsValue>", &["T"]));
+    }
+
+    #[test]
+    fn hoist_gate_rejects_qself_projection() {
+        // `Promise<<T as Promising>::Resolution>` — T only appears behind a
+        // projection, which is NOT constraining. This is the shape that
+        // produced E0207 before the fix.
+        assert!(!args_are_constraining(
+            "Promise<<T as Promising>::Resolution>",
+            &["T"]
+        ));
+    }
+
+    #[test]
+    fn hoist_gate_rejects_bare_projection() {
+        // `Array<T::Item>` — T appears as the head of a multi-segment path,
+        // which Rust resolves through an implicit projection. Non-constraining.
+        assert!(!args_are_constraining("Array<T::Item>", &["T"]));
+        // Even if U is constraining, T's non-constraining presence disqualifies
+        // the whole return path (partial hoisting would still be ill-formed).
+        assert!(!args_are_constraining("Foo<T::Item, U>", &["T", "U"]));
+    }
+
+    #[test]
+    fn hoist_gate_rejects_fn_ptr_and_fn_sugar() {
+        // `fn(T) -> U` and `Fn(T) -> U` sugar are both non-constraining slots.
+        assert!(!args_are_constraining("Foo<fn(T) -> i32>", &["T"]));
+        assert!(!args_are_constraining("Foo<Box<dyn Fn(T) -> i32>>", &["T"]));
+        // Return-position of the parenthesized sugar also counts.
+        assert!(!args_are_constraining("Foo<Box<dyn Fn(i32) -> T>>", &["T"]));
+    }
+
+    #[test]
+    fn hoist_gate_rejects_assoc_type_binding_rhs() {
+        // `Trait<Item = T>` — T sits behind the outer trait's projection.
+        assert!(!args_are_constraining(
+            "Foo<Box<dyn Iterator<Item = T>>>",
+            &["T"]
+        ));
     }
 }

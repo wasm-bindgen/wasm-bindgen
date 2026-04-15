@@ -2230,29 +2230,28 @@ impl ast::ImportFunction {
             return None;
         }
 
-        // For static methods, only infer class hoisting when all type args are
-        // bare generic param idents — not associated types like `I::Item`.
-        if is_static {
-            if let syn::PathArguments::AngleBracketed(ref gen_args) = seg.arguments {
-                let fn_params: Vec<&Ident> = generics::generic_params(&self.generics)
-                    .iter()
-                    .map(|p| p.0)
-                    .collect();
-                for arg in &gen_args.args {
-                    match arg {
-                        syn::GenericArgument::Lifetime(_) => {}
-                        syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
-                            qself: None,
-                            path: arg_path,
-                        })) if arg_path.segments.len() == 1
-                            && matches!(
-                                arg_path.segments[0].arguments,
-                                syn::PathArguments::None
-                            )
-                            && fn_params.iter().any(|p| *p == &arg_path.segments[0].ident) => {}
-                        _ => return None,
-                    }
-                }
+        // Only hoist fn generics onto the class impl header when every fn
+        // generic mentioned in the return type's args appears in a
+        // *structurally constraining* position (per E0207 / RFC 0447).
+        //
+        // Non-constraining positions — projections (`<T as Trait>::Assoc`,
+        // `T::Item`), fn-ptr slots (`fn(T)` / `Fn(T)` sugar), associated-type
+        // binding RHS, etc. — would produce an `impl<T> Ret<...>` whose `T`
+        // is not determinable from `Self`, yielding a borrow-check-level
+        // compilation error. When we detect such a shape, bail so the
+        // parameter stays function-level.
+        //
+        // This replaces the earlier "static methods must have only bare
+        // idents" heuristic, which was both too strict (rejected valid
+        // shapes like `Array<Option<T>>`) and too narrow (didn't apply to
+        // constructors, leading to E0207 for `Promise<<T as Promising>::Resolution>`).
+        if let syn::PathArguments::AngleBracketed(ref gen_args) = seg.arguments {
+            let fn_params: Vec<&Ident> = generics::generic_params(&self.generics)
+                .iter()
+                .map(|p| p.0)
+                .collect();
+            if !generics::args_are_constraining_for(&gen_args.args, &fn_params) {
+                return None;
             }
         }
 

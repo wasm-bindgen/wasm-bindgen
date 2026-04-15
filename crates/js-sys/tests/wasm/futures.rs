@@ -4,10 +4,7 @@ use std::ops::FnMut;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
-// ---------------------------------------------------------------------------
 // IntoFuture — direct promise.await
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen_test]
 async fn promise_await_resolve() {
     let p = Promise::resolve(&JsValue::from(42));
@@ -30,10 +27,7 @@ async fn typed_promise_await() {
     assert_eq!(n.value_of(), 99.0);
 }
 
-// ---------------------------------------------------------------------------
 // JsFuture
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen_test]
 async fn promise_resolve_is_ok_future() {
     let p = Promise::resolve(&JsValue::from(42));
@@ -64,10 +58,7 @@ async fn can_create_multiple_futures_from_same_promise() {
     b.await.unwrap();
 }
 
-// ---------------------------------------------------------------------------
 // future_to_promise
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen_test]
 async fn ok_future_is_resolved_promise() {
     let p = future_to_promise(async { Ok(JsValue::from(42)) });
@@ -82,10 +73,7 @@ async fn error_future_is_rejected_promise() {
     assert_eq!(e, 42);
 }
 
-// ---------------------------------------------------------------------------
 // spawn_local
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen]
 extern "C" {
     fn setTimeout(c: &Closure<dyn FnMut()>);
@@ -157,10 +145,256 @@ async fn spawn_local_err_no_exception() {
     assert_eq!(rx.await.unwrap(), 42);
 }
 
-// ---------------------------------------------------------------------------
-// Atomics / multithread-specific tests
-// ---------------------------------------------------------------------------
+// join_all
+#[wasm_bindgen_test]
+async fn join_all_resolves() {
+    use js_sys::{futures::join_all, Number};
 
+    let promises = vec![
+        Promise::resolve(&Number::from(1)),
+        Promise::resolve(&Number::from(2)),
+        Promise::resolve(&Number::from(3)),
+    ];
+    let results = join_all(promises).await.unwrap();
+    assert_eq!(results.length(), 3);
+    // Under `js_sys_unstable_apis`, `Array::get` returns `Option<T>` instead
+    // of `T`; both indices are in range here, so just unwrap on that path.
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(results.get(0).value_of(), 1.0);
+        assert_eq!(results.get(1).value_of(), 2.0);
+        assert_eq!(results.get(2).value_of(), 3.0);
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(results.get(0).unwrap().value_of(), 1.0);
+        assert_eq!(results.get(1).unwrap().value_of(), 2.0);
+        assert_eq!(results.get(2).unwrap().value_of(), 3.0);
+    }
+}
+
+#[wasm_bindgen_test]
+async fn join_all_rejects_on_first_failure() {
+    use js_sys::{futures::join_all, Number};
+
+    let promises = vec![
+        Promise::resolve(&Number::from(1)),
+        Promise::<Number>::reject_typed(&JsValue::from("fail")),
+        Promise::resolve(&Number::from(3)),
+    ];
+    let err = join_all(promises).await.unwrap_err();
+    assert_eq!(err, "fail");
+}
+
+#[wasm_bindgen_test]
+async fn join_all_empty() {
+    use js_sys::{futures::join_all, Number};
+
+    let promises: Vec<Promise<Number>> = vec![];
+    let results = join_all(promises).await.unwrap();
+    assert_eq!(results.length(), 0);
+}
+
+// all_settled
+#[wasm_bindgen_test]
+async fn all_settled_collects_all() {
+    use js_sys::{futures::all_settled, Number};
+
+    let promises = vec![
+        Promise::resolve(&Number::from(1)),
+        Promise::<Number>::reject_typed(&JsValue::from("err")),
+        Promise::resolve(&Number::from(3)),
+    ];
+    let results = all_settled(promises).await.unwrap();
+    assert_eq!(results.length(), 3);
+
+    // Under `js_sys_unstable_apis`, `Array::get` returns `Option<T>` instead
+    // of `T`; all three indices are in range here, so just unwrap on that path.
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert!(results.get(0).is_fulfilled());
+        assert_eq!(results.get(0).get_value().unwrap().value_of(), 1.0);
+
+        assert!(results.get(1).is_rejected());
+        assert_eq!(results.get(1).get_reason().unwrap(), "err");
+
+        assert!(results.get(2).is_fulfilled());
+        assert_eq!(results.get(2).get_value().unwrap().value_of(), 3.0);
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert!(results.get(0).unwrap().is_fulfilled());
+        assert_eq!(results.get(0).unwrap().get_value().unwrap().value_of(), 1.0);
+
+        assert!(results.get(1).unwrap().is_rejected());
+        assert_eq!(results.get(1).unwrap().get_reason().unwrap(), "err");
+
+        assert!(results.get(2).unwrap().is_fulfilled());
+        assert_eq!(results.get(2).unwrap().get_value().unwrap().value_of(), 3.0);
+    }
+}
+
+// race
+#[wasm_bindgen_test]
+async fn race_returns_first() {
+    use js_sys::{futures::race, Number};
+
+    let promises = vec![
+        Promise::resolve(&Number::from(42)),
+        Promise::resolve(&Number::from(99)),
+    ];
+    let result: Number = race(promises).await.unwrap();
+    assert_eq!(result.value_of(), 42.0);
+}
+
+#[wasm_bindgen_test]
+async fn race_rejects_if_first_rejects() {
+    use js_sys::{futures::race, Number};
+
+    let promises = vec![
+        Promise::<Number>::reject_typed(&JsValue::from("fast")),
+        Promise::resolve(&Number::from(99)),
+    ];
+    let err = race(promises).await.unwrap_err();
+    assert_eq!(err, "fast");
+}
+
+// any
+#[wasm_bindgen_test]
+async fn any_returns_first_success() {
+    use js_sys::{futures::any, Number};
+
+    let promises = vec![
+        Promise::<Number>::reject_typed(&JsValue::from("err1")),
+        Promise::resolve(&Number::from(42)),
+        Promise::resolve(&Number::from(99)),
+    ];
+    let result: Number = any(promises).await.unwrap();
+    assert_eq!(result.value_of(), 42.0);
+}
+
+#[wasm_bindgen_test]
+async fn any_rejects_if_all_reject() {
+    use js_sys::{futures::any, Number};
+
+    let promises = vec![
+        Promise::<Number>::reject_typed(&JsValue::from("e1")),
+        Promise::<Number>::reject_typed(&JsValue::from("e2")),
+    ];
+    let err = any(promises).await;
+    assert!(err.is_err());
+}
+
+// IntoPromise for Future
+#[wasm_bindgen_test]
+async fn join_all_accepts_futures_via_map() {
+    use js_sys::futures::join_all;
+
+    let values = [10, 20, 30];
+    let futures = values
+        .iter()
+        .map(|&v| async move { Ok::<JsValue, JsValue>(JsValue::from(v)) });
+    let results = join_all(futures).await.unwrap();
+    assert_eq!(results.length(), 3);
+    // Under `js_sys_unstable_apis`, `Array::get` returns `Option<JsValue>`
+    // instead of `JsValue`; indices are all in range so unwrap on that path.
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(results.get(0), 10);
+        assert_eq!(results.get(1), 20);
+        assert_eq!(results.get(2), 30);
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(results.get(0).unwrap(), 10);
+        assert_eq!(results.get(1).unwrap(), 20);
+        assert_eq!(results.get(2).unwrap(), 30);
+    }
+}
+
+// join! macro
+#[wasm_bindgen_test]
+async fn join_macro_two() {
+    use js_sys::{JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::resolve(&JsString::from("hello"));
+    let (a, b) = js_sys::join!(p1, p2).await.unwrap().into_parts();
+    assert_eq!(a.value_of(), 1.0);
+    assert_eq!(b, "hello");
+}
+
+// Mixed input: one position is a JS `Promise<T>`, the other is a Rust
+// `Future<Output = Result<T, JsValue>>`. Both are accepted via `IntoPromise`,
+// erased to `Promise<JsValue>` through `JsGeneric`'s `upcast_into`, and
+// resolved concurrently through `Promise.all`. The caller destructures the
+// `ArrayTuple<(Number, JsString)>` the macro reinterprets the result into.
+#[wasm_bindgen_test]
+async fn join_macro_mixed_promise_and_future() {
+    use js_sys::{JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(7));
+    let f2 = async { Ok(JsString::from("world")) };
+
+    let (a, b) = js_sys::join!(p1, f2).await.unwrap().into_parts();
+    assert_eq!(a.value_of(), 7.0);
+    assert_eq!(b, "world");
+}
+
+#[wasm_bindgen_test]
+async fn join_macro_three() {
+    use js_sys::Number;
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::resolve(&Number::from(2));
+    let p3 = Promise::resolve(&Number::from(3));
+    let (a, b, c) = js_sys::join!(p1, p2, p3).await.unwrap().into_parts();
+    assert_eq!(a.value_of(), 1.0);
+    assert_eq!(b.value_of(), 2.0);
+    assert_eq!(c.value_of(), 3.0);
+}
+
+#[wasm_bindgen_test]
+async fn join_macro_single() {
+    use js_sys::Number;
+
+    let p1 = Promise::resolve(&Number::from(42));
+    let (a,) = js_sys::join!(p1).await.unwrap().into_parts();
+    assert_eq!(a.value_of(), 42.0);
+}
+
+// all_settled! macro — heterogeneous tuple input; the macro produces a
+// Promise<ArrayTuple<(PromiseState<Number>, PromiseState<JsString>)>>.
+#[wasm_bindgen_test]
+async fn all_settled_macro_mixed() {
+    use js_sys::{JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
+    let results = js_sys::all_settled!(p1, p2).await.unwrap();
+    let (s1, s2) = results.into_parts();
+    assert!(s1.is_fulfilled());
+    assert_eq!(s1.get_value().unwrap().value_of(), 1.0);
+    assert!(s2.is_rejected());
+    assert_eq!(s2.get_reason().unwrap(), "err");
+}
+
+// all_settled! also accepts futures in any position via `IntoPromise`.
+#[wasm_bindgen_test]
+async fn all_settled_macro_mixed_promise_and_future() {
+    use js_sys::{JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(7));
+    let f2 = async { Ok(JsString::from("world")) };
+    let results = js_sys::all_settled!(p1, f2).await.unwrap();
+    let (s1, s2) = results.into_parts();
+    assert!(s1.is_fulfilled());
+    assert_eq!(s1.get_value().unwrap().value_of(), 7.0);
+    assert!(s2.is_fulfilled());
+    assert_eq!(s2.get_value().unwrap(), "world");
+}
+
+// Atomics / multithread-specific tests
 #[cfg(target_feature = "atomics")]
 use std::future::Future;
 #[cfg(target_feature = "atomics")]
@@ -229,10 +463,7 @@ async fn wait_async_promise_callback_runs_without_wake() {
     done_rx.await.expect("task finished");
 }
 
-// ---------------------------------------------------------------------------
 // JsStream (requires futures-core-03-stream feature)
-// ---------------------------------------------------------------------------
-
 #[cfg(feature = "futures-core-03-stream")]
 #[wasm_bindgen_test]
 async fn can_use_an_async_iterable_as_stream() {

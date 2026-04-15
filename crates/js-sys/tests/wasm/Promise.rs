@@ -253,7 +253,7 @@ async fn test_future_to_promise_success() {
 #[wasm_bindgen_test]
 async fn test_future_to_promise_error() {
     let future = async { Err(JsValue::from("future failed")) };
-    let promise: Promise<TestValue> = future_to_promise_typed(future);
+    let promise = future_to_promise_typed::<TestValue, _>(future);
 
     let result = JsFuture::from(promise).await;
     assert!(result.is_err());
@@ -265,10 +265,10 @@ async fn test_future_to_promise_error() {
 async fn test_future_to_promise_chaining_with_closure() {
     let future = async {
         let val = TestValue::new(&JsString::from("chained"));
-        Ok(val.into())
+        Ok(val)
     };
 
-    let promise: Promise<TestValue> = future_to_promise_typed(future);
+    let promise = future_to_promise_typed(future);
     let closure = Closure::new(|val: TestValue| {
         val.transform(&JsString::from("_then"))
             .map_err(|e| JsError::new(&e.as_string().unwrap_or_default()))
@@ -284,10 +284,10 @@ async fn test_future_to_promise_async_computation() {
     let future = async {
         let base = TestValue::new(&JsString::from("computed"));
         let transformed = base.transform(&JsString::from("_async"))?;
-        Ok(transformed.into())
+        Ok(transformed)
     };
 
-    let promise: Promise<TestValue> = future_to_promise_typed(future);
+    let promise = future_to_promise_typed(future);
     let result = JsFuture::from(promise).await.unwrap();
     assert_eq!(result.value(), "computed_async");
 }

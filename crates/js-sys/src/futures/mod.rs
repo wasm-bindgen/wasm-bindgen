@@ -46,6 +46,7 @@ use wasm_bindgen::__rt::marker::ErasableGeneric;
 #[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
 use wasm_bindgen::convert::{FromWasmAbi, Upcast};
+use wasm_bindgen::sys::Promising;
 use wasm_bindgen::{prelude::*, JsError, JsGeneric};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "futures-core-03-stream")))]
@@ -69,6 +70,9 @@ mod task {
          }
     }
 }
+
+mod utils;
+pub use utils::*;
 
 /// Runs a Rust `Future` on the current thread.
 ///
@@ -126,7 +130,7 @@ impl<T> fmt::Debug for JsFuture<T> {
     }
 }
 
-impl<T: 'static + FromWasmAbi> From<Promise<T>> for JsFuture<T> {
+impl<T: JsGeneric + FromWasmAbi> From<Promise<T>> for JsFuture<T> {
     fn from(js: Promise<T>) -> JsFuture<T> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
@@ -216,7 +220,7 @@ impl<T> Future for JsFuture<T> {
     }
 }
 
-impl<T: 'static + FromWasmAbi> IntoFuture for Promise<T> {
+impl<T: JsGeneric + FromWasmAbi> IntoFuture for Promise<T> {
     type Output = Result<T, JsValue>;
     type IntoFuture = JsFuture<T>;
 
@@ -254,10 +258,10 @@ where
         spawn_local(async move {
             match future.await {
                 Ok(val) => {
-                    resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                    resolve.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
                 }
                 Err(val) => {
-                    reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                    reject.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
                 }
             }
         });
@@ -295,14 +299,14 @@ where
             let res = future.catch_unwind().await;
             match res {
                 Ok(Ok(val)) => {
-                    resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                    resolve.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
                 }
                 Ok(Err(val)) => {
-                    reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                    reject.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
                 }
                 Err(val) => {
                     reject
-                        .call(&JsValue::undefined(), (&panic_to_panic_error(val),))
+                        .call(&JsValue::UNDEFINED, (&panic_to_panic_error(val),))
                         .unwrap_throw();
                 }
             }
@@ -331,10 +335,11 @@ where
 /// If the `future` provided panics then the returned `Promise` **will not
 /// resolve**. Instead it will be a leaked promise. This is an unfortunate
 /// limitation of Wasm currently that's hoped to be fixed one day!
-pub fn future_to_promise_typed<F, T>(future: F) -> Promise<T>
+pub fn future_to_promise_typed<T, F>(future: F) -> Promise<<T as Promising>::Resolution>
 where
     F: Future<Output = Result<T, JsValue>> + 'static,
-    T: FromWasmAbi + JsGeneric + Upcast<T> + 'static,
+    T: Promising + FromWasmAbi + JsGeneric,
+    <T as Promising>::Resolution: JsGeneric,
 {
     let mut future = Some(future);
 
@@ -343,10 +348,10 @@ where
         spawn_local(async move {
             match future.await {
                 Ok(val) => {
-                    resolve.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                    resolve.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
                 }
                 Err(val) => {
-                    reject.call(&JsValue::undefined(), (&val,)).unwrap_throw();
+                    reject.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
                 }
             }
         });

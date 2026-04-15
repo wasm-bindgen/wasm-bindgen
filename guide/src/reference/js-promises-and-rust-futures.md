@@ -186,6 +186,87 @@ Both functions are also re-exported from `wasm_bindgen_futures` unchanged.
 [`spawn_local`]: https://docs.rs/js-sys/*/js_sys/futures/fn.spawn_local.html
 [`future_to_promise`]: https://docs.rs/js-sys/*/js_sys/futures/fn.future_to_promise.html
 
+## Concurrent I/O with Promise Combinators
+
+When running multiple JS-backed async operations concurrently (fetch, KV, D1,
+R2, etc.), use the promise combinators in `js_sys::futures` instead of
+`futures_util::future::join_all`. The Rust combinator polls futures
+cooperatively within the WASM executor, which serializes JS promise resolution.
+The `js_sys` combinators delegate to `Promise.all`, `Promise.race`, etc.,
+letting V8's event loop drive true concurrent I/O.
+
+### `join_all` — all must succeed (homogeneous)
+
+```rust
+use js_sys::futures::join_all;
+
+let promises: Vec<Promise> = (0..10)
+    .map(|_| worker.fetch_with_str_and_init(&url, &init))
+    .collect();
+let responses: Array = join_all(promises).await?;
+```
+
+Rejects with the first rejection, like `Promise.all`.
+
+### `join!` — all must succeed (heterogeneous)
+
+```rust
+use js_sys::join;
+
+let results = join!(
+    fetch_promise,        // Promise<Response>
+    array_buffer_promise, // Promise<ArrayBuffer>
+).await?;
+let (response, buffer) = results.into_parts();
+```
+
+Each argument can be a different `Promise<T>`. Returns an `ArrayTuple` that
+can be destructured via `.into_parts()`.
+
+### `all_settled` / `all_settled!` — wait for all, never reject early
+
+```rust
+use js_sys::futures::all_settled;
+
+let results = all_settled(promises).await?;
+for state in results.iter() {
+    if state.is_fulfilled() {
+        let value = state.get_value().unwrap();
+    } else {
+        let reason = state.get_reason().unwrap();
+    }
+}
+```
+
+### `race` — first to settle
+
+```rust
+use js_sys::futures::race;
+
+let first = race(promises).await?;
+```
+
+### `any` — first to succeed
+
+```rust
+use js_sys::futures::any;
+
+let first_success = any(promises).await?;
+```
+
+Rejects with an `AggregateError` only if every promise rejects.
+
+### `IntoPromise` trait
+
+All homogeneous combinators accept any iterator of items implementing
+`IntoPromise`, which is implemented for:
+
+- `Promise<T>` — identity conversion
+- `Future<Output = Result<T, JsValue>>` — converted via `future_to_promise_typed`
+
+This means you can mix promises from JS APIs with Rust futures in
+`join_all`, `race`, etc.
+
 ## Using Generic Promise Types
 
 Promises support [erasable generic type parameters](./types/js-sys.md). With

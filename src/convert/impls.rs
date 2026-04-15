@@ -788,6 +788,22 @@ impl IntoWasmAbi for JsError {
     }
 }
 
+// `JsError` is `#[repr(transparent)]` over `JsValue`, so this is the same
+// wire format as `JsValue` — we just rewrap the resulting `JsValue` into
+// `JsError` on the way out. Required so `JsError` can be used in positions
+// that cross the ABI (e.g. `Promising`'s supertrait bound, promise
+// resolutions, async return types).
+impl FromWasmAbi for JsError {
+    type Abi = <JsValue as FromWasmAbi>::Abi;
+
+    #[inline]
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        JsError {
+            value: JsValue::from_abi(js),
+        }
+    }
+}
+
 impl Promising for JsError {
     type Resolution = JsError;
 }
