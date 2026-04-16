@@ -1102,8 +1102,9 @@ export const __wbg_memory: WebAssembly.Memory;
             }
         }
         format!(
-            "let wasmModule, wasm;
+            "let wasmModule, wasmInstance, wasm;
             function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
+                wasmInstance = instance;
                 wasm = instance.exports;
                 wasmModule = module;
                 {init_memviews}{init_stack_size_check}{start}return wasm;
@@ -1238,7 +1239,8 @@ export const __wbg_memory: WebAssembly.Memory;
         format!(
             "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
             const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
-            const wasm = wasmInstantiated.instance.exports;
+            const wasmInstance = wasmInstantiated.instance;
+            const wasm = wasmInstance.exports;
             {start}",
             start = if needs_manual_start {
                 "wasm.__wbindgen_start();\n"
@@ -1275,9 +1277,7 @@ export const __wbg_memory: WebAssembly.Memory;
             };
 
             format!(
-                r#"let wasm;
-let wasmModule;
-let memory;
+                r#"let wasm, wasmInstance, wasmModule, memory;
 let __initialized = false;
 
 export function initSync(opts = {{}}) {{
@@ -1297,8 +1297,8 @@ export function initSync(opts = {{}}) {{
     }}
 
     const wasmImports = __wbg_get_imports(mem);
-    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
-    wasm = instance.exports;
+    wasmInstance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = wasmInstance.exports;
     memory = wasmImports['./{module_name}_bg.js'].memory;
 {start_call}
     __initialized = true;
@@ -1320,7 +1320,8 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
                 const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);\n\
                 const wasmBytes = readFileSync(wasmUrl);\n\
                 const wasmModule = new WebAssembly.Module(wasmBytes);\n\
-                let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;\n\
+                let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());\n\
+                let wasm = wasmInstance.exports;\n\
                 {start}",
                 start = if needs_manual_start {
                     "wasm.__wbindgen_start();\n"
@@ -1353,9 +1354,7 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
             };
 
             format!(
-                r#"let wasm;
-let wasmModule;
-let memory;
+                r#"let wasm, wasmInstance, wasmModule;
 let __initialized = false;
 
 // Export __wbg_get_imports for workers to use
@@ -1381,8 +1380,8 @@ exports.initSync = function(opts) {{
     }}
 
     const wasmImports = __wbg_get_imports(mem);
-    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
-    wasm = instance.exports;
+    wasmInstance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = wasmInstance.exports;
     memory = wasmImports['./{module_name}_bg.js'].memory;
     exports.__wasm = wasm;
     exports.__wbg_wasm_module = wasmModule;
@@ -1404,7 +1403,8 @@ if (require('worker_threads').isMainThread) {{
                 r#"const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
             const wasmBytes = require('fs').readFileSync(wasmPath);
             const wasmModule = new WebAssembly.Module(wasmBytes);
-            let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
+            let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+            let wasm = wasmInstance.exports;
             {start}"#,
                 start = if needs_manual_start {
                     "wasm.__wbindgen_start();\n"
@@ -3465,7 +3465,7 @@ if (require('worker_threads').isMainThread) {{
         };
         reset_statements.push(format!(
             "{abort_reset}
-            const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+            wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             wasm = wasmInstance.exports;
             wasm.__wbindgen_start();
             "
@@ -5059,11 +5059,32 @@ addToLibrary({
                 assert_eq!(args.len(), 0);
 
                 match self.config.mode {
-                    OutputMode::Web | OutputMode::NoModules { .. } |
-                    OutputMode::Node { .. } | OutputMode::Module => "wasmModule",
+                    OutputMode::Web
+                    | OutputMode::NoModules { .. }
+                    | OutputMode::Node { .. }
+                    | OutputMode::Module => "wasmModule",
                     _ => bail!(
                         "`wasm_bindgen::module` is currently only supported with \
-                         `--target no-modules`, `--target web`, `--target module` and `--target nodejs`"
+                         `--target no-modules`, `--target web`, `--target module`, \
+                         `--target nodejs` and `--target experimental-nodejs-module`"
+                    ),
+                }
+                .to_string()
+            }
+
+            Intrinsic::Instance => {
+                assert_eq!(args.len(), 0);
+                match self.config.mode {
+                    OutputMode::Web
+                    | OutputMode::NoModules { .. }
+                    | OutputMode::Node { .. }
+                    | OutputMode::Module
+                    | OutputMode::Deno => "wasmInstance",
+                    _ => bail!(
+                        "`wasm_bindgen::instance` is currently only supported with \
+                         `--target no-modules`, `--target web`, `--target deno`, \
+                         `--target module`, `--target nodejs` and \
+                         `--target experimental-nodejs-module`"
                     ),
                 }
                 .to_string()
