@@ -25,4 +25,5 @@ function __wbg_get_imports() {
 
 const wasmUrl = new URL('reference_test_bg.wasm', import.meta.url);
 const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
-const wasm = wasmInstantiated.instance.exports;
+const wasmInstance = wasmInstantiated.instance;
+const wasm = wasmInstance.exports;

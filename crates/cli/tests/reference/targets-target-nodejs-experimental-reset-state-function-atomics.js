@@ -5,7 +5,7 @@ function __wbg_reset_state () {
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
     __wbg_reinit_scheduled = false;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+    wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
@@ -82,9 +82,7 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-let wasm;
-let wasmModule;
-let memory;
+let wasm, wasmInstance, wasmModule, memory;
 let __initialized = false;
 
 // Export __wbg_get_imports for workers to use
@@ -110,8 +108,8 @@ exports.initSync = function(opts) {
     }
 
     const wasmImports = __wbg_get_imports(mem);
-    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
-    wasm = instance.exports;
+    wasmInstance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = wasmInstance.exports;
     memory = wasmImports['./reference_test_bg.js'].memory;
     exports.__wasm = wasm;
     exports.__wbg_wasm_module = wasmModule;

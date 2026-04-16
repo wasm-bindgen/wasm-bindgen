@@ -23,8 +23,9 @@ function __wbg_get_imports() {
     };
 }
 
-let wasmModule, wasm;
+let wasmModule, wasmInstance, wasm;
 function __wbg_finalize_init(instance, module) {
+    wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
     return wasm;

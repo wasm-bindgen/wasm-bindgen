@@ -1014,7 +1014,7 @@ export const __wbg_memory: WebAssembly.Memory;
             "import source wasmModule from \"./{module_name}_bg.wasm\";\n"
         ));
         format!(
-            "const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());\n\
+            "let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());\n\
              let wasm = wasmInstance.exports;\n\
              {start}",
             start = if needs_manual_start {
@@ -1354,7 +1354,7 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
             };
 
             format!(
-                r#"let wasm, wasmInstance, wasmModule;
+                r#"let wasm, wasmInstance, wasmModule, memory;
 let __initialized = false;
 
 // Export __wbg_get_imports for workers to use

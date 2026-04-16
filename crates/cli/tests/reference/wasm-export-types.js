@@ -131,8 +131,9 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-let wasmModule, wasm;
+let wasmModule, wasmInstance, wasm;
 function __wbg_finalize_init(instance, module) {
+    wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
     cachedUint8ArrayMemory0 = null;
