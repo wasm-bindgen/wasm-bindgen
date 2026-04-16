@@ -73,3 +73,8 @@ exports.assert_function_table = (x, i) => {
     assert.ok(x instanceof WebAssembly.Table);
     assert.strictEqual(x.get(i), rawWasm.function_table_lookup);
 };
+
+exports.assert_instance = (instance, wasmExports) => {
+    assert.ok(instance instanceof WebAssembly.Instance);
+    assert.strictEqual(instance.exports, wasmExports);
+};

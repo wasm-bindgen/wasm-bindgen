@@ -1272,6 +1272,7 @@ extern "C" {
     fn __wbindgen_exports() -> JsValue;
     fn __wbindgen_memory() -> JsValue;
     fn __wbindgen_module() -> JsValue;
+    fn __wbindgen_instance() -> JsValue;
     fn __wbindgen_function_table() -> JsValue;
 
     fn __wbindgen_reinit();
@@ -1667,6 +1668,14 @@ where
 /// It is unavailable for `--target bundler`.
 pub fn module() -> JsValue {
     __wbindgen_module()
+}
+
+/// Returns a handle to this Wasm instance's `WebAssembly.Instance`.
+/// This is only available when the final Wasm app is built with
+/// `--target no-modules`, `--target web`, `--target deno` or `--target nodejs`.
+/// It is unavailable for `--target bundler`.
+pub fn instance() -> JsValue {
+    __wbindgen_instance()
 }
 
 /// Returns a handle to this Wasm instance's `WebAssembly.Instance.prototype.exports`
