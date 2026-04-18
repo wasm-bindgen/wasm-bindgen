@@ -3,6 +3,23 @@
 
 ## Unreleased
 
+### Added
+
+* Added Promise combinator utilities to `js_sys::futures` that delegate to
+  `Promise.all`, `Promise.race`, `Promise.any`, and `Promise.allSettled` for
+  true concurrent I/O via the JS event loop (vs. `futures_util::future::join_all`
+  which serializes JS resolution through the Rust executor). Ships homogeneous
+  free functions `join_all` / `all_settled` / `race` / `any`, heterogeneous
+  macros `join!` / `all_settled!` dispatched through a new `PromiseTuple` trait
+  (arities 1..=8), and an `IntoPromise` trait accepting both `Promise<T>` and
+  `Future<Output = Result<T, JsValue>>` in every slot.
+  [#5113](https://github.com/wasm-bindgen/wasm-bindgen/pull/5113)
+
+* Added `JsCast::instanceof` support for `JsError` via a new `__wbindgen_is_error`
+  intrinsic; `JsError` is now `#[repr(transparent)]` and implements `FromWasmAbi`,
+  making the existing `Promising for JsError` impl usable end-to-end.
+  [#5113](https://github.com/wasm-bindgen/wasm-bindgen/pull/5113)
+
 ### Fixed
 
 * Fixed namespaced export identifiers in generated JS/TS to use qualified names
@@ -15,6 +32,7 @@
   no longer uses stderr output to determine if a driver has failed; instead a
   per-attempt timeout detects stuck drivers and retries on a new port.
   [#5111](https://github.com/wasm-bindgen/wasm-bindgen/pull/5111)
+
 ## [0.2.118](https://github.com/rustwasm/wasm-bindgen/compare/0.2.117...0.2.118)
 
 ### Added

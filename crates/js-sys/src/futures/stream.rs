@@ -21,7 +21,7 @@ pub struct JsStream<T = JsValue> {
     done: bool,
 }
 
-impl<T: 'static + FromWasmAbi> JsStream<T> {
+impl<T: JsGeneric + FromWasmAbi> JsStream<T> {
     fn next_future(&self) -> Result<JsFuture<IteratorNext<T>>, JsValue> {
         self.iter.next_iterator().map(JsFuture::from)
     }
@@ -37,7 +37,7 @@ impl<T> From<AsyncIterator<T>> for JsStream<T> {
     }
 }
 
-impl<T: 'static + JsGeneric + FromWasmAbi + Unpin> Stream for JsStream<T> {
+impl<T: JsGeneric + FromWasmAbi + Unpin> Stream for JsStream<T> {
     type Item = Result<T, JsValue>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {

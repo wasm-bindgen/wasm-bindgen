@@ -343,26 +343,20 @@ pub(crate) fn args_are_constraining_for(
 ) -> bool {
     for arg in args {
         match arg {
-            syn::GenericArgument::Type(ty) => {
-                if !type_is_constraining(ty, generic_names) {
-                    return false;
-                }
+            syn::GenericArgument::Type(ty) if !type_is_constraining(ty, generic_names) => {
+                return false;
             }
-            syn::GenericArgument::Lifetime(_) => {}
-            syn::GenericArgument::Const(_) => {}
             // Associated type bindings (`Trait<Item = T>`) project through the
             // outer trait, so any fn generics inside the RHS are behind a
             // projection — not constraining.
-            syn::GenericArgument::AssocType(binding) => {
-                if type_mentions_any(&binding.ty, generic_names) {
-                    return false;
-                }
+            syn::GenericArgument::AssocType(binding)
+                if type_mentions_any(&binding.ty, generic_names) =>
+            {
+                return false;
             }
-            _ => {
-                // Unknown / future arg kinds: be conservative, treat any
-                // occurrence as non-constraining.
-                // We currently don't encounter these in practice.
-            }
+            // Anything else (lifetimes, consts, already-constraining types,
+            // future arg kinds) doesn't disqualify the args.
+            _ => {}
         }
     }
     true

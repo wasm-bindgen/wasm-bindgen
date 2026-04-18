@@ -220,10 +220,23 @@ let results = join!(
 let (response, buffer) = results.into_parts();
 ```
 
-Each argument can be a different `Promise<T>`. Returns an `ArrayTuple` that
-can be destructured via `.into_parts()`.
+Each argument can be a different `Promise<T>`, *or* a Rust
+`Future<Output = Result<T, JsValue>>` — `IntoPromise` lifts both uniformly,
+so you can mix them in any position:
 
-### `all_settled` / `all_settled!` — wait for all, never reject early
+```rust
+let results = join!(
+    fetch_promise,                              // Promise<Response>
+    async { Ok(compute_buffer_locally()) },     // Future<...>
+).await?;
+let (response, buffer) = results.into_parts();
+```
+
+Returns a `Promise<ArrayTuple<(T1, T2, ...)>>` whose shape is pinned by the
+`PromiseTuple` trait (implemented for arities 1..=8). Destructure via
+`.into_parts()`.
+
+### `all_settled` — wait for all, never reject early (homogeneous)
 
 ```rust
 use js_sys::futures::all_settled;
@@ -237,6 +250,26 @@ for state in results.iter() {
     }
 }
 ```
+
+### `all_settled!` — wait for all, never reject early (heterogeneous)
+
+```rust
+use js_sys::all_settled;
+
+let results = all_settled!(
+    fetch_promise,        // Promise<Response>
+    array_buffer_promise, // Promise<ArrayBuffer>
+).await?;
+let (response_state, buffer_state) = results.into_parts();
+if response_state.is_fulfilled() {
+    let response = response_state.get_value().unwrap();
+    // ...
+}
+```
+
+Like `join!`, accepts a mix of `Promise<T>` and Rust
+`Future<Output = Result<T, JsValue>>` in any position. Returns a
+`Promise<ArrayTuple<(PromiseState<T1>, PromiseState<T2>, ...)>>`.
 
 ### `race` — first to settle
 
