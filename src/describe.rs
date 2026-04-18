@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{Clamped, JsError, JsValue, __rt::marker::ErasableGeneric};
+use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue};
 use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
