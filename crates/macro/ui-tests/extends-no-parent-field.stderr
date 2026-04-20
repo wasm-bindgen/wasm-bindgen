@@ -1,0 +1,5 @@
+error: struct with `extends` must have exactly one field annotated with `#[wasm_bindgen(parent)]`
+ --> ui-tests/extends-no-parent-field.rs:6:26
+  |
+6 | #[wasm_bindgen(extends = Animal)]
+  |                          ^^^^^^

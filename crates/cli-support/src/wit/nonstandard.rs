@@ -257,6 +257,10 @@ pub struct AuxStruct {
     pub private: bool,
     /// The namespace to export the struct through, if any
     pub js_namespace: Option<Vec<String>>,
+    /// The JS name of the parent class this struct extends, if any.
+    /// Populated when the source `#[wasm_bindgen(extends = Parent)]`
+    /// attribute was set on the exported struct.
+    pub extends: Option<String>,
 }
 
 /// All possible types of imports that can be imported by a Wasm module.

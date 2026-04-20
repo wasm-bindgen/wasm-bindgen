@@ -181,6 +181,7 @@ macro_rules! shared_api {
             generate_typescript: bool,
             js_namespace: Option<Vec<&'a str>>,
             private: bool,
+            extends: Option<&'a str>,
         }
 
         struct StructField<'a> {

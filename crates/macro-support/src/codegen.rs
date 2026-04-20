@@ -455,6 +455,55 @@ impl ToTokens for ast::Struct {
         })
         .to_tokens(tokens);
 
+        // If this struct `extends` another exported Rust struct, emit the
+        // Rust-side trait impls that project through the parent field. This
+        // lets `&Child` coerce to `&Parent` via `AsRef` and via method
+        // resolution through `Deref`. The JS side of the inheritance
+        // relationship (class Child extends Parent, instanceof, prototype
+        // chain) is handled later during cli-support code generation.
+        if let Some(parent_path) = &self.extends {
+            let parent_field = self.fields.iter().find(|f| f.is_parent);
+            if let Some(parent_field) = parent_field {
+                let field_name = &parent_field.rust_name;
+                (quote! {
+                    #[automatically_derived]
+                    impl #wasm_bindgen::__rt::core::convert::AsRef<#parent_path> for #name {
+                        #[inline]
+                        fn as_ref(&self) -> &#parent_path {
+                            &self.#field_name
+                        }
+                    }
+
+                    #[automatically_derived]
+                    impl #wasm_bindgen::__rt::core::convert::AsMut<#parent_path> for #name {
+                        #[inline]
+                        fn as_mut(&mut self) -> &mut #parent_path {
+                            &mut self.#field_name
+                        }
+                    }
+
+                    #[automatically_derived]
+                    impl #wasm_bindgen::__rt::core::ops::Deref for #name {
+                        type Target = #parent_path;
+
+                        #[inline]
+                        fn deref(&self) -> &#parent_path {
+                            &self.#field_name
+                        }
+                    }
+
+                    #[automatically_derived]
+                    impl #wasm_bindgen::__rt::core::ops::DerefMut for #name {
+                        #[inline]
+                        fn deref_mut(&mut self) -> &mut #parent_path {
+                            &mut self.#field_name
+                        }
+                    }
+                })
+                .to_tokens(tokens);
+            }
+        }
+
         for field in self.fields.iter() {
             field.to_tokens(tokens);
         }
@@ -463,6 +512,13 @@ impl ToTokens for ast::Struct {
 
 impl ToTokens for ast::StructField {
     fn to_tokens(&self, tokens: &mut TokenStream) {
+        // Parent fields exist solely to back the `extends` relationship
+        // (used by `AsRef`/`Deref` codegen above). They are not exposed to
+        // JS as a getter/setter.
+        if self.is_parent {
+            return;
+        }
+
         let rust_name = &self.rust_name;
         let struct_name = &self.struct_name;
         let ty = &self.ty;

@@ -192,6 +192,15 @@ struct ExportedClass {
     js_name: Option<String>,
     /// The namespace-qualified name (used for wasm symbol references)
     qualified_name: Option<String>,
+    /// The JS name of the parent class this class extends, if any.
+    /// Sourced from `AuxStruct.extends` via the `#[wasm_bindgen(extends)]`
+    /// attribute on an exported Rust struct. The parent class is expected
+    /// to be another exported Rust type defined in the same wasm module.
+    ///
+    /// PR 1 plumbs this through but does not yet emit a JS `extends`
+    /// clause; that lands in a follow-up PR alongside the constructor
+    /// `super()` call and parent-method forwarders.
+    extends: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5289,6 +5298,7 @@ addToLibrary({
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         class.js_name = Some(struct_.name.clone());
         class.qualified_name = Some(struct_.qualified_name.clone());
+        class.extends = struct_.extends.clone();
         Ok(())
     }
 

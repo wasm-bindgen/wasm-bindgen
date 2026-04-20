@@ -98,6 +98,7 @@ macro_rules! attrgen {
             (extends, false, Extends(Span, syn::Path)),
             (no_deref, false, NoDeref(Span)),
             (no_upcast, false, NoUpcast(Span)),
+            (parent, false, Parent(Span)),
             (no_promising, false, NoPromising(Span)),
             (vendor_prefix, false, VendorPrefix(Span, Ident)),
             (variadic, false, Variadic(Span)),
@@ -480,6 +481,22 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         // the `wasm_bindgen` option has been used before
         let _ = attrs.wasm_bindgen();
 
+        // Collect any `extends = Path` attributes on the struct. For Rust
+        // exports we only support a single parent in this first pass.
+        let mut extends: Option<syn::Path> = None;
+        for (used, attr) in attrs.attrs.iter() {
+            if let BindgenAttr::Extends(span, path) = attr {
+                if extends.is_some() {
+                    return Err(Diagnostic::span_error(
+                        *span,
+                        "`extends` may only be specified once on an exported struct",
+                    ));
+                }
+                extends = Some(path.clone());
+                used.set(true);
+            }
+        }
+
         let mut fields = Vec::new();
         let js_name = attrs
             .js_name()
@@ -497,23 +514,34 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         let getter_with_clone = attrs.getter_with_clone();
         let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
         let qualified_name = wasm_bindgen_shared::qualified_name(js_namespace.as_deref(), &js_name);
+        let mut parent_count = 0usize;
         for (i, field) in self.fields.iter_mut().enumerate() {
-            match field.vis {
-                syn::Visibility::Public(..) => {}
-                _ => continue,
+            // Parse attributes first so we can detect `#[wasm_bindgen(parent)]`
+            // even on non-`pub` fields. A parent field may be private — it
+            // does not need to be exposed to JS.
+            let field_attrs = BindgenAttrs::find(&mut field.attrs)?;
+            let is_parent = field_attrs.parent().is_some();
+            if is_parent {
+                parent_count += 1;
             }
+
+            let is_public = matches!(field.vis, syn::Visibility::Public(..));
+            if !is_public && !is_parent {
+                field_attrs.check_used();
+                continue;
+            }
+
             let (js_field_name, member) = match &field.ident {
                 Some(ident) => (ident.unraw().to_string(), syn::Member::Named(ident.clone())),
                 None => (i.to_string(), syn::Member::Unnamed(i.into())),
             };
 
-            let attrs = BindgenAttrs::find(&mut field.attrs)?;
-            if attrs.skip().is_some() {
-                attrs.check_used();
+            if field_attrs.skip().is_some() && !is_parent {
+                field_attrs.check_used();
                 continue;
             }
 
-            let js_field_name = match attrs.js_name() {
+            let js_field_name = match field_attrs.js_name() {
                 Some((name, _)) => name.to_string(),
                 None => js_field_name,
             };
@@ -526,18 +554,48 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
                 rust_name: member,
                 js_name: js_field_name,
                 struct_name: self.ident.clone(),
-                readonly: attrs.readonly().is_some(),
+                readonly: field_attrs.readonly().is_some(),
                 ty: field.ty.clone(),
                 getter: Ident::new(&getter, Span::call_site()),
                 setter: Ident::new(&setter, Span::call_site()),
                 comments,
-                generate_typescript: attrs.skip_typescript().is_none(),
-                generate_jsdoc: attrs.skip_jsdoc().is_none(),
-                getter_with_clone: attrs.getter_with_clone().or(getter_with_clone).copied(),
+                generate_typescript: field_attrs.skip_typescript().is_none(),
+                generate_jsdoc: field_attrs.skip_jsdoc().is_none(),
+                getter_with_clone: field_attrs
+                    .getter_with_clone()
+                    .or(getter_with_clone)
+                    .copied(),
+                is_parent,
                 wasm_bindgen: program.wasm_bindgen.clone(),
             });
-            attrs.check_used();
+            field_attrs.check_used();
         }
+
+        // Validate the extends/parent relationship.
+        match (&extends, parent_count) {
+            (Some(path), 0) => {
+                return Err(Diagnostic::span_error(
+                    path.span(),
+                    "struct with `extends` must have exactly one field annotated \
+                     with `#[wasm_bindgen(parent)]`",
+                ));
+            }
+            (Some(_), n) if n > 1 => {
+                return Err(Diagnostic::span_error(
+                    self.ident.span(),
+                    "only one field may be annotated with `#[wasm_bindgen(parent)]`",
+                ));
+            }
+            (None, n) if n > 0 => {
+                return Err(Diagnostic::span_error(
+                    self.ident.span(),
+                    "`#[wasm_bindgen(parent)]` requires the struct to declare \
+                     `#[wasm_bindgen(extends = ...)]`",
+                ));
+            }
+            _ => {}
+        }
+
         let generate_typescript = attrs.skip_typescript().is_none();
         let private = attrs.private().is_some();
         let comments: Vec<String> = extract_doc_comments(&self.attrs);
@@ -552,6 +610,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             generate_typescript,
             private,
             js_namespace,
+            extends,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
     }

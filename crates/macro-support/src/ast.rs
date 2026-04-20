@@ -465,6 +465,10 @@ pub struct Struct {
     pub private: bool,
     /// The namespace to export the struct through, if any
     pub js_namespace: Option<Vec<String>>,
+    /// The parent type this struct extends, if any. When set, exactly one
+    /// field must be annotated with `#[wasm_bindgen(parent)]` and will be
+    /// used as the upcast projection target.
+    pub extends: Option<Path>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }
@@ -499,6 +503,11 @@ pub struct StructField {
     /// If this is `Some`, the auto-generated getter for this field must clone
     /// the field instead of copying it.
     pub getter_with_clone: Option<Span>,
+    /// Whether this field was annotated with `#[wasm_bindgen(parent)]` and
+    /// therefore holds the parent instance for an `extends` relationship.
+    /// Parent fields are not exposed to JS as getters/setters; they exist
+    /// only for Rust-side upcast projection.
+    pub is_parent: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }

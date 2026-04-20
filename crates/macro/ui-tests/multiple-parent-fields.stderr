@@ -1,0 +1,5 @@
+error: only one field may be annotated with `#[wasm_bindgen(parent)]`
+ --> ui-tests/multiple-parent-fields.rs:7:12
+  |
+7 | pub struct Dog {
+  |            ^^^
