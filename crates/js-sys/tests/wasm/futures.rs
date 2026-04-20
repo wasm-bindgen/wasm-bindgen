@@ -234,55 +234,29 @@ async fn all_settled_collects_all() {
     }
 }
 
-// race
+// select
 #[wasm_bindgen_test]
-async fn race_returns_first() {
-    use js_sys::{futures::race, Number};
+async fn select_returns_first() {
+    use js_sys::{futures::select, Number};
 
     let promises = vec![
         Promise::resolve(&Number::from(42)),
         Promise::resolve(&Number::from(99)),
     ];
-    let result: Number = race(promises).await.unwrap();
+    let result: Number = select(promises).await.unwrap();
     assert_eq!(result.value_of(), 42.0);
 }
 
 #[wasm_bindgen_test]
-async fn race_rejects_if_first_rejects() {
-    use js_sys::{futures::race, Number};
+async fn select_rejects_if_first_rejects() {
+    use js_sys::{futures::select, Number};
 
     let promises = vec![
         Promise::<Number>::reject_typed(&JsValue::from("fast")),
         Promise::resolve(&Number::from(99)),
     ];
-    let err = race(promises).await.unwrap_err();
+    let err = select(promises).await.unwrap_err();
     assert_eq!(err, "fast");
-}
-
-// any
-#[wasm_bindgen_test]
-async fn any_returns_first_success() {
-    use js_sys::{futures::any, Number};
-
-    let promises = vec![
-        Promise::<Number>::reject_typed(&JsValue::from("err1")),
-        Promise::resolve(&Number::from(42)),
-        Promise::resolve(&Number::from(99)),
-    ];
-    let result: Number = any(promises).await.unwrap();
-    assert_eq!(result.value_of(), 42.0);
-}
-
-#[wasm_bindgen_test]
-async fn any_rejects_if_all_reject() {
-    use js_sys::{futures::any, Number};
-
-    let promises = vec![
-        Promise::<Number>::reject_typed(&JsValue::from("e1")),
-        Promise::<Number>::reject_typed(&JsValue::from("e2")),
-    ];
-    let err = any(promises).await;
-    assert!(err.is_err());
 }
 
 // IntoPromise for Future

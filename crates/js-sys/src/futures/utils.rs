@@ -126,16 +126,18 @@ where
 /// # Example
 ///
 /// ```ignore
-/// use js_sys::futures::race;
+/// use js_sys::futures::select;
 ///
-/// let first = race(promises).await?;
+/// let first = select(promises).await?;
 /// ```
 ///
 /// # Errors
 ///
 /// Rejects with the value of the first promise to reject, if it settles
 /// before any promise fulfills.
-pub async fn race<I: IntoIterator>(promises: I) -> Result<<I::Item as IntoPromise>::Output, JsValue>
+pub async fn select<I: IntoIterator>(
+    promises: I,
+) -> Result<<I::Item as IntoPromise>::Output, JsValue>
 where
     I::Item: IntoPromise,
     <I::Item as IntoPromise>::Output: FromWasmAbi,
@@ -145,34 +147,6 @@ where
         array.push(&p.into_promise());
     }
     Promise::race_iterable(&array).await
-}
-
-/// Returns the result of the first `Promise` to fulfill, using `Promise.any`.
-///
-/// Ignores rejections unless all promises reject, in which case it rejects
-/// with an `AggregateError`.
-///
-/// # Example
-///
-/// ```ignore
-/// use js_sys::futures::any;
-///
-/// let first_success = any(promises).await?;
-/// ```
-///
-/// # Errors
-///
-/// Rejects with an `AggregateError` if every promise in the iterator rejects.
-pub async fn any<I: IntoIterator>(promises: I) -> Result<<I::Item as IntoPromise>::Output, JsValue>
-where
-    I::Item: IntoPromise,
-    <I::Item as IntoPromise>::Output: FromWasmAbi,
-{
-    let array = Array::new_typed();
-    for p in promises {
-        array.push(&p.into_promise());
-    }
-    Promise::any_iterable(&array).await
 }
 
 /// Tuples of `Promise<T>` whose combinators produce single `Promise`s whose

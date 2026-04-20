@@ -271,23 +271,16 @@ Like `join!`, accepts a mix of `Promise<T>` and Rust
 `Future<Output = Result<T, JsValue>>` in any position. Returns a
 `Promise<ArrayTuple<(PromiseState<T1>, PromiseState<T2>, ...)>>`.
 
-### `race` — first to settle
+### `select` — first to settle
 
 ```rust
-use js_sys::futures::race;
+use js_sys::futures::select;
 
-let first = race(promises).await?;
+let first = select(promises).await?;
 ```
 
-### `any` — first to succeed
-
-```rust
-use js_sys::futures::any;
-
-let first_success = any(promises).await?;
-```
-
-Rejects with an `AggregateError` only if every promise rejects.
+Delegates to `Promise.race`. Named `select` to match the Rust `futures`
+convention.
 
 ### `IntoPromise` trait
 
