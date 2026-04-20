@@ -195,10 +195,50 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut function_args = Vec::new();
         let mut arg_tys = Vec::new();
 
+        // Inheritance constructor wiring (computed BEFORE JsBuilder::new
+        // borrows `self.cx` mutably).
+        //
+        // JS forbids a subclass constructor from touching `this` before it
+        // invokes `super(...)`. Our emitted constructor body does write
+        // `this.__wbg_ptr` (see the `RustFromI32` lowering further below),
+        // so a subclass constructor must begin with `super(...)`.
+        //
+        // A subclass's ctor also allocates its OWN Rust struct and wants to
+        // end up with only the child's pointer on `this`. If `super(...)`
+        // invoked the parent's user ctor it would allocate a spurious
+        // orphan parent instance. We avoid that with a shared module-level
+        // sentinel (emitted once up front in `generate()`): subclass calls
+        // `super(__wbgSuperSkip)`, and every user ctor checks for the
+        // sentinel and returns early.
+        //
+        // Top-level (non-subclass) ctors can safely `return` before doing
+        // any `this` access. Subclass ctors must do super() first, then the
+        // sentinel check — which is still valid because after super() the
+        // `this` binding is initialized, so an empty `return;` is legal.
+        let (ctor_is_subclass, ctor_needs_sentinel_check) = match &self.constructor {
+            Some(ctor_class) => {
+                let resolved = self.cx.resolve_class_name(ctor_class).to_string();
+                let is_subclass = self
+                    .cx
+                    .exported_classes
+                    .get(&resolved)
+                    .and_then(|c| c.extends.as_ref())
+                    .is_some();
+                (is_subclass, self.cx.has_super_skip_sentinel())
+            }
+            None => (false, false),
+        };
+
         // If this is a method then we're generating this as part of a class
         // method, so the leading parameter is the this pointer stored on
         // the JS object, so synthesize that here.
         let mut js = JsBuilder::new(self.cx, debug_name);
+        if ctor_is_subclass {
+            js.prelude("super(__wbgSuperSkip);");
+        }
+        if ctor_needs_sentinel_check {
+            js.prelude("if (arguments[0] === __wbgSuperSkip) return;");
+        }
         if let Some(consumes_self) = self.method {
             let _ = params.next();
             if js.cx.generate_reinit {

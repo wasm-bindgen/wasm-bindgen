@@ -132,6 +132,13 @@ pub struct Context<'a> {
     /// Tracks the specific Emscripten dependencies for each individual Wasm import.
     /// These are gathered from `adapter_deps` during adapter generation.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
+
+    /// Tracks whether the module-level `__wbgSuperSkip` sentinel has been
+    /// emitted. The sentinel is used to short-circuit the body of parent
+    /// class constructors when they are invoked as `super(__wbgSuperSkip)`
+    /// from a subclass — avoiding a spurious extra Rust allocation that
+    /// would otherwise be leaked.
+    super_skip_sentinel_emitted: bool,
 }
 
 /// Definition of a module export
@@ -268,7 +275,27 @@ impl<'a> Context<'a> {
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
+            super_skip_sentinel_emitted: false,
         })
+    }
+
+    /// Emits `const __wbgSuperSkip = Symbol();` at module level exactly
+    /// once. Safe to call repeatedly. See the constructor codepath in
+    /// `binding.rs` for the full rationale.
+    pub(crate) fn expose_super_skip_sentinel(&mut self) {
+        if self.super_skip_sentinel_emitted {
+            return;
+        }
+        self.globals
+            .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
+        self.super_skip_sentinel_emitted = true;
+    }
+
+    /// Whether the super-skip sentinel has been emitted. Constructor
+    /// prelude only emits the sentinel check when a subclass in the same
+    /// module has already forced its emission.
+    pub(crate) fn has_super_skip_sentinel(&self) -> bool {
+        self.super_skip_sentinel_emitted
     }
 
     fn has_intrinsic(&self, name: &str) -> bool {
@@ -1559,20 +1586,62 @@ if (require('worker_threads').isMainThread) {{
 
     fn write_classes(&mut self) -> Result<(), Error> {
         let exported_classes = std::mem::take(&mut self.exported_classes);
+        // Build a name → JS identifier map so a subclass can resolve its
+        // parent's emitted class identifier. Both the map key (rust_name)
+        // and the js_name are indexed, since `#[wasm_bindgen(extends =
+        // Path)]` stores the last segment of the Rust path, which matches
+        // the js_name when no rename is in play.
+        let class_identifiers: HashMap<String, String> = exported_classes
+            .iter()
+            .flat_map(|(key, cls)| {
+                let mut entries = vec![(key.clone(), cls.identifier.clone())];
+                if let Some(js) = &cls.js_name {
+                    if js != key {
+                        entries.push((js.clone(), cls.identifier.clone()));
+                    }
+                }
+                entries
+            })
+            .collect();
         for (class, exports) in exported_classes {
-            self.write_class(&class, exports)?;
+            self.write_class(&class, exports, &class_identifiers)?;
         }
         Ok(())
     }
 
-    fn write_class(&mut self, name: &str, class: ExportedClass) -> Result<(), Error> {
+    fn write_class(
+        &mut self,
+        name: &str,
+        class: ExportedClass,
+        class_identifiers: &HashMap<String, String>,
+    ) -> Result<(), Error> {
         let identifier = &class.identifier;
         // Use js_name for JS output, falling back to the key name
         let js_name = class.js_name.as_deref().unwrap_or(name);
         // Use qualified_name for wasm symbol references, falling back to js_name
         let qualified = class.qualified_name.as_deref().unwrap_or(js_name);
-        let mut dst = format!("class {identifier} {{\n");
-        let mut ts_dst = dst.clone();
+        // Resolve the parent class identifier for `extends`, if any.
+        let parent_identifier = match &class.extends {
+            Some(parent_name) => {
+                let id = class_identifiers.get(parent_name).cloned().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "class `{}` extends `{}`, but no exported Rust \
+                         struct named `{}` was found in this module",
+                        identifier,
+                        parent_name,
+                        parent_name,
+                    )
+                })?;
+                Some(id)
+            }
+            None => None,
+        };
+        let class_header = match &parent_identifier {
+            Some(parent_id) => format!("class {identifier} extends {parent_id} {{\n"),
+            None => format!("class {identifier} {{\n"),
+        };
+        let mut dst = class_header.clone();
+        let mut ts_dst = class_header;
 
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
@@ -3733,6 +3802,7 @@ if (require('worker_threads').isMainThread) {{
         // Set up qualified_name → rust_name and qualified_name → js_name mappings
         // before processing adapters, so that WasmDescribe lookups (which use
         // qualified_name) can resolve to the correct exported class.
+        let mut any_class_has_parent = false;
         for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
@@ -3742,12 +3812,20 @@ if (require('worker_threads').isMainThread) {{
                 self.qualified_to_rust_name
                     .insert(s.name.clone(), s.rust_name.clone());
             }
-            // Pre-populate js_name so require_class can generate the correct
-            // identifier before generate_struct runs.
-            self.exported_classes
-                .entry(s.rust_name.clone())
-                .or_default()
-                .js_name = Some(s.name.clone());
+            // Pre-populate js_name and extends so require_class / constructor
+            // binding can resolve them before generate_struct runs.
+            let cls = self.exported_classes.entry(s.rust_name.clone()).or_default();
+            cls.js_name = Some(s.name.clone());
+            cls.extends = s.extends.clone();
+            if s.extends.is_some() {
+                any_class_has_parent = true;
+            }
+        }
+        // Emit the super-skip sentinel once up front if any class in this
+        // module extends another. Every user-defined constructor then
+        // checks for the sentinel as the first thing in its body.
+        if any_class_has_parent {
+            self.expose_super_skip_sentinel();
         }
 
         self.generate_jstag_import();

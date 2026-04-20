@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+### Added
+
+* Inheritance between Rust-exported `#[wasm_bindgen]` structs via a new
+  `extends = Parent` struct attribute and a `#[wasm_bindgen(parent)]`
+  field attribute. Produces a JS `class Child extends Parent { ... }`
+  with working `instanceof` across the hierarchy, plus Rust-side
+  `AsRef<Parent>`/`AsMut<Parent>`/`Deref<Target = Parent>`/`DerefMut`
+  for the child. Parent methods are inherited on the JS side via the
+  prototype chain for plain JS methods; for methods exported from
+  Rust, re-export them on the child using `Deref` (one-liner).
+  [#5119](https://github.com/wasm-bindgen/wasm-bindgen/pull/5119)
+
 ## [0.2.118](https://github.com/rustwasm/wasm-bindgen/compare/0.2.117...0.2.118)
 
 ### Added
