@@ -1678,6 +1678,7 @@ pub fn instance() -> JsValue {
     __wbindgen_instance()
 }
 
+// TODO: deprecate next major
 /// Returns a handle to this Wasm instance's `WebAssembly.Instance.prototype.exports`
 pub fn exports() -> JsValue {
     __wbindgen_exports()
