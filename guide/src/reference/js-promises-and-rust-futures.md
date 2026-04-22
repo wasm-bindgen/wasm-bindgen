@@ -262,7 +262,7 @@ If you already have a `Vec<Promise<T>>`, use [`Array::of`] to lift it:
 
 When the promises resolve to *different* types, collect them into a Rust
 tuple and pass to [`Promise::all_tuple`]. The result is a typed
-[`ArrayTuple<(T1, T2, ..., Tn)>`] you can destructure via `.into_parts()`
+[`ArrayTuple<(T1, T2, ..., Tn)>`] you can destructure via `.into_tuple()`
 back into a native Rust tuple. Implemented for arity 1..=8.
 
 ```rust
@@ -272,7 +272,7 @@ use js_sys::Promise;
 // buffer_promise: Promise<ArrayBuffer>
 let (response, buffer) = Promise::all_tuple((fetch_promise, buffer_promise))
     .await?
-    .into_parts();
+    .into_tuple();
 ```
 
 Rejects with the first rejection, matching `Promise.all` semantics.
@@ -285,7 +285,7 @@ never rejects early:
 use js_sys::Promise;
 
 let results = Promise::all_settled_tuple((fetch_promise, buffer_promise)).await?;
-let (response_state, buffer_state) = results.into_parts();
+let (response_state, buffer_state) = results.into_tuple();
 if response_state.is_fulfilled() {
     let response = response_state.get_value().unwrap();
     // ...
@@ -324,7 +324,7 @@ let (response, buffer) = Promise::all_tuple((
     future_to_promise_typed(async { Ok(buffer_from_rust().await?) }),
 ))
 .await?
-.into_parts();
+.into_tuple();
 ```
 
 `future_to_promise_typed` spawns the `Future` on the current thread and

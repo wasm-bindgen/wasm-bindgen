@@ -1680,9 +1680,15 @@ macro_rules! impl_tuple {
                 self.$last()
             }
 
-            /// Convert the ArrayTuple into its corresponding Rust tuple
-            pub fn into_parts(self) -> ($($T,)+) {
+            /// Convert the ArrayTuple into its corresponding Rust tuple.
+            pub fn into_tuple(self) -> ($($T,)+) {
                 ($(self.$vars(),)+)
+            }
+
+            /// Deprecated alias for [`ArrayTuple::into_tuple`].
+            #[deprecated(note = "renamed to `into_tuple`")]
+            pub fn into_parts(self) -> ($($T,)+) {
+                self.into_tuple()
             }
 
             /// Create a new ArrayTuple from the corresponding parts.
@@ -12783,6 +12789,19 @@ impl<T> PromiseState<T> {
     }
 }
 
+/// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
+/// spec invariant that exactly one of the fulfilled value or the rejection
+/// reason is populated per slot.
+impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
+    fn from(state: PromiseState<T>) -> Result<T, JsValue> {
+        if state.is_fulfilled() {
+            Ok(state.get_value().unwrap())
+        } else {
+            Err(state.get_reason().unwrap())
+        }
+    }
+}
+
 // Promise
 #[wasm_bindgen]
 extern "C" {
@@ -13146,37 +13165,56 @@ pub trait PromiseTuple {
     /// `ArrayTuple<(PromiseState<T1>, PromiseState<T2>, ...)>`.
     type Settled: JsGeneric;
 
-    /// Internal: join via `Promise.all`, returning a typed `Promise`.
-    #[doc(hidden)]
-    fn __all(self) -> Promise<Self::Joined>;
+    /// Join via `Promise.all`, returning a typed `Promise`.
+    fn all(self) -> Promise<Self::Joined>;
 
-    /// Internal: settle via `Promise.allSettled`, returning a typed `Promise`.
-    #[doc(hidden)]
-    fn __all_settled(self) -> Promise<Self::Settled>;
+    /// Settle via `Promise.allSettled`, returning a typed `Promise`.
+    fn all_settled(self) -> Promise<Self::Settled>;
 }
 
 macro_rules! impl_promise_tuple {
     ([$($T:ident)+] [$($idx:tt)+]) => {
+        // Rust tuple of `Promise<T_i>`. Builds the heterogeneous
+        // `ArrayTuple` of promises via the existing `From<(...)>` impl
+        // (each element upcasts through `JsGeneric`), then delegates to
+        // the `ArrayTuple` impl below.
         impl<$($T: JsGeneric),+> PromiseTuple for ($(Promise<$T>,)+) {
             type Joined = ArrayTuple<($($T,)+)>;
             type Settled = ArrayTuple<($(PromiseState<$T>,)+)>;
 
-            fn __all(self) -> Promise<Self::Joined> {
-                // Build the heterogeneous `ArrayTuple` of promises via the
-                // existing `From<(...)>` impl (each element upcasts through
-                // `JsGeneric`), hand it to `Promise.all_iterable`, and
-                // reinterpret the result `Array<JsValue>` as the intended
-                // `ArrayTuple<(T1, T2, ...)>`. The reinterpret is safe
-                // because `Promise.all` preserves order and arity by spec.
+            fn all(self) -> Promise<Self::Joined> {
                 let tuple: ArrayTuple<($(Promise<$T>,)+)> = ($(self.$idx,)+).into();
-                use wasm_bindgen::JsCast;
-                Promise::all_iterable(&tuple).unchecked_into()
+                tuple.all()
             }
 
-            fn __all_settled(self) -> Promise<Self::Settled> {
+            fn all_settled(self) -> Promise<Self::Settled> {
                 let tuple: ArrayTuple<($(Promise<$T>,)+)> = ($(self.$idx,)+).into();
+                tuple.all_settled()
+            }
+        }
+
+        // `ArrayTuple<(Promise<T_1>, ..., Promise<T_n>)>` — callers who
+        // already have an `ArrayTuple` (e.g. from a binding that returns
+        // one, or built via `.into()` earlier in a pipeline) can pass it
+        // directly without unpacking into a Rust tuple.
+        //
+        // Hands the `ArrayTuple` straight to `Promise.all_iterable` /
+        // `Promise.allSettled_iterable` and reinterprets the result
+        // `Array<JsValue>` as the intended typed `ArrayTuple`. Safe because
+        // `Promise.all` / `Promise.allSettled` preserve input order and
+        // arity by spec.
+        impl<$($T: JsGeneric),+> PromiseTuple for ArrayTuple<($(Promise<$T>,)+)> {
+            type Joined = ArrayTuple<($($T,)+)>;
+            type Settled = ArrayTuple<($(PromiseState<$T>,)+)>;
+
+            fn all(self) -> Promise<Self::Joined> {
                 use wasm_bindgen::JsCast;
-                Promise::all_settled_iterable(&tuple).unchecked_into()
+                Promise::all_iterable(&self).unchecked_into()
+            }
+
+            fn all_settled(self) -> Promise<Self::Settled> {
+                use wasm_bindgen::JsCast;
+                Promise::all_settled_iterable(&self).unchecked_into()
             }
         }
     };
@@ -13196,7 +13234,7 @@ impl Promise {
     /// tuple of `Promise<T_i>` and returns a single [`Promise`] resolving to a
     /// typed [`ArrayTuple<(T_1, T_2, ..., T_n)>`].
     ///
-    /// Destructure the awaited result via [`ArrayTuple::into_parts`] to get
+    /// Destructure the awaited result via [`ArrayTuple::into_tuple`] to get
     /// the individual values back as a native Rust tuple. Implemented for
     /// arity 1..=8.
     ///
@@ -13209,11 +13247,11 @@ impl Promise {
     ///
     /// let (response, buffer) = Promise::all_tuple((fetch_promise, buffer_promise))
     ///     .await?
-    ///     .into_parts();
+    ///     .into_tuple();
     /// ```
     #[inline]
     pub fn all_tuple<T: PromiseTuple>(promises: T) -> Promise<T::Joined> {
-        promises.__all()
+        promises.all()
     }
 
     /// Heterogeneous counterpart to [`Promise::all_settled_iterable`]: accepts
@@ -13231,11 +13269,11 @@ impl Promise {
     /// use js_sys::Promise;
     ///
     /// let results = Promise::all_settled_tuple((fetch_promise, buffer_promise)).await?;
-    /// let (response_state, buffer_state) = results.into_parts();
+    /// let (response_state, buffer_state) = results.into_tuple();
     /// ```
     #[inline]
     pub fn all_settled_tuple<T: PromiseTuple>(promises: T) -> Promise<T::Settled> {
-        promises.__all_settled()
+        promises.all_settled()
     }
 }
 

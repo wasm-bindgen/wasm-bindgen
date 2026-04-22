@@ -153,7 +153,7 @@ async fn all_tuple_two() {
 
     let p1 = Promise::resolve(&Number::from(1));
     let p2 = Promise::resolve(&JsString::from("hello"));
-    let (a, b) = Promise::all_tuple((p1, p2)).await.unwrap().into_parts();
+    let (a, b) = Promise::all_tuple((p1, p2)).await.unwrap().into_tuple();
     assert_eq!(a.value_of(), 1.0);
     assert_eq!(b, "hello");
 }
@@ -165,7 +165,7 @@ async fn all_tuple_three() {
     let p1 = Promise::resolve(&Number::from(1));
     let p2 = Promise::resolve(&Number::from(2));
     let p3 = Promise::resolve(&Number::from(3));
-    let (a, b, c) = Promise::all_tuple((p1, p2, p3)).await.unwrap().into_parts();
+    let (a, b, c) = Promise::all_tuple((p1, p2, p3)).await.unwrap().into_tuple();
     assert_eq!(a.value_of(), 1.0);
     assert_eq!(b.value_of(), 2.0);
     assert_eq!(c.value_of(), 3.0);
@@ -176,7 +176,7 @@ async fn all_tuple_single() {
     use js_sys::Number;
 
     let p1 = Promise::resolve(&Number::from(42));
-    let (a,) = Promise::all_tuple((p1,)).await.unwrap().into_parts();
+    let (a,) = Promise::all_tuple((p1,)).await.unwrap().into_tuple();
     assert_eq!(a.value_of(), 42.0);
 }
 
@@ -200,7 +200,7 @@ async fn all_tuple_accepts_future_via_future_to_promise_typed() {
 
     let p1 = Promise::resolve(&Number::from(7));
     let p2 = future_to_promise_typed(async { Ok(JsString::from("world")) });
-    let (a, b) = Promise::all_tuple((p1, p2)).await.unwrap().into_parts();
+    let (a, b) = Promise::all_tuple((p1, p2)).await.unwrap().into_tuple();
     assert_eq!(a.value_of(), 7.0);
     assert_eq!(b, "world");
 }
@@ -214,11 +214,59 @@ async fn all_settled_tuple_mixed() {
     let p1 = Promise::resolve(&Number::from(1));
     let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
     let results = Promise::all_settled_tuple((p1, p2)).await.unwrap();
-    let (s1, s2) = results.into_parts();
+    let (s1, s2) = results.into_tuple();
     assert!(s1.is_fulfilled());
     assert_eq!(s1.get_value().unwrap().value_of(), 1.0);
     assert!(s2.is_rejected());
     assert_eq!(s2.get_reason().unwrap(), "err");
+}
+
+// `Promise::all_tuple` also accepts an `ArrayTuple<(Promise<T_1>, ...)>`
+// directly, without first unpacking it into a Rust tuple. Same semantics,
+// same destructuring.
+#[wasm_bindgen_test]
+async fn all_tuple_accepts_array_tuple() {
+    use js_sys::{ArrayTuple, JsString, Number, Promise};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::resolve(&JsString::from("hello"));
+    let tuple: ArrayTuple<(Promise<Number>, Promise<JsString>)> = (p1, p2).into();
+    let (a, b) = Promise::all_tuple(tuple).await.unwrap().into_tuple();
+    assert_eq!(a.value_of(), 1.0);
+    assert_eq!(b, "hello");
+}
+
+#[wasm_bindgen_test]
+async fn all_settled_tuple_accepts_array_tuple() {
+    use js_sys::{ArrayTuple, JsString, Number, Promise};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
+    let tuple: ArrayTuple<(Promise<Number>, Promise<JsString>)> = (p1, p2).into();
+    let results = Promise::all_settled_tuple(tuple).await.unwrap();
+    let (s1, s2) = results.into_tuple();
+    assert!(s1.is_fulfilled());
+    assert_eq!(s1.get_value().unwrap().value_of(), 1.0);
+    assert!(s2.is_rejected());
+    assert_eq!(s2.get_reason().unwrap(), "err");
+}
+
+// `PromiseState<T>` converts to `Result<T, JsValue>` directly, matching the
+// `allSettled` spec invariant that exactly one of `value` / `reason` is
+// populated per slot.
+#[wasm_bindgen_test]
+async fn promise_state_into_result() {
+    use js_sys::{JsString, Number, Promise};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
+    let results = Promise::all_settled_tuple((p1, p2)).await.unwrap();
+    let (s1, s2) = results.into_tuple();
+
+    let r1: Result<Number, JsValue> = s1.into();
+    let r2: Result<JsString, JsValue> = s2.into();
+    assert_eq!(r1.unwrap().value_of(), 1.0);
+    assert_eq!(r2.unwrap_err(), "err");
 }
 
 // Atomics / multithread-specific tests
