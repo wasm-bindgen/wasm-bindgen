@@ -81,6 +81,7 @@ intrinsics! {
         Memory = "__wbindgen_memory",
         Exports = "__wbindgen_exports",
         Module = "__wbindgen_module",
+        Instance = "__wbindgen_instance",
         FunctionTable = "__wbindgen_function_table",
         DebugString = "__wbindgen_debug_string",
         CopyToTypedArray = "__wbindgen_copy_to_typed_array",

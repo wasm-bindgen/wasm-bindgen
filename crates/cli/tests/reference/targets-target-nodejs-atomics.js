@@ -57,9 +57,7 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-let wasm;
-let wasmModule;
-let memory;
+let wasm, wasmInstance, wasmModule, memory;
 let __initialized = false;
 
 // Export __wbg_get_imports for workers to use
@@ -85,8 +83,8 @@ exports.initSync = function(opts) {
     }
 
     const wasmImports = __wbg_get_imports(mem);
-    const instance = new WebAssembly.Instance(wasmModule, wasmImports);
-    wasm = instance.exports;
+    wasmInstance = new WebAssembly.Instance(wasmModule, wasmImports);
+    wasm = wasmInstance.exports;
     memory = wasmImports['./reference_test_bg.js'].memory;
     exports.__wasm = wasm;
     exports.__wbg_wasm_module = wasmModule;

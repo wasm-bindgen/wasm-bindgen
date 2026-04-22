@@ -9,6 +9,7 @@ extern "C" {
     fn assert_null(v: JsValue);
     fn debug_values() -> JsValue;
     fn assert_function_table(a: JsValue, b: usize);
+    fn assert_instance(a: JsValue, b: JsValue);
 }
 
 #[wasm_bindgen_test]
@@ -212,6 +213,11 @@ fn memory_accessor_appears_to_work() {
         move |val, _, _| v.push(val)
     });
     assert_eq!(v, [3, 0, 0, 0]);
+}
+
+#[wasm_bindgen_test]
+fn instance_accessor_appears_to_work() {
+    assert_instance(wasm_bindgen::instance(), wasm_bindgen::exports());
 }
 
 #[wasm_bindgen_test]

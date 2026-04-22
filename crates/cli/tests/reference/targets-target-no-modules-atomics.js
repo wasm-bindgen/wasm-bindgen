@@ -61,8 +61,9 @@ let wasm_bindgen = (function(exports) {
         return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
     }
 
-    let wasmModule, wasm;
+    let wasmModule, wasmInstance, wasm;
     function __wbg_finalize_init(instance, module, thread_stack_size) {
+        wasmInstance = instance;
         wasm = instance.exports;
         wasmModule = module;
         cachedUint8ArrayMemory0 = null;

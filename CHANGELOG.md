@@ -3,6 +3,13 @@
 
 ## Unreleased
 
+### Added
+
+* Added `wasm_bindgen::instance()` to return the current
+  `WebAssembly.Instance`. The generated JS glue retains the 
+  instantiated `WebAssembly.Instance`.
+  [#5118](https://github.com/wasm-bindgen/wasm-bindgen/pull/5118)
+
 ### Fixed
 
 * Fixed namespaced export identifiers in generated JS/TS to use qualified names

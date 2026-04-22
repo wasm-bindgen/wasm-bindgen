@@ -5,7 +5,7 @@ import source wasmModule from "./reference_test_bg.wasm";
 export function __wbg_reset_state () {
     __wbg_instance_id++;
     __wbg_reinit_scheduled = false;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+    wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
@@ -56,6 +56,6 @@ let __wbg_instance_id = 0;
 
 let __wbg_reinit_scheduled = false;
 
-const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

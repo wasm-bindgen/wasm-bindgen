@@ -109,5 +109,6 @@ function decodeText(ptr, len) {
 const wasmPath = `${__dirname}/reference_test_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
+let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();
