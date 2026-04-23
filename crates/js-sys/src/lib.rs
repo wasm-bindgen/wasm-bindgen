@@ -1955,9 +1955,7 @@ impl<T: JsGeneric> core::iter::IntoIterator for Array<T> {
 //
 // Using an associated type (`A::JsCanon`) rather than a free type parameter
 // bound by `AsRef<T>` is what lets inference pick `T` uniquely from the
-// iterator item — no turbofish, no intermediate `Vec`, no `AsRef<T>` ambiguity
-// across the auto-generated `AsRef<JsValue>` / `AsRef<Self>` /
-// `AsRef<Superclass>` impls on `#[wasm_bindgen]` types. This fixes the
+// iterator item. This fixes the
 // `A: AsRef<T>` E0283 regression that the earlier unstable impl suffered
 // from (see #5042).
 //
