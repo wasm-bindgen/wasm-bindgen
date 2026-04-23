@@ -479,10 +479,7 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T 
 // JsValue-like slice support (Rust-to-JS only)
 // JsValue-like are repr(transparent) over u32, so &[JsValue] is a contiguous array of heap indices
 
-unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T]
-where
-    <T as ErasableGeneric>::Repr: Sized,
-{
+unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
     type Repr = &'static [T::Repr];
 }
 
