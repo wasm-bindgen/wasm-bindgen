@@ -573,8 +573,6 @@ impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCa
 /// ```ignore
 /// use js_sys::{Array, Number};
 ///
-/// // No intermediate `Vec`, no annotations: the iterator's item type pins
-/// // `Array<A::JsCanon>` uniquely.
 /// let arr: Array<Number> = (0..10).map(Number::from).collect();
 /// ```
 pub trait IntoJsGeneric {
