@@ -546,10 +546,8 @@ impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCa
 
 /// Value conversion from a type into its canonical [`JsGeneric`] form.
 ///
-/// This trait lets APIs that operate over a generic JavaScript element type
-/// (for example [`js_sys::Array<T>`], [`js_sys::Set<T>`], combinators like
-/// `Promise.all`, etc.) project every input value through a single,
-/// functionally-determined target [`JsGeneric`].
+/// This trait allows types to be converted into JsGeneric supported types, which
+/// are required to be erasably generic with JsValue.
 ///
 /// The single associated type — rather than a free type parameter bounded by
 /// `AsRef<T>` — is what makes collection-style APIs infer annotation-free.
