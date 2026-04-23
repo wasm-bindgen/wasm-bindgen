@@ -58,6 +58,6 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

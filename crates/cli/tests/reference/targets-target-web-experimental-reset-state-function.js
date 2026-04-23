@@ -3,7 +3,7 @@
 export function __wbg_reset_state () {
     __wbg_instance_id++;
     __wbg_reinit_scheduled = false;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+    wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
@@ -54,8 +54,9 @@ let __wbg_instance_id = 0;
 
 let __wbg_reinit_scheduled = false;
 
-let wasmModule, wasm;
+let wasmModule, wasmInstance, wasm;
 function __wbg_finalize_init(instance, module) {
+    wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
     wasm.__wbindgen_start();

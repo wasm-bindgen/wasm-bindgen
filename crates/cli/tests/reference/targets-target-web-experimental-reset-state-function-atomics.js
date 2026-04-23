@@ -5,7 +5,7 @@ export function __wbg_reset_state () {
     cachedUint8ArrayMemory0 = null;
     if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
     __wbg_reinit_scheduled = false;
-    const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+    wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
     wasm = wasmInstance.exports;
     wasm.__wbindgen_start();
 }
@@ -88,8 +88,9 @@ function decodeText(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().slice(ptr, ptr + len));
 }
 
-let wasmModule, wasm;
+let wasmModule, wasmInstance, wasm;
 function __wbg_finalize_init(instance, module, thread_stack_size) {
+    wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
     cachedUint8ArrayMemory0 = null;

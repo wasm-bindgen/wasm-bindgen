@@ -25,5 +25,5 @@ function __wbg_get_imports() {
     };
 }
 
-const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
 let wasm = wasmInstance.exports;
