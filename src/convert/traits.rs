@@ -582,14 +582,6 @@ pub trait IntoJsGeneric {
     type JsCanon: JsGeneric;
 
     /// Produce the canonical [`JsGeneric`] value for `self`.
-    ///
-    /// Takes `&self` because crossing into a JS-side handle is already a
-    /// refcount-level operation (every [`JsGeneric`] is an `Rc`-backed
-    /// externref handle). The "clone" that happens inside each impl body is
-    /// the boundary-crossing refcount, not an extra copy — this is the
-    /// `to_js` (borrow → owned) shape rather than `into_js` (consume → owned),
-    /// matching Rust's naming conventions for value conversion from a
-    /// reference.
     fn to_js(&self) -> Self::JsCanon;
 }
 
