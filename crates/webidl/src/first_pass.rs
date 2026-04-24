@@ -1741,6 +1741,102 @@ impl<'a> FirstPassRecord<'a> {
         if self.interfaces.contains_key(superclass) && set.insert(superclass) {
             list.push(camel_case_ident(superclass));
             self.fill_superclasses(superclass, set, list);
+        } else if crate::constants::BUILTIN_EXTENDS.contains_key(superclass) {
+            // The superclass is a JS built-in type (e.g. Promise, Error).
+            // Push the raw name so the caller can resolve it to a js_sys path.
+            list.push(superclass.to_string());
+        }
+    }
+
+    /// Returns true if this interface extends Promise (directly or transitively).
+    pub fn extends_promise(&self, interface: &str) -> bool {
+        let data = match self.interfaces.get(interface) {
+            Some(data) => data,
+            None => return false,
+        };
+        let superclass = match &data.superclass {
+            Some(class) => *class,
+            None => return false,
+        };
+        if superclass == "Promise" {
+            return true;
+        }
+        if self.interfaces.contains_key(superclass) {
+            return self.extends_promise(superclass);
+        }
+        false
+    }
+
+    /// Finds the `then` operation for a Promise-extending interface,
+    /// walking up the interface hierarchy if the operation is not defined
+    /// directly on the given interface.
+    pub fn find_then_operation(&self, interface: &str) -> Option<&OperationData<'a>> {
+        let data = self.interfaces.get(interface)?;
+        if let Some(op) = data.operations.get(&OperationId::Operation(Some("then"))) {
+            return Some(op);
+        }
+        // Walk up to the parent interface (stop before Promise itself,
+        // which is a built-in and not in self.interfaces).
+        let superclass = data.superclass?;
+        if superclass == "Promise" {
+            return None;
+        }
+        self.find_then_operation(superclass)
+    }
+
+    /// Determines the resolution type of a Promise-extending interface by
+    /// inspecting the first parameter of the `onfulfilled` callback in its
+    /// `then` method. This is the type the promise passes to the callback
+    /// when it resolves.
+    ///
+    /// Scans all overloaded signatures of `then()` to find one with an
+    /// `onfulfilled` callback argument. Looks up both plain `callback` and
+    /// `callback interface` definitions. When multiple overloads produce
+    /// different resolution types, uses `singular_union` to find the best
+    /// common base type.
+    ///
+    /// Returns `None` if the resolution type cannot be determined (e.g., no
+    /// `then` method, no callback argument, or callback not found).
+    pub fn promise_resolution_type(&self, interface: &str) -> Option<WbgType<'a>> {
+        let then_op = self.find_then_operation(interface)?;
+        // Collect resolution types from all overloaded signatures that have
+        // an onfulfilled callback argument.
+        let mut candidates = Vec::new();
+        for sig in &then_op.signatures {
+            let onfulfilled_arg = match sig.args.first() {
+                Some(arg) => arg,
+                None => continue,
+            };
+            let arg_type_name = match Self::extract_identifier_name(onfulfilled_arg.ty) {
+                Some(name) => name,
+                None => continue,
+            };
+            // Look up plain callbacks first, then callback interfaces
+            if let Some(callback_data) = self.callbacks.get(arg_type_name) {
+                if let Some(param) = callback_data.params.first() {
+                    candidates.push(param.clone());
+                    continue;
+                }
+            }
+            if let Some(cb_iface) = self.callback_interfaces.get(arg_type_name) {
+                if let Some(param) = cb_iface.params.first() {
+                    candidates.push(param.clone());
+                }
+            }
+        }
+        if candidates.is_empty() {
+            return None;
+        }
+        Some(WbgType::singular_union(candidates))
+    }
+
+    /// Extracts the identifier name from a weedle type, if it is a simple
+    /// identifier type (e.g., `ParseInt` in `then(ParseInt onfulfilled)`).
+    fn extract_identifier_name<'b>(ty: &'b weedle::types::Type<'b>) -> Option<&'b str> {
+        use weedle::types::*;
+        match ty {
+            Type::Single(SingleType::NonAny(NonAnyType::Identifier(id))) => Some(id.type_.0),
+            _ => None,
         }
     }
 

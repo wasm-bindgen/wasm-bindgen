@@ -38,3 +38,57 @@ async fn return_any_promise() {
     let num = js_sys::Reflect::get(&v, &"num".into()).unwrap();
     assert_eq!(num.as_f64().unwrap(), 42.0);
 }
+
+/// Test that an interface extending a JS built-in (Promise) generates
+/// `extends = ::js_sys::Promise`, allowing AsRef<Promise> to work.
+#[wasm_bindgen_test]
+fn interface_extends_js_builtin() {
+    let sub = PromiseSubclass::new().unwrap();
+
+    // Should be usable as a Promise via AsRef
+    let _promise: &Promise = sub.as_ref();
+
+    // Should also have its own methods
+    let label = sub.label();
+    assert_eq!(label, "test-subclass");
+}
+
+/// Test that the Promising trait is implemented for a Promise subclass,
+/// and that it can be used in a generic context requiring Promising.
+#[wasm_bindgen_test]
+fn promise_subclass_satisfies_promising_bound() {
+    use wasm_bindgen::sys::Promising;
+
+    fn accepts_promising<T: Promising<Resolution = wasm_bindgen::JsValue>>(_val: &T) {}
+
+    let sub = PromiseSubclass::new().unwrap();
+    accepts_promising(&sub);
+}
+
+/// Test that the resolution type is inferred from the onfulfilled callback's
+/// first parameter (DOMString -> JsString), not from then()'s return type.
+#[wasm_bindgen_test]
+fn typed_promise_resolution_from_callback() {
+    use wasm_bindgen::sys::Promising;
+
+    fn accepts_string_promising<T: Promising<Resolution = js_sys::JsString>>(_val: &T) {}
+
+    let p = TypedTextPromise::new().unwrap();
+    accepts_string_promising(&p);
+}
+
+/// Test that a child interface inherits the resolution type from
+/// its parent's then() method.
+#[wasm_bindgen_test]
+fn child_inherits_parent_resolution_type() {
+    use wasm_bindgen::sys::Promising;
+
+    fn accepts_string_promising<T: Promising<Resolution = js_sys::JsString>>(_val: &T) {}
+
+    let child = ChildTextPromise::new().unwrap();
+    accepts_string_promising(&child);
+
+    // Should also have its own methods
+    let label = child.child_label();
+    assert_eq!(label, "child-label");
+}

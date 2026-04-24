@@ -551,6 +551,32 @@ global.TestPromises = class {
   }
 };
 
+global.PromiseSubclass = class extends Promise {
+  constructor() {
+    super((resolve) => resolve("done"));
+    this._label = "test-subclass";
+  }
+  label() {
+    return this._label;
+  }
+};
+
+global.TypedTextPromise = class extends Promise {
+  constructor() {
+    super((resolve) => resolve("hello-typed"));
+  }
+};
+
+global.ChildTextPromise = class extends global.TypedTextPromise {
+  constructor() {
+    super();
+    this._childLabel = "child-label";
+  }
+  childLabel() {
+    return this._childLabel;
+  }
+};
+
 global.SignatureStability = class {
   process(options) {
     if (options === undefined) {
