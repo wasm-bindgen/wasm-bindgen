@@ -593,7 +593,7 @@ impl IntoJsGeneric for JsValue {
 
 // Reference iteration clones the borrowed wrapper to produce an owned value,
 // then delegates to that type's canonical conversion.
-impl<T: IntoJsGeneric + ?Sized + Clone> IntoJsGeneric for &T {
+impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
     type JsCanon = T::JsCanon;
     #[inline]
     fn to_js(self) -> T::JsCanon {
