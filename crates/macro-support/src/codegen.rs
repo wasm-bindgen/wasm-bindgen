@@ -1048,19 +1048,16 @@ impl TryToTokens for ast::ImportType {
         // rather than via a blanket over `T: JsGeneric`, preserves the option
         // for future wrapper types to pick a non-identity `JsCanon`.
         //
-        // The body goes through `JsValue` rather than `Clone::clone(self)`:
-        // every `#[wasm_bindgen]` type has an auto-generated
-        // `AsRef<JsValue>` impl, and `JsValue` is always refcount-cloneable.
-        // This lets the impl apply uniformly to types that do not implement
-        // Rust-level `Clone` (e.g. generic types whose parameters aren't
-        // `Clone`, or plain handle wrappers that simply don't derive
-        // `Clone`), while still performing the single boundary-crossing
-        // refcount op that any JS handle would require.
+        // The body takes `self` by value and reinterprets the transparent JS
+        // handle wrapper into its canonical type. This lets the impl apply
+        // uniformly to types that do not implement Rust-level `Clone` (e.g.
+        // generic types whose parameters aren't `Clone`, or plain handle
+        // wrappers that simply don't derive `Clone`).
         //
         // Types whose Rust wrapper enforces owned-once destruction semantics
         // (currently just `JsClosure`) opt out via the
         // `#[wasm_bindgen(no_into_js_generic)]` attribute — producing a
-        // second wrapper over the same handle would violate those semantics.
+        // duplicate wrapper over the same handle would violate those semantics.
         //
         // The extra `Self: JsGeneric` predicate propagates any generic
         // type-parameter requirements the `JsGeneric` blanket imposes
@@ -1090,9 +1087,8 @@ impl TryToTokens for ast::ImportType {
                 {
                     type JsCanon = #rust_name #ty_generics;
                     #[inline]
-                    fn to_js(&self) -> #rust_name #ty_generics {
-                        let js: JsValue = AsRef::<JsValue>::as_ref(self).clone();
-                        <#rust_name #ty_generics as JsCast>::unchecked_from_js(js)
+                    fn to_js(self) -> #rust_name #ty_generics {
+            unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
                     }
                 }
             }

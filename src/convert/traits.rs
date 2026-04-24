@@ -556,11 +556,13 @@ impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCa
 ///
 /// # Implementations
 ///
-/// Provided impls (all by-value, no `Clone`):
+/// Provided impls:
 /// - [`JsValue`] in this crate.
 /// - Every `#[wasm_bindgen]`-imported type (identity — emitted by the macro).
 /// - Every generic `js_sys` container (`Array<T>`, `Promise<T>`, `Set<T>`, …)
 ///   provides its own identity impl owned by `js_sys`.
+/// - References to cloneable implementors, so borrowed iteration can still
+///   produce owned JS-generic values.
 ///
 /// This trait is deliberately *not* blanket-implemented over all [`JsGeneric`]
 /// types: each implementor explicitly opts in, which leaves room for future
@@ -578,25 +580,24 @@ pub trait IntoJsGeneric {
     type JsCanon: JsGeneric;
 
     /// Produce the canonical [`JsGeneric`] value for `self`.
-    fn to_js(&self) -> Self::JsCanon;
+    fn to_js(self) -> Self::JsCanon;
 }
 
 impl IntoJsGeneric for JsValue {
     type JsCanon = JsValue;
     #[inline]
-    fn to_js(&self) -> JsValue {
-        self.clone()
+    fn to_js(self) -> JsValue {
+        self
     }
 }
 
-// Reference blanket delegates through deref — no extra clone, the underlying
-// `T` impl already performs the one refcount op that boundary-crossing
-// requires.
-impl<T: IntoJsGeneric + ?Sized> IntoJsGeneric for &T {
+// Reference iteration clones the borrowed wrapper to produce an owned value,
+// then delegates to that type's canonical conversion.
+impl<T: IntoJsGeneric + ?Sized + Clone> IntoJsGeneric for &T {
     type JsCanon = T::JsCanon;
     #[inline]
-    fn to_js(&self) -> T::JsCanon {
-        (**self).to_js()
+    fn to_js(self) -> T::JsCanon {
+        self.clone().to_js()
     }
 }
 

@@ -7,7 +7,7 @@
 
 * Promise ergonomics: `Promise::all_tuple` and `Promise::all_settled_tuple`
   for heterogeneous concurrent awaits (arity 1..=8, destructure via
-  `.into_parts()`), typed `FromIterator` / `Extend` on `js_sys::Array<T>` so
+  `.into_tuple()`), typed `FromIterator` / `Extend` on `js_sys::Array<T>` so
   the canonical `Promise::all_iterable(&iter.collect::<Array<_>>()).await`
   one-liner infers element types without turbofish, and a new
   `wasm_bindgen::IntoJsGeneric` trait underpinning the inference (with
@@ -16,7 +16,7 @@
   prelude. Fixes [#5042](https://github.com/wasm-bindgen/wasm-bindgen/issues/5042).
   Callers that relied on `.collect::<Array>()` implicitly erasing typed
   items into `Array<JsValue>` now need `.map(JsValue::from)`.
-  [#5113](https://github.com/wasm-bindgen/wasm-bindgen/pull/5113)
+  [#5121](https://github.com/wasm-bindgen/wasm-bindgen/pull/5121)
 
 * Added `wasm_bindgen::instance()` to return the current
   `WebAssembly.Instance`. The generated JS glue retains the 
