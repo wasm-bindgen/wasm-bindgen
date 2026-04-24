@@ -186,6 +186,160 @@ Both functions are also re-exported from `wasm_bindgen_futures` unchanged.
 [`spawn_local`]: https://docs.rs/js-sys/*/js_sys/futures/fn.spawn_local.html
 [`future_to_promise`]: https://docs.rs/js-sys/*/js_sys/futures/fn.future_to_promise.html
 
+## Combining JS Promises Concurrently
+
+Rust's async ecosystem and JavaScript's promise ecosystem interoperate
+cleanly: awaiting a [`Promise<T>`][`js_sys::Promise`] yields to the JS
+event loop, so in-flight JS-side work (fetches, timers, I/O) continues in
+parallel while Rust futures are pending. `futures_util`'s `join_all` /
+`select` / `try_join_all` work correctly over `JsFuture`s and deliver
+proper parallelism.
+
+When your inputs are already JS `Promise<T>` values, the native
+`Promise.all` / `Promise.allSettled` / `Promise.race` bindings on
+[`js_sys::Promise`] are the idiomatic choice — they match JS semantics
+exactly and avoid the Rust executor polling each child on every wake.
+
+The canonical recipe collects the promise-producing iterator straight into a
+typed [`Array<Promise<T>>`] and hands it to the combinator — no turbofish
+on the elements, no intermediate `Vec`:
+
+### `Promise.all` — all must succeed
+
+```rust
+use js_sys::{Array, Promise};
+
+// responses: Array<Response>
+let responses = Promise::all_iterable(
+    &(0..10)
+        .map(|_| worker.fetch_with_str_and_init(&url, &init))
+        .collect::<Array<_>>(),
+)
+.await?;
+```
+
+Rejects with the first rejection, matching `Promise.all` semantics.
+
+### `Promise.allSettled` — wait for all, never reject early
+
+```rust
+use js_sys::{Array, Promise};
+
+// results: Array<PromiseState<Response>>
+let results = Promise::all_settled_iterable(
+    &(0..10)
+        .map(|_| worker.fetch_with_str_and_init(&url, &init))
+        .collect::<Array<_>>(),
+)
+.await?;
+for state in results.iter() {
+    if state.is_fulfilled() {
+        let value = state.get_value().unwrap();
+    } else {
+        let reason = state.get_reason().unwrap();
+    }
+}
+```
+
+### `Promise.race` — first to settle
+
+```rust
+use js_sys::{Array, Promise};
+
+// first: Response
+let first = Promise::race_iterable(
+    &(0..10)
+        .map(|_| worker.fetch_with_str_and_init(&url, &init))
+        .collect::<Array<_>>(),
+)
+.await?;
+```
+
+If you already have a `Vec<Promise<T>>`, use [`Array::of`] to lift it:
+`Promise::all_iterable(&Array::of(&promises))`.
+
+### Heterogeneous `Promise.all` over a tuple
+
+When the promises resolve to *different* types, collect them into a Rust
+tuple and pass to [`Promise::all_tuple`]. The result is a typed
+[`ArrayTuple<(T1, T2, ..., Tn)>`] you can destructure via `.into_tuple()`
+back into a native Rust tuple. Implemented for arity 1..=8.
+
+```rust
+use js_sys::Promise;
+
+// fetch_promise:  Promise<Response>
+// buffer_promise: Promise<ArrayBuffer>
+let (response, buffer) = Promise::all_tuple((fetch_promise, buffer_promise))
+    .await?
+    .into_tuple();
+```
+
+Rejects with the first rejection, matching `Promise.all` semantics.
+
+For the `Promise.allSettled` analogue use [`Promise::all_settled_tuple`]; it
+resolves to an `ArrayTuple<(PromiseState<T1>, ..., PromiseState<Tn>)>` and
+never rejects early:
+
+```rust
+use js_sys::Promise;
+
+let results = Promise::all_settled_tuple((fetch_promise, buffer_promise)).await?;
+let (response_state, buffer_state) = results.into_tuple();
+if response_state.is_fulfilled() {
+    let response = response_state.get_value().unwrap();
+    // ...
+}
+```
+
+There is no `race_tuple` equivalent — `Promise.race` returns whichever input
+settles first, whose type would be a union `T1 | T2 | ... | Tn` that Rust
+can't express. For heterogeneous race, collect into an `Array<JsValue>` and
+use [`Promise::race_iterable`] explicitly, then narrow with `dyn_into` at
+the inspection site.
+
+### Mixing Rust `Future`s with JS `Promise`s
+
+If some of your inputs are Rust `Future<Output = Result<T, JsValue>>` values
+rather than JS `Promise<T>`, lift each one explicitly with
+[`future_to_promise_typed`] at the call site:
+
+```rust
+use js_sys::{futures::future_to_promise_typed, Array, Promise};
+
+// For homogeneous batches, mix both shapes into one `Array<Promise<T>>`:
+let responses = Promise::all_iterable(
+    &[
+        fetch_promise,
+        future_to_promise_typed(async { Ok(fetch_via_rust().await?) }),
+    ]
+    .into_iter()
+    .collect::<Array<_>>(),
+)
+.await?;
+
+// For heterogeneous tuples, lift each future before passing the tuple:
+let (response, buffer) = Promise::all_tuple((
+    fetch_promise,
+    future_to_promise_typed(async { Ok(buffer_from_rust().await?) }),
+))
+.await?
+.into_tuple();
+```
+
+`future_to_promise_typed` spawns the `Future` on the current thread and
+returns a JS `Promise<T>` that settles with its result — from that point on
+the two shapes are interchangeable.
+
+[`js_sys::Promise`]: https://docs.rs/js-sys/*/js_sys/struct.Promise.html
+[`Array<Promise<T>>`]: https://docs.rs/js-sys/*/js_sys/struct.Array.html
+[`Array::of`]: https://docs.rs/js-sys/*/js_sys/struct.Array.html#method.of
+[`future_to_promise_typed`]: https://docs.rs/js-sys/*/js_sys/futures/fn.future_to_promise_typed.html
+[`Promise::all_tuple`]: https://docs.rs/js-sys/*/js_sys/struct.Promise.html#method.all_tuple
+[`Promise::all_settled_tuple`]: https://docs.rs/js-sys/*/js_sys/struct.Promise.html#method.all_settled_tuple
+[`Promise::race_iterable`]: https://docs.rs/js-sys/*/js_sys/struct.Promise.html#method.race_iterable
+[`ArrayTuple<(T1, T2, ..., Tn)>`]: https://docs.rs/js-sys/*/js_sys/struct.ArrayTuple.html
+
 ## Using Generic Promise Types
 
 Promises support [erasable generic type parameters](./types/js-sys.md). With

@@ -99,6 +99,7 @@ macro_rules! attrgen {
             (no_deref, false, NoDeref(Span)),
             (no_upcast, false, NoUpcast(Span)),
             (no_promising, false, NoPromising(Span)),
+            (no_into_js_generic, false, NoIntoJsGeneric(Span)),
             (vendor_prefix, false, VendorPrefix(Span, Ident)),
             (variadic, false, Variadic(Span)),
             (typescript_custom_section, false, TypescriptCustomSection(Span)),
@@ -828,6 +829,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         let no_deref = attrs.no_deref().is_some();
         let no_upcast = attrs.no_upcast().is_some();
         let no_promising = attrs.no_promising().is_some();
+        let no_into_js_generic = attrs.no_into_js_generic().is_some();
         for (used, attr) in attrs.attrs.iter() {
             match attr {
                 BindgenAttr::Extends(_, e) => {
@@ -870,6 +872,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
             no_deref,
             no_upcast,
             no_promising,
+            no_into_js_generic,
             wasm_bindgen: program.wasm_bindgen.clone(),
             generics: generics.unwrap_or(self.generics),
         }))

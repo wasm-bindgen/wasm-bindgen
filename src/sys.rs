@@ -2,7 +2,6 @@
 //!
 //! These types represent fundamental JavaScript values and are designed to be
 //! used as generic type parameters in typed JavaScript collections and APIs.
-
 use crate::convert::UpcastFrom;
 use crate::JsCast;
 use crate::JsGeneric;

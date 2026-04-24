@@ -543,3 +543,66 @@ impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCa
     JsGeneric for T
 {
 }
+
+/// Value conversion from a type into its canonical [`JsGeneric`] form.
+///
+/// This trait allows types to be converted into JsGeneric supported types, which
+/// are required to be erasably generic with JsValue.
+///
+/// The single associated type — rather than a free type parameter bounded by
+/// `AsRef<T>` — is what makes collection-style APIs infer annotation-free.
+/// Given an input `A`, there is exactly one `A::JsCanon`, so rustc never has
+/// to search across multiple `AsRef` impls to pick a target element type.
+///
+/// # Implementations
+///
+/// Provided impls:
+/// - [`JsValue`] in this crate.
+/// - Every `#[wasm_bindgen]`-imported type (identity — emitted by the macro).
+/// - Every generic `js_sys` container (`Array<T>`, `Promise<T>`, `Set<T>`, …)
+///   provides its own identity impl owned by `js_sys`.
+/// - References to cloneable implementors, so borrowed iteration can still
+///   produce owned JS-generic values.
+///
+/// This trait is deliberately *not* blanket-implemented over all [`JsGeneric`]
+/// types: each implementor explicitly opts in, which leaves room for future
+/// wrapper types to pick a non-identity [`Self::JsCanon`].
+///
+/// # Example
+///
+/// ```ignore
+/// use js_sys::{Array, Number};
+///
+/// let arr: Array<Number> = (0..10).map(Number::from).collect();
+/// ```
+pub trait IntoJsGeneric {
+    /// The canonical [`JsGeneric`] form of this type.
+    type JsCanon: JsGeneric;
+
+    /// Produce the canonical [`JsGeneric`] value for `self`.
+    fn to_js(self) -> Self::JsCanon;
+}
+
+impl IntoJsGeneric for JsValue {
+    type JsCanon = JsValue;
+    #[inline]
+    fn to_js(self) -> JsValue {
+        self
+    }
+}
+
+// Reference iteration clones the borrowed wrapper to produce an owned value,
+// then delegates to that type's canonical conversion.
+impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
+    type JsCanon = T::JsCanon;
+    #[inline]
+    fn to_js(self) -> T::JsCanon {
+        self.clone().to_js()
+    }
+}
+
+// Intentionally not a blanket `impl<T: JsGeneric> IntoJsGeneric for T`:
+// that would lock in identity for every current and future `JsGeneric` type
+// and prevent wrapper types from canonicalising to a different target.
+// Instead, implementations are provided explicitly by each owning crate
+// (macro-generated for user types; hand-written for `js_sys` containers).

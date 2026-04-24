@@ -788,6 +788,18 @@ impl IntoWasmAbi for JsError {
     }
 }
 
+// `JsError` is `#[repr(transparent)]` over `JsValue`
+impl FromWasmAbi for JsError {
+    type Abi = <JsValue as FromWasmAbi>::Abi;
+
+    #[inline]
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        JsError {
+            value: JsValue::from_abi(js),
+        }
+    }
+}
+
 impl Promising for JsError {
     type Resolution = JsError;
 }

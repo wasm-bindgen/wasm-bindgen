@@ -84,28 +84,68 @@ fn from_iter() {
 }
 
 // Regression test for https://github.com/wasm-bindgen/wasm-bindgen/issues/5042:
-// collecting a wasm_bindgen type without explicit type annotations must not cause E0283.
-#[cfg(not(js_sys_unstable_apis))]
+// collecting a `#[wasm_bindgen]` type without explicit type annotations must
+// not cause E0283. Under the `IntoJsGeneric`-based `FromIterator` impl the
+// result type is the typed `Array<JsString>` (projected via
+// `JsString::JsCanon = JsString`), not the erased `Array<JsValue>` the
+// pre-`IntoJsGeneric` stable impl produced.
 #[wasm_bindgen_test]
 fn from_iter_wasm_bindgen_type() {
-    // JsString implements AsRef<JsValue> and AsRef<JsString>; before the fix this
-    // caused "cannot infer type for type parameter T" on the stable FromIterator impl.
     let arr = Array::from_iter([JsString::from("a"), JsString::from("b")]);
     assert_eq!(arr.length(), 2);
 
-    let arr = [JsString::from("x"), JsString::from("y")]
-        .iter()
-        .collect::<Array>();
+    // Reference iteration: `Item = &JsString`, the `&T: IntoJsGeneric`
+    // blanket delegates through to `JsString::JsCanon = JsString`, so
+    // `.collect::<Array<_>>()` infers `Array<JsString>`.
+    let arr: Array<JsString> = [JsString::from("x"), JsString::from("y")].iter().collect();
+    assert_eq!(arr.length(), 2);
+
+    // Explicit erasure — opt in via `.map(JsValue::from)` if you still want
+    // the untyped shape.
+    let arr: Array<JsValue> = [JsString::from("p"), JsString::from("q")]
+        .into_iter()
+        .map(JsValue::from)
+        .collect();
     assert_eq!(arr.length(), 2);
 }
 
-#[cfg(not(js_sys_unstable_apis))]
+// Regression shape from the flutter_rust_bridge report (fzyzcjy/flutter_rust_bridge#3009):
+//
+//     worker.post_message(&Array::from_iter([wasm_init_object]))?;
+//
+// The important property is that `Array::from_iter([owned_value])` — where
+// the iterator item is an owned `#[wasm_bindgen]` type — must infer to the
+// **typed** `Array<T>` without any turbofish or type annotation. On the old
+// `FromIterator<A> for Array<T> where A: AsRef<T>` impl this triggered
+// E0283 because `A: AsRef<T>` had multiple solutions for `T`.
+#[wasm_bindgen_test]
+fn from_iter_owned_wasm_bindgen_type_infers() {
+    // No annotation, single owned item: must infer `Array<Object>`, and the
+    // inference must propagate through a `&Array<Object>` argument without
+    // re-triggering ambiguity.
+    fn take_object_array(arr: &Array<Object>) {
+        assert_eq!(arr.length(), 1);
+    }
+
+    let obj = Object::new();
+    let arr = Array::from_iter([obj]);
+    take_object_array(&arr);
+}
+
 #[wasm_bindgen_test]
 fn extend() {
-    let mut array = Array::new();
+    // Starting from a typed `Array<JsString>`: `.extend` with matching items
+    // works without any erasure.
+    let mut array: Array<JsString> = Array::new_typed();
     array.extend([JsString::from("a"), JsString::from("b")]);
     array.extend([JsString::from("c"), JsString::from("d")]);
     assert_eq!(array.length(), 4);
+
+    // Starting from an untyped `Array<JsValue>`: callers extend with
+    // `JsValue` items (or explicitly erase typed ones via `.map`).
+    let mut array: Array<JsValue> = Array::new();
+    array.extend([JsString::from("e"), JsString::from("f")].map(JsValue::from));
+    assert_eq!(array.length(), 2);
 }
 
 #[wasm_bindgen_test]
@@ -1362,7 +1402,6 @@ fn test_array_to_vec() {
     assert_eq!(second.id(), 2);
 }
 
-#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn test_array_from_iter() {
     let items = vec![
@@ -1378,7 +1417,6 @@ fn test_array_from_iter() {
     assert_eq!(first.id(), 1);
 }
 
-#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn test_array_extend() {
     let mut arr: Array<TestItem> = Array::new_typed();

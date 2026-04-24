@@ -4,10 +4,7 @@ use std::ops::FnMut;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
-// ---------------------------------------------------------------------------
 // IntoFuture — direct promise.await
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen_test]
 async fn promise_await_resolve() {
     let p = Promise::resolve(&JsValue::from(42));
@@ -30,10 +27,7 @@ async fn typed_promise_await() {
     assert_eq!(n.value_of(), 99.0);
 }
 
-// ---------------------------------------------------------------------------
 // JsFuture
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen_test]
 async fn promise_resolve_is_ok_future() {
     let p = Promise::resolve(&JsValue::from(42));
@@ -64,10 +58,7 @@ async fn can_create_multiple_futures_from_same_promise() {
     b.await.unwrap();
 }
 
-// ---------------------------------------------------------------------------
 // future_to_promise
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen_test]
 async fn ok_future_is_resolved_promise() {
     let p = future_to_promise(async { Ok(JsValue::from(42)) });
@@ -82,10 +73,7 @@ async fn error_future_is_rejected_promise() {
     assert_eq!(e, 42);
 }
 
-// ---------------------------------------------------------------------------
 // spawn_local
-// ---------------------------------------------------------------------------
-
 #[wasm_bindgen]
 extern "C" {
     fn setTimeout(c: &Closure<dyn FnMut()>);
@@ -157,10 +145,131 @@ async fn spawn_local_err_no_exception() {
     assert_eq!(rx.await.unwrap(), 42);
 }
 
-// ---------------------------------------------------------------------------
-// Atomics / multithread-specific tests
-// ---------------------------------------------------------------------------
+// Heterogeneous `Promise::all_tuple` — the tuple method resolves a
+// tuple of `Promise<T_i>` into a typed `ArrayTuple<(T_1, T_2, ...)>`.
+#[wasm_bindgen_test]
+async fn all_tuple_two() {
+    use js_sys::{JsString, Number};
 
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::resolve(&JsString::from("hello"));
+    let (a, b) = Promise::all_tuple((p1, p2)).await.unwrap().into_tuple();
+    assert_eq!(a.value_of(), 1.0);
+    assert_eq!(b, "hello");
+}
+
+#[wasm_bindgen_test]
+async fn all_tuple_three() {
+    use js_sys::Number;
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::resolve(&Number::from(2));
+    let p3 = Promise::resolve(&Number::from(3));
+    let (a, b, c) = Promise::all_tuple((p1, p2, p3)).await.unwrap().into_tuple();
+    assert_eq!(a.value_of(), 1.0);
+    assert_eq!(b.value_of(), 2.0);
+    assert_eq!(c.value_of(), 3.0);
+}
+
+#[wasm_bindgen_test]
+async fn all_tuple_single() {
+    use js_sys::Number;
+
+    let p1 = Promise::resolve(&Number::from(42));
+    let (a,) = Promise::all_tuple((p1,)).await.unwrap().into_tuple();
+    assert_eq!(a.value_of(), 42.0);
+}
+
+// Rejection propagation: `Promise::all_tuple` rejects with the first
+// rejection, matching `Promise.all` semantics.
+#[wasm_bindgen_test]
+async fn all_tuple_rejects_on_first_failure() {
+    use js_sys::{JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("fail"));
+    let err = Promise::all_tuple((p1, p2)).await.unwrap_err();
+    assert_eq!(err, "fail");
+}
+
+// Mixing a Rust `Future` with a `Promise` is handled at the call site via
+// `future_to_promise_typed` — explicit spawning, no trait magic.
+#[wasm_bindgen_test]
+async fn all_tuple_accepts_future_via_future_to_promise_typed() {
+    use js_sys::{futures::future_to_promise_typed, JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(7));
+    let p2 = future_to_promise_typed(async { Ok(JsString::from("world")) });
+    let (a, b) = Promise::all_tuple((p1, p2)).await.unwrap().into_tuple();
+    assert_eq!(a.value_of(), 7.0);
+    assert_eq!(b, "world");
+}
+
+// Heterogeneous `Promise::all_settled_tuple` — never rejects early; every
+// slot settles and is reflected by a `PromiseState<T_i>` in the result.
+#[wasm_bindgen_test]
+async fn all_settled_tuple_mixed() {
+    use js_sys::{JsString, Number};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
+    let results = Promise::all_settled_tuple((p1, p2)).await.unwrap();
+    let (s1, s2) = results.into_tuple();
+    assert!(s1.is_fulfilled());
+    assert_eq!(s1.get_value().unwrap().value_of(), 1.0);
+    assert!(s2.is_rejected());
+    assert_eq!(s2.get_reason().unwrap(), "err");
+}
+
+// `Promise::all_tuple` also accepts an `ArrayTuple<(Promise<T_1>, ...)>`
+// directly, without first unpacking it into a Rust tuple. Same semantics,
+// same destructuring.
+#[wasm_bindgen_test]
+async fn all_tuple_accepts_array_tuple() {
+    use js_sys::{ArrayTuple, JsString, Number, Promise};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::resolve(&JsString::from("hello"));
+    let tuple: ArrayTuple<(Promise<Number>, Promise<JsString>)> = (p1, p2).into();
+    let (a, b) = Promise::all_tuple(tuple).await.unwrap().into_tuple();
+    assert_eq!(a.value_of(), 1.0);
+    assert_eq!(b, "hello");
+}
+
+#[wasm_bindgen_test]
+async fn all_settled_tuple_accepts_array_tuple() {
+    use js_sys::{ArrayTuple, JsString, Number, Promise};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
+    let tuple: ArrayTuple<(Promise<Number>, Promise<JsString>)> = (p1, p2).into();
+    let results = Promise::all_settled_tuple(tuple).await.unwrap();
+    let (s1, s2) = results.into_tuple();
+    assert!(s1.is_fulfilled());
+    assert_eq!(s1.get_value().unwrap().value_of(), 1.0);
+    assert!(s2.is_rejected());
+    assert_eq!(s2.get_reason().unwrap(), "err");
+}
+
+// `PromiseState<T>` converts to `Result<T, JsValue>` directly, matching the
+// `allSettled` spec invariant that exactly one of `value` / `reason` is
+// populated per slot.
+#[wasm_bindgen_test]
+async fn promise_state_into_result() {
+    use js_sys::{JsString, Number, Promise};
+
+    let p1 = Promise::resolve(&Number::from(1));
+    let p2 = Promise::<JsString>::reject_typed(&JsValue::from("err"));
+    let results = Promise::all_settled_tuple((p1, p2)).await.unwrap();
+    let (s1, s2) = results.into_tuple();
+
+    let r1: Result<Number, JsValue> = s1.into();
+    let r2: Result<JsString, JsValue> = s2.into();
+    assert_eq!(r1.unwrap().value_of(), 1.0);
+    assert_eq!(r2.unwrap_err(), "err");
+}
+
+// Atomics / multithread-specific tests
 #[cfg(target_feature = "atomics")]
 use std::future::Future;
 #[cfg(target_feature = "atomics")]
@@ -229,10 +338,7 @@ async fn wait_async_promise_callback_runs_without_wake() {
     done_rx.await.expect("task finished");
 }
 
-// ---------------------------------------------------------------------------
 // JsStream (requires futures-core-03-stream feature)
-// ---------------------------------------------------------------------------
-
 #[cfg(feature = "futures-core-03-stream")]
 #[wasm_bindgen_test]
 async fn can_use_an_async_iterable_as_stream() {

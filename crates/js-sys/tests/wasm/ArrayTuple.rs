@@ -166,14 +166,14 @@ fn last_method() {
 }
 
 #[wasm_bindgen_test]
-fn into_parts_method() {
+fn into_tuple_method() {
     let tuple1: ArrayTuple<(JsString,)> = ArrayTuple::new1(&JsString::from("single"));
-    let (a,) = tuple1.into_parts();
+    let (a,) = tuple1.into_tuple();
     assert_eq!(a, "single");
 
     let tuple2: ArrayTuple<(JsString, Number)> =
         ArrayTuple::new2(&JsString::from("hello"), &Number::from(42));
-    let (first, second) = tuple2.into_parts();
+    let (first, second) = tuple2.into_tuple();
     assert_eq!(first, "hello");
     assert_eq!(second, 42);
 
@@ -182,7 +182,7 @@ fn into_parts_method() {
         &JsString::from("middle"),
         &Number::from(3),
     );
-    let (a, b, c) = tuple3.into_parts();
+    let (a, b, c) = tuple3.into_tuple();
     assert_eq!(a, 1);
     assert_eq!(b, "middle");
     assert_eq!(c, 3);
@@ -194,12 +194,24 @@ fn into_parts_method() {
         &JsString::from("d"),
         &JsString::from("e"),
     );
-    let (v1, v2, v3, v4, v5) = tuple5.into_parts();
+    let (v1, v2, v3, v4, v5) = tuple5.into_tuple();
     assert_eq!(v1, "a");
     assert_eq!(v2, "b");
     assert_eq!(v3, "c");
     assert_eq!(v4, "d");
     assert_eq!(v5, "e");
+}
+
+// The deprecated `into_parts` alias still works.
+#[wasm_bindgen_test]
+fn into_parts_alias_still_works() {
+    #[allow(deprecated)]
+    let tuple: ArrayTuple<(JsString, Number)> =
+        ArrayTuple::new2(&JsString::from("hello"), &Number::from(42));
+    #[allow(deprecated)]
+    let (first, second) = tuple.into_parts();
+    assert_eq!(first, "hello");
+    assert_eq!(second, 42);
 }
 
 #[wasm_bindgen_test]
