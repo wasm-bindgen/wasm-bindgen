@@ -25,12 +25,12 @@
 
 ### Added
 
-* Added a `js-sys` feature to `wasm-bindgen` that makes async macro codegen use
-  `js_sys::futures` instead of `wasm_bindgen_futures`, removing the need for
-  `wasm-bindgen-futures` as a separate dependency when the crate also depends
-  directly on `js-sys`. The feature is explicit opt-in so transitive `js-sys`
-  dependencies do not cause generated code to reference an unavailable
-  `::js_sys` path.
+* Added an explicit opt-in `js-sys` feature to `wasm-bindgen` that makes async
+  macro codegen use `js_sys::futures` instead of `wasm_bindgen_futures`,
+  removing the need for `wasm-bindgen-futures` as a separate dependency when the
+  crate also depends directly on `js-sys`. This is not enabled automatically by
+  transitive `js-sys` dependencies, since the crate using `#[wasm_bindgen]` must
+  be able to resolve the generated `::js_sys` path.
   [#5112](https://github.com/wasm-bindgen/wasm-bindgen/pull/5112)
 
 ### Fixed

@@ -361,10 +361,10 @@ async fn process_numbers() -> Result<f64, JsValue> {
 
 ## Using `js_sys` directly without `wasm-bindgen-futures`
 
-By default the `#[wasm_bindgen]` macro generates async glue that references
-`wasm_bindgen_futures`. If you want to depend only on `js-sys` and avoid
-pulling in `wasm-bindgen-futures`, depend directly on `js-sys` and enable the
-`js-sys` feature on `wasm-bindgen`:
+By default the `#[wasm_bindgen]` macro continues to generate async glue that
+references `wasm_bindgen_futures`. If you want to depend only on `js-sys` and
+avoid pulling in `wasm-bindgen-futures`, depend directly on `js-sys` and enable
+the `js-sys` feature on `wasm-bindgen`:
 
 ```toml
 [dependencies]
@@ -387,7 +387,8 @@ extern "C" {
 This feature is not enabled automatically by transitive `js-sys` dependencies:
 the crate using `#[wasm_bindgen]` must be able to resolve the generated
 `::js_sys` path. The existing `js_sys = my_crate::js_sys` attribute remains
-available as a path override for re-export crates.
+available as a path override for re-export crates, but it does not enable
+`js_sys::futures` codegen by itself.
 
 ## Compatibility note
 
