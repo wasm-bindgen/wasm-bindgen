@@ -96,8 +96,7 @@ fn from_iter_wasm_bindgen_type() {
     assert_eq!(arr.length(), 2);
 
     // Typed form: inference picks `Array<JsString>` via `IntoJsGeneric`.
-    let arr: Array<JsString> =
-        Array::from_iter_typed([JsString::from("x"), JsString::from("y")]);
+    let arr: Array<JsString> = Array::from_iter_typed([JsString::from("x"), JsString::from("y")]);
     assert_eq!(arr.length(), 2);
 
     // Reference iteration: `Item = &JsString`, the `&T: IntoJsGeneric`
