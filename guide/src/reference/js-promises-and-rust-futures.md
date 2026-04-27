@@ -360,34 +360,13 @@ async fn process_numbers() -> Result<f64, JsValue> {
 
 ## Using `js_sys` directly without `wasm-bindgen-futures`
 
-By default the `#[wasm_bindgen]` macro continues to generate async glue that
-references `wasm_bindgen_futures`. If you want to depend only on `js-sys` and
-avoid pulling in `wasm-bindgen-futures`, depend directly on `js-sys` and enable
-the `js-sys` feature on `wasm-bindgen`:
+To make `#[wasm_bindgen]` emit `js_sys::futures` directly and drop the
+`wasm-bindgen-futures` dependency, depend on `js-sys` and build with
+`--cfg=wasm_bindgen_use_js_sys` (e.g. via `RUSTFLAGS` or `.cargo/config.toml`).
 
-```toml
-[dependencies]
-js-sys = "..."
-wasm-bindgen = { version = "...", features = ["js-sys"] }
-```
-
-```rust
-#[wasm_bindgen]
-pub async fn foo() {
-    // codegen uses js_sys::futures::future_to_promise / spawn_local
-}
-
-#[wasm_bindgen]
-extern "C" {
-    async fn fetch(url: &str) -> JsValue;
-}
-```
-
-This feature is not enabled automatically by transitive `js-sys` dependencies:
-the crate using `#[wasm_bindgen]` must be able to resolve the generated
-`::js_sys` path. The existing `js_sys = my_crate::js_sys` attribute remains
-available as a path override for re-export crates, but it does not enable
-`js_sys::futures` codegen by itself.
+A cfg is used rather than a Cargo feature so the choice stays scoped to the
+crate that opts in — Cargo features union across the dep graph, which would
+flip codegen for every `#[wasm_bindgen]` user in the build.
 
 ## Compatibility note
 

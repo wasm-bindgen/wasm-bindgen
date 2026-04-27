@@ -9,7 +9,7 @@ use syn::Path;
 use wasm_bindgen_shared as shared;
 
 pub fn use_js_sys_futures() -> bool {
-    cfg!(feature = "js-sys")
+    cfg!(wasm_bindgen_use_js_sys)
 }
 
 /// Whether a function is a start function, and if so, whether it

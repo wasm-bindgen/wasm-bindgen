@@ -33,13 +33,13 @@
   instantiated `WebAssembly.Instance`.
   [#5118](https://github.com/wasm-bindgen/wasm-bindgen/pull/5118)
 
-* Added an explicit opt-in `js-sys` feature to `wasm-bindgen` that makes async
-  macro codegen use `js_sys::futures` instead of `wasm_bindgen_futures`,
-  removing the need for `wasm-bindgen-futures` as a separate dependency when the
-  crate also depends directly on `js-sys`. This is not enabled automatically by
-  transitive `js-sys` dependencies, since the crate using `#[wasm_bindgen]` must
-  be able to resolve the generated `::js_sys` path.
+* Added a `--cfg=wasm_bindgen_use_js_sys` opt-in that makes async macro codegen
+  use `js_sys::futures` instead of `wasm_bindgen_futures`, dropping the need
+  for `wasm-bindgen-futures` when the crate already depends on `js-sys`. A cfg
+  is used rather than a Cargo feature so the choice stays scoped to the crate
+  that opts in.
   [#5112](https://github.com/wasm-bindgen/wasm-bindgen/pull/5112)
+  [#5127](https://github.com/wasm-bindgen/wasm-bindgen/pull/5127)
 
 ### Changed
 
