@@ -26,14 +26,12 @@
   are preserved, so existing `.collect::<Array>()` call sites keep compiling
   unchanged. Fixes [#5042](https://github.com/wasm-bindgen/wasm-bindgen/issues/5042).
   [#5121](https://github.com/wasm-bindgen/wasm-bindgen/pull/5121),
-  [#5128](https://github.com/wasm-bindgen/wasm-bindgen/pull/5128)
+  [#5125](https://github.com/wasm-bindgen/wasm-bindgen/pull/5125)
 
 * Added `wasm_bindgen::instance()` to return the current
   `WebAssembly.Instance`. The generated JS glue retains the 
   instantiated `WebAssembly.Instance`.
   [#5118](https://github.com/wasm-bindgen/wasm-bindgen/pull/5118)
-
-### Added
 
 * Added an explicit opt-in `js-sys` feature to `wasm-bindgen` that makes async
   macro codegen use `js_sys::futures` instead of `wasm_bindgen_futures`,
