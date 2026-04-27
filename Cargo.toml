@@ -24,7 +24,6 @@ test = false
 [features]
 default = ["std"]
 enable-interning = ["std"]
-js-sys = ["wasm-bindgen-macro/js-sys"]
 serde-serialize = ["serde", "serde_json", "std"]
 spans = []
 std = []
@@ -80,6 +79,7 @@ workspace = true
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_unstable_test_coverage)',
+  'cfg(wasm_bindgen_use_js_sys)',
   'cfg(xxx_debug_only_print_generated_code)',
 ] }
 unused_lifetimes = "warn"
