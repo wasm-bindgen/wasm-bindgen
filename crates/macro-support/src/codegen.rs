@@ -613,6 +613,10 @@ impl TryToTokens for ast::Export {
             Some(ast::MethodSelf::ByValue) => {
                 let class = self.rust_class.as_ref().unwrap();
                 arg_conversions.push(quote! {
+                    // Owned `self` is consumed inside the catch-unwind closure;
+                    // assert it's `UnwindSafe` so a panic mid-method doesn't
+                    // surface a half-modified observable value to the caller.
+                    #wasm_bindgen::__rt::assert_unwind_safe::<#class>();
                     let me = unsafe {
                         <#class as #wasm_bindgen::convert::FromWasmAbi>::from_abi(me)
                     };
@@ -622,6 +626,17 @@ impl TryToTokens for ast::Export {
             Some(ast::MethodSelf::RefMutable) => {
                 let class = self.rust_class.as_ref().unwrap();
                 arg_conversions.push(quote! {
+                    // `&mut self` requires `Self: RefUnwindSafe` (logical
+                    // unwind-safety): if the method panics partway through
+                    // mutation, the caller may observe the struct again, so
+                    // any interior mutability whose invariants could be
+                    // broken must be opt-in via `AssertUnwindSafe` or a
+                    // manual `impl RefUnwindSafe`. Stdlib's `&mut T:
+                    // !UnwindSafe` blanket would otherwise reject every
+                    // `&mut self` method, so we use a separate type-level
+                    // assertion rather than relying on closure capture
+                    // inference.
+                    #wasm_bindgen::__rt::assert_ref_unwind_safe::<#class>();
                     let mut me = unsafe {
                         <#class as #wasm_bindgen::convert::RefMutFromWasmAbi>
                             ::ref_mut_from_abi(me)
@@ -646,6 +661,11 @@ impl TryToTokens for ast::Export {
                     (quote!(RefFromWasmAbi), quote!(ref_from_abi), quote!(&*me))
                 };
                 arg_conversions.push(quote! {
+                    // `&self` requires `Self: RefUnwindSafe` for the same
+                    // reason as `&mut self` — a panic mid-method can leave
+                    // interior-mutable state in a torn condition observable
+                    // by subsequent calls.
+                    #wasm_bindgen::__rt::assert_ref_unwind_safe::<#class>();
                     let me = unsafe {
                         <#class as #wasm_bindgen::convert::#trait_>::#func(me)
                     };
@@ -683,6 +703,10 @@ impl TryToTokens for ast::Export {
                     let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
                     args.extend(prim_args);
                     arg_conversions.push(quote! {
+                        // `&mut T` arg: same logical-unwind-safety check as
+                        // `&mut self` — `T` must be `RefUnwindSafe` so any
+                        // panic mid-call cannot leave torn interior state.
+                        #wasm_bindgen::__rt::assert_ref_unwind_safe::<#elem>();
                         let mut #ident = unsafe {
                             <#elem as #wasm_bindgen::convert::RefMutFromWasmAbi>
                                 ::ref_mut_from_abi(
@@ -699,6 +723,9 @@ impl TryToTokens for ast::Export {
                         let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
                         args.extend(prim_args);
                         arg_conversions.push(quote! {
+                            // `&T` arg in async export: enforce
+                            // `T: RefUnwindSafe` for the same reason.
+                            #wasm_bindgen::__rt::assert_ref_unwind_safe::<#elem>();
                             let #ident = unsafe {
                                 <#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>
                                     ::long_ref_from_abi(
@@ -714,6 +741,8 @@ impl TryToTokens for ast::Export {
                         let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
                         args.extend(prim_args);
                         arg_conversions.push(quote! {
+                            // `&T` arg: enforce `T: RefUnwindSafe`.
+                            #wasm_bindgen::__rt::assert_ref_unwind_safe::<#elem>();
                             let #ident = unsafe {
                                 <#elem as #wasm_bindgen::convert::RefFromWasmAbi>
                                     ::ref_from_abi(
@@ -729,6 +758,10 @@ impl TryToTokens for ast::Export {
                     let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
                     args.extend(prim_args);
                     arg_conversions.push(quote! {
+                        // Owned arg: consumed locally inside the catch-unwind
+                        // closure, so `UnwindSafe` (not `RefUnwindSafe`) is
+                        // the relevant property.
+                        #wasm_bindgen::__rt::assert_unwind_safe::<#ty>();
                         let #ident = unsafe {
                             <#ty as #wasm_bindgen::convert::FromWasmAbi>
                                 ::from_abi(

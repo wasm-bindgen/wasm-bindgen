@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::panic::AssertUnwindSafe;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicU32, Ordering};
 use wasm_bindgen::prelude::*;
@@ -309,8 +310,12 @@ fn getter_compute() {
     test_getter_compute(GetterCompute);
 }
 
+// `Rc<Cell<u32>>` is not `RefUnwindSafe`. Wrap with `AssertUnwindSafe`
+// to opt in: the setter is a single primitive `Cell::set` call which
+// cannot panic mid-mutation, so it's safe to expose under
+// `panic = "unwind"`.
 #[wasm_bindgen]
-struct SetterCompute(Rc<Cell<u32>>);
+struct SetterCompute(AssertUnwindSafe<Rc<Cell<u32>>>);
 
 #[wasm_bindgen]
 impl SetterCompute {
@@ -323,7 +328,7 @@ impl SetterCompute {
 #[wasm_bindgen_test]
 fn setter_compute() {
     let r = Rc::new(Cell::new(3));
-    test_setter_compute(SetterCompute(r.clone()));
+    test_setter_compute(SetterCompute(AssertUnwindSafe(r.clone())));
     assert_eq!(r.get(), 100);
 }
 

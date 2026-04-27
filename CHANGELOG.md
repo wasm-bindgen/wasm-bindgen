@@ -43,6 +43,17 @@
 
 ### Changed
 
+* `#[wasm_bindgen]` exports now enforce unwind-safety at compile time under
+  `panic = "unwind"`. The generated wrapper for every `&self` / `&mut self`
+  method asserts `Self: RefUnwindSafe`, and reference arguments `&T` / `&mut T`
+  assert `T: RefUnwindSafe`, before the body runs inside `catch_unwind`. This
+  catches at compile time methods whose interior-mutable state could be
+  silently torn by a caught panic (e.g. a `RefCell` left borrowed, a `Cell`
+  updated halfway through restoring an invariant). The check is a no-op
+  outside `panic = "unwind"` builds. Users whose type is genuinely safe can
+  opt in with `impl RefUnwindSafe for MyType {}` or by wrapping interior-
+  mutable fields in `std::panic::AssertUnwindSafe`.
+
 * Simplified generated `web-sys` bindings by omitting redundant
   `#[wasm_bindgen]` attributes when they match wasm-bindgen defaults, including
   structural method annotations and matching `js_name` entries. The
