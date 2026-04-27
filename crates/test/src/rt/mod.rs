@@ -142,6 +142,13 @@ pub struct Context {
     state: Rc<State>,
 }
 
+// The test harness intentionally drives state through interior mutability
+// (`Cell`, `RefCell`) and is the orchestrator of panicking test execution
+// itself; assert unwind-safety explicitly so the macro-generated check
+// passes under `panic = "unwind"`.
+impl core::panic::RefUnwindSafe for Context {}
+impl core::panic::UnwindSafe for Context {}
+
 struct State {
     /// In Benchmark
     is_bench: bool,
