@@ -27,10 +27,10 @@ std = ["wasm-bindgen/std", "dep:futures-util"]
 # It has been agreed to gate functionnality requiring CSP unsafe-eval behind this feature
 # See https://github.com/wasm-bindgen/wasm-bindgen/issues/1647#issuecomment-3775469177
 unsafe-eval = []
-# Backwards-compatible alias — futures support is now always enabled.
-futures = []
 # Enables JsStream (AsyncIterator -> Stream bridge).
-futures-core-03-stream = ["dep:futures-core"]
+# Pulls in `futures-util` directly so this keeps working under
+# `default-features = false`.
+futures-core-03-stream = ["dep:futures-util", "dep:futures-core"]
 
 [dependencies]
 cfg-if = "1.0.0"
