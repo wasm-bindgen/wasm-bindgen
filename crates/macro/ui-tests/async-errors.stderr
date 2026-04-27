@@ -4,9 +4,14 @@ error[E0277]: the trait bound `Result<(), ()>: IntoJsResult` is not satisfied
 51 | pub async fn bad1() -> Result<(), ()> {
    |                        ^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<(), ()>`
    |
-   = help: the following other types implement trait `IntoJsResult`:
-             Result<(), E>
-             Result<T, E>
+help: the following other types implement trait `IntoJsResult`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<T: Into<JsValue>, E: Into<JsValue>> IntoJsResult for Result<T, E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<T, E>`
+...
+   | impl<E: Into<JsValue>> IntoJsResult for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<(), E>`
 
 error[E0277]: the trait bound `Result<(), BadType>: IntoJsResult` is not satisfied
   --> ui-tests/async-errors.rs:55:24
@@ -14,9 +19,14 @@ error[E0277]: the trait bound `Result<(), BadType>: IntoJsResult` is not satisfi
 55 | pub async fn bad2() -> Result<(), BadType> {
    |                        ^^^^^^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<(), BadType>`
    |
-   = help: the following other types implement trait `IntoJsResult`:
-             Result<(), E>
-             Result<T, E>
+help: the following other types implement trait `IntoJsResult`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<T: Into<JsValue>, E: Into<JsValue>> IntoJsResult for Result<T, E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<T, E>`
+...
+   | impl<E: Into<JsValue>> IntoJsResult for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<(), E>`
 
 error[E0277]: the trait bound `wasm_bindgen::JsValue: From<BadType>` is not satisfied
   --> ui-tests/async-errors.rs:59:24
@@ -30,9 +40,9 @@ error[E0277]: the trait bound `wasm_bindgen::JsValue: From<BadType>` is not sati
              `wasm_bindgen::JsValue` implements `From<&str>`
              `wasm_bindgen::JsValue` implements `From<*const T>`
              `wasm_bindgen::JsValue` implements `From<*mut T>`
-             `wasm_bindgen::JsValue` implements `From<Array<T>>`
              `wasm_bindgen::JsValue` implements `From<ArrayBuffer>`
              `wasm_bindgen::JsValue` implements `From<ArrayBufferOptions>`
+             `wasm_bindgen::JsValue` implements `From<ArrayTuple<T>>`
            and $N others
    = note: required for `BadType` to implement `Into<wasm_bindgen::JsValue>`
    = note: required for `BadType` to implement `IntoJsResult`
@@ -41,8 +51,14 @@ error[E0277]: the trait bound `Result<BadType, wasm_bindgen::JsValue>: IntoJsRes
   --> ui-tests/async-errors.rs:63:24
    |
 63 | pub async fn bad4() -> Result<BadType, JsValue> {
-   |                        ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IntoJsResult` is not implemented for `Result<BadType, wasm_bindgen::JsValue>`
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-   = help: the following other types implement trait `IntoJsResult`:
-             Result<(), E>
-             Result<T, E>
+   = help: the trait `IntoJsResult` is not implemented for `Result<BadType, wasm_bindgen::JsValue>`
+help: the following other types implement trait `IntoJsResult`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<T: Into<JsValue>, E: Into<JsValue>> IntoJsResult for Result<T, E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<T, E>`
+...
+   | impl<E: Into<JsValue>> IntoJsResult for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<(), E>`

@@ -1,14 +1,14 @@
 error: unused wasm_bindgen attribute
  --> ui-tests/unused-fn-attrs.rs:5:42
   |
-5 |     #[wasm_bindgen(js_name = "firstArg", js_name = "anotherFirstArg")] arg: u32,
+5 |     #[wasm_bindgen(js_name = "firstArg", js_name = "anotherFirstArg")] ar...
   |                                          ^^^^^^^
 
 error: unused wasm_bindgen attribute
   --> ui-tests/unused-fn-attrs.rs:12:53
    |
-12 |     #[wasm_bindgen(unchecked_param_type = "number", unchecked_param_type = "bigint")] arg: u32,
-   |                                                     ^^^^^^^^^^^^^^^^^^^^
+12 | ..._param_type = "number", unchecked_param_type = "bigint")] arg: u32,
+   |                            ^^^^^^^^^^^^^^^^^^^^
 
 error: unused wasm_bindgen attribute
   --> ui-tests/unused-fn-attrs.rs:19:20
