@@ -14,6 +14,7 @@ pub fn shared_setup(is_bench: bool) -> String {
     format!(
         r#"
 const handlers = {{}};
+const is_bench = {is_bench};
 
 const wrap = method => {{
     const og = console[method];
@@ -22,7 +23,7 @@ const wrap = method => {{
         if (nocapture) {{
             og.apply(this, args);
         }}
-        if (handlers[on_method]) {{
+        if (!is_bench && handlers[on_method]) {{
             handlers[on_method](args);
         }}
     }};

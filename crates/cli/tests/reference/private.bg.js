@@ -51,7 +51,6 @@ export const PublicEnum = Object.freeze({
  */
 export class PublicStruct {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(PublicStruct.prototype);
         obj.__wbg_ptr = ptr;
         PublicStructFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -94,7 +93,6 @@ export function get_public_struct() {
 
 class internal__NamespacedHidden {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(internal__NamespacedHidden.prototype);
         obj.__wbg_ptr = ptr;
         internal__NamespacedHiddenFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -173,13 +171,13 @@ export function __wbindgen_init_externref_table() {
 }
 const HiddenStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr, 1));
 const internal__NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_internal__namespacedhidden_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_internal__namespacedhidden_free(ptr, 1));
 const PublicStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_publicstruct_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_publicstruct_free(ptr, 1));
 
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
@@ -188,8 +186,7 @@ function _assertClass(instance, klass) {
 }
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

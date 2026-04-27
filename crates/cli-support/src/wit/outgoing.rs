@@ -6,6 +6,14 @@ use anyhow::{bail, format_err, Error};
 use walrus::{ExportId, ValType};
 use wasm_bindgen_shared::identifier::to_valid_ident;
 
+fn closure_word_descriptor(memory64: bool) -> Descriptor {
+    if memory64 {
+        Descriptor::I64AsF64
+    } else {
+        Descriptor::I32
+    }
+}
+
 impl InstructionBuilder<'_, '_> {
     /// Processes one more `Descriptor` as an argument to a JS function that
     /// Wasm is calling.
@@ -67,6 +75,16 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::U32 => self.outgoing_i32(AdapterType::U32),
             Descriptor::I64 => self.outgoing_i64(AdapterType::I64),
             Descriptor::U64 => self.outgoing_i64(AdapterType::U64),
+            Descriptor::I64AsF64 | Descriptor::U64AsF64 => {
+                self.outgoing_f64();
+            }
+            Descriptor::RawPointer => {
+                if self.cx.memory64() {
+                    self.outgoing_f64();
+                } else {
+                    self.outgoing_i32(AdapterType::U32);
+                }
+            }
             Descriptor::I128 => {
                 self.instruction(
                     &[AdapterType::I64, AdapterType::I64],
@@ -101,8 +119,13 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::RustStruct(class) => {
+                let ptr_ty = if self.cx.memory64() {
+                    AdapterType::F64
+                } else {
+                    self.ptr_ty()
+                };
                 self.instruction(
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                     Instruction::RustFromI32 {
                         class: class.to_string(),
                     },
@@ -116,8 +139,9 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String => {
                 // fetch the ptr/length ...
-                self.get(AdapterType::I32);
-                self.get(AdapterType::I32);
+                let ptr_ty = self.outgoing_internal_word_ty();
+                self.get(ptr_ty.clone());
+                self.get(ptr_ty);
 
                 // ... then defer a call to `free` to happen later
                 let free = self.cx.free()?;
@@ -148,8 +172,9 @@ impl InstructionBuilder<'_, '_> {
                 })?;
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::VectorLoad {
                         kind: kind.clone(),
                         mem,
@@ -177,7 +202,14 @@ impl InstructionBuilder<'_, '_> {
             // Largely synthetic and can't show up
             Descriptor::ClampedU8 => unreachable!(),
 
-            Descriptor::NonNull => self.outgoing_i32(AdapterType::NonNull),
+            Descriptor::NonNull => {
+                if self.cx.memory64() {
+                    self.get(AdapterType::F64);
+                    self.output.push(AdapterType::NonNull);
+                } else {
+                    self.outgoing_i32(AdapterType::NonNull);
+                }
+            }
 
             Descriptor::Closure(d) => {
                 self.outgoing_function(d.mutable, &d.function, Some(d.owned))?
@@ -205,8 +237,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::CachedString => self.cached_string(false)?,
 
             Descriptor::String => {
+                let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::MemoryToString(self.cx.memory()?),
                     &[AdapterType::String],
                 );
@@ -218,8 +251,9 @@ impl InstructionBuilder<'_, '_> {
                     )
                 })?;
                 let mem = self.cx.memory()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
@@ -276,11 +310,14 @@ impl InstructionBuilder<'_, '_> {
         owned_closure: Option<bool>,
     ) -> Result<(), Error> {
         let mut descriptor = descriptor.clone();
-        // synthesize the a/b arguments that aren't present in the
+        // Synthesize the a/b arguments that aren't present in the
         // signature from wasm-bindgen but are present in the Wasm file.
+        // On wasm64 these use the same number ABI as the rest of the
+        // pointer-sized wasm-bindgen surface.
         let nargs = descriptor.arguments.len();
-        descriptor.arguments.insert(0, Descriptor::I32);
-        descriptor.arguments.insert(0, Descriptor::I32);
+        let ptr_descriptor = closure_word_descriptor(self.cx.memory64());
+        descriptor.arguments.insert(0, ptr_descriptor.clone());
+        descriptor.arguments.insert(0, ptr_descriptor);
         let shim = self.export_table_element(descriptor.shim_idx);
         let dtor = match owned_closure {
             None => ClosureDtor::Immediate,
@@ -288,8 +325,9 @@ impl InstructionBuilder<'_, '_> {
             Some(true) => ClosureDtor::OwnClosure,
         };
         let adapter = self.cx.export_adapter(shim, descriptor)?;
+        let ptr_ty = self.ptr_ty();
         self.instruction(
-            &[AdapterType::I32, AdapterType::I32],
+            &[ptr_ty.clone(), ptr_ty],
             Instruction::Closure {
                 adapter,
                 nargs,
@@ -329,6 +367,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::U16 => self.out_option_sentinel32(AdapterType::U16),
             Descriptor::I32 => self.out_option_sentinel64(AdapterType::S32),
             Descriptor::U32 => self.out_option_sentinel64(AdapterType::U32),
+            Descriptor::I64AsF64 => self.out_option_sentinel64(AdapterType::I64),
+            Descriptor::U64AsF64 => self.out_option_sentinel64(AdapterType::U64),
             Descriptor::I64 => self.option_native(true, ValType::I64),
             Descriptor::U64 => self.option_native(false, ValType::I64),
             Descriptor::F32 => self.out_option_sentinel64(AdapterType::F32),
@@ -376,8 +416,13 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::RustStruct(name) => {
+                let ptr_ty = if self.cx.memory64() {
+                    AdapterType::F64
+                } else {
+                    self.ptr_ty()
+                };
                 self.instruction(
-                    &[AdapterType::I32],
+                    &[ptr_ty],
                     Instruction::OptionRustFromI32 {
                         class: name.to_string(),
                     },
@@ -397,8 +442,9 @@ impl InstructionBuilder<'_, '_> {
                 })?;
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionVectorLoad {
                         kind: kind.clone(),
                         mem,
@@ -408,11 +454,21 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::NonNull => self.instruction(
-                &[AdapterType::I32],
-                Instruction::OptionNonNullFromI32,
-                &[AdapterType::NonNull.option()],
-            ),
+            Descriptor::NonNull => {
+                let ptr_ty = if self.cx.memory64() {
+                    AdapterType::F64
+                } else {
+                    self.ptr_ty()
+                };
+                self.instruction(
+                    &[ptr_ty],
+                    Instruction::OptionNonNullFromI32,
+                    &[AdapterType::NonNull.option()],
+                );
+            }
+            Descriptor::RawPointer => {
+                self.out_option_sentinel64(AdapterType::U32);
+            }
 
             _ => bail!(
                 "unsupported optional argument type for calling JS function from Rust: {arg:?}"
@@ -435,6 +491,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::F64
             | Descriptor::I64
             | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
             | Descriptor::I128
             | Descriptor::U128
             | Descriptor::Boolean
@@ -448,7 +506,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Option(_)
             | Descriptor::Vector(_)
             | Descriptor::Unit
-            | Descriptor::NonNull => {
+            | Descriptor::NonNull
+            | Descriptor::RawPointer => {
                 // We must throw before reading the Ok type, if there is an error. However, the
                 // structure of ResultAbi is that the Err value + discriminant come last (for
                 // alignment reasons). So the UnwrapResult instruction must come first, but the
@@ -501,8 +560,9 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::String => {
                 // fetch the ptr/length ...
-                self.get(AdapterType::I32);
-                self.get(AdapterType::I32);
+                let ptr_ty = self.outgoing_internal_word_ty();
+                self.get(ptr_ty.clone());
+                self.get(ptr_ty);
                 // fetch the err/is_err
                 self.get(AdapterType::I32);
                 self.get(AdapterType::I32);
@@ -582,8 +642,9 @@ impl InstructionBuilder<'_, '_> {
                     )
                 })?;
                 let mem = self.cx.memory()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::I32, AdapterType::I32],
+                    &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
@@ -620,12 +681,17 @@ impl InstructionBuilder<'_, '_> {
         };
         self.instruction(&[AdapterType::I64], instr, &[output]);
     }
+    fn outgoing_f64(&mut self) {
+        self.get(AdapterType::F64);
+        self.output.push(AdapterType::F64);
+    }
 
     fn cached_string(&mut self, owned: bool) -> Result<(), Error> {
         let mem = self.cx.memory()?;
         let free = self.cx.free()?;
+        let ptr_ty = self.outgoing_internal_word_ty();
         self.instruction(
-            &[AdapterType::I32, AdapterType::I32],
+            &[ptr_ty.clone(), ptr_ty],
             Instruction::CachedStringLoad {
                 owned,
                 mem,
@@ -661,4 +727,18 @@ impl InstructionBuilder<'_, '_> {
             &[ty.option()],
         );
     }
+
+    fn outgoing_internal_word_ty(&self) -> AdapterType {
+        if self.return_position && self.cx.memory64() {
+            AdapterType::F64
+        } else {
+            self.ptr_ty()
+        }
+    }
+}
+
+#[test]
+fn closure_word_descriptor_uses_number_abi_on_memory64() {
+    assert_eq!(closure_word_descriptor(true), Descriptor::I64AsF64);
+    assert_eq!(closure_word_descriptor(false), Descriptor::I32);
 }

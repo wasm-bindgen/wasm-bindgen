@@ -1,13 +1,14 @@
 use crate::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmRet};
 use crate::describe::inform;
 use crate::JsValue;
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 use core::any::Any;
 use core::borrow::{Borrow, BorrowMut};
 #[cfg(target_feature = "atomics")]
 use core::cell::UnsafeCell;
 use core::cell::{Cell, RefCell};
 use core::convert::Infallible;
+use core::marker::PhantomData;
 use core::ops::{Deref, DerefMut};
 use core::panic::{RefUnwindSafe, UnwindSafe};
 #[cfg(target_feature = "atomics")]
@@ -277,6 +278,175 @@ pub fn assert_not_null<T>(s: *mut T) {
     }
 }
 
+#[cfg(target_arch = "wasm64")]
+pub type WasmWordRepr = f64;
+#[cfg(not(target_arch = "wasm64"))]
+pub type WasmWordRepr = u32;
+
+/// Signed counterpart of [`WasmWordRepr`]. Used for `isize` ABI lowering so
+/// that negative values sign-extend correctly when widening to `f64`.
+#[cfg(target_arch = "wasm64")]
+pub type WasmSignedWordRepr = f64;
+#[cfg(not(target_arch = "wasm64"))]
+pub type WasmSignedWordRepr = i32;
+
+/// A single pointer-sized machine word using the JS-number ABI on wasm64.
+#[repr(transparent)]
+#[derive(Copy, Clone, Default)]
+pub struct WasmWord(WasmWordRepr);
+
+impl WasmWord {
+    #[inline]
+    pub fn from_usize(value: usize) -> Self {
+        #[cfg(target_arch = "wasm64")]
+        {
+            Self(value as f64)
+        }
+        #[cfg(not(target_arch = "wasm64"))]
+        {
+            Self(value as u32)
+        }
+    }
+
+    #[inline]
+    pub fn into_usize(self) -> usize {
+        self.0 as usize
+    }
+
+    #[inline]
+    pub fn from_isize(value: isize) -> Self {
+        #[cfg(target_arch = "wasm64")]
+        {
+            Self(value as f64)
+        }
+        #[cfg(not(target_arch = "wasm64"))]
+        {
+            Self(value as u32)
+        }
+    }
+
+    #[inline]
+    pub fn into_isize(self) -> isize {
+        self.0 as isize
+    }
+
+    #[inline]
+    pub fn is_zero(&self) -> bool {
+        #[cfg(target_arch = "wasm64")]
+        {
+            self.0 == 0.0
+        }
+        #[cfg(not(target_arch = "wasm64"))]
+        {
+            self.0 == 0
+        }
+    }
+}
+
+impl WasmAbi for WasmWord {
+    type Prim1 = WasmWordRepr;
+    type Prim2 = ();
+    type Prim3 = ();
+    type Prim4 = ();
+
+    #[inline]
+    fn split(self) -> (Self::Prim1, (), (), ()) {
+        (self.0, (), (), ())
+    }
+
+    #[inline]
+    fn join(prim1: Self::Prim1, _: (), _: (), _: ()) -> Self {
+        Self(prim1)
+    }
+}
+
+/// A typed raw pointer using the JS-number ABI on wasm64.
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+pub struct WasmPtr<T> {
+    word: WasmWord,
+    _marker: PhantomData<*mut T>,
+}
+
+impl<T> Default for WasmPtr<T> {
+    #[inline]
+    fn default() -> Self {
+        Self::null()
+    }
+}
+
+impl<T> WasmPtr<T> {
+    #[inline]
+    pub fn from_ptr(ptr: *mut T) -> Self {
+        Self::from_usize(ptr as usize)
+    }
+
+    #[inline]
+    pub fn into_ptr(self) -> *mut T {
+        self.into_usize() as *mut T
+    }
+
+    #[inline]
+    pub fn from_usize(value: usize) -> Self {
+        Self {
+            word: WasmWord::from_usize(value),
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn into_usize(self) -> usize {
+        self.word.into_usize()
+    }
+
+    #[inline]
+    pub fn null() -> Self {
+        Self::from_usize(0)
+    }
+
+    #[inline]
+    pub fn is_null(&self) -> bool {
+        self.word.is_zero()
+    }
+}
+
+impl<T> WasmAbi for WasmPtr<T> {
+    type Prim1 = <WasmWord as WasmAbi>::Prim1;
+    type Prim2 = ();
+    type Prim3 = ();
+    type Prim4 = ();
+
+    #[inline]
+    fn split(self) -> (Self::Prim1, (), (), ()) {
+        self.word.split()
+    }
+
+    #[inline]
+    fn join(prim1: Self::Prim1, _: (), _: (), _: ()) -> Self {
+        Self {
+            word: WasmWord::join(prim1, (), (), ()),
+            _marker: PhantomData,
+        }
+    }
+}
+
+// The wasm64 representation of `WasmWord` is `f64`, which has enough
+// mantissa precision to roundtrip any in-range pointer value. On wasm32
+// the representation is `u32`, so this test is only meaningful on wasm64.
+#[cfg(all(test, target_arch = "wasm64"))]
+mod tests {
+    use super::WasmWord;
+
+    #[test]
+    fn wasm_word_roundtrips_large_pointer_values() {
+        let value = 1usize << 60;
+        assert_eq!(WasmWord::from_usize(value).into_usize(), value);
+
+        let signed = -(1isize << 40);
+        assert_eq!(WasmWord::from_isize(signed).into_isize(), signed);
+    }
+}
+
 #[cold]
 #[inline(never)]
 fn throw_null() -> ! {
@@ -504,16 +674,18 @@ impl<T: ?Sized> BorrowMut<T> for RcRefMut<T> {
 }
 
 #[no_mangle]
-pub extern "C" fn __wbindgen_malloc(size: usize, align: usize) -> *mut u8 {
+pub extern "C" fn __wbindgen_malloc(size: WasmWord, align: WasmWord) -> WasmPtr<u8> {
+    let size = size.into_usize();
+    let align = align.into_usize();
     if let Ok(layout) = Layout::from_size_align(size, align) {
         unsafe {
             if layout.size() > 0 {
                 let ptr = alloc(layout);
                 if !ptr.is_null() {
-                    return ptr;
+                    return WasmPtr::from_ptr(ptr);
                 }
             } else {
-                return align as *mut u8;
+                return WasmPtr::from_usize(align);
             }
         }
     }
@@ -523,17 +695,21 @@ pub extern "C" fn __wbindgen_malloc(size: usize, align: usize) -> *mut u8 {
 
 #[no_mangle]
 pub unsafe extern "C" fn __wbindgen_realloc(
-    ptr: *mut u8,
-    old_size: usize,
-    new_size: usize,
-    align: usize,
-) -> *mut u8 {
+    ptr: WasmPtr<u8>,
+    old_size: WasmWord,
+    new_size: WasmWord,
+    align: WasmWord,
+) -> WasmPtr<u8> {
+    let ptr = ptr.into_ptr();
+    let old_size = old_size.into_usize();
+    let new_size = new_size.into_usize();
+    let align = align.into_usize();
     debug_assert!(old_size > 0);
     debug_assert!(new_size > 0);
     if let Ok(layout) = Layout::from_size_align(old_size, align) {
         let ptr = realloc(ptr, layout, new_size);
         if !ptr.is_null() {
-            return ptr;
+            return WasmPtr::from_ptr(ptr);
         }
     }
     malloc_failure();
@@ -547,10 +723,10 @@ fn malloc_failure() -> ! {
         } else if #[cfg(feature = "std")] {
             std::process::abort();
         } else if #[cfg(all(
-            target_arch = "wasm32",
+            target_family = "wasm",
             any(target_os = "unknown", target_os = "none")
         ))] {
-            core::arch::wasm32::unreachable();
+            core::arch::wasm::unreachable();
         } else {
             unreachable!()
         }
@@ -558,12 +734,15 @@ fn malloc_failure() -> ! {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn __wbindgen_free(ptr: *mut u8, size: usize, align: usize) {
+pub unsafe extern "C" fn __wbindgen_free(ptr: WasmPtr<u8>, size: WasmWord, align: WasmWord) {
+    let size = size.into_usize();
     // This happens for zero-length slices, and in that case `ptr` is
     // likely bogus so don't actually send this to the system allocator
     if size == 0 {
         return;
     }
+    let ptr = ptr.into_ptr();
+    let align = align.into_usize();
     let layout = Layout::from_size_align_unchecked(size, align);
     dealloc(ptr, layout);
 }
@@ -818,13 +997,13 @@ pub const fn encode_u32_to_fixed_len_bytes(value: u32) -> [u8; 5] {
     result
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate, raw_module = "__wbindgen_placeholder__")]
 extern "C" {
     fn __wbindgen_panic_error(msg: &JsValue) -> JsValue;
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 pub fn panic_to_panic_error(val: std::boxed::Box<dyn Any + Send>) -> JsValue {
     #[cfg(not(target_feature = "atomics"))]
     {
@@ -845,7 +1024,7 @@ pub fn panic_to_panic_error(val: std::boxed::Box<dyn Any + Send>) -> JsValue {
     err
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 pub fn maybe_catch_unwind<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) -> R {
     let result = std::panic::catch_unwind(f);
     match result {
@@ -856,7 +1035,7 @@ pub fn maybe_catch_unwind<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) ->
     }
 }
 
-#[cfg(not(all(target_arch = "wasm32", feature = "std", panic = "unwind")))]
+#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
 pub fn maybe_catch_unwind<F: FnOnce() -> R, R>(f: F) -> R {
     f()
 }

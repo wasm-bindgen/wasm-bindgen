@@ -14,6 +14,8 @@ pub enum Descriptor {
     U32,
     I64,
     U64,
+    I64AsF64,
+    U64AsF64,
     I128,
     U128,
     F32,
@@ -44,6 +46,7 @@ pub enum Descriptor {
     Result(Box<Descriptor>),
     Unit,
     NonNull,
+    RawPointer,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -92,12 +95,14 @@ impl Descriptor {
             I16 => Descriptor::I16,
             I32 => Descriptor::I32,
             I64 => Descriptor::I64,
+            I64_AS_F64 => Descriptor::I64AsF64,
             I128 => Descriptor::I128,
             U8 if clamped => Descriptor::ClampedU8,
             U8 => Descriptor::U8,
             U16 => Descriptor::U16,
             U32 => Descriptor::U32,
             U64 => Descriptor::U64,
+            U64_AS_F64 => Descriptor::U64AsF64,
             U128 => Descriptor::U128,
             F32 => Descriptor::F32,
             F64 => Descriptor::F64,
@@ -150,6 +155,7 @@ impl Descriptor {
             UNIT => Descriptor::Unit,
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
+            RAW_POINTER => Descriptor::RawPointer,
             other => panic!("unknown descriptor: {other}"),
         }
     }
@@ -181,12 +187,12 @@ impl Descriptor {
             Descriptor::I8 => Some(VectorKind::I8),
             Descriptor::I16 => Some(VectorKind::I16),
             Descriptor::I32 => Some(VectorKind::I32),
-            Descriptor::I64 => Some(VectorKind::I64),
+            Descriptor::I64 | Descriptor::I64AsF64 => Some(VectorKind::I64),
             Descriptor::U8 => Some(VectorKind::U8),
             Descriptor::ClampedU8 => Some(VectorKind::ClampedU8),
             Descriptor::U16 => Some(VectorKind::U16),
             Descriptor::U32 => Some(VectorKind::U32),
-            Descriptor::U64 => Some(VectorKind::U64),
+            Descriptor::U64 | Descriptor::U64AsF64 => Some(VectorKind::U64),
             Descriptor::F32 => Some(VectorKind::F32),
             Descriptor::F64 => Some(VectorKind::F64),
             Descriptor::Externref => Some(VectorKind::Externref),
@@ -222,6 +228,18 @@ impl Closure {
             function: Function::decode(data),
         }
     }
+}
+
+#[test]
+fn vector_kind_accepts_memory64_scalar_descriptors() {
+    assert_eq!(
+        Descriptor::Vector(Box::new(Descriptor::U64AsF64)).vector_kind(),
+        Some(VectorKind::U64)
+    );
+    assert_eq!(
+        Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(Descriptor::I64AsF64)))).vector_kind(),
+        Some(VectorKind::I64)
+    );
 }
 
 impl Function {

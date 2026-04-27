@@ -6,11 +6,12 @@
   <body>
     <pre id='output'>Loading scripts...</pre>
     <script>
+     // {IS_BENCH}
      const wrap = method => {
          const og = console[method];
          const on_method = `on_console_${method}`;
          console[method] = function (...args) {
-             if (window[on_method]) {
+             if (!is_bench && window[on_method]) {
                  window[on_method](args);
              }
              og.apply(this, args);

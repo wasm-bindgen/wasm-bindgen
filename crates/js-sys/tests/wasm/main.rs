@@ -1,4 +1,7 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(any(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    target_arch = "wasm64"
+))]
 #![allow(non_snake_case)]
 
 pub mod Array;

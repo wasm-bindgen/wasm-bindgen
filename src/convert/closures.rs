@@ -4,6 +4,7 @@ use core::panic::AssertUnwindSafe;
 
 use crate::__rt::marker::ErasableGeneric;
 use crate::__rt::maybe_catch_unwind;
+use crate::__rt::WasmWord;
 use crate::closure::{
     Closure, IntoWasmClosure, IntoWasmClosureRef, IntoWasmClosureRefMut, ScopedClosure,
     WasmClosure, WasmClosureFnOnce, WasmClosureFnOnceAbort,
@@ -59,7 +60,7 @@ macro_rules! closures {
             fn into_abi(self) -> WasmSlice {
                 unsafe {
                     let (a, b): (usize, usize) = mem::transmute(self);
-                    WasmSlice { ptr: a as u32, len: b as u32 }
+                    WasmSlice::from_usize(a, b)
                 }
             }
         }
@@ -78,8 +79,8 @@ macro_rules! closures {
         // `UNWIND_SAFE` has no effect — panics always abort.
         #[allow(non_snake_case)]
         unsafe extern "C-unwind" fn invoke<$($var: $FromWasmAbi,)* R: ReturnWasmAbi, const UNWIND_SAFE: bool>(
-            a: usize,
-            b: usize,
+            a: WasmWord,
+            b: WasmWord,
             $(
             $arg1: <$var::Abi as WasmAbi>::Prim1,
             $arg2: <$var::Abi as WasmAbi>::Prim2,
@@ -87,11 +88,12 @@ macro_rules! closures {
             $arg4: <$var::Abi as WasmAbi>::Prim4,
             )*
         ) -> WasmRet<R::Abi> {
-            if a == 0 {
+            if a.is_zero() {
                 throw_str("closure invoked recursively or after being dropped");
             }
             let ret = {
-                let f: & $($mut)? dyn $Fn $FnArgs -> R = mem::transmute((a, b));
+                let f: & $($mut)? dyn $Fn $FnArgs -> R =
+                    mem::transmute((a.into_usize(), b.into_usize()));
                 $(
                     let $var = $var::Abi::join($arg1, $arg2, $arg3, $arg4);
                 )*

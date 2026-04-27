@@ -1139,34 +1139,33 @@ impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
     }
 }
 
-// `usize` and `isize` have to be treated a bit specially, because we know that
-// they're 32-bit but the compiler conservatively assumes they might be bigger.
-// So, we have to manually forward to the `u32`/`i32` versions.
+// `usize` and `isize` use the public pointer-sized JS number ABI, which is
+// `u32`/`i32` on wasm32 and `f64` on wasm64.
 impl PartialEq<usize> for JsValue {
     #[inline]
     fn eq(&self, other: &usize) -> bool {
-        *self == (*other as u32)
+        *self == (*other as crate::__rt::WasmWordRepr)
     }
 }
 
 impl From<usize> for JsValue {
     #[inline]
     fn from(n: usize) -> Self {
-        Self::from(n as u32)
+        Self::from(n as crate::__rt::WasmWordRepr)
     }
 }
 
 impl PartialEq<isize> for JsValue {
     #[inline]
     fn eq(&self, other: &isize) -> bool {
-        *self == (*other as i32)
+        *self == (*other as crate::__rt::WasmSignedWordRepr)
     }
 }
 
 impl From<isize> for JsValue {
     #[inline]
     fn from(n: isize) -> Self {
-        Self::from(n as i32)
+        Self::from(n as crate::__rt::WasmSignedWordRepr)
     }
 }
 

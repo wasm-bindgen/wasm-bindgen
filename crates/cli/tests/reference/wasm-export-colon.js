@@ -41,7 +41,7 @@ export class WasmBindgenTestContext {
      */
     constructor(is_bench) {
         const ret = wasm.wasmbindgentestcontext_new(is_bench);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         WasmBindgenTestContextFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -484,7 +484,7 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000004(arg0, arg
 
 const WasmBindgenTestContextFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_wasmbindgentestcontext_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_wasmbindgentestcontext_free(ptr, 1));
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
@@ -575,8 +575,7 @@ function getDataViewMemory0() {
 }
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

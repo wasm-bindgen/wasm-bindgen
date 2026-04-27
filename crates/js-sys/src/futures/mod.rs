@@ -40,10 +40,10 @@ use core::future::{Future, IntoFuture};
 use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 use futures_util::FutureExt;
 use wasm_bindgen::__rt::marker::ErasableGeneric;
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
 use wasm_bindgen::convert::{FromWasmAbi, Upcast};
 use wasm_bindgen::sys::Promising;
@@ -242,7 +242,7 @@ impl<T: JsGeneric + FromWasmAbi> IntoFuture for Promise<T> {
 /// Note that in Wasm panics are currently translated to aborts, but "abort" in
 /// this case means that a JavaScript exception is thrown. The Wasm module is
 /// still usable (likely erroneously) after Rust panics.
-#[cfg(not(all(target_arch = "wasm32", feature = "std", panic = "unwind")))]
+#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
 pub fn future_to_promise<F>(future: F) -> Promise
 where
     F: Future<Output = Result<JsValue, JsValue>> + 'static,
@@ -280,7 +280,7 @@ where
 ///
 /// If the `future` provided panics then the returned `Promise` will be rejected
 /// with a PanicError.
-#[cfg(all(target_arch = "wasm32", feature = "std", panic = "unwind"))]
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 pub fn future_to_promise<F>(future: F) -> Promise
 where
     F: Future<Output = Result<JsValue, JsValue>> + 'static + std::panic::UnwindSafe,

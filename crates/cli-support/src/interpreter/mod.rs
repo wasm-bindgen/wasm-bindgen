@@ -50,8 +50,12 @@ pub struct Interpreter {
     // used to validate restoration and to unwind early exits (describe_cast).
     stack_pointer_initial: i32,
 
-    // Live state of all locally-defined i32 globals, snapshotted from the
+    // Live state of all locally-defined integer globals, snapshotted from the
     // module at construction and mutated freely during interpretation.
+    //
+    // The interpreter itself only tracks 32-bit values, so wasm64 i64 globals
+    // are truncated the same way we already truncate other descriptor-time
+    // i64 values.
     globals: HashMap<GlobalId, i32>,
 
     // The descriptor which we're assembling, a list of `u32` entries. This is
@@ -119,13 +123,17 @@ impl Interpreter {
             ..Default::default()
         };
 
-        // Snapshot all locally-defined i32 globals so the interpreter can
+        // Snapshot all locally-defined integer globals so the interpreter can
         // read/write them during descriptor execution.
         for global in module.globals.iter() {
-            if let GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(n))) =
-                global.kind
-            {
-                ret.globals.insert(global.id(), n);
+            match global.kind {
+                GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(n))) => {
+                    ret.globals.insert(global.id(), n);
+                }
+                GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I64(n))) => {
+                    ret.globals.insert(global.id(), n as i32);
+                }
+                _ => {}
             }
         }
 
@@ -268,7 +276,11 @@ impl Frame<'_> {
             match instr {
                 Instr::Const(c) => match c.value {
                     Value::I32(n) => stack.push(n),
-                    _ => bail!("non-i32 constant"),
+                    // For wasm64, truncate i64 constants to i32. The descriptor
+                    // protocol only uses small values, and pointer arithmetic
+                    // in our tiny interpreter fits in i32.
+                    Value::I64(n) => stack.push(n as i32),
+                    _ => bail!("non-integer constant"),
                 },
                 Instr::LocalGet(e) => stack.push(self.locals.get(&e.local).cloned().unwrap_or(0)),
                 Instr::LocalSet(e) => {
@@ -300,9 +312,23 @@ impl Frame<'_> {
                     let rhs = stack.pop().unwrap();
                     let lhs = stack.pop().unwrap();
                     stack.push(match e.op {
-                        BinaryOp::I32Sub => lhs - rhs,
-                        BinaryOp::I32Add => lhs + rhs,
+                        BinaryOp::I32Sub | BinaryOp::I64Sub => lhs - rhs,
+                        BinaryOp::I32Add | BinaryOp::I64Add => lhs + rhs,
+                        BinaryOp::I32And | BinaryOp::I64And => lhs & rhs,
                         op => bail!("invalid binary op {op:?}"),
+                    });
+                }
+
+                // Support unary ops, mainly for wasm64's I32WrapI64 and
+                // I64ExtendI32U (pointer conversions).
+                Instr::Unop(e) => {
+                    let val = stack.pop().unwrap();
+                    stack.push(match e.op {
+                        // i64→i32 wrap: already truncated in our i32 representation
+                        UnaryOp::I32WrapI64 => val,
+                        // i32→i64 extend: already fits in our i32 representation
+                        UnaryOp::I64ExtendUI32 | UnaryOp::I64ExtendSI32 => val,
+                        op => bail!("invalid unary op {op:?}"),
                     });
                 }
 

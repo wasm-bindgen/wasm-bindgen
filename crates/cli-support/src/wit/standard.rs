@@ -244,6 +244,9 @@ pub enum Instruction {
     F64FromOptionSentinelInt {
         signed: bool,
     },
+    /// Pops an optional JS number, preserving its numeric value while reserving
+    /// `Number.MAX_SAFE_INTEGER` as the ABI sentinel for pointer-sized options.
+    F64FromOptionSentinelNumber,
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the f32 value of it if it's "some"
     F64FromOptionSentinelF32,

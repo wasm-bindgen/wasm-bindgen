@@ -91,7 +91,7 @@ export class NamespaceConsumer {
         _assertClass(bar_point, bar__Point);
         var ptr1 = bar_point.__destroy_into_raw();
         const ret = wasm.namespaceconsumer_new(ptr0, ptr1, foo_status, bar_status);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         NamespaceConsumerFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -210,7 +210,7 @@ export class Point {
      */
     constructor(value) {
         const ret = wasm.toplevelpoint_new(value);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -368,7 +368,6 @@ export const Status = Object.freeze({
 
 class bar__Point {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(bar__Point.prototype);
         obj.__wbg_ptr = ptr;
         bar__PointFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -396,7 +395,7 @@ class bar__Point {
      */
     constructor(x, y) {
         const ret = wasm.barpoint_new(x, y);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         bar__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -431,7 +430,6 @@ if (Symbol.dispose) bar__Point.prototype[Symbol.dispose] = bar__Point.prototype.
 
 class bar__RefToFoo {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(bar__RefToFoo.prototype);
         obj.__wbg_ptr = ptr;
         bar__RefToFooFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -491,7 +489,7 @@ class bar__nested__Point {
      */
     constructor(magnitude) {
         const ret = wasm.barnestedpoint_new(magnitude);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         bar__nested__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -524,7 +522,6 @@ bar.nested.Point = bar__nested__Point;
  */
 class foo__Point {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(foo__Point.prototype);
         obj.__wbg_ptr = ptr;
         foo__PointFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -551,7 +548,7 @@ class foo__Point {
      */
     constructor(x) {
         const ret = wasm.foopoint_new(x);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         foo__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -573,7 +570,6 @@ if (Symbol.dispose) foo__Point.prototype[Symbol.dispose] = foo__Point.prototype.
 
 class foo__RefToBar {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(foo__RefToBar.prototype);
         obj.__wbg_ptr = ptr;
         foo__RefToBarFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -637,7 +633,7 @@ class foo__nested__Point {
      */
     constructor(z) {
         const ret = wasm.foonestedpoint_new(z);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         foo__nested__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -764,34 +760,34 @@ export function __wbindgen_init_externref_table() {
 }
 const bar__RefToFooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_bar__reftofoo_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_bar__reftofoo_free(ptr, 1));
 const bar__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_bar__nested__point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_bar__nested__point_free(ptr, 1));
 const bar__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_bar__point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_bar__point_free(ptr, 1));
 const foo__RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_foo__reftobar_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_foo__reftobar_free(ptr, 1));
 const foo__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_foo__nested__point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_foo__nested__point_free(ptr, 1));
 const foo__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_foo__point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_foo__point_free(ptr, 1));
 const NamespaceConsumerFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_namespaceconsumer_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_namespaceconsumer_free(ptr, 1));
 const RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_reftobar_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_reftobar_free(ptr, 1));
 const RefToFooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_reftofoo_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_reftofoo_free(ptr, 1));
 const PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr, 1));
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
@@ -890,8 +886,7 @@ function getDataViewMemory0() {
 }
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

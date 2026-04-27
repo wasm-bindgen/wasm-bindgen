@@ -1,6 +1,5 @@
 export class Test {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(Test.prototype);
         obj.__wbg_ptr = ptr;
         TestFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -55,11 +54,10 @@ export function __wbindgen_init_externref_table() {
 }
 const TestFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_test_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_test_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

@@ -46,13 +46,14 @@ pub fn get_stack_pointer(module: &Module) -> Option<GlobalId> {
     let candidates = module
         .globals
         .iter()
-        .filter(|g| g.ty == ValType::I32)
+        .filter(|g| g.ty == ValType::I32 || g.ty == ValType::I64)
         .filter(|g| g.mutable)
         // The stack pointer is guaranteed to not be initialized to 0, and it's
-        // guaranteed to have an i32 initializer, so find globals which are
-        // locally defined, are an i32, and have a nonzero initializer
+        // guaranteed to have an i32/i64 initializer, so find globals which are
+        // locally defined and have a nonzero initializer
         .filter(|g| match g.kind {
             GlobalKind::Local(ConstExpr::Value(Value::I32(n))) => n != 0,
+            GlobalKind::Local(ConstExpr::Value(Value::I64(n))) => n != 0,
             _ => false,
         })
         .collect::<Vec<_>>();
@@ -81,7 +82,7 @@ pub fn get_tls_base(module: &Module) -> Option<GlobalId> {
         .filter(|id| {
             let global = module.globals.get(*id);
 
-            global.ty == ValType::I32
+            global.ty == ValType::I32 || global.ty == ValType::I64
         })
         .collect::<Vec<_>>();
 
@@ -186,13 +187,17 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId>
     for &segment in table.elem_segments.iter() {
         let segment = module.elements.get(segment);
         let offset = match &segment.kind {
-            walrus::ElementKind::Active { offset, .. } => {
-                match evaluate_const_expr(offset, module) {
-                    Some(Value::I32(n)) => n as u32,
-                    // Cannot statically evaluate this segment's offset; skip it.
-                    _ => continue,
-                }
-            }
+            walrus::ElementKind::Active { offset, .. } => match evaluate_const_expr(offset, module)
+            {
+                Some(Value::I32(n)) => n as u32,
+                Some(Value::I64(n)) => match u32::try_from(n) {
+                    Ok(n) => n,
+                    // Cannot represent this segment's offset as a table index; skip it.
+                    Err(_) => continue,
+                },
+                // Cannot statically evaluate this segment's offset; skip it.
+                _ => continue,
+            },
             _ => continue,
         };
 

@@ -519,3 +519,34 @@ fn multiple_globals_with_named_stack_pointer_not_exported() {
     "#;
     interpret(wat, "foo", &[5, 7]);
 }
+
+#[test]
+fn wasm64_stack_pointer_global() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (global $__stack_pointer (mut i64) (i64.const 65536))
+
+            (func $foo
+                global.get $__stack_pointer
+                i64.const 16
+                i64.sub
+                global.set $__stack_pointer
+
+                global.get $__stack_pointer
+                i32.wrap_i64
+                call $__wbindgen_describe
+
+                global.get $__stack_pointer
+                i64.const 16
+                i64.add
+                global.set $__stack_pointer
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[65520]);
+}

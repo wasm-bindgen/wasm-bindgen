@@ -113,15 +113,90 @@ impl Sanitizer {
     }
 
     fn assert_same(&mut self, output: &str, expected: &Path) -> Result<()> {
-        let output = self.sanitize(output);
+        let mut output = self.sanitize(output);
+        let is_wat = expected.extension().and_then(|ext| ext.to_str()) == Some("wat");
+        if is_wat {
+            output = canonicalize_wat_types(&output);
+        }
         if env::var("BLESS").is_ok() {
             fs::write(expected, output.as_bytes())?;
         } else {
-            let expected = fs::read_to_string(expected)?;
+            let mut expected = fs::read_to_string(expected)?;
+            if is_wat {
+                expected = canonicalize_wat_types(&expected);
+            }
             pretty_assertions::assert_str_eq!(expected, output);
         }
         Ok(())
     }
+}
+
+fn canonicalize_wat_types(wat: &str) -> String {
+    #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+    struct TypeDef {
+        old_idx: usize,
+        signature: String,
+    }
+
+    let defs = regex!(r"(?m)^(\s*)\(type \(;(\d+);\) (.+)\)$")
+        .captures_iter(wat)
+        .map(|caps| TypeDef {
+            old_idx: caps[2].parse().unwrap(),
+            signature: caps[3].to_owned(),
+        })
+        .collect::<Vec<_>>();
+
+    if defs.len() <= 1 {
+        return wat.to_owned();
+    }
+
+    let mut sorted_defs = defs.clone();
+    sorted_defs.sort_by(|a, b| {
+        a.signature
+            .cmp(&b.signature)
+            .then(a.old_idx.cmp(&b.old_idx))
+    });
+
+    let type_index_map = sorted_defs
+        .iter()
+        .enumerate()
+        .map(|(new_idx, def)| (def.old_idx, new_idx))
+        .collect::<HashMap<_, _>>();
+
+    let type_indent = regex!(r"(?m)^(\s*)\(type \(;\d+;\) .+\)$")
+        .captures(wat)
+        .map(|caps| caps[1].to_owned())
+        .unwrap_or_else(|| "  ".to_owned());
+
+    let mut lines = Vec::new();
+    let mut inserted_types = false;
+    for line in wat.lines() {
+        if regex!(r"^(\s*)\(type \(;(\d+);\) (.+)\)$").is_match(line) {
+            if !inserted_types {
+                for (new_idx, def) in sorted_defs.iter().enumerate() {
+                    lines.push(format!(
+                        "{type_indent}(type (;{new_idx};) {})",
+                        def.signature
+                    ));
+                }
+                inserted_types = true;
+            }
+            continue;
+        }
+        lines.push(line.to_owned());
+    }
+
+    let mut canonicalized = lines.join("\n");
+    if wat.ends_with('\n') {
+        canonicalized.push('\n');
+    }
+
+    regex!(r"\(type (\d+)\)")
+        .replace_all(&canonicalized, |caps: &regex::Captures| {
+            let old_idx = caps[1].parse::<usize>().unwrap();
+            format!("(type {})", type_index_map[&old_idx])
+        })
+        .into_owned()
 }
 
 #[rstest::rstest]
@@ -401,4 +476,31 @@ fn sanitize_local_funcs(module: &mut Module) {
         let new_id = module.replace_exported_func(id, |_| {}).unwrap();
         module.funcs.get_mut(new_id).name = old_name;
     }
+}
+
+#[test]
+fn canonicalize_wat_types_ignores_type_order() {
+    let left = r#"(module
+  (type (;0;) (func (param i64 i64) (result i64 i64)))
+  (type (;1;) (func (result i32 i32 i32)))
+  (type (;2;) (func (param i32 i32) (result i32 i32)))
+  (func $"echo_i128 multivalue shim" (;0;) (type 0) (param i64 i64) (result i64 i64))
+  (func $"result_i32 multivalue shim" (;1;) (type 1) (result i32 i32 i32))
+  (func $"echo_string multivalue shim" (;2;) (type 2) (param i32 i32) (result i32 i32))
+)
+"#;
+    let right = r#"(module
+  (type (;0;) (func (param i32 i32) (result i32 i32)))
+  (type (;1;) (func (param i64 i64) (result i64 i64)))
+  (type (;2;) (func (result i32 i32 i32)))
+  (func $"echo_i128 multivalue shim" (;0;) (type 1) (param i64 i64) (result i64 i64))
+  (func $"result_i32 multivalue shim" (;1;) (type 2) (result i32 i32 i32))
+  (func $"echo_string multivalue shim" (;2;) (type 0) (param i32 i32) (result i32 i32))
+)
+"#;
+
+    let left = canonicalize_wat_types(left);
+    let right = canonicalize_wat_types(right);
+    assert_eq!(left, right);
+    assert_eq!(left, canonicalize_wat_types(&left));
 }

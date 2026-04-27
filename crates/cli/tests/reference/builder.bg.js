@@ -1,6 +1,5 @@
 export class ClassBuilder {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(ClassBuilder.prototype);
         obj.__wbg_ptr = ptr;
         ClassBuilderFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -39,11 +38,10 @@ export function __wbindgen_init_externref_table() {
 }
 const ClassBuilderFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_classbuilder_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_classbuilder_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

@@ -5,6 +5,14 @@
 
 ### Added
 
+* Added support for the `wasm64-unknown-unknown` target (memory64 / wasm64).
+  `usize` / `isize` and raw pointers are now lowered through an `f64` JS
+  number ABI on wasm64 (matching the existing convention used for `Option<u32>`
+  etc. on wasm32), with the CLI inspecting the module's memory type to pick
+  the right codegen path. Includes a dedicated `wasm64` CI job and test
+  suite covering the new ABI paths.
+  [#5004](https://github.com/wasm-bindgen/wasm-bindgen/pull/5004)
+
 * Promise ergonomics: `Promise::all_tuple` and `Promise::all_settled_tuple`
   for heterogeneous concurrent awaits (arity 1..=8, destructure via
   `.into_tuple()`), typed `FromIterator` / `Extend` on `js_sys::Array<T>` so
