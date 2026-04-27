@@ -608,6 +608,9 @@ jobs:
 
 
   deploy:
+    environment:
+      name: publish
+      deployment: false
     permissions:
       contents: write #  to push changes in repo (jamesives/github-pages-deploy-action)
       id-token: write #  to use Crates.io trusted publishing
