@@ -10,9 +10,9 @@
 //! * `futures_util::future::join_all` over `Vec<JsFuture<T>>` where each
 //!   `JsFuture` wraps one of the input `Promise`s. This is the
 //!   Rust-executor-cooperative path the PR claims is slower.
-//! * `Promise::all_iterable(&iter.collect()).await` — the canonical
-//!   one-liner. The iterator items are `Promise<T>`, so
-//!   `FromIterator<Promise<T>>` infers the target `Array<Promise<T>>`
+//! * `Promise::all_iterable(&Array::from_iter_typed(iter)).await` — the
+//!   canonical one-liner. The iterator items are `Promise<T>`, so
+//!   `Array::from_iter_typed` infers the target `Array<Promise<T>>`
 //!   annotation-free via `IntoJsGeneric`. Delegates to `Promise.all` on the
 //!   JS side. No intermediate `Vec`, no `js_sys::futures` wrapper in the hot
 //!   loop, no macros, no new combinator crate surface.
@@ -48,19 +48,13 @@ async fn bench_futures_join_all(n: usize) {
 
 async fn bench_promise_all(n: usize) {
     // Canonical one-liner: collect the promise-producing iterator straight
-    // into a typed `Array<Promise<Number>>` via `FromIterator` (inference
-    // pins the element type through `IntoJsGeneric::JsCanon`), then hand it
-    // to `Promise::all_iterable` and await. The `::<Array<_>>()` turbofish
-    // picks `Array` as the target container (`Promise::all_iterable` is
-    // generic over any `Iterable`, so something has to name the concrete
-    // container); `_` is inferred from the iterator's item type as
-    // `Promise<Number>`. One JS-side combinator, one wake, no intermediate
-    // `Vec`.
-    let results = Promise::all_iterable(
-        &(0..n)
-            .map(|i| make_timeout_promise(i as f64))
-            .collect::<Array<_>>(),
-    )
+    // into a typed `Array<Promise<Number>>` via `Array::from_iter_typed`
+    // (inference pins the element type through `IntoJsGeneric::JsCanon`),
+    // then hand it to `Promise::all_iterable` and await. One JS-side
+    // combinator, one wake, no intermediate `Vec`.
+    let results = Promise::all_iterable(&Array::from_iter_typed(
+        (0..n).map(|i| make_timeout_promise(i as f64)),
+    ))
     .await
     .unwrap();
     std::hint::black_box(results);

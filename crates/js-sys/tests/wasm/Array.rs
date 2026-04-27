@@ -85,27 +85,24 @@ fn from_iter() {
 
 // Regression test for https://github.com/wasm-bindgen/wasm-bindgen/issues/5042:
 // collecting a `#[wasm_bindgen]` type without explicit type annotations must
-// not cause E0283. Under the `IntoJsGeneric`-based `FromIterator` impl the
-// result type is the typed `Array<JsString>` (projected via
-// `JsString::JsCanon = JsString`), not the erased `Array<JsValue>` the
-// pre-`IntoJsGeneric` stable impl produced.
+// not cause E0283. The stable `FromIterator` impl on `Array` (= `Array<JsValue>`)
+// is bound by `AsRef<JsValue>`, which `JsString` satisfies, so the result is
+// the erased `Array<JsValue>`. To preserve the element type, use
+// `Array::<T>::from_iter_typed`, which is typed via `IntoJsGeneric`.
 #[wasm_bindgen_test]
 fn from_iter_wasm_bindgen_type() {
+    // Stable form: erased `Array<JsValue>`, no turbofish needed.
     let arr = Array::from_iter([JsString::from("a"), JsString::from("b")]);
     assert_eq!(arr.length(), 2);
 
-    // Reference iteration: `Item = &JsString`, the `&T: IntoJsGeneric`
-    // blanket delegates through to `JsString::JsCanon = JsString`, so
-    // `.collect::<Array<_>>()` infers `Array<JsString>`.
-    let arr: Array<JsString> = [JsString::from("x"), JsString::from("y")].iter().collect();
+    // Typed form: inference picks `Array<JsString>` via `IntoJsGeneric`.
+    let arr: Array<JsString> = Array::from_iter_typed([JsString::from("x"), JsString::from("y")]);
     assert_eq!(arr.length(), 2);
 
-    // Explicit erasure — opt in via `.map(JsValue::from)` if you still want
-    // the untyped shape.
-    let arr: Array<JsValue> = [JsString::from("p"), JsString::from("q")]
-        .into_iter()
-        .map(JsValue::from)
-        .collect();
+    // Reference iteration: `Item = &JsString`, the `&T: IntoJsGeneric`
+    // blanket delegates through to `JsString::JsCanon = JsString`.
+    let arr: Array<JsString> =
+        Array::from_iter_typed([JsString::from("p"), JsString::from("q")].iter());
     assert_eq!(arr.length(), 2);
 }
 
@@ -114,37 +111,43 @@ fn from_iter_wasm_bindgen_type() {
 //     worker.post_message(&Array::from_iter([wasm_init_object]))?;
 //
 // The important property is that `Array::from_iter([owned_value])` — where
-// the iterator item is an owned `#[wasm_bindgen]` type — must infer to the
-// **typed** `Array<T>` without any turbofish or type annotation. On the old
-// `FromIterator<A> for Array<T> where A: AsRef<T>` impl this triggered
-// E0283 because `A: AsRef<T>` had multiple solutions for `T`.
+// the iterator item is an owned `#[wasm_bindgen]` type — must compile
+// without any turbofish or type annotation. The stable `FromIterator` returns
+// erased `Array<JsValue>`; `Array::<T>::from_iter_typed` infers the typed
+// `Array<T>` for callers who want it.
 #[wasm_bindgen_test]
 fn from_iter_owned_wasm_bindgen_type_infers() {
-    // No annotation, single owned item: must infer `Array<Object>`, and the
-    // inference must propagate through a `&Array<Object>` argument without
-    // re-triggering ambiguity.
     fn take_object_array(arr: &Array<Object>) {
         assert_eq!(arr.length(), 1);
     }
+    fn take_value_array(arr: &Array) {
+        assert_eq!(arr.length(), 1);
+    }
 
+    // Stable: erased `Array<JsValue>` (= `Array`).
     let obj = Object::new();
     let arr = Array::from_iter([obj]);
+    take_value_array(&arr);
+
+    // Typed: `Array<Object>` via `IntoJsGeneric` inference.
+    let obj = Object::new();
+    let arr = Array::from_iter_typed([obj]);
     take_object_array(&arr);
 }
 
 #[wasm_bindgen_test]
 fn extend() {
-    // Starting from a typed `Array<JsString>`: `.extend` with matching items
-    // works without any erasure.
-    let mut array: Array<JsString> = Array::new_typed();
+    // Stable `Extend` on `Array` (= `Array<JsValue>`) is bound by
+    // `AsRef<JsValue>`, so typed items extend an erased array directly.
+    let mut array = Array::new();
     array.extend([JsString::from("a"), JsString::from("b")]);
     array.extend([JsString::from("c"), JsString::from("d")]);
     assert_eq!(array.length(), 4);
 
-    // Starting from an untyped `Array<JsValue>`: callers extend with
-    // `JsValue` items (or explicitly erase typed ones via `.map`).
-    let mut array: Array<JsValue> = Array::new();
-    array.extend([JsString::from("e"), JsString::from("f")].map(JsValue::from));
+    // Typed companion: `extend_typed` on `Array<T>` projects items through
+    // `IntoJsGeneric` and preserves the element type.
+    let mut array: Array<JsString> = Array::new_typed();
+    array.extend_typed([JsString::from("e"), JsString::from("f")]);
     assert_eq!(array.length(), 2);
 }
 
@@ -1403,14 +1406,14 @@ fn test_array_to_vec() {
 }
 
 #[wasm_bindgen_test]
-fn test_array_from_iter() {
+fn test_array_from_iter_typed() {
     let items = vec![
         TestItem::new(1, &JsString::from("a")),
         TestItem::new(2, &JsString::from("b")),
         TestItem::new(3, &JsString::from("c")),
     ];
 
-    let arr: Array<TestItem> = items.iter().map(|i| i).collect();
+    let arr: Array<TestItem> = Array::from_iter_typed(items.iter());
 
     assert_eq!(arr.length(), 3);
     let first: TestItem = unwrap_get!(arr, 0);
@@ -1418,7 +1421,7 @@ fn test_array_from_iter() {
 }
 
 #[wasm_bindgen_test]
-fn test_array_extend() {
+fn test_array_extend_typed() {
     let mut arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
 
@@ -1426,7 +1429,7 @@ fn test_array_extend() {
         TestItem::new(2, &JsString::from("b")),
         TestItem::new(3, &JsString::from("c")),
     ];
-    arr.extend(more);
+    arr.extend_typed(more);
 
     assert_eq!(arr.length(), 3);
 }

@@ -193,8 +193,11 @@ When your inputs are already JS `Promise<T>` values, the native
 exactly and avoid the Rust executor polling each child on every wake.
 
 The canonical recipe collects the promise-producing iterator straight into a
-typed [`Array<Promise<T>>`] and hands it to the combinator — no turbofish
-on the elements, no intermediate `Vec`:
+typed [`Array<Promise<T>>`] via [`Array::from_iter_typed`] and hands it to
+the combinator — no turbofish on the elements, no intermediate `Vec`. The
+typed-collection helper infers the element type from the iterator item via
+[`IntoJsGeneric`]; the stable `.collect::<Array>()` form keeps producing an
+erased `Array<JsValue>` for callers that want erasure.
 
 ### `Promise.all` — all must succeed
 
@@ -203,9 +206,9 @@ use js_sys::{Array, Promise};
 
 // responses: Array<Response>
 let responses = Promise::all_iterable(
-    &(0..10)
-        .map(|_| worker.fetch_with_str_and_init(&url, &init))
-        .collect::<Array<_>>(),
+    &Array::from_iter_typed(
+        (0..10).map(|_| worker.fetch_with_str_and_init(&url, &init)),
+    ),
 )
 .await?;
 ```
@@ -219,9 +222,9 @@ use js_sys::{Array, Promise};
 
 // results: Array<PromiseState<Response>>
 let results = Promise::all_settled_iterable(
-    &(0..10)
-        .map(|_| worker.fetch_with_str_and_init(&url, &init))
-        .collect::<Array<_>>(),
+    &Array::from_iter_typed(
+        (0..10).map(|_| worker.fetch_with_str_and_init(&url, &init)),
+    ),
 )
 .await?;
 for state in results.iter() {
@@ -240,9 +243,9 @@ use js_sys::{Array, Promise};
 
 // first: Response
 let first = Promise::race_iterable(
-    &(0..10)
-        .map(|_| worker.fetch_with_str_and_init(&url, &init))
-        .collect::<Array<_>>(),
+    &Array::from_iter_typed(
+        (0..10).map(|_| worker.fetch_with_str_and_init(&url, &init)),
+    ),
 )
 .await?;
 ```
@@ -301,12 +304,10 @@ use js_sys::{futures::future_to_promise_typed, Array, Promise};
 
 // For homogeneous batches, mix both shapes into one `Array<Promise<T>>`:
 let responses = Promise::all_iterable(
-    &[
+    &Array::from_iter_typed([
         fetch_promise,
         future_to_promise_typed(async { Ok(fetch_via_rust().await?) }),
-    ]
-    .into_iter()
-    .collect::<Array<_>>(),
+    ]),
 )
 .await?;
 
