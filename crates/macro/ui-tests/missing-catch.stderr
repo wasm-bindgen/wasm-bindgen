@@ -2,21 +2,20 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
  --> ui-tests/missing-catch.rs:6:12
   |
 3 | #[wasm_bindgen]
-  | --------------- in this attribute macro expansion
+  | --------------- in this procedural macro expansion
 ...
 6 |     pub fn foo() -> Result<JsValue, JsValue>;
-  |            ^^^ unsatisfied trait bound
+  |            ^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
-  = help: the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   = help: the following other types implement trait `FromWasmAbi`:
             ()
             *const T
             *mut T
+            AssertUnwindSafe<T>
+            Box<[T]>
             Clamped<T>
             JsError
             JsOption<T>
-            Undefined
-            bool
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -24,18 +23,17 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
  --> ui-tests/missing-catch.rs:3:1
   |
 3 | #[wasm_bindgen]
-  | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+  | ^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
-  = help: the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   = help: the following other types implement trait `FromWasmAbi`:
             ()
             *const T
             *mut T
+            AssertUnwindSafe<T>
+            Box<[T]>
             Clamped<T>
             JsError
             JsOption<T>
-            Undefined
-            bool
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -43,16 +41,15 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
  --> ui-tests/missing-catch.rs:6:21
   |
 6 |     pub fn foo() -> Result<JsValue, JsValue>;
-  |                     ^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+  |                     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   |
-  = help: the trait `FromWasmAbi` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
   = help: the following other types implement trait `FromWasmAbi`:
             ()
             *const T
             *mut T
+            AssertUnwindSafe<T>
+            Box<[T]>
             Clamped<T>
             JsError
             JsOption<T>
-            Undefined
-            bool
           and $N others

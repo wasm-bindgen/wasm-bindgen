@@ -1,38 +1,38 @@
 error: invalid JS identifier
  --> ui-tests/invalid-fn-arg-name.rs:4:59
   |
-4 | pub fn fn_with_invalid_arg_name1(#[wasm_bindgen(js_name = "*firstArg")] a...
+4 | pub fn fn_with_invalid_arg_name1(#[wasm_bindgen(js_name = "*firstArg")] arg: u32) -> JsValue {
   |                                                           ^^^^^^^^^^^
 
 error: invalid JS identifier
  --> ui-tests/invalid-fn-arg-name.rs:9:59
   |
-9 | pub fn fn_with_invalid_arg_name2(#[wasm_bindgen(js_name = "#firstArg")] a...
+9 | pub fn fn_with_invalid_arg_name2(#[wasm_bindgen(js_name = "#firstArg")] arg: u32) -> JsValue {
   |                                                           ^^^^^^^^^^^
 
 error: invalid JS identifier
   --> ui-tests/invalid-fn-arg-name.rs:14:59
    |
-14 | pub fn fn_with_invalid_arg_name3(#[wasm_bindgen(js_name = "firstArg#")] ...
+14 | pub fn fn_with_invalid_arg_name3(#[wasm_bindgen(js_name = "firstArg#")] arg: u32) -> JsValue {
    |                                                           ^^^^^^^^^^^
 
 error: invalid JS identifier
   --> ui-tests/invalid-fn-arg-name.rs:19:59
    |
-19 | pub fn fn_with_invalid_arg_name4(#[wasm_bindgen(js_name = "first-Arg")] ...
+19 | pub fn fn_with_invalid_arg_name4(#[wasm_bindgen(js_name = "first-Arg")] arg: u32) -> JsValue {
    |                                                           ^^^^^^^^^^^
 
 error: invalid JS identifier
   --> ui-tests/invalid-fn-arg-name.rs:24:59
    |
-24 | ...e5(#[wasm_bindgen(js_name = "--firstArg")] arg: u32) -> JsValue {
-   |                                ^^^^^^^^^^^^
+24 | pub fn fn_with_invalid_arg_name5(#[wasm_bindgen(js_name = "--firstArg")] arg: u32) -> JsValue {
+   |                                                           ^^^^^^^^^^^^
 
 error: invalid JS identifier
   --> ui-tests/invalid-fn-arg-name.rs:29:59
    |
-29 | ...e6(#[wasm_bindgen(js_name = " first Arg")] arg: u32) -> JsValue {
-   |                                ^^^^^^^^^^^^
+29 | pub fn fn_with_invalid_arg_name6(#[wasm_bindgen(js_name = " first Arg")] arg: u32) -> JsValue {
+   |                                                           ^^^^^^^^^^^^
 
 error: invalid JS identifier
   --> ui-tests/invalid-fn-arg-name.rs:40:34
