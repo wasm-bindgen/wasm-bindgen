@@ -1039,3 +1039,46 @@ pub fn maybe_catch_unwind<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) ->
 pub fn maybe_catch_unwind<F: FnOnce() -> R, R>(f: F) -> R {
     f()
 }
+
+/// Type-level assertion that `T: RefUnwindSafe` under `panic = "unwind"`.
+///
+/// Emitted by `#[wasm_bindgen]` for the receiver type of `&self` / `&mut self`
+/// methods and the pointee of `&T` / `&mut T` arguments on exported functions.
+///
+/// Stdlib's `&mut T: !UnwindSafe` blanket means we cannot use the closure's
+/// own `UnwindSafe` bound to validate user types — every `&mut self` method
+/// would fail unconditionally. Instead, this asserts the *logical* unwind
+/// safety property (`T: RefUnwindSafe`): the user's type must not contain
+/// interior mutability whose invariants could be silently broken when a
+/// panic is caught by [`maybe_catch_unwind`]. This is the same property
+/// `RefCell`, `Cell`, `Mutex` advertise when refusing to implement
+/// `RefUnwindSafe`.
+///
+/// Users whose type is genuinely safe to observe after a caught panic can
+/// opt in with `impl RefUnwindSafe for MyType {}` or by wrapping interior-
+/// mutable fields in `std::panic::AssertUnwindSafe`.
+///
+/// No-op outside `panic = "unwind"` builds (where panics abort instead).
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[inline(always)]
+pub fn assert_ref_unwind_safe<T: ?Sized + std::panic::RefUnwindSafe>() {}
+
+#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
+#[inline(always)]
+pub fn assert_ref_unwind_safe<T: ?Sized>() {}
+
+/// Type-level assertion that `T: UnwindSafe` under `panic = "unwind"`.
+///
+/// Used for owned receiver / argument types where the value is consumed
+/// inside the catch boundary; mirrors [`assert_ref_unwind_safe`] but for
+/// owned-value contexts where `UnwindSafe` (rather than `RefUnwindSafe`)
+/// is the relevant property.
+///
+/// No-op outside `panic = "unwind"` builds.
+#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[inline(always)]
+pub fn assert_unwind_safe<T: ?Sized + std::panic::UnwindSafe>() {}
+
+#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
+#[inline(always)]
+pub fn assert_unwind_safe<T: ?Sized>() {}
