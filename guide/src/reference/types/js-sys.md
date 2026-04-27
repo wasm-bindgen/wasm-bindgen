@@ -175,7 +175,7 @@ async fn example() -> Result<Number, JsValue> {
 }
 ```
 
-Futures support is enabled by default. If you need a named [`JsFuture`]
+If you need a named [`JsFuture`]
 value, use `JsFuture::from`:
 
 ```rust
