@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = PermissionDescriptor)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "PermissionDescriptor")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PermissionDescriptor` dictionary."]
     #[doc = ""]

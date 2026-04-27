@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = CustomElementRegistry , typescript_type = "CustomElementRegistry")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "CustomElementRegistry",
+        typescript_type = "CustomElementRegistry"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CustomElementRegistry` class."]
     #[doc = ""]
@@ -12,7 +16,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CustomElementRegistry`*"]
     pub type CustomElementRegistry;
-    # [wasm_bindgen (catch , method , structural , js_class = "CustomElementRegistry" , js_name = define)]
+    #[wasm_bindgen(catch, method, js_class = "CustomElementRegistry")]
     #[doc = "The `define()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define)"]
@@ -24,7 +28,7 @@ extern "C" {
         function_constructor: &::js_sys::Function,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "ElementDefinitionOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "CustomElementRegistry" , js_name = define)]
+    #[wasm_bindgen(catch, method, js_class = "CustomElementRegistry", js_name = "define")]
     #[doc = "The `define()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define)"]
@@ -36,7 +40,7 @@ extern "C" {
         function_constructor: &::js_sys::Function,
         options: &ElementDefinitionOptions,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "CustomElementRegistry" , js_name = get)]
+    #[wasm_bindgen(method, js_class = "CustomElementRegistry")]
     #[doc = "The `get()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/get)"]
@@ -44,14 +48,19 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CustomElementRegistry`*"]
     pub fn get(this: &CustomElementRegistry, name: &str) -> ::wasm_bindgen::JsValue;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (method , structural , js_class = "CustomElementRegistry" , js_name = upgrade)]
+    #[wasm_bindgen(method, js_class = "CustomElementRegistry")]
     #[doc = "The `upgrade()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/upgrade)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CustomElementRegistry`, `Node`*"]
     pub fn upgrade(this: &CustomElementRegistry, root: &Node);
-    # [wasm_bindgen (catch , method , structural , js_class = "CustomElementRegistry" , js_name = whenDefined)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "CustomElementRegistry",
+        js_name = "whenDefined"
+    )]
     #[doc = "The `whenDefined()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/whenDefined)"]

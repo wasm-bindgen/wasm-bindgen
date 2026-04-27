@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = BluetoothServiceDataMap , typescript_type = "BluetoothServiceDataMap")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "BluetoothServiceDataMap",
+        typescript_type = "BluetoothServiceDataMap"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `BluetoothServiceDataMap` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type BluetoothServiceDataMap;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "BluetoothServiceDataMap" , js_name = size)]
+    #[wasm_bindgen(method, getter, js_class = "BluetoothServiceDataMap", js_name = "size")]
     #[doc = "Getter for the `size` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/size)"]
@@ -28,7 +32,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn size(this: &BluetoothServiceDataMap) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "BluetoothServiceDataMap" , js_name = forEach)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "BluetoothServiceDataMap",
+        js_name = "forEach"
+    )]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/forEach)"]
@@ -44,7 +53,7 @@ extern "C" {
         >,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "BluetoothServiceDataMap" , js_name = get)]
+    #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `get()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/get)"]
@@ -55,7 +64,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get(this: &BluetoothServiceDataMap, key: &str) -> Option<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "BluetoothServiceDataMap" , js_name = has)]
+    #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `has()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/has)"]
@@ -66,7 +75,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn has(this: &BluetoothServiceDataMap, key: &str) -> bool;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "BluetoothServiceDataMap" , js_name = entries)]
+    #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `entries()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/entries)"]
@@ -79,7 +88,7 @@ extern "C" {
         this: &BluetoothServiceDataMap,
     ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::JsString, ::js_sys::DataView)>>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "BluetoothServiceDataMap" , js_name = keys)]
+    #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `keys()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/keys)"]
@@ -90,7 +99,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn keys(this: &BluetoothServiceDataMap) -> ::js_sys::Iterator<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "BluetoothServiceDataMap" , js_name = values)]
+    #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `values()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothServiceDataMap/values)"]

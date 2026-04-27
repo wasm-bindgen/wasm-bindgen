@@ -4,7 +4,14 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = MouseEvent , extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = WheelEvent , typescript_type = "WheelEvent")]
+    #[wasm_bindgen(
+        extends = "MouseEvent",
+        extends = "UiEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "WheelEvent",
+        typescript_type = "WheelEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WheelEvent` class."]
     #[doc = ""]
@@ -12,28 +19,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
     pub type WheelEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "WheelEvent" , js_name = deltaX)]
+    #[wasm_bindgen(method, getter, js_class = "WheelEvent", js_name = "deltaX")]
     #[doc = "Getter for the `deltaX` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
     pub fn delta_x(this: &WheelEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "WheelEvent" , js_name = deltaY)]
+    #[wasm_bindgen(method, getter, js_class = "WheelEvent", js_name = "deltaY")]
     #[doc = "Getter for the `deltaY` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
     pub fn delta_y(this: &WheelEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "WheelEvent" , js_name = deltaZ)]
+    #[wasm_bindgen(method, getter, js_class = "WheelEvent", js_name = "deltaZ")]
     #[doc = "Getter for the `deltaZ` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
     pub fn delta_z(this: &WheelEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "WheelEvent" , js_name = deltaMode)]
+    #[wasm_bindgen(method, getter, js_class = "WheelEvent", js_name = "deltaMode")]
     #[doc = "Getter for the `deltaMode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode)"]

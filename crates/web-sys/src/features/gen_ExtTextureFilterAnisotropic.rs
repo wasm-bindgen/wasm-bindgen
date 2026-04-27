@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = EXT_texture_filter_anisotropic , typescript_type = "EXT_texture_filter_anisotropic")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "EXT_texture_filter_anisotropic" , typescript_type = "EXT_texture_filter_anisotropic")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ExtTextureFilterAnisotropic` class."]
     #[doc = ""]

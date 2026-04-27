@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SVGTransformList , typescript_type = "SVGTransformList")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SVGTransformList",
+        typescript_type = "SVGTransformList"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgTransformList` class."]
     #[doc = ""]
@@ -12,7 +16,12 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgTransformList`*"]
     pub type SvgTransformList;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGTransformList" , js_name = numberOfItems)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGTransformList",
+        js_name = "numberOfItems"
+    )]
     #[doc = "Getter for the `numberOfItems` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/numberOfItems)"]
@@ -20,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransformList`*"]
     pub fn number_of_items(this: &SvgTransformList) -> u32;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = appendItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList", js_name = "appendItem")]
     #[doc = "The `appendItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/appendItem)"]
@@ -30,7 +39,7 @@ extern "C" {
         this: &SvgTransformList,
         new_item: &SvgTransform,
     ) -> Result<SvgTransform, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = clear)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/clear)"]
@@ -38,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransformList`*"]
     pub fn clear(this: &SvgTransformList) -> Result<(), JsValue>;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = consolidate)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList")]
     #[doc = "The `consolidate()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/consolidate)"]
@@ -46,7 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`, `SvgTransformList`*"]
     pub fn consolidate(this: &SvgTransformList) -> Result<Option<SvgTransform>, JsValue>;
     #[cfg(all(feature = "SvgMatrix", feature = "SvgTransform",))]
-    # [wasm_bindgen (method , structural , js_class = "SVGTransformList" , js_name = createSVGTransformFromMatrix)]
+    #[wasm_bindgen(
+        method,
+        js_class = "SVGTransformList",
+        js_name = "createSVGTransformFromMatrix"
+    )]
     #[doc = "The `createSVGTransformFromMatrix()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/createSVGTransformFromMatrix)"]
@@ -57,7 +70,7 @@ extern "C" {
         matrix: &SvgMatrix,
     ) -> SvgTransform;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = getItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList", js_name = "getItem")]
     #[doc = "The `getItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/getItem)"]
@@ -65,7 +78,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`, `SvgTransformList`*"]
     pub fn get_item(this: &SvgTransformList, index: u32) -> Result<SvgTransform, JsValue>;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = initialize)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList")]
     #[doc = "The `initialize()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/initialize)"]
@@ -76,7 +89,12 @@ extern "C" {
         new_item: &SvgTransform,
     ) -> Result<SvgTransform, JsValue>;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = insertItemBefore)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "SVGTransformList",
+        js_name = "insertItemBefore"
+    )]
     #[doc = "The `insertItemBefore()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/insertItemBefore)"]
@@ -88,7 +106,7 @@ extern "C" {
         index: u32,
     ) -> Result<SvgTransform, JsValue>;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = removeItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList", js_name = "removeItem")]
     #[doc = "The `removeItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/removeItem)"]
@@ -96,7 +114,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgTransform`, `SvgTransformList`*"]
     pub fn remove_item(this: &SvgTransformList, index: u32) -> Result<SvgTransform, JsValue>;
     #[cfg(feature = "SvgTransform")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGTransformList" , js_name = replaceItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList", js_name = "replaceItem")]
     #[doc = "The `replaceItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGTransformList/replaceItem)"]
@@ -108,13 +126,7 @@ extern "C" {
         index: u32,
     ) -> Result<SvgTransform, JsValue>;
     #[cfg(feature = "SvgTransform")]
-    #[wasm_bindgen(
-        catch,
-        method,
-        structural,
-        js_class = "SVGTransformList",
-        indexing_getter
-    )]
+    #[wasm_bindgen(catch, method, js_class = "SVGTransformList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]

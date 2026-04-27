@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGMarkerElement , typescript_type = "SVGMarkerElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGMarkerElement",
+        typescript_type = "SVGMarkerElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgMarkerElement` class."]
     #[doc = ""]
@@ -13,7 +21,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgMarkerElement`*"]
     pub type SvgMarkerElement;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = refX)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "refX")]
     #[doc = "Getter for the `refX` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/refX)"]
@@ -21,7 +29,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgMarkerElement`*"]
     pub fn ref_x(this: &SvgMarkerElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = refY)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "refY")]
     #[doc = "Getter for the `refY` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/refY)"]
@@ -29,7 +37,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgMarkerElement`*"]
     pub fn ref_y(this: &SvgMarkerElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = markerUnits)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "markerUnits")]
     #[doc = "Getter for the `markerUnits` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/markerUnits)"]
@@ -37,7 +45,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgMarkerElement`*"]
     pub fn marker_units(this: &SvgMarkerElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = markerWidth)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "markerWidth")]
     #[doc = "Getter for the `markerWidth` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/markerWidth)"]
@@ -45,7 +53,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgMarkerElement`*"]
     pub fn marker_width(this: &SvgMarkerElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = markerHeight)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGMarkerElement",
+        js_name = "markerHeight"
+    )]
     #[doc = "Getter for the `markerHeight` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/markerHeight)"]
@@ -53,7 +66,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgMarkerElement`*"]
     pub fn marker_height(this: &SvgMarkerElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = orientType)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "orientType")]
     #[doc = "Getter for the `orientType` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/orientType)"]
@@ -61,7 +74,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgMarkerElement`*"]
     pub fn orient_type(this: &SvgMarkerElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedAngle")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = orientAngle)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "orientAngle")]
     #[doc = "Getter for the `orientAngle` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/orientAngle)"]
@@ -69,7 +82,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedAngle`, `SvgMarkerElement`*"]
     pub fn orient_angle(this: &SvgMarkerElement) -> SvgAnimatedAngle;
     #[cfg(feature = "SvgAnimatedRect")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = viewBox)]
+    #[wasm_bindgen(method, getter, js_class = "SVGMarkerElement", js_name = "viewBox")]
     #[doc = "Getter for the `viewBox` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/viewBox)"]
@@ -77,7 +90,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedRect`, `SvgMarkerElement`*"]
     pub fn view_box(this: &SvgMarkerElement) -> SvgAnimatedRect;
     #[cfg(feature = "SvgAnimatedPreserveAspectRatio")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGMarkerElement" , js_name = preserveAspectRatio)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGMarkerElement",
+        js_name = "preserveAspectRatio"
+    )]
     #[doc = "Getter for the `preserveAspectRatio` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/preserveAspectRatio)"]
@@ -85,14 +103,19 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedPreserveAspectRatio`, `SvgMarkerElement`*"]
     pub fn preserve_aspect_ratio(this: &SvgMarkerElement) -> SvgAnimatedPreserveAspectRatio;
     #[cfg(feature = "SvgAngle")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGMarkerElement" , js_name = setOrientToAngle)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "SVGMarkerElement",
+        js_name = "setOrientToAngle"
+    )]
     #[doc = "The `setOrientToAngle()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/setOrientToAngle)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgAngle`, `SvgMarkerElement`*"]
     pub fn set_orient_to_angle(this: &SvgMarkerElement, angle: &SvgAngle) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "SVGMarkerElement" , js_name = setOrientToAuto)]
+    #[wasm_bindgen(method, js_class = "SVGMarkerElement", js_name = "setOrientToAuto")]
     #[doc = "The `setOrientToAuto()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGMarkerElement/setOrientToAuto)"]

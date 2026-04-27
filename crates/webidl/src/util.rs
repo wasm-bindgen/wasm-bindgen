@@ -460,7 +460,7 @@ impl<'src> FirstPassRecord<'src> {
                 }
             }
         }
-        let (js_name, kind, force_structural, force_throws) = match id {
+        let (js_name, kind, force_throws) = match id {
             // Constructors aren't annotated with `[Throws]` extended attributes
             // (how could they be, since they themselves are extended
             // attributes?) so we must conservatively assume that they can
@@ -473,29 +473,20 @@ impl<'src> FirstPassRecord<'src> {
             // > value of a type corresponding to the interface the
             // > `[Constructor]` extended attribute appears on, **or throw an
             // > exception**.
-            OperationId::Constructor(_) => {
-                ("new", InterfaceMethodKind::Constructor(None), false, true)
-            }
+            OperationId::Constructor(_) => ("new", InterfaceMethodKind::Constructor(None), true),
             OperationId::NamedConstructor(n) => (
                 "new",
                 InterfaceMethodKind::Constructor(Some(n.0.to_string())),
-                false,
                 true,
             ),
-            OperationId::Operation(Some(s)) => (*s, InterfaceMethodKind::Regular, false, false),
+            OperationId::Operation(Some(s)) => (*s, InterfaceMethodKind::Regular, false),
             OperationId::Operation(None) => {
                 log::warn!("unsupported unnamed operation");
                 return Vec::new();
             }
-            OperationId::IndexingGetter => {
-                ("get", InterfaceMethodKind::IndexingGetter, true, false)
-            }
-            OperationId::IndexingSetter => {
-                ("set", InterfaceMethodKind::IndexingSetter, true, false)
-            }
-            OperationId::IndexingDeleter => {
-                ("delete", InterfaceMethodKind::IndexingDeleter, true, false)
-            }
+            OperationId::IndexingGetter => ("get", InterfaceMethodKind::IndexingGetter, false),
+            OperationId::IndexingSetter => ("set", InterfaceMethodKind::IndexingSetter, false),
+            OperationId::IndexingDeleter => ("delete", InterfaceMethodKind::IndexingDeleter, false),
         };
 
         // Classify each expanded signature into three categories:
@@ -644,9 +635,8 @@ impl<'src> FirstPassRecord<'src> {
             kind: &InterfaceMethodKind,
             id: &OperationId<'_>,
             is_static: bool,
-            force_structural: bool,
             force_throws: bool,
-            container_attrs: Option<&ExtendedAttributeList<'_>>,
+            _container_attrs: Option<&ExtendedAttributeList<'_>>,
             unstable_flag: bool,
             has_unstable_override: bool,
             wbg_generic: bool,
@@ -659,8 +649,6 @@ impl<'src> FirstPassRecord<'src> {
             }
             let ret_ty = signature.orig.ret.to_wbg_type(first_pass);
             first_pass.options.next_unstable.set(saved);
-            let structural =
-                force_structural || is_structural(signature.orig.attrs.as_ref(), container_attrs);
             let catch = force_throws
                 || throws(signature.orig.attrs)
                 || (signature
@@ -726,7 +714,6 @@ impl<'src> FirstPassRecord<'src> {
                 ret_wbg_ty: Some(ret_ty),
                 kind: kind.clone(),
                 is_static,
-                structural,
                 catch,
                 variadic,
                 unstable: unstable_flag,
@@ -785,7 +772,6 @@ impl<'src> FirstPassRecord<'src> {
                     &kind,
                     id,
                     is_static,
-                    force_structural,
                     force_throws,
                     container_attrs,
                     unstable_flag,
@@ -1011,18 +997,6 @@ fn has_named_attribute(list: Option<&ExtendedAttributeList>, attribute: &str) ->
     })
 }
 
-fn has_ident_attribute(list: Option<&ExtendedAttributeList>, ident: &str) -> bool {
-    let list = match list {
-        Some(list) => list,
-        None => return false,
-    };
-    list.body.list.iter().any(|attr| match attr {
-        ExtendedAttribute::Ident(id) => id.lhs_identifier.0 == ident,
-        ExtendedAttribute::IdentList(id) => id.identifier.0 == ident,
-        _ => false,
-    })
-}
-
 /// ChromeOnly is for things that are only exposed to privileged code in Firefox.
 pub fn is_chrome_only(ext_attrs: &Option<ExtendedAttributeList>) -> bool {
     has_named_attribute(ext_attrs.as_ref(), "ChromeOnly")
@@ -1060,19 +1034,6 @@ pub fn get_rust_deprecated(ext_attrs: &Option<ExtendedAttributeList>) -> Option<
             Some(IdentifierOrString::String(s)) => Some(Some(s.0.to_owned())),
             _ => unimplemented!(),
         })
-}
-
-/// Whether a webidl object is marked as structural.
-pub fn is_structural(
-    item_attrs: Option<&ExtendedAttributeList>,
-    container_attrs: Option<&ExtendedAttributeList>,
-) -> bool {
-    // Note that once host bindings is implemented we'll want to switch this
-    // from `true` to `false`, and then we'll want to largely read information
-    // from the WebIDL about whether to use structural bindings or not.
-    true || has_named_attribute(item_attrs, "Unforgeable")
-        || has_named_attribute(container_attrs, "Unforgeable")
-        || has_ident_attribute(container_attrs, "Global")
 }
 
 /// Whether a webidl object is marked as throwing.

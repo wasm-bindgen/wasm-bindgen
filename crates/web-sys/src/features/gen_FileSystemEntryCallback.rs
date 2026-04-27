@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = FileSystemEntryCallback)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "FileSystemEntryCallback")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FileSystemEntryCallback` dictionary.\n\n*This API requires the following crate features to be activated: `FileSystemEntryCallback`*"]
     pub type FileSystemEntryCallback;

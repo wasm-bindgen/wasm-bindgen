@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = FileSystemHandle , typescript_type = "FileSystemHandle")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "FileSystemHandle",
+        typescript_type = "FileSystemHandle"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FileSystemHandle` class."]
     #[doc = ""]
@@ -13,21 +17,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemHandle`*"]
     pub type FileSystemHandle;
     #[cfg(feature = "FileSystemHandleKind")]
-    # [wasm_bindgen (structural , method , getter , js_class = "FileSystemHandle" , js_name = kind)]
+    #[wasm_bindgen(method, getter, js_class = "FileSystemHandle", js_name = "kind")]
     #[doc = "Getter for the `kind` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/kind)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemHandle`, `FileSystemHandleKind`*"]
     pub fn kind(this: &FileSystemHandle) -> FileSystemHandleKind;
-    # [wasm_bindgen (structural , method , getter , js_class = "FileSystemHandle" , js_name = name)]
+    #[wasm_bindgen(method, getter, js_class = "FileSystemHandle", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/name)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemHandle`*"]
     pub fn name(this: &FileSystemHandle) -> ::alloc::string::String;
-    # [wasm_bindgen (method , structural , js_class = "FileSystemHandle" , js_name = isSameEntry)]
+    #[wasm_bindgen(method, js_class = "FileSystemHandle", js_name = "isSameEntry")]
     #[doc = "The `isSameEntry()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/isSameEntry)"]
@@ -35,7 +39,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FileSystemHandle`*"]
     pub fn is_same_entry(this: &FileSystemHandle, other: &FileSystemHandle) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemHandle" , js_name = queryPermission)]
+    #[wasm_bindgen(method, js_class = "FileSystemHandle", js_name = "queryPermission")]
     #[doc = "The `queryPermission()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/queryPermission)"]
@@ -47,7 +51,7 @@ extern "C" {
     pub fn query_permission(this: &FileSystemHandle) -> ::js_sys::Promise<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FileSystemHandlePermissionDescriptor")]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemHandle" , js_name = queryPermission)]
+    #[wasm_bindgen(method, js_class = "FileSystemHandle", js_name = "queryPermission")]
     #[doc = "The `queryPermission()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/queryPermission)"]
@@ -61,7 +65,7 @@ extern "C" {
         descriptor: &FileSystemHandlePermissionDescriptor,
     ) -> ::js_sys::Promise<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemHandle" , js_name = requestPermission)]
+    #[wasm_bindgen(method, js_class = "FileSystemHandle", js_name = "requestPermission")]
     #[doc = "The `requestPermission()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/requestPermission)"]
@@ -73,7 +77,7 @@ extern "C" {
     pub fn request_permission(this: &FileSystemHandle) -> ::js_sys::Promise<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FileSystemHandlePermissionDescriptor")]
-    # [wasm_bindgen (method , structural , js_class = "FileSystemHandle" , js_name = requestPermission)]
+    #[wasm_bindgen(method, js_class = "FileSystemHandle", js_name = "requestPermission")]
     #[doc = "The `requestPermission()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/requestPermission)"]

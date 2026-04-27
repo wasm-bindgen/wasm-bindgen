@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = DOMPointReadOnly , typescript_type = "DOMPointReadOnly")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "DOMPointReadOnly",
+        typescript_type = "DOMPointReadOnly"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomPointReadOnly` class."]
     #[doc = ""]
@@ -12,28 +16,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomPointReadOnly`*"]
     pub type DomPointReadOnly;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMPointReadOnly" , js_name = x)]
+    #[wasm_bindgen(method, getter, js_class = "DOMPointReadOnly", js_name = "x")]
     #[doc = "Getter for the `x` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/x)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomPointReadOnly`*"]
     pub fn x(this: &DomPointReadOnly) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMPointReadOnly" , js_name = y)]
+    #[wasm_bindgen(method, getter, js_class = "DOMPointReadOnly", js_name = "y")]
     #[doc = "Getter for the `y` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/y)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomPointReadOnly`*"]
     pub fn y(this: &DomPointReadOnly) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMPointReadOnly" , js_name = z)]
+    #[wasm_bindgen(method, getter, js_class = "DOMPointReadOnly", js_name = "z")]
     #[doc = "Getter for the `z` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/z)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomPointReadOnly`*"]
     pub fn z(this: &DomPointReadOnly) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMPointReadOnly" , js_name = w)]
+    #[wasm_bindgen(method, getter, js_class = "DOMPointReadOnly", js_name = "w")]
     #[doc = "Getter for the `w` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/w)"]
@@ -80,7 +84,11 @@ extern "C" {
         z: f64,
         w: f64,
     ) -> Result<DomPointReadOnly, JsValue>;
-    # [wasm_bindgen (static_method_of = DomPointReadOnly , js_class = "DOMPointReadOnly" , js_name = fromPoint)]
+    #[wasm_bindgen(
+        static_method_of = "DomPointReadOnly",
+        js_class = "DOMPointReadOnly",
+        js_name = "fromPoint"
+    )]
     #[doc = "The `fromPoint()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/fromPoint_static)"]
@@ -88,7 +96,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPointReadOnly`*"]
     pub fn from_point() -> DomPointReadOnly;
     #[cfg(feature = "DomPointInit")]
-    # [wasm_bindgen (static_method_of = DomPointReadOnly , js_class = "DOMPointReadOnly" , js_name = fromPoint)]
+    #[wasm_bindgen(
+        static_method_of = "DomPointReadOnly",
+        js_class = "DOMPointReadOnly",
+        js_name = "fromPoint"
+    )]
     #[doc = "The `fromPoint()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/fromPoint_static)"]
@@ -96,7 +108,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPointInit`, `DomPointReadOnly`*"]
     pub fn from_point_with_other(other: &DomPointInit) -> DomPointReadOnly;
     #[cfg(feature = "DomPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "DOMPointReadOnly" , js_name = matrixTransform)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "DOMPointReadOnly",
+        js_name = "matrixTransform"
+    )]
     #[doc = "The `matrixTransform()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/matrixTransform)"]
@@ -104,7 +121,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPoint`, `DomPointReadOnly`*"]
     pub fn matrix_transform(this: &DomPointReadOnly) -> Result<DomPoint, JsValue>;
     #[cfg(all(feature = "DomMatrixInit", feature = "DomPoint",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "DOMPointReadOnly" , js_name = matrixTransform)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "DOMPointReadOnly",
+        js_name = "matrixTransform"
+    )]
     #[doc = "The `matrixTransform()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/matrixTransform)"]
@@ -114,7 +136,7 @@ extern "C" {
         this: &DomPointReadOnly,
         matrix: &DomMatrixInit,
     ) -> Result<DomPoint, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "DOMPointReadOnly" , js_name = toJSON)]
+    #[wasm_bindgen(method, js_class = "DOMPointReadOnly", js_name = "toJSON")]
     #[doc = "The `toJSON()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMPointReadOnly/toJSON)"]

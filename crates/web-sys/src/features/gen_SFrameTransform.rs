@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = SFrameTransform , typescript_type = "SFrameTransform")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SFrameTransform",
+        typescript_type = "SFrameTransform"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SFrameTransform` class."]
     #[doc = ""]
@@ -17,7 +22,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type SFrameTransform;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "SFrameTransform" , js_name = onerror)]
+    #[wasm_bindgen(method, getter, js_class = "SFrameTransform", js_name = "onerror")]
     #[doc = "Getter for the `onerror` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/onerror)"]
@@ -28,7 +33,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn onerror(this: &SFrameTransform) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "SFrameTransform" , js_name = onerror)]
+    #[wasm_bindgen(method, setter, js_class = "SFrameTransform", js_name = "onerror")]
     #[doc = "Setter for the `onerror` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/onerror)"]
@@ -40,7 +45,7 @@ extern "C" {
     pub fn set_onerror(this: &SFrameTransform, value: Option<&::js_sys::Function>);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ReadableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SFrameTransform" , js_name = readable)]
+    #[wasm_bindgen(method, getter, js_class = "SFrameTransform", js_name = "readable")]
     #[doc = "Getter for the `readable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/readable)"]
@@ -52,7 +57,7 @@ extern "C" {
     pub fn readable(this: &SFrameTransform) -> ReadableStream;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WritableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SFrameTransform" , js_name = writable)]
+    #[wasm_bindgen(method, getter, js_class = "SFrameTransform", js_name = "writable")]
     #[doc = "Getter for the `writable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/writable)"]
@@ -87,7 +92,7 @@ extern "C" {
     pub fn new_with_options(options: &SFrameTransformOptions) -> Result<SFrameTransform, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
+    #[wasm_bindgen(method, js_class = "SFrameTransform", js_name = "setEncryptionKey")]
     #[doc = "The `setEncryptionKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/setEncryptionKey)"]
@@ -102,7 +107,7 @@ extern "C" {
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
+    #[wasm_bindgen(method, js_class = "SFrameTransform", js_name = "setEncryptionKey")]
     #[doc = "The `setEncryptionKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/setEncryptionKey)"]
@@ -118,7 +123,7 @@ extern "C" {
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
+    #[wasm_bindgen(method, js_class = "SFrameTransform", js_name = "setEncryptionKey")]
     #[doc = "The `setEncryptionKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/setEncryptionKey)"]
@@ -134,7 +139,7 @@ extern "C" {
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CryptoKey")]
-    # [wasm_bindgen (method , structural , js_class = "SFrameTransform" , js_name = setEncryptionKey)]
+    #[wasm_bindgen(method, js_class = "SFrameTransform", js_name = "setEncryptionKey")]
     #[doc = "The `setEncryptionKey()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SFrameTransform/setEncryptionKey)"]

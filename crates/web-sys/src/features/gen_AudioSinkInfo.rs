@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = AudioSinkInfo , typescript_type = "AudioSinkInfo")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "AudioSinkInfo",
+        typescript_type = "AudioSinkInfo"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `AudioSinkInfo` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type AudioSinkInfo;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioSinkType")]
-    # [wasm_bindgen (structural , method , getter , js_class = "AudioSinkInfo" , js_name = type)]
+    #[wasm_bindgen(method, getter, js_class = "AudioSinkInfo", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioSinkInfo/type)"]

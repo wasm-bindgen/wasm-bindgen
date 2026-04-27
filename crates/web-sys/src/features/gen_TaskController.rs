@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = AbortController , extends = :: js_sys :: Object , js_name = TaskController , typescript_type = "TaskController")]
+    #[wasm_bindgen(
+        extends = "AbortController",
+        extends = "::js_sys::Object",
+        js_name = "TaskController",
+        typescript_type = "TaskController"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TaskController` class."]
     #[doc = ""]
@@ -41,7 +46,7 @@ extern "C" {
     pub fn new_with_init(init: &TaskControllerInit) -> Result<TaskController, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "TaskPriority")]
-    # [wasm_bindgen (catch , method , structural , js_class = "TaskController" , js_name = setPriority)]
+    #[wasm_bindgen(catch, method, js_class = "TaskController", js_name = "setPriority")]
     #[doc = "The `setPriority()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TaskController/setPriority)"]

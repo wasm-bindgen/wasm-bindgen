@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = PaymentRequestUpdateEvent , typescript_type = "PaymentRequestUpdateEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "PaymentRequestUpdateEvent",
+        typescript_type = "PaymentRequestUpdateEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PaymentRequestUpdateEvent` class."]
     #[doc = ""]
@@ -30,7 +35,12 @@ extern "C" {
         type_: &str,
         event_init_dict: &PaymentRequestUpdateEventInit,
     ) -> Result<PaymentRequestUpdateEvent, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "PaymentRequestUpdateEvent" , js_name = updateWith)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "PaymentRequestUpdateEvent",
+        js_name = "updateWith"
+    )]
     #[doc = "The `updateWith()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentRequestUpdateEvent/updateWith)"]

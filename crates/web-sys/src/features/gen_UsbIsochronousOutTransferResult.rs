@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = USBIsochronousOutTransferResult , typescript_type = "USBIsochronousOutTransferResult")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "USBIsochronousOutTransferResult",
+        typescript_type = "USBIsochronousOutTransferResult"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UsbIsochronousOutTransferResult` class."]
     #[doc = ""]
@@ -18,7 +22,12 @@ extern "C" {
     pub type UsbIsochronousOutTransferResult;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbIsochronousOutTransferPacket")]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBIsochronousOutTransferResult" , js_name = packets)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "USBIsochronousOutTransferResult",
+        js_name = "packets"
+    )]
     #[doc = "Getter for the `packets` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBIsochronousOutTransferResult/packets)"]

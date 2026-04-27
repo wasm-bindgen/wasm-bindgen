@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGComponentTransferFunctionElement , typescript_type = "SVGComponentTransferFunctionElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGComponentTransferFunctionElement",
+        typescript_type = "SVGComponentTransferFunctionElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgComponentTransferFunctionElement` class."]
     #[doc = ""]
@@ -13,7 +21,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgComponentTransferFunctionElement`*"]
     pub type SvgComponentTransferFunctionElement;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = type)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "type"
+    )]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/type)"]
@@ -21,7 +34,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgComponentTransferFunctionElement`*"]
     pub fn type_(this: &SvgComponentTransferFunctionElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedNumberList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = tableValues)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "tableValues"
+    )]
     #[doc = "Getter for the `tableValues` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/tableValues)"]
@@ -29,7 +47,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumberList`, `SvgComponentTransferFunctionElement`*"]
     pub fn table_values(this: &SvgComponentTransferFunctionElement) -> SvgAnimatedNumberList;
     #[cfg(feature = "SvgAnimatedNumber")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = slope)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "slope"
+    )]
     #[doc = "Getter for the `slope` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/slope)"]
@@ -37,7 +60,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumber`, `SvgComponentTransferFunctionElement`*"]
     pub fn slope(this: &SvgComponentTransferFunctionElement) -> SvgAnimatedNumber;
     #[cfg(feature = "SvgAnimatedNumber")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = intercept)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "intercept"
+    )]
     #[doc = "Getter for the `intercept` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/intercept)"]
@@ -45,7 +73,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumber`, `SvgComponentTransferFunctionElement`*"]
     pub fn intercept(this: &SvgComponentTransferFunctionElement) -> SvgAnimatedNumber;
     #[cfg(feature = "SvgAnimatedNumber")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = amplitude)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "amplitude"
+    )]
     #[doc = "Getter for the `amplitude` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/amplitude)"]
@@ -53,7 +86,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumber`, `SvgComponentTransferFunctionElement`*"]
     pub fn amplitude(this: &SvgComponentTransferFunctionElement) -> SvgAnimatedNumber;
     #[cfg(feature = "SvgAnimatedNumber")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = exponent)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "exponent"
+    )]
     #[doc = "Getter for the `exponent` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/exponent)"]
@@ -61,7 +99,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumber`, `SvgComponentTransferFunctionElement`*"]
     pub fn exponent(this: &SvgComponentTransferFunctionElement) -> SvgAnimatedNumber;
     #[cfg(feature = "SvgAnimatedNumber")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGComponentTransferFunctionElement" , js_name = offset)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGComponentTransferFunctionElement",
+        js_name = "offset"
+    )]
     #[doc = "Getter for the `offset` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGComponentTransferFunctionElement/offset)"]

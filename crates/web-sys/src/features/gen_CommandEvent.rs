@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = CommandEvent , typescript_type = "CommandEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "CommandEvent",
+        typescript_type = "CommandEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CommandEvent` class."]
     #[doc = ""]
@@ -13,14 +18,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CommandEvent`*"]
     pub type CommandEvent;
     #[cfg(feature = "Element")]
-    # [wasm_bindgen (structural , method , getter , js_class = "CommandEvent" , js_name = source)]
+    #[wasm_bindgen(method, getter, js_class = "CommandEvent", js_name = "source")]
     #[doc = "Getter for the `source` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CommandEvent/source)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CommandEvent`, `Element`*"]
     pub fn source(this: &CommandEvent) -> Option<Element>;
-    # [wasm_bindgen (structural , method , getter , js_class = "CommandEvent" , js_name = command)]
+    #[wasm_bindgen(method, getter, js_class = "CommandEvent", js_name = "command")]
     #[doc = "Getter for the `command` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CommandEvent/command)"]

@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = GPUUncapturedErrorEvent , typescript_type = "GPUUncapturedErrorEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "GPUUncapturedErrorEvent",
+        typescript_type = "GPUUncapturedErrorEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuUncapturedErrorEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type GpuUncapturedErrorEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuError")]
-    # [wasm_bindgen (structural , method , getter , js_class = "GPUUncapturedErrorEvent" , js_name = error)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GPUUncapturedErrorEvent",
+        js_name = "error"
+    )]
     #[doc = "Getter for the `error` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUUncapturedErrorEvent/error)"]

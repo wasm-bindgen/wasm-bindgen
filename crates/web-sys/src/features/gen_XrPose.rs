@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = XRPose , typescript_type = "XRPose")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "XRPose",
+        typescript_type = "XRPose"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrPose` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type XrPose;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrRigidTransform")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRPose" , js_name = transform)]
+    #[wasm_bindgen(method, getter, js_class = "XRPose", js_name = "transform")]
     #[doc = "Getter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRPose/transform)"]
@@ -30,7 +34,7 @@ extern "C" {
     pub fn transform(this: &XrPose) -> XrRigidTransform;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomPointReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRPose" , js_name = linearVelocity)]
+    #[wasm_bindgen(method, getter, js_class = "XRPose", js_name = "linearVelocity")]
     #[doc = "Getter for the `linearVelocity` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRPose/linearVelocity)"]
@@ -42,7 +46,7 @@ extern "C" {
     pub fn linear_velocity(this: &XrPose) -> Option<DomPointReadOnly>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomPointReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRPose" , js_name = angularVelocity)]
+    #[wasm_bindgen(method, getter, js_class = "XRPose", js_name = "angularVelocity")]
     #[doc = "Getter for the `angularVelocity` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRPose/angularVelocity)"]
@@ -53,7 +57,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn angular_velocity(this: &XrPose) -> Option<DomPointReadOnly>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRPose" , js_name = emulatedPosition)]
+    #[wasm_bindgen(method, getter, js_class = "XRPose", js_name = "emulatedPosition")]
     #[doc = "Getter for the `emulatedPosition` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRPose/emulatedPosition)"]

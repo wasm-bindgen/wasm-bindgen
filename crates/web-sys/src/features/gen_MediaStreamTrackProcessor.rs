@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = MediaStreamTrackProcessor , typescript_type = "MediaStreamTrackProcessor")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "MediaStreamTrackProcessor",
+        typescript_type = "MediaStreamTrackProcessor"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaStreamTrackProcessor` class."]
     #[doc = ""]
@@ -18,7 +22,12 @@ extern "C" {
     pub type MediaStreamTrackProcessor;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ReadableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaStreamTrackProcessor" , js_name = readable)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaStreamTrackProcessor",
+        js_name = "readable"
+    )]
     #[doc = "Getter for the `readable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrackProcessor/readable)"]
@@ -30,7 +39,12 @@ extern "C" {
     pub fn readable(this: &MediaStreamTrackProcessor) -> ReadableStream;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ReadableStream")]
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaStreamTrackProcessor" , js_name = readable)]
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "MediaStreamTrackProcessor",
+        js_name = "readable"
+    )]
     #[doc = "Setter for the `readable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrackProcessor/readable)"]

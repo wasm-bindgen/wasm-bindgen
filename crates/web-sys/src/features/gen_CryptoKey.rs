@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = CryptoKey , typescript_type = "CryptoKey")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "CryptoKey",
+        typescript_type = "CryptoKey"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CryptoKey` class."]
     #[doc = ""]
@@ -12,28 +16,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CryptoKey`*"]
     pub type CryptoKey;
-    # [wasm_bindgen (structural , method , getter , js_class = "CryptoKey" , js_name = type)]
+    #[wasm_bindgen(method, getter, js_class = "CryptoKey", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/type)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CryptoKey`*"]
     pub fn type_(this: &CryptoKey) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "CryptoKey" , js_name = extractable)]
+    #[wasm_bindgen(method, getter, js_class = "CryptoKey", js_name = "extractable")]
     #[doc = "Getter for the `extractable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/extractable)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CryptoKey`*"]
     pub fn extractable(this: &CryptoKey) -> bool;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "CryptoKey" , js_name = algorithm)]
+    #[wasm_bindgen(catch, method, getter, js_class = "CryptoKey", js_name = "algorithm")]
     #[doc = "Getter for the `algorithm` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/algorithm)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CryptoKey`*"]
     pub fn algorithm(this: &CryptoKey) -> Result<::js_sys::Object, JsValue>;
-    # [wasm_bindgen (structural , method , getter , js_class = "CryptoKey" , js_name = usages)]
+    #[wasm_bindgen(method, getter, js_class = "CryptoKey", js_name = "usages")]
     #[doc = "Getter for the `usages` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/usages)"]

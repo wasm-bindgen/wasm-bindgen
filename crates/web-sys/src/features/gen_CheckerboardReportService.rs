@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = CheckerboardReportService , typescript_type = "CheckerboardReportService")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "CheckerboardReportService",
+        typescript_type = "CheckerboardReportService"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CheckerboardReportService` class."]
     #[doc = ""]
@@ -19,28 +23,40 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReportService`*"]
     pub fn new() -> Result<CheckerboardReportService, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "CheckerboardReportService" , js_name = flushActiveReports)]
+    #[wasm_bindgen(
+        method,
+        js_class = "CheckerboardReportService",
+        js_name = "flushActiveReports"
+    )]
     #[doc = "The `flushActiveReports()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CheckerboardReportService/flushActiveReports)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReportService`*"]
     pub fn flush_active_reports(this: &CheckerboardReportService);
-    # [wasm_bindgen (method , structural , js_class = "CheckerboardReportService" , js_name = getReports)]
+    #[wasm_bindgen(method, js_class = "CheckerboardReportService", js_name = "getReports")]
     #[doc = "The `getReports()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CheckerboardReportService/getReports)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReportService`*"]
     pub fn get_reports(this: &CheckerboardReportService) -> ::js_sys::Array;
-    # [wasm_bindgen (method , structural , js_class = "CheckerboardReportService" , js_name = isRecordingEnabled)]
+    #[wasm_bindgen(
+        method,
+        js_class = "CheckerboardReportService",
+        js_name = "isRecordingEnabled"
+    )]
     #[doc = "The `isRecordingEnabled()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CheckerboardReportService/isRecordingEnabled)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReportService`*"]
     pub fn is_recording_enabled(this: &CheckerboardReportService) -> bool;
-    # [wasm_bindgen (method , structural , js_class = "CheckerboardReportService" , js_name = setRecordingEnabled)]
+    #[wasm_bindgen(
+        method,
+        js_class = "CheckerboardReportService",
+        js_name = "setRecordingEnabled"
+    )]
     #[doc = "The `setRecordingEnabled()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CheckerboardReportService/setRecordingEnabled)"]

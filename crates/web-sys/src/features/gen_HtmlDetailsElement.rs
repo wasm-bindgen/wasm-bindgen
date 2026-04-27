@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = HtmlElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = HTMLDetailsElement , typescript_type = "HTMLDetailsElement")]
+    #[wasm_bindgen(
+        extends = "HtmlElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "HTMLDetailsElement",
+        typescript_type = "HTMLDetailsElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HtmlDetailsElement` class."]
     #[doc = ""]
@@ -12,14 +20,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDetailsElement`*"]
     pub type HtmlDetailsElement;
-    # [wasm_bindgen (structural , method , getter , js_class = "HTMLDetailsElement" , js_name = open)]
+    #[wasm_bindgen(method, getter, js_class = "HTMLDetailsElement", js_name = "open")]
     #[doc = "Getter for the `open` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDetailsElement/open)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDetailsElement`*"]
     pub fn open(this: &HtmlDetailsElement) -> bool;
-    # [wasm_bindgen (structural , method , setter , js_class = "HTMLDetailsElement" , js_name = open)]
+    #[wasm_bindgen(method, setter, js_class = "HTMLDetailsElement", js_name = "open")]
     #[doc = "Setter for the `open` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDetailsElement/open)"]

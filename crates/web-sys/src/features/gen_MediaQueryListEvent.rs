@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MediaQueryListEvent , typescript_type = "MediaQueryListEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "MediaQueryListEvent",
+        typescript_type = "MediaQueryListEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaQueryListEvent` class."]
     #[doc = ""]
@@ -12,14 +17,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaQueryListEvent`*"]
     pub type MediaQueryListEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaQueryListEvent" , js_name = media)]
+    #[wasm_bindgen(method, getter, js_class = "MediaQueryListEvent", js_name = "media")]
     #[doc = "Getter for the `media` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryListEvent/media)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaQueryListEvent`*"]
     pub fn media(this: &MediaQueryListEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaQueryListEvent" , js_name = matches)]
+    #[wasm_bindgen(method, getter, js_class = "MediaQueryListEvent", js_name = "matches")]
     #[doc = "Getter for the `matches` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryListEvent/matches)"]

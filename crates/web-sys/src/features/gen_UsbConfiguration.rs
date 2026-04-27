@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = USBConfiguration , typescript_type = "USBConfiguration")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "USBConfiguration",
+        typescript_type = "USBConfiguration"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UsbConfiguration` class."]
     #[doc = ""]
@@ -17,7 +21,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type UsbConfiguration;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBConfiguration" , js_name = configurationValue)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "USBConfiguration",
+        js_name = "configurationValue"
+    )]
     #[doc = "Getter for the `configurationValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBConfiguration/configurationValue)"]
@@ -28,7 +37,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn configuration_value(this: &UsbConfiguration) -> u8;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBConfiguration" , js_name = configurationName)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "USBConfiguration",
+        js_name = "configurationName"
+    )]
     #[doc = "Getter for the `configurationName` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBConfiguration/configurationName)"]
@@ -40,7 +54,7 @@ extern "C" {
     pub fn configuration_name(this: &UsbConfiguration) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbInterface")]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBConfiguration" , js_name = interfaces)]
+    #[wasm_bindgen(method, getter, js_class = "USBConfiguration", js_name = "interfaces")]
     #[doc = "Getter for the `interfaces` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBConfiguration/interfaces)"]

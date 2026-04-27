@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = OffscreenCanvas , typescript_type = "OffscreenCanvas")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "OffscreenCanvas",
+        typescript_type = "OffscreenCanvas"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OffscreenCanvas` class."]
     #[doc = ""]
@@ -12,28 +17,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub type OffscreenCanvas;
-    # [wasm_bindgen (structural , method , getter , js_class = "OffscreenCanvas" , js_name = width)]
+    #[wasm_bindgen(method, getter, js_class = "OffscreenCanvas", js_name = "width")]
     #[doc = "Getter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/width)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub fn width(this: &OffscreenCanvas) -> u32;
-    # [wasm_bindgen (structural , method , setter , js_class = "OffscreenCanvas" , js_name = width)]
+    #[wasm_bindgen(method, setter, js_class = "OffscreenCanvas", js_name = "width")]
     #[doc = "Setter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/width)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub fn set_width(this: &OffscreenCanvas, value: u32);
-    # [wasm_bindgen (structural , method , getter , js_class = "OffscreenCanvas" , js_name = height)]
+    #[wasm_bindgen(method, getter, js_class = "OffscreenCanvas", js_name = "height")]
     #[doc = "Getter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/height)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub fn height(this: &OffscreenCanvas) -> u32;
-    # [wasm_bindgen (structural , method , setter , js_class = "OffscreenCanvas" , js_name = height)]
+    #[wasm_bindgen(method, setter, js_class = "OffscreenCanvas", js_name = "height")]
     #[doc = "Setter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/height)"]
@@ -47,7 +52,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub fn new(width: u32, height: u32) -> Result<OffscreenCanvas, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvas" , js_name = convertToBlob)]
+    #[wasm_bindgen(catch, method, js_class = "OffscreenCanvas", js_name = "convertToBlob")]
     #[doc = "The `convertToBlob()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob)"]
@@ -55,7 +60,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub fn convert_to_blob(this: &OffscreenCanvas) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "ImageEncodeOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvas" , js_name = convertToBlob)]
+    #[wasm_bindgen(catch, method, js_class = "OffscreenCanvas", js_name = "convertToBlob")]
     #[doc = "The `convertToBlob()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob)"]
@@ -65,7 +70,7 @@ extern "C" {
         this: &OffscreenCanvas,
         options: &ImageEncodeOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvas" , js_name = getContext)]
+    #[wasm_bindgen(catch, method, js_class = "OffscreenCanvas", js_name = "getContext")]
     #[doc = "The `getContext()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/getContext)"]
@@ -75,7 +80,7 @@ extern "C" {
         this: &OffscreenCanvas,
         context_id: &str,
     ) -> Result<Option<::js_sys::Object>, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvas" , js_name = getContext)]
+    #[wasm_bindgen(catch, method, js_class = "OffscreenCanvas", js_name = "getContext")]
     #[doc = "The `getContext()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/getContext)"]
@@ -87,7 +92,12 @@ extern "C" {
         context_options: &::wasm_bindgen::JsValue,
     ) -> Result<Option<::js_sys::Object>, JsValue>;
     #[cfg(feature = "ImageBitmap")]
-    # [wasm_bindgen (catch , method , structural , js_class = "OffscreenCanvas" , js_name = transferToImageBitmap)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "OffscreenCanvas",
+        js_name = "transferToImageBitmap"
+    )]
     #[doc = "The `transferToImageBitmap()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/transferToImageBitmap)"]

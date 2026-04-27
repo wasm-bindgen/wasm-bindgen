@@ -4,7 +4,10 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = FileSystemCreateWritableOptions)]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "FileSystemCreateWritableOptions"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FileSystemCreateWritableOptions` dictionary."]
     #[doc = ""]

@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = DOMQuad , typescript_type = "DOMQuad")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "DOMQuad",
+        typescript_type = "DOMQuad"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomQuad` class."]
     #[doc = ""]
@@ -13,7 +17,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomQuad`*"]
     pub type DomQuad;
     #[cfg(feature = "DomPoint")]
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMQuad" , js_name = p1)]
+    #[wasm_bindgen(method, getter, js_class = "DOMQuad", js_name = "p1")]
     #[doc = "Getter for the `p1` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/p1)"]
@@ -21,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPoint`, `DomQuad`*"]
     pub fn p1(this: &DomQuad) -> DomPoint;
     #[cfg(feature = "DomPoint")]
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMQuad" , js_name = p2)]
+    #[wasm_bindgen(method, getter, js_class = "DOMQuad", js_name = "p2")]
     #[doc = "Getter for the `p2` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/p2)"]
@@ -29,7 +33,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPoint`, `DomQuad`*"]
     pub fn p2(this: &DomQuad) -> DomPoint;
     #[cfg(feature = "DomPoint")]
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMQuad" , js_name = p3)]
+    #[wasm_bindgen(method, getter, js_class = "DOMQuad", js_name = "p3")]
     #[doc = "Getter for the `p3` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/p3)"]
@@ -37,7 +41,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPoint`, `DomQuad`*"]
     pub fn p3(this: &DomQuad) -> DomPoint;
     #[cfg(feature = "DomPoint")]
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMQuad" , js_name = p4)]
+    #[wasm_bindgen(method, getter, js_class = "DOMQuad", js_name = "p4")]
     #[doc = "Getter for the `p4` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/p4)"]
@@ -45,7 +49,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomPoint`, `DomQuad`*"]
     pub fn p4(this: &DomQuad) -> DomPoint;
     #[cfg(feature = "DomRectReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMQuad" , js_name = bounds)]
+    #[wasm_bindgen(method, getter, js_class = "DOMQuad", js_name = "bounds")]
     #[doc = "Getter for the `bounds` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/bounds)"]
@@ -112,7 +116,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomQuad`, `DomRectReadOnly`*"]
     pub fn new_with_rect(rect: &DomRectReadOnly) -> Result<DomQuad, JsValue>;
     #[cfg(feature = "DomRectReadOnly")]
-    # [wasm_bindgen (method , structural , js_class = "DOMQuad" , js_name = getBounds)]
+    #[wasm_bindgen(method, js_class = "DOMQuad", js_name = "getBounds")]
     #[doc = "The `getBounds()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/getBounds)"]
@@ -120,7 +124,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomQuad`, `DomRectReadOnly`*"]
     pub fn get_bounds(this: &DomQuad) -> DomRectReadOnly;
     #[cfg(feature = "DomQuadJson")]
-    # [wasm_bindgen (method , structural , js_class = "DOMQuad" , js_name = toJSON)]
+    #[wasm_bindgen(method, js_class = "DOMQuad", js_name = "toJSON")]
     #[doc = "The `toJSON()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMQuad/toJSON)"]

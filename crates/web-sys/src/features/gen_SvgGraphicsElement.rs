@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGGraphicsElement , typescript_type = "SVGGraphicsElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGGraphicsElement",
+        typescript_type = "SVGGraphicsElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgGraphicsElement` class."]
     #[doc = ""]
@@ -13,21 +21,31 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`*"]
     pub type SvgGraphicsElement;
     #[cfg(feature = "SvgAnimatedTransformList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGraphicsElement" , js_name = transform)]
+    #[wasm_bindgen(method, getter, js_class = "SVGGraphicsElement", js_name = "transform")]
     #[doc = "Getter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/transform)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedTransformList`, `SvgGraphicsElement`*"]
     pub fn transform(this: &SvgGraphicsElement) -> SvgAnimatedTransformList;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGraphicsElement" , js_name = nearestViewportElement)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGraphicsElement",
+        js_name = "nearestViewportElement"
+    )]
     #[doc = "Getter for the `nearestViewportElement` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/nearestViewportElement)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`*"]
     pub fn nearest_viewport_element(this: &SvgGraphicsElement) -> Option<SvgElement>;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGraphicsElement" , js_name = farthestViewportElement)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGraphicsElement",
+        js_name = "farthestViewportElement"
+    )]
     #[doc = "Getter for the `farthestViewportElement` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/farthestViewportElement)"]
@@ -35,7 +53,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`*"]
     pub fn farthest_viewport_element(this: &SvgGraphicsElement) -> Option<SvgElement>;
     #[cfg(feature = "SvgStringList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGraphicsElement" , js_name = requiredFeatures)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGraphicsElement",
+        js_name = "requiredFeatures"
+    )]
     #[doc = "Getter for the `requiredFeatures` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/requiredFeatures)"]
@@ -43,7 +66,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`, `SvgStringList`*"]
     pub fn required_features(this: &SvgGraphicsElement) -> SvgStringList;
     #[cfg(feature = "SvgStringList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGraphicsElement" , js_name = requiredExtensions)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGraphicsElement",
+        js_name = "requiredExtensions"
+    )]
     #[doc = "Getter for the `requiredExtensions` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/requiredExtensions)"]
@@ -51,7 +79,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`, `SvgStringList`*"]
     pub fn required_extensions(this: &SvgGraphicsElement) -> SvgStringList;
     #[cfg(feature = "SvgStringList")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGGraphicsElement" , js_name = systemLanguage)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGGraphicsElement",
+        js_name = "systemLanguage"
+    )]
     #[doc = "Getter for the `systemLanguage` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/systemLanguage)"]
@@ -59,7 +92,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`, `SvgStringList`*"]
     pub fn system_language(this: &SvgGraphicsElement) -> SvgStringList;
     #[cfg(feature = "SvgRect")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGGraphicsElement" , js_name = getBBox)]
+    #[wasm_bindgen(catch, method, js_class = "SVGGraphicsElement", js_name = "getBBox")]
     #[doc = "The `getBBox()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getBBox)"]
@@ -67,7 +100,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`, `SvgRect`*"]
     pub fn get_b_box(this: &SvgGraphicsElement) -> Result<SvgRect, JsValue>;
     #[cfg(all(feature = "SvgBoundingBoxOptions", feature = "SvgRect",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGGraphicsElement" , js_name = getBBox)]
+    #[wasm_bindgen(catch, method, js_class = "SVGGraphicsElement", js_name = "getBBox")]
     #[doc = "The `getBBox()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getBBox)"]
@@ -78,7 +111,7 @@ extern "C" {
         a_options: &SvgBoundingBoxOptions,
     ) -> Result<SvgRect, JsValue>;
     #[cfg(feature = "SvgMatrix")]
-    # [wasm_bindgen (method , structural , js_class = "SVGGraphicsElement" , js_name = getCTM)]
+    #[wasm_bindgen(method, js_class = "SVGGraphicsElement", js_name = "getCTM")]
     #[doc = "The `getCTM()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getCTM)"]
@@ -86,7 +119,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`, `SvgMatrix`*"]
     pub fn get_ctm(this: &SvgGraphicsElement) -> Option<SvgMatrix>;
     #[cfg(feature = "SvgMatrix")]
-    # [wasm_bindgen (method , structural , js_class = "SVGGraphicsElement" , js_name = getScreenCTM)]
+    #[wasm_bindgen(method, js_class = "SVGGraphicsElement", js_name = "getScreenCTM")]
     #[doc = "The `getScreenCTM()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getScreenCTM)"]
@@ -94,7 +127,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgGraphicsElement`, `SvgMatrix`*"]
     pub fn get_screen_ctm(this: &SvgGraphicsElement) -> Option<SvgMatrix>;
     #[cfg(feature = "SvgMatrix")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGGraphicsElement" , js_name = getTransformToElement)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "SVGGraphicsElement",
+        js_name = "getTransformToElement"
+    )]
     #[doc = "The `getTransformToElement()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getTransformToElement)"]
@@ -104,7 +142,7 @@ extern "C" {
         this: &SvgGraphicsElement,
         element: &SvgGraphicsElement,
     ) -> Result<SvgMatrix, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "SVGGraphicsElement" , js_name = hasExtension)]
+    #[wasm_bindgen(method, js_class = "SVGGraphicsElement", js_name = "hasExtension")]
     #[doc = "The `hasExtension()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/hasExtension)"]

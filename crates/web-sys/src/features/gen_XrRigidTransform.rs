@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = XRRigidTransform , typescript_type = "XRRigidTransform")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "XRRigidTransform",
+        typescript_type = "XRRigidTransform"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrRigidTransform` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type XrRigidTransform;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomPointReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRigidTransform" , js_name = position)]
+    #[wasm_bindgen(method, getter, js_class = "XRRigidTransform", js_name = "position")]
     #[doc = "Getter for the `position` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRigidTransform/position)"]
@@ -30,7 +34,7 @@ extern "C" {
     pub fn position(this: &XrRigidTransform) -> DomPointReadOnly;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "DomPointReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRigidTransform" , js_name = orientation)]
+    #[wasm_bindgen(method, getter, js_class = "XRRigidTransform", js_name = "orientation")]
     #[doc = "Getter for the `orientation` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRigidTransform/orientation)"]
@@ -41,7 +45,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn orientation(this: &XrRigidTransform) -> DomPointReadOnly;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRigidTransform" , js_name = matrix)]
+    #[wasm_bindgen(method, getter, js_class = "XRRigidTransform", js_name = "matrix")]
     #[doc = "Getter for the `matrix` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRigidTransform/matrix)"]
@@ -52,7 +56,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn matrix(this: &XrRigidTransform) -> ::alloc::vec::Vec<f32>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRigidTransform" , js_name = inverse)]
+    #[wasm_bindgen(method, getter, js_class = "XRRigidTransform", js_name = "inverse")]
     #[doc = "Getter for the `inverse` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRigidTransform/inverse)"]

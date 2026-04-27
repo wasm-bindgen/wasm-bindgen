@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = VideoDecoder , typescript_type = "VideoDecoder")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "VideoDecoder",
+        typescript_type = "VideoDecoder"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `VideoDecoder` class."]
     #[doc = ""]
@@ -18,7 +23,7 @@ extern "C" {
     pub type VideoDecoder;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "CodecState")]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoDecoder" , js_name = state)]
+    #[wasm_bindgen(method, getter, js_class = "VideoDecoder", js_name = "state")]
     #[doc = "Getter for the `state` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/state)"]
@@ -29,7 +34,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn state(this: &VideoDecoder) -> CodecState;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoDecoder" , js_name = decodeQueueSize)]
+    #[wasm_bindgen(method, getter, js_class = "VideoDecoder", js_name = "decodeQueueSize")]
     #[doc = "Getter for the `decodeQueueSize` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/decodeQueueSize)"]
@@ -40,7 +45,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn decode_queue_size(this: &VideoDecoder) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoDecoder" , js_name = ondequeue)]
+    #[wasm_bindgen(method, getter, js_class = "VideoDecoder", js_name = "ondequeue")]
     #[doc = "Getter for the `ondequeue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/ondequeue)"]
@@ -51,7 +56,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn ondequeue(this: &VideoDecoder) -> Option<::js_sys::Function>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , setter , js_class = "VideoDecoder" , js_name = ondequeue)]
+    #[wasm_bindgen(method, setter, js_class = "VideoDecoder", js_name = "ondequeue")]
     #[doc = "Setter for the `ondequeue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/ondequeue)"]
@@ -74,7 +79,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(init: &VideoDecoderInit) -> Result<VideoDecoder, JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoDecoder" , js_name = close)]
+    #[wasm_bindgen(catch, method, js_class = "VideoDecoder")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/close)"]
@@ -86,7 +91,7 @@ extern "C" {
     pub fn close(this: &VideoDecoder) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoDecoderConfig")]
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoDecoder" , js_name = configure)]
+    #[wasm_bindgen(catch, method, js_class = "VideoDecoder")]
     #[doc = "The `configure()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/configure)"]
@@ -98,7 +103,7 @@ extern "C" {
     pub fn configure(this: &VideoDecoder, config: &VideoDecoderConfig) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "EncodedVideoChunk")]
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoDecoder" , js_name = decode)]
+    #[wasm_bindgen(catch, method, js_class = "VideoDecoder")]
     #[doc = "The `decode()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/decode)"]
@@ -109,7 +114,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn decode(this: &VideoDecoder, chunk: &EncodedVideoChunk) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "VideoDecoder" , js_name = flush)]
+    #[wasm_bindgen(method, js_class = "VideoDecoder")]
     #[doc = "The `flush()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/flush)"]
@@ -121,7 +126,11 @@ extern "C" {
     pub fn flush(this: &VideoDecoder) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "VideoDecoderConfig", feature = "VideoDecoderSupport",))]
-    # [wasm_bindgen (static_method_of = VideoDecoder , js_class = "VideoDecoder" , js_name = isConfigSupported)]
+    #[wasm_bindgen(
+        static_method_of = "VideoDecoder",
+        js_class = "VideoDecoder",
+        js_name = "isConfigSupported"
+    )]
     #[doc = "The `isConfigSupported()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/isConfigSupported_static)"]
@@ -134,7 +143,7 @@ extern "C" {
         config: &VideoDecoderConfig,
     ) -> ::js_sys::Promise<VideoDecoderSupport>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoDecoder" , js_name = reset)]
+    #[wasm_bindgen(catch, method, js_class = "VideoDecoder")]
     #[doc = "The `reset()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/reset)"]

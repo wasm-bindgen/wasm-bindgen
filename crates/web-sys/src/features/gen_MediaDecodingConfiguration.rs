@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = MediaDecodingConfiguration)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "MediaDecodingConfiguration")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaDecodingConfiguration` dictionary."]
     #[doc = ""]

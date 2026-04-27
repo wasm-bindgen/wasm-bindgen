@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = Headers , typescript_type = "Headers")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "Headers",
+        typescript_type = "Headers"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Headers` class."]
     #[doc = ""]
@@ -42,63 +46,63 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn new_with_record_from_str_to_str(init: &::js_sys::Object) -> Result<Headers, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = append)]
+    #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `append()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/append)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn append(this: &Headers, name: &str, value: &str) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = delete)]
+    #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `delete()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/delete)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn delete(this: &Headers, name: &str) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = forEach)]
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/forEach)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn for_each(this: &Headers, callback: &::js_sys::Function) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = get)]
+    #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `get()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/get)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn get(this: &Headers, name: &str) -> Result<Option<::alloc::string::String>, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = has)]
+    #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `has()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/has)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn has(this: &Headers, name: &str) -> Result<bool, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "Headers" , js_name = set)]
+    #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `set()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/set)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn set(this: &Headers, name: &str, value: &str) -> Result<(), JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = entries)]
+    #[wasm_bindgen(method, js_class = "Headers")]
     #[doc = "The `entries()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/entries)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn entries(this: &Headers) -> ::js_sys::Iterator;
-    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = keys)]
+    #[wasm_bindgen(method, js_class = "Headers")]
     #[doc = "The `keys()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/keys)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn keys(this: &Headers) -> ::js_sys::Iterator;
-    # [wasm_bindgen (method , structural , js_class = "Headers" , js_name = values)]
+    #[wasm_bindgen(method, js_class = "Headers")]
     #[doc = "The `values()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/values)"]

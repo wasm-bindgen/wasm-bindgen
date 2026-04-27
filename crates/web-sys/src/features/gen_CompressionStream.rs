@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = CompressionStream , typescript_type = "CompressionStream")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "CompressionStream",
+        typescript_type = "CompressionStream"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `CompressionStream` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type CompressionStream;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ReadableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "CompressionStream" , js_name = readable)]
+    #[wasm_bindgen(method, getter, js_class = "CompressionStream", js_name = "readable")]
     #[doc = "Getter for the `readable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream/readable)"]
@@ -30,7 +34,7 @@ extern "C" {
     pub fn readable(this: &CompressionStream) -> ReadableStream;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WritableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "CompressionStream" , js_name = writable)]
+    #[wasm_bindgen(method, getter, js_class = "CompressionStream", js_name = "writable")]
     #[doc = "Getter for the `writable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream/writable)"]

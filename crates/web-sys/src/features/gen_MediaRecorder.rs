@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = MediaRecorder , typescript_type = "MediaRecorder")]
+    #[wasm_bindgen(
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "MediaRecorder",
+        typescript_type = "MediaRecorder"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaRecorder` class."]
     #[doc = ""]
@@ -13,7 +18,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub type MediaRecorder;
     #[cfg(feature = "MediaStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = stream)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "stream")]
     #[doc = "Getter for the `stream` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/stream)"]
@@ -21,112 +26,132 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`, `MediaStream`*"]
     pub fn stream(this: &MediaRecorder) -> MediaStream;
     #[cfg(feature = "RecordingState")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = state)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "state")]
     #[doc = "Getter for the `state` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/state)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`, `RecordingState`*"]
     pub fn state(this: &MediaRecorder) -> RecordingState;
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = mimeType)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "mimeType")]
     #[doc = "Getter for the `mimeType` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/mimeType)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn mime_type(this: &MediaRecorder) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = ondataavailable)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaRecorder",
+        js_name = "ondataavailable"
+    )]
     #[doc = "Getter for the `ondataavailable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/ondataavailable)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn ondataavailable(this: &MediaRecorder) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaRecorder" , js_name = ondataavailable)]
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "MediaRecorder",
+        js_name = "ondataavailable"
+    )]
     #[doc = "Setter for the `ondataavailable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/ondataavailable)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn set_ondataavailable(this: &MediaRecorder, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = onerror)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "onerror")]
     #[doc = "Getter for the `onerror` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onerror)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn onerror(this: &MediaRecorder) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaRecorder" , js_name = onerror)]
+    #[wasm_bindgen(method, setter, js_class = "MediaRecorder", js_name = "onerror")]
     #[doc = "Setter for the `onerror` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onerror)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn set_onerror(this: &MediaRecorder, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = onpause)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "onpause")]
     #[doc = "Getter for the `onpause` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onpause)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn onpause(this: &MediaRecorder) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaRecorder" , js_name = onpause)]
+    #[wasm_bindgen(method, setter, js_class = "MediaRecorder", js_name = "onpause")]
     #[doc = "Setter for the `onpause` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onpause)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn set_onpause(this: &MediaRecorder, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = onresume)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "onresume")]
     #[doc = "Getter for the `onresume` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onresume)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn onresume(this: &MediaRecorder) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaRecorder" , js_name = onresume)]
+    #[wasm_bindgen(method, setter, js_class = "MediaRecorder", js_name = "onresume")]
     #[doc = "Setter for the `onresume` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onresume)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn set_onresume(this: &MediaRecorder, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = onstart)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "onstart")]
     #[doc = "Getter for the `onstart` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onstart)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn onstart(this: &MediaRecorder) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaRecorder" , js_name = onstart)]
+    #[wasm_bindgen(method, setter, js_class = "MediaRecorder", js_name = "onstart")]
     #[doc = "Setter for the `onstart` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onstart)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn set_onstart(this: &MediaRecorder, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = onstop)]
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "onstop")]
     #[doc = "Getter for the `onstop` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onstop)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn onstop(this: &MediaRecorder) -> Option<::js_sys::Function>;
-    # [wasm_bindgen (structural , method , setter , js_class = "MediaRecorder" , js_name = onstop)]
+    #[wasm_bindgen(method, setter, js_class = "MediaRecorder", js_name = "onstop")]
     #[doc = "Setter for the `onstop` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/onstop)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn set_onstop(this: &MediaRecorder, value: Option<&::js_sys::Function>);
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = videoBitsPerSecond)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaRecorder",
+        js_name = "videoBitsPerSecond"
+    )]
     #[doc = "Getter for the `videoBitsPerSecond` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/videoBitsPerSecond)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn video_bits_per_second(this: &MediaRecorder) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = audioBitsPerSecond)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaRecorder",
+        js_name = "audioBitsPerSecond"
+    )]
     #[doc = "Getter for the `audioBitsPerSecond` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/audioBitsPerSecond)"]
@@ -134,7 +159,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn audio_bits_per_second(this: &MediaRecorder) -> u32;
     #[cfg(feature = "BitrateMode")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaRecorder" , js_name = audioBitrateMode)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaRecorder",
+        js_name = "audioBitrateMode"
+    )]
     #[doc = "Getter for the `audioBitrateMode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/audioBitrateMode)"]
@@ -191,49 +221,53 @@ extern "C" {
         output: u32,
         options: &MediaRecorderOptions,
     ) -> Result<MediaRecorder, JsValue>;
-    # [wasm_bindgen (static_method_of = MediaRecorder , js_class = "MediaRecorder" , js_name = isTypeSupported)]
+    #[wasm_bindgen(
+        static_method_of = "MediaRecorder",
+        js_class = "MediaRecorder",
+        js_name = "isTypeSupported"
+    )]
     #[doc = "The `isTypeSupported()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn is_type_supported(type_: &str) -> bool;
-    # [wasm_bindgen (catch , method , structural , js_class = "MediaRecorder" , js_name = pause)]
+    #[wasm_bindgen(catch, method, js_class = "MediaRecorder")]
     #[doc = "The `pause()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/pause)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn pause(this: &MediaRecorder) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MediaRecorder" , js_name = requestData)]
+    #[wasm_bindgen(catch, method, js_class = "MediaRecorder", js_name = "requestData")]
     #[doc = "The `requestData()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/requestData)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn request_data(this: &MediaRecorder) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MediaRecorder" , js_name = resume)]
+    #[wasm_bindgen(catch, method, js_class = "MediaRecorder")]
     #[doc = "The `resume()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/resume)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn resume(this: &MediaRecorder) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MediaRecorder" , js_name = start)]
+    #[wasm_bindgen(catch, method, js_class = "MediaRecorder")]
     #[doc = "The `start()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/start)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn start(this: &MediaRecorder) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MediaRecorder" , js_name = start)]
+    #[wasm_bindgen(catch, method, js_class = "MediaRecorder", js_name = "start")]
     #[doc = "The `start()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/start)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn start_with_time_slice(this: &MediaRecorder, time_slice: i32) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MediaRecorder" , js_name = stop)]
+    #[wasm_bindgen(catch, method, js_class = "MediaRecorder")]
     #[doc = "The `stop()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/stop)"]

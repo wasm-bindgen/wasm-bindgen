@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = VideoFrame , typescript_type = "VideoFrame")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "VideoFrame",
+        typescript_type = "VideoFrame"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `VideoFrame` class."]
     #[doc = ""]
@@ -13,21 +17,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub type VideoFrame;
     #[cfg(feature = "VideoPixelFormat")]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = format)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "format")]
     #[doc = "Getter for the `format` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/format)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`, `VideoPixelFormat`*"]
     pub fn format(this: &VideoFrame) -> Option<VideoPixelFormat>;
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = codedWidth)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "codedWidth")]
     #[doc = "Getter for the `codedWidth` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/codedWidth)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn coded_width(this: &VideoFrame) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = codedHeight)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "codedHeight")]
     #[doc = "Getter for the `codedHeight` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/codedHeight)"]
@@ -35,7 +39,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn coded_height(this: &VideoFrame) -> u32;
     #[cfg(feature = "DomRectReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = codedRect)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "codedRect")]
     #[doc = "Getter for the `codedRect` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/codedRect)"]
@@ -43,35 +47,35 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DomRectReadOnly`, `VideoFrame`*"]
     pub fn coded_rect(this: &VideoFrame) -> Option<DomRectReadOnly>;
     #[cfg(feature = "DomRectReadOnly")]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = visibleRect)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "visibleRect")]
     #[doc = "Getter for the `visibleRect` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/visibleRect)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRectReadOnly`, `VideoFrame`*"]
     pub fn visible_rect(this: &VideoFrame) -> Option<DomRectReadOnly>;
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = displayWidth)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "displayWidth")]
     #[doc = "Getter for the `displayWidth` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/displayWidth)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn display_width(this: &VideoFrame) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = displayHeight)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "displayHeight")]
     #[doc = "Getter for the `displayHeight` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/displayHeight)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn display_height(this: &VideoFrame) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = duration)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "duration")]
     #[doc = "Getter for the `duration` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/duration)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn duration(this: &VideoFrame) -> Option<f64>;
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = timestamp)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "timestamp")]
     #[doc = "Getter for the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/timestamp)"]
@@ -79,7 +83,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn timestamp(this: &VideoFrame) -> f64;
     #[cfg(feature = "VideoColorSpace")]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = colorSpace)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "colorSpace")]
     #[doc = "Getter for the `colorSpace` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/colorSpace)"]
@@ -87,7 +91,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoColorSpace`, `VideoFrame`*"]
     pub fn color_space(this: &VideoFrame) -> VideoColorSpace;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = rotation)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "rotation")]
     #[doc = "Getter for the `rotation` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/rotation)"]
@@ -98,7 +102,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn rotation(this: &VideoFrame) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "VideoFrame" , js_name = flip)]
+    #[wasm_bindgen(method, getter, js_class = "VideoFrame", js_name = "flip")]
     #[doc = "Getter for the `flip` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/flip)"]
@@ -273,7 +277,7 @@ extern "C" {
         data: &::js_sys::Uint8Array,
         init: &VideoFrameBufferInit,
     ) -> Result<VideoFrame, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoFrame" , js_name = allocationSize)]
+    #[wasm_bindgen(catch, method, js_class = "VideoFrame", js_name = "allocationSize")]
     #[doc = "The `allocationSize()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/allocationSize)"]
@@ -281,7 +285,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn allocation_size(this: &VideoFrame) -> Result<u32, JsValue>;
     #[cfg(feature = "VideoFrameCopyToOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoFrame" , js_name = allocationSize)]
+    #[wasm_bindgen(catch, method, js_class = "VideoFrame", js_name = "allocationSize")]
     #[doc = "The `allocationSize()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/allocationSize)"]
@@ -291,14 +295,14 @@ extern "C" {
         this: &VideoFrame,
         options: &VideoFrameCopyToOptions,
     ) -> Result<u32, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "VideoFrame" , js_name = clone)]
+    #[wasm_bindgen(catch, method, js_class = "VideoFrame")]
     #[doc = "The `clone()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/clone)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn clone(this: &VideoFrame) -> Result<VideoFrame, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = close)]
+    #[wasm_bindgen(method, js_class = "VideoFrame")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/close)"]
@@ -306,7 +310,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoFrame`*"]
     pub fn close(this: &VideoFrame);
     #[cfg(feature = "PlaneLayout")]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
+    #[wasm_bindgen(method, js_class = "VideoFrame", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
@@ -317,7 +321,7 @@ extern "C" {
         destination: &::js_sys::Object,
     ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(feature = "PlaneLayout")]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
+    #[wasm_bindgen(method, js_class = "VideoFrame", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
@@ -328,7 +332,7 @@ extern "C" {
         destination: &mut [u8],
     ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(feature = "PlaneLayout")]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
+    #[wasm_bindgen(method, js_class = "VideoFrame", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
@@ -339,7 +343,7 @@ extern "C" {
         destination: &::js_sys::Uint8Array,
     ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(all(feature = "PlaneLayout", feature = "VideoFrameCopyToOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
+    #[wasm_bindgen(method, js_class = "VideoFrame", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
@@ -351,7 +355,7 @@ extern "C" {
         options: &VideoFrameCopyToOptions,
     ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(all(feature = "PlaneLayout", feature = "VideoFrameCopyToOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
+    #[wasm_bindgen(method, js_class = "VideoFrame", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
@@ -363,7 +367,7 @@ extern "C" {
         options: &VideoFrameCopyToOptions,
     ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(all(feature = "PlaneLayout", feature = "VideoFrameCopyToOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = copyTo)]
+    #[wasm_bindgen(method, js_class = "VideoFrame", js_name = "copyTo")]
     #[doc = "The `copyTo()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo)"]
@@ -376,7 +380,7 @@ extern "C" {
     ) -> ::js_sys::Promise<::js_sys::Array<PlaneLayout>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "VideoFrameMetadata")]
-    # [wasm_bindgen (method , structural , js_class = "VideoFrame" , js_name = metadata)]
+    #[wasm_bindgen(method, js_class = "VideoFrame")]
     #[doc = "The `metadata()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/metadata)"]

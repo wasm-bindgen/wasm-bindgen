@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = AudioNode , extends = EventTarget , extends = :: js_sys :: Object , js_name = GainNode , typescript_type = "GainNode")]
+    #[wasm_bindgen(
+        extends = "AudioNode",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "GainNode",
+        typescript_type = "GainNode"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GainNode` class."]
     #[doc = ""]
@@ -13,7 +19,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GainNode`*"]
     pub type GainNode;
     #[cfg(feature = "AudioParam")]
-    # [wasm_bindgen (structural , method , getter , js_class = "GainNode" , js_name = gain)]
+    #[wasm_bindgen(method, getter, js_class = "GainNode", js_name = "gain")]
     #[doc = "Getter for the `gain` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GainNode/gain)"]

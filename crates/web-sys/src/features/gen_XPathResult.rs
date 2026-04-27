@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = XPathResult , typescript_type = "XPathResult")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "XPathResult",
+        typescript_type = "XPathResult"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XPathResult` class."]
     #[doc = ""]
@@ -12,28 +16,46 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub type XPathResult;
-    # [wasm_bindgen (structural , method , getter , js_class = "XPathResult" , js_name = resultType)]
+    #[wasm_bindgen(method, getter, js_class = "XPathResult", js_name = "resultType")]
     #[doc = "Getter for the `resultType` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/resultType)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub fn result_type(this: &XPathResult) -> u16;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "XPathResult" , js_name = numberValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XPathResult",
+        js_name = "numberValue"
+    )]
     #[doc = "Getter for the `numberValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/numberValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub fn number_value(this: &XPathResult) -> Result<f64, JsValue>;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "XPathResult" , js_name = stringValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XPathResult",
+        js_name = "stringValue"
+    )]
     #[doc = "Getter for the `stringValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/stringValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub fn string_value(this: &XPathResult) -> Result<::alloc::string::String, JsValue>;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "XPathResult" , js_name = booleanValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XPathResult",
+        js_name = "booleanValue"
+    )]
     #[doc = "Getter for the `booleanValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/booleanValue)"]
@@ -41,21 +63,38 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub fn boolean_value(this: &XPathResult) -> Result<bool, JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "XPathResult" , js_name = singleNodeValue)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XPathResult",
+        js_name = "singleNodeValue"
+    )]
     #[doc = "Getter for the `singleNodeValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/singleNodeValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`, `XPathResult`*"]
     pub fn single_node_value(this: &XPathResult) -> Result<Option<Node>, JsValue>;
-    # [wasm_bindgen (structural , method , getter , js_class = "XPathResult" , js_name = invalidIteratorState)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XPathResult",
+        js_name = "invalidIteratorState"
+    )]
     #[doc = "Getter for the `invalidIteratorState` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/invalidIteratorState)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub fn invalid_iterator_state(this: &XPathResult) -> bool;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "XPathResult" , js_name = snapshotLength)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XPathResult",
+        js_name = "snapshotLength"
+    )]
     #[doc = "Getter for the `snapshotLength` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/snapshotLength)"]
@@ -63,7 +102,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
     pub fn snapshot_length(this: &XPathResult) -> Result<u32, JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "XPathResult" , js_name = iterateNext)]
+    #[wasm_bindgen(catch, method, js_class = "XPathResult", js_name = "iterateNext")]
     #[doc = "The `iterateNext()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/iterateNext)"]
@@ -71,7 +110,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Node`, `XPathResult`*"]
     pub fn iterate_next(this: &XPathResult) -> Result<Option<Node>, JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "XPathResult" , js_name = snapshotItem)]
+    #[wasm_bindgen(catch, method, js_class = "XPathResult", js_name = "snapshotItem")]
     #[doc = "The `snapshotItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/snapshotItem)"]

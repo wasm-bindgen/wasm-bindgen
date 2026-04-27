@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = MediaTrackSettings)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "MediaTrackSettings")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaTrackSettings` dictionary."]
     #[doc = ""]

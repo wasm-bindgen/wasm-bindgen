@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = DeviceRotationRateInit)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "DeviceRotationRateInit")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DeviceRotationRateInit` dictionary."]
     #[doc = ""]

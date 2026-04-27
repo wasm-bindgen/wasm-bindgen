@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = DomException , extends = :: js_sys :: Object , js_name = WebTransportError , typescript_type = "WebTransportError")]
+    #[wasm_bindgen(
+        extends = "DomException",
+        extends = "::js_sys::Object",
+        js_name = "WebTransportError",
+        typescript_type = "WebTransportError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebTransportError` class."]
     #[doc = ""]
@@ -18,7 +23,7 @@ extern "C" {
     pub type WebTransportError;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WebTransportErrorSource")]
-    # [wasm_bindgen (structural , method , getter , js_class = "WebTransportError" , js_name = source)]
+    #[wasm_bindgen(method, getter, js_class = "WebTransportError", js_name = "source")]
     #[doc = "Getter for the `source` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransportError/source)"]
@@ -29,7 +34,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn source(this: &WebTransportError) -> WebTransportErrorSource;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "WebTransportError" , js_name = streamErrorCode)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "WebTransportError",
+        js_name = "streamErrorCode"
+    )]
     #[doc = "Getter for the `streamErrorCode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebTransportError/streamErrorCode)"]

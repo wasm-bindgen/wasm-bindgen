@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WritableStream , typescript_type = "WritableStream")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "WritableStream",
+        typescript_type = "WritableStream"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WritableStream` class."]
     #[doc = ""]
@@ -12,7 +16,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WritableStream`*"]
     pub type WritableStream;
-    # [wasm_bindgen (structural , method , getter , js_class = "WritableStream" , js_name = locked)]
+    #[wasm_bindgen(method, getter, js_class = "WritableStream", js_name = "locked")]
     #[doc = "Getter for the `locked` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream/locked)"]
@@ -46,14 +50,14 @@ extern "C" {
         underlying_sink: &::js_sys::Object,
         strategy: &QueuingStrategy,
     ) -> Result<WritableStream, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "WritableStream" , js_name = abort)]
+    #[wasm_bindgen(method, js_class = "WritableStream")]
     #[doc = "The `abort()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream/abort)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WritableStream`*"]
     pub fn abort(this: &WritableStream) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "WritableStream" , js_name = abort)]
+    #[wasm_bindgen(method, js_class = "WritableStream", js_name = "abort")]
     #[doc = "The `abort()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream/abort)"]
@@ -63,7 +67,7 @@ extern "C" {
         this: &WritableStream,
         reason: &::wasm_bindgen::JsValue,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "WritableStream" , js_name = close)]
+    #[wasm_bindgen(method, js_class = "WritableStream")]
     #[doc = "The `close()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream/close)"]
@@ -71,7 +75,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WritableStream`*"]
     pub fn close(this: &WritableStream) -> ::js_sys::Promise;
     #[cfg(feature = "WritableStreamDefaultWriter")]
-    # [wasm_bindgen (catch , method , structural , js_class = "WritableStream" , js_name = getWriter)]
+    #[wasm_bindgen(catch, method, js_class = "WritableStream", js_name = "getWriter")]
     #[doc = "The `getWriter()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream/getWriter)"]

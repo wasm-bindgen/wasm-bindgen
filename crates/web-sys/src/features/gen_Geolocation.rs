@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (is_type_of = | _ | false , extends = :: js_sys :: Object , js_name = Geolocation , typescript_type = "Geolocation")]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "Geolocation" , typescript_type = "Geolocation")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Geolocation` class."]
     #[doc = ""]
@@ -12,7 +12,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Geolocation`*"]
     pub type Geolocation;
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = clearWatch)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "clearWatch")]
     #[doc = "The `clearWatch()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/clearWatch)"]
@@ -20,7 +20,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Geolocation`*"]
     pub fn clear_watch(this: &Geolocation, watch_id: i32);
     #[cfg(not(web_sys_unstable_apis))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Geolocation" , js_name = getCurrentPosition)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Geolocation",
+        js_name = "getCurrentPosition"
+    )]
     #[doc = "The `getCurrentPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition)"]
@@ -31,7 +36,12 @@ extern "C" {
         success_callback: &::js_sys::Function,
     ) -> Result<(), JsValue>;
     #[cfg(not(web_sys_unstable_apis))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Geolocation" , js_name = getCurrentPosition)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Geolocation",
+        js_name = "getCurrentPosition"
+    )]
     #[doc = "The `getCurrentPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition)"]
@@ -44,7 +54,12 @@ extern "C" {
     ) -> Result<(), JsValue>;
     #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "PositionOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "Geolocation" , js_name = getCurrentPosition)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Geolocation",
+        js_name = "getCurrentPosition"
+    )]
     #[doc = "The `getCurrentPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition)"]
@@ -58,7 +73,7 @@ extern "C" {
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GeolocationPosition")]
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = getCurrentPosition)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "getCurrentPosition")]
     #[doc = "The `getCurrentPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition)"]
@@ -73,7 +88,7 @@ extern "C" {
     );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "GeolocationPosition", feature = "GeolocationPositionError",))]
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = getCurrentPosition)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "getCurrentPosition")]
     #[doc = "The `getCurrentPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition)"]
@@ -95,7 +110,7 @@ extern "C" {
         feature = "GeolocationPositionError",
         feature = "PositionOptions",
     ))]
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = getCurrentPosition)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "getCurrentPosition")]
     #[doc = "The `getCurrentPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition)"]
@@ -113,7 +128,7 @@ extern "C" {
         options: &PositionOptions,
     );
     #[cfg(not(web_sys_unstable_apis))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Geolocation" , js_name = watchPosition)]
+    #[wasm_bindgen(catch, method, js_class = "Geolocation", js_name = "watchPosition")]
     #[doc = "The `watchPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)"]
@@ -124,7 +139,7 @@ extern "C" {
         success_callback: &::js_sys::Function,
     ) -> Result<i32, JsValue>;
     #[cfg(not(web_sys_unstable_apis))]
-    # [wasm_bindgen (catch , method , structural , js_class = "Geolocation" , js_name = watchPosition)]
+    #[wasm_bindgen(catch, method, js_class = "Geolocation", js_name = "watchPosition")]
     #[doc = "The `watchPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)"]
@@ -137,7 +152,7 @@ extern "C" {
     ) -> Result<i32, JsValue>;
     #[cfg(not(web_sys_unstable_apis))]
     #[cfg(feature = "PositionOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "Geolocation" , js_name = watchPosition)]
+    #[wasm_bindgen(catch, method, js_class = "Geolocation", js_name = "watchPosition")]
     #[doc = "The `watchPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)"]
@@ -151,7 +166,7 @@ extern "C" {
     ) -> Result<i32, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GeolocationPosition")]
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = watchPosition)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "watchPosition")]
     #[doc = "The `watchPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)"]
@@ -166,7 +181,7 @@ extern "C" {
     ) -> i32;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "GeolocationPosition", feature = "GeolocationPositionError",))]
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = watchPosition)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "watchPosition")]
     #[doc = "The `watchPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)"]
@@ -188,7 +203,7 @@ extern "C" {
         feature = "GeolocationPositionError",
         feature = "PositionOptions",
     ))]
-    # [wasm_bindgen (method , structural , js_class = "Geolocation" , js_name = watchPosition)]
+    #[wasm_bindgen(method, js_class = "Geolocation", js_name = "watchPosition")]
     #[doc = "The `watchPosition()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)"]

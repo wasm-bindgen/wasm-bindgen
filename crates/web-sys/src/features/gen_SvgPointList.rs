@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SVGPointList , typescript_type = "SVGPointList")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SVGPointList",
+        typescript_type = "SVGPointList"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgPointList` class."]
     #[doc = ""]
@@ -12,7 +16,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgPointList`*"]
     pub type SvgPointList;
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGPointList" , js_name = numberOfItems)]
+    #[wasm_bindgen(method, getter, js_class = "SVGPointList", js_name = "numberOfItems")]
     #[doc = "Getter for the `numberOfItems` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/numberOfItems)"]
@@ -20,14 +24,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPointList`*"]
     pub fn number_of_items(this: &SvgPointList) -> u32;
     #[cfg(feature = "SvgPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = appendItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList", js_name = "appendItem")]
     #[doc = "The `appendItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/appendItem)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgPoint`, `SvgPointList`*"]
     pub fn append_item(this: &SvgPointList, new_item: &SvgPoint) -> Result<SvgPoint, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = clear)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/clear)"]
@@ -35,7 +39,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPointList`*"]
     pub fn clear(this: &SvgPointList) -> Result<(), JsValue>;
     #[cfg(feature = "SvgPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = getItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList", js_name = "getItem")]
     #[doc = "The `getItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/getItem)"]
@@ -43,7 +47,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPoint`, `SvgPointList`*"]
     pub fn get_item(this: &SvgPointList, index: u32) -> Result<SvgPoint, JsValue>;
     #[cfg(feature = "SvgPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = initialize)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList")]
     #[doc = "The `initialize()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/initialize)"]
@@ -51,7 +55,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPoint`, `SvgPointList`*"]
     pub fn initialize(this: &SvgPointList, new_item: &SvgPoint) -> Result<SvgPoint, JsValue>;
     #[cfg(feature = "SvgPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = insertItemBefore)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList", js_name = "insertItemBefore")]
     #[doc = "The `insertItemBefore()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/insertItemBefore)"]
@@ -63,7 +67,7 @@ extern "C" {
         index: u32,
     ) -> Result<SvgPoint, JsValue>;
     #[cfg(feature = "SvgPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = removeItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList", js_name = "removeItem")]
     #[doc = "The `removeItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/removeItem)"]
@@ -71,7 +75,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgPoint`, `SvgPointList`*"]
     pub fn remove_item(this: &SvgPointList, index: u32) -> Result<SvgPoint, JsValue>;
     #[cfg(feature = "SvgPoint")]
-    # [wasm_bindgen (catch , method , structural , js_class = "SVGPointList" , js_name = replaceItem)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList", js_name = "replaceItem")]
     #[doc = "The `replaceItem()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPointList/replaceItem)"]
@@ -83,7 +87,7 @@ extern "C" {
         index: u32,
     ) -> Result<SvgPoint, JsValue>;
     #[cfg(feature = "SvgPoint")]
-    #[wasm_bindgen(catch, method, structural, js_class = "SVGPointList", indexing_getter)]
+    #[wasm_bindgen(catch, method, js_class = "SVGPointList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]

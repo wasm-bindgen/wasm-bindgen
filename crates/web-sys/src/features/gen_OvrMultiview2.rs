@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = OVR_multiview2 , typescript_type = "OVR_multiview2")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "OVR_multiview2",
+        typescript_type = "OVR_multiview2"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OvrMultiview2` class."]
     #[doc = ""]
@@ -13,7 +17,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OvrMultiview2`*"]
     pub type OvrMultiview2;
     #[cfg(feature = "WebGlTexture")]
-    # [wasm_bindgen (method , structural , js_class = "OVR_multiview2" , js_name = framebufferTextureMultiviewOVR)]
+    #[wasm_bindgen(
+        method,
+        js_class = "OVR_multiview2",
+        js_name = "framebufferTextureMultiviewOVR"
+    )]
     #[doc = "The `framebufferTextureMultiviewOVR()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OVR_multiview2/framebufferTextureMultiviewOVR)"]

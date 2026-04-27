@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = AbstractRange , extends = :: js_sys :: Object , js_name = StaticRange , typescript_type = "StaticRange")]
+    #[wasm_bindgen(
+        extends = "AbstractRange",
+        extends = "::js_sys::Object",
+        js_name = "StaticRange",
+        typescript_type = "StaticRange"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `StaticRange` class."]
     #[doc = ""]

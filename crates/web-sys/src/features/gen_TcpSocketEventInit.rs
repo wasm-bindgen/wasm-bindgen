@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = TCPSocketEventInit)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "TCPSocketEventInit")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TcpSocketEventInit` dictionary."]
     #[doc = ""]

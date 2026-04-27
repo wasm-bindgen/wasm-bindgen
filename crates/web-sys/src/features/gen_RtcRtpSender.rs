@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = RTCRtpSender , typescript_type = "RTCRtpSender")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "RTCRtpSender",
+        typescript_type = "RTCRtpSender"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `RtcRtpSender` class."]
     #[doc = ""]
@@ -13,7 +17,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpSender`*"]
     pub type RtcRtpSender;
     #[cfg(feature = "MediaStreamTrack")]
-    # [wasm_bindgen (structural , method , getter , js_class = "RTCRtpSender" , js_name = track)]
+    #[wasm_bindgen(method, getter, js_class = "RTCRtpSender", js_name = "track")]
     #[doc = "Getter for the `track` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/track)"]
@@ -21,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`, `RtcRtpSender`*"]
     pub fn track(this: &RtcRtpSender) -> Option<MediaStreamTrack>;
     #[cfg(feature = "RtcdtmfSender")]
-    # [wasm_bindgen (structural , method , getter , js_class = "RTCRtpSender" , js_name = dtmf)]
+    #[wasm_bindgen(method, getter, js_class = "RTCRtpSender", js_name = "dtmf")]
     #[doc = "Getter for the `dtmf` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/dtmf)"]
@@ -29,7 +33,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpSender`, `RtcdtmfSender`*"]
     pub fn dtmf(this: &RtcRtpSender) -> Option<RtcdtmfSender>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "RTCRtpSender" , js_name = transform)]
+    #[wasm_bindgen(method, getter, js_class = "RTCRtpSender", js_name = "transform")]
     #[doc = "Getter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/transform)"]
@@ -41,7 +45,7 @@ extern "C" {
     pub fn transform(this: &RtcRtpSender) -> Option<::js_sys::Object>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "SFrameTransform")]
-    # [wasm_bindgen (structural , method , setter , js_class = "RTCRtpSender" , js_name = transform)]
+    #[wasm_bindgen(method, setter, js_class = "RTCRtpSender", js_name = "transform")]
     #[doc = "Setter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/transform)"]
@@ -56,7 +60,7 @@ extern "C" {
     );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "RtcRtpScriptTransform")]
-    # [wasm_bindgen (structural , method , setter , js_class = "RTCRtpSender" , js_name = transform)]
+    #[wasm_bindgen(method, setter, js_class = "RTCRtpSender", js_name = "transform")]
     #[doc = "Setter for the `transform` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/transform)"]
@@ -70,7 +74,7 @@ extern "C" {
         value: Option<&RtcRtpScriptTransform>,
     );
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = generateKeyFrame)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "generateKeyFrame")]
     #[doc = "The `generateKeyFrame()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/generateKeyFrame)"]
@@ -81,7 +85,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn generate_key_frame(this: &RtcRtpSender) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = generateKeyFrame)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "generateKeyFrame")]
     #[doc = "The `generateKeyFrame()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/generateKeyFrame)"]
@@ -95,7 +99,11 @@ extern "C" {
         rids: &[::js_sys::JsString],
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(feature = "RtcRtpCapabilities")]
-    # [wasm_bindgen (static_method_of = RtcRtpSender , js_class = "RTCRtpSender" , js_name = getCapabilities)]
+    #[wasm_bindgen(
+        static_method_of = "RtcRtpSender",
+        js_class = "RTCRtpSender",
+        js_name = "getCapabilities"
+    )]
     #[doc = "The `getCapabilities()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/getCapabilities_static)"]
@@ -103,14 +111,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCapabilities`, `RtcRtpSender`*"]
     pub fn get_capabilities(kind: &str) -> Option<RtcRtpCapabilities>;
     #[cfg(feature = "RtcRtpParameters")]
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = getParameters)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "getParameters")]
     #[doc = "The `getParameters()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/getParameters)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpParameters`, `RtcRtpSender`*"]
     pub fn get_parameters(this: &RtcRtpSender) -> RtcRtpParameters;
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = getStats)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "getStats")]
     #[doc = "The `getStats()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/getStats)"]
@@ -118,7 +126,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpSender`*"]
     pub fn get_stats(this: &RtcRtpSender) -> ::js_sys::Promise;
     #[cfg(feature = "MediaStreamTrack")]
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = replaceTrack)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "replaceTrack")]
     #[doc = "The `replaceTrack()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/replaceTrack)"]
@@ -128,7 +136,7 @@ extern "C" {
         this: &RtcRtpSender,
         with_track: Option<&MediaStreamTrack>,
     ) -> ::js_sys::Promise;
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = setParameters)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "setParameters")]
     #[doc = "The `setParameters()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/setParameters)"]
@@ -136,7 +144,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpSender`*"]
     pub fn set_parameters(this: &RtcRtpSender) -> ::js_sys::Promise;
     #[cfg(feature = "RtcRtpParameters")]
-    # [wasm_bindgen (method , structural , js_class = "RTCRtpSender" , js_name = setParameters)]
+    #[wasm_bindgen(method, js_class = "RTCRtpSender", js_name = "setParameters")]
     #[doc = "The `setParameters()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/setParameters)"]

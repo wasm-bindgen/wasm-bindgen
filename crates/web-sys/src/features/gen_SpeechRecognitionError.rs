@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = SpeechRecognitionError , typescript_type = "SpeechRecognitionError")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "SpeechRecognitionError",
+        typescript_type = "SpeechRecognitionError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SpeechRecognitionError` class."]
     #[doc = ""]
@@ -13,14 +18,19 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`*"]
     pub type SpeechRecognitionError;
     #[cfg(feature = "SpeechRecognitionErrorCode")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SpeechRecognitionError" , js_name = error)]
+    #[wasm_bindgen(method, getter, js_class = "SpeechRecognitionError", js_name = "error")]
     #[doc = "Getter for the `error` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionError/error)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`, `SpeechRecognitionErrorCode`*"]
     pub fn error(this: &SpeechRecognitionError) -> SpeechRecognitionErrorCode;
-    # [wasm_bindgen (structural , method , getter , js_class = "SpeechRecognitionError" , js_name = message)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SpeechRecognitionError",
+        js_name = "message"
+    )]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionError/message)"]

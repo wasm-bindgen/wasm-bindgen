@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MediaStreamEvent , typescript_type = "MediaStreamEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "MediaStreamEvent",
+        typescript_type = "MediaStreamEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaStreamEvent` class."]
     #[doc = ""]
@@ -13,7 +18,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamEvent`*"]
     pub type MediaStreamEvent;
     #[cfg(feature = "MediaStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaStreamEvent" , js_name = stream)]
+    #[wasm_bindgen(method, getter, js_class = "MediaStreamEvent", js_name = "stream")]
     #[doc = "Getter for the `stream` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamEvent/stream)"]

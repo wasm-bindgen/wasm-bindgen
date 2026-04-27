@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = ExtendableEvent , extends = Event , extends = :: js_sys :: Object , js_name = ExtendableCookieChangeEvent , typescript_type = "ExtendableCookieChangeEvent")]
+    #[wasm_bindgen(
+        extends = "ExtendableEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "ExtendableCookieChangeEvent",
+        typescript_type = "ExtendableCookieChangeEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ExtendableCookieChangeEvent` class."]
     #[doc = ""]
@@ -12,14 +18,24 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableCookieChangeEvent`*"]
     pub type ExtendableCookieChangeEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableCookieChangeEvent" , js_name = changed)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableCookieChangeEvent",
+        js_name = "changed"
+    )]
     #[doc = "Getter for the `changed` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableCookieChangeEvent/changed)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableCookieChangeEvent`*"]
     pub fn changed(this: &ExtendableCookieChangeEvent) -> ::js_sys::Array;
-    # [wasm_bindgen (structural , method , getter , js_class = "ExtendableCookieChangeEvent" , js_name = deleted)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableCookieChangeEvent",
+        js_name = "deleted"
+    )]
     #[doc = "Getter for the `deleted` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableCookieChangeEvent/deleted)"]

@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = XRInputSourceEvent , typescript_type = "XRInputSourceEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "XRInputSourceEvent",
+        typescript_type = "XRInputSourceEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrInputSourceEvent` class."]
     #[doc = ""]
@@ -18,7 +23,7 @@ extern "C" {
     pub type XrInputSourceEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrFrame")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRInputSourceEvent" , js_name = frame)]
+    #[wasm_bindgen(method, getter, js_class = "XRInputSourceEvent", js_name = "frame")]
     #[doc = "Getter for the `frame` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent/frame)"]
@@ -30,7 +35,12 @@ extern "C" {
     pub fn frame(this: &XrInputSourceEvent) -> XrFrame;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrInputSource")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRInputSourceEvent" , js_name = inputSource)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRInputSourceEvent",
+        js_name = "inputSource"
+    )]
     #[doc = "Getter for the `inputSource` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent/inputSource)"]

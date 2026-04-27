@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = RTCDataChannelEvent , typescript_type = "RTCDataChannelEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "RTCDataChannelEvent",
+        typescript_type = "RTCDataChannelEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `RtcDataChannelEvent` class."]
     #[doc = ""]
@@ -13,7 +18,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcDataChannelEvent`*"]
     pub type RtcDataChannelEvent;
     #[cfg(feature = "RtcDataChannel")]
-    # [wasm_bindgen (structural , method , getter , js_class = "RTCDataChannelEvent" , js_name = channel)]
+    #[wasm_bindgen(method, getter, js_class = "RTCDataChannelEvent", js_name = "channel")]
     #[doc = "Getter for the `channel` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent/channel)"]

@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = BiquadFilterOptions)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "BiquadFilterOptions")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `BiquadFilterOptions` dictionary."]
     #[doc = ""]

@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MutationEvent , typescript_type = "MutationEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "MutationEvent",
+        typescript_type = "MutationEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MutationEvent` class."]
     #[doc = ""]
@@ -13,49 +18,59 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub type MutationEvent;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MutationEvent" , js_name = relatedNode)]
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "relatedNode")]
     #[doc = "Getter for the `relatedNode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/relatedNode)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
     pub fn related_node(this: &MutationEvent) -> Option<Node>;
-    # [wasm_bindgen (structural , method , getter , js_class = "MutationEvent" , js_name = prevValue)]
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "prevValue")]
     #[doc = "Getter for the `prevValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/prevValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn prev_value(this: &MutationEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "MutationEvent" , js_name = newValue)]
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "newValue")]
     #[doc = "Getter for the `newValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/newValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn new_value(this: &MutationEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "MutationEvent" , js_name = attrName)]
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "attrName")]
     #[doc = "Getter for the `attrName` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/attrName)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn attr_name(this: &MutationEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "MutationEvent" , js_name = attrChange)]
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "attrChange")]
     #[doc = "Getter for the `attrChange` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/attrChange)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn attr_change(this: &MutationEvent) -> u16;
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn init_mutation_event(this: &MutationEvent, type_: &str) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
@@ -66,7 +81,12 @@ extern "C" {
         type_: &str,
         can_bubble: bool,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
@@ -79,7 +99,12 @@ extern "C" {
         cancelable: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
@@ -93,7 +118,12 @@ extern "C" {
         related_node: Option<&Node>,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
@@ -108,7 +138,12 @@ extern "C" {
         prev_value: &str,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
@@ -124,7 +159,12 @@ extern "C" {
         new_value: &str,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
@@ -141,7 +181,12 @@ extern "C" {
         attr_name: &str,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (catch , method , structural , js_class = "MutationEvent" , js_name = initMutationEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
     #[doc = "The `initMutationEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]

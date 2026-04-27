@@ -4,7 +4,13 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = UiEvent , extends = Event , extends = :: js_sys :: Object , js_name = KeyboardEvent , typescript_type = "KeyboardEvent")]
+    #[wasm_bindgen(
+        extends = "UiEvent",
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "KeyboardEvent",
+        typescript_type = "KeyboardEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `KeyboardEvent` class."]
     #[doc = ""]
@@ -12,77 +18,77 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub type KeyboardEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = charCode)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "charCode")]
     #[doc = "Getter for the `charCode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/charCode)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn char_code(this: &KeyboardEvent) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = keyCode)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "keyCode")]
     #[doc = "Getter for the `keyCode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn key_code(this: &KeyboardEvent) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = altKey)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "altKey")]
     #[doc = "Getter for the `altKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/altKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn alt_key(this: &KeyboardEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = ctrlKey)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "ctrlKey")]
     #[doc = "Getter for the `ctrlKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/ctrlKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn ctrl_key(this: &KeyboardEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = shiftKey)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "shiftKey")]
     #[doc = "Getter for the `shiftKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/shiftKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn shift_key(this: &KeyboardEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = metaKey)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "metaKey")]
     #[doc = "Getter for the `metaKey` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/metaKey)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn meta_key(this: &KeyboardEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = location)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "location")]
     #[doc = "Getter for the `location` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/location)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn location(this: &KeyboardEvent) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = repeat)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "repeat")]
     #[doc = "Getter for the `repeat` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/repeat)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn repeat(this: &KeyboardEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = isComposing)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "isComposing")]
     #[doc = "Getter for the `isComposing` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/isComposing)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn is_composing(this: &KeyboardEvent) -> bool;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = key)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "key")]
     #[doc = "Getter for the `key` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn key(this: &KeyboardEvent) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "KeyboardEvent" , js_name = code)]
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "code")]
     #[doc = "Getter for the `code` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code)"]
@@ -107,21 +113,31 @@ extern "C" {
         type_arg: &str,
         keyboard_event_init_dict: &KeyboardEventInit,
     ) -> Result<KeyboardEvent, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "KeyboardEvent" , js_name = getModifierState)]
+    #[wasm_bindgen(method, js_class = "KeyboardEvent", js_name = "getModifierState")]
     #[doc = "The `getModifierState()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn get_modifier_state(this: &KeyboardEvent, key: &str) -> bool;
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn init_keyboard_event(this: &KeyboardEvent, type_arg: &str) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -132,7 +148,12 @@ extern "C" {
         type_arg: &str,
         bubbles_arg: bool,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -145,7 +166,12 @@ extern "C" {
         cancelable_arg: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -159,7 +185,12 @@ extern "C" {
         view_arg: Option<&Window>,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -174,7 +205,12 @@ extern "C" {
         key_arg: &str,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -190,7 +226,12 @@ extern "C" {
         location_arg: u32,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -207,7 +248,12 @@ extern "C" {
         ctrl_key: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -225,7 +271,12 @@ extern "C" {
         alt_key: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
@@ -244,7 +295,12 @@ extern "C" {
         shift_key: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (catch , method , structural , js_class = "KeyboardEvent" , js_name = initKeyboardEvent)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
     #[doc = "The `initKeyboardEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]

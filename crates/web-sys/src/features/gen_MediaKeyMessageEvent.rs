@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = MediaKeyMessageEvent , typescript_type = "MediaKeyMessageEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "MediaKeyMessageEvent",
+        typescript_type = "MediaKeyMessageEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `MediaKeyMessageEvent` class."]
     #[doc = ""]
@@ -13,14 +18,25 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeyMessageEvent`*"]
     pub type MediaKeyMessageEvent;
     #[cfg(feature = "MediaKeyMessageType")]
-    # [wasm_bindgen (structural , method , getter , js_class = "MediaKeyMessageEvent" , js_name = messageType)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaKeyMessageEvent",
+        js_name = "messageType"
+    )]
     #[doc = "Getter for the `messageType` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeyMessageEvent/messageType)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeyMessageEvent`, `MediaKeyMessageType`*"]
     pub fn message_type(this: &MediaKeyMessageEvent) -> MediaKeyMessageType;
-    # [wasm_bindgen (structural , catch , method , getter , js_class = "MediaKeyMessageEvent" , js_name = message)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "MediaKeyMessageEvent",
+        js_name = "message"
+    )]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeyMessageEvent/message)"]

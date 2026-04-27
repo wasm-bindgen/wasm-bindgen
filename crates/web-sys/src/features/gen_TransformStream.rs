@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = TransformStream , typescript_type = "TransformStream")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "TransformStream",
+        typescript_type = "TransformStream"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `TransformStream` class."]
     #[doc = ""]
@@ -13,7 +17,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TransformStream`*"]
     pub type TransformStream;
     #[cfg(feature = "ReadableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TransformStream" , js_name = readable)]
+    #[wasm_bindgen(method, getter, js_class = "TransformStream", js_name = "readable")]
     #[doc = "Getter for the `readable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream/readable)"]
@@ -21,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ReadableStream`, `TransformStream`*"]
     pub fn readable(this: &TransformStream) -> ReadableStream;
     #[cfg(feature = "WritableStream")]
-    # [wasm_bindgen (structural , method , getter , js_class = "TransformStream" , js_name = writable)]
+    #[wasm_bindgen(method, getter, js_class = "TransformStream", js_name = "writable")]
     #[doc = "Getter for the `writable` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream/writable)"]

@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = DomRectReadOnly , extends = :: js_sys :: Object , js_name = DOMRect , typescript_type = "DOMRect")]
+    #[wasm_bindgen(
+        extends = "DomRectReadOnly",
+        extends = "::js_sys::Object",
+        js_name = "DOMRect",
+        typescript_type = "DOMRect"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomRect` class."]
     #[doc = ""]
@@ -12,56 +17,56 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub type DomRect;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMRect" , js_name = x)]
+    #[wasm_bindgen(method, getter, js_class = "DOMRect", js_name = "x")]
     #[doc = "Getter for the `x` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/x)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn x(this: &DomRect) -> f64;
-    # [wasm_bindgen (structural , method , setter , js_class = "DOMRect" , js_name = x)]
+    #[wasm_bindgen(method, setter, js_class = "DOMRect", js_name = "x")]
     #[doc = "Setter for the `x` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/x)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn set_x(this: &DomRect, value: f64);
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMRect" , js_name = y)]
+    #[wasm_bindgen(method, getter, js_class = "DOMRect", js_name = "y")]
     #[doc = "Getter for the `y` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/y)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn y(this: &DomRect) -> f64;
-    # [wasm_bindgen (structural , method , setter , js_class = "DOMRect" , js_name = y)]
+    #[wasm_bindgen(method, setter, js_class = "DOMRect", js_name = "y")]
     #[doc = "Setter for the `y` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/y)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn set_y(this: &DomRect, value: f64);
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMRect" , js_name = width)]
+    #[wasm_bindgen(method, getter, js_class = "DOMRect", js_name = "width")]
     #[doc = "Getter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/width)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn width(this: &DomRect) -> f64;
-    # [wasm_bindgen (structural , method , setter , js_class = "DOMRect" , js_name = width)]
+    #[wasm_bindgen(method, setter, js_class = "DOMRect", js_name = "width")]
     #[doc = "Setter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/width)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn set_width(this: &DomRect, value: f64);
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMRect" , js_name = height)]
+    #[wasm_bindgen(method, getter, js_class = "DOMRect", js_name = "height")]
     #[doc = "Getter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/height)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomRect`*"]
     pub fn height(this: &DomRect) -> f64;
-    # [wasm_bindgen (structural , method , setter , js_class = "DOMRect" , js_name = height)]
+    #[wasm_bindgen(method, setter, js_class = "DOMRect", js_name = "height")]
     #[doc = "Setter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect/height)"]

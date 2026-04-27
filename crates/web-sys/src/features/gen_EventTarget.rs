@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = EventTarget , typescript_type = "EventTarget")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "EventTarget",
+        typescript_type = "EventTarget"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `EventTarget` class."]
     #[doc = ""]
@@ -19,7 +23,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventTarget`*"]
     pub fn new() -> Result<EventTarget, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -31,7 +35,7 @@ extern "C" {
         listener: &::js_sys::Function,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "EventListener")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -43,7 +47,7 @@ extern "C" {
         listener: &EventListener,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "AddEventListenerOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -56,7 +60,7 @@ extern "C" {
         options: &AddEventListenerOptions,
     ) -> Result<(), JsValue>;
     #[cfg(all(feature = "AddEventListenerOptions", feature = "EventListener",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -68,7 +72,7 @@ extern "C" {
         listener: &EventListener,
         options: &AddEventListenerOptions,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -81,7 +85,7 @@ extern "C" {
         options: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "EventListener")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -94,7 +98,7 @@ extern "C" {
         options: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "AddEventListenerOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -108,7 +112,7 @@ extern "C" {
         wants_untrusted: Option<bool>,
     ) -> Result<(), JsValue>;
     #[cfg(all(feature = "AddEventListenerOptions", feature = "EventListener",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -121,7 +125,7 @@ extern "C" {
         options: &AddEventListenerOptions,
         wants_untrusted: Option<bool>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -135,7 +139,7 @@ extern "C" {
         wants_untrusted: Option<bool>,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "EventListener")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = addEventListener)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "addEventListener")]
     #[doc = "The `addEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)"]
@@ -149,14 +153,19 @@ extern "C" {
         wants_untrusted: Option<bool>,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Event")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = dispatchEvent)]
+    #[wasm_bindgen(catch, method, js_class = "EventTarget", js_name = "dispatchEvent")]
     #[doc = "The `dispatchEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Event`, `EventTarget`*"]
     pub fn dispatch_event(this: &EventTarget, event: &Event) -> Result<bool, JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = removeEventListener)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "EventTarget",
+        js_name = "removeEventListener"
+    )]
     #[doc = "The `removeEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)"]
@@ -168,7 +177,12 @@ extern "C" {
         listener: &::js_sys::Function,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "EventListener")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = removeEventListener)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "EventTarget",
+        js_name = "removeEventListener"
+    )]
     #[doc = "The `removeEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)"]
@@ -180,7 +194,12 @@ extern "C" {
         listener: &EventListener,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "EventListenerOptions")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = removeEventListener)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "EventTarget",
+        js_name = "removeEventListener"
+    )]
     #[doc = "The `removeEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)"]
@@ -193,7 +212,12 @@ extern "C" {
         options: &EventListenerOptions,
     ) -> Result<(), JsValue>;
     #[cfg(all(feature = "EventListener", feature = "EventListenerOptions",))]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = removeEventListener)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "EventTarget",
+        js_name = "removeEventListener"
+    )]
     #[doc = "The `removeEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)"]
@@ -205,7 +229,12 @@ extern "C" {
         listener: &EventListener,
         options: &EventListenerOptions,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = removeEventListener)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "EventTarget",
+        js_name = "removeEventListener"
+    )]
     #[doc = "The `removeEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)"]
@@ -218,7 +247,12 @@ extern "C" {
         options: bool,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "EventListener")]
-    # [wasm_bindgen (catch , method , structural , js_class = "EventTarget" , js_name = removeEventListener)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "EventTarget",
+        js_name = "removeEventListener"
+    )]
     #[doc = "The `removeEventListener()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)"]

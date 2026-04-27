@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = StorageEvent , typescript_type = "StorageEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "StorageEvent",
+        typescript_type = "StorageEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `StorageEvent` class."]
     #[doc = ""]
@@ -12,28 +17,28 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub type StorageEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "StorageEvent" , js_name = key)]
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "key")]
     #[doc = "Getter for the `key` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/key)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn key(this: &StorageEvent) -> Option<::alloc::string::String>;
-    # [wasm_bindgen (structural , method , getter , js_class = "StorageEvent" , js_name = oldValue)]
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "oldValue")]
     #[doc = "Getter for the `oldValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/oldValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn old_value(this: &StorageEvent) -> Option<::alloc::string::String>;
-    # [wasm_bindgen (structural , method , getter , js_class = "StorageEvent" , js_name = newValue)]
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "newValue")]
     #[doc = "Getter for the `newValue` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/newValue)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn new_value(this: &StorageEvent) -> Option<::alloc::string::String>;
-    # [wasm_bindgen (structural , method , getter , js_class = "StorageEvent" , js_name = url)]
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "url")]
     #[doc = "Getter for the `url` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/url)"]
@@ -41,7 +46,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn url(this: &StorageEvent) -> Option<::alloc::string::String>;
     #[cfg(feature = "Storage")]
-    # [wasm_bindgen (structural , method , getter , js_class = "StorageEvent" , js_name = storageArea)]
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "storageArea")]
     #[doc = "Getter for the `storageArea` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/storageArea)"]
@@ -66,21 +71,21 @@ extern "C" {
         type_: &str,
         event_init_dict: &StorageEventInit,
     ) -> Result<StorageEvent, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn init_storage_event(this: &StorageEvent, type_: &str);
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn init_storage_event_with_can_bubble(this: &StorageEvent, type_: &str, can_bubble: bool);
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
@@ -92,7 +97,7 @@ extern "C" {
         can_bubble: bool,
         cancelable: bool,
     );
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
@@ -105,7 +110,7 @@ extern "C" {
         cancelable: bool,
         key: Option<&str>,
     );
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
@@ -119,7 +124,7 @@ extern "C" {
         key: Option<&str>,
         old_value: Option<&str>,
     );
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
@@ -134,7 +139,7 @@ extern "C" {
         old_value: Option<&str>,
         new_value: Option<&str>,
     );
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]
@@ -151,7 +156,7 @@ extern "C" {
         url: Option<&str>,
     );
     #[cfg(feature = "Storage")]
-    # [wasm_bindgen (method , structural , js_class = "StorageEvent" , js_name = initStorageEvent)]
+    #[wasm_bindgen(method, js_class = "StorageEvent", js_name = "initStorageEvent")]
     #[doc = "The `initStorageEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/initStorageEvent)"]

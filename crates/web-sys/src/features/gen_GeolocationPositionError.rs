@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GeolocationPositionError , typescript_type = "GeolocationPositionError")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "GeolocationPositionError",
+        typescript_type = "GeolocationPositionError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GeolocationPositionError` class."]
     #[doc = ""]
@@ -17,7 +21,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GeolocationPositionError;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationPositionError" , js_name = code)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationPositionError",
+        js_name = "code"
+    )]
     #[doc = "Getter for the `code` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPositionError/code)"]
@@ -28,7 +37,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn code(this: &GeolocationPositionError) -> u16;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationPositionError" , js_name = message)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationPositionError",
+        js_name = "message"
+    )]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPositionError/message)"]

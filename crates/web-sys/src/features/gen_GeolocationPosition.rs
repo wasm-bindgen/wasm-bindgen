@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GeolocationPosition , typescript_type = "GeolocationPosition")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "GeolocationPosition",
+        typescript_type = "GeolocationPosition"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GeolocationPosition` class."]
     #[doc = ""]
@@ -18,7 +22,7 @@ extern "C" {
     pub type GeolocationPosition;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GeolocationCoordinates")]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationPosition" , js_name = coords)]
+    #[wasm_bindgen(method, getter, js_class = "GeolocationPosition", js_name = "coords")]
     #[doc = "Getter for the `coords` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition/coords)"]
@@ -29,7 +33,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn coords(this: &GeolocationPosition) -> GeolocationCoordinates;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationPosition" , js_name = timestamp)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationPosition",
+        js_name = "timestamp"
+    )]
     #[doc = "Getter for the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition/timestamp)"]

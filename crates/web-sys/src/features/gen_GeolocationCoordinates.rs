@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GeolocationCoordinates , typescript_type = "GeolocationCoordinates")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "GeolocationCoordinates",
+        typescript_type = "GeolocationCoordinates"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GeolocationCoordinates` class."]
     #[doc = ""]
@@ -17,7 +21,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type GeolocationCoordinates;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = accuracy)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationCoordinates",
+        js_name = "accuracy"
+    )]
     #[doc = "Getter for the `accuracy` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/accuracy)"]
@@ -28,7 +37,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn accuracy(this: &GeolocationCoordinates) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = latitude)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationCoordinates",
+        js_name = "latitude"
+    )]
     #[doc = "Getter for the `latitude` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/latitude)"]
@@ -39,7 +53,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn latitude(this: &GeolocationCoordinates) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = longitude)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationCoordinates",
+        js_name = "longitude"
+    )]
     #[doc = "Getter for the `longitude` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/longitude)"]
@@ -50,7 +69,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn longitude(this: &GeolocationCoordinates) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = altitude)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationCoordinates",
+        js_name = "altitude"
+    )]
     #[doc = "Getter for the `altitude` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/altitude)"]
@@ -61,7 +85,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn altitude(this: &GeolocationCoordinates) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = altitudeAccuracy)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationCoordinates",
+        js_name = "altitudeAccuracy"
+    )]
     #[doc = "Getter for the `altitudeAccuracy` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/altitudeAccuracy)"]
@@ -72,7 +101,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn altitude_accuracy(this: &GeolocationCoordinates) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = heading)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GeolocationCoordinates",
+        js_name = "heading"
+    )]
     #[doc = "Getter for the `heading` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/heading)"]
@@ -83,7 +117,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn heading(this: &GeolocationCoordinates) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "GeolocationCoordinates" , js_name = speed)]
+    #[wasm_bindgen(method, getter, js_class = "GeolocationCoordinates", js_name = "speed")]
     #[doc = "Getter for the `speed` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/speed)"]

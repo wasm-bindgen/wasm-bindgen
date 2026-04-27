@@ -4,7 +4,15 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGFEDisplacementMapElement , typescript_type = "SVGFEDisplacementMapElement")]
+    #[wasm_bindgen(
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGFEDisplacementMapElement",
+        typescript_type = "SVGFEDisplacementMapElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgfeDisplacementMapElement` class."]
     #[doc = ""]
@@ -13,7 +21,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgfeDisplacementMapElement`*"]
     pub type SvgfeDisplacementMapElement;
     #[cfg(feature = "SvgAnimatedString")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = in1)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "in1"
+    )]
     #[doc = "Getter for the `in1` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/in1)"]
@@ -21,7 +34,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`, `SvgfeDisplacementMapElement`*"]
     pub fn in1(this: &SvgfeDisplacementMapElement) -> SvgAnimatedString;
     #[cfg(feature = "SvgAnimatedString")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = in2)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "in2"
+    )]
     #[doc = "Getter for the `in2` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/in2)"]
@@ -29,7 +47,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`, `SvgfeDisplacementMapElement`*"]
     pub fn in2(this: &SvgfeDisplacementMapElement) -> SvgAnimatedString;
     #[cfg(feature = "SvgAnimatedNumber")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = scale)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "scale"
+    )]
     #[doc = "Getter for the `scale` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/scale)"]
@@ -37,7 +60,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedNumber`, `SvgfeDisplacementMapElement`*"]
     pub fn scale(this: &SvgfeDisplacementMapElement) -> SvgAnimatedNumber;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = xChannelSelector)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "xChannelSelector"
+    )]
     #[doc = "Getter for the `xChannelSelector` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/xChannelSelector)"]
@@ -45,7 +73,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgfeDisplacementMapElement`*"]
     pub fn x_channel_selector(this: &SvgfeDisplacementMapElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedEnumeration")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = yChannelSelector)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "yChannelSelector"
+    )]
     #[doc = "Getter for the `yChannelSelector` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/yChannelSelector)"]
@@ -53,7 +86,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedEnumeration`, `SvgfeDisplacementMapElement`*"]
     pub fn y_channel_selector(this: &SvgfeDisplacementMapElement) -> SvgAnimatedEnumeration;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = x)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "x"
+    )]
     #[doc = "Getter for the `x` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/x)"]
@@ -61,7 +99,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeDisplacementMapElement`*"]
     pub fn x(this: &SvgfeDisplacementMapElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = y)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "y"
+    )]
     #[doc = "Getter for the `y` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/y)"]
@@ -69,7 +112,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeDisplacementMapElement`*"]
     pub fn y(this: &SvgfeDisplacementMapElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = width)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "width"
+    )]
     #[doc = "Getter for the `width` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/width)"]
@@ -77,7 +125,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeDisplacementMapElement`*"]
     pub fn width(this: &SvgfeDisplacementMapElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedLength")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = height)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "height"
+    )]
     #[doc = "Getter for the `height` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/height)"]
@@ -85,7 +138,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedLength`, `SvgfeDisplacementMapElement`*"]
     pub fn height(this: &SvgfeDisplacementMapElement) -> SvgAnimatedLength;
     #[cfg(feature = "SvgAnimatedString")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGFEDisplacementMapElement" , js_name = result)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGFEDisplacementMapElement",
+        js_name = "result"
+    )]
     #[doc = "Getter for the `result` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGFEDisplacementMapElement/result)"]

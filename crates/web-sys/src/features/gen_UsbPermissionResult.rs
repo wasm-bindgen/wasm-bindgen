@@ -5,7 +5,13 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = PermissionStatus , extends = EventTarget , extends = :: js_sys :: Object , js_name = USBPermissionResult , typescript_type = "USBPermissionResult")]
+    #[wasm_bindgen(
+        extends = "PermissionStatus",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "USBPermissionResult",
+        typescript_type = "USBPermissionResult"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UsbPermissionResult` class."]
     #[doc = ""]
@@ -18,7 +24,7 @@ extern "C" {
     pub type UsbPermissionResult;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbDevice")]
-    # [wasm_bindgen (structural , method , getter , js_class = "USBPermissionResult" , js_name = devices)]
+    #[wasm_bindgen(method, getter, js_class = "USBPermissionResult", js_name = "devices")]
     #[doc = "Getter for the `devices` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBPermissionResult/devices)"]
@@ -30,7 +36,7 @@ extern "C" {
     pub fn devices(this: &UsbPermissionResult) -> ::js_sys::Array<UsbDevice>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbDevice")]
-    # [wasm_bindgen (structural , method , setter , js_class = "USBPermissionResult" , js_name = devices)]
+    #[wasm_bindgen(method, setter, js_class = "USBPermissionResult", js_name = "devices")]
     #[doc = "Setter for the `devices` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/USBPermissionResult/devices)"]

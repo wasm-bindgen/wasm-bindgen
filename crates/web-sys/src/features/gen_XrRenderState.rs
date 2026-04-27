@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = XRRenderState , typescript_type = "XRRenderState")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "XRRenderState",
+        typescript_type = "XRRenderState"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `XrRenderState` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type XrRenderState;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRenderState" , js_name = depthNear)]
+    #[wasm_bindgen(method, getter, js_class = "XRRenderState", js_name = "depthNear")]
     #[doc = "Getter for the `depthNear` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRenderState/depthNear)"]
@@ -28,7 +32,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn depth_near(this: &XrRenderState) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRenderState" , js_name = depthFar)]
+    #[wasm_bindgen(method, getter, js_class = "XRRenderState", js_name = "depthFar")]
     #[doc = "Getter for the `depthFar` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRenderState/depthFar)"]
@@ -39,7 +43,12 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn depth_far(this: &XrRenderState) -> f64;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRenderState" , js_name = inlineVerticalFieldOfView)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "XRRenderState",
+        js_name = "inlineVerticalFieldOfView"
+    )]
     #[doc = "Getter for the `inlineVerticalFieldOfView` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRenderState/inlineVerticalFieldOfView)"]
@@ -51,7 +60,7 @@ extern "C" {
     pub fn inline_vertical_field_of_view(this: &XrRenderState) -> Option<f64>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "XrWebGlLayer")]
-    # [wasm_bindgen (structural , method , getter , js_class = "XRRenderState" , js_name = baseLayer)]
+    #[wasm_bindgen(method, getter, js_class = "XRRenderState", js_name = "baseLayer")]
     #[doc = "Getter for the `baseLayer` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRRenderState/baseLayer)"]

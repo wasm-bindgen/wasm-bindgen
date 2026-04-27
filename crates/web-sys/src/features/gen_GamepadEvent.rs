@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = GamepadEvent , typescript_type = "GamepadEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "GamepadEvent",
+        typescript_type = "GamepadEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GamepadEvent` class."]
     #[doc = ""]
@@ -13,7 +18,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `GamepadEvent`*"]
     pub type GamepadEvent;
     #[cfg(feature = "Gamepad")]
-    # [wasm_bindgen (structural , method , getter , js_class = "GamepadEvent" , js_name = gamepad)]
+    #[wasm_bindgen(method, getter, js_class = "GamepadEvent", js_name = "gamepad")]
     #[doc = "Getter for the `gamepad` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GamepadEvent/gamepad)"]

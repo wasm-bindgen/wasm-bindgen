@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = PerformanceMeasureOptions)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "PerformanceMeasureOptions")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PerformanceMeasureOptions` dictionary."]
     #[doc = ""]

@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = PictureInPictureEvent , typescript_type = "PictureInPictureEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "PictureInPictureEvent",
+        typescript_type = "PictureInPictureEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `PictureInPictureEvent` class."]
     #[doc = ""]
@@ -18,7 +23,12 @@ extern "C" {
     pub type PictureInPictureEvent;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PictureInPictureWindow")]
-    # [wasm_bindgen (structural , method , getter , js_class = "PictureInPictureEvent" , js_name = pictureInPictureWindow)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PictureInPictureEvent",
+        js_name = "pictureInPictureWindow"
+    )]
     #[doc = "Getter for the `pictureInPictureWindow` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PictureInPictureEvent/pictureInPictureWindow)"]

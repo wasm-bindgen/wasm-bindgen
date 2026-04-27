@@ -4,7 +4,10 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = RequestMediaKeySystemAccessNotification)]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "RequestMediaKeySystemAccessNotification"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `RequestMediaKeySystemAccessNotification` dictionary."]
     #[doc = ""]

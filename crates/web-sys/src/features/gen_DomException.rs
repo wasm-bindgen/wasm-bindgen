@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = DOMException , typescript_type = "DOMException")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "DOMException",
+        typescript_type = "DOMException"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DomException` class."]
     #[doc = ""]
@@ -12,63 +16,63 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub type DomException;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = name)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/name)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn name(this: &DomException) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = message)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "message")]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/message)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn message(this: &DomException) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = code)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "code")]
     #[doc = "Getter for the `code` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/code)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn code(this: &DomException) -> u16;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = result)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "result")]
     #[doc = "Getter for the `result` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/result)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn result(this: &DomException) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = filename)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "filename")]
     #[doc = "Getter for the `filename` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/filename)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn filename(this: &DomException) -> ::alloc::string::String;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = lineNumber)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "lineNumber")]
     #[doc = "Getter for the `lineNumber` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/lineNumber)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn line_number(this: &DomException) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = columnNumber)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "columnNumber")]
     #[doc = "Getter for the `columnNumber` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/columnNumber)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn column_number(this: &DomException) -> u32;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = data)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "data")]
     #[doc = "Getter for the `data` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/data)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn data(this: &DomException) -> Option<::js_sys::Object>;
-    # [wasm_bindgen (structural , method , getter , js_class = "DOMException" , js_name = stack)]
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "stack")]
     #[doc = "Getter for the `stack` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/stack)"]

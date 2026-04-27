@@ -4,7 +4,11 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = SVGAnimatedAngle , typescript_type = "SVGAnimatedAngle")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "SVGAnimatedAngle",
+        typescript_type = "SVGAnimatedAngle"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgAnimatedAngle` class."]
     #[doc = ""]
@@ -13,7 +17,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedAngle`*"]
     pub type SvgAnimatedAngle;
     #[cfg(feature = "SvgAngle")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGAnimatedAngle" , js_name = baseVal)]
+    #[wasm_bindgen(method, getter, js_class = "SVGAnimatedAngle", js_name = "baseVal")]
     #[doc = "Getter for the `baseVal` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAnimatedAngle/baseVal)"]
@@ -21,7 +25,7 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SvgAngle`, `SvgAnimatedAngle`*"]
     pub fn base_val(this: &SvgAnimatedAngle) -> SvgAngle;
     #[cfg(feature = "SvgAngle")]
-    # [wasm_bindgen (structural , method , getter , js_class = "SVGAnimatedAngle" , js_name = animVal)]
+    #[wasm_bindgen(method, getter, js_class = "SVGAnimatedAngle", js_name = "animVal")]
     #[doc = "Getter for the `animVal` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAnimatedAngle/animVal)"]

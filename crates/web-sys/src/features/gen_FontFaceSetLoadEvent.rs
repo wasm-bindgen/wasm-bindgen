@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = FontFaceSetLoadEvent , typescript_type = "FontFaceSetLoadEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "FontFaceSetLoadEvent",
+        typescript_type = "FontFaceSetLoadEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `FontFaceSetLoadEvent` class."]
     #[doc = ""]
@@ -12,7 +17,12 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceSetLoadEvent`*"]
     pub type FontFaceSetLoadEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "FontFaceSetLoadEvent" , js_name = fontfaces)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "FontFaceSetLoadEvent",
+        js_name = "fontfaces"
+    )]
     #[doc = "Getter for the `fontfaces` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSetLoadEvent/fontfaces)"]

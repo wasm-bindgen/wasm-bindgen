@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = Lock , typescript_type = "Lock")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "Lock",
+        typescript_type = "Lock"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Lock` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type Lock;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "Lock" , js_name = name)]
+    #[wasm_bindgen(method, getter, js_class = "Lock", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Lock/name)"]
@@ -29,7 +33,7 @@ extern "C" {
     pub fn name(this: &Lock) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "LockMode")]
-    # [wasm_bindgen (structural , method , getter , js_class = "Lock" , js_name = mode)]
+    #[wasm_bindgen(method, getter, js_class = "Lock", js_name = "mode")]
     #[doc = "Getter for the `mode` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Lock/mode)"]

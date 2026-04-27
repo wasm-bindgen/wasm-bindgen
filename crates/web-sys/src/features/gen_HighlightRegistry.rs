@@ -5,7 +5,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = HighlightRegistry , typescript_type = "HighlightRegistry")]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "HighlightRegistry",
+        typescript_type = "HighlightRegistry"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `HighlightRegistry` class."]
     #[doc = ""]
@@ -17,7 +21,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub type HighlightRegistry;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (structural , method , getter , js_class = "HighlightRegistry" , js_name = size)]
+    #[wasm_bindgen(method, getter, js_class = "HighlightRegistry", js_name = "size")]
     #[doc = "Getter for the `size` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/size)"]
@@ -28,7 +32,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn size(this: &HighlightRegistry) -> u32;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = clear)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/clear)"]
@@ -39,7 +43,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn clear(this: &HighlightRegistry);
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = delete)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `delete()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/delete)"]
@@ -51,7 +55,7 @@ extern "C" {
     pub fn delete(this: &HighlightRegistry, key: &str) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
-    # [wasm_bindgen (catch , method , structural , js_class = "HighlightRegistry" , js_name = forEach)]
+    #[wasm_bindgen(catch, method, js_class = "HighlightRegistry", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/forEach)"]
@@ -66,7 +70,7 @@ extern "C" {
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = get)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `get()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/get)"]
@@ -77,7 +81,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get(this: &HighlightRegistry, key: &str) -> Option<Highlight>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = has)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `has()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/has)"]
@@ -89,7 +93,11 @@ extern "C" {
     pub fn has(this: &HighlightRegistry, key: &str) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HighlightHitResult")]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = highlightsFromPoint)]
+    #[wasm_bindgen(
+        method,
+        js_class = "HighlightRegistry",
+        js_name = "highlightsFromPoint"
+    )]
     #[doc = "The `highlightsFromPoint()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/highlightsFromPoint)"]
@@ -105,7 +113,11 @@ extern "C" {
     ) -> ::js_sys::Array<HighlightHitResult>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "HighlightHitResult", feature = "HighlightsFromPointOptions",))]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = highlightsFromPoint)]
+    #[wasm_bindgen(
+        method,
+        js_class = "HighlightRegistry",
+        js_name = "highlightsFromPoint"
+    )]
     #[doc = "The `highlightsFromPoint()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/highlightsFromPoint)"]
@@ -122,7 +134,7 @@ extern "C" {
     ) -> ::js_sys::Array<HighlightHitResult>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = set)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `set()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/set)"]
@@ -134,7 +146,7 @@ extern "C" {
     pub fn set(this: &HighlightRegistry, key: &str, value: &Highlight) -> HighlightRegistry;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = entries)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `entries()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/entries)"]
@@ -147,7 +159,7 @@ extern "C" {
         this: &HighlightRegistry,
     ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::JsString, Highlight)>>;
     #[cfg(web_sys_unstable_apis)]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = keys)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `keys()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/keys)"]
@@ -159,7 +171,7 @@ extern "C" {
     pub fn keys(this: &HighlightRegistry) -> ::js_sys::Iterator<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
-    # [wasm_bindgen (method , structural , js_class = "HighlightRegistry" , js_name = values)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `values()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/values)"]

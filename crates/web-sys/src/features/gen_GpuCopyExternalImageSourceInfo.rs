@@ -5,7 +5,10 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUCopyExternalImageSourceInfo)]
+    #[wasm_bindgen(
+        extends = "::js_sys::Object",
+        js_name = "GPUCopyExternalImageSourceInfo"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuCopyExternalImageSourceInfo` dictionary."]
     #[doc = ""]

@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = ErrorCallback)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "ErrorCallback")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ErrorCallback` dictionary.\n\n*This API requires the following crate features to be activated: `ErrorCallback`*"]
     pub type ErrorCallback;

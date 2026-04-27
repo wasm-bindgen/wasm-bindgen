@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = UIEvent , typescript_type = "UIEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "UIEvent",
+        typescript_type = "UIEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UiEvent` class."]
     #[doc = ""]
@@ -13,49 +18,49 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub type UiEvent;
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = view)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "view")]
     #[doc = "Getter for the `view` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/view)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`, `Window`*"]
     pub fn view(this: &UiEvent) -> Option<Window>;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = detail)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "detail")]
     #[doc = "Getter for the `detail` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/detail)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn detail(this: &UiEvent) -> i32;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = layerX)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "layerX")]
     #[doc = "Getter for the `layerX` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn layer_x(this: &UiEvent) -> i32;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = layerY)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "layerY")]
     #[doc = "Getter for the `layerY` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerY)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn layer_y(this: &UiEvent) -> i32;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = pageX)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "pageX")]
     #[doc = "Getter for the `pageX` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/pageX)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn page_x(this: &UiEvent) -> i32;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = pageY)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "pageY")]
     #[doc = "Getter for the `pageY` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/pageY)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn page_y(this: &UiEvent) -> i32;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = which)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "which")]
     #[doc = "Getter for the `which` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/which)"]
@@ -63,14 +68,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn which(this: &UiEvent) -> u32;
     #[cfg(feature = "Node")]
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = rangeParent)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "rangeParent")]
     #[doc = "Getter for the `rangeParent` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/rangeParent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`, `UiEvent`*"]
     pub fn range_parent(this: &UiEvent) -> Option<Node>;
-    # [wasm_bindgen (structural , method , getter , js_class = "UIEvent" , js_name = rangeOffset)]
+    #[wasm_bindgen(method, getter, js_class = "UIEvent", js_name = "rangeOffset")]
     #[doc = "Getter for the `rangeOffset` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/rangeOffset)"]
@@ -95,21 +100,21 @@ extern "C" {
         type_: &str,
         event_init_dict: &UiEventInit,
     ) -> Result<UiEvent, JsValue>;
-    # [wasm_bindgen (method , structural , js_class = "UIEvent" , js_name = initUIEvent)]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
     #[doc = "The `initUIEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn init_ui_event(this: &UiEvent, a_type: &str);
-    # [wasm_bindgen (method , structural , js_class = "UIEvent" , js_name = initUIEvent)]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
     #[doc = "The `initUIEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn init_ui_event_with_a_can_bubble(this: &UiEvent, a_type: &str, a_can_bubble: bool);
-    # [wasm_bindgen (method , structural , js_class = "UIEvent" , js_name = initUIEvent)]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
     #[doc = "The `initUIEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
@@ -122,7 +127,7 @@ extern "C" {
         a_cancelable: bool,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "UIEvent" , js_name = initUIEvent)]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
     #[doc = "The `initUIEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
@@ -136,7 +141,7 @@ extern "C" {
         a_view: Option<&Window>,
     );
     #[cfg(feature = "Window")]
-    # [wasm_bindgen (method , structural , js_class = "UIEvent" , js_name = initUIEvent)]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
     #[doc = "The `initUIEvent()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]

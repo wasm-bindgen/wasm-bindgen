@@ -4,7 +4,16 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = SvgAnimationElement , extends = SvgElement , extends = Element , extends = Node , extends = EventTarget , extends = :: js_sys :: Object , js_name = SVGAnimateTransformElement , typescript_type = "SVGAnimateTransformElement")]
+    #[wasm_bindgen(
+        extends = "SvgAnimationElement",
+        extends = "SvgElement",
+        extends = "Element",
+        extends = "Node",
+        extends = "EventTarget",
+        extends = "::js_sys::Object",
+        js_name = "SVGAnimateTransformElement",
+        typescript_type = "SVGAnimateTransformElement"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `SvgAnimateTransformElement` class."]
     #[doc = ""]

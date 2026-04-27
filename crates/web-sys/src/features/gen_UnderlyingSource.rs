@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = UnderlyingSource)]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "UnderlyingSource")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `UnderlyingSource` dictionary."]
     #[doc = ""]

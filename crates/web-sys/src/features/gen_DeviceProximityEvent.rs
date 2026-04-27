@@ -4,7 +4,12 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = Event , extends = :: js_sys :: Object , js_name = DeviceProximityEvent , typescript_type = "DeviceProximityEvent")]
+    #[wasm_bindgen(
+        extends = "Event",
+        extends = "::js_sys::Object",
+        js_name = "DeviceProximityEvent",
+        typescript_type = "DeviceProximityEvent"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `DeviceProximityEvent` class."]
     #[doc = ""]
@@ -12,21 +17,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceProximityEvent`*"]
     pub type DeviceProximityEvent;
-    # [wasm_bindgen (structural , method , getter , js_class = "DeviceProximityEvent" , js_name = value)]
+    #[wasm_bindgen(method, getter, js_class = "DeviceProximityEvent", js_name = "value")]
     #[doc = "Getter for the `value` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceProximityEvent/value)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceProximityEvent`*"]
     pub fn value(this: &DeviceProximityEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "DeviceProximityEvent" , js_name = min)]
+    #[wasm_bindgen(method, getter, js_class = "DeviceProximityEvent", js_name = "min")]
     #[doc = "Getter for the `min` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceProximityEvent/min)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceProximityEvent`*"]
     pub fn min(this: &DeviceProximityEvent) -> f64;
-    # [wasm_bindgen (structural , method , getter , js_class = "DeviceProximityEvent" , js_name = max)]
+    #[wasm_bindgen(method, getter, js_class = "DeviceProximityEvent", js_name = "max")]
     #[doc = "Getter for the `max` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceProximityEvent/max)"]

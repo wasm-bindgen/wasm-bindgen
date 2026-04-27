@@ -4,7 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = U2F , typescript_type = "U2F")]
+    #[wasm_bindgen(extends = "::js_sys::Object", js_name = "U2F", typescript_type = "U2F")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `U2f` class."]
     #[doc = ""]
@@ -12,7 +12,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
     pub type U2f;
-    # [wasm_bindgen (catch , method , structural , js_class = "U2F" , js_name = register)]
+    #[wasm_bindgen(catch, method, js_class = "U2F")]
     #[doc = "The `register()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/register)"]
@@ -25,7 +25,7 @@ extern "C" {
         registered_keys: &::wasm_bindgen::JsValue,
         callback: &::js_sys::Function,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "U2F" , js_name = register)]
+    #[wasm_bindgen(catch, method, js_class = "U2F", js_name = "register")]
     #[doc = "The `register()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/register)"]
@@ -39,7 +39,7 @@ extern "C" {
         callback: &::js_sys::Function,
         opt_timeout_seconds: Option<i32>,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "U2F" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "U2F")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/sign)"]
@@ -52,7 +52,7 @@ extern "C" {
         registered_keys: &::wasm_bindgen::JsValue,
         callback: &::js_sys::Function,
     ) -> Result<(), JsValue>;
-    # [wasm_bindgen (catch , method , structural , js_class = "U2F" , js_name = sign)]
+    #[wasm_bindgen(catch, method, js_class = "U2F", js_name = "sign")]
     #[doc = "The `sign()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/sign)"]

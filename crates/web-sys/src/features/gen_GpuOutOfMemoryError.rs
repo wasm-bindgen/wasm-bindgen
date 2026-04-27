@@ -5,7 +5,12 @@ use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = GpuError , extends = :: js_sys :: Object , js_name = GPUOutOfMemoryError , typescript_type = "GPUOutOfMemoryError")]
+    #[wasm_bindgen(
+        extends = "GpuError",
+        extends = "::js_sys::Object",
+        js_name = "GPUOutOfMemoryError",
+        typescript_type = "GPUOutOfMemoryError"
+    )]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuOutOfMemoryError` class."]
     #[doc = ""]
