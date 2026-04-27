@@ -13,6 +13,7 @@ version = "0.2.118"
 
 [features]
 extra-traits = ["syn/extra-traits"]
+js-sys = []
 strict-macro = []
 
 [dependencies]

@@ -1,15 +1,15 @@
 error[E0433]: failed to resolve: could not find `__wbindgen_coverage` in `test`
-  --> ui-tests/wasm-bindgen.rs:37:1
+  --> ui-tests/wasm-bindgen.rs:43:1
    |
-37 | #[wasm_bindgen(wasm_bindgen = test)]
+43 | #[wasm_bindgen(wasm_bindgen = test)]
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ could not find `__wbindgen_coverage` in `test`
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0425]: cannot find function `future_to_promise` in module `test`
-  --> ui-tests/wasm-bindgen.rs:40:1
+  --> ui-tests/wasm-bindgen.rs:46:1
    |
-40 | #[wasm_bindgen(wasm_bindgen_futures = test)]
+46 | #[wasm_bindgen(wasm_bindgen_futures = test)]
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `test`
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

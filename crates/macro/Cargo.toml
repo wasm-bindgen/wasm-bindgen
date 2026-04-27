@@ -17,6 +17,7 @@ version = "0.2.118"
 proc-macro = true
 
 [features]
+js-sys = ["wasm-bindgen-macro-support/js-sys"]
 strict-macro = ["wasm-bindgen-macro-support/strict-macro"]
 
 [dependencies]

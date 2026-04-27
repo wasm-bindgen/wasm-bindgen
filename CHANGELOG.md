@@ -23,6 +23,16 @@
   instantiated `WebAssembly.Instance`.
   [#5118](https://github.com/wasm-bindgen/wasm-bindgen/pull/5118)
 
+### Added
+
+* Added an explicit opt-in `js-sys` feature to `wasm-bindgen` that makes async
+  macro codegen use `js_sys::futures` instead of `wasm_bindgen_futures`,
+  removing the need for `wasm-bindgen-futures` as a separate dependency when the
+  crate also depends directly on `js-sys`. This is not enabled automatically by
+  transitive `js-sys` dependencies, since the crate using `#[wasm_bindgen]` must
+  be able to resolve the generated `::js_sys` path.
+  [#5112](https://github.com/wasm-bindgen/wasm-bindgen/pull/5112)
+
 ### Fixed
 
 * Fixed namespaced export identifiers in generated JS/TS to use qualified names

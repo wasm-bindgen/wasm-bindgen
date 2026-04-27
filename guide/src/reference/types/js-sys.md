@@ -175,16 +175,8 @@ async fn example() -> Result<Number, JsValue> {
 }
 ```
 
-This requires the `futures` feature on `js-sys`, which is activated
-automatically when `wasm-bindgen-futures` is a dependency. Enable it directly
-if needed:
-
-```toml
-[dependencies]
-js-sys = { version = "0.3", features = ["futures"] }
-```
-
-If you need a named [`JsFuture`] value, use `JsFuture::from`:
+If you need a named [`JsFuture`]
+value, use `JsFuture::from`:
 
 ```rust
 use js_sys::futures::JsFuture;

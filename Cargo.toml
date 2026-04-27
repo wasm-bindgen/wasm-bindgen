@@ -24,6 +24,7 @@ test = false
 [features]
 default = ["std"]
 enable-interning = ["std"]
+js-sys = ["wasm-bindgen-macro/js-sys"]
 serde-serialize = ["serde", "serde_json", "std"]
 spans = []
 std = []

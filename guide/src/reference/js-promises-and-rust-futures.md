@@ -22,14 +22,6 @@ async fn get_from_js() -> Result<JsValue, JsValue> {
 }
 ```
 
-This works out of the box when `wasm-bindgen-futures` is in your dependency
-tree, which activates the `futures` feature on `js-sys`. You can also enable
-it explicitly without `wasm-bindgen-futures`:
-
-```toml
-[dependencies]
-js-sys = { version = "0.3", features = ["futures"] }
-```
 
 For typed promises the awaited value matches the type parameter directly:
 
@@ -365,13 +357,43 @@ async fn process_numbers() -> Result<f64, JsValue> {
 }
 ```
 
+## Using `js_sys` directly without `wasm-bindgen-futures`
+
+By default the `#[wasm_bindgen]` macro continues to generate async glue that
+references `wasm_bindgen_futures`. If you want to depend only on `js-sys` and
+avoid pulling in `wasm-bindgen-futures`, depend directly on `js-sys` and enable
+the `js-sys` feature on `wasm-bindgen`:
+
+```toml
+[dependencies]
+js-sys = "..."
+wasm-bindgen = { version = "...", features = ["js-sys"] }
+```
+
+```rust
+#[wasm_bindgen]
+pub async fn foo() {
+    // codegen uses js_sys::futures::future_to_promise / spawn_local
+}
+
+#[wasm_bindgen]
+extern "C" {
+    async fn fetch(url: &str) -> JsValue;
+}
+```
+
+This feature is not enabled automatically by transitive `js-sys` dependencies:
+the crate using `#[wasm_bindgen]` must be able to resolve the generated
+`::js_sys` path. The existing `js_sys = my_crate::js_sys` attribute remains
+available as a path override for re-export crates, but it does not enable
+`js_sys::futures` codegen by itself.
+
 ## Compatibility note
 
-`wasm-bindgen-futures` is now a thin re-export shim. The implementation lives
-in `js-sys` under the `futures` feature, which `wasm-bindgen-futures` activates
-automatically when it is a dependency. All existing import paths
-(`wasm_bindgen_futures::JsFuture`, `wasm_bindgen_futures::spawn_local`, etc.)
-continue to work without any changes.
+`wasm-bindgen-futures` is now a thin re-export shim. The futures implementation
+lives in `js-sys` and is always available (no feature gate required). All
+existing import paths (`wasm_bindgen_futures::JsFuture`,
+`wasm_bindgen_futures::spawn_local`, etc.) continue to work without changes.
 
 Learn more:
 

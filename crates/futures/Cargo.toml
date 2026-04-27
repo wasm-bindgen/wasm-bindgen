@@ -17,11 +17,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-# Depending on js-sys with the "futures" feature activates IntoFuture for Promise
-# and makes promise.await work automatically.
-js-sys = { path = "../js-sys", version = "=0.3.95", default-features = false, features = [
-  "futures",
-] }
+js-sys = { path = "../js-sys", version = "=0.3.95", default-features = false }
 wasm-bindgen = { path = "../..", version = "=0.2.118", default-features = false }
 
 [features]
