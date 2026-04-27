@@ -99,7 +99,11 @@ use core::future::Future;
 use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{self, Poll};
-use js_sys::{Array, Function, Number, Promise, Undefined};
+#[cfg(target_arch = "wasm64")]
+use js_sys::BigInt;
+#[cfg(target_arch = "wasm32")]
+use js_sys::Number;
+use js_sys::{Array, Function, Promise};
 pub use wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
@@ -401,11 +405,11 @@ impl Context {
         // to pass native function pointers around here). Each test will
         // execute one of the `execute_*` tests below which will push a
         // future onto our `remaining` list, which we'll process later.
-        let cx_arg = Number::from(self as *const Context as u32);
+        let cx_arg = context_arg(self);
         for test in tests {
             match test
-                .unchecked_into::<Function<fn(Number) -> Undefined>>()
-                .call(&JsValue::null(), (&cx_arg,))
+                .unchecked_into::<Function>()
+                .call1(&JsValue::null(), &cx_arg)
             {
                 Ok(_) => {}
                 Err(e) => {
@@ -426,6 +430,21 @@ impl Context {
             Ok(JsValue::from(passed))
         })
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn context_arg(cx: &Context) -> JsValue {
+    Number::from(cx as *const Context as u32).into()
+}
+
+#[cfg(target_arch = "wasm64")]
+fn context_arg(cx: &Context) -> JsValue {
+    BigInt::from(cx as *const Context as u64).into()
+}
+
+#[cfg(not(target_family = "wasm"))]
+fn context_arg(_cx: &Context) -> JsValue {
+    JsValue::NULL
 }
 
 crate::scoped_thread_local!(static CURRENT_OUTPUT: RefCell<Output>);

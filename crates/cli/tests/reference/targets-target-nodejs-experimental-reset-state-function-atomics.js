@@ -61,8 +61,7 @@ function __wbg_call_guard() {
 let __wbg_instance_id = 0;
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

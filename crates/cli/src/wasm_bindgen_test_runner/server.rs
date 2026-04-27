@@ -445,6 +445,7 @@ SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
         worker_script.push_str(&format!(
             r#"
             const nocapture = {nocapture};
+            const is_bench = {is_bench};
             {forward_console_message_fn}
             const wrap = method => {{
                 const on_method = `on_console_${{method}}`;
@@ -452,7 +453,7 @@ SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
                     if (nocapture) {{
                         self.__wbg_test_output_writeln(...args);
                     }}
-                    if (self[on_method]) {{
+                    if (!is_bench && self[on_method]) {{
                         self[on_method](args);
                     }}
                     __wbg_forward_console_message(port.postMessage.bind(port), method, args);
@@ -682,6 +683,7 @@ SharedWorker.prototype = __wbg_OriginalSharedWorker.prototype;
                 include_str!("index.html")
             };
             let s = s.replace("// {NOCAPTURE}", &format!("const nocapture = {nocapture};"));
+            let s = s.replace("// {IS_BENCH}", &format!("const is_bench = {is_bench};"));
             let s = if !test_mode.is_worker() && test_mode.no_modules() {
                 s.replace(
                     "<!-- {IMPORT_SCRIPTS} -->",

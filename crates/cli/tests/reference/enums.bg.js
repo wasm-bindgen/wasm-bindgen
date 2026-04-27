@@ -96,8 +96,7 @@ export function __wbindgen_init_externref_table() {
 const __wbindgen_enum_ColorName = ["green", "yellow", "red"];
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   coverage:
+    if: github.event_name == 'pull_request' || github.repository == 'wasm-bindgen/wasm-bindgen'
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always

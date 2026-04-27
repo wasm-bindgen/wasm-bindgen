@@ -6,6 +6,16 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
+#[cfg(target_arch = "wasm32")]
+fn wasm_memory_grow(_mem: u32, delta: usize) -> usize {
+    core::arch::wasm32::memory_grow::<0>(delta)
+}
+
+#[cfg(target_arch = "wasm64")]
+fn wasm_memory_grow(_mem: u32, delta: usize) -> usize {
+    core::arch::wasm64::memory_grow::<0>(delta)
+}
+
 #[wasm_bindgen(module = "tests/wasm/memory_growth.js")]
 extern "C" {
     fn get_memory_byte_length() -> u32;
@@ -65,10 +75,10 @@ fn explicit_memory_grow() {
     let s1 = echo_string("before grow");
     assert_eq!(s1, "before grow");
 
-    // Grow memory explicitly using core::arch::wasm32::memory_grow
+    // Grow memory explicitly using wasm_memory_grow
     // This is a more direct test than relying on allocator behavior
     let pages_to_grow = 10; // 640KB
-    let old_pages = core::arch::wasm32::memory_grow(0, pages_to_grow);
+    let old_pages = wasm_memory_grow(0, pages_to_grow);
     assert!(old_pages != usize::MAX, "memory.grow failed");
 
     // Now verify string operations still work after explicit growth
@@ -86,7 +96,7 @@ fn explicit_memory_grow() {
 fn repeated_memory_growth() {
     for i in 0..5 {
         // Grow memory
-        let old_pages = core::arch::wasm32::memory_grow(0, 1);
+        let old_pages = wasm_memory_grow(0, 1);
         assert!(
             old_pages != usize::MAX,
             "memory.grow failed on iteration {}",

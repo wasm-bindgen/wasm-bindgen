@@ -18,7 +18,7 @@ class Array2 {
     }
     constructor() {
         const ret = wasm.array_new();
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         Array2Finalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -51,11 +51,10 @@ export function __wbindgen_init_externref_table() {
 }
 const Array2Finalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_array_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_array_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

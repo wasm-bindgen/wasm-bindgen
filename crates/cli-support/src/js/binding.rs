@@ -138,6 +138,10 @@ pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
     }
 }
 
+/// Sentinel used by the f64-ABI `Option` paths to represent `None`. Must not
+/// collide with any valid payload (including i64/u64 on wasm64 via f64).
+const F64_OPTION_SENTINEL: &str = "Number.MAX_SAFE_INTEGER";
+
 impl<'a, 'b> Builder<'a, 'b> {
     pub fn new(cx: &'a mut Context<'b>) -> Builder<'a, 'b> {
         Builder {
@@ -1090,12 +1094,18 @@ fn instruction(
                 other => bail!("invalid aggregate return type {other:?}"),
             };
             // Note that we always assume the return pointer is argument 0,
-            // which is currently the case for LLVM.
+            // which is currently the case for LLVM. On wasm64 the retptr is
+            // an LLVM-synthesized `i64` sret, arriving in JS as a BigInt, so
+            // coerce it to a number before doing pointer arithmetic.
             let val = js.pop();
             let mem_string = mem.access(js.cx.config.mode.emscripten());
             let expr = format!(
-                "{mem_string}.{method}({} + {size} * {offset}, {val}, true);",
-                js.arg(0),
+                "{mem_string}.{method}({retptr} + {size} * {offset}, {val}, true);",
+                retptr = if js.cx.memory64 {
+                    format!("Number({})", js.arg(0))
+                } else {
+                    js.arg(0).to_string()
+                },
             );
             js.prelude(&expr);
         }
@@ -1254,7 +1264,19 @@ fn instruction(
             // u32.
 
             let op = if *signed { ">>" } else { ">>>" };
-            js.push(format!("isLikeNone({val}) ? 0x100000001 : ({val}) {op} 0"));
+            js.push(format!(
+                "isLikeNone({val}) ? {F64_OPTION_SENTINEL} : ({val}) {op} 0"
+            ));
+        }
+        Instruction::F64FromOptionSentinelNumber => {
+            // Used when the underlying integer spans the full f64-safe range
+            // (e.g. i64/u64 on wasm64). No narrowing; just coerce to number.
+            let val = js.pop();
+            js.cx.expose_is_like_none();
+            js.assert_optional_number(&val);
+            js.push(format!(
+                "isLikeNone({val}) ? {F64_OPTION_SENTINEL} : Number({val})"
+            ));
         }
         Instruction::F64FromOptionSentinelF32 => {
             let val = js.pop();
@@ -1267,7 +1289,7 @@ fn instruction(
             // possible to use a sentinel value.
 
             js.push(format!(
-                "isLikeNone({val}) ? 0x100000001 : Math.fround({val})"
+                "isLikeNone({val}) ? {F64_OPTION_SENTINEL} : Math.fround({val})"
             ));
         }
 
@@ -1450,15 +1472,15 @@ fn instruction(
                         (
                             format!(
                                 "\
-                                this.__wbg_ptr = {val} >>> 0;
+                                this.__wbg_ptr = {val};
                                 Object.defineProperty(this, '__wbg_inst', {{ value: __wbg_instance_id, writable: true }});
                                 "
                             ),
-                            format!("{{ ptr: {val} >>> 0, instance: __wbg_instance_id }}"),
+                            format!("{{ ptr: {val}, instance: __wbg_instance_id }}"),
                         )
                     } else {
                         (
-                            format!("this.__wbg_ptr = {val} >>> 0;"),
+                            format!("this.__wbg_ptr = {val};"),
                             "this.__wbg_ptr".to_string(),
                         )
                     };
@@ -1655,7 +1677,9 @@ fn instruction(
 
         Instruction::OptionF64Sentinel => {
             let val = js.pop();
-            js.push(format!("{val} === 0x100000001 ? undefined : {val}"));
+            js.push(format!(
+                "{val} === {F64_OPTION_SENTINEL} ? undefined : {val}"
+            ));
         }
 
         Instruction::OptionU32Sentinel => {
@@ -1712,7 +1736,7 @@ fn instruction(
 
         Instruction::OptionNonNullFromI32 => {
             let val = js.pop();
-            js.push(format!("{val} === 0 ? undefined : {val} >>> 0"));
+            js.push(format!("{val} === 0 ? undefined : {val}"));
         }
     }
     Ok(())

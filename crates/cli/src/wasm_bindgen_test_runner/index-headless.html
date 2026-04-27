@@ -23,6 +23,7 @@
      };
 
      // {NOCAPTURE}
+     // {IS_BENCH}
      const wrap = method => {
          const on_method = `on_console_${method}`;
          console[method] = function (...args) {
@@ -31,7 +32,7 @@
              } else {
                  orig("console_output").apply(this, args);
              }
-             if (window[on_method]) {
+             if (!is_bench && window[on_method]) {
                  window[on_method](args);
              }
          };

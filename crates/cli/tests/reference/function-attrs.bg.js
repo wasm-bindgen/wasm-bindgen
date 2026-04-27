@@ -3,7 +3,6 @@
  */
 export class HoldsNumber {
     static __wrap(ptr) {
-        ptr = ptr >>> 0;
         const obj = Object.create(HoldsNumber.prototype);
         obj.__wbg_ptr = ptr;
         HoldsNumberFinalization.register(obj, obj.__wbg_ptr, obj);
@@ -202,7 +201,7 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg
 
 const HoldsNumberFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_holdsnumber_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_holdsnumber_free(ptr, 1));
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
@@ -288,8 +287,7 @@ function getDataViewMemory0() {
 }
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

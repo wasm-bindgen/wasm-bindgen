@@ -5,7 +5,7 @@ use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::str;
 
-use crate::__rt::marker::ErasableGeneric;
+use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, FromWasmAbi, IntoWasmAbi,
@@ -28,32 +28,45 @@ use cfg_if::cfg_if;
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct WasmSlice {
-    pub ptr: u32,
-    pub len: u32,
+    pub ptr: WasmWord,
+    pub len: WasmWord,
+}
+
+impl WasmSlice {
+    #[inline]
+    pub fn from_usize(ptr: usize, len: usize) -> Self {
+        Self {
+            ptr: WasmWord::from_usize(ptr),
+            len: WasmWord::from_usize(len),
+        }
+    }
 }
 
 impl WasmAbi for WasmSlice {
     /// `self.ptr`
-    type Prim1 = u32;
+    type Prim1 = <WasmWord as WasmAbi>::Prim1;
     /// `self.len`
-    type Prim2 = u32;
+    type Prim2 = <WasmWord as WasmAbi>::Prim1;
     type Prim3 = ();
     type Prim4 = ();
 
     #[inline]
-    fn split(self) -> (u32, u32, (), ()) {
-        (self.ptr, self.len, (), ())
+    fn split(self) -> (Self::Prim1, Self::Prim2, (), ()) {
+        (self.ptr.split().0, self.len.split().0, (), ())
     }
 
     #[inline]
-    fn join(ptr: u32, len: u32, _: (), _: ()) -> Self {
-        Self { ptr, len }
+    fn join(ptr: Self::Prim1, len: Self::Prim2, _: (), _: ()) -> Self {
+        Self {
+            ptr: WasmWord::join(ptr, (), (), ()),
+            len: WasmWord::join(len, (), (), ()),
+        }
     }
 }
 
 #[inline]
 fn null_slice() -> WasmSlice {
-    WasmSlice { ptr: 0, len: 0 }
+    WasmSlice::from_usize(0, 0)
 }
 
 pub struct WasmMutSlice {
@@ -63,22 +76,23 @@ pub struct WasmMutSlice {
 
 impl WasmAbi for WasmMutSlice {
     /// `self.slice.ptr`
-    type Prim1 = u32;
+    type Prim1 = <WasmSlice as WasmAbi>::Prim1;
     /// `self.slice.len`
-    type Prim2 = u32;
+    type Prim2 = <WasmSlice as WasmAbi>::Prim2;
     /// `self.idx`
     type Prim3 = u32;
     type Prim4 = ();
 
     #[inline]
-    fn split(self) -> (u32, u32, u32, ()) {
-        (self.slice.ptr, self.slice.len, self.idx, ())
+    fn split(self) -> (Self::Prim1, Self::Prim2, u32, ()) {
+        let (ptr, len, (), ()) = self.slice.split();
+        (ptr, len, self.idx, ())
     }
 
     #[inline]
-    fn join(ptr: u32, len: u32, idx: u32, _: ()) -> Self {
+    fn join(ptr: Self::Prim1, len: Self::Prim2, idx: u32, _: ()) -> Self {
         Self {
-            slice: WasmSlice { ptr, len },
+            slice: WasmSlice::join(ptr, len, (), ()),
             idx,
         }
     }
@@ -143,10 +157,7 @@ macro_rules! vectors_internal {
                 let ptr = vector.as_ptr();
                 let len = vector.len();
                 mem::forget(vector);
-                WasmSlice {
-                    ptr: ptr.into_abi(),
-                    len: len as u32,
-                }
+                WasmSlice::from_usize(ptr as usize, len)
             }
         }
 
@@ -155,8 +166,8 @@ macro_rules! vectors_internal {
 
             #[inline]
             unsafe fn vector_from_abi(js: WasmSlice) -> Box<[$t]> {
-                let ptr = <*mut $t>::from_abi(js.ptr);
-                let len = js.len as usize;
+                let ptr = js.ptr.into_usize() as *mut $t;
+                let len = js.len.into_usize();
                 Vec::from_raw_parts(ptr, len, len).into_boxed_slice()
             }
         }
@@ -166,10 +177,7 @@ macro_rules! vectors_internal {
 
             #[inline]
             fn into_abi(self) -> WasmSlice {
-                WasmSlice {
-                    ptr: self.as_ptr().into_abi(),
-                    len: self.len() as u32,
-                }
+                WasmSlice::from_usize(self.as_ptr() as usize, self.len())
             }
         }
 
@@ -271,7 +279,7 @@ cfg_if! {
         #[inline]
         fn unsafe_get_cached_str(x: &str) -> Option<WasmSlice> {
             // This uses 0 for the ptr as an indication that it is a JsValue and not a str.
-            crate::cache::intern::unsafe_get_str(x).map(|x| WasmSlice { ptr: 0, len: x })
+            crate::cache::intern::unsafe_get_str(x).map(|x| WasmSlice::from_usize(0, x as usize))
         }
 
     } else {
@@ -322,7 +330,7 @@ where
 {
     #[inline]
     fn is_none(abi: &WasmSlice) -> bool {
-        abi.ptr == 0
+        abi.ptr.is_zero()
     }
 }
 
@@ -356,7 +364,7 @@ impl FromWasmAbi for String {
 impl OptionFromWasmAbi for String {
     #[inline]
     fn is_none(slice: &WasmSlice) -> bool {
-        slice.ptr == 0
+        slice.ptr.is_zero()
     }
 }
 
@@ -446,7 +454,7 @@ where
     Self: FromWasmAbi<Abi = WasmSlice>,
 {
     fn is_none(slice: &WasmSlice) -> bool {
-        slice.ptr == 0
+        slice.ptr.is_zero()
     }
 }
 
@@ -455,8 +463,8 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T 
 
     #[inline]
     unsafe fn vector_from_abi(js: WasmSlice) -> Box<[Self]> {
-        let ptr = <*mut T>::from_abi(js.ptr);
-        let len = js.len as usize;
+        let ptr = js.ptr.into_usize() as *mut T;
+        let len = js.len.into_usize();
         Vec::from_raw_parts(ptr, len, len).into_boxed_slice()
     }
 }
@@ -469,10 +477,7 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T 
         let ptr = vector.as_ptr();
         let len = vector.len();
         mem::forget(vector);
-        WasmSlice {
-            ptr: ptr.into_abi(),
-            len: len as u32,
-        }
+        WasmSlice::from_usize(ptr as usize, len)
     }
 }
 
@@ -490,10 +495,7 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> IntoWasmAbi for &[T] {
 
     #[inline]
     fn into_abi(self) -> WasmSlice {
-        WasmSlice {
-            ptr: self.as_ptr() as u32,
-            len: self.len() as u32,
-        }
+        WasmSlice::from_usize(self.as_ptr() as usize, self.len())
     }
 }
 

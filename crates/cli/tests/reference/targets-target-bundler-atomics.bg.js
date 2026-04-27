@@ -26,8 +26,7 @@ export function __wbindgen_init_externref_table() {
 
 export const memory = new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

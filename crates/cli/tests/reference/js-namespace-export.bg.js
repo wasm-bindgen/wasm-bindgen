@@ -66,7 +66,7 @@ class default__Counter {
      */
     constructor(initial) {
         const ret = wasm.counter_new(initial);
-        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr = ret;
         default__CounterFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
@@ -334,20 +334,19 @@ export function __wbindgen_init_externref_table() {
 }
 const default__CounterFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_default__counter_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_default__counter_free(ptr, 1));
 const models__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_models__point_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_models__point_free(ptr, 1));
 const models__3d__Point3DFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_models__3d__point3d_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_models__3d__point3d_free(ptr, 1));
 const RectangleFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_rectangle_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_rectangle_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

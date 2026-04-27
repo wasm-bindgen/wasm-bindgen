@@ -1,6 +1,12 @@
 const wasm = require('wasm-bindgen-test.js');
 const assert = require('assert');
 
+const isWasm64 = () => typeof wasm.wasm64_return_usize === 'function';
+
+const wasm64IsizeMin = Number(-(1n << 63n));
+const wasm64IsizeMax = Number((1n << 63n) - 1n);
+const wasm64UsizeMax = Number((1n << 64n) - 1n);
+
 exports.optional_i32_js_identity = a => a;
 exports.optional_u32_js_identity = a => a;
 exports.optional_isize_js_identity = a => a;
@@ -40,18 +46,39 @@ exports.js_works = () => {
     assert.strictEqual(wasm.optional_isize_identity(wasm.optional_isize_zero()), 0);
     assert.strictEqual(wasm.optional_isize_identity(wasm.optional_isize_one()), 1);
     assert.strictEqual(wasm.optional_isize_identity(wasm.optional_isize_neg_one()), -1);
-    assert.strictEqual(wasm.optional_isize_identity(wasm.optional_isize_min()), -2147483648);
-    assert.strictEqual(wasm.optional_isize_identity(wasm.optional_isize_max()), 2147483647);
-    assert.strictEqual(wasm.optional_isize_identity(2 ** 32), 0); // isize is 32 bit, so it behaves the same as i32
-    assert.strictEqual(wasm.optional_isize_identity(2 ** 32 + 1), 1);
+    assert.strictEqual(
+        wasm.optional_isize_identity(wasm.optional_isize_min()),
+        isWasm64() ? wasm64IsizeMin : -2147483648,
+    );
+    assert.strictEqual(
+        wasm.optional_isize_identity(wasm.optional_isize_max()),
+        isWasm64() ? wasm64IsizeMax : 2147483647,
+    );
+    assert.strictEqual(
+        wasm.optional_isize_identity(2 ** 32),
+        isWasm64() ? 2 ** 32 : 0,
+    );
+    assert.strictEqual(
+        wasm.optional_isize_identity(2 ** 32 + 1),
+        isWasm64() ? 2 ** 32 + 1 : 1,
+    );
 
     assert.strictEqual(wasm.optional_usize_identity(wasm.optional_usize_none()), undefined);
     assert.strictEqual(wasm.optional_usize_identity(wasm.optional_usize_zero()), 0);
     assert.strictEqual(wasm.optional_usize_identity(wasm.optional_usize_one()), 1);
     assert.strictEqual(wasm.optional_usize_identity(wasm.optional_usize_min()), 0);
-    assert.strictEqual(wasm.optional_usize_identity(wasm.optional_usize_max()), 4294967295);
-    assert.strictEqual(wasm.optional_usize_identity(2 ** 32), 0); // usize is 32 bit, so it behaves the same as i32
-    assert.strictEqual(wasm.optional_usize_identity(2 ** 32 + 1), 1);
+    assert.strictEqual(
+        wasm.optional_usize_identity(wasm.optional_usize_max()),
+        isWasm64() ? wasm64UsizeMax : 4294967295,
+    );
+    assert.strictEqual(
+        wasm.optional_usize_identity(2 ** 32),
+        isWasm64() ? 2 ** 32 : 0,
+    );
+    assert.strictEqual(
+        wasm.optional_usize_identity(2 ** 32 + 1),
+        isWasm64() ? 2 ** 32 + 1 : 1,
+    );
 
     assert.strictEqual(wasm.optional_f32_identity(wasm.optional_f32_none()), undefined);
     assert.strictEqual(wasm.optional_f32_identity(wasm.optional_f32_zero()), 0);

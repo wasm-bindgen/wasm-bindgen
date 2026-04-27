@@ -50,6 +50,17 @@ struct InstructionBuilder<'a, 'b> {
     return_position: bool,
 }
 
+impl InstructionBuilder<'_, '_> {
+    /// Returns `AdapterType::I64` for memory64 modules, `AdapterType::I32` for wasm32.
+    fn ptr_ty(&self) -> AdapterType {
+        if self.cx.memory64() {
+            AdapterType::I64
+        } else {
+            AdapterType::I32
+        }
+    }
+}
+
 pub fn process(
     bindgen: &mut Bindgen,
     module: &mut Module,
@@ -1255,10 +1266,16 @@ impl<'a> Context<'a> {
         };
         self.aux.structs.push(aux);
 
+        let ptr_desc = if self.memory64() {
+            Descriptor::I64AsF64
+        } else {
+            Descriptor::I32
+        };
+
         let wrap_constructor = wasm_bindgen_shared::new_function(&qualified_name);
         self.add_aux_import_to_import_map(
             &wrap_constructor,
-            vec![Descriptor::I32],
+            vec![ptr_desc.clone()],
             Descriptor::Externref,
             AuxImport::WrapInExportedClass(rust_name.to_string()),
         )?;
@@ -1267,7 +1284,7 @@ impl<'a> Context<'a> {
         self.add_aux_import_to_import_map(
             &unwrap_fn,
             vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
-            Descriptor::I32,
+            ptr_desc,
             AuxImport::UnwrapExportedClass(rust_name.to_string()),
         )?;
 
@@ -1448,7 +1465,7 @@ impl<'a> Context<'a> {
     fn import_adapter(
         &mut self,
         import: ImportId,
-        signature: Function,
+        mut signature: Function,
         kind: AdapterJsImportKind,
     ) -> Result<AdapterId, Error> {
         let import = self.module.imports.get(import);
@@ -1458,6 +1475,8 @@ impl<'a> Context<'a> {
             walrus::ImportKind::Function(f) => f,
             _ => bail!("bound import must be assigned to function"),
         };
+        let memory64 = self.memory64();
+        self.normalize_memory64_signature(&mut signature, core_id);
 
         // Process the returned type first to see if it needs an out-pointer. This
         // happens if the results of the incoming arguments translated to Wasm take
@@ -1471,7 +1490,11 @@ impl<'a> Context<'a> {
         // usage of closures going out to the import.
         let mut args = ret.cx.instruction_builder(false);
         if uses_retptr {
-            args.input.push(AdapterType::I32);
+            args.input.push(if memory64 {
+                AdapterType::F64
+            } else {
+                AdapterType::I32
+            });
         }
         for arg in signature.arguments.iter() {
             args.outgoing(arg)?;
@@ -1535,7 +1558,7 @@ impl<'a> Context<'a> {
     fn export_adapter(
         &mut self,
         mut export: ExportId,
-        signature: Function,
+        mut signature: Function,
     ) -> Result<AdapterId, Error> {
         // Same export might be requested multiple times due to codegen-units,
         // or because wasm-ld ICF merged invoke functions for different closure
@@ -1569,6 +1592,12 @@ impl<'a> Context<'a> {
                 export = self.module.exports.add(&name, func_id);
             }
         }
+
+        let core_id = match self.module.exports.get(export).item {
+            walrus::ExportItem::Function(f) => f,
+            _ => bail!("bound export must be assigned to function"),
+        };
+        self.normalize_memory64_signature(&mut signature, core_id);
 
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
@@ -1656,6 +1685,37 @@ impl<'a> Context<'a> {
         Ok(id)
     }
 
+    fn normalize_memory64_signature(&self, signature: &mut Function, core_id: FunctionId) {
+        if !self.memory64() {
+            return;
+        }
+
+        let ty = self.module.funcs.get(core_id).ty();
+        let (params, results) = self.module.types.params_results(ty);
+
+        for (descriptor, wasm) in signature.arguments.iter_mut().zip(params.iter().copied()) {
+            Self::normalize_memory64_descriptor(descriptor, wasm);
+        }
+
+        if let [result] = results {
+            Self::normalize_memory64_descriptor(&mut signature.ret, *result);
+        }
+    }
+
+    fn normalize_memory64_descriptor(descriptor: &mut Descriptor, wasm: walrus::ValType) {
+        if wasm != walrus::ValType::F64 {
+            return;
+        }
+
+        if let Descriptor::Option(inner) = descriptor {
+            match inner.as_mut() {
+                Descriptor::I64 => **inner = Descriptor::I64AsF64,
+                Descriptor::U64 => **inner = Descriptor::U64AsF64,
+                _ => {}
+            }
+        }
+    }
+
     fn instruction_builder<'b>(&'b mut self, return_position: bool) -> InstructionBuilder<'b, 'a> {
         InstructionBuilder {
             cx: self,
@@ -1699,6 +1759,13 @@ impl<'a> Context<'a> {
     fn memory(&self) -> Result<MemoryId, Error> {
         self.memory
             .ok_or_else(|| anyhow!("failed to find memory declaration in module"))
+    }
+
+    /// Returns `true` if the module's primary memory is 64-bit.
+    fn memory64(&self) -> bool {
+        self.memory
+            .map(|id| self.module.memories.get(id).memory64)
+            .unwrap_or(false)
     }
 
     /// Removes the export item for all `__wbindgen` intrinsics which are
@@ -1773,7 +1840,8 @@ fn verify_constructor_return(class: &str, ret: &Descriptor) -> Result<(), Error>
         | Descriptor::String
         | Descriptor::Option(_)
         | Descriptor::Enum { .. }
-        | Descriptor::Unit => {
+        | Descriptor::Unit
+        | Descriptor::RawPointer => {
             bail!("The constructor for class `{class}` tries to return a JS primitive type, which would cause the return value to be ignored. Use a builder instead (remove the `constructor` attribute).");
         }
         Descriptor::Result(ref d) | Descriptor::Ref(ref d) | Descriptor::RefMut(ref d) => {
@@ -1950,4 +2018,22 @@ fn test_struct_packer() {
     assert_eq!(read_ty(double), 2); // f64, already aligned
     assert_eq!(read_ty(i32___), 4); // u32, already aligned
     assert_eq!(read_ty(double), 6); // f64, NOT already aligned, skips up to offset 6
+}
+
+#[test]
+fn normalize_memory64_descriptor_only_rewrites_explicit_number_abi_options() {
+    let mut number_option = Descriptor::Option(Box::new(Descriptor::I64));
+    Context::normalize_memory64_descriptor(&mut number_option, walrus::ValType::F64);
+    assert_eq!(
+        number_option,
+        Descriptor::Option(Box::new(Descriptor::I64AsF64))
+    );
+
+    let mut exact_i64 = Descriptor::I64;
+    Context::normalize_memory64_descriptor(&mut exact_i64, walrus::ValType::I64);
+    assert_eq!(exact_i64, Descriptor::I64);
+
+    let mut exact_option = Descriptor::Option(Box::new(Descriptor::I64));
+    Context::normalize_memory64_descriptor(&mut exact_option, walrus::ValType::I64);
+    assert_eq!(exact_option, Descriptor::Option(Box::new(Descriptor::I64)));
 }

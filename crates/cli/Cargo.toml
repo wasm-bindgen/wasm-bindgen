@@ -48,6 +48,7 @@ ureq = { version = "3", default-features = false, features = ["brotli", "gzip"] 
 walrus = "0.26.1"
 wasm-bindgen-cli-support = { path = "../cli-support", version = "=0.2.118" }
 wasm-bindgen-test-shared = { path = "../test-shared", version = "=0.2.118" }
+wasmparser = "0.245"
 
 [dev-dependencies]
 assert_cmd = "2"
@@ -55,7 +56,6 @@ predicates = "3"
 pretty_assertions = "1.4"
 regex = "1.11.2"
 rstest = "0.26"
-wasmparser = "0.245"
 wasmprinter = "0.245"
 
 [features]

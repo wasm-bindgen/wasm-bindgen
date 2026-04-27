@@ -23,8 +23,7 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 3, false);
 }
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;

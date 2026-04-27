@@ -20,6 +20,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::thread;
 use wasm_bindgen_cli_support::Bindgen;
+use wasmparser::{Imports, Parser as WasmParser, Payload, TypeRef};
 
 mod deno;
 mod headless;
@@ -138,11 +139,13 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         file_name_buf.set_extension("wasm");
     }
     let wasm = fs::read(file_name_buf).context("failed to read Wasm file")?;
+    let uses_memory64 = module_uses_memory64(&wasm)?;
     let mut wasm = walrus::ModuleConfig::new()
-        // generate dwarf by default, it can be controlled by debug profile
-        //
-        // https://doc.rust-lang.org/cargo/reference/profiles.html#debug
-        .generate_dwarf(true)
+        // Generate DWARF by default so the test runner preserves debug info for
+        // ordinary wasm32 test binaries. Walrus 0.26 currently overflows while
+        // remapping DWARF addresses for memory64 modules, so skip DWARF
+        // generation for wasm64 inputs until upstream supports them.
+        .generate_dwarf(!uses_memory64)
         .parse(&wasm)
         .context("failed to deserialize Wasm module")?;
     let mut tests = Tests::new();
@@ -464,6 +467,52 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn module_uses_memory64(wasm: &[u8]) -> anyhow::Result<bool> {
+    for payload in WasmParser::new(0).parse_all(wasm) {
+        match payload.context("failed to inspect Wasm module")? {
+            Payload::ImportSection(imports) => {
+                for import in imports {
+                    match import? {
+                        Imports::Single(_, import) => {
+                            if let TypeRef::Memory(memory) = import.ty {
+                                if memory.memory64 {
+                                    return Ok(true);
+                                }
+                            }
+                        }
+                        Imports::Compact1 { items, .. } => {
+                            for item in items {
+                                if let TypeRef::Memory(memory) = item?.ty {
+                                    if memory.memory64 {
+                                        return Ok(true);
+                                    }
+                                }
+                            }
+                        }
+                        Imports::Compact2 { ty, .. } => {
+                            if let TypeRef::Memory(memory) = ty {
+                                if memory.memory64 {
+                                    return Ok(true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Payload::MemorySection(memories) => {
+                for memory in memories {
+                    if memory?.memory64 {
+                        return Ok(true);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok(false)
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum TestMode {
     Node { no_modules: bool },
@@ -504,6 +553,42 @@ impl TestMode {
             TestMode::ServiceWorker { .. } => "WASM_BINDGEN_USE_SERVICE_WORKER",
             TestMode::Emscripten => "WASM_BINDGEN_USE_EMSCRIPTEN",
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Cli, Tests};
+    use std::path::PathBuf;
+
+    fn cli() -> Cli {
+        Cli {
+            file: PathBuf::from("test.wasm"),
+            bench: false,
+            include_ignored: true,
+            ignored: false,
+            exact: false,
+            skip: Vec::new(),
+            list: false,
+            nocapture: false,
+            format: None,
+            filter: None,
+        }
+    }
+
+    #[test]
+    fn runner_args_keep_filtered_count_on_number_abi() {
+        let cli = cli();
+        let tests = Tests {
+            tests: Vec::new(),
+            filtered: 3,
+        };
+
+        let args = cli.get_args(&tests);
+
+        assert!(args.contains("cx.include_ignored(true);"));
+        assert!(args.contains("cx.filtered_count(3);"));
+        assert!(!args.contains("3n"));
     }
 }
 

@@ -71,7 +71,16 @@ exports.debug_values = () => ([
 exports.assert_function_table = (x, i) => {
     const rawWasm = require('wasm-bindgen-test.js').__wasm;
     assert.ok(x instanceof WebAssembly.Table);
-    assert.strictEqual(x.get(i), rawWasm.function_table_lookup);
+    let entry;
+    try {
+        entry = x.get(i);
+    } catch (e) {
+        if (typeof i !== 'number') {
+            throw e;
+        }
+        entry = x.get(BigInt(i));
+    }
+    assert.strictEqual(entry, rawWasm.function_table_lookup);
 };
 
 exports.assert_instance = (instance, wasmExports) => {

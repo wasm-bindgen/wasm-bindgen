@@ -14,13 +14,13 @@ export class Foo {
      */
     get lone_getter() {
         const ret = wasm.foo_lone_getter(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+        return ret === Number.MAX_SAFE_INTEGER ? undefined : ret;
     }
     /**
      * @param {number | null} [value]
      */
     set lone_setter(value) {
-        wasm.foo_set_lone_setter(this.__wbg_ptr, isLikeNone(value) ? 0x100000001 : (value) >>> 0);
+        wasm.foo_set_lone_setter(this.__wbg_ptr, isLikeNone(value) ? Number.MAX_SAFE_INTEGER : (value) >>> 0);
     }
     /**
      * But you must write strings.
@@ -43,7 +43,7 @@ export class Foo {
      * @param {number | null} [z]
      */
     set z(z) {
-        wasm.foo_set_z(this.__wbg_ptr, isLikeNone(z) ? 0x100000001 : (z) >>> 0);
+        wasm.foo_set_z(this.__wbg_ptr, isLikeNone(z) ? Number.MAX_SAFE_INTEGER : (z) >>> 0);
     }
     /**
      * You will only read numbers.
@@ -67,7 +67,7 @@ export class Foo {
      */
     get z() {
         const ret = wasm.foo_z(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+        return ret === Number.MAX_SAFE_INTEGER ? undefined : ret;
     }
     /**
      * @returns {number}
@@ -81,7 +81,7 @@ export class Foo {
      */
     get y() {
         const ret = wasm.__wbg_get_foo_y(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
+        return ret === Number.MAX_SAFE_INTEGER ? undefined : ret;
     }
     /**
      * @param {number} arg0
@@ -93,7 +93,7 @@ export class Foo {
      * @param {number | null} [arg0]
      */
     set y(arg0) {
-        wasm.__wbg_set_foo_y(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_foo_y(this.__wbg_ptr, isLikeNone(arg0) ? Number.MAX_SAFE_INTEGER : (arg0) >>> 0);
     }
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
@@ -111,11 +111,10 @@ export function __wbindgen_init_externref_table() {
 }
 const FooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_foo_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_foo_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;
