@@ -15,16 +15,18 @@
 
 * Promise ergonomics: `Promise::all_tuple` and `Promise::all_settled_tuple`
   for heterogeneous concurrent awaits (arity 1..=8, destructure via
-  `.into_tuple()`), typed `FromIterator` / `Extend` on `js_sys::Array<T>` so
-  the canonical `Promise::all_iterable(&iter.collect::<Array<_>>()).await`
-  one-liner infers element types without turbofish, and a new
-  `wasm_bindgen::IntoJsGeneric` trait underpinning the inference (with
-  codegen-emitted identity impls and a `#[wasm_bindgen(no_into_js_generic)]`
-  opt-out for types like `JsClosure`). Also re-exports `JsGeneric` from the
-  prelude. Fixes [#5042](https://github.com/wasm-bindgen/wasm-bindgen/issues/5042).
-  Callers that relied on `.collect::<Array>()` implicitly erasing typed
-  items into `Array<JsValue>` now need `.map(JsValue::from)`.
-  [#5121](https://github.com/wasm-bindgen/wasm-bindgen/pull/5121)
+  `.into_tuple()`), and a new `wasm_bindgen::IntoJsGeneric` trait underpinning
+  typed-`Array` inference (with codegen-emitted identity impls and a
+  `#[wasm_bindgen(no_into_js_generic)]` opt-out for types like `JsClosure`).
+  Also re-exports `JsGeneric` from the prelude. Typed collection on
+  `js_sys::Array<T>` is exposed as the inherent constructor
+  `Array::<T>::from_iter_typed` (and companion `extend_typed`), inferring `T`
+  from the iterator item via `IntoJsGeneric`. The stable `FromIterator` /
+  `Extend` impls on `Array` (= `Array<JsValue>`) bound by `AsRef<JsValue>`
+  are preserved, so existing `.collect::<Array>()` call sites keep compiling
+  unchanged. Fixes [#5042](https://github.com/wasm-bindgen/wasm-bindgen/issues/5042).
+  [#5121](https://github.com/wasm-bindgen/wasm-bindgen/pull/5121),
+  [#5128](https://github.com/wasm-bindgen/wasm-bindgen/pull/5128)
 
 * Added `wasm_bindgen::instance()` to return the current
   `WebAssembly.Instance`. The generated JS glue retains the 

@@ -1947,38 +1947,90 @@ impl<T: JsGeneric> core::iter::IntoIterator for Array<T> {
     }
 }
 
-// `FromIterator` / `Extend` for `Array<T>` project every input value through
-// its canonical [`JsGeneric`] via [`IntoJsGeneric`].
+// `FromIterator` / `Extend` for `Array` (= `Array<JsValue>` via the default
+// type parameter) preserve the long-standing stable behaviour: any iterator
+// of items convertible to `&JsValue` collects into an erased `Array<JsValue>`.
 //
-// Using an associated type (`A::JsCanon`) rather than a free type parameter
-// bound by `AsRef<T>` is what lets inference pick `T` uniquely from the
-// iterator item. This fixes the
-// `A: AsRef<T>` E0283 regression that the earlier unstable impl suffered
-// from (see #5042).
+// Typed collection (where the element type is inferred from the iterator
+// item via [`IntoJsGeneric`]) is exposed as the inherent constructor
+// [`Array::from_iter_typed`] rather than a second `FromIterator` impl. A
+// blanket `impl<A: IntoJsGeneric> FromIterator<A> for Array<A::JsCanon>`
+// would overlap with the stable `AsRef<JsValue>` impl on `Array<JsValue>`
+// (since `JsValue: IntoJsGeneric` with `JsCanon = JsValue`), so the two
+// cannot coexist as `FromIterator` impls without coherence violations.
 //
-// The reference-iteration case (`Item = &T`) is handled transparently by the
-// `&T: IntoJsGeneric` blanket in `wasm-bindgen` core.
-//
-// Compared to the pre-existing stable impl `impl<A> FromIterator<A> for Array
-// where A: AsRef<JsValue>`, this changes the target type from the untyped
-// `Array<JsValue>` (implicit erasure) to the typed `Array<A::JsCanon>`.
-// Call sites that want erasure now opt in via `.map(JsValue::from)` at the
-// call site.
+// TODO(next major): deprecate this `FromIterator`/`Extend` pair in favour
+// of a single `IntoJsGeneric`-based impl, and rename `from_iter_typed` to
+// take its place. That migration is source-breaking for callers relying on
+// `.collect::<Array>()` implicit erasure of typed items, so it is deferred.
 
-impl<A: IntoJsGeneric> core::iter::FromIterator<A> for Array<A::JsCanon> {
-    fn from_iter<I>(iter: I) -> Array<A::JsCanon>
+impl<A> core::iter::FromIterator<A> for Array
+where
+    A: AsRef<JsValue>,
+{
+    fn from_iter<I>(iter: I) -> Array
     where
         I: IntoIterator<Item = A>,
     {
-        let mut out = Array::<A::JsCanon>::new_typed();
+        let mut out = Array::new();
         out.extend(iter);
         out
     }
 }
 
-impl<A: IntoJsGeneric> core::iter::Extend<A> for Array<A::JsCanon> {
+impl<A> core::iter::Extend<A> for Array
+where
+    A: AsRef<JsValue>,
+{
     fn extend<I>(&mut self, iter: I)
     where
+        I: IntoIterator<Item = A>,
+    {
+        for value in iter {
+            self.push(value.as_ref());
+        }
+    }
+}
+
+impl<T: JsGeneric> Array<T> {
+    /// Collect an iterator into a typed `Array<T>`, projecting each item
+    /// through its canonical [`JsGeneric`] via [`IntoJsGeneric`].
+    ///
+    /// This is the typed counterpart to the stable
+    /// `impl FromIterator<A> for Array where A: AsRef<JsValue>`, which always
+    /// produces an erased `Array<JsValue>`. Use `from_iter_typed` when you
+    /// want the element type inferred from the iterator item:
+    ///
+    /// ```ignore
+    /// use js_sys::{Array, Number};
+    ///
+    /// let arr = Array::from_iter_typed((0..10).map(Number::from));
+    /// // arr: Array<Number>
+    /// ```
+    ///
+    /// Reference iteration (`Item = &U`) is supported transparently via the
+    /// `&U: IntoJsGeneric` blanket in `wasm-bindgen` core.
+    //
+    // TODO(next major): replace the stable `FromIterator` impl above with
+    // this behaviour and remove `from_iter_typed`.
+    pub fn from_iter_typed<A, I>(iter: I) -> Array<T>
+    where
+        A: IntoJsGeneric<JsCanon = T>,
+        I: IntoIterator<Item = A>,
+    {
+        let mut out = Array::<T>::new_typed();
+        out.extend_typed(iter);
+        out
+    }
+
+    /// Extend a typed `Array<T>` with an iterator of items convertible to
+    /// `T` via [`IntoJsGeneric`]. Companion to [`Array::from_iter_typed`].
+    //
+    // TODO(next major): replace the stable `Extend` impl above with this
+    // behaviour and remove `extend_typed`.
+    pub fn extend_typed<A, I>(&mut self, iter: I)
+    where
+        A: IntoJsGeneric<JsCanon = T>,
         I: IntoIterator<Item = A>,
     {
         for value in iter {
