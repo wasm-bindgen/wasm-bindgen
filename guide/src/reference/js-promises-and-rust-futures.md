@@ -22,8 +22,6 @@ async fn get_from_js() -> Result<JsValue, JsValue> {
 }
 ```
 
-This works out of the box — the futures support is built into `js-sys` and
-is always available.
 
 For typed promises the awaited value matches the type parameter directly:
 
