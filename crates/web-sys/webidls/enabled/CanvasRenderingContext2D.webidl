@@ -38,9 +38,8 @@ typedef (HTMLOrSVGImageElement or
 
 interface CanvasRenderingContext2D {
 
-  // back-reference to the canvas.  Might be null if we're not
-  // associated with a canvas.
-  readonly attribute HTMLCanvasElement? canvas;
+  // back-reference to the canvas
+  readonly attribute HTMLCanvasElement canvas;
 
   // Show the caret if appropriate when drawing
   [Func="CanvasUtils::HasDrawWindowPrivilege"]
