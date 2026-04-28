@@ -87,7 +87,10 @@ fn stringify() {
     assert_eq!(str1, "[1,true,\"hello\"]");
 
     let obj = Object::new();
+    #[cfg(not(js_sys_unstable_apis))]
     Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    Reflect::set(&obj, &"foo".into(), &JsValue::from("bar")).unwrap();
     let str2: String = JSON::stringify(&JsValue::from(obj)).unwrap().into();
     assert_eq!(str2, "{\"foo\":\"bar\"}");
 }
@@ -97,7 +100,10 @@ fn stringify_error() {
     let func =
         Function::<fn() -> JsString>::new_no_args_typed("throw new Error(\"rust really rocks\")");
     let obj = Object::new();
+    #[cfg(not(js_sys_unstable_apis))]
     Reflect::set_str(obj.as_ref(), &"toJSON".into(), func.as_ref()).unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    Reflect::set(&obj, &"toJSON".into(), func.as_ref()).unwrap();
 
     let result = JSON::stringify(&JsValue::from(obj));
     assert!(result.is_err());
@@ -111,8 +117,16 @@ fn stringify_error() {
 #[wasm_bindgen_test]
 fn stringify_with_replacer() {
     let obj = Object::new();
-    Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
-    Reflect::set_str(obj.as_ref(), &"hello".into(), &JsValue::from("world")).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
+        Reflect::set_str(obj.as_ref(), &"hello".into(), &JsValue::from("world")).unwrap();
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        Reflect::set(&obj, &"foo".into(), &JsValue::from("bar")).unwrap();
+        Reflect::set(&obj, &"hello".into(), &JsValue::from("world")).unwrap();
+    }
 
     let output1: String;
     #[cfg(not(js_sys_unstable_apis))]
@@ -212,8 +226,16 @@ fn stringify_with_replacer_and_space() {
     assert_eq!(output1, "[\n    1,\n    true,\n    \"hello\"\n]");
 
     let obj = Object::new();
-    Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
-    Reflect::set_str(obj.as_ref(), &"hello".into(), &JsValue::from("world")).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
+        Reflect::set_str(obj.as_ref(), &"hello".into(), &JsValue::from("world")).unwrap();
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        Reflect::set(&obj, &"foo".into(), &JsValue::from("bar")).unwrap();
+        Reflect::set(&obj, &"hello".into(), &JsValue::from("world")).unwrap();
+    }
 
     let replacer_array = Array::new();
     replacer_array.push(&JsValue::from("hello"));
@@ -263,9 +285,18 @@ fn stringify_with_replacer_and_space_error() {
 #[wasm_bindgen_test]
 fn stringify_with_replacer_func_typed() {
     let obj = Object::new();
-    Reflect::set_str(&obj.as_ref(), &"a".into(), &JsValue::from(1)).unwrap();
-    Reflect::set_str(&obj.as_ref(), &"b".into(), &JsValue::from(2)).unwrap();
-    Reflect::set_str(&obj.as_ref(), &"c".into(), &JsValue::from(3)).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        Reflect::set_str(&obj.as_ref(), &"a".into(), &JsValue::from(1)).unwrap();
+        Reflect::set_str(&obj.as_ref(), &"b".into(), &JsValue::from(2)).unwrap();
+        Reflect::set_str(&obj.as_ref(), &"c".into(), &JsValue::from(3)).unwrap();
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        Reflect::set(&obj, &"a".into(), &JsValue::from(1)).unwrap();
+        Reflect::set(&obj, &"b".into(), &JsValue::from(2)).unwrap();
+        Reflect::set(&obj, &"c".into(), &JsValue::from(3)).unwrap();
+    }
 
     // Replacer function that doubles numbers
     let output: String = JSON::stringify_with_replacer_func(
@@ -287,9 +318,18 @@ fn stringify_with_replacer_func_typed() {
 #[wasm_bindgen_test]
 fn stringify_with_replacer_list_typed() {
     let obj = Object::new();
-    Reflect::set_str(obj.as_ref(), &"a".into(), &JsValue::from(1)).unwrap();
-    Reflect::set_str(obj.as_ref(), &"b".into(), &JsValue::from(2)).unwrap();
-    Reflect::set_str(obj.as_ref(), &"c".into(), &JsValue::from(3)).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        Reflect::set_str(obj.as_ref(), &"a".into(), &JsValue::from(1)).unwrap();
+        Reflect::set_str(obj.as_ref(), &"b".into(), &JsValue::from(2)).unwrap();
+        Reflect::set_str(obj.as_ref(), &"c".into(), &JsValue::from(3)).unwrap();
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        Reflect::set(&obj, &"a".into(), &JsValue::from(1)).unwrap();
+        Reflect::set(&obj, &"b".into(), &JsValue::from(2)).unwrap();
+        Reflect::set(&obj, &"c".into(), &JsValue::from(3)).unwrap();
+    }
 
     // Only include "a" and "c" in output
     let output: String = JSON::stringify_with_replacer_list(

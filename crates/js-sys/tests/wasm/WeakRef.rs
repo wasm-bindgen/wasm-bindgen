@@ -32,7 +32,12 @@ fn deref() {
     assert_eq!(&value, &dereffed_obj);
 
     // Check that we can still access properties of the dereferenced object
+    #[cfg(not(js_sys_unstable_apis))]
     let prop = Reflect::get_str(&dereffed_obj, &"some".into())
+        .unwrap()
+        .unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    let prop = Reflect::get(&dereffed_obj, &"some".into())
         .unwrap()
         .unwrap();
     assert_eq!(prop, "value");

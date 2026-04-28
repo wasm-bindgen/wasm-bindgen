@@ -12,12 +12,15 @@ fn new() {
 #[wasm_bindgen_test]
 fn new_with_cause() {
     let options = Object::new();
+    #[cfg(not(js_sys_unstable_apis))]
     Reflect::set_str(
         options.as_ref(),
         &"cause".into(),
         &JsValue::from("some cause"),
     )
     .unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    Reflect::set(&options, &"cause".into(), &JsValue::from("some cause")).unwrap();
     let error = Error::new_with_options("some message", &options);
     assert_eq!(error.cause(), "some cause");
 }

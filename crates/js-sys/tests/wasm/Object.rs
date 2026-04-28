@@ -90,18 +90,36 @@ fn assign() {
     let res = Object::assign_many(&target, &[src1, src2, src3]).unwrap();
 
     assert!(Object::is(target.as_ref(), res.as_ref()));
-    assert_eq!(
-        Reflect::get_str(target.as_ref(), &a).unwrap().unwrap(),
-        JsValue::from(&c)
-    );
-    assert_eq!(
-        Reflect::get_str(target.as_ref(), &b).unwrap().unwrap(),
-        JsValue::from(&b)
-    );
-    assert_eq!(
-        Reflect::get_str(target.as_ref(), &c).unwrap().unwrap(),
-        JsValue::from(&c)
-    );
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(
+            Reflect::get_str(target.as_ref(), &a).unwrap().unwrap(),
+            JsValue::from(&c)
+        );
+        assert_eq!(
+            Reflect::get_str(target.as_ref(), &b).unwrap().unwrap(),
+            JsValue::from(&b)
+        );
+        assert_eq!(
+            Reflect::get_str(target.as_ref(), &c).unwrap().unwrap(),
+            JsValue::from(&c)
+        );
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(
+            Reflect::get(target.as_ref(), a.as_ref()).unwrap().unwrap(),
+            JsValue::from(&c)
+        );
+        assert_eq!(
+            Reflect::get(target.as_ref(), b.as_ref()).unwrap().unwrap(),
+            JsValue::from(&b)
+        );
+        assert_eq!(
+            Reflect::get(target.as_ref(), c.as_ref()).unwrap().unwrap(),
+            JsValue::from(&c)
+        );
+    }
 }
 
 #[wasm_bindgen_test]
@@ -142,11 +160,22 @@ fn define_property_str_with_string() {
     let foo: Object<JsValue> = foo_42().unchecked_into();
     let descriptor = js_sys::PropertyDescriptor::new_value(&JsValue::from(99));
 
-    let result = Object::define_property_str(&foo, &JsString::from("bar"), &descriptor);
-    assert!(result.is_ok());
-    let obj = result.unwrap();
-    assert!(obj.has_own_property(&"bar".into()));
-    assert_eq!(Reflect::get_str(&obj, &"bar".into()).unwrap().unwrap(), 99);
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let result = Object::define_property_str(&foo, &JsString::from("bar"), &descriptor);
+        assert!(result.is_ok());
+        let obj = result.unwrap();
+        assert!(obj.has_own_property(&"bar".into()));
+        assert_eq!(Reflect::get_str(&obj, &"bar".into()).unwrap().unwrap(), 99);
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let result = Object::define_property(&foo, &JsString::from("bar").as_ref(), &descriptor);
+        assert!(result.is_ok());
+        let obj = result.unwrap();
+        assert!(obj.has_own_property(&"bar".into()));
+        assert_eq!(Reflect::get(&obj, &"bar".into()).unwrap().unwrap(), 99);
+    }
 }
 
 #[allow(deprecated)]
@@ -156,12 +185,28 @@ fn define_property_symbol() {
     let sym = Symbol::for_("test_symbol");
     let descriptor = js_sys::PropertyDescriptor::new_value(&JsValue::from(42));
 
-    let result = Object::define_property_symbol(&foo, &sym, &descriptor);
-    assert!(result.is_ok());
-    let obj = result.unwrap();
-
-    assert!(obj.has_own_property(&sym));
-    assert_eq!(Reflect::get_symbol(&obj, &sym).unwrap(), 42);
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let result = Object::define_property_symbol(&foo, &sym, &descriptor);
+        assert!(result.is_ok());
+        let obj = result.unwrap();
+        assert!(obj.has_own_property(&sym));
+        assert_eq!(
+            Reflect::get_symbol::<JsValue>(&obj, &sym).unwrap(),
+            JsValue::from(42)
+        );
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let result = Object::define_property(&foo, sym.as_ref(), &descriptor);
+        assert!(result.is_ok());
+        let obj = result.unwrap();
+        assert!(obj.has_own_property(&sym));
+        assert_eq!(
+            Reflect::get(&obj, sym.as_ref()).unwrap(),
+            Some(JsValue::from(42))
+        );
+    }
 }
 
 #[wasm_bindgen_test]
@@ -170,7 +215,10 @@ fn define_property_str_on_frozen_object() {
     Object::freeze(&foo);
 
     let descriptor = js_sys::PropertyDescriptor::new_value(&JsValue::from(100));
+    #[cfg(not(js_sys_unstable_apis))]
     let result = Object::define_property_str(&foo, &JsString::from("newProp"), &descriptor);
+    #[cfg(js_sys_unstable_apis)]
+    let result = Object::define_property(&foo, &JsString::from("newProp").as_ref(), &descriptor);
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -182,11 +230,17 @@ fn define_property_str_typed() {
     let foo: Object<Number> = Object::new_typed();
     let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(3.14));
 
+    #[cfg(not(js_sys_unstable_apis))]
     let result = Object::define_property_str(&foo, &JsString::from("pi"), &descriptor);
+    #[cfg(js_sys_unstable_apis)]
+    let result = Object::define_property(&foo, &JsString::from("pi").as_ref(), &descriptor);
     assert!(result.is_ok());
     let obj = result.unwrap();
 
+    #[cfg(not(js_sys_unstable_apis))]
     let value = Reflect::get_str(&obj, &"pi".into()).unwrap().unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    let value = Reflect::get(&obj, &"pi".into()).unwrap().unwrap();
     let num: Number = value.unchecked_into();
     assert_eq!(num.value_of(), 3.14);
 }
@@ -231,14 +285,22 @@ fn from_entries() {
     array.push(&entry_two);
     let object = Object::from_entries(&array).unwrap();
 
-    assert_eq!(
-        Reflect::get_str(&object, &"foo".into()).unwrap().unwrap(),
-        42
-    );
-    assert_eq!(
-        Reflect::get_str(&object, &"baz".into()).unwrap().unwrap(),
-        43
-    );
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(
+            Reflect::get_str(&object, &"foo".into()).unwrap().unwrap(),
+            42
+        );
+        assert_eq!(
+            Reflect::get_str(&object, &"baz".into()).unwrap().unwrap(),
+            43
+        );
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(Reflect::get(&object, &"foo".into()).unwrap().unwrap(), 42);
+        assert_eq!(Reflect::get(&object, &"baz".into()).unwrap().unwrap(), 43);
+    }
 
     #[cfg(not(js_sys_unstable_apis))]
     {
@@ -260,10 +322,15 @@ fn get_own_property_descriptor() {
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        let desc = Object::get_own_property_descriptor(&foo, &"foo".into()).unwrap();
+        // Property exists — Some with correct value
+        let desc = Object::get_own_property_descriptor(&foo, &"foo".into())
+            .unwrap()
+            .unwrap();
         assert_eq!(desc.get_value().unwrap(), 42);
-        let desc = Object::get_own_property_descriptor(&foo, &"bar".into()).unwrap();
-        assert!(desc.is_undefined());
+        // Property does not exist — None
+        assert!(Object::get_own_property_descriptor(&foo, &"bar".into())
+            .unwrap()
+            .is_none());
     }
 }
 
@@ -362,7 +429,7 @@ fn has_own() {
     {
         assert!(Object::has_own(&foo_42(), &"foo".into()).unwrap());
         assert!(!Object::has_own(&foo_42(), &"bar".into()).unwrap());
-        assert!(Object::has_own_symbol(&map_with_symbol_key(), &symbol_key()).unwrap());
+        assert!(Object::has_own(&map_with_symbol_key(), &symbol_key()).unwrap());
     }
 }
 
@@ -449,7 +516,10 @@ fn values() {
 #[wasm_bindgen_test]
 fn property_is_enumerable() {
     assert!(foo_42().property_is_enumerable(&"foo".into()));
+    #[cfg(not(js_sys_unstable_apis))]
     assert!(!foo_42().property_is_enumerable(&42.into()));
+    #[cfg(js_sys_unstable_apis)]
+    assert!(!foo_42().property_is_enumerable(&"42".into()));
     assert!(!Object::new().property_is_enumerable(&"foo".into()));
 }
 
@@ -512,12 +582,20 @@ fn from_entries_typed() {
     ));
 
     let obj: Object<JsString> = Object::from_entries_typed(&entries).unwrap();
-    assert_eq!(
-        Reflect::get_str(&obj, &"foo".into()).unwrap().unwrap(),
-        "bar"
-    );
-    assert_eq!(
-        Reflect::get_str(&obj, &"baz".into()).unwrap().unwrap(),
-        "qux"
-    );
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        assert_eq!(
+            Reflect::get_str(&obj, &"foo".into()).unwrap().unwrap(),
+            "bar"
+        );
+        assert_eq!(
+            Reflect::get_str(&obj, &"baz".into()).unwrap().unwrap(),
+            "qux"
+        );
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        assert_eq!(Reflect::get(&obj, &"foo".into()).unwrap().unwrap(), "bar");
+        assert_eq!(Reflect::get(&obj, &"baz".into()).unwrap().unwrap(), "qux");
+    }
 }

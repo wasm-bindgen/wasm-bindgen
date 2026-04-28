@@ -249,15 +249,33 @@ fn match_() {
     let obj = result.unwrap();
 
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"0".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"0".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"0".into()).unwrap().unwrap()
+            }
+        },
         "T"
     );
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"1".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"1".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"1".into()).unwrap().unwrap()
+            }
+        },
         "I"
     );
 
@@ -266,15 +284,33 @@ fn match_() {
     let obj = result.unwrap();
 
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"0".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"0".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"0".into()).unwrap().unwrap()
+            }
+        },
         "The"
     );
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"1".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"1".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"1".into()).unwrap().unwrap()
+            }
+        },
         "It"
     );
 
@@ -287,33 +323,82 @@ fn match_() {
     let obj = result.unwrap();
 
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"0".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"0".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"0".into()).unwrap().unwrap()
+            }
+        },
         "see Chapter 3.4.5.1"
     );
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"1".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"1".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"1".into()).unwrap().unwrap()
+            }
+        },
         "Chapter 3.4.5.1"
     );
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"2".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"2".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"2".into()).unwrap().unwrap()
+            }
+        },
         ".1"
     );
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"index".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"index".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"index".into())
+                    .unwrap()
+                    .unwrap()
+            }
+        },
         22
     );
     assert_eq!(
-        Reflect::get_str(obj.as_ref(), &"input".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(obj.as_ref(), &"input".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(obj.as_ref(), &"input".into())
+                    .unwrap()
+                    .unwrap()
+            }
+        },
         s
     );
 }

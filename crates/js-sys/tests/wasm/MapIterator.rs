@@ -14,15 +14,33 @@ fn entries() {
     assert!(next.value().is_object());
 
     assert_eq!(
-        Reflect::get_str(&next.value(), &"0".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(&next.value(), &"0".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(&next.value(), &"0".into()).unwrap().unwrap()
+            }
+        },
         "uno"
     );
     assert_eq!(
-        Reflect::get_str(&next.value(), &"1".into())
-            .unwrap()
-            .unwrap(),
+        {
+            #[cfg(not(js_sys_unstable_apis))]
+            {
+                Reflect::get_str(&next.value(), &"1".into())
+                    .unwrap()
+                    .unwrap()
+            }
+            #[cfg(js_sys_unstable_apis)]
+            {
+                Reflect::get(&next.value(), &"1".into()).unwrap().unwrap()
+            }
+        },
         1
     );
 

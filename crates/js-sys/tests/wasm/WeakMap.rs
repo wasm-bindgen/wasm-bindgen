@@ -85,9 +85,12 @@ fn typed_get_set() {
     let retrieved = map.get(&key);
     #[cfg(js_sys_unstable_apis)]
     let retrieved = map.get(&key).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
     let data = Reflect::get_str(&retrieved, &"data".into())
         .unwrap()
         .unwrap();
+    #[cfg(js_sys_unstable_apis)]
+    let data = Reflect::get(&retrieved, &"data".into()).unwrap().unwrap();
     assert_eq!(data, 42);
 }
 
