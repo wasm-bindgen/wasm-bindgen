@@ -1263,6 +1263,7 @@ impl<'a> Context<'a> {
                 .as_ref()
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
             private: struct_.private,
+            extends: struct_.extends.map(|s| s.to_string()),
         };
         self.aux.structs.push(aux);
 

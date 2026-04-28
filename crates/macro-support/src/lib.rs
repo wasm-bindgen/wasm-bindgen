@@ -29,12 +29,21 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     // if struct is encountered, add `derive` attribute and let everything happen there (workaround
     // to help parsing cfg_attr correctly).
     let item = syn::parse2::<syn::Item>(input)?;
-    if let syn::Item::Struct(s) = item {
+    if let syn::Item::Struct(mut s) = item {
         let opts: BindgenAttrs = syn::parse2(attr.clone())?;
         let wasm_bindgen = opts
             .wasm_bindgen()
             .cloned()
             .unwrap_or_else(|| syn::parse_quote! { ::wasm_bindgen });
+
+        // Inject `parent: <wasm_bindgen>::Parent<Parent>` when the struct
+        // declares `#[wasm_bindgen(extends = Parent)]`, so users never write
+        // the field themselves. Also rejects user-declared `Parent<T>` fields.
+        let extends_path = opts.attrs.iter().find_map(|(_, a)| match a {
+            parser::BindgenAttr::Extends(_, path) => Some(path.clone()),
+            _ => None,
+        });
+        parser::inject_parent_field(&mut s, extends_path.as_ref(), &wasm_bindgen)?;
 
         let item = quote! {
             #[derive(#wasm_bindgen::__rt::BindgenedStruct)]
