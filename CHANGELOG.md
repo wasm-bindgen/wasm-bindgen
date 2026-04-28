@@ -208,6 +208,9 @@
 
 ### Changed
 
+* Fix ? support for JsError under no_std
+  #5029[](https://github.com/wasm-bindgen/wasm-bindgen/pull/5029)
+
 * Replaced per-closure generic destructors with a single `__wbindgen_destroy_closure`
   export.
   [#5019](https://github.com/wasm-bindgen/wasm-bindgen/pull/5019)
