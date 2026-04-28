@@ -3,6 +3,8 @@
 
 ## [0.2.119](https://github.com/rustwasm/wasm-bindgen/compare/0.2.118...0.2.119)
 
+* Added logic to the `no-modules` JavaScript boilerplate in order to support usage within WebWorkers. [#4943](https://github.com/wasm-bindgen/wasm-bindgen/issues/4943)
+
 ### Added
 
 * Added support for the `wasm64-unknown-unknown` target (memory64 / wasm64).
