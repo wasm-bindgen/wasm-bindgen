@@ -144,6 +144,9 @@ pub mod handler;
 mod cast;
 pub use crate::cast::JsCast;
 
+mod parent;
+pub use crate::parent::Parent;
+
 mod cache;
 pub use cache::intern::{intern, unintern};
 

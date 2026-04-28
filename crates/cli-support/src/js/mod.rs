@@ -135,6 +135,13 @@ pub struct Context<'a> {
 
     /// `true` when the module's memory is a memory64 (wasm64) memory.
     memory64: bool,
+
+    /// Tracks whether the module-level `__wbgSuperSkip` sentinel has been
+    /// emitted. The sentinel is used to short-circuit the body of parent
+    /// class constructors when they are invoked as `super(__wbgSuperSkip)`
+    /// from a subclass — avoiding a spurious extra Rust allocation that
+    /// would otherwise be leaked.
+    super_skip_sentinel_emitted: bool,
 }
 
 /// Definition of a module export
@@ -157,6 +164,13 @@ struct ExportDefinition {
 
     /// Whether this is a private export, so not actually exposed on the module exports interface
     private: bool,
+
+    /// If this definition is `class Child extends Parent { ... }`, the
+    /// `Parent` identifier the body references. Used by `write_exports` to
+    /// emit parents before children — otherwise `BTreeMap` (export-name)
+    /// order may interleave `class Child extends Parent` before `Parent`
+    /// is initialized, producing a TDZ `ReferenceError` at module load.
+    parent_identifier: Option<String>,
 }
 
 /// Module namespace export
@@ -194,6 +208,24 @@ struct ExportedClass {
     js_name: Option<String>,
     /// The namespace-qualified name (used for wasm symbol references)
     qualified_name: Option<String>,
+    /// The JS name of the parent class this class extends, if any.
+    /// Sourced from `AuxStruct.extends` via the `#[wasm_bindgen(extends)]`
+    /// attribute on an exported Rust struct. The parent class is expected
+    /// to be another exported Rust type defined in the same wasm module.
+    extends: Option<String>,
+    /// Resolved ancestor chain, nearest-first (i.e. direct parent at index
+    /// 0, grandparent at index 1, etc.). Populated in
+    /// `populate_inheritance_chains` before any JS emission so that
+    /// constructor, `__wrap`, `free`, and method-body emitters all see a
+    /// consistent per-class view of the chain. Each entry is
+    /// `(js_name, qualified_name)` — js_name is used for the JS instance
+    /// field (`this.__wbg_ptr_<JsName>`), qualified_name keys the wasm
+    /// symbol names for `upcast_function` / `free_function`.
+    ancestors: Vec<(String, String, String)>,
+    /// True if this class either declares `extends` or is extended by some
+    /// other class. Non-participating classes keep the single-pointer
+    /// `this.__wbg_ptr` representation for backward compatibility.
+    participates_in_inheritance: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -263,7 +295,27 @@ impl<'a> Context<'a> {
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
             memory64,
+            super_skip_sentinel_emitted: false,
         })
+    }
+
+    /// Emits `const __wbgSuperSkip = Symbol();` at module level exactly
+    /// once. Safe to call repeatedly. See the constructor codepath in
+    /// `binding.rs` for the full rationale.
+    pub(crate) fn expose_super_skip_sentinel(&mut self) {
+        if self.super_skip_sentinel_emitted {
+            return;
+        }
+        self.globals
+            .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
+        self.super_skip_sentinel_emitted = true;
+    }
+
+    /// Whether the super-skip sentinel has been emitted. Constructor
+    /// prelude only emits the sentinel check when a subclass in the same
+    /// module has already forced its emission.
+    pub(crate) fn has_super_skip_sentinel(&self) -> bool {
+        self.super_skip_sentinel_emitted
     }
 
     fn has_intrinsic(&self, name: &str) -> bool {
@@ -344,6 +396,7 @@ impl<'a> Context<'a> {
             comments,
             ts_comments,
             private,
+            parent_identifier: _,
         } = def;
         self.globals.push('\n');
         if self.config.typescript && !ts_decl.is_empty() {
@@ -480,6 +533,7 @@ impl<'a> Context<'a> {
                     ts_comments: None,
                     ts_definition,
                     private: false,
+                    parent_identifier: None,
                 }),
             )?;
         }
@@ -1545,6 +1599,100 @@ if (require('worker_threads').isMainThread) {{
         name
     }
 
+    /// Populate `ancestors` and `participates_in_inheritance` on every
+    /// `ExportedClass`. Walks the `extends` chain from each subclass up to
+    /// its root ancestor; if a cycle or missing parent is encountered the
+    /// chain is truncated there (the missing-parent error is reported later
+    /// during `write_class` with better span info).
+    fn populate_inheritance_chains(&mut self) {
+        // Resolve a chain of rust_name keys first (so cycle detection works),
+        // then translate to (js_name, qualified_name) pairs for emission.
+        let mut updates: Vec<(String, Vec<String>)> = Vec::new();
+        let keys: Vec<String> = self.exported_classes.keys().cloned().collect();
+        for key in &keys {
+            let mut chain: Vec<String> = Vec::new();
+            let mut cursor = match self
+                .exported_classes
+                .get(key)
+                .and_then(|c| c.extends.clone())
+            {
+                Some(p) => p,
+                None => continue,
+            };
+            loop {
+                // Resolve via the same rules `write_class` uses: key may be
+                // either the parent's rust_name or its js_name. Fall back to
+                // scanning by js_name if the direct key lookup fails.
+                let resolved_key = if self.exported_classes.contains_key(&cursor) {
+                    cursor.clone()
+                } else {
+                    match self.exported_classes.iter().find_map(|(k, v)| {
+                        if v.js_name.as_deref() == Some(cursor.as_str()) {
+                            Some(k.clone())
+                        } else {
+                            None
+                        }
+                    }) {
+                        Some(k) => k,
+                        None => break,
+                    }
+                };
+                if chain.contains(&resolved_key) || resolved_key == *key {
+                    break;
+                }
+                chain.push(resolved_key.clone());
+                cursor = match self
+                    .exported_classes
+                    .get(&resolved_key)
+                    .and_then(|c| c.extends.clone())
+                {
+                    Some(p) => p,
+                    None => break,
+                };
+            }
+            if !chain.is_empty() {
+                updates.push((key.clone(), chain));
+            }
+        }
+        // Mark every subclass with its chain and flag participation on both
+        // sides of every edge.
+        for (child, chain) in &updates {
+            // For each ancestor we keep three names:
+            //   0. `identifier`: the class's auto-sanitized JS identifier,
+            //      used as a `__wbg_ptr_<Ident>` property suffix and as a
+            //      JS-side reference (always a valid JS ident).
+            //   1. `rust_name`: the parent's Rust struct identifier (== the
+            //      key in `exported_classes`). Used to derive the upcast
+            //      wasm symbol so the name matches what the macro emits —
+            //      the macro derives the parent half of `upcast_function`
+            //      from `parent_path.segments.last().ident`, which is the
+            //      Rust identifier, NOT the (potentially renamed/namespaced)
+            //      qualified name.
+            //   2. `qualified_name`: used for `__wbg_<...>_free` etc., where
+            //      the macro itself emits the symbol from qualified_name.
+            let resolved_chain: Vec<(String, String, String)> = chain
+                .iter()
+                .map(|k| {
+                    let c = self.exported_classes.get(k);
+                    let id = c.map(|c| c.identifier.clone()).unwrap_or_else(|| k.clone());
+                    let q = c
+                        .and_then(|c| c.qualified_name.clone())
+                        .unwrap_or_else(|| id.clone());
+                    (id, k.clone(), q)
+                })
+                .collect();
+            if let Some(c) = self.exported_classes.get_mut(child) {
+                c.ancestors = resolved_chain;
+                c.participates_in_inheritance = true;
+            }
+            for ancestor in chain {
+                if let Some(c) = self.exported_classes.get_mut(ancestor) {
+                    c.participates_in_inheritance = true;
+                }
+            }
+        }
+    }
+
     fn require_class<'b>(&'b mut self, name: &str) -> &'b mut ExportedClass {
         // Resolve qualified_name to rust_name if needed
         let key = if let Some(rust_name) = self.qualified_to_rust_name.get(name) {
@@ -1571,20 +1719,85 @@ if (require('worker_threads').isMainThread) {{
 
     fn write_classes(&mut self) -> Result<(), Error> {
         let exported_classes = std::mem::take(&mut self.exported_classes);
+        // Build a name → (JS identifier, generate_typescript) map so a
+        // subclass can resolve its parent's emitted class identifier and
+        // also tell whether the parent's `.d.ts` declaration was suppressed
+        // via `skip_typescript` (in which case the child's `.d.ts` must NOT
+        // emit `extends Parent` — that would dangle on an undeclared base).
+        // Both the map key (rust_name) and the js_name are indexed, since
+        // `#[wasm_bindgen(extends = Path)]` stores the last segment of the
+        // Rust path, which matches the js_name when no rename is in play.
+        let class_identifiers: HashMap<String, (String, bool)> = exported_classes
+            .iter()
+            .flat_map(|(key, cls)| {
+                let entry = (cls.identifier.clone(), cls.generate_typescript);
+                let mut entries = vec![(key.clone(), entry.clone())];
+                if let Some(js) = &cls.js_name {
+                    if js != key {
+                        entries.push((js.clone(), entry));
+                    }
+                }
+                entries
+            })
+            .collect();
         for (class, exports) in exported_classes {
-            self.write_class(&class, exports)?;
+            self.write_class(&class, exports, &class_identifiers)?;
         }
         Ok(())
     }
 
-    fn write_class(&mut self, name: &str, class: ExportedClass) -> Result<(), Error> {
+    fn write_class(
+        &mut self,
+        name: &str,
+        class: ExportedClass,
+        class_identifiers: &HashMap<String, (String, bool)>,
+    ) -> Result<(), Error> {
         let identifier = &class.identifier;
         // Use js_name for JS output, falling back to the key name
         let js_name = class.js_name.as_deref().unwrap_or(name);
         // Use qualified_name for wasm symbol references, falling back to js_name
         let qualified = class.qualified_name.as_deref().unwrap_or(js_name);
-        let mut dst = format!("class {identifier} {{\n");
-        let mut ts_dst = dst.clone();
+        // For every class in an `extends` chain we emit per-class
+        // `__wbg_ptr_<Class>` fields (in addition to the legacy
+        // `__wbg_ptr` alias) so parent-method prototype dispatch routes
+        // through the correct ancestor pointer. Resolve the ancestors'
+        // js_names (field name) and qualified_names (wasm symbol base)
+        // once here.
+        let participates = class.participates_in_inheritance;
+        let ancestors: Vec<(String, String, String)> = class.ancestors.clone();
+        // Resolve the parent class identifier for `extends`, if any. Also
+        // capture whether the parent emits TypeScript: a parent with
+        // `skip_typescript` has no `.d.ts` declaration, so the child's TS
+        // must drop the `extends` clause to avoid referencing an undeclared
+        // base. Runtime JS still inherits — only the type declaration
+        // diverges (and TS users only see methods declared on the child,
+        // which matches what's actually safe to call without prototype
+        // lookups landing on undeclared parent methods).
+        let parent_meta = match &class.extends {
+            Some(parent_name) => {
+                let meta = class_identifiers.get(parent_name).cloned().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "class `{identifier}` extends `{parent_name}`, but no \
+                         exported Rust struct named `{parent_name}` was found \
+                         in this module",
+                    )
+                })?;
+                Some(meta)
+            }
+            None => None,
+        };
+        let parent_identifier: Option<String> = parent_meta.as_ref().map(|(id, _)| id.clone());
+        let parent_ts_visible: bool = parent_meta.as_ref().is_some_and(|(_, ts)| *ts);
+        let mut dst = match &parent_identifier {
+            Some(parent_id) => format!("class {identifier} extends {parent_id} {{\n"),
+            None => format!("class {identifier} {{\n"),
+        };
+        let mut ts_dst = match &parent_identifier {
+            Some(parent_id) if parent_ts_visible => {
+                format!("class {identifier} extends {parent_id} {{\n")
+            }
+            _ => format!("class {identifier} {{\n"),
+        };
 
         if !class.has_constructor {
             // declare the constructor as private to prevent direct instantiation
@@ -1602,16 +1815,49 @@ if (require('worker_threads').isMainThread) {{
         }
 
         if class.wrap_needed {
-            let (ptr_assignment, register_data) = if self.generate_reinit {
-                (
-                    "\
-                    obj.__wbg_ptr = ptr;
-                    Object.defineProperty(obj, '__wbg_inst', { value: __wbg_instance_id, writable: true });
-                    ",
-                    "{ ptr, instance: __wbg_instance_id }",
-                )
+            let ptr_assignment = if participates {
+                let mut body = String::new();
+                body.push_str("obj.__wbg_ptr = ptr;\n");
+                body.push_str(&format!("obj.__wbg_ptr_{identifier} = ptr;\n"));
+                if self.generate_reinit {
+                    body.push_str("Object.defineProperty(obj, '__wbg_inst', { value: __wbg_instance_id, writable: true });\n");
+                }
+                let mut prev_expr = String::from("ptr");
+                let mut from_qualified = qualified.to_string();
+                for (idx, (anc_id, anc_rust, anc_qualified)) in ancestors.iter().enumerate() {
+                    // The macro emits the upcast symbol as
+                    // `upcast_function(child_qualified_name, parent_rust_name)`,
+                    // so use the parent's rust_name (NOT qualified_name) here.
+                    let sym = wasm_bindgen_shared::upcast_function(&from_qualified, anc_rust);
+                    let tmp = format!("__wbg_anc_{idx}");
+                    body.push_str(&format!("const {tmp} = wasm.{sym}({prev_expr}) >>> 0;\n"));
+                    body.push_str(&format!("obj.__wbg_ptr_{anc_id} = {tmp};\n"));
+                    prev_expr = tmp;
+                    from_qualified = anc_qualified.clone();
+                }
+                body
+            } else if self.generate_reinit {
+                "obj.__wbg_ptr = ptr;\nObject.defineProperty(obj, '__wbg_inst', { value: __wbg_instance_id, writable: true });\n".to_string()
             } else {
-                ("obj.__wbg_ptr = ptr;", "obj.__wbg_ptr")
+                "obj.__wbg_ptr = ptr;".to_string()
+            };
+
+            let register_data = if participates {
+                let mut parts: Vec<String> = Vec::new();
+                parts.push(format!(
+                    "__wbg_ptr_{identifier}: obj.__wbg_ptr_{identifier}"
+                ));
+                for (anc_id, _, _) in ancestors.iter() {
+                    parts.push(format!("__wbg_ptr_{anc_id}: obj.__wbg_ptr_{anc_id}"));
+                }
+                if self.generate_reinit {
+                    parts.push("instance: __wbg_instance_id".to_string());
+                }
+                format!("{{ {} }}", parts.join(", "))
+            } else if self.generate_reinit {
+                "{ ptr, instance: __wbg_instance_id }".to_string()
+            } else {
+                "obj.__wbg_ptr".to_string()
             };
 
             dst.push_str(&format!(
@@ -1627,10 +1873,21 @@ if (require('worker_threads').isMainThread) {{
         }
 
         if class.unwrap_needed {
+            // For inheritance-participating classes, a wasm-bindgen subclass
+            // has `__wbg_ptr` set to its own (descendant) pointer rather than a
+            // pointer compatible with this class's wasm shim, so consuming via
+            // `__destroy_into_raw()` would hand the wrong pointer to Rust.
+            // Require an exact constructor match — Rust receives 0 in the
+            // rejection case, which trips `assert_not_null` and throws cleanly.
+            let check = if participates {
+                format!("jsValue?.constructor !== {identifier}")
+            } else {
+                format!("!(jsValue instanceof {identifier})")
+            };
             dst.push_str(&format!(
                 "\
                 static __unwrap(jsValue) {{
-                    if (!(jsValue instanceof {identifier})) {{
+                    if ({check}) {{
                         return 0;
                     }}
                     return jsValue.__destroy_into_raw();
@@ -1639,7 +1896,24 @@ if (require('worker_threads').isMainThread) {{
             ));
         }
 
-        let finalization_callback = if self.generate_reinit {
+        let finalization_callback = if participates {
+            let mut body = String::new();
+            body.push_str(&format!(
+                "wasm.{}(tok.__wbg_ptr_{identifier} >>> 0, 1);\n",
+                wasm_bindgen_shared::free_function(qualified)
+            ));
+            for (anc_id, _, anc_q) in ancestors.iter() {
+                body.push_str(&format!(
+                    "wasm.{}(tok.__wbg_ptr_{anc_id} >>> 0, 1);\n",
+                    wasm_bindgen_shared::free_function(anc_q)
+                ));
+            }
+            if self.generate_reinit {
+                format!("(tok) => {{ if (tok.instance === __wbg_instance_id) {{ {body} }} }}")
+            } else {
+                format!("(tok) => {{ {body} }}")
+            }
+        } else if self.generate_reinit {
             format!(
                 "({{ ptr, instance }}) => {{
                 if (instance === __wbg_instance_id) wasm.{}(ptr, 1);
@@ -1729,13 +2003,36 @@ if (require('worker_threads').isMainThread) {{
                 binding::ExportGuard::None
             },
         );
+        let destroy_body = if participates {
+            let mut body = String::new();
+            body.push_str("const ptr = this.__wbg_ptr;\n");
+            body.push_str("this.__wbg_ptr = 0;\n");
+            body.push_str(&format!("this.__wbg_ptr_{identifier} = 0;\n"));
+            // Release JS-held ancestor Rc clones (allow_delayed=1 — the
+            // child's Rc<Parent> field may still be alive). Order doesn't
+            // matter because refcounts commute.
+            for (anc_id, _, anc_q) in ancestors.iter() {
+                let anc_free = wasm_bindgen_shared::free_function(anc_q);
+                body.push_str(&format!(
+                    "const __anc_{anc_id} = this.__wbg_ptr_{anc_id};\n"
+                ));
+                body.push_str(&format!("this.__wbg_ptr_{anc_id} = 0;\n"));
+                body.push_str(&format!(
+                    "if (__anc_{anc_id} !== 0) wasm.{anc_free}(__anc_{anc_id} >>> 0, 1);\n"
+                ));
+            }
+            body.push_str(&format!("{identifier}Finalization.unregister(this);\n"));
+            body.push_str("return ptr;");
+            body
+        } else {
+            format!(
+                "const ptr = this.__wbg_ptr;\nthis.__wbg_ptr = 0;\n{identifier}Finalization.unregister(this);\nreturn ptr;"
+            )
+        };
         dst.push_str(&format!(
             "\
             __destroy_into_raw() {{
-                const ptr = this.__wbg_ptr;
-                this.__wbg_ptr = 0;
-                {identifier}Finalization.unregister(this);
-                return ptr;
+                {destroy_body}
             }}
             free() {{
                 const ptr = this.__destroy_into_raw();
@@ -1796,6 +2093,7 @@ if (require('worker_threads').isMainThread) {{
                 ts_definition,
                 ts_comments,
                 private: class.private,
+                parent_identifier: parent_identifier.clone(),
             }),
         )?;
 
@@ -1922,6 +2220,14 @@ if (require('worker_threads').isMainThread) {{
 
     fn write_exports(&mut self) -> Result<(), Error> {
         let exports = std::mem::take(&mut self.exports);
+        // Reorder so a `class Child extends Parent { ... }` definition is
+        // emitted after the `Parent` definition. BTreeMap iteration is by
+        // export name, which can place the child first and trip the JS
+        // class-declaration TDZ at module load (`Cannot access 'Parent'
+        // before initialization`). Definitions without a parent dependency
+        // (or whose parent isn't itself an export — e.g. an imported class)
+        // keep their existing position relative to other independents.
+        let exports = topo_sort_class_exports(exports);
         for (ref export_name, export) in exports {
             match export {
                 ExportEntry::Definition(def) => {
@@ -1955,6 +2261,7 @@ if (require('worker_threads').isMainThread) {{
                             ts_definition,
                             identifier,
                             private: false,
+                            parent_identifier: None,
                         },
                     );
                 }
@@ -3519,6 +3826,7 @@ if (require('worker_threads').isMainThread) {{
                 ts_comments: None,
                 // Only publicly exported when --experimental-reset-state-function is passed
                 private: !self.config.generate_reset_state,
+                parent_identifier: None,
             }),
         )?;
 
@@ -3752,6 +4060,7 @@ if (require('worker_threads').isMainThread) {{
         // Set up qualified-name mappings before processing adapters, so that
         // WasmDescribe lookups can resolve to the right exported class and TS
         // declaration identifier.
+        let mut any_class_has_parent = false;
         for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
@@ -3770,12 +4079,35 @@ if (require('worker_threads').isMainThread) {{
                 .or_default();
             class.js_name = Some(s.name.clone());
             class.qualified_name = Some(s.qualified_name.clone());
+            // Pre-populate extends so the constructor binding (emitted while
+            // processing adapters below) can tell whether a class is a
+            // subclass and needs `super(__wbgSuperSkip)`. The same field is
+            // repopulated later by `generate_struct` for the JS `extends`
+            // clause, but that runs after adapter processing.
+            class.extends = s.extends.clone();
+            if s.extends.is_some() {
+                any_class_has_parent = true;
+            }
             if let Some(identifier) = identifier {
                 class.identifier = identifier;
             }
             self.qualified_to_identifier
                 .insert(s.qualified_name.clone(), class.identifier.clone());
         }
+        // Emit the super-skip sentinel once up front if any class in this
+        // module extends another. Every user-defined constructor then checks
+        // for the sentinel as the first thing in its body so that a
+        // subclass's `super(__wbgSuperSkip)` short-circuits the parent
+        // ctor body and doesn't allocate an orphan parent instance.
+        if any_class_has_parent {
+            self.expose_super_skip_sentinel();
+        }
+        // Resolve the full ancestor chain for every class that participates
+        // in inheritance (i.e. declares `extends` or is extended by another
+        // class). Each class's `__wbg_ptr_<Class>` per-ancestor pointer
+        // scheme is keyed on this list; ordering is nearest-first
+        // (direct parent at index 0).
+        self.populate_inheritance_chains();
         for e in self.aux.enums.values() {
             self.get_or_create_identifier(&e.qualified_name);
         }
@@ -4090,10 +4422,18 @@ addToLibrary({
                         builder.classless_this();
                     }
                     AuxExportKind::Constructor(class) => builder.constructor(class),
-                    AuxExportKind::Method { receiver, .. } => match receiver {
+                    AuxExportKind::Method {
+                        receiver, class, ..
+                    } => match receiver {
                         AuxReceiverKind::None => {}
-                        AuxReceiverKind::Borrowed => builder.method(false),
-                        AuxReceiverKind::Owned => builder.method(true),
+                        AuxReceiverKind::Borrowed => {
+                            builder.method_class(class);
+                            builder.method(false);
+                        }
+                        AuxReceiverKind::Owned => {
+                            builder.method_class(class);
+                            builder.method(true);
+                        }
                     },
                 }
             }
@@ -4199,6 +4539,7 @@ addToLibrary({
                                 ts_definition,
                                 ts_comments,
                                 private: false,
+                                parent_identifier: None,
                             }),
                         )?;
                     }
@@ -5293,6 +5634,7 @@ addToLibrary({
                 ts_definition: typescript,
                 ts_comments: Some(ts_comments),
                 private: enum_.private,
+                parent_identifier: None,
             }),
         )?;
 
@@ -5351,6 +5693,7 @@ addToLibrary({
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         class.js_name = Some(struct_.name.clone());
         class.qualified_name = Some(struct_.qualified_name.clone());
+        class.extends = struct_.extends.clone();
         Ok(())
     }
 
@@ -5854,6 +6197,110 @@ fn format_doc_comments(comments: &str, js_doc_comments: Option<String>) -> Strin
     } else {
         format!("/**\n{body}{doc} */\n")
     }
+}
+
+/// Reorder exports so that a `class Child extends Parent` Definition appears
+/// after the Definition that introduces `Parent` (matched by identifier).
+/// Independents preserve their relative BTreeMap (export-name) order.
+///
+/// Children of imported / external bases (where no Definition introduces the
+/// referenced parent_identifier in this module) are treated as independents;
+/// the JS runtime resolves the `extends` reference normally.
+///
+/// Recurses into namespaces so nested class hierarchies are also ordered.
+fn topo_sort_class_exports(exports: BTreeMap<String, ExportEntry>) -> Vec<(String, ExportEntry)> {
+    use std::collections::HashSet;
+
+    // Collect the set of identifiers introduced by Definitions in *this* level
+    // — only those participate as resolvable parents. Anything pointing
+    // outside the set (imported parents, etc.) is left as-is.
+    let local_ids: HashSet<String> = exports
+        .values()
+        .filter_map(|e| match e {
+            ExportEntry::Definition(d) => Some(d.identifier.clone()),
+            ExportEntry::Namespace(_) => None,
+        })
+        .collect();
+
+    let entries: Vec<(String, ExportEntry)> = exports.into_iter().collect();
+    let n = entries.len();
+
+    // Map each entry's identifier to its index for parent lookups, and recurse
+    // into namespace bodies up front so the ordering inside each namespace is
+    // also fixed.
+    let mut name_to_idx: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::with_capacity(n);
+    let mut entries: Vec<(String, ExportEntry)> = entries
+        .into_iter()
+        .map(|(name, entry)| match entry {
+            ExportEntry::Namespace(mut ns) => {
+                let inner = std::mem::take(&mut ns.ns);
+                ns.ns = topo_sort_class_exports(inner)
+                    .into_iter()
+                    .collect::<BTreeMap<_, _>>();
+                (name, ExportEntry::Namespace(ns))
+            }
+            other => (name, other),
+        })
+        .collect();
+    for (i, (_, e)) in entries.iter().enumerate() {
+        if let ExportEntry::Definition(d) = e {
+            name_to_idx.insert(d.identifier.clone(), i);
+        }
+    }
+
+    // Stable topological sort: process indices in original order, defer those
+    // whose parent (if local) hasn't been emitted yet.
+    let mut emitted: Vec<bool> = vec![false; n];
+    let mut out: Vec<(String, ExportEntry)> = Vec::with_capacity(n);
+
+    // Repeatedly scan; at least one item makes progress each pass unless
+    // there's a cycle (impossible: extends produces a tree because each class
+    // declares at most one parent and self-reference is rejected upstream).
+    loop {
+        let mut progress = false;
+        for i in 0..n {
+            if emitted[i] {
+                continue;
+            }
+            let parent_local_idx = match &entries[i].1 {
+                ExportEntry::Definition(d) => d
+                    .parent_identifier
+                    .as_ref()
+                    .filter(|p| local_ids.contains(*p))
+                    .and_then(|p| name_to_idx.get(p).copied()),
+                _ => None,
+            };
+            let ready = match parent_local_idx {
+                Some(p) => emitted[p],
+                None => true,
+            };
+            if ready {
+                // Take the entry out by replacing with a sentinel; entries[i]
+                // is no longer accessed after this.
+                let placeholder = (String::new(), ExportEntry::Namespace(Default::default()));
+                let taken = std::mem::replace(&mut entries[i], placeholder);
+                out.push(taken);
+                emitted[i] = true;
+                progress = true;
+            }
+        }
+        if !progress {
+            break;
+        }
+    }
+
+    // If any items remain (shouldn't happen in practice), append them in
+    // original order so output is total.
+    for i in 0..n {
+        if !emitted[i] {
+            let placeholder = (String::new(), ExportEntry::Namespace(Default::default()));
+            let taken = std::mem::replace(&mut entries[i], placeholder);
+            out.push(taken);
+        }
+    }
+
+    out
 }
 
 /// Defines an export with an optional namespace path segment

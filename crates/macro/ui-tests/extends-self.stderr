@@ -1,0 +1,11 @@
+error: `extends = Self` (or naming the same struct) is not allowed; a class cannot inherit from itself
+ --> ui-tests/extends-self.rs:3:16
+  |
+3 | #[wasm_bindgen(extends = SelfA)]
+  |                ^^^^^^^
+
+error: `extends = Self` (or naming the same struct) is not allowed; a class cannot inherit from itself
+ --> ui-tests/extends-self.rs:6:16
+  |
+6 | #[wasm_bindgen(extends = Self)]
+  |                ^^^^^^^

@@ -502,6 +502,33 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         // the `wasm_bindgen` option has been used before
         let _ = attrs.wasm_bindgen();
 
+        // Collect any `extends = Path` attributes on the struct. For Rust
+        // exports we only support a single parent in this first pass, and
+        // we reject self-extends (`extends = Foo` on `struct Foo`) — the
+        // injected `parent: Parent<Foo>` field is infinitely-sized at the
+        // type level, and the emitted JS would be `class Foo extends Foo`
+        // which fails at module load with a TDZ ReferenceError.
+        let mut extends: Option<syn::Path> = None;
+        for (used, attr) in attrs.attrs.iter() {
+            if let BindgenAttr::Extends(span, path) = attr {
+                if extends.is_some() {
+                    return Err(Diagnostic::span_error(
+                        *span,
+                        "`extends` may only be specified once on an exported struct",
+                    ));
+                }
+                if path.is_ident(&self.ident) || path.is_ident("Self") {
+                    return Err(Diagnostic::span_error(
+                        *span,
+                        "`extends = Self` (or naming the same struct) is not allowed; \
+                         a class cannot inherit from itself",
+                    ));
+                }
+                extends = Some(path.clone());
+                used.set(true);
+            }
+        }
+
         let mut fields = Vec::new();
         let js_name = attrs
             .js_name()
@@ -519,23 +546,35 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         let getter_with_clone = attrs.getter_with_clone();
         let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
         let qualified_name = wasm_bindgen_shared::qualified_name(js_namespace.as_deref(), &js_name);
+        let mut parent_count = 0usize;
         for (i, field) in self.fields.iter_mut().enumerate() {
-            match field.vis {
-                syn::Visibility::Public(..) => {}
-                _ => continue,
+            let field_attrs = BindgenAttrs::find(&mut field.attrs)?;
+            // The parent field is identified purely by its type being
+            // `Parent<T>` — no dedicated attribute is required. The inner
+            // `T` is verified by the Rust type checker when the upcast
+            // helper is compiled.
+            let is_parent = is_parent_wrapper_type(&field.ty);
+            if is_parent {
+                parent_count += 1;
             }
+
+            let is_public = matches!(field.vis, syn::Visibility::Public(..));
+            if !is_public && !is_parent {
+                field_attrs.check_used();
+                continue;
+            }
+
             let (js_field_name, member) = match &field.ident {
                 Some(ident) => (ident.unraw().to_string(), syn::Member::Named(ident.clone())),
                 None => (i.to_string(), syn::Member::Unnamed(i.into())),
             };
 
-            let attrs = BindgenAttrs::find(&mut field.attrs)?;
-            if attrs.skip().is_some() {
-                attrs.check_used();
+            if field_attrs.skip().is_some() && !is_parent {
+                field_attrs.check_used();
                 continue;
             }
 
-            let js_field_name = match attrs.js_name() {
+            let js_field_name = match field_attrs.js_name() {
                 Some((name, _)) => name.to_string(),
                 None => js_field_name,
             };
@@ -548,18 +587,40 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
                 rust_name: member,
                 js_name: js_field_name,
                 struct_name: self.ident.clone(),
-                readonly: attrs.readonly().is_some(),
+                readonly: field_attrs.readonly().is_some(),
                 ty: field.ty.clone(),
                 getter: Ident::new(&getter, Span::call_site()),
                 setter: Ident::new(&setter, Span::call_site()),
                 comments,
-                generate_typescript: attrs.skip_typescript().is_none(),
-                generate_jsdoc: attrs.skip_jsdoc().is_none(),
-                getter_with_clone: attrs.getter_with_clone().or(getter_with_clone).copied(),
+                generate_typescript: field_attrs.skip_typescript().is_none(),
+                generate_jsdoc: field_attrs.skip_jsdoc().is_none(),
+                getter_with_clone: field_attrs
+                    .getter_with_clone()
+                    .or(getter_with_clone)
+                    .copied(),
+                is_parent,
                 wasm_bindgen: program.wasm_bindgen.clone(),
             });
-            attrs.check_used();
+            field_attrs.check_used();
         }
+
+        // The `parent: Parent<T>` field is injected by `inject_parent_field`
+        // before the struct reaches this point, so a struct with `extends`
+        // should always have exactly one `Parent<T>` field. A struct without
+        // `extends` can never have one — `inject_parent_field` rejects
+        // user-declared `Parent<T>` fields.
+        match (&extends, parent_count) {
+            (Some(_), 1) => {}
+            (None, 0) => {}
+            _ => {
+                return Err(Diagnostic::span_error(
+                    self.ident.span(),
+                    "internal error: inconsistent Parent<T> field state; \
+                     this should have been caught by inject_parent_field",
+                ));
+            }
+        }
+
         let generate_typescript = attrs.skip_typescript().is_none();
         let private = attrs.private().is_some();
         let comments: Vec<String> = extract_doc_comments(&self.attrs);
@@ -574,6 +635,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             generate_typescript,
             private,
             js_namespace,
+            extends,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
     }
@@ -585,6 +647,157 @@ fn get_ty(mut ty: &syn::Type) -> &syn::Type {
     }
 
     ty
+}
+
+/// Injects a hidden `parent: <wasm_bindgen>::Parent<ParentType>` field into
+/// a struct that declares `#[wasm_bindgen(extends = ParentType)]`, and
+/// rejects any user-declared `Parent<T>` field on any struct — the macro
+/// owns that field.
+///
+/// Called from the macro entry point before the struct tokens are re-emitted,
+/// so downstream type-checking sees the injected field.
+pub fn inject_parent_field(
+    s: &mut syn::ItemStruct,
+    extends_path: Option<&syn::Path>,
+    wasm_bindgen: &syn::Path,
+) -> Result<(), Diagnostic> {
+    for field in s.fields.iter() {
+        if is_parent_wrapper_type(&field.ty) {
+            let path_str = path_to_string(field_type_path(&field.ty));
+            let msg = if extends_path.is_some() {
+                format!(
+                    "do not declare a `{path_str}` field; the \
+                     `#[wasm_bindgen(extends = ...)]` macro injects \
+                     `parent: wasm_bindgen::Parent<...>` automatically"
+                )
+            } else {
+                format!(
+                    "`{path_str}` looks like `wasm_bindgen::Parent<T>`, \
+                     which is reserved for the \
+                     `#[wasm_bindgen(extends = ...)]` macro. If you intended \
+                     a different `Parent` type, qualify it (e.g. \
+                     `my_crate::tree::Parent`) so this check skips it."
+                )
+            };
+            bail_span!(&field.ty, "{}", msg);
+        }
+    }
+
+    let Some(parent_path) = extends_path else {
+        return Ok(());
+    };
+
+    for field in s.fields.iter() {
+        if let Some(ident) = &field.ident {
+            if ident == "parent" {
+                bail_span!(
+                    ident,
+                    "struct with `#[wasm_bindgen(extends = ...)]` cannot \
+                     have a field named `parent`; the macro injects one"
+                );
+            }
+        }
+    }
+
+    let injected: syn::Field = syn::parse_quote! {
+        parent: #wasm_bindgen::Parent<#parent_path>
+    };
+
+    match &mut s.fields {
+        syn::Fields::Named(named) => {
+            named.named.insert(0, injected);
+        }
+        syn::Fields::Unit => {
+            let mut named = syn::FieldsNamed {
+                brace_token: Default::default(),
+                named: syn::punctuated::Punctuated::new(),
+            };
+            named.named.push(injected);
+            s.fields = syn::Fields::Named(named);
+            s.semi_token = None;
+        }
+        syn::Fields::Unnamed(_) => {
+            bail_span!(
+                &s.ident,
+                "tuple structs cannot use `#[wasm_bindgen(extends = ...)]`; \
+                 use a named-field struct"
+            );
+        }
+    }
+
+    Ok(())
+}
+
+/// Returns true if `ty` looks like `wasm_bindgen::Parent<T>`. We can't
+/// fully resolve paths at macro-expansion time, so we accept a small set
+/// of unambiguous spellings that name `wasm_bindgen::Parent`:
+///
+/// * `Parent<T>` — the unqualified form (assumes the user has imported it,
+///   or hasn't defined a different type with the same name in scope).
+/// * `wasm_bindgen::Parent<T>` and `::wasm_bindgen::Parent<T>` — the
+///   canonical fully-qualified spellings.
+/// * `crate::Parent<T>` — re-export from the crate root, plausible only
+///   in user crates that re-export `wasm_bindgen::Parent`.
+///
+/// This is intentionally conservative: a user with their own
+/// `my_crate::tree::Parent<T>` field is left alone.
+fn is_parent_wrapper_type(ty: &syn::Type) -> bool {
+    let path = match field_type_path(ty) {
+        Some(p) => p,
+        None => return false,
+    };
+    let last = match path.segments.last() {
+        Some(seg) => seg,
+        None => return false,
+    };
+    if last.ident != "Parent" {
+        return false;
+    }
+    let one_type_arg = match &last.arguments {
+        syn::PathArguments::AngleBracketed(args) => {
+            args.args
+                .iter()
+                .filter(|a| matches!(a, syn::GenericArgument::Type(_)))
+                .count()
+                == 1
+        }
+        _ => false,
+    };
+    if !one_type_arg {
+        return false;
+    }
+    // Match only the unambiguous spellings that name wasm_bindgen::Parent.
+    let segs: Vec<String> = path.segments.iter().map(|s| s.ident.to_string()).collect();
+    let leading_colon = path.leading_colon.is_some();
+    match (leading_colon, segs.as_slice()) {
+        (false, [only]) if only == "Parent" => true,
+        (false, [first, last]) if first == "wasm_bindgen" && last == "Parent" => true,
+        (true, [first, last]) if first == "wasm_bindgen" && last == "Parent" => true,
+        (false, [first, last]) if first == "crate" && last == "Parent" => true,
+        _ => false,
+    }
+}
+
+/// Extract the path of a `Type::Path`, peeling off any leading groups.
+fn field_type_path(ty: &syn::Type) -> Option<&syn::Path> {
+    match get_ty(ty) {
+        syn::Type::Path(p) => Some(&p.path),
+        _ => None,
+    }
+}
+
+/// Stringify a path's segment idents (without generic args) for diagnostics.
+fn path_to_string(path: Option<&syn::Path>) -> String {
+    let Some(path) = path else {
+        return String::from("<unknown>");
+    };
+    let mut out = String::new();
+    if path.leading_colon.is_some() {
+        out.push_str("::");
+    }
+    let segs: Vec<String> = path.segments.iter().map(|s| s.ident.to_string()).collect();
+    out.push_str(&segs.join("::"));
+    out
 }
 
 fn get_expr(mut expr: &syn::Expr) -> &syn::Expr {

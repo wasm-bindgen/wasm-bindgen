@@ -1,0 +1,13 @@
+error: `Parent` looks like `wasm_bindgen::Parent<T>`, which is reserved for the `#[wasm_bindgen(extends = ...)]` macro. If you intended a different `Parent` type, qualify it (e.g. `my_crate::tree::Parent`) so this check skips it.
+ --> ui-tests/parent-without-extends.rs:9:13
+  |
+9 |     animal: Parent<Animal>,
+  |             ^^^^^^^^^^^^^^
+
+warning: unused import: `wasm_bindgen::Parent`
+ --> ui-tests/parent-without-extends.rs:2:5
+  |
+2 | use wasm_bindgen::Parent;
+  |     ^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

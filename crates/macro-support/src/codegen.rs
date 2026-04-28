@@ -458,6 +458,64 @@ impl ToTokens for ast::Struct {
         })
         .to_tokens(tokens);
 
+        // If this struct `extends` another exported Rust struct, emit:
+        //
+        //   - `AsRef<Parent<ParentType>>` projecting to the wrapper field so
+        //     generic code can walk the chain at the type level.
+        //   - The upcast wasm export used by the JS side to produce a
+        //     separately-refcounted parent pointer when a child instance is
+        //     constructed (or when wasm returns a child back to JS). The
+        //     upcast clones the `Rc<WasmRefCell<Parent>>` held by the
+        //     child's `Parent<ParentType>` field.
+        //
+        // The JS-side of the extends relationship (class Child extends
+        // Parent, instanceof, prototype-chain dispatch) is wired up by
+        // cli-support using this export and the matching `extends` schema
+        // entry.
+        if let Some(parent_path) = &self.extends {
+            let parent_field = self.fields.iter().find(|f| f.is_parent);
+            if let Some(parent_field) = parent_field {
+                let field_name = &parent_field.rust_name;
+                let field_ty = &parent_field.ty;
+                let parent_js_name = parent_path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default();
+                let upcast_fn = Ident::new(
+                    &shared::upcast_function(&name_str, &parent_js_name),
+                    Span::call_site(),
+                );
+                (quote! {
+                    #[automatically_derived]
+                    impl #wasm_bindgen::__rt::core::convert::AsRef<#field_ty> for #name {
+                        #[inline]
+                        fn as_ref(&self) -> &#field_ty {
+                            &self.#field_name
+                        }
+                    }
+
+                    #[cfg(target_family = "wasm")]
+                    #[automatically_derived]
+                    const _: () = {
+                        #[no_mangle]
+                        #[doc(hidden)]
+                        pub unsafe extern "C-unwind" fn #upcast_fn(ptr: u32) -> u32 {
+                            use #wasm_bindgen::__rt::alloc::rc::Rc;
+                            use #wasm_bindgen::__rt::{assert_not_null, WasmRefCell};
+
+                            let ptr = ptr as *mut WasmRefCell<#name>;
+                            assert_not_null(ptr);
+                            let cell = &*ptr;
+                            let rc_clone = cell.borrow().#field_name.__wbg_clone_rc();
+                            Rc::into_raw(rc_clone) as u32
+                        }
+                    };
+                })
+                .to_tokens(tokens);
+            }
+        }
+
         for field in self.fields.iter() {
             field.to_tokens(tokens);
         }
@@ -466,6 +524,13 @@ impl ToTokens for ast::Struct {
 
 impl ToTokens for ast::StructField {
     fn to_tokens(&self, tokens: &mut TokenStream) {
+        // Parent fields exist solely to back the `extends` relationship
+        // (used by `AsRef`/`Deref` codegen above). They are not exposed to
+        // JS as a getter/setter.
+        if self.is_parent {
+            return;
+        }
+
         let rust_name = &self.rust_name;
         let struct_name = &self.struct_name;
         let ty = &self.ty;
