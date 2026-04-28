@@ -28,6 +28,11 @@ pub struct Builder<'a, 'b> {
     /// Whether or not this is building a method of a Rust class instance, and
     /// whether or not the method consumes `self` or not.
     method: Option<bool>,
+    /// If building a method, the class that defines it. Used to dispatch the
+    /// `this` pointer through the inheritance-aware per-class field
+    /// (`this.__wbg_ptr_<OwnClass>`) when the class participates in an
+    /// `extends` chain.
+    method_class: Option<String>,
     /// Whether this is a classless this function (receives JS `this` as first param)
     classless_this: bool,
     /// Whether or not we're catching exceptions from the main function
@@ -149,6 +154,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             cx,
             constructor: None,
             method: None,
+            method_class: None,
             classless_this: false,
             catch: false,
         }
@@ -156,6 +162,13 @@ impl<'a, 'b> Builder<'a, 'b> {
 
     pub fn method(&mut self, consumed: bool) {
         self.method = Some(consumed);
+    }
+
+    /// Record the class name that owns the method being built. Used to
+    /// route `this.__wbg_ptr` lookups through the per-class inheritance
+    /// field when the class extends (or is extended by) another.
+    pub fn method_class(&mut self, class: &str) {
+        self.method_class = Some(class.to_string());
     }
 
     pub fn classless_this(&mut self) {
@@ -200,10 +213,81 @@ impl<'a, 'b> Builder<'a, 'b> {
         let mut function_args = Vec::new();
         let mut arg_tys = Vec::new();
 
+        // Inheritance constructor wiring (computed BEFORE JsBuilder::new
+        // borrows `self.cx` mutably).
+        //
+        // JS forbids a subclass constructor from touching `this` before it
+        // invokes `super(...)`. Our emitted constructor body does write
+        // `this.__wbg_ptr` (see the `RustFromI32` lowering further below),
+        // so a subclass constructor must begin with `super(...)`.
+        //
+        // A subclass's ctor also allocates its OWN Rust struct and wants to
+        // end up with only the child's pointer on `this`. If `super(...)`
+        // invoked the parent's user ctor it would allocate a spurious
+        // orphan parent instance. We avoid that with a shared module-level
+        // sentinel (emitted once up front in `generate()`): subclass calls
+        // `super(__wbgSuperSkip)`, and every user ctor checks for the
+        // sentinel and returns early.
+        //
+        // Top-level (non-subclass) ctors can safely `return` before doing
+        // any `this` access. Subclass ctors must do super() first, then the
+        // sentinel check — which is still valid because after super() the
+        // `this` binding is initialized, so an empty `return;` is legal.
+        let (ctor_is_subclass, ctor_needs_sentinel_check) = match &self.constructor {
+            Some(ctor_class) => {
+                let resolved = self.cx.resolve_class_name(ctor_class).to_string();
+                let is_subclass = self
+                    .cx
+                    .exported_classes
+                    .get(&resolved)
+                    .and_then(|c| c.extends.as_ref())
+                    .is_some();
+                (is_subclass, self.cx.has_super_skip_sentinel())
+            }
+            None => (false, false),
+        };
+
+        // Route the `this` pointer through a per-class field when the
+        // method's class participates in an `extends` chain. Every class
+        // in a chain stores `this.__wbg_ptr_<OwnClass>` alongside
+        // `this.__wbg_ptr` (which always mirrors the own-class ptr for
+        // backward compat with code that reads the unqualified field).
+        //
+        // For `self`-by-value methods, also compute a subclass-dispatch
+        // guard: a wasm-bindgen subclass reaching this method via the JS
+        // prototype chain would call `this.__destroy_into_raw()` on the
+        // descendant (returning the descendant pointer) and hand it to
+        // this method's parent wasm shim — type-confused free / UB. The
+        // guard throws cleanly instead.
+        let (this_ptr_expr, consumes_self_subclass_guard) = match &self.method_class {
+            Some(method_class) => {
+                let resolved = self.cx.resolve_class_name(method_class).to_string();
+                let cls = self.cx.exported_classes.get(&resolved);
+                if cls.is_some_and(|c| c.participates_in_inheritance) {
+                    let identifier = cls.map(|c| c.identifier.clone()).unwrap_or(resolved);
+                    let guard = format!(
+                        "if (this?.constructor !== {identifier}) {{ \
+                            throw new TypeError('{identifier}: a `self`-by-value method cannot be invoked through subclass dispatch'); \
+                        }}"
+                    );
+                    (format!("this.__wbg_ptr_{identifier}"), Some(guard))
+                } else {
+                    ("this.__wbg_ptr".to_string(), None)
+                }
+            }
+            None => ("this.__wbg_ptr".to_string(), None),
+        };
+
         // If this is a method then we're generating this as part of a class
         // method, so the leading parameter is the this pointer stored on
         // the JS object, so synthesize that here.
         let mut js = JsBuilder::new(self.cx, debug_name);
+        if ctor_is_subclass {
+            js.prelude("super(__wbgSuperSkip);");
+        }
+        if ctor_needs_sentinel_check {
+            js.prelude("if (arguments[0] === __wbgSuperSkip) return;");
+        }
         if let Some(consumes_self) = self.method {
             let _ = params.next();
             if js.cx.generate_reinit {
@@ -221,10 +305,13 @@ impl<'a, 'b> Builder<'a, 'b> {
                 );
             }
             if consumes_self {
+                if let Some(guard) = &consumes_self_subclass_guard {
+                    js.prelude(guard);
+                }
                 js.prelude("const ptr = this.__destroy_into_raw();");
                 js.args.push("ptr".into());
             } else {
-                js.args.push("this.__wbg_ptr".into());
+                js.args.push(this_ptr_expr);
             }
         } else if self.classless_this {
             let _ = params.next();
@@ -726,6 +813,32 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("_assertClass({arg}, {identifier});"));
     }
 
+    /// `assert_class` for boundaries that take the receiver by value
+    /// (ownership transfer to Rust). For classes participating in an
+    /// `extends` chain, additionally reject subclass instances: a
+    /// wasm-bindgen subclass has `__wbg_ptr` set to its own (descendant)
+    /// pointer, not a pointer compatible with this class's wasm shim, so
+    /// `__destroy_into_raw()` would hand the wrong pointer to Rust —
+    /// type-confused free / UB.
+    fn assert_owned_class(&mut self, arg: &str, class: &str) {
+        self.assert_class(arg, class);
+        let resolved = self.cx.resolve_class_name(class).to_string();
+        let participates = self
+            .cx
+            .exported_classes
+            .get(&resolved)
+            .is_some_and(|c| c.participates_in_inheritance);
+        if participates {
+            let identifier = self.cx.require_class_identifier(class);
+            self.prelude(&format!(
+                "if ({arg}.constructor !== {identifier}) {{ \
+                    throw new TypeError('expected exact instance of {identifier}; \
+                    a wasm-bindgen subclass cannot be consumed by-value as its parent'); \
+                }}"
+            ));
+        }
+    }
+
     fn assert_number(&mut self, arg: &str) {
         if !self.cx.config.debug {
             return;
@@ -1165,7 +1278,7 @@ fn instruction(
 
         Instruction::I32FromExternrefRustOwned { class } => {
             let val = js.pop();
-            js.assert_class(&val, class);
+            js.assert_owned_class(&val, class);
             js.assert_not_moved(&val);
             let i = js.tmp();
             js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
@@ -1176,7 +1289,27 @@ fn instruction(
             let val = js.pop();
             js.assert_class(&val, class);
             js.assert_not_moved(&val);
-            js.push(format!("{val}.__wbg_ptr"));
+            // For inheritance-participating classes, route through the
+            // per-class pointer field. `_assertClass` uses `instanceof`,
+            // so a subclass instance passes the check, but `{val}.__wbg_ptr`
+            // would be the *descendant* pointer — handing that to this
+            // class's wasm shim would type-confuse the borrow. The
+            // per-class field `__wbg_ptr_<DefiningClass>` is populated by
+            // the constructor / `__wrap` upcast chain on every instance,
+            // including subclass instances, so it is the correct ancestor
+            // pointer.
+            let resolved = js.cx.resolve_class_name(class).to_string();
+            let participates = js
+                .cx
+                .exported_classes
+                .get(&resolved)
+                .is_some_and(|c| c.participates_in_inheritance);
+            if participates {
+                let identifier = js.cx.require_class_identifier(class);
+                js.push(format!("{val}.__wbg_ptr_{identifier}"));
+            } else {
+                js.push(format!("{val}.__wbg_ptr"));
+            }
         }
 
         Instruction::I32FromOptionRust { class } => {
@@ -1185,7 +1318,7 @@ fn instruction(
             let i = js.tmp();
             js.prelude(&format!("let ptr{i} = 0;"));
             js.prelude(&format!("if (!isLikeNone({val})) {{"));
-            js.assert_class(&val, class);
+            js.assert_owned_class(&val, class);
             js.assert_not_moved(&val);
             js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
             js.prelude("}");
@@ -1459,16 +1592,74 @@ fn instruction(
             // Resolve both the descriptor class and the constructor class to
             // rust_name for comparison, since they may use different naming
             // (qualified_name vs js_class vs rust_name).
-            let resolved_class = js.cx.resolve_class_name(class);
+            let resolved_class = js.cx.resolve_class_name(class).to_string();
             match constructor {
                 Some(name) if js.cx.resolve_class_name(name) == resolved_class => {
                     // Get the JS identifier for the class, which may be aliased
                     // if the name conflicts with a JS builtin (e.g., `Array` -> `Array2`)
                     let identifier = js.cx.require_class_identifier(class);
+                    // Gather inheritance info (ancestors, own qualified name)
+                    // before any mutable borrow for prelude emission.
+                    let cls = js.cx.exported_classes.get(&resolved_class);
+                    let participates = cls.is_some_and(|c| c.participates_in_inheritance);
+                    let own_qualified = cls
+                        .and_then(|c| c.qualified_name.clone())
+                        .or_else(|| cls.and_then(|c| c.js_name.clone()))
+                        .unwrap_or_else(|| resolved_class.clone());
+                    // Per-class pointer suffix uses the class's auto-sanitized
+                    // JS identifier (always a valid JS ident) rather than the
+                    // user-facing js_name, which may contain hyphens or other
+                    // chars that would break `obj.__wbg_ptr_<...>` syntax.
+                    let own_ident = cls
+                        .map(|c| c.identifier.clone())
+                        .unwrap_or_else(|| resolved_class.clone());
+                    // For each ancestor: (identifier, rust_name, qualified_name).
+                    // Nearest-first: ancestors[0] is the direct parent.
+                    // identifier   -> per-class pointer field suffix
+                    // rust_name    -> upcast symbol parent half (matches macro)
+                    // qualified    -> free symbol etc. (also matches macro)
+                    let ancestors: Vec<(String, String, String)> =
+                        cls.map(|c| c.ancestors.clone()).unwrap_or_default();
                     // When reinit is enabled, define __wbg_inst as non-enumerable
                     // and non-configurable so it doesn't appear in serialization
                     // (e.g. toJSON) but remains writable for instance replacement.
-                    let (ptr_assignment, register_data) = if js.cx.generate_reinit {
+                    let (ptr_assignment, register_data) = if participates {
+                        let mut body = String::new();
+                        body.push_str(&format!("this.__wbg_ptr = {val} >>> 0;\n"));
+                        body.push_str(&format!("this.__wbg_ptr_{own_ident} = {val} >>> 0;\n"));
+                        if js.cx.generate_reinit {
+                            body.push_str(
+                                "Object.defineProperty(this, '__wbg_inst', { value: __wbg_instance_id, writable: true });\n",
+                            );
+                        }
+                        // Chain upcasts: each hop consumes the previous ptr.
+                        let mut prev_ptr_expr = format!("{val} >>> 0");
+                        let mut from_qualified = own_qualified.clone();
+                        let mut token_parts: Vec<String> =
+                            vec![format!("__wbg_ptr_{own_ident}: {val} >>> 0")];
+                        for (idx, (anc_id, anc_rust, anc_qualified)) in ancestors.iter().enumerate()
+                        {
+                            let sym =
+                                wasm_bindgen_shared::upcast_function(&from_qualified, anc_rust);
+                            let tmp = format!("__wbg_anc_{idx}");
+                            body.push_str(&format!(
+                                "const {tmp} = wasm.{sym}({prev_ptr_expr}) >>> 0;\n"
+                            ));
+                            body.push_str(&format!("this.__wbg_ptr_{anc_id} = {tmp};\n"));
+                            token_parts.push(format!("__wbg_ptr_{anc_id}: {tmp}"));
+                            prev_ptr_expr = tmp;
+                            from_qualified = anc_qualified.clone();
+                        }
+                        let token = if js.cx.generate_reinit {
+                            format!(
+                                "{{ {}, instance: __wbg_instance_id }}",
+                                token_parts.join(", ")
+                            )
+                        } else {
+                            format!("{{ {} }}", token_parts.join(", "))
+                        };
+                        (body, token)
+                    } else if js.cx.generate_reinit {
                         (
                             format!(
                                 "\
