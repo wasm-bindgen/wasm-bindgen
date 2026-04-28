@@ -5,7 +5,7 @@ use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
 use anyhow::{anyhow, bail, ensure, Error};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{hash_map::Entry, BTreeSet, HashMap};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
@@ -1124,15 +1124,28 @@ impl<'a> Context<'a> {
                 .as_ref()
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
         };
-        let mut result = Ok(());
-        self.aux
-            .string_enums
-            .entry(aux.name.clone())
-            .and_modify(|existing| {
-                result = Err(anyhow!("duplicate string enums:\n{existing:?}\n{aux:?}"));
-            })
-            .or_insert(aux);
-        result
+        match self.aux.string_enums.entry(aux.name.clone()) {
+            Entry::Occupied(mut e) => {
+                let existing = e.get_mut();
+                if existing.variant_values != aux.variant_values {
+                    // Merge variant lists
+                    let mut seen = std::collections::HashSet::new();
+                    for v in &existing.variant_values {
+                        seen.insert(v.clone());
+                    }
+                    for v in &aux.variant_values {
+                        if !seen.contains(v) {
+                            seen.insert(v.clone());
+                            existing.variant_values.push(v.clone());
+                        }
+                    }
+                }
+            }
+            Entry::Vacant(v) => {
+                v.insert(aux);
+            }
+        }
+        Ok(())
     }
 
     fn enum_(&mut self, enum_: decode::Enum<'_>) -> Result<(), Error> {
@@ -1607,9 +1620,9 @@ impl<'a> Context<'a> {
 
         // ... then the returned value being translated back
 
-        let inner_ret_output = if let Some(sig_inner_ret) = &signature.inner_ret {
+        let inner_ret_output = if signature.inner_ret.is_some() {
             let mut inner_ret = args.cx.instruction_builder(true);
-            inner_ret.outgoing(sig_inner_ret)?;
+            inner_ret.outgoing(&signature.inner_ret.unwrap())?;
             inner_ret.output
         } else {
             vec![]
