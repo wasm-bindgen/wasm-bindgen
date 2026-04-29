@@ -44,11 +44,11 @@ note: required by a bound in `Function`
   |         T: JsFunction = fn(
   |            ^^^^^^^^^^ required by this bound in `Function`
 
-error[E0599]: the method `call1` exists for struct `Function<JsValue>`, but its trait bounds were not satisfied
+error[E0599]: the method `call1` exists for struct `Function<wasm_bindgen::JsValue>`, but its trait bounds were not satisfied
  --> ui-tests/function-typed-call-mismatch.rs:9:24
   |
 9 |     let _result = func.call1(&JsValue::undefined(), &42);
-  |                        ^^^^^ method cannot be called on `Function<JsValue>` due to unsatisfied trait bounds
+  |                        ^^^^^ method cannot be called on `Function<wasm_bindgen::JsValue>` due to unsatisfied trait bounds
   |
  ::: $WORKSPACE/src/lib.rs
   |

@@ -222,6 +222,13 @@ fn shared_export<'a>(
     })
 }
 
+fn shared_name<'a>(func: &ast::Name, intern: &'a Interner) -> Name<'a> {
+    match func {
+        ast::Name::Identifier(x) => Name::Identifier(intern.intern_str(x)),
+        ast::Name::Symbol(x) => Name::Symbol(intern.intern_str(x)),
+    }
+}
+
 fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Function<'a> {
     let args =
         func.arguments
@@ -246,7 +253,7 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
     Function {
         args,
         asyncness: func.r#async,
-        name: &func.name,
+        name: shared_name(&func.name, _intern),
         generate_typescript: func.generate_typescript,
         generate_jsdoc: func.generate_jsdoc,
         variadic: func.variadic,
@@ -284,17 +291,31 @@ fn shared_variant<'a>(v: &'a ast::Variant, intern: &'a Interner) -> EnumVariant<
 
 fn shared_import<'a>(i: &'a ast::Import, intern: &'a Interner) -> Result<Import<'a>, Diagnostic> {
     // Resolve reexport name: use explicit rename if provided, otherwise use the import's name
-    let reexport = i.reexport.as_ref().map(|rename_opt| {
-        rename_opt.clone().unwrap_or_else(|| {
+    let reexport = i
+        .reexport
+        .as_ref()
+        .map(|rename_opt| -> Result<String, Diagnostic> {
+            if let Some(rename) = rename_opt {
+                return Ok(rename.clone());
+            }
             // Get the default name from the import kind
-            match &i.kind {
+            Ok(match &i.kind {
                 ast::ImportKind::Type(t) => t.js_name.clone(),
-                ast::ImportKind::Function(f) => f.function.name.clone(),
+                ast::ImportKind::Function(f) => match &f.function.name {
+                    ast::Name::Identifier(name) => name.clone(),
+                    ast::Name::Symbol(_) => {
+                        return Err(Diagnostic::span_error(
+                            f.function.name_span,
+                            "cannot reexport an imported function with a symbol `js_name`. \
+                             Provide an explicit reexport name: `#[wasm_bindgen(reexport = \"name\")]`",
+                        ));
+                    }
+                },
                 ast::ImportKind::Static(s) => s.js_name.clone(),
                 _ => unreachable!("reexport only supported on types, functions, and statics"),
-            }
+            })
         })
-    });
+        .transpose()?;
 
     // Determine whether TypeScript should be generated for this import.
     // For functions, this is stored on the Function struct; for types and statics,
@@ -440,9 +461,9 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
     }
 }
 
-fn shared_struct_field<'a>(s: &'a ast::StructField, _intern: &'a Interner) -> StructField<'a> {
+fn shared_struct_field<'a>(s: &'a ast::StructField, intern: &'a Interner) -> StructField<'a> {
     StructField {
-        name: &s.js_name,
+        name: shared_name(&s.js_name, intern),
         readonly: s.readonly,
         comments: s.comments.iter().map(|s| &**s).collect(),
         generate_typescript: s.generate_typescript,
@@ -652,17 +673,20 @@ fn from_ast_method_kind<'a>(
             let is_static = *is_static;
             let kind = match kind {
                 ast::OperationKind::Getter(g) => {
-                    let g = g.as_ref().map(|g| intern.intern_str(g));
-                    OperationKind::Getter(g.unwrap_or_else(|| function.infer_getter_property()))
+                    let g = g
+                        .as_ref()
+                        .unwrap_or_else(|| function.infer_getter_property());
+                    OperationKind::Getter(shared_name(g, intern))
                 }
                 ast::OperationKind::Regular => OperationKind::Regular,
                 ast::OperationKind::RegularThis => OperationKind::RegularThis,
                 ast::OperationKind::Setter(s) => {
-                    let s = s.as_ref().map(|s| intern.intern_str(s));
-                    OperationKind::Setter(match s {
-                        Some(s) => s,
-                        None => intern.intern_str(&function.infer_setter_property()?),
-                    })
+                    let s = if let Some(s) = s {
+                        shared_name(s, intern)
+                    } else {
+                        shared_name(&function.infer_setter_property()?, intern)
+                    };
+                    OperationKind::Setter(s)
                 }
                 ast::OperationKind::IndexingGetter => OperationKind::IndexingGetter,
                 ast::OperationKind::IndexingSetter => OperationKind::IndexingSetter,

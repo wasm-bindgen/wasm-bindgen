@@ -64,7 +64,7 @@ warning: type `class` should have an upper camel case name
 59 | pub struct class;
    |            ^^^^^ help: convert the identifier to upper camel case (notice the capitalization): `Class`
    |
-   = note: `#[warn(non_camel_case_types)]` on by default
+   = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
 
 warning: type `true` should have an upper camel case name
   --> ui-tests/import-keyword.rs:61:12

@@ -5,8 +5,8 @@ use crate::transforms::{
 };
 use crate::wasm_conventions::get_memory;
 use crate::wit::{
-    Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxReceiverKind, AuxStringEnum,
-    AuxValue,
+    Adapter, AdapterId, AdapterJsImportKind, AuxExportedMethodKind, AuxName, AuxReceiverKind,
+    AuxStringEnum, AuxValue,
 };
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
@@ -198,12 +198,12 @@ struct ExportedClass {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct FieldLocation {
-    name: String,
+    name: AuxName,
     is_static: bool,
 }
 #[derive(Debug)]
 struct FieldInfo {
-    name: String,
+    name: AuxName,
     is_static: bool,
     order: usize,
     getter: Option<FieldAccessor>,
@@ -1815,6 +1815,7 @@ if (require('worker_threads').isMainThread) {{
         } in fields
         {
             let is_static = if *is_static { "static " } else { "" };
+            let name_def = property_definition(name);
 
             let write_docs = |ts_dst: &mut String, docs: &str| {
                 if docs.is_empty() {
@@ -1832,7 +1833,7 @@ if (require('worker_threads').isMainThread) {{
                 ts_dst.push_str("  ");
                 ts_dst.push_str(is_static);
                 ts_dst.push_str("get ");
-                ts_dst.push_str(name);
+                ts_dst.push_str(&name_def);
                 ts_dst.push_str("(): ");
                 ts_dst.push_str(&getter.ty);
                 ts_dst.push_str(";\n");
@@ -1842,7 +1843,7 @@ if (require('worker_threads').isMainThread) {{
                 ts_dst.push_str("  ");
                 ts_dst.push_str(is_static);
                 ts_dst.push_str("set ");
-                ts_dst.push_str(name);
+                ts_dst.push_str(&name_def);
                 ts_dst.push_str("(value: ");
                 ts_dst.push_str(&setter.ty);
                 if setter.is_optional {
@@ -1859,7 +1860,7 @@ if (require('worker_threads').isMainThread) {{
                     ts_dst.push_str("  ");
                     ts_dst.push_str(is_static);
                     ts_dst.push_str("readonly ");
-                    ts_dst.push_str(name);
+                    ts_dst.push_str(&name_def);
                     ts_dst.push_str(if getter.is_optional { "?: " } else { ": " });
                     ts_dst.push_str(&getter.ty);
                     ts_dst.push_str(";\n");
@@ -1906,7 +1907,7 @@ if (require('worker_threads').isMainThread) {{
                         write_docs(ts_dst, docs);
                         ts_dst.push_str("  ");
                         ts_dst.push_str(is_static);
-                        ts_dst.push_str(name);
+                        ts_dst.push_str(&name_def);
                         ts_dst.push_str(if setter.is_optional { "?: " } else { ": " });
                         ts_dst.push_str(&setter.ty);
                         ts_dst.push_str(";\n");
@@ -3586,8 +3587,7 @@ if (require('worker_threads').isMainThread) {{
         if let Some(name) = self.imported_names.get(&import.name) {
             let mut name = name.clone();
             for field in import.fields.iter() {
-                name.push('.');
-                name.push_str(field);
+                name.push_str(&property_accessor(field));
             }
             return Ok(name.clone());
         }
@@ -3664,8 +3664,7 @@ if (require('worker_threads').isMainThread) {{
 
         // After we've got an actual name handle field projections
         for field in import.fields.iter() {
-            name.push('.');
-            name.push_str(field);
+            name.push_str(&property_accessor(field));
         }
         Ok(name)
     }
@@ -3681,13 +3680,19 @@ if (require('worker_threads').isMainThread) {{
             name = format!("typeof {name} === 'undefined' ? null : {name}");
 
             for field in import.fields.iter() {
-                name.push_str("?.");
-                name.push_str(field);
+                let access = property_accessor(field);
+                // Optional chaining: `.x` -> `?.x`, `[..]` -> `?.[..]`.
+                if access.starts_with('.') {
+                    name.push('?');
+                    name.push_str(&access);
+                } else {
+                    name.push_str("?.");
+                    name.push_str(&access);
+                }
             }
         } else {
             for field in import.fields.iter() {
-                name.push('.');
-                name.push_str(field);
+                name.push_str(&property_accessor(field));
             }
         }
 
@@ -4210,7 +4215,14 @@ addToLibrary({
                         }
 
                         exported.has_constructor = true;
-                        exported.push("constructor", "", &js_docs, &code, &ts_docs, ts_sig);
+                        exported.push(
+                            &AuxName::Identifier("constructor".to_string()),
+                            "",
+                            &js_docs,
+                            &code,
+                            &ts_docs,
+                            ts_sig,
+                        );
                     }
                     AuxExportKind::Method {
                         class,
@@ -4244,7 +4256,9 @@ addToLibrary({
                                     exported.push_accessor_ts(location, accessor, false);
                                 }
                                 // Add the getter to the list of readable fields (used to generate `toJSON`)
-                                exported.readable_properties.push(name.clone());
+                                if let AuxName::Identifier(name) = name {
+                                    exported.readable_properties.push(name.clone());
+                                }
                                 // Ignore the raw signature.
                                 None
                             }
@@ -4565,9 +4579,10 @@ addToLibrary({
                     Ok(format!("new {js}({})", variadic_args(args)?))
                 }
                 AdapterJsImportKind::Method => {
-                    let descriptor = |anchor: &str, extra: &str, field: &str, which: &str| {
+                    let descriptor = |anchor: &str, extra: &str, field: &AuxName, which: &str| {
                         format!(
-                            "GetOwnOrInheritedPropertyDescriptor({anchor}{extra}, '{field}').{which}"
+                            "GetOwnOrInheritedPropertyDescriptor({anchor}{extra}, {field}).{which}",
+                            field = property_key(field),
                         )
                     };
                     let js = match val {
@@ -4682,7 +4697,8 @@ addToLibrary({
                 assert_eq!(
                     args.len(),
                     1,
-                    "The getter '{field}' as more than one args ({n})",
+                    "The getter '{}' as more than one args ({n})",
+                    field.as_ref().debug_name(),
                     n = args.len()
                 );
                 Ok(format!("{}{}", args[0], property_accessor(field)))
@@ -5762,10 +5778,10 @@ fn check_duplicated_getter_and_setter_names(
 ) -> Result<(), Error> {
     fn verify_exports(
         first_class: &str,
-        first_field: &str,
+        first_field: &AuxName,
         first_receiver: &AuxReceiverKind,
         second_class: &str,
-        second_field: &str,
+        second_field: &AuxName,
         second_receiver: &AuxReceiverKind,
     ) -> Result<(), Error> {
         let both_are_in_the_same_class = first_class == second_class;
@@ -5773,7 +5789,8 @@ fn check_duplicated_getter_and_setter_names(
             && first_receiver.is_static() == second_receiver.is_static();
         if both_are_in_the_same_class && both_are_referencing_the_same_field {
             bail!(format!(
-                "There can be only one getter/setter definition for `{first_field}` in `{first_class}`"
+                "There can be only one getter/setter definition for `{}` in `{first_class}`",
+                first_field.as_ref().debug_name(),
             ));
         }
         Ok(())
@@ -5917,27 +5934,79 @@ fn define_export(
 /// In most cases, this is `.<name>`, generating accesses like `foo.bar`.
 /// However, if `name` is not a valid JavaScript identifier, it becomes
 /// `["<name>"]` instead, creating accesses like `foo["kebab-case"]`.
-fn property_accessor(name: &str) -> String {
-    if is_valid_ident(name) {
-        format!(".{name}")
-    } else {
-        format!("[\"{}\"]", name.escape_default())
+///
+/// As a special case, an identifier name containing `.` is treated as a
+/// dotted path of identifier segments and rendered as such (each segment
+/// is itself bracket-escaped if it isn't a valid identifier). This
+/// preserves the historical behaviour of `js_name = "prototype.set.call"`.
+///
+/// Symbols are also supported, and will be accessed as `[Symbol.<name>]`.
+/// E.g. `foo[Symbol.iterator]`.
+fn property_accessor(name: &AuxName) -> String {
+    match name {
+        AuxName::Identifier(name) => name
+            .split('.')
+            .map(|segment| {
+                if is_valid_ident(segment) {
+                    format!(".{segment}")
+                } else {
+                    format!("[\"{}\"]", segment.escape_default())
+                }
+            })
+            .collect(),
+        AuxName::Symbol(name) => format!("[Symbol.{name}]"),
+    }
+}
+
+/// Similar to `property_accessor`, but for property definitions.
+///
+/// E.g. for a property named `foo`, this will return `foo`. For string-like
+/// names, it will return `["foo-bar"]`. For symbols, it will return
+/// `[Symbol.foo]`.
+///
+/// Dotted-path identifier names (e.g. `prototype.set.call`) are not
+/// meaningful in property-definition position, so they fall through to
+/// the bracket-string form.
+fn property_definition(name: &AuxName) -> String {
+    match name {
+        AuxName::Identifier(name) => {
+            if is_valid_ident(name) {
+                name.to_string()
+            } else {
+                format!("[\"{}\"]", name.escape_default())
+            }
+        }
+        AuxName::Symbol(name) => format!("[Symbol.{name}]"),
+    }
+}
+
+/// Similar the runtime string or symbol value of a property of the given name.
+///
+/// E.g. for a property named `foo`, this will return `"foo"`. For string-like
+/// names, it will return `"foo-bar"`. For symbols, it will return
+/// `Symbol.foo`.
+fn property_key(name: &AuxName) -> String {
+    match name {
+        AuxName::Identifier(name) => format!("\"{}\"", name.escape_default()),
+        AuxName::Symbol(name) => format!("Symbol.{name}"),
     }
 }
 
 impl ExportedClass {
     fn push(
         &mut self,
-        function_name: &str,
+        function_name: &AuxName,
         function_prefix: &str,
         js_docs: &str,
         js: &str,
         ts_docs: &str,
         ts: Option<&str>,
     ) {
+        let name_def = property_definition(function_name);
+
         self.contents.push_str(js_docs);
         self.contents.push_str(function_prefix);
-        self.contents.push_str(function_name);
+        self.contents.push_str(&name_def);
         self.contents.push_str(js);
         self.contents.push('\n');
         if let Some(ts) = ts {
@@ -5950,7 +6019,7 @@ impl ExportedClass {
             }
             self.typescript.push_str("  ");
             self.typescript.push_str(function_prefix);
-            self.typescript.push_str(function_name);
+            self.typescript.push_str(&name_def);
             self.typescript.push_str(ts);
             self.typescript.push_str(";\n");
         }
@@ -5967,7 +6036,7 @@ impl ExportedClass {
             .typescript_fields
             .entry(location)
             .or_insert_with_key(|location| FieldInfo {
-                name: location.name.to_string(),
+                name: location.name.clone(),
                 is_static: location.is_static,
                 order: size,
                 getter: None,
