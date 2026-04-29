@@ -16,7 +16,11 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, ()>: wasm_bindgen::
 18 | fn foo5() -> Result<JsValue, ()> {
    |              ^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, ()>`
    |
-   = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<E: Into<JsValue>> Start for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: wasm_bindgen::__rt::Start` is not satisfied
   --> ui-tests/start-function.rs:23:14
@@ -24,7 +28,11 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
 23 | fn foo6() -> Result<JsValue, JsValue> {
    |              ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
    |
-   = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<E: Into<JsValue>> Start for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, ()>: wasm_bindgen::__rt::Start` is not satisfied
   --> ui-tests/start-function.rs:36:26
@@ -32,7 +40,11 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, ()>: wasm_bindgen::
 36 | async fn foo_async3() -> Result<JsValue, ()> {
    |                          ^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, ()>`
    |
-   = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<E: Into<JsValue>> Start for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>: wasm_bindgen::__rt::Start` is not satisfied
   --> ui-tests/start-function.rs:41:26
@@ -40,4 +52,8 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
 41 | async fn foo_async4() -> Result<JsValue, JsValue> {
    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `wasm_bindgen::__rt::Start` is not implemented for `Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue>`
    |
-   = help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+help: the trait `wasm_bindgen::__rt::Start` is implemented for `Result<(), E>`
+  --> $WORKSPACE/src/rt/mod.rs
+   |
+   | impl<E: Into<JsValue>> Start for Result<(), E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

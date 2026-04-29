@@ -1,4 +1,4 @@
-error[E0433]: failed to resolve: could not find `__wbindgen_coverage` in `test`
+error[E0433]: cannot find `__wbindgen_coverage` in `test`
   --> ui-tests/wasm-bindgen.rs:43:1
    |
 43 | #[wasm_bindgen(wasm_bindgen = test)]
@@ -13,9 +13,3 @@ error[E0425]: cannot find function `future_to_promise` in module `test`
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `test`
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
-help: consider importing one of these functions
-   |
-3  + use js_sys::futures::future_to_promise;
-   |
-3  + use wasm_bindgen_futures::future_to_promise;
-   |
