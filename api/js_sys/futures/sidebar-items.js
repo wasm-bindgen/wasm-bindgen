@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["future_to_promise","future_to_promise_typed","spawn_local"],"struct":["JsFuture"]};

@@ -1,0 +1,547 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Promises and Futures - The &#x60;wasm-bindgen&#x60; Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-747b8832.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-7e39e376.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The &#x60;wasm-bindgen&#x60; Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="working-with-a-js-promise-and-a-rust-future"><a class="header" href="#working-with-a-js-promise-and-a-rust-future">Working with a JS <code>Promise</code> and a Rust <code>Future</code></a></h1>
+<p>Many APIs on the web work with a <code>Promise</code>, such as an <code>async</code> function in JS.
+Naturally you’ll probably want to interoperate with them from Rust! To do that
+you can use <a href="https://docs.rs/js-sys/*/js_sys/struct.Promise.html"><code>js_sys::Promise</code></a> together with Rust <code>async</code> functions.</p>
+<h2 id="awaiting-a-promise-directly"><a class="header" href="#awaiting-a-promise-directly">Awaiting a <code>Promise</code> directly</a></h2>
+<p><code>js_sys::Promise</code> implements <a href="https://doc.rust-lang.org/std/future/trait.IntoFuture.html"><code>IntoFuture</code></a>, so you can <code>.await</code> it directly
+in any <code>async</code> function. This is the recommended approach:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::Promise;
+use wasm_bindgen::prelude::*;
+
+async fn get_from_js() -&gt; Result&lt;JsValue, JsValue&gt; {
+    let promise = Promise::resolve(&amp;42.into());
+    let result = promise.await?;
+    Ok(result)
+}
+<span class="boring">}</span></code></pre>
+<p>For typed promises the awaited value matches the type parameter directly:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Promise, Number};
+
+async fn get_number() -&gt; Result&lt;Number, JsValue&gt; {
+    let promise: Promise&lt;Number&gt; = fetch_number();
+    let number = promise.await?;  // number: Number
+    Ok(number)
+}
+<span class="boring">}</span></code></pre>
+<h2 id="using-jsfuture-explicitly"><a class="header" href="#using-jsfuture-explicitly">Using <code>JsFuture</code> explicitly</a></h2>
+<p>If you need a named <code>Future</code> type — for example to store it in a struct or
+pass it around — use <a href="https://docs.rs/js-sys/*/js_sys/futures/struct.JsFuture.html"><code>JsFuture</code></a> from <code>js_sys::futures</code> or
+<code>wasm_bindgen_futures</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::futures::JsFuture;
+use wasm_bindgen::JsValue;
+
+async fn get_from_js() -&gt; Result&lt;JsValue, JsValue&gt; {
+    let promise = js_sys::Promise::resolve(&amp;42.into());
+    let result = JsFuture::from(promise).await?;
+    Ok(result)
+}
+<span class="boring">}</span></code></pre>
+<p><code>JsFuture</code> is also re-exported from <code>wasm_bindgen_futures</code> for backwards
+compatibility:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen_futures::JsFuture;
+<span class="boring">}</span></code></pre>
+<p>A successful promise becomes <code>Ok</code> and a rejected promise becomes <code>Err</code>,
+corresponding to JS <code>.then</code> and <code>.catch</code>.</p>
+<h2 id="importing-js-async-functions"><a class="header" href="#importing-js-async-functions">Importing JS <code>async</code> functions</a></h2>
+<p>You can import a JS async function directly with an <code>extern "C"</code> block, and
+the promise will be converted to a future automatically. The return type can be
+<code>JsValue</code>, no return at all, or <code>Result</code> and <code>Option</code> types to primitives or
+types supporting <a href="https://docs.rs/wasm-bindgen/*/wasm_bindgen/trait.JsCast.html">JsCast</a> conversions:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[wasm_bindgen]
+extern "C" {
+    async fn async_func_1_ret_number() -&gt; JsValue;
+    async fn async_func_2();
+    async fn async_func_3_ret_string() -&gt; JsString;
+    async fn async_func_4_ret_array() -&gt; Uint8Array;
+}
+
+async fn get_from_js() -&gt; f64 {
+    async_func_1_ret_number().await.as_f64().unwrap_or(0.0)
+}
+<span class="boring">}</span></code></pre>
+<p>The <code>async</code> attribute can be combined with <code>catch</code> to manage errors from the
+JS promise:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(catch)]
+    async fn async_func_3() -&gt; Result&lt;JsValue, JsValue&gt;;
+    #[wasm_bindgen(catch)]
+    async fn async_func_4() -&gt; Result&lt;(), JsValue&gt;;
+}
+<span class="boring">}</span></code></pre>
+<h2 id="exporting-rust-async-fn-to-js"><a class="header" href="#exporting-rust-async-fn-to-js">Exporting Rust <code>async fn</code> to JS</a></h2>
+<p>Use an <code>async</code> function with <code>#[wasm_bindgen]</code> to export a function that
+returns a <code>Promise</code> to JavaScript:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[wasm_bindgen]
+pub async fn foo() {
+    // ...
+}
+<span class="boring">}</span></code></pre>
+<p>When invoked from JS the <code>foo</code> function here will return a <code>Promise</code>, so you
+can use it as:</p>
+<pre><code class="language-js">import { foo } from "my-module";
+
+async function shim() {
+    const result = await foo();
+    // ...
+}
+</code></pre>
+<h2 id="return-values-of-async-fn"><a class="header" href="#return-values-of-async-fn">Return values of <code>async fn</code></a></h2>
+<p>When using an <code>async fn</code> in Rust and exporting it to JS there are some
+restrictions on the return type. The return value of an exported Rust function
+will eventually become <code>Result&lt;JsValue, JsValue&gt;</code> where <code>Ok</code> turns into a
+successfully resolved promise and <code>Err</code> is equivalent to throwing an exception.</p>
+<p>The following types are supported as return types from an <code>async fn</code>:</p>
+<ul>
+<li><code>()</code> — turns into a successful <code>undefined</code> in JS</li>
+<li><code>T: Into&lt;JsValue&gt;</code> — turns into a successful JS value</li>
+<li><code>Result&lt;(), E: Into&lt;JsValue&gt;&gt;</code> — <code>Ok(())</code> resolves to <code>undefined</code>; <code>Err</code>
+rejects with <code>E</code> converted to a JS value</li>
+<li><code>Result&lt;T: Into&lt;JsValue&gt;, E: Into&lt;JsValue&gt;&gt;</code> — both payloads are converted
+into a <code>JsValue</code></li>
+</ul>
+<p>Note that many types implement being converted into a <code>JsValue</code>, such as all
+imported types via <code>#[wasm_bindgen]</code> (aka those in <code>js-sys</code> or <code>web-sys</code>),
+primitives like <code>u32</code>, and all exported <code>#[wasm_bindgen]</code> types. In general,
+you should be able to write code without having too many explicit conversions,
+and the macro should take care of the rest!</p>
+<h2 id="spawn_local-and-future_to_promise"><a class="header" href="#spawn_local-and-future_to_promise"><code>spawn_local</code> and <code>future_to_promise</code></a></h2>
+<p>Use <a href="https://docs.rs/js-sys/*/js_sys/futures/fn.spawn_local.html"><code>spawn_local</code></a> to run a <code>Future&lt;Output = ()&gt;</code> on the current thread
+without returning a <code>Promise</code> to JavaScript:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::futures::spawn_local;
+
+spawn_local(async {
+    // drive a future to completion on the JS microtask queue
+});
+<span class="boring">}</span></code></pre>
+<p>Use <a href="https://docs.rs/js-sys/*/js_sys/futures/fn.future_to_promise.html"><code>future_to_promise</code></a> to convert a Rust <code>Future</code> into a JavaScript
+<code>Promise</code> explicitly:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::futures::future_to_promise;
+use wasm_bindgen::JsValue;
+
+let promise = future_to_promise(async {
+    Ok(JsValue::from(42))
+});
+<span class="boring">}</span></code></pre>
+<p>Both functions are also re-exported from <code>wasm_bindgen_futures</code> unchanged.</p>
+<h2 id="combining-js-promises-concurrently"><a class="header" href="#combining-js-promises-concurrently">Combining JS Promises Concurrently</a></h2>
+<p>Rust’s async ecosystem and JavaScript’s promise ecosystem interoperate
+cleanly: awaiting a <a href="https://docs.rs/js-sys/*/js_sys/struct.Promise.html"><code>Promise&lt;T&gt;</code></a> yields to the JS
+event loop, so in-flight JS-side work (fetches, timers, I/O) continues in
+parallel while Rust futures are pending. <code>futures_util</code>’s <code>join_all</code> /
+<code>select</code> / <code>try_join_all</code> work correctly over <code>JsFuture</code>s and deliver
+proper parallelism.</p>
+<p>When your inputs are already JS <code>Promise&lt;T&gt;</code> values, the native
+<code>Promise.all</code> / <code>Promise.allSettled</code> / <code>Promise.race</code> bindings on
+<a href="https://docs.rs/js-sys/*/js_sys/struct.Promise.html"><code>js_sys::Promise</code></a> are the idiomatic choice — they match JS semantics
+exactly and avoid the Rust executor polling each child on every wake.</p>
+<p>The canonical recipe collects the promise-producing iterator straight into a
+typed <a href="https://docs.rs/js-sys/*/js_sys/struct.Array.html"><code>Array&lt;Promise&lt;T&gt;&gt;</code></a> via [<code>Array::from_iter_typed</code>] and hands it to
+the combinator — no turbofish on the elements, no intermediate <code>Vec</code>. The
+typed-collection helper infers the element type from the iterator item via
+[<code>IntoJsGeneric</code>]; the stable <code>.collect::&lt;Array&gt;()</code> form keeps producing an
+erased <code>Array&lt;JsValue&gt;</code> for callers that want erasure.</p>
+<h3 id="promiseall--all-must-succeed"><a class="header" href="#promiseall--all-must-succeed"><code>Promise.all</code> — all must succeed</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Array, Promise};
+
+// responses: Array&lt;Response&gt;
+let responses = Promise::all_iterable(
+    &amp;Array::from_iter_typed(
+        (0..10).map(|_| worker.fetch_with_str_and_init(&amp;url, &amp;init)),
+    ),
+)
+.await?;
+<span class="boring">}</span></code></pre>
+<p>Rejects with the first rejection, matching <code>Promise.all</code> semantics.</p>
+<h3 id="promiseallsettled--wait-for-all-never-reject-early"><a class="header" href="#promiseallsettled--wait-for-all-never-reject-early"><code>Promise.allSettled</code> — wait for all, never reject early</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Array, Promise};
+
+// results: Array&lt;PromiseState&lt;Response&gt;&gt;
+let results = Promise::all_settled_iterable(
+    &amp;Array::from_iter_typed(
+        (0..10).map(|_| worker.fetch_with_str_and_init(&amp;url, &amp;init)),
+    ),
+)
+.await?;
+for state in results.iter() {
+    if state.is_fulfilled() {
+        let value = state.get_value().unwrap();
+    } else {
+        let reason = state.get_reason().unwrap();
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="promiserace--first-to-settle"><a class="header" href="#promiserace--first-to-settle"><code>Promise.race</code> — first to settle</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Array, Promise};
+
+// first: Response
+let first = Promise::race_iterable(
+    &amp;Array::from_iter_typed(
+        (0..10).map(|_| worker.fetch_with_str_and_init(&amp;url, &amp;init)),
+    ),
+)
+.await?;
+<span class="boring">}</span></code></pre>
+<p>If you already have a <code>Vec&lt;Promise&lt;T&gt;&gt;</code>, use <a href="https://docs.rs/js-sys/*/js_sys/struct.Array.html#method.of"><code>Array::of</code></a> to lift it:
+<code>Promise::all_iterable(&amp;Array::of(&amp;promises))</code>.</p>
+<h3 id="heterogeneous-promiseall-over-a-tuple"><a class="header" href="#heterogeneous-promiseall-over-a-tuple">Heterogeneous <code>Promise.all</code> over a tuple</a></h3>
+<p>When the promises resolve to <em>different</em> types, collect them into a Rust
+tuple and pass to <a href="https://docs.rs/js-sys/*/js_sys/struct.Promise.html#method.all_tuple"><code>Promise::all_tuple</code></a>. The result is a typed
+<a href="https://docs.rs/js-sys/*/js_sys/struct.ArrayTuple.html"><code>ArrayTuple&lt;(T1, T2, ..., Tn)&gt;</code></a> you can destructure via <code>.into_tuple()</code>
+back into a native Rust tuple. Implemented for arity 1..=8.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::Promise;
+
+// fetch_promise:  Promise&lt;Response&gt;
+// buffer_promise: Promise&lt;ArrayBuffer&gt;
+let (response, buffer) = Promise::all_tuple((fetch_promise, buffer_promise))
+    .await?
+    .into_tuple();
+<span class="boring">}</span></code></pre>
+<p>Rejects with the first rejection, matching <code>Promise.all</code> semantics.</p>
+<p>For the <code>Promise.allSettled</code> analogue use <a href="https://docs.rs/js-sys/*/js_sys/struct.Promise.html#method.all_settled_tuple"><code>Promise::all_settled_tuple</code></a>; it
+resolves to an <code>ArrayTuple&lt;(PromiseState&lt;T1&gt;, ..., PromiseState&lt;Tn&gt;)&gt;</code> and
+never rejects early:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::Promise;
+
+let results = Promise::all_settled_tuple((fetch_promise, buffer_promise)).await?;
+let (response_state, buffer_state) = results.into_tuple();
+if response_state.is_fulfilled() {
+    let response = response_state.get_value().unwrap();
+    // ...
+}
+<span class="boring">}</span></code></pre>
+<p>There is no <code>race_tuple</code> equivalent — <code>Promise.race</code> returns whichever input
+settles first, whose type would be a union <code>T1 | T2 | ... | Tn</code> that Rust
+can’t express. For heterogeneous race, collect into an <code>Array&lt;JsValue&gt;</code> and
+use <a href="https://docs.rs/js-sys/*/js_sys/struct.Promise.html#method.race_iterable"><code>Promise::race_iterable</code></a> explicitly, then narrow with <code>dyn_into</code> at
+the inspection site.</p>
+<h3 id="mixing-rust-futures-with-js-promises"><a class="header" href="#mixing-rust-futures-with-js-promises">Mixing Rust <code>Future</code>s with JS <code>Promise</code>s</a></h3>
+<p>If some of your inputs are Rust <code>Future&lt;Output = Result&lt;T, JsValue&gt;&gt;</code> values
+rather than JS <code>Promise&lt;T&gt;</code>, lift each one explicitly with
+<a href="https://docs.rs/js-sys/*/js_sys/futures/fn.future_to_promise_typed.html"><code>future_to_promise_typed</code></a> at the call site:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{futures::future_to_promise_typed, Array, Promise};
+
+// For homogeneous batches, mix both shapes into one `Array&lt;Promise&lt;T&gt;&gt;`:
+let responses = Promise::all_iterable(
+    &amp;Array::from_iter_typed([
+        fetch_promise,
+        future_to_promise_typed(async { Ok(fetch_via_rust().await?) }),
+    ]),
+)
+.await?;
+
+// For heterogeneous tuples, lift each future before passing the tuple:
+let (response, buffer) = Promise::all_tuple((
+    fetch_promise,
+    future_to_promise_typed(async { Ok(buffer_from_rust().await?) }),
+))
+.await?
+.into_tuple();
+<span class="boring">}</span></code></pre>
+<p><code>future_to_promise_typed</code> spawns the <code>Future</code> on the current thread and
+returns a JS <code>Promise&lt;T&gt;</code> that settles with its result — from that point on
+the two shapes are interchangeable.</p>
+<h2 id="using-generic-promise-types"><a class="header" href="#using-generic-promise-types">Using Generic Promise Types</a></h2>
+<p>Promises support <a href="./types/js-sys.html">erasable generic type parameters</a>. With
+<code>IntoFuture</code>, the resolved type flows through directly without a cast:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use js_sys::{Promise, Number, Array};
+
+#[wasm_bindgen]
+extern "C" {
+    fn fetchNumbers() -&gt; Promise&lt;Array&lt;Number&gt;&gt;;
+}
+
+async fn process_numbers() -&gt; Result&lt;f64, JsValue&gt; {
+    // Await the typed promise — no cast needed
+    let numbers: Array&lt;Number&gt; = fetchNumbers().await?;
+
+    let mut sum = 0.0;
+    for i in 0..numbers.length() {
+        sum += numbers.get(i).value_of();
+    }
+    Ok(sum)
+}
+<span class="boring">}</span></code></pre>
+<h2 id="using-js_sys-directly-without-wasm-bindgen-futures"><a class="header" href="#using-js_sys-directly-without-wasm-bindgen-futures">Using <code>js_sys</code> directly without <code>wasm-bindgen-futures</code></a></h2>
+<p>To make <code>#[wasm_bindgen]</code> emit <code>js_sys::futures</code> directly and drop the
+<code>wasm-bindgen-futures</code> dependency, depend on <code>js-sys</code> and build with
+<code>--cfg=wasm_bindgen_use_js_sys</code> (e.g. via <code>RUSTFLAGS</code> or <code>.cargo/config.toml</code>).</p>
+<p>A cfg is used rather than a Cargo feature so the choice stays scoped to the
+crate that opts in — Cargo features union across the dep graph, which would
+flip codegen for every <code>#[wasm_bindgen]</code> user in the build.</p>
+<h2 id="compatibility-note"><a class="header" href="#compatibility-note">Compatibility note</a></h2>
+<p><code>wasm-bindgen-futures</code> is now a thin re-export shim. The futures implementation
+lives in <code>js-sys</code> and is always available (no feature gate required). All
+existing import paths (<code>wasm_bindgen_futures::JsFuture</code>,
+<code>wasm_bindgen_futures::spawn_local</code>, etc.) continue to work without changes.</p>
+<p>Learn more:</p>
+<ul>
+<li><a href="https://docs.rs/js-sys/*/js_sys/futures/index.html"><code>js_sys::futures</code> API documentation</a></li>
+<li><a href="https://crates.io/crates/wasm-bindgen-futures"><code>wasm_bindgen_futures</code> on crates.io</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/receiving-js-closures-in-rust.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/iterating-over-js-values.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/receiving-js-closures-in-rust.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/iterating-over-js-values.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
