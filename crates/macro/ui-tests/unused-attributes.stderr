@@ -34,7 +34,7 @@ error: unused variable: `getter_with_clone`
 24 | #[wasm_bindgen(getter_with_clone, final)]
    |                ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_getter_with_clone`
 
-error: unused variable: `r#final`
+error: unused variable: `final`
   --> ui-tests/unused-attributes.rs:24:35
    |
 24 | #[wasm_bindgen(getter_with_clone, final)]
