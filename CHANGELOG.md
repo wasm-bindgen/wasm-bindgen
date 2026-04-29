@@ -1,6 +1,19 @@
 # `wasm-bindgen` Change Log
 --------------------------------------------------------------------------------
 
+## Unreleased
+
+### Added
+
+### Fixed
+
+* Fix compilation failure with `no_std` + `release`
+  [#5134](https://github.com/wasm-bindgen/wasm-bindgen/pull/5134)
+
+### Changed
+
+--------------------------------------------------------------------------------
+
 ## [0.2.119](https://github.com/rustwasm/wasm-bindgen/compare/0.2.118...0.2.119)
 
 ### Added

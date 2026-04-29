@@ -108,8 +108,12 @@ fn internal_error(_msg: &str) -> ! {
             super::throw_str(_msg)
         } else if #[cfg(feature = "std")] {
             std::process::abort();
-        } else if #[cfg(target_family = "wasm")] {
-            core::arch::wasm::unreachable();
+        } else if #[cfg(target_arch = "wasm32")] {
+            // stable
+            core::arch::wasm32::unreachable();
+        } else if #[cfg(target_arch = "wasm64")] {
+            // unstable, need simd_wasm64 feature
+            core::arch::wasm64::unreachable();
         } else {
             unreachable!()
         }
