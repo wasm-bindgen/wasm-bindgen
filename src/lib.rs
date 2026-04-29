@@ -46,6 +46,10 @@
     feature(allow_internal_unstable),
     allow(internal_features)
 )]
+#![cfg_attr(
+    all(not(debug_assertions), not(feature = "std"), target_arch = "wasm64"),
+    feature(simd_wasm64)
+)]
 #![doc(html_root_url = "https://docs.rs/wasm-bindgen/0.2")]
 
 extern crate alloc;

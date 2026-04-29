@@ -722,11 +722,12 @@ fn malloc_failure() -> ! {
             super::throw_str("invalid malloc request")
         } else if #[cfg(feature = "std")] {
             std::process::abort();
-        } else if #[cfg(all(
-            target_family = "wasm",
-            any(target_os = "unknown", target_os = "none")
-        ))] {
-            core::arch::wasm::unreachable();
+        } else if #[cfg(target_arch = "wasm32")] {
+            // stable
+            core::arch::wasm32::unreachable();
+        } else if #[cfg(target_arch = "wasm64")] {
+            // unstable, need simd_wasm64 feature
+            core::arch::wasm64::unreachable();
         } else {
             unreachable!()
         }
