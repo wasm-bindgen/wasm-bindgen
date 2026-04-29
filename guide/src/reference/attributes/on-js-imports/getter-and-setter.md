@@ -76,3 +76,27 @@ const white_russians = function(the_dude) {
   return the_dude.white_russians;
 };
 ```
+
+## Well-known symbols
+
+Both `getter` and `setter` accept the explicit bracket-string form
+`"[Symbol.<name>]"` to bind to an accessor keyed by a
+[well-known symbol][well-known-symbols]:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = String)]
+    type JsString;
+
+    #[wasm_bindgen(method, js_class = "String", getter = "[Symbol.toPrimitive]")]
+    fn to_primitive(this: &JsString) -> String;
+}
+```
+
+This binds to the `[Symbol.toPrimitive]` getter on `String.prototype`.
+Only the exact form `"[Symbol.<ident>]"` is accepted. The same syntax is
+also supported by [`js_name`](js_name.html) for non-getter/setter
+imports.
+
+[well-known-symbols]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#well-known_symbols

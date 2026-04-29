@@ -1333,6 +1333,12 @@ fn function_from_decl(
     }
 
     let (name, name_span) = if let Some((js_name, js_name_span)) = opts.js_name() {
+        if matches!(position, FunctionPosition::Free) && matches!(js_name, JsName::Symbol(_)) {
+            return Err(Diagnostic::span_error(
+                js_name_span,
+                "free functions with #[wasm_bindgen] do not support symbols in js_name",
+            ));
+        }
         let kind = operation_kind(opts);
         let prefix = match kind {
             OperationKind::Setter(_) => "set_",
@@ -2202,6 +2208,20 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             syn::ForeignItem::Static(s) => s.convert((program, item_opts, &module))?,
             _ => panic!("only foreign functions/types allowed for now"),
         };
+
+        if js_namespace.is_none() {
+            if let ast::ImportKind::Function(import_function) = &kind {
+                if matches!(import_function.kind, ast::ImportFunctionKind::Normal)
+                    && matches!(import_function.function.name, ast::Name::Symbol(_))
+                {
+                    return Err(Diagnostic::span_error(
+                        import_function.function.name_span,
+                        "free imported functions do not support symbols in js_name unless a \
+                         js_namespace is specified",
+                    ));
+                }
+            }
+        }
 
         // check for JS keywords
 
