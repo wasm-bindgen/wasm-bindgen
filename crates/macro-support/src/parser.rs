@@ -474,15 +474,10 @@ impl Parse for BindgenAttr {
             (@parser $variant:ident(Span, JsName, Span)) => ({
                 input.parse::<Token![=]>()?;
                 let (val, span) = match input.parse::<syn::LitStr>() {
-                    Ok(str) => (JsName::Identifier(str.value()), str.span()),
+                    Ok(str) => (parse_js_name_litstr(&str)?, str.span()),
                     Err(_) => {
                         let ident = input.parse::<AnyIdent>()?.0;
-                        if ident == "Symbol" && input.parse::<Token![.]>().is_ok() {
-                            let sym = input.parse::<AnyIdent>()?.0;
-                            (JsName::Symbol(sym.to_string()), sym.span())
-                        } else {
-                            (JsName::Identifier(ident.to_string()), ident.span())
-                        }
+                        (JsName::Identifier(ident.to_string()), ident.span())
                     }
                 };
                 return Ok(BindgenAttr::$variant(attr_span, val, span))
@@ -491,15 +486,10 @@ impl Parse for BindgenAttr {
             (@parser $variant:ident(Span, Option<JsName>)) => ({
                 if input.parse::<Token![=]>().is_ok() {
                     let val = match input.parse::<syn::LitStr>() {
-                        Ok(str) => JsName::Identifier(str.value()),
+                        Ok(str) => parse_js_name_litstr(&str)?,
                         Err(_) => {
                             let ident = input.parse::<AnyIdent>()?.0;
-                            if ident == "Symbol" && input.parse::<Token![.]>().is_ok() {
-                                let sym = input.parse::<AnyIdent>()?.0;
-                                JsName::Symbol(sym.to_string())
-                            } else {
-                                JsName::Identifier(ident.to_string())
-                            }
+                            JsName::Identifier(ident.to_string())
                         }
                     };
                     return Ok(BindgenAttr::$variant(attr_span, Some(val)))
@@ -574,6 +564,29 @@ impl Parse for AnyIdent {
     }
 }
 
+/// Parse the string literal of a `js_name = "..."`/`getter = "..."`/
+/// `setter = "..."` attribute into a [`JsName`].
+///
+/// A value of the form `"[Symbol.<ident>]"` is recognized as a well-known
+/// symbol; anything else is treated as a string-style identifier (which
+/// may itself be a dotted path or a non-identifier string that the JS
+/// renderer will bracket-escape later).
+fn parse_js_name_litstr(litstr: &syn::LitStr) -> SynResult<JsName> {
+    let value = litstr.value();
+    if let Some(inner) = value.strip_prefix('[').and_then(|s| s.strip_suffix(']')) {
+        if let Some(name) = inner.strip_prefix("Symbol.") {
+            if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                return Ok(JsName::Symbol(name.to_string()));
+            }
+        }
+        return Err(syn::Error::new(
+            litstr.span(),
+            "the only computed-key form supported in `js_name` is `\"[Symbol.<ident>]\"`",
+        ));
+    }
+    Ok(JsName::Identifier(value))
+}
+
 /// Conversion trait with context.
 ///
 /// Used to convert syn tokens into an AST, that we can then use to generate glue code. The context
@@ -615,7 +628,6 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
                 js_name
             );
         }
-
 
         let is_inspectable = attrs.inspectable().is_some();
         let getter_with_clone = attrs.getter_with_clone();
@@ -1338,7 +1350,6 @@ fn function_from_decl(
         )
     };
 
-
     Ok((
         ast::Function {
             name_span,
@@ -1457,18 +1468,24 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
             let arg_attrs = FnArgAttrs {
                 js_name: attrs
                     .js_name()
-                    .map_or(Ok(None), |(js_name_override, span)| match js_name_override {
-                        JsName::Identifier(ident) => {
-                            if is_js_keyword(ident) || !is_valid_ident(ident) {
-                                return Err(Diagnostic::span_error(span, "invalid JS identifier"));
+                    .map_or(
+                        Ok(None),
+                        |(js_name_override, span)| match js_name_override {
+                            JsName::Identifier(ident) => {
+                                if is_js_keyword(ident) || !is_valid_ident(ident) {
+                                    return Err(Diagnostic::span_error(
+                                        span,
+                                        "invalid JS identifier",
+                                    ));
+                                }
+                                Ok(Some(ident.clone()))
                             }
-                            Ok(Some(ident.clone()))
-                        }
-                        JsName::Symbol(_) => Err(Diagnostic::span_error(
-                            span,
-                            "function arguments do not support symbols in js_name",
-                        )),
-                    })?,
+                            JsName::Symbol(_) => Err(Diagnostic::span_error(
+                                span,
+                                "function arguments do not support symbols in js_name",
+                            )),
+                        },
+                    )?,
                 js_type,
                 optional: is_optional,
                 desc: attrs

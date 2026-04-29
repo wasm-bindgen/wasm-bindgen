@@ -5,6 +5,15 @@
 
 ### Added
 
+* Added support for well-known symbols in `js_name`, `getter`, and
+  `setter` via the explicit bracket-string form
+  `"[Symbol.<name>]"`. This works for imported and exported methods,
+  fields, getters, and setters. For example,
+  `#[wasm_bindgen(js_name = "[Symbol.iterator]")]` on an exported method
+  generates `[Symbol.iterator]() { ... }` on the generated JS class, and
+  the same syntax works for `getter` / `setter` and for imported items.
+  [#4230](https://github.com/wasm-bindgen/wasm-bindgen/pull/4230)
+
 ### Fixed
 
 * Fix compilation failure with `no_std` + `release`

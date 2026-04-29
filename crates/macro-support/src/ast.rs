@@ -101,7 +101,7 @@ impl Program {
 /// Note that symbols are only allowed for properties, fields, and methods.
 /// Free functions, enums, types, and classes cannot be named with symbols.
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Name {
     /// A valid JS identifier.
     Identifier(String),

@@ -1211,7 +1211,7 @@ impl<'a> Context<'a> {
             self.aux.export_map.insert(
                 getter_id,
                 AuxExport {
-                    debug_name: format!("getter for `{}::{}`", struct_.name, debug_name),
+                    debug_name: format!("getter for `{}::{debug_name}`", struct_.name),
                     args: None,
                     asyncness: false,
                     comments: concatenate_comments(&field.comments),
@@ -1246,7 +1246,7 @@ impl<'a> Context<'a> {
             self.aux.export_map.insert(
                 setter_id,
                 AuxExport {
-                    debug_name: format!("setter for `{}::{}`", struct_.name, debug_name),
+                    debug_name: format!("setter for `{}::{debug_name}`", struct_.name),
                     args: None,
                     asyncness: false,
                     comments: concatenate_comments(&field.comments),

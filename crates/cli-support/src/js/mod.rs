@@ -5935,17 +5935,25 @@ fn define_export(
 /// However, if `name` is not a valid JavaScript identifier, it becomes
 /// `["<name>"]` instead, creating accesses like `foo["kebab-case"]`.
 ///
+/// As a special case, an identifier name containing `.` is treated as a
+/// dotted path of identifier segments and rendered as such (each segment
+/// is itself bracket-escaped if it isn't a valid identifier). This
+/// preserves the historical behaviour of `js_name = "prototype.set.call"`.
+///
 /// Symbols are also supported, and will be accessed as `[Symbol.<name>]`.
 /// E.g. `foo[Symbol.iterator]`.
 fn property_accessor(name: &AuxName) -> String {
     match name {
-        AuxName::Identifier(name) => {
-            if is_valid_ident(name) {
-                format!(".{name}")
-            } else {
-                format!("[\"{}\"]", name.escape_default())
-            }
-        }
+        AuxName::Identifier(name) => name
+            .split('.')
+            .map(|segment| {
+                if is_valid_ident(segment) {
+                    format!(".{segment}")
+                } else {
+                    format!("[\"{}\"]", segment.escape_default())
+                }
+            })
+            .collect(),
         AuxName::Symbol(name) => format!("[Symbol.{name}]"),
     }
 }
@@ -5955,6 +5963,10 @@ fn property_accessor(name: &AuxName) -> String {
 /// E.g. for a property named `foo`, this will return `foo`. For string-like
 /// names, it will return `["foo-bar"]`. For symbols, it will return
 /// `[Symbol.foo]`.
+///
+/// Dotted-path identifier names (e.g. `prototype.set.call`) are not
+/// meaningful in property-definition position, so they fall through to
+/// the bracket-string form.
 fn property_definition(name: &AuxName) -> String {
     match name {
         AuxName::Identifier(name) => {
