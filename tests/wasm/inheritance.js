@@ -250,6 +250,53 @@ exports.js_parent_free_dispatched_on_subclass_throws_works = () => {
     dog.free();
 };
 
+// 3-level chain: ChainA <- ChainB <- ChainC. Verifies the new free /
+// consume-self gates fire at every depth — i.e. the per-class pointer
+// check works whether the receiver is one or two prototype-chain hops
+// away from the method's defining class.
+exports.js_three_level_chain_gates_at_every_depth_works = () => {
+    const c = new wbg.ChainC('alpha', 'beta', 'gamma');
+
+    // free guard: dispatching either ancestor's `free` on a grandchild
+    // must throw at every depth (would otherwise feed a descendant
+    // pointer to an ancestor's wasm free shim — type-confused free).
+    let threwFreeA = false;
+    try { wbg.ChainA.prototype.free.call(c); } catch (_) { threwFreeA = true; }
+    if (!threwFreeA) {
+        throw new Error('ChainA.prototype.free.call(c) must throw at depth 2');
+    }
+    let threwFreeB = false;
+    try { wbg.ChainB.prototype.free.call(c); } catch (_) { threwFreeB = true; }
+    if (!threwFreeB) {
+        throw new Error('ChainB.prototype.free.call(c) must throw at depth 1');
+    }
+
+    // consume-self guard: same matrix for `self`-by-value methods.
+    let threwIntoA = false;
+    try { wbg.ChainA.prototype.into_a_label.call(c); } catch (_) { threwIntoA = true; }
+    if (!threwIntoA) {
+        throw new Error('ChainA.prototype.into_a_label.call(c) must throw at depth 2');
+    }
+    let threwIntoB = false;
+    try { wbg.ChainB.prototype.into_b_tag.call(c); } catch (_) { threwIntoB = true; }
+    if (!threwIntoB) {
+        throw new Error('ChainB.prototype.into_b_tag.call(c) must throw at depth 1');
+    }
+
+    // c is still intact — every guard fires before __destroy_into_raw.
+    c.free();
+
+    // Direct invocation on real instances must still work at every level.
+    const a = new wbg.ChainA('alpha');
+    if (a.into_a_label() !== 'alpha') {
+        throw new Error('ChainA.into_a_label on real ChainA must return alpha');
+    }
+    const b = new wbg.ChainB('alpha', 'beta');
+    if (b.into_b_tag() !== 'beta') {
+        throw new Error('ChainB.into_b_tag on real ChainB must return beta');
+    }
+};
+
 exports.js_super_does_not_double_alloc = () => {
     wbg.inheritance_reset_counters();
 

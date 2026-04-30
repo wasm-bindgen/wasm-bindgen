@@ -271,7 +271,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 if cls.is_some_and(|c| c.participates_in_inheritance) {
                     let identifier = cls.map(|c| c.identifier.clone()).unwrap_or(resolved);
                     let guard = format!(
-                        "if (this?.__wbg_ptr !== this?.__wbg_ptr_{identifier}) {{ \
+                        "if (this.__wbg_ptr !== this.__wbg_ptr_{identifier}) {{ \
                             throw new TypeError('{identifier}: a `self`-by-value method cannot be invoked through subclass prototype dispatch'); \
                         }}"
                     );

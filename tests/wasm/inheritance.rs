@@ -16,6 +16,7 @@ extern "C" {
     fn js_borrowed_parent_method_with_subclass_works();
     fn js_js_only_subclass_passes_pointer_check_works();
     fn js_parent_free_dispatched_on_subclass_throws_works();
+    fn js_three_level_chain_gates_at_every_depth_works();
 }
 
 #[wasm_bindgen]
@@ -243,6 +244,11 @@ fn js_parent_free_dispatched_on_subclass_throws() {
     js_parent_free_dispatched_on_subclass_throws_works();
 }
 
+#[wasm_bindgen_test]
+fn js_three_level_chain_gates_at_every_depth() {
+    js_three_level_chain_gates_at_every_depth_works();
+}
+
 // Parent with `skip_typescript` and a child that extends it. The child
 // must keep the runtime `extends` in `.js` (so prototype-chain dispatch
 // works) but drop it from `.d.ts` (the parent has no declaration to
@@ -283,5 +289,77 @@ impl InheritanceChildOfSkipped {
 
     pub fn extra(&self) -> u32 {
         self.extra
+    }
+}
+
+// Three-level inheritance chain — `ChainA` <- `ChainB` <- `ChainC`. The
+// reference snapshot already locks down the ABI shape for a 3-level chain
+// (extends-rust.rs), but until this struct existed in the live wasm test
+// crate the new free / consume-self gates were only exercised at depth 1.
+// Each level carries a `self`-by-value method so prototype-dispatch tests
+// can verify the gate fires regardless of how many ancestor links there
+// are between the receiver and the method's defining class.
+#[wasm_bindgen]
+pub struct ChainA {
+    a_label: String,
+}
+
+#[wasm_bindgen]
+impl ChainA {
+    #[wasm_bindgen(constructor)]
+    pub fn new(a_label: String) -> ChainA {
+        ChainA { a_label }
+    }
+
+    pub fn a_label(&self) -> String {
+        self.a_label.clone()
+    }
+
+    pub fn into_a_label(self) -> String {
+        self.a_label
+    }
+}
+
+#[wasm_bindgen(extends = ChainA)]
+pub struct ChainB {
+    b_tag: String,
+}
+
+#[wasm_bindgen]
+impl ChainB {
+    #[wasm_bindgen(constructor)]
+    pub fn new(a_label: String, b_tag: String) -> ChainB {
+        ChainB {
+            parent: ChainA::new(a_label).into(),
+            b_tag,
+        }
+    }
+
+    pub fn b_tag(&self) -> String {
+        self.b_tag.clone()
+    }
+
+    pub fn into_b_tag(self) -> String {
+        self.b_tag
+    }
+}
+
+#[wasm_bindgen(extends = ChainB)]
+pub struct ChainC {
+    c_extra: String,
+}
+
+#[wasm_bindgen]
+impl ChainC {
+    #[wasm_bindgen(constructor)]
+    pub fn new(a_label: String, b_tag: String, c_extra: String) -> ChainC {
+        ChainC {
+            parent: ChainB::new(a_label, b_tag).into(),
+            c_extra,
+        }
+    }
+
+    pub fn c_extra(&self) -> String {
+        self.c_extra.clone()
     }
 }

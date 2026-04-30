@@ -1877,14 +1877,18 @@ if (require('worker_threads').isMainThread) {{
         }
 
         if class.unwrap_needed {
-            // For inheritance-participating classes, a wasm-bindgen subclass
-            // has `__wbg_ptr` set to its own (descendant) pointer rather than a
-            // pointer compatible with this class's wasm shim, so consuming via
+            // For inheritance-participating classes, a Rust descendant has
+            // `__wbg_ptr` set to its own (descendant) pointer rather than
+            // one compatible with this class's wasm shim, so consuming via
             // `__destroy_into_raw()` would hand the wrong pointer to Rust.
-            // Require an exact constructor match — Rust receives 0 in the
-            // rejection case, which trips `assert_not_null` and throws cleanly.
+            // Reject by comparing the leaf `__wbg_ptr` against the per-class
+            // slot `__wbg_ptr_<Class>`: for the actual class instance (or a
+            // user-written JS-only subclass) those slots agree, so the
+            // unwrap proceeds; for a Rust descendant they differ, so we
+            // return 0 — Rust receives null, trips `assert_not_null`, and
+            // throws cleanly.
             let check = if participates {
-                format!("jsValue?.constructor !== {identifier}")
+                format!("jsValue?.__wbg_ptr !== jsValue?.__wbg_ptr_{identifier}")
             } else {
                 format!("!(jsValue instanceof {identifier})")
             };
