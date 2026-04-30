@@ -1886,7 +1886,7 @@ if (require('worker_threads').isMainThread) {{
             // return 0 — Rust receives null, trips `assert_not_null`, and
             // throws cleanly.
             let check = if participates {
-                format!("jsValue?.__wbg_ptr !== jsValue?.__wbg_ptr_{identifier}")
+                format!("jsValue.__wbg_ptr !== jsValue.__wbg_ptr_{identifier}")
             } else {
                 format!("!(jsValue instanceof {identifier})")
             };

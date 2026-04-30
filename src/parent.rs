@@ -3,7 +3,7 @@
 //! `#[wasm_bindgen(extends = Parent)]`.
 //!
 //! Each parent method's wasm shim takes a `*const WasmRefCell<Parent>`,
-//! while the child's own `__wbg_ptr` points at a `WasmRefCell<Child>`.
+//! while the child's `__wbg_ptr` points at a `WasmRefCell<Child>`.
 //! The two pointers can't alias safely, so each JS instance carries a
 //! separate `__wbg_ptr_<Class>` slot for every class in its inheritance
 //! chain, and the parent data lives in its own `Rc<WasmRefCell<T>>`

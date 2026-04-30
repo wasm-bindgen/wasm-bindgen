@@ -137,8 +137,8 @@ exports.js_skip_typescript_parent_child_works = () => {
 // `dog.__wbg_ptr_InheritanceAnimal` — the upcasted ancestor pointer set
 // by the Dog constructor — so the wasm shim sees a true
 // `WasmRefCell<Animal>` and the call returns the Animal's `name`
-// ("Rex"), not the Dog's `breed` ("Labrador"). Test asserts that:
-// dispatch must either return the correct name or throw, never silently
+// ("Rex"), not the Dog's `breed` ("Labrador"). The test asserts that
+// dispatch must either return the correct name or throw — never silently
 // return the descendant field.
 exports.js_borrowed_parent_with_subclass_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
