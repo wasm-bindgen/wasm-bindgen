@@ -460,8 +460,13 @@ impl ToTokens for ast::Struct {
 
         // If this struct `extends` another exported Rust struct, emit:
         //
-        //   - `AsRef<Parent<ParentType>>` projecting to the wrapper field so
-        //     generic code can walk the chain at the type level.
+        //   - `AsRef<Parent<ParentType>>` projecting to the wrapper field
+        //     so generic code can accept any direct child where it expects
+        //     a borrowed `Parent<ParentType>`. This impl is direct-parent
+        //     only: `AsRef` returns `&Parent<P>` borrowed from `&self`,
+        //     and ancestors at depth ≥ 2 live inside an `Rc<WasmRefCell>`
+        //     reachable only via a transient `borrow()` guard whose
+        //     lifetime would not satisfy the `AsRef` contract.
         //   - The upcast wasm export used by the JS side to produce a
         //     separately-refcounted parent pointer when a child instance is
         //     constructed (or when wasm returns a child back to JS). The

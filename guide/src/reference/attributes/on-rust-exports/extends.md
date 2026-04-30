@@ -94,8 +94,8 @@ Declaring your own field named `parent`, or any field typed as
 `wasm_bindgen::Parent<T>`, is an error — the macro owns that field.
 
 The macro also derives `impl AsRef<wasm_bindgen::Parent<Parent>>` on the
-child, so generic Rust code can accept any descendant where it expects a
-borrowed reference to the parent's `Parent<…>` cell:
+child, so generic Rust code can accept any **direct** child where it
+expects a borrowed reference to the parent's `Parent<…>` cell:
 
 ```rust
 fn animal_name<T: AsRef<wasm_bindgen::Parent<Animal>>>(t: &T) -> String {
@@ -103,6 +103,14 @@ fn animal_name<T: AsRef<wasm_bindgen::Parent<Animal>>>(t: &T) -> String {
 }
 animal_name(&dog); // "Rex"
 ```
+
+The `AsRef` impl is direct-parent only — for a chain
+`Animal <- Dog <- Puppy`, `Puppy: AsRef<Parent<Dog>>` is emitted but
+`Puppy: AsRef<Parent<Animal>>` is not, because reaching `Animal`
+requires going through a transient `borrow()` guard on the `Dog` cell
+whose lifetime would not satisfy the `AsRef` contract. To read an
+ancestor from a deeper descendant, chain the borrow manually:
+`puppy.parent.borrow().parent.borrow().name()`.
 
 ## How inheritance works at runtime
 

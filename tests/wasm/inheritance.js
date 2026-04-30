@@ -1,5 +1,28 @@
 const wbg = require('wasm-bindgen-test.js');
 
+// Run `fn` and assert that it throws a TypeError whose message includes
+// `expected_substr`. Used to verify that a gate fired (rather than the
+// throw coming from an unrelated source like a missing class export).
+function assertGateThrew(fn, expected_substr, label) {
+    let caught = null;
+    try { fn(); } catch (e) { caught = e; }
+    if (!caught) {
+        throw new Error(label + ': expected throw, none seen');
+    }
+    if (!(caught instanceof TypeError)) {
+        throw new Error(
+            label + ': expected TypeError, got ' + (caught && caught.constructor && caught.constructor.name)
+            + ': ' + (caught && caught.message)
+        );
+    }
+    if (!String(caught.message).includes(expected_substr)) {
+        throw new Error(
+            label + ': expected message to include ' + JSON.stringify(expected_substr)
+            + ', got ' + JSON.stringify(caught.message)
+        );
+    }
+}
+
 exports.js_instanceof_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
     if (!(dog instanceof wbg.InheritanceDog)) {
@@ -47,17 +70,11 @@ exports.js_inherited_method_dispatch_works = () => {
 // `assert_not_null` in the Rust shim and surfaces as a JS exception here.
 exports.js_owned_parent_rejects_subclass_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
-    let threw = false;
-    try {
-        wbg.inheritance_take_animal_by_value(dog);
-    } catch (_) {
-        threw = true;
-    }
-    if (!threw) {
-        throw new Error(
-            'passing an InheritanceDog by value as InheritanceAnimal must throw'
-        );
-    }
+    assertGateThrew(
+        () => wbg.inheritance_take_animal_by_value(dog),
+        'cannot be consumed by-value as its ancestor',
+        'inheritance_take_animal_by_value(dog)'
+    );
     dog.free();
 
     // The legitimate path — passing an actual InheritanceAnimal — must still
@@ -72,17 +89,11 @@ exports.js_owned_parent_rejects_subclass_works = () => {
 // __destroy_into_raw call.
 exports.js_owned_self_method_rejects_subclass_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
-    let threw = false;
-    try {
-        dog.into_name();
-    } catch (_) {
-        threw = true;
-    }
-    if (!threw) {
-        throw new Error(
-            'InheritanceAnimal.into_name() must throw when dispatched on an InheritanceDog'
-        );
-    }
+    assertGateThrew(
+        () => dog.into_name(),
+        'cannot be invoked through subclass prototype dispatch',
+        'dog.into_name()'
+    );
     dog.free();
 
     // Direct invocation on a real parent must still consume and return.
@@ -228,18 +239,11 @@ exports.js_js_only_subclass_passes_pointer_check_works = () => {
 // into the participating-class `free()` body throws cleanly instead.
 exports.js_parent_free_dispatched_on_subclass_throws_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
-    let threw = false;
-    try {
-        wbg.InheritanceAnimal.prototype.free.call(dog);
-    } catch (_) {
-        threw = true;
-    }
-    if (!threw) {
-        throw new Error(
-            'InheritanceAnimal.prototype.free.call(dog) must throw — otherwise ' +
-            'the parent free shim is invoked with the descendant pointer (UB)'
-        );
-    }
+    assertGateThrew(
+        () => wbg.InheritanceAnimal.prototype.free.call(dog),
+        'free cannot be invoked through subclass prototype dispatch',
+        'InheritanceAnimal.prototype.free.call(dog)'
+    );
     // The dog should still be intact and freeable through its own free().
     dog.free();
 };
@@ -254,30 +258,41 @@ exports.js_three_level_chain_gates_at_every_depth_works = () => {
     // free guard: dispatching either ancestor's `free` on a grandchild
     // must throw at every depth (would otherwise feed a descendant
     // pointer to an ancestor's wasm free shim — type-confused free).
-    let threwFreeA = false;
-    try { wbg.ChainA.prototype.free.call(c); } catch (_) { threwFreeA = true; }
-    if (!threwFreeA) {
-        throw new Error('ChainA.prototype.free.call(c) must throw at depth 2');
-    }
-    let threwFreeB = false;
-    try { wbg.ChainB.prototype.free.call(c); } catch (_) { threwFreeB = true; }
-    if (!threwFreeB) {
-        throw new Error('ChainB.prototype.free.call(c) must throw at depth 1');
-    }
+    assertGateThrew(
+        () => wbg.ChainA.prototype.free.call(c),
+        'free cannot be invoked through subclass prototype dispatch',
+        'ChainA.prototype.free.call(c) (depth 2)'
+    );
+    assertGateThrew(
+        () => wbg.ChainB.prototype.free.call(c),
+        'free cannot be invoked through subclass prototype dispatch',
+        'ChainB.prototype.free.call(c) (depth 1)'
+    );
 
     // consume-self guard: same matrix for `self`-by-value methods.
-    let threwIntoA = false;
-    try { wbg.ChainA.prototype.into_a_label.call(c); } catch (_) { threwIntoA = true; }
-    if (!threwIntoA) {
-        throw new Error('ChainA.prototype.into_a_label.call(c) must throw at depth 2');
-    }
-    let threwIntoB = false;
-    try { wbg.ChainB.prototype.into_b_tag.call(c); } catch (_) { threwIntoB = true; }
-    if (!threwIntoB) {
-        throw new Error('ChainB.prototype.into_b_tag.call(c) must throw at depth 1');
-    }
+    assertGateThrew(
+        () => wbg.ChainA.prototype.into_a_label.call(c),
+        'cannot be invoked through subclass prototype dispatch',
+        'ChainA.prototype.into_a_label.call(c) (depth 2)'
+    );
+    assertGateThrew(
+        () => wbg.ChainB.prototype.into_b_tag.call(c),
+        'cannot be invoked through subclass prototype dispatch',
+        'ChainB.prototype.into_b_tag.call(c) (depth 1)'
+    );
 
-    // c is still intact — every guard fires before __destroy_into_raw.
+    // c is still intact — every guard fires before __destroy_into_raw,
+    // so `c`'s pointer slots are unchanged. Verify directly: own data,
+    // child's data via inheritance, parent's data via inheritance.
+    if (c.c_extra() !== 'gamma') {
+        throw new Error('c.c_extra() must remain "gamma" after rejected dispatches');
+    }
+    if (c.b_tag() !== 'beta') {
+        throw new Error('c.b_tag() (inherited) must remain "beta" after rejected dispatches');
+    }
+    if (c.a_label() !== 'alpha') {
+        throw new Error('c.a_label() (inherited) must remain "alpha" after rejected dispatches');
+    }
     c.free();
 
     // Direct invocation on real instances must still work at every level.
