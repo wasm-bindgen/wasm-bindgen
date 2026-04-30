@@ -66,9 +66,9 @@ exports.js_owned_parent_rejects_subclass_works = () => {
     wbg.inheritance_take_animal_by_value(animal);
 };
 
-// `self`-by-value parent method dispatched via the JS prototype chain on a
-// wasm-bindgen subclass would otherwise hand the descendant pointer to the
-// parent's wasm shim. The cli-support guard now throws before the
+// `self`-by-value parent method dispatched via the JS prototype chain on
+// a wasm-bindgen descendant would otherwise hand the descendant pointer
+// to the parent's wasm shim. The cli-support guard throws before the
 // __destroy_into_raw call.
 exports.js_owned_self_method_rejects_subclass_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
@@ -131,20 +131,15 @@ exports.js_skip_typescript_parent_child_works = () => {
     child.free();
 };
 
-// Pass a Dog (subclass) to a free function declared as `&Animal`. The
+// Pass a Dog (descendant) to a free function declared as `&Animal`. The
 // `_assertClass` runtime check uses `instanceof`, so a Dog passes the
-// Animal check. But the JS-side `I32FromExternrefRustBorrow` lowering
-// emits `dog.__wbg_ptr` — a pointer to `WasmRefCell<Dog>` — which is then
-// reinterpreted by the wasm shim as `WasmRefCell<Animal>`. The Dog's
-// fields happen to align such that `Dog.breed` (a String) lands where
-// `Animal.name` (also a String) lives, so the call returns the wrong
-// data instead of throwing or returning the correct upcast.
-//
-// The fix: when the parameter class participates in inheritance, emit
-// `dog.__wbg_ptr_<DefiningClass>` (which the constructor populated via
-// upcast). For now this test asserts the SOUND behavior — either the
-// call returns the correct name "Rex", or it throws. What it must NOT
-// do is return the breed silently.
+// Animal check. The `I32FromExternrefRustBorrow` lowering then emits
+// `dog.__wbg_ptr_InheritanceAnimal` — the upcasted ancestor pointer set
+// by the Dog constructor — so the wasm shim sees a true
+// `WasmRefCell<Animal>` and the call returns the Animal's `name`
+// ("Rex"), not the Dog's `breed` ("Labrador"). Test asserts that:
+// dispatch must either return the correct name or throw, never silently
+// return the descendant field.
 exports.js_borrowed_parent_with_subclass_works = () => {
     const dog = new wbg.InheritanceDog('Rex', 'Labrador');
     let result;
@@ -163,7 +158,7 @@ exports.js_borrowed_parent_with_subclass_works = () => {
     }
     dog.free();
 
-    // Real-Animal path must still work after the routing change.
+    // Real-Animal path: same lowering, no upcast — must round-trip the name.
     const animal = new wbg.InheritanceAnimal('Felix');
     if (wbg.inheritance_take_animal_by_ref(animal) !== 'Felix') {
         throw new Error('borrowed-parent on a real Animal must return its name');

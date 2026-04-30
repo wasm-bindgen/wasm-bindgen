@@ -105,14 +105,16 @@ impl InheritanceDog {
 }
 
 // Renamed parent + child whose rust_name sorts ALPHABETICALLY BEFORE the
-// parent's exported js_name. Exercises two reviewer concerns at once:
-//   (a) macro/cli upcast symbol agreement when the parent has `js_name`
-//       (the macro derives the symbol from `extends = <Path>` last segment,
-//       so cli-support must use rust_name there, not qualified_name).
-//   (b) emission ordering: with this rename, BTreeMap export-name iteration
-//       would put `class InheritanceBetaChild extends RenamedAnimal` before
-//       `class RenamedAnimal` is initialized — TDZ ReferenceError at module
-//       load — unless cli-support topo-sorts class definitions.
+// parent's exported js_name. Exercises two properties of the codegen:
+//   (a) macro/cli upcast-symbol agreement when the parent has `js_name`:
+//       the macro derives the symbol from the `extends = <Path>` last
+//       segment, so cli-support must resolve it via the rust_name (not
+//       the qualified js_name) when emitting the upcast call.
+//   (b) emission ordering: name-sorted iteration of exports would place
+//       `class InheritanceBetaChild extends RenamedAnimal` before
+//       `class RenamedAnimal` is initialized and trip the JS class-decl
+//       TDZ at module load. The topo sort in `topo_sort_class_exports`
+//       puts the parent first.
 #[wasm_bindgen(js_name = "RenamedAnimal")]
 pub struct InheritanceAlphaParent {
     label: String,

@@ -250,8 +250,8 @@ impl<'a, 'b> Builder<'a, 'b> {
         // Route the `this` pointer through a per-class field when the
         // method's class participates in an `extends` chain. Every class
         // in a chain stores `this.__wbg_ptr_<OwnClass>` alongside
-        // `this.__wbg_ptr` (which always mirrors the own-class ptr for
-        // backward compat with code that reads the unqualified field).
+        // `this.__wbg_ptr`; the unqualified slot mirrors the own-class
+        // pointer so callers that read it directly resolve correctly.
         //
         // For `self`-by-value methods, also compute a subclass-dispatch
         // guard: a Rust descendant reaching this method via the JS

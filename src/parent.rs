@@ -2,18 +2,13 @@
 //! field of an exported Rust type declared with
 //! `#[wasm_bindgen(extends = Parent)]`.
 //!
-//! When a child exported struct inherits from a parent exported struct, the
-//! JS side must be able to dispatch parent methods on a child instance. Each
-//! parent method's wasm shim expects a `*const WasmRefCell<Parent>` (or
-//! equivalently an `Rc<WasmRefCell<Parent>>` raw pointer), but the child's
-//! own `__wbg_ptr` points at a `WasmRefCell<Child>`. Passing the child's
-//! pointer to a parent method would be type confusion.
-//!
-//! The fix: every JS instance carries a separate `__wbg_ptr_<Class>` for
-//! each class in its inheritance chain. For the child to materialize a
-//! parent pointer, the parent data must live in its own `Rc<WasmRefCell<T>>`
-//! allocation that the wasm runtime can clone on demand. `Parent<T>` is that
-//! storage — a newtype around `Rc<WasmRefCell<T>>`.
+//! Each parent method's wasm shim takes a `*const WasmRefCell<Parent>`,
+//! while the child's own `__wbg_ptr` points at a `WasmRefCell<Child>`.
+//! The two pointers can't alias safely, so each JS instance carries a
+//! separate `__wbg_ptr_<Class>` slot for every class in its inheritance
+//! chain, and the parent data lives in its own `Rc<WasmRefCell<T>>`
+//! allocation that the wasm runtime can clone on demand. `Parent<T>` is
+//! that storage — a newtype around `Rc<WasmRefCell<T>>`.
 //!
 //! Users do **not** declare a `Parent<T>` field themselves. Writing
 //! `#[wasm_bindgen(extends = Animal)] struct Dog { ... }` causes the macro

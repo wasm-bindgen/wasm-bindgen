@@ -1761,11 +1761,10 @@ if (require('worker_threads').isMainThread) {{
         // Use qualified_name for wasm symbol references, falling back to js_name
         let qualified = class.qualified_name.as_deref().unwrap_or(js_name);
         // For every class in an `extends` chain we emit per-class
-        // `__wbg_ptr_<Class>` fields (in addition to the legacy
-        // `__wbg_ptr` alias) so parent-method prototype dispatch routes
-        // through the correct ancestor pointer. Resolve the ancestors'
-        // js_names (field name) and qualified_names (wasm symbol base)
-        // once here.
+        // `__wbg_ptr_<Class>` fields alongside the unqualified `__wbg_ptr`
+        // alias, so parent-method prototype dispatch can route through
+        // the correct ancestor pointer. Resolve the ancestors' js_names
+        // (field name) and qualified_names (wasm symbol base) once here.
         let participates = class.participates_in_inheritance;
         let ancestors: Vec<(String, String, String)> = class.ancestors.clone();
         // Resolve the parent class identifier for `extends`, if any. Also
