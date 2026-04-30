@@ -199,11 +199,10 @@ exports.js_borrowed_parent_method_with_subclass_works = () => {
 // class. The subclass's constructor goes through `super()` which runs the
 // real wasm-bindgen ctor — so `myAnimal.__wbg_ptr` and
 // `myAnimal.__wbg_ptr_InheritanceAnimal` are populated to the *same*
-// animal pointer. The cli-support guards used to compare
-// `this.constructor`, which falsely rejected this case; they now compare
-// `__wbg_ptr === __wbg_ptr_<Class>`, which correctly accepts JS-only
-// subclasses while still rejecting Rust descendants (whose per-class
-// pointer is an upcasted ancestor pointer that differs from `__wbg_ptr`).
+// animal pointer. The cli-support guards compare those two slots:
+// JS-only subclasses pass because the slots agree, while Rust descendants
+// (whose per-class slot is an upcasted ancestor pointer that differs from
+// `__wbg_ptr`) are still rejected.
 exports.js_js_only_subclass_passes_pointer_check_works = () => {
     class JsOnlyAnimal extends wbg.InheritanceAnimal {}
 

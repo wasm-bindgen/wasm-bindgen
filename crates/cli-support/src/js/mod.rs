@@ -178,11 +178,10 @@ struct ExportDefinition {
 struct ExportedNamespace {
     /// Namespace id.
     id: Option<String>,
-    /// Namespace entries. Stored as a `Vec` (rather than a map) so the
-    /// topo-sort applied by `topo_sort_class_exports` survives to emission —
-    /// re-collecting into a `BTreeMap` would resort by export name and
-    /// reintroduce the TDZ where `class Child extends Parent` is emitted
-    /// before `Parent` is declared.
+    /// Namespace entries in emission order. The order is set by
+    /// `topo_sort_class_exports` and must reach JS emission unchanged so
+    /// that `class Child extends Parent` is declared after `Parent` —
+    /// otherwise the JS class-decl TDZ trips at module load.
     ns: Vec<(String, ExportEntry)>,
 }
 
@@ -6252,15 +6251,13 @@ fn topo_sort_class_exports(exports: BTreeMap<String, ExportEntry>) -> Vec<(Strin
     topo_sort_class_entries(exports.into_iter().collect())
 }
 
-/// Inner helper that operates on an ordered `Vec` so namespace contents —
-/// which by this point may already be in topo-sorted order — are not
-/// re-shuffled by an intermediate `BTreeMap` round-trip.
+/// Inner helper that operates on an ordered `Vec` so a recursion into a
+/// namespace whose contents are already topo-sorted does not re-shuffle
+/// them.
 ///
-/// The input `entries` are sorted by name first (stable), so non-dependent
-/// siblings retain the historical alphabetic emission order (which is what
-/// `BTreeMap` iteration produced before this storage moved to `Vec` to make
-/// the topo-sort survive). Topo-sort then permutes only as needed to place
-/// `class Child extends Parent` after `Parent`.
+/// `entries` are sorted by name first (stable), so non-dependent siblings
+/// emit in alphabetic order. Topo-sort then permutes only as needed to
+/// place `class Child extends Parent` after `Parent`.
 fn topo_sort_class_entries(mut entries: Vec<(String, ExportEntry)>) -> Vec<(String, ExportEntry)> {
     use std::collections::HashSet;
 
@@ -6289,11 +6286,8 @@ fn topo_sort_class_entries(mut entries: Vec<(String, ExportEntry)>) -> Vec<(Stri
         .map(|(name, entry)| match entry {
             ExportEntry::Namespace(mut ns) => {
                 let inner = std::mem::take(&mut ns.ns);
-                // The inner namespace is itself topologically sorted; the
-                // returned `Vec` is stored as-is so the order survives to
-                // emission. (An earlier version re-collected into a
-                // `BTreeMap` here, which silently re-sorted by export name
-                // and reintroduced the TDZ this sort exists to prevent.)
+                // Replace the inner contents with a topo-sorted `Vec` so
+                // emission walks them in dependency order.
                 ns.ns = topo_sort_class_entries(inner);
                 (name, ExportEntry::Namespace(ns))
             }
