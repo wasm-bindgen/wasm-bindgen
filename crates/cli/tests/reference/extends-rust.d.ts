@@ -10,13 +10,6 @@ export class InheritanceParent {
 
 export function inheritance_borrow_parent(p: InheritanceParent): string;
 
-declare class ns__NsChild extends ns__NsParent {
-    free(): void;
-    [Symbol.dispose](): void;
-    constructor(label: string, note: string);
-    note(): string;
-}
-
 declare class ns__NsParent {
     free(): void;
     [Symbol.dispose](): void;
@@ -24,9 +17,16 @@ declare class ns__NsParent {
     constructor(label: string);
 }
 
+declare class ns__NsChild extends ns__NsParent {
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor(label: string, note: string);
+    note(): string;
+}
+
 export let ns: {
-    NsChild: typeof ns__NsChild,
     NsParent: typeof ns__NsParent,
+    NsChild: typeof ns__NsChild,
 };
 
 export class InheritanceChild extends InheritanceParent {

@@ -178,8 +178,12 @@ struct ExportDefinition {
 struct ExportedNamespace {
     /// Namespace id.
     id: Option<String>,
-    /// Namespace entries.
-    ns: BTreeMap<String, ExportEntry>,
+    /// Namespace entries. Stored as a `Vec` (rather than a map) so the
+    /// topo-sort applied by `topo_sort_class_exports` survives to emission —
+    /// re-collecting into a `BTreeMap` would resort by export name and
+    /// reintroduce the TDZ where `class Child extends Parent` is emitted
+    /// before `Parent` is declared.
+    ns: Vec<(String, ExportEntry)>,
 }
 
 #[derive(Default)]
@@ -2029,13 +2033,36 @@ if (require('worker_threads').isMainThread) {{
                 "const ptr = this.__wbg_ptr;\nthis.__wbg_ptr = 0;\n{identifier}Finalization.unregister(this);\nreturn ptr;"
             )
         };
+        // For inheritance-participating classes, guard `free()` against
+        // `Parent.prototype.free.call(child)` style cross-class dispatch.
+        // The body uses `this.__destroy_into_raw()` (which dispatches via
+        // the prototype chain to the descendant's `__destroy_into_raw`) and
+        // hands the resulting pointer to *this* class's wasm free shim. If
+        // `this` is a Rust descendant, that pointer is the descendant's
+        // own-class pointer, which mismatches the wasm shim's expected
+        // layout — type-confused free / UB. Reject by checking that
+        // `this.__wbg_ptr` matches the per-class pointer slot for this
+        // class; for the actual leaf instance (or a JS-only subclass that
+        // doesn't add its own wasm-bindgen layer) those are identical, so
+        // the check passes; for a Rust descendant, the per-class pointer
+        // is the upcasted ancestor pointer and differs from `__wbg_ptr`,
+        // so the call throws cleanly.
+        let free_guard = if participates {
+            format!(
+                "if (this.__wbg_ptr !== this.__wbg_ptr_{identifier}) {{ \
+                    throw new TypeError('{identifier}: free cannot be invoked through subclass prototype dispatch'); \
+                }}\n                "
+            )
+        } else {
+            String::new()
+        };
         dst.push_str(&format!(
             "\
             __destroy_into_raw() {{
                 {destroy_body}
             }}
             free() {{
-                const ptr = this.__destroy_into_raw();
+                {free_guard}const ptr = this.__destroy_into_raw();
                 {free}
             }}
             "
@@ -2273,7 +2300,7 @@ if (require('worker_threads').isMainThread) {{
     fn write_namespace(
         &mut self,
         name: &str,
-        namespace: &BTreeMap<String, ExportEntry>,
+        namespace: &[(String, ExportEntry)],
         existing: bool,
     ) -> Result<String, Error> {
         let mut output = String::new();
@@ -2301,7 +2328,7 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn write_namespace_ts(
-        namespace: &BTreeMap<String, ExportEntry>,
+        namespace: &[(String, ExportEntry)],
         indent: &str,
     ) -> Result<String, Error> {
         let mut ts_dst = String::from("{\n");
@@ -6218,20 +6245,34 @@ fn format_doc_comments(comments: &str, js_doc_comments: Option<String>) -> Strin
 ///
 /// Recurses into namespaces so nested class hierarchies are also ordered.
 fn topo_sort_class_exports(exports: BTreeMap<String, ExportEntry>) -> Vec<(String, ExportEntry)> {
+    topo_sort_class_entries(exports.into_iter().collect())
+}
+
+/// Inner helper that operates on an ordered `Vec` so namespace contents —
+/// which by this point may already be in topo-sorted order — are not
+/// re-shuffled by an intermediate `BTreeMap` round-trip.
+///
+/// The input `entries` are sorted by name first (stable), so non-dependent
+/// siblings retain the historical alphabetic emission order (which is what
+/// `BTreeMap` iteration produced before this storage moved to `Vec` to make
+/// the topo-sort survive). Topo-sort then permutes only as needed to place
+/// `class Child extends Parent` after `Parent`.
+fn topo_sort_class_entries(mut entries: Vec<(String, ExportEntry)>) -> Vec<(String, ExportEntry)> {
     use std::collections::HashSet;
+
+    entries.sort_by(|(a, _), (b, _)| a.cmp(b));
 
     // Collect the set of identifiers introduced by Definitions in *this* level
     // — only those participate as resolvable parents. Anything pointing
     // outside the set (imported parents, etc.) is left as-is.
-    let local_ids: HashSet<String> = exports
-        .values()
-        .filter_map(|e| match e {
+    let local_ids: HashSet<String> = entries
+        .iter()
+        .filter_map(|(_, e)| match e {
             ExportEntry::Definition(d) => Some(d.identifier.clone()),
             ExportEntry::Namespace(_) => None,
         })
         .collect();
 
-    let entries: Vec<(String, ExportEntry)> = exports.into_iter().collect();
     let n = entries.len();
 
     // Map each entry's identifier to its index for parent lookups, and recurse
@@ -6244,9 +6285,12 @@ fn topo_sort_class_exports(exports: BTreeMap<String, ExportEntry>) -> Vec<(Strin
         .map(|(name, entry)| match entry {
             ExportEntry::Namespace(mut ns) => {
                 let inner = std::mem::take(&mut ns.ns);
-                ns.ns = topo_sort_class_exports(inner)
-                    .into_iter()
-                    .collect::<BTreeMap<_, _>>();
+                // The inner namespace is itself topologically sorted; the
+                // returned `Vec` is stored as-is so the order survives to
+                // emission. (An earlier version re-collected into a
+                // `BTreeMap` here, which silently re-sorted by export name
+                // and reintroduced the TDZ this sort exists to prevent.)
+                ns.ns = topo_sort_class_entries(inner);
                 (name, ExportEntry::Namespace(ns))
             }
             other => (name, other),
@@ -6351,7 +6395,7 @@ fn define_export(
             ExportEntry::Definition(def) if def.definition.is_empty() => {
                 *export_entry = ExportEntry::Namespace(ExportedNamespace {
                     id: Some(def.identifier.to_string()),
-                    ns: BTreeMap::new(),
+                    ns: Vec::new(),
                 });
                 let ExportEntry::Namespace(ns) = export_entry else {
                     unreachable!();
@@ -6362,7 +6406,66 @@ fn define_export(
                 bail!("Cannot to define namespace export over existing definition {export_name}");
             }
         };
-        define_export(&mut ns.ns, export_name, &ns_path[1..], export)?;
+        define_namespace_export(&mut ns.ns, export_name, &ns_path[1..], export)?;
+    }
+    Ok(())
+}
+
+/// `define_export` for namespace contents — the inner storage is a `Vec`
+/// (not a `BTreeMap`) so the topo-sort imposed at emission time survives.
+/// Linear-scans for an existing entry by name; namespaces are small.
+fn define_namespace_export(
+    exports: &mut Vec<(String, ExportEntry)>,
+    export_name: &str,
+    ns_path: &[String],
+    export: ExportEntry,
+) -> Result<(), Error> {
+    assert!(!matches!(export, ExportEntry::Namespace(_)));
+
+    if ns_path.is_empty() {
+        if let Some(slot) = exports.iter_mut().find(|(k, _)| k == export_name) {
+            if let ExportEntry::Definition(def) = export {
+                if def.definition.is_empty() {
+                    if let ExportEntry::Namespace(ns) = &mut slot.1 {
+                        if ns.id.is_none() {
+                            ns.id = Some(def.identifier);
+                            return Ok(());
+                        }
+                    }
+                }
+            }
+            bail!("Cannot define export over existing namespace {export_name}");
+        }
+        exports.push((export_name.to_string(), export));
+    } else {
+        let idx = match exports.iter().position(|(k, _)| k == &ns_path[0]) {
+            Some(i) => i,
+            None => {
+                exports.push((
+                    ns_path[0].clone(),
+                    ExportEntry::Namespace(Default::default()),
+                ));
+                exports.len() - 1
+            }
+        };
+        let entry = &mut exports[idx].1;
+        let ns = match entry {
+            ExportEntry::Namespace(ns) => ns,
+            ExportEntry::Definition(def) if def.definition.is_empty() => {
+                *entry = ExportEntry::Namespace(ExportedNamespace {
+                    id: Some(def.identifier.to_string()),
+                    ns: Vec::new(),
+                });
+                let ExportEntry::Namespace(ns) = entry else {
+                    unreachable!();
+                };
+                ns
+            }
+            _ => {
+                bail!("Cannot to define namespace export over existing definition {export_name}");
+            }
+        };
+        define_namespace_export(&mut ns.ns, export_name, &ns_path[1..], export)?;
     }
     Ok(())
 }

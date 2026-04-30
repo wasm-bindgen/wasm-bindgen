@@ -7,6 +7,7 @@ export class InheritanceParent {
         return ptr;
     }
     free() {
+        if (this.__wbg_ptr !== this.__wbg_ptr_InheritanceParent) { throw new TypeError('InheritanceParent: free cannot be invoked through subclass prototype dispatch'); }
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_inheritanceparent_free(ptr, 0);
     }
@@ -59,6 +60,50 @@ export function inheritance_borrow_parent(p) {
     }
 }
 
+class ns__NsParent {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        this.__wbg_ptr_ns__NsParent = 0;
+        ns__NsParentFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        if (this.__wbg_ptr !== this.__wbg_ptr_ns__NsParent) { throw new TypeError('ns__NsParent: free cannot be invoked through subclass prototype dispatch'); }
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_ns__nsparent_free(ptr, 0);
+    }
+    /**
+     * @returns {string}
+     */
+    label() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.nsparent_label(this.__wbg_ptr_ns__NsParent);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * @param {string} label
+     */
+    constructor(label) {
+        if (arguments[0] === __wbgSuperSkip) return;
+        const ptr0 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.nsparent_new(ptr0, len0);
+        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr_ns__NsParent = ret >>> 0;
+        ns__NsParentFinalization.register(this, { __wbg_ptr_ns__NsParent: ret >>> 0 }, this);
+        return this;
+    }
+}
+if (Symbol.dispose) ns__NsParent.prototype[Symbol.dispose] = ns__NsParent.prototype.free;
+
 class ns__NsChild extends ns__NsParent {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -71,6 +116,7 @@ class ns__NsChild extends ns__NsParent {
         return ptr;
     }
     free() {
+        if (this.__wbg_ptr !== this.__wbg_ptr_ns__NsChild) { throw new TypeError('ns__NsChild: free cannot be invoked through subclass prototype dispatch'); }
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_ns__nschild_free(ptr, 0);
     }
@@ -111,52 +157,9 @@ class ns__NsChild extends ns__NsParent {
 }
 if (Symbol.dispose) ns__NsChild.prototype[Symbol.dispose] = ns__NsChild.prototype.free;
 
-class ns__NsParent {
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        this.__wbg_ptr_ns__NsParent = 0;
-        ns__NsParentFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_ns__nsparent_free(ptr, 0);
-    }
-    /**
-     * @returns {string}
-     */
-    label() {
-        let deferred1_0;
-        let deferred1_1;
-        try {
-            const ret = wasm.nsparent_label(this.__wbg_ptr_ns__NsParent);
-            deferred1_0 = ret[0];
-            deferred1_1 = ret[1];
-            return getStringFromWasm0(ret[0], ret[1]);
-        } finally {
-            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
-        }
-    }
-    /**
-     * @param {string} label
-     */
-    constructor(label) {
-        if (arguments[0] === __wbgSuperSkip) return;
-        const ptr0 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.nsparent_new(ptr0, len0);
-        this.__wbg_ptr = ret >>> 0;
-        this.__wbg_ptr_ns__NsParent = ret >>> 0;
-        ns__NsParentFinalization.register(this, { __wbg_ptr_ns__NsParent: ret >>> 0 }, this);
-        return this;
-    }
-}
-if (Symbol.dispose) ns__NsParent.prototype[Symbol.dispose] = ns__NsParent.prototype.free;
-
 export const ns = {};
-ns.NsChild = ns__NsChild;
 ns.NsParent = ns__NsParent;
+ns.NsChild = ns__NsChild;
 
 export class InheritanceChild extends InheritanceParent {
     __destroy_into_raw() {
@@ -170,6 +173,7 @@ export class InheritanceChild extends InheritanceParent {
         return ptr;
     }
     free() {
+        if (this.__wbg_ptr !== this.__wbg_ptr_InheritanceChild) { throw new TypeError('InheritanceChild: free cannot be invoked through subclass prototype dispatch'); }
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_inheritancechild_free(ptr, 0);
     }
@@ -225,6 +229,7 @@ export class InheritanceGrandchild extends InheritanceChild {
         return ptr;
     }
     free() {
+        if (this.__wbg_ptr !== this.__wbg_ptr_InheritanceGrandchild) { throw new TypeError('InheritanceGrandchild: free cannot be invoked through subclass prototype dispatch'); }
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_inheritancegrandchild_free(ptr, 0);
     }

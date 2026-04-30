@@ -14,6 +14,8 @@ extern "C" {
     fn js_skip_typescript_parent_child_works();
     fn js_borrowed_parent_with_subclass_works();
     fn js_borrowed_parent_method_with_subclass_works();
+    fn js_js_only_subclass_passes_pointer_check_works();
+    fn js_parent_free_dispatched_on_subclass_throws_works();
 }
 
 #[wasm_bindgen]
@@ -229,6 +231,16 @@ fn js_borrowed_parent_with_subclass() {
 #[wasm_bindgen_test]
 fn js_borrowed_parent_method_with_subclass() {
     js_borrowed_parent_method_with_subclass_works();
+}
+
+#[wasm_bindgen_test]
+fn js_js_only_subclass_passes_pointer_check() {
+    js_js_only_subclass_passes_pointer_check_works();
+}
+
+#[wasm_bindgen_test]
+fn js_parent_free_dispatched_on_subclass_throws() {
+    js_parent_free_dispatched_on_subclass_throws_works();
 }
 
 // Parent with `skip_typescript` and a child that extends it. The child

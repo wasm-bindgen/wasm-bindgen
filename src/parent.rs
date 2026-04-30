@@ -1,5 +1,6 @@
-//! `Parent<T>` — storage wrapper for the parent field of an exported Rust
-//! type that uses `#[wasm_bindgen(extends = Parent)]`.
+//! `Parent<T>` — storage wrapper that backs the auto-injected `parent`
+//! field of an exported Rust type declared with
+//! `#[wasm_bindgen(extends = Parent)]`.
 //!
 //! When a child exported struct inherits from a parent exported struct, the
 //! JS side must be able to dispatch parent methods on a child instance. Each
@@ -14,19 +15,28 @@
 //! allocation that the wasm runtime can clone on demand. `Parent<T>` is that
 //! storage — a newtype around `Rc<WasmRefCell<T>>`.
 //!
-//! Users declare their parent field as `parent: Parent<Animal>` and
-//! initialize it with `Animal::new(...).into()` or `Parent::new(value)`.
+//! Users do **not** declare a `Parent<T>` field themselves. Writing
+//! `#[wasm_bindgen(extends = Animal)] struct Dog { ... }` causes the macro
+//! to inject `parent: wasm_bindgen::Parent<Animal>` as the first field of
+//! `Dog`; an explicit user-declared `Parent<T>` field on any
+//! `#[wasm_bindgen]` struct is rejected at macro time. In the child's
+//! constructor the field is populated with `Animal::new(...).into()` (using
+//! the [`From<T>`] impl below) or with [`Parent::new`]. From inside method
+//! bodies the parent value is reached as `self.parent.borrow()` /
+//! `self.parent.borrow_mut()`.
 
 use crate::__rt::alloc::rc::Rc;
 use crate::__rt::{Ref, RefMut, WasmRefCell};
 
-/// Storage wrapper required for `#[wasm_bindgen(parent)]` fields on a struct
-/// that uses `#[wasm_bindgen(extends = Parent)]`.
+/// Storage wrapper for the auto-injected `parent` field on a struct that
+/// declares `#[wasm_bindgen(extends = Parent)]`.
 ///
 /// Under the hood this is an `Rc<WasmRefCell<T>>` so that wasm-bindgen can
 /// produce a separately-refcounted parent pointer for JS-side prototype
 /// dispatch. Use [`Parent::borrow`] / [`Parent::borrow_mut`] to access the
-/// inner value.
+/// inner value. You should not need to construct `Parent<T>` directly
+/// outside the child's constructor; the [`From<T>`] impl is the typical way
+/// to initialize the injected `parent` field.
 pub struct Parent<T> {
     inner: Rc<WasmRefCell<T>>,
 }

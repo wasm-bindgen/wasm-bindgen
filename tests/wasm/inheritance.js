@@ -195,6 +195,61 @@ exports.js_borrowed_parent_method_with_subclass_works = () => {
     observer.free();
 };
 
+// User-written JS subclass of an inheritance-participating wasm-bindgen
+// class. The subclass's constructor goes through `super()` which runs the
+// real wasm-bindgen ctor — so `myAnimal.__wbg_ptr` and
+// `myAnimal.__wbg_ptr_InheritanceAnimal` are populated to the *same*
+// animal pointer. The cli-support guards used to compare
+// `this.constructor`, which falsely rejected this case; they now compare
+// `__wbg_ptr === __wbg_ptr_<Class>`, which correctly accepts JS-only
+// subclasses while still rejecting Rust descendants (whose per-class
+// pointer is an upcasted ancestor pointer that differs from `__wbg_ptr`).
+exports.js_js_only_subclass_passes_pointer_check_works = () => {
+    class JsOnlyAnimal extends wbg.InheritanceAnimal {}
+
+    // (a) Leaf-class consume-self method dispatched on a JS-only subclass.
+    //     Pointer-equality gate must pass.
+    const a1 = new JsOnlyAnimal('Felix');
+    if (a1.into_name() !== 'Felix') {
+        throw new Error(
+            'JS-only subclass: into_name must return "Felix" — pointer-eq guard rejected a valid JS subclass'
+        );
+    }
+
+    // (b) Rust function taking InheritanceAnimal by value must accept a
+    //     JS-only subclass instance (assert_owned_class pointer-eq check).
+    const a2 = new JsOnlyAnimal('Tom');
+    wbg.inheritance_take_animal_by_value(a2);
+
+    // (c) free() dispatched through the prototype on a JS-only subclass
+    //     instance must succeed (the new free guard's pointer-eq check
+    //     passes since `__wbg_ptr === __wbg_ptr_InheritanceAnimal`).
+    const a3 = new JsOnlyAnimal('Whiskers');
+    a3.free();
+};
+
+// Cross-class prototype dispatch of `free()` would otherwise return the
+// descendant's `__wbg_ptr` from `__destroy_into_raw()` and pass it to the
+// *parent's* wasm free shim — type-confused free / UB. The guard injected
+// into the participating-class `free()` body throws cleanly instead.
+exports.js_parent_free_dispatched_on_subclass_throws_works = () => {
+    const dog = new wbg.InheritanceDog('Rex', 'Labrador');
+    let threw = false;
+    try {
+        wbg.InheritanceAnimal.prototype.free.call(dog);
+    } catch (_) {
+        threw = true;
+    }
+    if (!threw) {
+        throw new Error(
+            'InheritanceAnimal.prototype.free.call(dog) must throw — otherwise ' +
+            'the parent free shim is invoked with the descendant pointer (UB)'
+        );
+    }
+    // The dog should still be intact and freeable through its own free().
+    dog.free();
+};
+
 exports.js_super_does_not_double_alloc = () => {
     wbg.inheritance_reset_counters();
 

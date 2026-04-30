@@ -254,11 +254,16 @@ impl<'a, 'b> Builder<'a, 'b> {
         // backward compat with code that reads the unqualified field).
         //
         // For `self`-by-value methods, also compute a subclass-dispatch
-        // guard: a wasm-bindgen subclass reaching this method via the JS
+        // guard: a Rust descendant reaching this method via the JS
         // prototype chain would call `this.__destroy_into_raw()` on the
         // descendant (returning the descendant pointer) and hand it to
         // this method's parent wasm shim — type-confused free / UB. The
-        // guard throws cleanly instead.
+        // guard rejects by comparing the leaf `this.__wbg_ptr` against
+        // the per-class slot `this.__wbg_ptr_<Class>`. For the actual
+        // class instance (or a user-written JS-only subclass that doesn't
+        // add a wasm-bindgen layer) those slots agree; for a Rust
+        // descendant the per-class slot holds the upcasted ancestor
+        // pointer and differs from `__wbg_ptr`, so the call throws.
         let (this_ptr_expr, consumes_self_subclass_guard) = match &self.method_class {
             Some(method_class) => {
                 let resolved = self.cx.resolve_class_name(method_class).to_string();
@@ -266,8 +271,8 @@ impl<'a, 'b> Builder<'a, 'b> {
                 if cls.is_some_and(|c| c.participates_in_inheritance) {
                     let identifier = cls.map(|c| c.identifier.clone()).unwrap_or(resolved);
                     let guard = format!(
-                        "if (this?.constructor !== {identifier}) {{ \
-                            throw new TypeError('{identifier}: a `self`-by-value method cannot be invoked through subclass dispatch'); \
+                        "if (this?.__wbg_ptr !== this?.__wbg_ptr_{identifier}) {{ \
+                            throw new TypeError('{identifier}: a `self`-by-value method cannot be invoked through subclass prototype dispatch'); \
                         }}"
                     );
                     (format!("this.__wbg_ptr_{identifier}"), Some(guard))
@@ -815,11 +820,15 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     /// `assert_class` for boundaries that take the receiver by value
     /// (ownership transfer to Rust). For classes participating in an
-    /// `extends` chain, additionally reject subclass instances: a
-    /// wasm-bindgen subclass has `__wbg_ptr` set to its own (descendant)
-    /// pointer, not a pointer compatible with this class's wasm shim, so
+    /// `extends` chain, additionally reject Rust descendant instances: a
+    /// descendant's `__wbg_ptr` is its own (descendant) pointer, which
+    /// is incompatible with this class's wasm shim, so
     /// `__destroy_into_raw()` would hand the wrong pointer to Rust —
-    /// type-confused free / UB.
+    /// type-confused free / UB. The check compares `arg.__wbg_ptr`
+    /// against `arg.__wbg_ptr_<Class>`: for the actual class instance
+    /// (or a user-written JS-only subclass) those agree; for a Rust
+    /// descendant the per-class slot holds the upcasted ancestor pointer
+    /// and differs from `__wbg_ptr`, so we throw.
     fn assert_owned_class(&mut self, arg: &str, class: &str) {
         self.assert_class(arg, class);
         let resolved = self.cx.resolve_class_name(class).to_string();
@@ -831,9 +840,9 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         if participates {
             let identifier = self.cx.require_class_identifier(class);
             self.prelude(&format!(
-                "if ({arg}.constructor !== {identifier}) {{ \
+                "if ({arg}.__wbg_ptr !== {arg}.__wbg_ptr_{identifier}) {{ \
                     throw new TypeError('expected exact instance of {identifier}; \
-                    a wasm-bindgen subclass cannot be consumed by-value as its parent'); \
+                    a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); \
                 }}"
             ));
         }
