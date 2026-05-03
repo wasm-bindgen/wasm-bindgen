@@ -266,6 +266,18 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_scroll_left(this: &Element, value: f64);
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ViewTransition")]
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "activeViewTransition")]
+    #[doc = "Getter for the `activeViewTransition` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/activeViewTransition)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ViewTransition`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn active_view_transition(this: &Element) -> Option<ViewTransition>;
     #[wasm_bindgen(
         method,
         getter,
@@ -702,6 +714,48 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_pointer_capture(this: &Element, pointer_id: i32) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ViewTransition")]
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "startViewTransition")]
+    #[doc = "The `startViewTransition()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/startViewTransition)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ViewTransition`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn start_view_transition(this: &Element) -> Result<ViewTransition, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "ViewTransition")]
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "startViewTransition")]
+    #[doc = "The `startViewTransition()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/startViewTransition)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ViewTransition`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn start_view_transition_with_callback(
+        this: &Element,
+        callback_options: &::js_sys::Function<fn() -> ::js_sys::Promise>,
+    ) -> Result<ViewTransition, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(feature = "StartViewTransitionOptions", feature = "ViewTransition",))]
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "startViewTransition")]
+    #[doc = "The `startViewTransition()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/startViewTransition)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `StartViewTransitionOptions`, `ViewTransition`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn start_view_transition_with_start_view_transition_options(
+        this: &Element,
+        callback_options: &StartViewTransitionOptions,
+    ) -> Result<ViewTransition, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "toggleAttribute")]
     #[doc = "The `toggleAttribute()` method."]
     #[doc = ""]
