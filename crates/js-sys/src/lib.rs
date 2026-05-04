@@ -473,11 +473,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
     #[wasm_bindgen(constructor)]
-    pub fn new_with_options(
-        errors: &[JsValue],
-        message: &str,
-        options: &Object,
-    ) -> AggregateError;
+    pub fn new_with_options(errors: &[JsValue], message: &str, options: &Object) -> AggregateError;
 
     /// The `errors` property of an `AggregateError` instance is an array
     /// representing the errors that were aggregated.
