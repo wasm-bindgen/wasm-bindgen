@@ -87,12 +87,6 @@ pub struct WasmBindgenAux {
 
 pub type WasmBindgenAuxId = TypedCustomSectionId<WasmBindgenAux>;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum AuxName {
-    Identifier(String),
-    Symbol(String),
-}
-
 #[derive(Debug)]
 pub struct AuxExport {
     /// When generating errors about this export, a helpful name to remember it
@@ -175,7 +169,7 @@ pub enum AuxExportKind {
     /// Rust object in the JS heap.
     Method {
         class: String,
-        name: AuxName,
+        name: String,
         receiver: AuxReceiverKind,
         kind: AuxExportedMethodKind,
     },
@@ -290,7 +284,7 @@ pub enum AuxImport {
 
     /// A static method on a class is being imported, and the `this` of the
     /// function call is expected to always be the class.
-    ValueWithThis(JsImport, AuxName),
+    ValueWithThis(JsImport, String),
 
     /// This import is expected to be a function that takes an `externref` and
     /// returns a `bool`. It's expected that it tests if the argument is an
@@ -313,31 +307,31 @@ pub enum AuxImport {
     /// This import is expected to be a shim that simply calls the `foo` method
     /// on the first object, passing along all other parameters and returning
     /// the resulting value.
-    StructuralMethod(AuxName),
+    StructuralMethod(String),
 
     /// This import is a "structural getter" which simply returns the `.field`
     /// value of the first argument as an object.
     ///
     /// e.g. `function(x) { return x.foo; }`
-    StructuralGetter(AuxName),
+    StructuralGetter(String),
 
     /// This import is a "structural getter" which simply returns the `.field`
     /// value of the specified class
     ///
     /// e.g. `function() { return TheClass.foo; }`
-    StructuralClassGetter(JsImport, AuxName),
+    StructuralClassGetter(JsImport, String),
 
     /// This import is a "structural setter" which simply sets the `.field`
     /// value of the first argument to the second argument.
     ///
     /// e.g. `function(x, y) { x.foo = y; }`
-    StructuralSetter(AuxName),
+    StructuralSetter(String),
 
     /// This import is a "structural setter" which simply sets the `.field`
     /// value of the specified class to the first argument of the function.
     ///
     /// e.g. `function(x) { TheClass.foo = x; }`
-    StructuralClassSetter(JsImport, AuxName),
+    StructuralClassSetter(JsImport, String),
 
     /// This import is expected to be a shim that is an indexing getter of the
     /// JS class here, where the first argument of the function is the field to
@@ -432,17 +426,17 @@ pub enum AuxValue {
 
     /// A getter function for the class listed for the field, acquired using
     /// `getOwnPropertyDescriptor`.
-    Getter(JsImport, AuxName),
+    Getter(JsImport, String),
 
     /// Like `Getter`, but accesses a field of a class instead of an instance
     /// of the class.
-    ClassGetter(JsImport, AuxName),
+    ClassGetter(JsImport, String),
 
     /// Like `Getter`, except the `set` property.
-    Setter(JsImport, AuxName),
+    Setter(JsImport, String),
 
     /// Like `Setter`, but for class fields instead of instance fields.
-    ClassSetter(JsImport, AuxName),
+    ClassSetter(JsImport, String),
 }
 
 /// What can actually be imported and typically a value in each of the variants
@@ -457,7 +451,7 @@ pub struct JsImport {
     pub name: JsImportName,
     /// Various field accesses (like `.foo.bar.baz`) to hang off the `name`
     /// above.
-    pub fields: Vec<AuxName>,
+    pub fields: Vec<String>,
 }
 
 /// Return value of `determine_import` which is where we look at an imported
@@ -522,22 +516,6 @@ impl walrus::CustomSection for WasmBindgenAux {
         }
         if let Some(id) = self.js_tag {
             roots.push_tag(id);
-        }
-    }
-}
-
-impl AuxName {
-    pub fn as_ref(&self) -> wasm_bindgen_shared::NameRef<'_> {
-        match self {
-            AuxName::Identifier(s) => wasm_bindgen_shared::NameRef::Identifier(s),
-            AuxName::Symbol(s) => wasm_bindgen_shared::NameRef::Symbol(s),
-        }
-    }
-
-    pub fn from_ref(name: wasm_bindgen_shared::NameRef<'_>) -> Self {
-        match name {
-            wasm_bindgen_shared::NameRef::Identifier(s) => AuxName::Identifier(s.to_string()),
-            wasm_bindgen_shared::NameRef::Symbol(s) => AuxName::Symbol(s.to_string()),
         }
     }
 }

@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
-use wasm_bindgen_shared::{free_function_export_name, struct_function_export_name, NameRef};
+use wasm_bindgen_shared::struct_function_export_name;
 
 mod incoming;
 mod nonstandard;
@@ -577,9 +577,9 @@ impl<'a> Context<'a> {
 
     fn export(&mut self, export: decode::Export<'_>) -> Result<(), Error> {
         let wasm_name = match &export.class {
-            Some(class) => struct_function_export_name(class, export.function.name.as_ref()),
+            Some(class) => struct_function_export_name(class, export.function.name),
             None => {
-                let base_name = free_function_export_name(export.function.name.as_ref());
+                let base_name = export.function.name.to_string();
                 if let Some(ref ns) = export.js_namespace {
                     format!("{}__{base_name}", ns.join("__"))
                 } else {
@@ -636,7 +636,7 @@ impl<'a> Context<'a> {
 
                         AuxExportKind::Method {
                             class,
-                            name: name.to_aux(),
+                            name: name.to_owned(),
                             receiver: if op.is_static {
                                 AuxReceiverKind::None
                             } else if export.consumed {
@@ -650,11 +650,10 @@ impl<'a> Context<'a> {
                 }
             }
             _ => {
-                let fn_name = export.function.name.as_ref().free_function().to_string();
                 if classless_this {
-                    AuxExportKind::FunctionThis(fn_name)
+                    AuxExportKind::FunctionThis(export.function.name.to_string())
                 } else {
-                    AuxExportKind::Function(fn_name)
+                    AuxExportKind::Function(export.function.name.to_string())
                 }
             }
         };
@@ -749,7 +748,7 @@ impl<'a> Context<'a> {
                             self.determine_import(
                                 &import.module,
                                 &import.js_namespace,
-                                function.name.as_ref(),
+                                function.name,
                             )?,
                             generate_typescript,
                         ),
@@ -773,11 +772,8 @@ impl<'a> Context<'a> {
         // to the WebAssembly instance.
         let (id, aux_import) = match method {
             Some(data) => {
-                let class = self.determine_import(
-                    &import.module,
-                    &import.js_namespace,
-                    NameRef::Identifier(data.class),
-                )?;
+                let class =
+                    self.determine_import(&import.module, &import.js_namespace, data.class)?;
                 match data.kind {
                     // NB: `structural` is ignored for constructors since the
                     // js type isn't expected to change anyway.
@@ -808,7 +804,7 @@ impl<'a> Context<'a> {
                 let id = self.import_adapter(import_id, descriptor, AdapterJsImportKind::Normal)?;
                 let aux_import = match import.module {
                     Some(ImportModule::RawNamed(PLACEHOLDER_MODULE)) => {
-                        let intrinsic = function.name.as_ref().free_function().parse()?;
+                        let intrinsic = function.name.parse()?;
                         if let Intrinsic::FunctionTable = intrinsic {
                             self.aux.function_table = self.module.tables.main_function_table()?;
                         }
@@ -821,7 +817,7 @@ impl<'a> Context<'a> {
                         let js_import = self.determine_import(
                             &import.module,
                             &import.js_namespace,
-                            function.name.as_ref(),
+                            function.name,
                         )?;
 
                         if let Some(reexport_name) = import.reexport {
@@ -876,20 +872,21 @@ impl<'a> Context<'a> {
         structural: bool,
         op: decode::Operation<'_>,
     ) -> Result<(AuxImport, bool), Error> {
-        match &op.kind {
+        match op.kind {
             decode::OperationKind::Regular => {
                 if op.is_static {
                     Ok((
-                        AuxImport::ValueWithThis(class, function.name.to_aux()),
+                        AuxImport::ValueWithThis(class, function.name.to_string()),
                         false,
                     ))
                 } else if structural {
-                    Ok((AuxImport::StructuralMethod(function.name.to_aux()), false))
+                    Ok((
+                        AuxImport::StructuralMethod(function.name.to_string()),
+                        false,
+                    ))
                 } else {
-                    class
-                        .fields
-                        .push(AuxName::Identifier("prototype".to_string()));
-                    class.fields.push(function.name.to_aux());
+                    class.fields.push("prototype".to_string());
+                    class.fields.push(function.name.to_string());
                     Ok((AuxImport::Value(AuxValue::Bare(class)), true))
                 }
             }
@@ -902,17 +899,17 @@ impl<'a> Context<'a> {
                 if structural {
                     if op.is_static {
                         Ok((
-                            AuxImport::StructuralClassGetter(class, field.to_aux()),
+                            AuxImport::StructuralClassGetter(class, field.to_string()),
                             false,
                         ))
                     } else {
-                        Ok((AuxImport::StructuralGetter(field.to_aux()), false))
+                        Ok((AuxImport::StructuralGetter(field.to_string()), false))
                     }
                 } else {
                     let val = if op.is_static {
-                        AuxValue::ClassGetter(class, field.to_aux())
+                        AuxValue::ClassGetter(class, field.to_string())
                     } else {
-                        AuxValue::Getter(class, field.to_aux())
+                        AuxValue::Getter(class, field.to_string())
                     };
                     Ok((AuxImport::Value(val), true))
                 }
@@ -922,17 +919,17 @@ impl<'a> Context<'a> {
                 if structural {
                     if op.is_static {
                         Ok((
-                            AuxImport::StructuralClassSetter(class, field.to_aux()),
+                            AuxImport::StructuralClassSetter(class, field.to_string()),
                             false,
                         ))
                     } else {
-                        Ok((AuxImport::StructuralSetter(field.to_aux()), false))
+                        Ok((AuxImport::StructuralSetter(field.to_string()), false))
                     }
                 } else {
                     let val = if op.is_static {
-                        AuxValue::ClassSetter(class, field.to_aux())
+                        AuxValue::ClassSetter(class, field.to_string())
                     } else {
-                        AuxValue::Setter(class, field.to_aux())
+                        AuxValue::Setter(class, field.to_string())
                     };
                     Ok((AuxImport::Value(val), true))
                 }
@@ -988,7 +985,7 @@ impl<'a> Context<'a> {
                             self.determine_import(
                                 &import.module,
                                 &import.js_namespace,
-                                NameRef::Identifier(static_.name),
+                                static_.name,
                             )?,
                             generate_typescript,
                         ),
@@ -1018,11 +1015,7 @@ impl<'a> Context<'a> {
 
         // And then save off that this function is is an instanceof shim for an
         // imported item.
-        let js = self.determine_import(
-            &import.module,
-            &import.js_namespace,
-            NameRef::Identifier(static_.name),
-        )?;
+        let js = self.determine_import(&import.module, &import.js_namespace, static_.name)?;
 
         if let Some(reexport_name) = import.reexport {
             self.aux
@@ -1080,7 +1073,7 @@ impl<'a> Context<'a> {
                             self.determine_import(
                                 &import.module,
                                 &import.js_namespace,
-                                NameRef::Identifier(type_.name),
+                                type_.name,
                             )?,
                             generate_typescript,
                         ),
@@ -1104,11 +1097,7 @@ impl<'a> Context<'a> {
 
         // And then save off that this function is is an instanceof shim for an
         // imported item.
-        let js_import = self.determine_import(
-            &import.module,
-            &import.js_namespace,
-            NameRef::Identifier(type_.name),
-        )?;
+        let js_import = self.determine_import(&import.module, &import.js_namespace, type_.name)?;
         if let Some(reexport_name) = import.reexport {
             self.aux
                 .reexports
@@ -1189,15 +1178,12 @@ impl<'a> Context<'a> {
             wasm_bindgen_shared::qualified_name(struct_.js_namespace.as_deref(), struct_.name);
         let rust_name = struct_.rust_name;
         for field in struct_.fields {
-            let getter =
-                wasm_bindgen_shared::struct_field_get(&qualified_name, field.name.as_ref());
-            let setter =
-                wasm_bindgen_shared::struct_field_set(&qualified_name, field.name.as_ref());
+            let getter = wasm_bindgen_shared::struct_field_get(&qualified_name, field.name);
+            let setter = wasm_bindgen_shared::struct_field_set(&qualified_name, field.name);
             let descriptor = match self.descriptors.remove(&getter) {
                 None => continue,
                 Some(d) => d,
             };
-            let debug_name = field.name.as_ref().debug_name();
 
             // Register a webidl transformation for the getter
             let (getter_id, _) = self.function_exports[&getter];
@@ -1211,13 +1197,13 @@ impl<'a> Context<'a> {
             self.aux.export_map.insert(
                 getter_id,
                 AuxExport {
-                    debug_name: format!("getter for `{}::{debug_name}`", struct_.name),
+                    debug_name: format!("getter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: rust_name.to_string(),
-                        name: field.name.to_aux(),
+                        name: field.name.to_string(),
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Getter,
                     },
@@ -1246,13 +1232,13 @@ impl<'a> Context<'a> {
             self.aux.export_map.insert(
                 setter_id,
                 AuxExport {
-                    debug_name: format!("setter for `{}::{debug_name}`", struct_.name),
+                    debug_name: format!("setter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: rust_name.to_string(),
-                        name: field.name.to_aux(),
+                        name: field.name.to_string(),
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Setter,
                     },
@@ -1330,59 +1316,52 @@ impl<'a> Context<'a> {
         &self,
         module: &Option<ImportModule<'_>>,
         js_namespace: &Option<Vec<String>>,
-        item: NameRef,
+        item: &str,
     ) -> Result<JsImport, Error> {
         // Similar to `--target no-modules`, only allow vendor prefixes
         // basically for web apis, shouldn't be necessary for things like npm
         // packages or other imported items.
-        if let NameRef::Identifier(item) = item {
-            let vendor_prefixes = self.vendor_prefixes.get(item);
-            if let Some(vendor_prefixes) = vendor_prefixes {
-                assert!(!vendor_prefixes.is_empty());
+        let vendor_prefixes = self.vendor_prefixes.get(item);
+        if let Some(vendor_prefixes) = vendor_prefixes {
+            assert!(!vendor_prefixes.is_empty());
 
-                if let Some(decode::ImportModule::Inline(_) | decode::ImportModule::Named(_)) =
-                    module
-                {
-                    bail!(
-                        "local JS snippets do not support vendor prefixes for \
-                         the import of `{item}` with a polyfill of `{}`",
-                        &vendor_prefixes[0]
-                    );
-                }
-                if let Some(decode::ImportModule::RawNamed(module)) = module {
-                    bail!(
-                        "import of `{item}` from `{module}` has a polyfill of `{}` listed, but \
-                         vendor prefixes aren't supported when importing from modules",
-                        &vendor_prefixes[0],
-                    );
-                }
-                if let Some(ns) = js_namespace {
-                    bail!(
-                        "import of `{item}` through js namespace `{}` isn't supported \
-                         right now when it lists a polyfill",
-                        ns.join(".")
-                    );
-                }
-                return Ok(JsImport {
-                    name: JsImportName::VendorPrefixed {
-                        name: item.to_string(),
-                        prefixes: vendor_prefixes.clone(),
-                    },
-                    fields: Vec::new(),
-                });
+            if let Some(decode::ImportModule::Inline(_) | decode::ImportModule::Named(_)) = module {
+                bail!(
+                    "local JS snippets do not support vendor prefixes for \
+                     the import of `{item}` with a polyfill of `{}`",
+                    &vendor_prefixes[0]
+                );
             }
+            if let Some(decode::ImportModule::RawNamed(module)) = module {
+                bail!(
+                    "import of `{item}` from `{module}` has a polyfill of `{}` listed, but
+                     vendor prefixes aren't supported when importing from modules",
+                    &vendor_prefixes[0],
+                );
+            }
+            if let Some(ns) = js_namespace {
+                bail!(
+                    "import of `{item}` through js namespace `{}` isn't supported \
+                     right now when it lists a polyfill",
+                    ns.join(".")
+                );
+            }
+            return Ok(JsImport {
+                name: JsImportName::VendorPrefixed {
+                    name: item.to_string(),
+                    prefixes: vendor_prefixes.clone(),
+                },
+                fields: Vec::new(),
+            });
         }
 
         let (name, fields) = match js_namespace {
             Some(ref ns) => {
-                let mut tail: Vec<_> = ns[1..]
-                    .iter()
-                    .map(|s| AuxName::Identifier(s.to_string()))
-                    .collect();
-                tail.push(AuxName::from_ref(item));
+                let mut tail = ns[1..].to_owned();
+                tail.push(item.to_string());
                 (ns[0].to_owned(), tail)
             }
-            None => (item.free_function().to_owned(), Vec::new()),
+            None => (item.to_owned(), Vec::new()),
         };
 
         let name = match module {

@@ -43,11 +43,11 @@ export class Foo {
     }
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
-export function __wbg_Symbol_iterator_9a3ae6c7dad7d3ed(arg0) {
+export function __wbg_Symboliterator_9a3ae6c7dad7d3ed(arg0) {
     const ret = arg0[Symbol.iterator]();
     return ret;
 }
-export function __wbg_Symbol_toPrimitive_4bd6ba9d43ef2762(arg0, arg1) {
+export function __wbg_SymboltoPrimitive_4bd6ba9d43ef2762(arg0, arg1) {
     SomeClass[Symbol.toPrimitive](getStringFromWasm0(arg0, arg1));
 }
 export function __wbg___wbindgen_throw_9c75d47bf9e7731e(arg0, arg1) {
