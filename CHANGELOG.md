@@ -5,6 +5,11 @@
 
 ### Added
 
+* Added `js_sys::AggregateError` bindings (constructor, `errors` getter, and
+  `new_with_message` / `new_with_options` overloads). `AggregateError` represents
+  multiple unrelated errors wrapped in a single error, e.g. as thrown by
+  `Promise.any` when all input promises reject.
+
 ### Fixed
 
 * Fix compilation failure with `no_std` + `release`

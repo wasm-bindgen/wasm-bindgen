@@ -4,6 +4,7 @@
 ))]
 #![allow(non_snake_case)]
 
+pub mod AggregateError;
 pub mod Array;
 pub mod ArrayBuffer;
 pub mod ArrayIterator;

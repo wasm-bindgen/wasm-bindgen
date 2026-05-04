@@ -438,6 +438,55 @@ extern "C" {
     pub fn unescape(string: &str) -> JsString;
 }
 
+// AggregateError
+#[wasm_bindgen]
+extern "C" {
+    /// The `AggregateError` object represents an error when several errors need
+    /// to be wrapped in a single error. It is thrown when multiple errors need
+    /// to be reported by an operation, for example by [`Promise::any`], when
+    /// all promises passed to it reject.
+    ///
+    /// `AggregateError` is a subclass of [`Error`].
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError)
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "AggregateError")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type AggregateError;
+
+    /// Creates a new `AggregateError` from the given iterable of errors.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
+    #[wasm_bindgen(constructor)]
+    pub fn new(errors: &[JsValue]) -> AggregateError;
+
+    /// Creates a new `AggregateError` from the given iterable of errors with a
+    /// human-readable description of the aggregate error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_message(errors: &[JsValue], message: &str) -> AggregateError;
+
+    /// Creates a new `AggregateError` from the given iterable of errors, a
+    /// human-readable description of the aggregate error, and an options
+    /// object whose `cause` property indicates the original cause of the
+    /// error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(
+        errors: &[JsValue],
+        message: &str,
+        options: &Object,
+    ) -> AggregateError;
+
+    /// The `errors` property of an `AggregateError` instance is an array
+    /// representing the errors that were aggregated.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/errors)
+    #[wasm_bindgen(method, getter)]
+    pub fn errors(this: &AggregateError) -> Array;
+}
+
 // Array
 #[wasm_bindgen]
 extern "C" {
