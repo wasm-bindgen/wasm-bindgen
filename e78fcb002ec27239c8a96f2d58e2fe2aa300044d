@@ -1,0 +1,37 @@
+crates/cli/tests/reference/discriminated-union.bg.js
+  d91764b7d6079bfb 3-97,99-101,112,188,194-196
+crates/shared/src/schema_hash_approval.rs
+  d91764b7d6079bfb 11
+crates/cli/tests/reference/discriminated-union.d.ts
+  d91764b7d6079bfb 7-9
+crates/cli-support/src/js/mod.rs
+  d91764b7d6079bfb 5353-5354,5363-5380,5386
+crates/cli-support/src/wit/nonstandard.rs
+  d91764b7d6079bfb 253-256,259-268
+crates/cli-support/src/wit/mod.rs
+  d91764b7d6079bfb 1143-1144,1147,1149-1151,1154-1156,1172
+crates/cli/tests/reference/discriminated-union.wat
+  d91764b7d6079bfb 2-19,30-35
+crates/cli/tests/reference/discriminated-union.js
+  d91764b7d6079bfb 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e78fcb002ec27239c8a96f2d58e2fe2aa300044d",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 185,
+      "total_deletions": 155,
+      "accepted_lines": 185,
+      "overriden_lines": 0
+    }
+  }
+}
