@@ -42,9 +42,9 @@ fn errors() {
     let error = AggregateError::new(&[a.into(), b.into()]);
     let errors = error.errors();
     assert_eq!(errors.length(), 2);
-    let first: Error = errors.get(0).dyn_into().unwrap();
+    let first: Error = errors.get_unchecked(0).dyn_into().unwrap();
     assert_eq!(JsValue::from(first.message()), "a");
-    let second: Error = errors.get(1).dyn_into().unwrap();
+    let second: Error = errors.get_unchecked(1).dyn_into().unwrap();
     assert_eq!(JsValue::from(second.message()), "b");
 }
 
