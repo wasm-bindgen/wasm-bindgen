@@ -1,0 +1,63 @@
+crates/cli-support/src/js/mod.rs
+  d91764b7d6079bfb 8,3811-3817,5354-5393,5396,5398-5416,5419,5421
+crates/cli-support/src/wit/nonstandard.rs
+  d91764b7d6079bfb 53-54,248,253-256,259-268
+crates/typescript-tests/src/dynamic_union.ts
+  d91764b7d6079bfb 1-71
+crates/cli-support/src/wit/mod.rs
+  d91764b7d6079bfb 724,1139-1141,1144-1148,1151-1154,1156,1158,1165,1169,1172-1174,1176,1180,1183
+crates/macro-support/src/encode.rs
+  d91764b7d6079bfb 362-363,427,429,441
+crates/cli-support/src/wit/incoming.rs
+  d91764b7d6079bfb 144,147,318-330
+crates/shared/src/lib.rs
+  d91764b7d6079bfb 64,132,285-286
+crates/macro-support/src/codegen.rs
+  d91764b7d6079bfb 972,1614,1668-1686,1689-1690,1701-1711,1754,1756,1765,1779-1818,1820-1827,1836,2603
+crates/cli-support/src/wit/outgoing.rs
+  d91764b7d6079bfb 112,365-376,517,695
+tests/wasm/enums.rs
+  d91764b7d6079bfb 218-288
+crates/macro-support/src/parser.rs
+  d91764b7d6079bfb 1753,1813,1898,1916,2207-2208
+crates/shared/src/tys.rs
+  d91764b7d6079bfb 39
+crates/typescript-tests/src/lib.rs
+  d91764b7d6079bfb 5
+crates/shared/src/schema_hash_approval.rs
+  d91764b7d6079bfb 11
+crates/cli-support/src/js/binding.rs
+  d91764b7d6079bfb 94,98,1902,1904
+crates/cli-support/src/descriptor.rs
+  d91764b7d6079bfb 43,150,157
+guide/src/reference/types/enums.md
+  d91764b7d6079bfb 87,89-92,97,99-100,107,116,119,122-134
+crates/typescript-tests/src/dynamic_union.rs
+  d91764b7d6079bfb 1-76
+crates/macro-support/src/ast.rs
+  d91764b7d6079bfb 188-189,404,634
+CHANGELOG.md
+  d91764b7d6079bfb 8-12
+crates/cli-support/src/wit/standard.rs
+  d91764b7d6079bfb 94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "1568af40fd3240423e556d07c80c7c9c28b97ff1",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 737,
+      "total_deletions": 654,
+      "accepted_lines": 504,
+      "overriden_lines": 0
+    }
+  }
+}
