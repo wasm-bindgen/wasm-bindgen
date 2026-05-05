@@ -8,9 +8,7 @@
 * Added `js_sys::AggregateError` bindings (constructor, `errors` getter, and
   `new_with_message` / `new_with_options` overloads). `AggregateError` represents
   multiple unrelated errors wrapped in a single error, e.g. as thrown by
-  `Promise.any` when all input promises reject.
-
-* Added `js_sys::ErrorOptions`, a typed bindings for the options dictionary
+  `Promise.any` when all input promises reject, along with `js_sys::ErrorOptions`,
   accepted by built-in error constructors. `ErrorOptions::new(cause)`
   constructs an instance pre-populated with `cause`, and `get_cause` /
   `set_cause` provide typed access to the property. All standard error
@@ -22,6 +20,13 @@
   `new_with_error_options(message, &ErrorOptions)` alongside the existing
   untyped `new_with_options`. `AggregateError::new_with_options` also takes
   `&ErrorOptions`.
+
+* Added `js_sys::FinalizationRegistry` bindings (constructor, `register`,
+  `register_with_token`, and `unregister`). The cleanup callback parameter
+  is typed as `&Function<fn(JsValue) -> Undefined>`, so closures created via
+  `Closure::new` can be passed using `Function::from_closure` (for owned
+  closures retained by JS) or `Function::closure_ref` (for borrowed scoped
+  closures). Pairs with the existing `js_sys::WeakRef` bindings.
 
 * Added support for well-known symbols in `js_name`, `getter`, and
   `setter` via the explicit bracket-string form

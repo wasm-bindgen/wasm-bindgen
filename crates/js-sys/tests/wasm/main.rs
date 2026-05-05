@@ -15,6 +15,7 @@ pub mod DataView;
 pub mod Date;
 pub mod Error;
 pub mod EvalError;
+pub mod FinalizationRegistry;
 pub mod Function;
 pub mod Generator;
 pub mod Intl;
