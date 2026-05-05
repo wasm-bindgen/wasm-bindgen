@@ -4834,6 +4834,74 @@ impl Default for Function {
     }
 }
 
+// FinalizationRegistry
+#[wasm_bindgen]
+extern "C" {
+    /// The `FinalizationRegistry` object lets you request a callback when an
+    /// object is garbage-collected.
+    ///
+    /// `FinalizationRegistry` provides a way to request that a cleanup
+    /// callback get called at some point when an object registered with the
+    /// registry has been reclaimed (garbage-collected). Cleanup callbacks
+    /// are sometimes called *finalizers*.
+    ///
+    /// Avoid where possible: cleanup callbacks should not be relied upon for
+    /// anything essential. They are best used to reduce memory usage over the
+    /// course of a program for objects that benefit from cleanup. Whether,
+    /// when, and in what order callbacks fire is implementation-defined.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry)
+    #[wasm_bindgen(extends = Object, typescript_type = "FinalizationRegistry<any>")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type FinalizationRegistry;
+
+    /// Creates a new `FinalizationRegistry` with the given cleanup callback.
+    ///
+    /// The cleanup callback is invoked, at some point after a registered
+    /// target is garbage-collected, with the `heldValue` that was passed to
+    /// [`FinalizationRegistry::register`]. Because callbacks may be deferred
+    /// or skipped entirely, the callback should normally outlive the
+    /// `FinalizationRegistry` (for example by being created via
+    /// [`Function::from_closure`]).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry/FinalizationRegistry)
+    #[wasm_bindgen(constructor)]
+    pub fn new(cleanup_callback: &Function<fn(JsValue) -> Undefined>) -> FinalizationRegistry;
+
+    /// Registers `target` with this `FinalizationRegistry`. When `target` is
+    /// reclaimed by the garbage collector the cleanup callback may be called
+    /// with `held_value`.
+    ///
+    /// `target` must be an object (or a non-registered symbol).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry/register)
+    #[wasm_bindgen(method)]
+    pub fn register(this: &FinalizationRegistry, target: &JsValue, held_value: &JsValue);
+
+    /// Registers `target` with this `FinalizationRegistry`, with an
+    /// `unregister_token` that can later be passed to
+    /// [`FinalizationRegistry::unregister`] to remove the registration.
+    ///
+    /// `target` and `unregister_token` must be objects (or non-registered
+    /// symbols), and the same value may be passed for both.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry/register)
+    #[wasm_bindgen(method, js_name = register)]
+    pub fn register_with_token(
+        this: &FinalizationRegistry,
+        target: &JsValue,
+        held_value: &JsValue,
+        unregister_token: &JsValue,
+    );
+
+    /// Unregisters all entries registered with this `FinalizationRegistry`
+    /// using `unregister_token`. Returns `true` if any cells were removed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry/unregister)
+    #[wasm_bindgen(method)]
+    pub fn unregister(this: &FinalizationRegistry, unregister_token: &JsValue) -> bool;
+}
+
 // Generator
 #[wasm_bindgen]
 extern "C" {
