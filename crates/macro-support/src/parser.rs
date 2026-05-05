@@ -245,7 +245,7 @@ impl BindgenAttrs {
                 .map(|a| a.0);
             let pos = match pos {
                 Some(i) => i,
-                None => return Ok(ret),
+                None => break,
             };
             let attr = attrs.remove(pos);
             let tokens = match attr.meta {
@@ -263,6 +263,17 @@ impl BindgenAttrs {
             ret.attrs.append(&mut attrs.attrs);
             attrs.check_used();
         }
+        // Validate the shape of any computed-key (`[Symbol.<ident>]`) value
+        // appearing in `js_name`. Position-specific rejection (e.g. on
+        // structs) happens later at the convert sites; here we only enforce
+        // the global shape so that an unrelated attribute typo is reported at
+        // the value's span.
+        for (_, attr) in &ret.attrs {
+            if let BindgenAttr::JsName(_, value, span) = attr {
+                validate_computed_key("js_name", value, *span)?;
+            }
+        }
+        Ok(ret)
     }
 
     fn get_thread_local(&self) -> Result<Option<ThreadLocal>, Diagnostic> {
@@ -280,6 +291,21 @@ impl BindgenAttrs {
         }
 
         Ok(thread_local)
+    }
+
+    /// Like [`Self::js_name`], but rejects computed-key (`[Symbol.<ident>]`)
+    /// values with a position-specific error message. Used by syntactic
+    /// positions that don't make sense as a JS-side symbol property
+    /// (structs, enums, types, statics, free functions, function args).
+    fn js_name_no_symbol(&self, position: &str) -> Result<Option<&str>, Diagnostic> {
+        match self.js_name() {
+            Some((value, span)) if is_computed_key(value) => Err(Diagnostic::span_error(
+                span,
+                format!("{position} do not support symbols in js_name"),
+            )),
+            Some((value, _)) => Ok(Some(value)),
+            None => Ok(None),
+        }
     }
 
     attrgen!(methods);
@@ -462,6 +488,37 @@ impl Parse for BindgenAttr {
     }
 }
 
+/// Returns whether `name` is a computed-property-key form, i.e. it
+/// starts with `[` and ends with `]`. The renderer treats such names
+/// as a JS expression to splice in directly (e.g. `[Symbol.iterator]`).
+pub(crate) fn is_computed_key(name: &str) -> bool {
+    let bytes = name.as_bytes();
+    bytes.len() >= 2 && bytes[0] == b'[' && bytes[bytes.len() - 1] == b']'
+}
+
+/// Validate a string-literal value used in `js_name`. If it looks like a
+/// computed key (`[...]`) we require it to be of the form
+/// `[Symbol.<ident>]`. Plain identifier-shaped or dotted-path values are
+/// passed through unchanged.
+fn validate_computed_key(attr: &str, value: &str, span: Span) -> Result<(), Diagnostic> {
+    if !is_computed_key(value) {
+        return Ok(());
+    }
+    let inner = &value[1..value.len() - 1];
+    let symbol_name = inner.strip_prefix("Symbol.");
+    let ok = symbol_name
+        .map(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'))
+        .unwrap_or(false);
+    if ok {
+        Ok(())
+    } else {
+        Err(Diagnostic::span_error(
+            span,
+            format!("the only computed-key form supported in `{attr}` is `\"[Symbol.<ident>]\"`"),
+        ))
+    }
+}
+
 struct AnyIdent(Ident);
 
 impl Parse for AnyIdent {
@@ -504,8 +561,8 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
 
         let mut fields = Vec::new();
         let js_name = attrs
-            .js_name()
-            .map(|s| s.0.to_string())
+            .js_name_no_symbol("structs with #[wasm_bindgen]")?
+            .map(|s| s.to_string())
             .unwrap_or(self.ident.unraw().to_string());
         if is_js_keyword(&js_name) && js_name != "default" {
             bail_span!(
@@ -836,8 +893,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         (program, attrs): (&ast::Program, BindgenAttrs),
     ) -> Result<Self::Target, Diagnostic> {
         let js_name = attrs
-            .js_name()
-            .map(|s| s.0)
+            .js_name_no_symbol("extern types with #[wasm_bindgen]")?
             .map_or_else(|| self.ident.to_string(), |s| s.to_string());
         let typescript_type = attrs.typescript_type().map(|s| s.0.to_string());
         let is_type_of = attrs.is_type_of().cloned();
@@ -923,8 +979,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
 
         let default_name = self.ident.to_string();
         let js_name = opts
-            .js_name()
-            .map(|p| p.0)
+            .js_name_no_symbol("statics with #[wasm_bindgen]")?
             .unwrap_or(&default_name)
             .to_string();
         let shim = format!(
@@ -1220,6 +1275,16 @@ fn function_from_decl(
     }
 
     let (name, name_span) = if let Some((js_name, js_name_span)) = opts.js_name() {
+        // Reject `js_name = "[Symbol.<x>]"` for free Rust functions. Other
+        // positions (methods, getters/setters, statics, types, etc.) handle
+        // their own validation closer to where they have full context (e.g.
+        // a parent extern-block `js_namespace`).
+        if is_computed_key(js_name) && matches!(position, FunctionPosition::Free) {
+            return Err(Diagnostic::span_error(
+                js_name_span,
+                "free functions with #[wasm_bindgen] do not support symbols in js_name",
+            ));
+        }
         let kind = operation_kind(opts);
         let prefix = match kind {
             OperationKind::Setter(_) => "set_",
@@ -1349,6 +1414,12 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
                 js_name: attrs
                     .js_name()
                     .map_or(Ok(None), |(js_name_override, span)| {
+                        if is_computed_key(js_name_override) {
+                            return Err(Diagnostic::span_error(
+                                span,
+                                "function arguments do not support symbols in js_name",
+                            ));
+                        }
                         if is_js_keyword(js_name_override) || !is_valid_ident(js_name_override) {
                             return Err(Diagnostic::span_error(span, "invalid JS identifier"));
                         }
@@ -1813,8 +1884,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         let private = opts.private().is_some();
         let comments = extract_doc_comments(&self.attrs);
         let js_name = opts
-            .js_name()
-            .map(|s| s.0)
+            .js_name_no_symbol("enums with #[wasm_bindgen]")?
             .map_or_else(|| self.ident.to_string(), |s| s.to_string());
         if is_js_keyword(&js_name) && js_name != "default" {
             bail_span!(
@@ -2063,6 +2133,29 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .map(|s| s.0);
         let module = ctx.module;
         let reexport = item_opts.reexport().cloned();
+
+        // Symbol-form `js_name` on a free imported function only makes sense
+        // when there is a containing `js_namespace`, because the macro emits
+        // accesses like `<namespace>[Symbol.<x>]`. Without a namespace there
+        // is no object to read the symbol-keyed property off, so reject early
+        // with a position-specific error.
+        if let syn::ForeignItem::Fn(_) = &self {
+            let is_method_like = item_opts.method().is_some()
+                || item_opts.constructor().is_some()
+                || item_opts.static_method_of().is_some()
+                || item_opts.getter().is_some()
+                || item_opts.setter().is_some();
+            if !is_method_like && js_namespace.is_none() {
+                if let Some((value, span)) = item_opts.js_name() {
+                    if is_computed_key(value) {
+                        return Err(Diagnostic::span_error(
+                            span,
+                            "free imported functions do not support symbols in js_name unless a js_namespace is specified",
+                        ));
+                    }
+                }
+            }
+        }
 
         let kind = match self {
             syn::ForeignItem::Fn(f) => f.convert((program, item_opts, &module))?,

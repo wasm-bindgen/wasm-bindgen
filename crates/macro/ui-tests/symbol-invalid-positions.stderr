@@ -1,0 +1,53 @@
+error: the only computed-key form supported in `js_name` is `"[Symbol.<ident>]"`
+ --> ui-tests/symbol-invalid-positions.rs:3:26
+  |
+3 | #[wasm_bindgen(js_name = "[notSymbol]")]
+  |                          ^^^^^^^^^^^^^
+
+error: the only computed-key form supported in `js_name` is `"[Symbol.<ident>]"`
+ --> ui-tests/symbol-invalid-positions.rs:6:26
+  |
+6 | #[wasm_bindgen(js_name = "[Symbol.]")]
+  |                          ^^^^^^^^^^^
+
+error: structs with #[wasm_bindgen] do not support symbols in js_name
+ --> ui-tests/symbol-invalid-positions.rs:9:26
+  |
+9 | #[wasm_bindgen(js_name = "[Symbol.iterator]")]
+  |                          ^^^^^^^^^^^^^^^^^^^
+
+error: enums with #[wasm_bindgen] do not support symbols in js_name
+  --> ui-tests/symbol-invalid-positions.rs:12:26
+   |
+12 | #[wasm_bindgen(js_name = "[Symbol.iterator]")]
+   |                          ^^^^^^^^^^^^^^^^^^^
+
+error: free functions with #[wasm_bindgen] do not support symbols in js_name
+  --> ui-tests/symbol-invalid-positions.rs:17:26
+   |
+17 | #[wasm_bindgen(js_name = "[Symbol.iterator]")]
+   |                          ^^^^^^^^^^^^^^^^^^^
+
+error: function arguments do not support symbols in js_name
+  --> ui-tests/symbol-invalid-positions.rs:21:41
+   |
+21 | pub fn bad_arg(#[wasm_bindgen(js_name = "[Symbol.iterator]")] _arg: u32) {}
+   |                                         ^^^^^^^^^^^^^^^^^^^
+
+error: extern types with #[wasm_bindgen] do not support symbols in js_name
+  --> ui-tests/symbol-invalid-positions.rs:25:30
+   |
+25 |     #[wasm_bindgen(js_name = "[Symbol.iterator]")]
+   |                              ^^^^^^^^^^^^^^^^^^^
+
+error: statics with #[wasm_bindgen] do not support symbols in js_name
+  --> ui-tests/symbol-invalid-positions.rs:28:30
+   |
+28 |     #[wasm_bindgen(js_name = "[Symbol.iterator]")]
+   |                              ^^^^^^^^^^^^^^^^^^^
+
+error: free imported functions do not support symbols in js_name unless a js_namespace is specified
+  --> ui-tests/symbol-invalid-positions.rs:31:30
+   |
+31 |     #[wasm_bindgen(js_name = "[Symbol.iterator]")]
+   |                              ^^^^^^^^^^^^^^^^^^^

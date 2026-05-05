@@ -2430,7 +2430,13 @@ extern "C" {
     pub fn values<T>(this: &Array<T>) -> Iterator<T>;
 }
 
+// FIXME(next-major): rename this trait to `ArrayBufferView`. The DOM/WebIDL
+// spec name `ArrayBufferView` covers both `DataView` and the typed-array
+// types, which more accurately reflects the set of types that implement this
+// trait. The `TypedArray` name is kept for now to avoid a breaking change.
 pub trait TypedArray: JsGeneric {}
+
+impl TypedArray for DataView {}
 
 // Next major: use usize/isize for indices
 /// The `Atomics` object provides atomic operations as static methods.

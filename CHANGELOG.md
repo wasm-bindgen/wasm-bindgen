@@ -12,12 +12,26 @@
   closures retained by JS) or `Function::closure_ref` (for borrowed scoped
   closures). Pairs with the existing `js_sys::WeakRef` bindings.
 
+* Added support for well-known symbols in `js_name`, `getter`, and
+  `setter` via the explicit bracket-string form
+  `"[Symbol.<name>]"`. This works for imported and exported methods,
+  fields, getters, and setters. For example,
+  `#[wasm_bindgen(js_name = "[Symbol.iterator]")]` on an exported method
+  generates `[Symbol.iterator]() { ... }` on the generated JS class, and
+  the same syntax works for `getter` / `setter` and for imported items.
+  [#4230](https://github.com/wasm-bindgen/wasm-bindgen/pull/4230)
+
 ### Fixed
 
 * Fix compilation failure with `no_std` + `release`
   [#5134](https://github.com/wasm-bindgen/wasm-bindgen/pull/5134)
 
 ### Changed
+
+* `js_sys::DataView` now implements the `js_sys::TypedArray` trait. A
+  `FIXME` notes that the trait should be renamed to `ArrayBufferView` in
+  the next major release to better reflect the WebIDL spec name covering
+  both `DataView` and the typed-array types.
 
 --------------------------------------------------------------------------------
 

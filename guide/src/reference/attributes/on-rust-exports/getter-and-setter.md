@@ -62,3 +62,33 @@ The name for a `getter` is by default inferred from the function name it's
 attached to. The default name for a `setter` is the function's name minus the
 `set_` prefix, and if `set_` isn't a prefix of the function it's an error to not
 provide the name explicitly.
+
+## Well-known symbols
+
+Both `getter` and `setter` accept the explicit bracket-string form
+`"[Symbol.<name>]"` to define an accessor keyed by a
+[well-known symbol][well-known-symbols] on the generated JS class:
+
+```rust
+#[wasm_bindgen]
+impl Foo {
+    #[wasm_bindgen(getter = "[Symbol.toStringTag]")]
+    pub fn to_string_tag(&self) -> String {
+        "Foo".to_string()
+    }
+}
+```
+
+generates:
+
+```js
+export class Foo {
+    get [Symbol.toStringTag]() { /* ... */ }
+}
+```
+
+Only the exact form `"[Symbol.<ident>]"` is accepted. The same syntax is
+also supported by [`js_name`](js_name.html) for non-getter/setter
+methods.
+
+[well-known-symbols]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#well-known_symbols
