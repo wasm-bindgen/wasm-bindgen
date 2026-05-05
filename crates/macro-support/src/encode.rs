@@ -203,7 +203,7 @@ fn shared_export<'a>(
     intern: &'a Interner,
 ) -> Result<Export<'a>, Diagnostic> {
     let consumed = matches!(export.method_self, Some(ast::MethodSelf::ByValue));
-    let method_kind = from_ast_method_kind(&export.function, intern, &export.method_kind)?;
+    let method_kind = from_ast_method_kind(&export.method_kind)?;
     Ok(Export {
         class: export.js_class.as_deref(),
         comments: export.comments.iter().map(|s| &**s).collect(),
@@ -368,7 +368,7 @@ fn shared_import_function<'a>(
 ) -> Result<ImportFunction<'a>, Diagnostic> {
     let method = match &i.kind {
         ast::ImportFunctionKind::Method { class, kind, .. } => {
-            let kind = from_ast_method_kind(&i.function, intern, kind)?;
+            let kind = from_ast_method_kind(kind)?;
             Some(MethodData { class, kind })
         }
         ast::ImportFunctionKind::Normal => None,
@@ -641,29 +641,16 @@ macro_rules! encode_api {
 }
 wasm_bindgen_shared::shared_api!(encode_api);
 
-fn from_ast_method_kind<'a>(
-    function: &'a ast::Function,
-    intern: &'a Interner,
-    method_kind: &'a ast::MethodKind,
-) -> Result<MethodKind<'a>, Diagnostic> {
+fn from_ast_method_kind(method_kind: &ast::MethodKind) -> Result<MethodKind, Diagnostic> {
     Ok(match method_kind {
         ast::MethodKind::Constructor => MethodKind::Constructor,
         ast::MethodKind::Operation(ast::Operation { is_static, kind }) => {
             let is_static = *is_static;
             let kind = match kind {
-                ast::OperationKind::Getter(g) => {
-                    let g = g.as_ref().map(|g| intern.intern_str(g));
-                    OperationKind::Getter(g.unwrap_or_else(|| function.infer_getter_property()))
-                }
                 ast::OperationKind::Regular => OperationKind::Regular,
                 ast::OperationKind::RegularThis => OperationKind::RegularThis,
-                ast::OperationKind::Setter(s) => {
-                    let s = s.as_ref().map(|s| intern.intern_str(s));
-                    OperationKind::Setter(match s {
-                        Some(s) => s,
-                        None => intern.intern_str(&function.infer_setter_property()?),
-                    })
-                }
+                ast::OperationKind::Getter => OperationKind::Getter,
+                ast::OperationKind::Setter => OperationKind::Setter,
                 ast::OperationKind::IndexingGetter => OperationKind::IndexingGetter,
                 ast::OperationKind::IndexingSetter => OperationKind::IndexingSetter,
                 ast::OperationKind::IndexingDeleter => OperationKind::IndexingDeleter,

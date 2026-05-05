@@ -75,24 +75,24 @@ macro_rules! shared_api {
 
         struct MethodData<'a> {
             class: &'a str,
-            kind: MethodKind<'a>,
+            kind: MethodKind,
         }
 
-        enum MethodKind<'a> {
+        enum MethodKind {
             Constructor,
-            Operation(Operation<'a>),
+            Operation(Operation),
         }
 
-        struct Operation<'a> {
+        struct Operation {
             is_static: bool,
-            kind: OperationKind<'a>,
+            kind: OperationKind,
         }
 
-        enum OperationKind<'a> {
+        enum OperationKind {
             Regular,
             RegularThis,
-            Getter(&'a str),
-            Setter(&'a str),
+            Getter,
+            Setter,
             IndexingGetter,
             IndexingSetter,
             IndexingDeleter,
@@ -134,7 +134,7 @@ macro_rules! shared_api {
             consumed: bool,
             function: Function<'a>,
             js_namespace: Option<Vec<&'a str>>,
-            method_kind: MethodKind<'a>,
+            method_kind: MethodKind,
             start: StartKind,
         }
 

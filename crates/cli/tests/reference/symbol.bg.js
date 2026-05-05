@@ -33,7 +33,7 @@ export class Foo {
         let deferred1_0;
         let deferred1_1;
         try {
-            const ret = wasm.foo_to_string_tag(this.__wbg_ptr);
+            const ret = wasm.foo_Symbol_toStringTag(this.__wbg_ptr);
             deferred1_0 = ret[0];
             deferred1_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
@@ -43,6 +43,9 @@ export class Foo {
     }
 }
 if (Symbol.dispose) Foo.prototype[Symbol.dispose] = Foo.prototype.free;
+export function __wbg_Symboliterator_00eaaec525eefd39() {
+    SomeClass[Symbol.iterator]();
+}
 export function __wbg_Symboliterator_9a3ae6c7dad7d3ed(arg0) {
     const ret = arg0[Symbol.iterator]();
     return ret;
@@ -50,22 +53,19 @@ export function __wbg_Symboliterator_9a3ae6c7dad7d3ed(arg0) {
 export function __wbg_SymboltoPrimitive_4bd6ba9d43ef2762(arg0, arg1) {
     SomeClass[Symbol.toPrimitive](getStringFromWasm0(arg0, arg1));
 }
-export function __wbg___wbindgen_throw_9c75d47bf9e7731e(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-}
-export function __wbg_import_static_symbol_getter_00eaaec525eefd39() {
-    SomeClass.import_static_symbol_getter();
-}
-export function __wbg_new_40230a3912a25f41() {
-    const ret = new JsString();
-    return ret;
-}
-export function __wbg_string_getter_792c0b754030f0c6(arg0, arg1) {
+export function __wbg_SymboltoPrimitive_792c0b754030f0c6(arg0, arg1) {
     const ret = arg1[Symbol.toPrimitive];
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+}
+export function __wbg___wbindgen_throw_9c75d47bf9e7731e(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_new_40230a3912a25f41() {
+    const ret = new JsString();
+    return ret;
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;

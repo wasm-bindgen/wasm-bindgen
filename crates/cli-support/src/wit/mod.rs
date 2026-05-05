@@ -629,8 +629,18 @@ impl<'a> Context<'a> {
                         }
 
                         let (name, kind) = match op.kind {
-                            decode::OperationKind::Getter(f) => (f, AuxExportedMethodKind::Getter),
-                            decode::OperationKind::Setter(f) => (f, AuxExportedMethodKind::Setter),
+                            decode::OperationKind::Getter => {
+                                (export.function.name, AuxExportedMethodKind::Getter)
+                            }
+                            decode::OperationKind::Setter => {
+                                let Some(name) = export.function.name.strip_prefix("set_") else {
+                                    bail!(
+                                        "The setter function `{}` must start with `set_`",
+                                        export.function.name,
+                                    );
+                                };
+                                (name, AuxExportedMethodKind::Setter)
+                            }
                             _ => (export.function.name, AuxExportedMethodKind::Method),
                         };
 
@@ -787,7 +797,7 @@ impl<'a> Context<'a> {
                     }
                     decode::MethodKind::Operation(op) => {
                         let (import, method) =
-                            self.determine_import_op(class, &function, structural, op)?;
+                            self.determine_import_op(class, &function, structural, &op)?;
                         let kind = if method {
                             AdapterJsImportKind::Method
                         } else {
@@ -870,23 +880,19 @@ impl<'a> Context<'a> {
         mut class: JsImport,
         function: &decode::Function<'_>,
         structural: bool,
-        op: decode::Operation<'_>,
+        op: &decode::Operation,
     ) -> Result<(AuxImport, bool), Error> {
+        let name = function.name.to_string();
+
         match op.kind {
             decode::OperationKind::Regular => {
                 if op.is_static {
-                    Ok((
-                        AuxImport::ValueWithThis(class, function.name.to_string()),
-                        false,
-                    ))
+                    Ok((AuxImport::ValueWithThis(class, name), false))
                 } else if structural {
-                    Ok((
-                        AuxImport::StructuralMethod(function.name.to_string()),
-                        false,
-                    ))
+                    Ok((AuxImport::StructuralMethod(name), false))
                 } else {
                     class.fields.push("prototype".to_string());
-                    class.fields.push(function.name.to_string());
+                    class.fields.push(name);
                     Ok((AuxImport::Value(AuxValue::Bare(class)), true))
                 }
             }
@@ -895,41 +901,38 @@ impl<'a> Context<'a> {
                 bail!("RegularThis operation kind should only appear on exports, not imports")
             }
 
-            decode::OperationKind::Getter(field) => {
+            decode::OperationKind::Getter => {
                 if structural {
                     if op.is_static {
-                        Ok((
-                            AuxImport::StructuralClassGetter(class, field.to_string()),
-                            false,
-                        ))
+                        Ok((AuxImport::StructuralClassGetter(class, name), false))
                     } else {
-                        Ok((AuxImport::StructuralGetter(field.to_string()), false))
+                        Ok((AuxImport::StructuralGetter(name), false))
                     }
                 } else {
                     let val = if op.is_static {
-                        AuxValue::ClassGetter(class, field.to_string())
+                        AuxValue::ClassGetter(class, name)
                     } else {
-                        AuxValue::Getter(class, field.to_string())
+                        AuxValue::Getter(class, name)
                     };
                     Ok((AuxImport::Value(val), true))
                 }
             }
 
-            decode::OperationKind::Setter(field) => {
+            decode::OperationKind::Setter => {
+                let Some(name) = name.strip_prefix("set_").map(|s| s.to_string()) else {
+                    bail!("The setter function `{name}` must start with `set_`");
+                };
                 if structural {
                     if op.is_static {
-                        Ok((
-                            AuxImport::StructuralClassSetter(class, field.to_string()),
-                            false,
-                        ))
+                        Ok((AuxImport::StructuralClassSetter(class, name), false))
                     } else {
-                        Ok((AuxImport::StructuralSetter(field.to_string()), false))
+                        Ok((AuxImport::StructuralSetter(name), false))
                     }
                 } else {
                     let val = if op.is_static {
-                        AuxValue::ClassSetter(class, field.to_string())
+                        AuxValue::ClassSetter(class, name)
                     } else {
-                        AuxValue::Setter(class, field.to_string())
+                        AuxValue::Setter(class, name)
                     };
                     Ok((AuxImport::Value(val), true))
                 }
