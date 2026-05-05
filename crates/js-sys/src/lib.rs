@@ -4858,7 +4858,7 @@ extern "C" {
     /// Creates a new `FinalizationRegistry` with the given cleanup callback.
     ///
     /// The cleanup callback is invoked, at some point after a registered
-    /// target is garbage-collected, with the `heldValue` that was passed to
+    /// target is garbage-collected, with the `held_value` that was passed to
     /// [`FinalizationRegistry::register`]. Because callbacks may be deferred
     /// or skipped entirely, the callback should normally outlive the
     /// `FinalizationRegistry` (for example by being created via
