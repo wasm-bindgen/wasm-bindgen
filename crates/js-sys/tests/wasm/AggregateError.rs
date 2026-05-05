@@ -27,8 +27,9 @@ fn new_with_message() {
 fn new_with_options() {
     let inner = Error::new("some error");
     let cause = Error::new("the cause");
-    let options = Object::new();
-    Reflect::set(&options, &"cause".into(), &cause).unwrap();
+    let options = ErrorOptions::new(&cause.clone().into());
+    assert!(options.is_instance_of::<Object>());
+    assert_eq!(options.get_cause(), JsValue::from(cause));
     let error = AggregateError::new_with_options(&[inner.into()], "Hello", &options);
     let base_error: &Error = error.dyn_ref().unwrap();
     assert_eq!(JsValue::from(base_error.message()), "Hello");

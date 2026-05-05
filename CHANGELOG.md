@@ -10,6 +10,19 @@
   multiple unrelated errors wrapped in a single error, e.g. as thrown by
   `Promise.any` when all input promises reject.
 
+* Added `js_sys::ErrorOptions`, a typed bindings for the options dictionary
+  accepted by built-in error constructors. `ErrorOptions::new(cause)`
+  constructs an instance pre-populated with `cause`, and `get_cause` /
+  `set_cause` provide typed access to the property. All standard error
+  constructors that previously took only a `message` (`EvalError`,
+  `RangeError`, `ReferenceError`, `SyntaxError`, `TypeError`, `URIError`,
+  `WebAssembly.CompileError`, `WebAssembly.LinkError`,
+  `WebAssembly.RuntimeError`) now expose a `new_with_options(message,
+  &ErrorOptions)` overload, and `Error` gains
+  `new_with_error_options(message, &ErrorOptions)` alongside the existing
+  untyped `new_with_options`. `AggregateError::new_with_options` also takes
+  `&ErrorOptions`.
+
 * Added support for well-known symbols in `js_name`, `getter`, and
   `setter` via the explicit bracket-string form
   `"[Symbol.<name>]"`. This works for imported and exported methods,
