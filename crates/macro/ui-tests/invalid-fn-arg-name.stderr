@@ -40,7 +40,7 @@ error: invalid JS identifier
 40 |         #[wasm_bindgen(js_name = "(firstArg)")] arg: u32,
    |                                  ^^^^^^^^^^^^
 
-error: invalid JS identifier
+error: the only computed-key form supported in `js_name` is `"[Symbol.<ident>]"`
   --> ui-tests/invalid-fn-arg-name.rs:47:34
    |
 47 |         #[wasm_bindgen(js_name = "[firstArg]")] arg: u32,

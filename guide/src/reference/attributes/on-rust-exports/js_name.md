@@ -100,3 +100,42 @@ export class Foo {
     }
 }
 ```
+
+## Well-known symbols
+
+`js_name` also accepts the explicit bracket-string form
+`"[Symbol.<name>]"` to expose a method on a Rust-defined class under a
+[well-known symbol][well-known-symbols]. This works for both methods and
+[`getter` / `setter`](getter-and-setter.html) attributes.
+
+```rust
+#[wasm_bindgen]
+pub struct Foo;
+
+#[wasm_bindgen]
+impl Foo {
+    #[wasm_bindgen(js_name = "[Symbol.toPrimitive]")]
+    pub fn to_primitive(&self) -> String {
+        "Foo".to_string()
+    }
+
+    #[wasm_bindgen(getter = "[Symbol.toStringTag]")]
+    pub fn to_string_tag(&self) -> String {
+        "Foo".to_string()
+    }
+}
+```
+
+This generates a class with computed-key members:
+
+```js
+export class Foo {
+    [Symbol.toPrimitive]() { /* ... */ }
+    get [Symbol.toStringTag]() { /* ... */ }
+}
+```
+
+Only the exact form `"[Symbol.<ident>]"` is accepted; arbitrary
+expressions inside `[ ... ]` are not supported.
+
+[well-known-symbols]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#well-known_symbols
