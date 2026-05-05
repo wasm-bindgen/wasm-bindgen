@@ -41,6 +41,6 @@ interface ViewTransitionTypeSet {
 
 [Exposed=Window]
 interface CSSViewTransitionRule : CSSRule {
-  readonly attribute CSSOMString navigation;
-  [SameObject] readonly attribute FrozenArray<CSSOMString> types;
+  readonly attribute DOMString navigation;
+  [SameObject] readonly attribute FrozenArray<DOMString> types;
 };
