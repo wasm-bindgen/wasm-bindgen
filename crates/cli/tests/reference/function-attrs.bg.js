@@ -23,7 +23,7 @@ export class HoldsNumber {
      * @returns {number}
      */
     get inner() {
-        const ret = wasm.holdsnumber_get_inner(this.__wbg_ptr);
+        const ret = wasm.holdsnumber_inner(this.__wbg_ptr);
         return ret;
     }
     /**

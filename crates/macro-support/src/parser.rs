@@ -82,8 +82,8 @@ macro_rules! attrgen {
             (module, true, Module(Span, String, Span)),
             (raw_module, true, RawModule(Span, String, Span)),
             (inline_js, true, InlineJs(Span, String, Span)),
-            (getter, false, Getter(Span, Option<String>)),
-            (setter, false, Setter(Span, Option<String>)),
+            (getter, false, Getter(Span, Option<String>, Span)),
+            (setter, false, Setter(Span, Option<String>, Span)),
             (indexing_getter, false, IndexingGetter(Span)),
             (indexing_setter, false, IndexingSetter(Span)),
             (indexing_deleter, false, IndexingDeleter(Span)),
@@ -182,6 +182,34 @@ macro_rules! methods {
                     BindgenAttr::$variant(_, s, span) => {
                         a.0.set(true);
                         Some((&s[..], *span))
+                    }
+                    _ => None,
+                })
+        }
+    };
+
+    (@method $name:ident, $variant:ident(Span, Option<String>, Span)) => {
+        fn $name(&self) -> Option<(Option<&str>, Span)> {
+            self.attrs
+                .iter()
+                .find_map(|a| match &a.1 {
+                    BindgenAttr::$variant(_, s, span) => {
+                        a.0.set(true);
+                        Some((s.as_ref().map(|s| &s[..]), *span))
+                    }
+                    _ => None,
+                })
+        }
+    };
+
+    (@method $name:ident, $variant:ident(Span, Option<String>)) => {
+        pub(crate) fn $name(&self) -> Option<&Option<String>> {
+            self.attrs
+                .iter()
+                .find_map(|a| match &a.1 {
+                    BindgenAttr::$variant(_, s) => {
+                        a.0.set(true);
+                        Some(s)
                     }
                     _ => None,
                 })
@@ -386,13 +414,27 @@ impl Parse for BindgenAttr {
                 return Ok(BindgenAttr::$variant(attr_span, ident))
             });
 
+            (@parser $variant:ident(Span, Option<String>, Span)) => ({
+                if input.parse::<Token![=]>().is_ok() {
+                    let (val, span) = match input.parse::<syn::LitStr>() {
+                        Ok(str) => (str.value(), str.span()),
+                        Err(_) => {
+                            let ident = input.parse::<AnyIdent>()?.0;
+                            (ident.to_string(), ident.span())
+                        }
+                    };
+                    return Ok(BindgenAttr::$variant(attr_span, Some(val), span))
+                } else {
+                    return Ok(BindgenAttr::$variant(attr_span, None, attr_span));
+                }
+            });
+
             (@parser $variant:ident(Span, Option<String>)) => ({
                 if input.parse::<Token![=]>().is_ok() {
                     if input.peek(syn::LitStr) {
                         let litstr = input.parse::<syn::LitStr>()?;
                         return Ok(BindgenAttr::$variant(attr_span, Some(litstr.value())))
                     }
-
                     let ident = input.parse::<AnyIdent>()?.0;
                     return Ok(BindgenAttr::$variant(attr_span, Some(ident.to_string())))
                 } else {
@@ -1274,7 +1316,25 @@ fn function_from_decl(
         }
     }
 
-    let (name, name_span) = if let Some((js_name, js_name_span)) = opts.js_name() {
+    let kind = operation_kind(opts);
+
+    // Determine the JS-side name. The override precedence is:
+    //   getter/setter explicit name > js_name > Rust ident name
+    // For setter, also infer from the `set_<x>` Rust ident if neither
+    // `setter = "..."` nor `js_name = "..."` is provided.
+    let attr_name = match kind {
+        OperationKind::Getter => match opts.getter() {
+            Some((Some(name), span)) => Some((name, span)),
+            _ => opts.js_name(),
+        },
+        OperationKind::Setter => match opts.setter() {
+            Some((Some(name), span)) => Some((name, span)),
+            _ => opts.js_name(),
+        },
+        _ => opts.js_name(),
+    };
+
+    let (name, name_span) = if let Some((js_name, js_name_span)) = attr_name {
         // Reject `js_name = "[Symbol.<x>]"` for free Rust functions. Other
         // positions (methods, getters/setters, statics, types, etc.) handle
         // their own validation closer to where they have full context (e.g.
@@ -1285,14 +1345,17 @@ fn function_from_decl(
                 "free functions with #[wasm_bindgen] do not support symbols in js_name",
             ));
         }
-        let kind = operation_kind(opts);
         let prefix = match kind {
-            OperationKind::Setter(_) => "set_",
+            OperationKind::Setter => "set_",
             _ => "",
         };
         (format!("{prefix}{js_name}"), js_name_span)
     } else {
-        (decl_name.unraw().to_string(), decl_name.span())
+        let name = decl_name.unraw().to_string();
+        if matches!(kind, OperationKind::Setter) && !name.starts_with("set_") {
+            bail_span!(decl_name, "setters must start with `set_`, found: {}", name);
+        }
+        (name, decl_name.span())
     };
 
     Ok((
@@ -2506,11 +2569,11 @@ fn operation_kind(opts: &BindgenAttrs) -> ast::OperationKind {
     if opts.this().is_some() {
         operation_kind = ast::OperationKind::RegularThis;
     }
-    if let Some(g) = opts.getter() {
-        operation_kind = ast::OperationKind::Getter(g.clone());
+    if opts.getter().is_some() {
+        operation_kind = ast::OperationKind::Getter;
     }
-    if let Some(s) = opts.setter() {
-        operation_kind = ast::OperationKind::Setter(s.clone());
+    if opts.setter().is_some() {
+        operation_kind = ast::OperationKind::Setter;
     }
     if opts.indexing_getter().is_some() {
         operation_kind = ast::OperationKind::IndexingGetter;

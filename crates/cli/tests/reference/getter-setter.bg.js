@@ -37,7 +37,7 @@ export class Foo {
      * @param {boolean | null} [value]
      */
     static set x(value) {
-        wasm.foo_set_x_static(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
+        wasm.foo_set_x(isLikeNone(value) ? 0xFFFFFF : value ? 1 : 0);
     }
     /**
      * @param {number | null} [z]
@@ -59,7 +59,7 @@ export class Foo {
      * @returns {boolean | undefined}
      */
     static get x() {
-        const ret = wasm.foo_x_static();
+        const ret = wasm.foo_x();
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**

@@ -872,7 +872,7 @@ impl TryToTokens for ast::Export {
                     }
                 }
                 ast::MethodKind::Operation(operation) => match operation.kind {
-                    ast::OperationKind::Getter(_) | ast::OperationKind::Setter(_) => {
+                    ast::OperationKind::Getter | ast::OperationKind::Setter => {
                         if operation.is_static {
                             add_check(quote! {
                                 let _: #wasm_bindgen::__rt::marker::CheckSupportsStaticProperty<#class>;
