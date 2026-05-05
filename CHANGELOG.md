@@ -5,6 +5,13 @@
 
 ### Added
 
+* Added `js_sys::FinalizationRegistry` bindings (constructor, `register`,
+  `register_with_token`, and `unregister`). The cleanup callback parameter
+  is typed as `&Function<fn(JsValue) -> Undefined>`, so closures created via
+  `Closure::new` can be passed using `Function::from_closure` (for owned
+  closures retained by JS) or `Function::closure_ref` (for borrowed scoped
+  closures). Pairs with the existing `js_sys::WeakRef` bindings.
+
 * Added support for well-known symbols in `js_name`, `getter`, and
   `setter` via the explicit bracket-string form
   `"[Symbol.<name>]"`. This works for imported and exported methods,
