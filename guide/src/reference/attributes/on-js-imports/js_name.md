@@ -85,3 +85,38 @@ extern "C" {
 ```
 
 [jsclass]: js_class.html
+
+## Well-known symbols
+
+`js_name` also accepts the explicit bracket-string form
+`"[Symbol.<name>]"` for binding to methods keyed by a
+[well-known symbol][well-known-symbols]. This works on plain functions
+inside `extern "C"` blocks (combined with `js_namespace` for static
+calls) as well as on `method`-style imports (combined with `js_class`),
+and the same form is accepted by [`getter` and `setter`](getter-and-setter.html).
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = SomeClass, js_name = "[Symbol.toPrimitive]")]
+    fn some_class_to_primitive(s: &str);
+
+    #[wasm_bindgen(js_name = String)]
+    type JsString;
+
+    #[wasm_bindgen(method, js_class = "String", js_name = "[Symbol.iterator]")]
+    fn string_iterator(this: &JsString) -> u32;
+
+    #[wasm_bindgen(method, js_class = "String", getter = "[Symbol.toPrimitive]")]
+    fn string_to_primitive(this: &JsString) -> String;
+}
+```
+
+These bind to `SomeClass[Symbol.toPrimitive](...)`,
+`stringInstance[Symbol.iterator]()`, and the
+`stringInstance[Symbol.toPrimitive]` getter respectively.
+
+Only the exact form `"[Symbol.<ident>]"` is accepted; arbitrary
+expressions inside `[ ... ]` are not supported.
+
+[well-known-symbols]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#well-known_symbols

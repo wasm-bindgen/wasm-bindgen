@@ -242,8 +242,35 @@ pub fn unwrap_function(struct_name: &str) -> String {
     name
 }
 
+/// Convert a JS-side name into a form suitable as a wasm-side export
+/// symbol suffix. Plain identifier names pass through unchanged. The
+/// bracket form `"[Symbol.<ident>]"` collapses to `Symbol_<ident>`. Any
+/// other non-alphanumeric characters are replaced with `_` so that the
+/// result is always a valid C identifier suffix.
+fn export_name_suffix(name: &str) -> alloc::borrow::Cow<'_, str> {
+    if name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
+        return alloc::borrow::Cow::Borrowed(name);
+    }
+    let mut out = String::with_capacity(name.len());
+    for c in name.chars() {
+        if c.is_ascii_alphanumeric() || c == '_' {
+            out.push(c);
+        } else if c == '.' || c == '[' || c == ']' {
+            // Bracket / dotted forms collapse cleanly; we represent
+            // `[Symbol.iterator]` as `Symbol_iterator` (the `[` and `]`
+            // drop, the `.` becomes `_`).
+            if c == '.' {
+                out.push('_');
+            }
+        } else {
+            out.push('_');
+        }
+    }
+    alloc::borrow::Cow::Owned(out)
+}
+
 pub fn free_function_export_name(function_name: &str) -> String {
-    function_name.to_string()
+    export_name_suffix(function_name).into_owned()
 }
 
 pub fn struct_function_export_name(struct_: &str, f: &str) -> String {
@@ -252,7 +279,7 @@ pub fn struct_function_export_name(struct_: &str, f: &str) -> String {
         .flat_map(|s| s.to_lowercase())
         .collect::<String>();
     name.push('_');
-    name.push_str(f);
+    name.push_str(&export_name_suffix(f));
     name
 }
 
@@ -260,7 +287,7 @@ pub fn struct_field_get(struct_: &str, f: &str) -> String {
     let mut name = String::from("__wbg_get_");
     name.extend(struct_.chars().flat_map(|s| s.to_lowercase()));
     name.push('_');
-    name.push_str(f);
+    name.push_str(&export_name_suffix(f));
     name
 }
 
@@ -268,7 +295,7 @@ pub fn struct_field_set(struct_: &str, f: &str) -> String {
     let mut name = String::from("__wbg_set_");
     name.extend(struct_.chars().flat_map(|s| s.to_lowercase()));
     name.push('_');
-    name.push_str(f);
+    name.push_str(&export_name_suffix(f));
     name
 }
 

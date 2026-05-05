@@ -572,7 +572,15 @@ impl Export {
             generated_name.push_str(class);
         }
         generated_name.push('_');
-        generated_name.push_str(&self.function.name.to_string());
+        // The JS-side name may contain characters that aren't valid in a
+        // Rust identifier (notably the `[Symbol.<name>]` computed-key form
+        // accepted by `js_name`). Filter to a valid identifier suffix; this
+        // is a no-op for plain identifier names.
+        for c in self.function.name.chars() {
+            if c.is_ascii_alphanumeric() || c == '_' {
+                generated_name.push(c);
+            }
+        }
         Ident::new(&generated_name, Span::call_site())
     }
 

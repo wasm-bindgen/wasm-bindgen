@@ -3586,8 +3586,7 @@ if (require('worker_threads').isMainThread) {{
         if let Some(name) = self.imported_names.get(&import.name) {
             let mut name = name.clone();
             for field in import.fields.iter() {
-                name.push('.');
-                name.push_str(field);
+                name.push_str(&property_accessor(field));
             }
             return Ok(name.clone());
         }
@@ -3664,8 +3663,7 @@ if (require('worker_threads').isMainThread) {{
 
         // After we've got an actual name handle field projections
         for field in import.fields.iter() {
-            name.push('.');
-            name.push_str(field);
+            name.push_str(&property_accessor(field));
         }
         Ok(name)
     }
@@ -3681,13 +3679,19 @@ if (require('worker_threads').isMainThread) {{
             name = format!("typeof {name} === 'undefined' ? null : {name}");
 
             for field in import.fields.iter() {
-                name.push_str("?.");
-                name.push_str(field);
+                let access = property_accessor(field);
+                // `.foo` -> `?.foo`; `[..]` -> `?.[..]`.
+                if access.starts_with('.') {
+                    name.push('?');
+                    name.push_str(&access);
+                } else {
+                    name.push_str("?.");
+                    name.push_str(&access);
+                }
             }
         } else {
             for field in import.fields.iter() {
-                name.push('.');
-                name.push_str(field);
+                name.push_str(&property_accessor(field));
             }
         }
 
@@ -4243,8 +4247,13 @@ addToLibrary({
 
                                     exported.push_accessor_ts(location, accessor, false);
                                 }
-                                // Add the getter to the list of readable fields (used to generate `toJSON`)
-                                exported.readable_properties.push(name.clone());
+                                // Add the getter to the list of readable fields
+                                // (used to generate `toJSON`). Symbol-keyed
+                                // getters are skipped because `toJSON` only
+                                // collects string-keyed properties.
+                                if !is_computed_key(name) {
+                                    exported.readable_properties.push(name.clone());
+                                }
                                 // Ignore the raw signature.
                                 None
                             }
@@ -5917,12 +5926,36 @@ fn define_export(
 /// In most cases, this is `.<name>`, generating accesses like `foo.bar`.
 /// However, if `name` is not a valid JavaScript identifier, it becomes
 /// `["<name>"]` instead, creating accesses like `foo["kebab-case"]`.
+///
+/// Two further conventions are recognized so that `js_name` can express
+/// the corresponding JS property forms verbatim:
+///
+/// * A `[...]` form (e.g. `"[Symbol.iterator]"`) is treated as a
+///   computed-key expression and spliced in as-is.
+/// * A dotted-path form (e.g. `"prototype.set.call"`) is split on `.`
+///   and each segment is rendered independently. This preserves the
+///   historical behavior used by `js-sys` for `<Class>.prototype.set.call`.
 fn property_accessor(name: &str) -> String {
-    if is_valid_ident(name) {
-        format!(".{name}")
-    } else {
-        format!("[\"{}\"]", name.escape_default())
+    if is_computed_key(name) {
+        return name.to_string();
     }
+    name.split('.')
+        .map(|segment| {
+            if is_valid_ident(segment) {
+                format!(".{segment}")
+            } else {
+                format!("[\"{}\"]", segment.escape_default())
+            }
+        })
+        .collect()
+}
+
+/// Returns whether `name` is a computed-key form, i.e. starts with `[`
+/// and ends with `]`. Used to opt into JS bracket-style property keys
+/// like `[Symbol.iterator]` from a string literal.
+fn is_computed_key(name: &str) -> bool {
+    let bytes = name.as_bytes();
+    bytes.len() >= 2 && bytes[0] == b'[' && bytes[bytes.len() - 1] == b']'
 }
 
 impl ExportedClass {
