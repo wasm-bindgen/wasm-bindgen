@@ -21,6 +21,11 @@
 
 ### Changed
 
+* `js_sys::DataView` now implements the `js_sys::TypedArray` trait. A
+  `FIXME` notes that the trait should be renamed to `ArrayBufferView` in
+  the next major release to better reflect the WebIDL spec name covering
+  both `DataView` and the typed-array types.
+
 --------------------------------------------------------------------------------
 
 ## [0.2.119](https://github.com/rustwasm/wasm-bindgen/compare/0.2.118...0.2.119)
