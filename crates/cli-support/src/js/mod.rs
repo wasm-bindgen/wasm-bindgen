@@ -40,6 +40,37 @@ macro_rules! region {
     };
 }
 
+/// JS code that satisfies a wasm import.
+///
+/// Each variant tells the per-target emitter how to wrap the value when
+/// writing it to the JS glue file. The distinction matters most for the
+/// bundler target, which renders each kind differently:
+///
+/// - `Function`        → `export function NAME(args) { body }`
+/// - `Expression`      → `export const NAME = <expr>;`
+/// - `GlobalRef(name)` → `export { name [as NAME] };`
+#[derive(Debug, Clone)]
+enum ImportDefinition {
+    /// A function literal. Holds the parameter list and body, with no
+    /// leading `function` keyword (e.g. `(arg0, arg1) { ... }`).
+    Function(String),
+    /// An arbitrary JS expression evaluated for its value.
+    Expression(String),
+    /// The name of a top-level binding declared elsewhere in the same JS
+    /// file (e.g. via `Context::global`).
+    GlobalRef(String),
+}
+
+impl ImportDefinition {
+    fn body(&self) -> String {
+        match self {
+            ImportDefinition::Function(body) => format!("function{}", body.trim()),
+            ImportDefinition::Expression(expr) => expr.trim().to_string(),
+            ImportDefinition::GlobalRef(ident) => ident.trim().to_string(),
+        }
+    }
+}
+
 pub struct Context<'a> {
     globals: String,
     /// ES module `import` statements collected during codegen, emitted at the
@@ -64,7 +95,7 @@ pub struct Context<'a> {
     js_imports: HashMap<String, Vec<(String, Option<String>)>>,
 
     /// A map of each Wasm import and what JS to hook up to it.
-    wasm_import_definitions: HashMap<ImportId, String>,
+    wasm_import_definitions: HashMap<ImportId, ImportDefinition>,
 
     /// A map from an import to the name we've locally imported it as.
     imported_names: HashMap<JsImportName, String>,
@@ -579,7 +610,8 @@ impl<'a> Context<'a> {
                     init_memory.push_str(",shared:true");
                 }
                 init_memory.push_str("})");
-                self.wasm_import_definitions.insert(id, init_memory);
+                self.wasm_import_definitions
+                    .insert(id, ImportDefinition::Expression(init_memory));
             }
         }
 
@@ -588,7 +620,12 @@ impl<'a> Context<'a> {
             if let Some(id) = mem.import {
                 if let Some(def) = self.wasm_import_definitions.get_mut(&id) {
                     if !self.config.mode.bundler() {
-                        def.insert_str(0, "memory || ");
+                        match def {
+                            ImportDefinition::Expression(expr) => expr.insert_str(0, "memory || "),
+                            ImportDefinition::Function(_) | ImportDefinition::GlobalRef(_) => {
+                                unreachable!("memory import is always inserted as an Expression")
+                            }
+                        }
                     }
                     has_memory = true;
                 }
@@ -787,9 +824,9 @@ impl<'a> Context<'a> {
         }
         return_stmt.push_str("};\n");
 
-        for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
+        for (id, def) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
-            fn_def.push_str(&format!("{}: {},\n", &import.name, js.trim()));
+            fn_def.push_str(&format!("{}: {},\n", &import.name, def.body()));
             import.module = self_module_name.clone();
         }
 
@@ -807,19 +844,37 @@ impl<'a> Context<'a> {
     fn generate_bundler_imports(&mut self, module_name: &str) -> String {
         let mut imports = String::new();
         let self_module_name = format!("./{module_name}_bg.js");
-        for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
+        for (id, def) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
-            if let Some(body) = js.strip_prefix("function") {
-                imports.push_str("export function ");
-                imports.push_str(&import.name);
-                imports.push_str(body.trim());
-                imports.push('\n');
-            } else {
-                imports.push_str("\nexport const ");
-                imports.push_str(&import.name);
-                imports.push_str(" = ");
-                imports.push_str(js.trim());
-                imports.push_str(";\n");
+            match def {
+                ImportDefinition::Function(body) => {
+                    imports.push_str("export function ");
+                    imports.push_str(&import.name);
+                    imports.push_str(body.trim());
+                    imports.push('\n');
+                }
+                ImportDefinition::Expression(expr) => {
+                    imports.push_str("\nexport const ");
+                    imports.push_str(&import.name);
+                    imports.push_str(" = ");
+                    imports.push_str(expr.trim());
+                    imports.push_str(";\n");
+                }
+                ImportDefinition::GlobalRef(ident) => {
+                    // Re-export the binding rather than emit
+                    // `export const NAME = ident;`, which would either
+                    // redeclare (when ident == NAME) or read the binding
+                    // before initialization (TDZ) when the binding's
+                    // declaration appears later in the file.
+                    let ident = ident.trim();
+                    imports.push_str("\nexport { ");
+                    imports.push_str(ident);
+                    if ident != import.name {
+                        imports.push_str(" as ");
+                        imports.push_str(&import.name);
+                    }
+                    imports.push_str(" };\n");
+                }
             }
             import.module = self_module_name.clone();
         }
@@ -869,13 +924,13 @@ impl<'a> Context<'a> {
         imports.push_str("});\n\n");
 
         // Inject Imports
-        for (id, js) in iter_by_import(&self.wasm_import_definitions, self.module) {
+        for (id, def) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get(*id);
             let name = &import.name;
 
-            let trimmed_js = js.trim();
+            let body = def.body();
             imports.push_str("addToLibrary({\n");
-            imports.push_str(&format!("  {name}: {trimmed_js},\n"));
+            imports.push_str(&format!("  {name}: {body},\n"));
 
             if let Some(deps) = self.emscripten_import_deps.get(id) {
                 let formatted_deps: Vec<String> =
@@ -4245,8 +4300,10 @@ if (require('worker_threads').isMainThread) {{
             self.emscripten_library
                 .push_str("addToLibrary({\n  __wbindgen_jstag: \"WebAssembly.JSTag\",\n});\n");
         } else {
-            self.wasm_import_definitions
-                .insert(id, "WebAssembly.JSTag".to_string());
+            self.wasm_import_definitions.insert(
+                id,
+                ImportDefinition::Expression("WebAssembly.JSTag".to_string()),
+            );
         }
     }
 
@@ -4326,8 +4383,10 @@ addToLibrary({
         ));
 
         // Use the constant for the import
-        self.wasm_import_definitions
-            .insert(id, "__wbindgen_wrapped_jstag".to_string());
+        self.wasm_import_definitions.insert(
+            id,
+            ImportDefinition::GlobalRef("__wbindgen_wrapped_jstag".to_string()),
+        );
 
         Ok(())
     }
@@ -4664,13 +4723,18 @@ addToLibrary({
                 // instead of the JS handleError wrapper
                 let has_wasm_catch = self.aux.js_tag.is_some();
 
+                // `code` here is `(args) { body }` (no leading `function`
+                // keyword). The wrapping cases prefix `function` because
+                // they need a function expression in the middle of the
+                // outer body; the final value we store is itself a function
+                // literal, so we strip the keyword once at the end.
                 let code = if catch && !has_wasm_catch {
                     self.expose_handle_error()?;
-                    format!("function() {{ return handleError(function {code}, arguments); }}")
+                    format!("() {{ return handleError(function {code}, arguments); }}")
                 } else if log_error {
-                    format!("function() {{ return logError(function {code}, arguments); }}")
+                    format!("() {{ return logError(function {code}, arguments); }}")
                 } else {
-                    format!("function{code}")
+                    code
                 };
 
                 if matches!(self.config.mode, OutputMode::Emscripten)
@@ -4680,7 +4744,8 @@ addToLibrary({
                         .insert(core, self.adapter_deps.clone());
                 }
 
-                self.wasm_import_definitions.insert(core, code);
+                self.wasm_import_definitions
+                    .insert(core, ImportDefinition::Function(code));
             }
             ContextAdapterKind::Adapter => {
                 assert!(!catch);
@@ -4858,7 +4923,8 @@ addToLibrary({
         self.expose_not_defined();
         let name = self.import_name(js)?;
         let js = format!("typeof {name} == 'function' ? {name} : notDefined('{name}')",);
-        self.wasm_import_definitions.insert(id, js);
+        self.wasm_import_definitions
+            .insert(id, ImportDefinition::Expression(js));
         Ok(true)
     }
 
