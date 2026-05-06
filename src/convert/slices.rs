@@ -312,6 +312,45 @@ where
     }
 }
 
+// Borrowed-vector support for outgoing arguments (Rust calling JS).
+//
+// `&Vec<T>` shares the same wire format as the owned `Vec<T>` (a
+// `WasmSlice` of element-buffer ptr+len that JS owns and frees), but the
+// JS-visible type is a plain `Array` rather than a typed array such as
+// `Uint16Array`. The CLI distinguishes these cases via the descriptor
+// shape: `Ref(Vector(_))` is uniquely produced by `&Vec<T>` and the
+// `outgoing_ref` codegen emits an `Array.from(...)` wrap for primitive
+// element kinds. For non-primitive kinds (string / externref) the
+// existing buffer helpers already build a plain `Array`, so the wire
+// format is unchanged and only the typed-array primitives need the
+// extra step on the JS side.
+//
+// We clone the vector into a fresh owned buffer so JS gets a buffer it
+// can take ownership of and free. The caller's data is left untouched.
+// `T: Clone` is required because each element gets cloned into the
+// transferred buffer.
+impl<T: Clone> IntoWasmAbi for &Vec<T>
+where
+    Box<[T]>: IntoWasmAbi<Abi = WasmSlice>,
+{
+    type Abi = <Box<[T]> as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        self.clone().into_boxed_slice().into_abi()
+    }
+}
+
+impl<T: Clone> OptionIntoWasmAbi for &Vec<T>
+where
+    Box<[T]>: IntoWasmAbi<Abi = WasmSlice>,
+{
+    #[inline]
+    fn none() -> WasmSlice {
+        null_slice()
+    }
+}
+
 impl<T> FromWasmAbi for Vec<T>
 where
     Box<[T]>: FromWasmAbi<Abi = WasmSlice>,

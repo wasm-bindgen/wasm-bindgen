@@ -74,6 +74,7 @@ pub mod try_from_js_value;
 pub mod unwind;
 pub mod usize;
 pub mod validate_prt;
+pub mod vec_ref;
 pub mod variadic;
 pub mod vendor_prefix;
 #[cfg(target_arch = "wasm64")]

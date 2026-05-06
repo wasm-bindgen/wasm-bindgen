@@ -5,6 +5,16 @@
 
 ### Added
 
+* Added support for `&Vec<T>` as an outgoing argument type when calling
+  imported JS functions from Rust, removing the previous restriction
+  that the caller had to give up ownership of the vector (`Vec<T>`).
+  The data is still cloned across the boundary — there's no Rust-side
+  ownership reason to require the move, since JS gets a fresh
+  allocation in every case except primitive typed arrays. As a side
+  effect, primitive `&Vec<T>` arrives on the JS side as a plain
+  `Array` rather than a typed array. `Option<&Vec<T>>` is also
+  supported. Owned `Vec<T>` retains its existing semantics.
+
 * Added `js_sys::AggregateError` bindings (constructor, `errors` getter, and
   `new_with_message` / `new_with_options` overloads). `AggregateError` represents
   multiple unrelated errors wrapped in a single error, e.g. as thrown by

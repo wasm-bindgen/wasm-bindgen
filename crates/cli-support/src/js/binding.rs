@@ -1632,6 +1632,38 @@ fn instruction(
             js.push(format!("v{i}"))
         }
 
+        Instruction::VectorLoadAsArray { kind, mem, free } => {
+            // Identical to `VectorLoad` for non-primitive element kinds (the
+            // existing buffer helper already builds a plain JS `Array` for
+            // string / externref vectors). For primitive element kinds we
+            // wrap the typed-array view in `Array.from(...)` so JS observes a
+            // plain heterogeneous `Array` of numbers/bigints rather than a
+            // typed array.
+            let len = js.pop();
+            let ptr = js.pop();
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let i = js.tmp();
+            let free = js.cx.export_name_of(*free);
+            let load = match kind {
+                // For string + externref kinds the helper produces a plain
+                // `Array` already; we still call `.slice()` for parity with
+                // `VectorLoad` (cheap and keeps semantics identical).
+                VectorKind::String
+                | VectorKind::Externref
+                | VectorKind::NamedExternref(_) => format!("{f}({ptr}, {len}).slice()"),
+                // Primitive kinds: `Array.from(typedArrayView)` coerces each
+                // element to a JS `Number` (or `BigInt` for 64-bit kinds) and
+                // produces a plain `Array`.
+                _ => format!("Array.from({f}({ptr}, {len}))"),
+            };
+            js.prelude(&format!("var v{i} = {load};"));
+            js.prelude(&format!(
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
+                size = kind.size()
+            ));
+            js.push(format!("v{i}"))
+        }
+
         Instruction::OptionVectorLoad { kind, mem, free } => {
             let len = js.pop();
             let ptr = js.pop();
@@ -1641,6 +1673,32 @@ fn instruction(
             js.prelude(&format!("let v{i};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+            js.prelude(&format!(
+                "wasm.{free}({ptr}, {len} * {size}, {size});",
+                size = kind.size()
+            ));
+            js.prelude("}");
+            js.push(format!("v{i}"));
+        }
+
+        Instruction::OptionVectorLoadAsArray { kind, mem, free } => {
+            // Counterpart of `VectorLoadAsArray` for `Option<&Vec<T>>`.
+            // See the `VectorLoadAsArray` arm above for the wrapping
+            // rationale.
+            let len = js.pop();
+            let ptr = js.pop();
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let i = js.tmp();
+            let free = js.cx.export_name_of(*free);
+            let load = match kind {
+                VectorKind::String
+                | VectorKind::Externref
+                | VectorKind::NamedExternref(_) => format!("{f}({ptr}, {len}).slice()"),
+                _ => format!("Array.from({f}({ptr}, {len}))"),
+            };
+            js.prelude(&format!("let v{i};"));
+            js.prelude(&format!("if ({ptr} !== 0) {{"));
+            js.prelude(&format!("v{i} = {load};"));
             js.prelude(&format!(
                 "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()

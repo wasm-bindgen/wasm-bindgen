@@ -262,6 +262,35 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
+            // Borrowed `&Vec<T>` argument: the Rust side cloned the
+            // contents into a freshly-allocated buffer that JS owns and
+            // must free. The wire format matches `Vec<T>`, but the
+            // JS-visible type is a plain `Array` rather than a typed
+            // array (for primitive element kinds), so we emit
+            // `VectorLoadAsArray` rather than `VectorLoad`.
+            //
+            // (`&Box<[T]>` has no `IntoWasmAbi` impl today, so this arm
+            // is uniquely produced by the `&Vec<T>` Rust ABI.)
+            Descriptor::Vector(_) => {
+                let kind = arg.vector_kind().ok_or_else(|| {
+                    format_err!(
+                        "unsupported argument type for calling JS function from Rust {arg:?}"
+                    )
+                })?;
+                let mem = self.cx.memory()?;
+                let free = self.cx.free()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
+                self.instruction(
+                    &[ptr_ty.clone(), ptr_ty],
+                    Instruction::VectorLoadAsArray {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                    },
+                    &[AdapterType::Vector(kind)],
+                );
+            }
+
             Descriptor::Function(descriptor) => {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
@@ -648,6 +677,29 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
+                    },
+                    &[AdapterType::Vector(kind).option()],
+                );
+            }
+            // `Option<&Vec<T>>`: same wire format as `Option<Vec<T>>`
+            // but produces a plain JS `Array` rather than a typed array
+            // for primitive element kinds. See the `Descriptor::Vector`
+            // arm in `outgoing_ref`.
+            Descriptor::Vector(_) => {
+                let kind = arg.vector_kind().ok_or_else(|| {
+                    format_err!(
+                        "unsupported optional vector type for calling JS function from Rust {arg:?}"
+                    )
+                })?;
+                let mem = self.cx.memory()?;
+                let free = self.cx.free()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
+                self.instruction(
+                    &[ptr_ty.clone(), ptr_ty],
+                    Instruction::OptionVectorLoadAsArray {
+                        kind: kind.clone(),
+                        mem,
+                        free,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );
