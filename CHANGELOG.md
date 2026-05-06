@@ -37,6 +37,9 @@
   the same syntax works for `getter` / `setter` and for imported items.
   [#4230](https://github.com/wasm-bindgen/wasm-bindgen/pull/4230)
 
+* Added level 2 bindings for `ViewTransition` to `web-sys`.
+  [#5138](https://github.com/wasm-bindgen/wasm-bindgen/pull/5138)
+
 ### Fixed
 
 * Fix compilation failure with `no_std` + `release`

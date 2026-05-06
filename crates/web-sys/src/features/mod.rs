@@ -1797,6 +1797,13 @@ mod gen_CssTransition;
 #[allow(unused_imports)]
 pub use gen_CssTransition::*;
 
+#[cfg(feature = "CssViewTransitionRule")]
+#[allow(non_snake_case)]
+mod gen_CssViewTransitionRule;
+#[cfg(feature = "CssViewTransitionRule")]
+#[allow(unused_imports)]
+pub use gen_CssViewTransitionRule::*;
+
 #[cfg(feature = "CustomElementRegistry")]
 #[allow(non_snake_case)]
 mod gen_CustomElementRegistry;
@@ -8930,6 +8937,13 @@ mod gen_SpeechSynthesisVoice;
 #[allow(unused_imports)]
 pub use gen_SpeechSynthesisVoice::*;
 
+#[cfg(feature = "StartViewTransitionOptions")]
+#[allow(non_snake_case)]
+mod gen_StartViewTransitionOptions;
+#[cfg(feature = "StartViewTransitionOptions")]
+#[allow(unused_imports)]
+pub use gen_StartViewTransitionOptions::*;
+
 #[cfg(feature = "StaticRange")]
 #[allow(non_snake_case)]
 mod gen_StaticRange;
@@ -10798,6 +10812,13 @@ mod gen_ViewTransition;
 #[cfg(feature = "ViewTransition")]
 #[allow(unused_imports)]
 pub use gen_ViewTransition::*;
+
+#[cfg(feature = "ViewTransitionTypeSet")]
+#[allow(non_snake_case)]
+mod gen_ViewTransitionTypeSet;
+#[cfg(feature = "ViewTransitionTypeSet")]
+#[allow(unused_imports)]
+pub use gen_ViewTransitionTypeSet::*;
 
 #[cfg(feature = "VisibilityState")]
 #[allow(non_snake_case)]
