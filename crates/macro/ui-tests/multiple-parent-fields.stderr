@@ -1,0 +1,13 @@
+error: do not declare a `Parent` field; the `#[wasm_bindgen(extends = ...)]` macro injects `parent: wasm_bindgen::Parent<...>` automatically
+ --> ui-tests/multiple-parent-fields.rs:9:15
+  |
+9 |     animal_a: Parent<Animal>,
+  |               ^^^^^^^^^^^^^^
+
+warning: unused import: `wasm_bindgen::Parent`
+ --> ui-tests/multiple-parent-fields.rs:2:5
+  |
+2 | use wasm_bindgen::Parent;
+  |     ^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

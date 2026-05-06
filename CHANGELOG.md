@@ -21,6 +21,20 @@
   untyped `new_with_options`. `AggregateError::new_with_options` also takes
   `&ErrorOptions`.
 
+* Added inheritance for Rust-exported types: an exported struct may
+  declare `#[wasm_bindgen(extends = Parent)]` to inherit from another
+  exported `#[wasm_bindgen]` struct. The macro injects a hidden
+  `parent: wasm_bindgen::Parent<Parent>` field (a refcounted cell around
+  the parent value) and emits `class Child extends Parent` in the
+  generated JS / `.d.ts`. The child gets an `AsRef<Parent<Parent>>` impl
+  for the direct parent, and threads per-class pointer slots through
+  the wasm ABI so that `instanceof Parent` is true and parent methods
+  dispatch soundly via the JS prototype chain. From inside child
+  methods, parent data is reached via `self.parent.borrow()` /
+  `self.parent.borrow_mut()`. See the new
+  [`extends` guide page](reference/attributes/on-rust-exports/extends.html).
+  [#5120](https://github.com/wasm-bindgen/wasm-bindgen/pull/5120)
+
 * Added `js_sys::FinalizationRegistry` bindings (constructor, `register`,
   `register_with_token`, and `unregister`). The cleanup callback parameter
   is typed as `&Function<fn(JsValue) -> Undefined>`, so closures created via

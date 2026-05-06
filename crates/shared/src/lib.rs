@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.119";
+pub const SCHEMA_VERSION: &str = "0.2.120";
 
 #[macro_export]
 macro_rules! shared_api {
@@ -181,6 +181,7 @@ macro_rules! shared_api {
             generate_typescript: bool,
             js_namespace: Option<Vec<&'a str>>,
             private: bool,
+            extends: Option<&'a str>,
         }
 
         struct StructField<'a> {
@@ -267,6 +268,17 @@ fn export_name_suffix(name: &str) -> alloc::borrow::Cow<'_, str> {
         }
     }
     alloc::borrow::Cow::Owned(out)
+}
+
+/// Symbol name of the wasm export that upcasts a `*const WasmRefCell<Child>`
+/// pointer to a cloned `Rc<WasmRefCell<Parent>>` raw pointer. Used by the
+/// macro codegen and by cli-support's JS emission to call each other.
+pub fn upcast_function(child_struct: &str, parent_struct: &str) -> String {
+    let mut name = "__wbg_upcast_".to_string();
+    name.extend(child_struct.chars().flat_map(|s| s.to_lowercase()));
+    name.push_str("_to_");
+    name.extend(parent_struct.chars().flat_map(|s| s.to_lowercase()));
+    name
 }
 
 pub fn free_function_export_name(function_name: &str) -> String {

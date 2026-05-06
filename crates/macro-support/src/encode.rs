@@ -427,6 +427,7 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
         fields: s
             .fields
             .iter()
+            .filter(|f| !f.is_parent)
             .map(|s| shared_struct_field(s, intern))
             .collect(),
         comments: s.comments.iter().map(|s| &**s).collect(),
@@ -437,6 +438,11 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
         private: s.private,
+        extends: s
+            .extends
+            .as_ref()
+            .and_then(|p| p.segments.last())
+            .map(|seg| intern.intern_str(&seg.ident.to_string())),
     }
 }
 

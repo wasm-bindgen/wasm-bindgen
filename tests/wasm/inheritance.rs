@@ -1,0 +1,367 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_test::*;
+
+#[wasm_bindgen(module = "tests/wasm/inheritance.js")]
+extern "C" {
+    fn js_instanceof_works();
+    fn js_inherited_method_dispatch_works();
+    fn js_super_does_not_double_alloc();
+    fn js_owned_parent_rejects_subclass_works();
+    fn js_owned_self_method_rejects_subclass_works();
+    fn js_renamed_parent_extends_works();
+    fn js_skip_typescript_parent_child_works();
+    fn js_borrowed_parent_with_subclass_works();
+    fn js_borrowed_parent_method_with_subclass_works();
+    fn js_js_only_subclass_passes_pointer_check_works();
+    fn js_parent_free_dispatched_on_subclass_throws_works();
+    fn js_three_level_chain_gates_at_every_depth_works();
+}
+
+#[wasm_bindgen]
+pub fn inheritance_take_animal_by_value(_a: InheritanceAnimal) {}
+
+// Borrowed-parameter free function. Exercises `I32FromExternrefRustBorrow`
+// in free-function position: when invoked from JS with a subclass instance
+// (e.g. an `InheritanceDog`), the lowering must emit
+// `dog.__wbg_ptr_InheritanceAnimal` (the upcast ancestor pointer), not
+// `dog.__wbg_ptr` (the descendant pointer). `_assertClass` only does an
+// `instanceof` check so a Dog passes the Animal check; it's the pointer
+// routing that prevents type confusion at the wasm shim.
+#[wasm_bindgen]
+pub fn inheritance_take_animal_by_ref(a: &InheritanceAnimal) -> String {
+    a.name.clone()
+}
+
+// Same `I32FromExternrefRustBorrow` lowering, but in *method* position:
+// `InheritanceObserver::describe_animal(&self, &InheritanceAnimal)`. The
+// borrowed-parameter routing must work whether the borrow is in a free
+// function's argument list or another class's method's argument list.
+#[wasm_bindgen]
+pub struct InheritanceObserver {
+    label: String,
+}
+
+#[wasm_bindgen]
+impl InheritanceObserver {
+    #[wasm_bindgen(constructor)]
+    pub fn new(label: String) -> InheritanceObserver {
+        InheritanceObserver { label }
+    }
+
+    pub fn describe_animal(&self, a: &InheritanceAnimal) -> String {
+        format!("{}: {}", self.label, a.name)
+    }
+}
+
+#[wasm_bindgen]
+pub struct InheritanceAnimal {
+    name: String,
+}
+
+#[wasm_bindgen]
+impl InheritanceAnimal {
+    #[wasm_bindgen(constructor)]
+    pub fn new(name: String) -> InheritanceAnimal {
+        INHERITANCE_ANIMAL_CTOR_COUNT.fetch_add(1, Ordering::SeqCst);
+        InheritanceAnimal { name }
+    }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    // self-by-value method on the parent — exercises the subclass-dispatch
+    // guard. Calling this on a wasm-bindgen subclass instance must throw.
+    pub fn into_name(self) -> String {
+        self.name
+    }
+}
+
+#[wasm_bindgen(extends = InheritanceAnimal)]
+pub struct InheritanceDog {
+    breed: String,
+}
+
+#[wasm_bindgen]
+impl InheritanceDog {
+    #[wasm_bindgen(constructor)]
+    pub fn new(name: String, breed: String) -> InheritanceDog {
+        INHERITANCE_DOG_CTOR_COUNT.fetch_add(1, Ordering::SeqCst);
+        InheritanceDog {
+            parent: InheritanceAnimal::new(name).into(),
+            breed,
+        }
+    }
+
+    pub fn breed(&self) -> String {
+        self.breed.clone()
+    }
+
+    pub fn parent_name(&self) -> String {
+        self.parent.borrow().name()
+    }
+}
+
+// Renamed parent + child whose rust_name sorts ALPHABETICALLY BEFORE the
+// parent's exported js_name. Exercises two properties of the codegen:
+//   (a) macro/cli upcast-symbol agreement when the parent has `js_name`:
+//       the macro derives the symbol from the `extends = <Path>` last
+//       segment, so cli-support must resolve it via the rust_name (not
+//       the qualified js_name) when emitting the upcast call.
+//   (b) emission ordering: name-sorted iteration of exports would place
+//       `class InheritanceBetaChild extends RenamedAnimal` before
+//       `class RenamedAnimal` is initialized and trip the JS class-decl
+//       TDZ at module load. The topo sort in `topo_sort_class_exports`
+//       puts the parent first.
+#[wasm_bindgen(js_name = "RenamedAnimal")]
+pub struct InheritanceAlphaParent {
+    label: String,
+}
+
+#[wasm_bindgen]
+impl InheritanceAlphaParent {
+    #[wasm_bindgen(constructor)]
+    pub fn new(label: String) -> InheritanceAlphaParent {
+        InheritanceAlphaParent { label }
+    }
+
+    pub fn label(&self) -> String {
+        self.label.clone()
+    }
+}
+
+#[wasm_bindgen(extends = InheritanceAlphaParent)]
+pub struct InheritanceBetaChild {
+    extra: String,
+}
+
+#[wasm_bindgen]
+impl InheritanceBetaChild {
+    #[wasm_bindgen(constructor)]
+    pub fn new(label: String, extra: String) -> InheritanceBetaChild {
+        InheritanceBetaChild {
+            parent: InheritanceAlphaParent::new(label).into(),
+            extra,
+        }
+    }
+
+    pub fn extra(&self) -> String {
+        self.extra.clone()
+    }
+}
+
+// Counters observable from JS to verify super-skip behavior.
+static INHERITANCE_ANIMAL_CTOR_COUNT: AtomicUsize = AtomicUsize::new(0);
+static INHERITANCE_DOG_CTOR_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+#[wasm_bindgen]
+pub fn inheritance_animal_ctor_count() -> usize {
+    INHERITANCE_ANIMAL_CTOR_COUNT.load(Ordering::SeqCst)
+}
+
+#[wasm_bindgen]
+pub fn inheritance_dog_ctor_count() -> usize {
+    INHERITANCE_DOG_CTOR_COUNT.load(Ordering::SeqCst)
+}
+
+#[wasm_bindgen]
+pub fn inheritance_reset_counters() {
+    INHERITANCE_ANIMAL_CTOR_COUNT.store(0, Ordering::SeqCst);
+    INHERITANCE_DOG_CTOR_COUNT.store(0, Ordering::SeqCst);
+}
+
+#[wasm_bindgen_test]
+fn rust_parent_borrow_returns_parent_data() {
+    let dog = InheritanceDog::new("Rex".into(), "Labrador".into());
+    assert_eq!(dog.parent_name(), "Rex");
+}
+
+// The macro derives `impl AsRef<wasm_bindgen::Parent<Animal>> for Dog`,
+// letting generic Rust code accept any descendant where it expects a
+// `&Parent<Animal>`. Verify it both type-checks and walks to the right
+// data.
+#[wasm_bindgen_test]
+fn rust_as_ref_parent_walks_chain() {
+    fn read_animal_name<T: AsRef<wasm_bindgen::Parent<InheritanceAnimal>>>(t: &T) -> String {
+        t.as_ref().borrow().name()
+    }
+    let dog = InheritanceDog::new("Rex".into(), "Labrador".into());
+    assert_eq!(read_animal_name(&dog), "Rex");
+}
+
+#[wasm_bindgen_test]
+fn js_instanceof() {
+    js_instanceof_works();
+}
+
+#[wasm_bindgen_test]
+fn js_inherited_method_dispatch() {
+    js_inherited_method_dispatch_works();
+}
+
+#[wasm_bindgen_test]
+fn js_super_skips_parent_ctor_body() {
+    js_super_does_not_double_alloc();
+}
+
+#[wasm_bindgen_test]
+fn js_owned_parent_rejects_subclass() {
+    js_owned_parent_rejects_subclass_works();
+}
+
+#[wasm_bindgen_test]
+fn js_owned_self_method_rejects_subclass() {
+    js_owned_self_method_rejects_subclass_works();
+}
+
+#[wasm_bindgen_test]
+fn js_renamed_parent_extends() {
+    js_renamed_parent_extends_works();
+}
+
+#[wasm_bindgen_test]
+fn js_skip_typescript_parent_child() {
+    js_skip_typescript_parent_child_works();
+}
+
+#[wasm_bindgen_test]
+fn js_borrowed_parent_with_subclass() {
+    js_borrowed_parent_with_subclass_works();
+}
+
+#[wasm_bindgen_test]
+fn js_borrowed_parent_method_with_subclass() {
+    js_borrowed_parent_method_with_subclass_works();
+}
+
+#[wasm_bindgen_test]
+fn js_js_only_subclass_passes_pointer_check() {
+    js_js_only_subclass_passes_pointer_check_works();
+}
+
+#[wasm_bindgen_test]
+fn js_parent_free_dispatched_on_subclass_throws() {
+    js_parent_free_dispatched_on_subclass_throws_works();
+}
+
+#[wasm_bindgen_test]
+fn js_three_level_chain_gates_at_every_depth() {
+    js_three_level_chain_gates_at_every_depth_works();
+}
+
+// Parent with `skip_typescript` and a child that extends it. The child
+// must keep the runtime `extends` in `.js` (so prototype-chain dispatch
+// works) but drop it from `.d.ts` (the parent has no declaration to
+// reference there). Runtime check: instanceof and inherited methods
+// still work. The .d.ts shape is verified at build time by inspecting
+// the emitted file (see js side).
+#[wasm_bindgen(skip_typescript)]
+pub struct InheritanceSkippedParent {
+    n: u32,
+}
+
+#[wasm_bindgen]
+impl InheritanceSkippedParent {
+    #[wasm_bindgen(constructor)]
+    pub fn new(n: u32) -> InheritanceSkippedParent {
+        InheritanceSkippedParent { n }
+    }
+
+    pub fn n(&self) -> u32 {
+        self.n
+    }
+}
+
+#[wasm_bindgen(extends = InheritanceSkippedParent)]
+pub struct InheritanceChildOfSkipped {
+    extra: u32,
+}
+
+#[wasm_bindgen]
+impl InheritanceChildOfSkipped {
+    #[wasm_bindgen(constructor)]
+    pub fn new(n: u32, extra: u32) -> InheritanceChildOfSkipped {
+        InheritanceChildOfSkipped {
+            parent: InheritanceSkippedParent::new(n).into(),
+            extra,
+        }
+    }
+
+    pub fn extra(&self) -> u32 {
+        self.extra
+    }
+}
+
+// Three-level inheritance chain — `ChainA` <- `ChainB` <- `ChainC`. The
+// reference snapshot already locks down the ABI shape for a 3-level chain
+// (extends-rust.rs), but until this struct existed in the live wasm test
+// crate the new free / consume-self gates were only exercised at depth 1.
+// Each level carries a `self`-by-value method so prototype-dispatch tests
+// can verify the gate fires regardless of how many ancestor links there
+// are between the receiver and the method's defining class.
+#[wasm_bindgen]
+pub struct ChainA {
+    a_label: String,
+}
+
+#[wasm_bindgen]
+impl ChainA {
+    #[wasm_bindgen(constructor)]
+    pub fn new(a_label: String) -> ChainA {
+        ChainA { a_label }
+    }
+
+    pub fn a_label(&self) -> String {
+        self.a_label.clone()
+    }
+
+    pub fn into_a_label(self) -> String {
+        self.a_label
+    }
+}
+
+#[wasm_bindgen(extends = ChainA)]
+pub struct ChainB {
+    b_tag: String,
+}
+
+#[wasm_bindgen]
+impl ChainB {
+    #[wasm_bindgen(constructor)]
+    pub fn new(a_label: String, b_tag: String) -> ChainB {
+        ChainB {
+            parent: ChainA::new(a_label).into(),
+            b_tag,
+        }
+    }
+
+    pub fn b_tag(&self) -> String {
+        self.b_tag.clone()
+    }
+
+    pub fn into_b_tag(self) -> String {
+        self.b_tag
+    }
+}
+
+#[wasm_bindgen(extends = ChainB)]
+pub struct ChainC {
+    c_extra: String,
+}
+
+#[wasm_bindgen]
+impl ChainC {
+    #[wasm_bindgen(constructor)]
+    pub fn new(a_label: String, b_tag: String, c_extra: String) -> ChainC {
+        ChainC {
+            parent: ChainB::new(a_label, b_tag).into(),
+            c_extra,
+        }
+    }
+
+    pub fn c_extra(&self) -> String {
+        self.c_extra.clone()
+    }
+}
