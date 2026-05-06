@@ -1,0 +1,25 @@
+crates/macro-support/src/codegen.rs
+  d91764b7d6079bfb 1841-1855,1900,1965
+crates/shared/src/schema_hash_approval.rs
+  d91764b7d6079bfb 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "c00bfebb64869fcb4f8a4cb036c44215a1675253",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 3,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    }
+  }
+}
