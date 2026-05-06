@@ -43,8 +43,12 @@ extern "C" {
 }
 ```
 
-Per-function and per-arg `slice_to_array` are additive — the attribute
-is opt-in at any level.
+Per-function and per-block `slice_to_array` combine additively — the
+attribute is opt-in at either level. The mode only acts on `&[T]` /
+`Option<&[T]>` arguments; any other argument shape (e.g. the `this`
+argument of a method, or unrelated scalar arguments) is left
+untouched, so it's safe to set the attribute on a method or on an
+entire `extern "C"` block of mixed-shape imports.
 
 ## Wire format
 

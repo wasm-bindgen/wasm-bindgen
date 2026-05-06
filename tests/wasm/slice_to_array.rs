@@ -52,6 +52,12 @@ extern "C" {
     fn js_st2a_imported(v: &[Tagged]) -> Vec<String>;
     #[wasm_bindgen(slice_to_array)]
     fn js_st2a_optional_u16(v: Option<&[u16]>) -> Option<Vec<u16>>;
+
+    // Method form: the `this` argument is non-slice and must be left
+    // alone by `slice_to_array`. Mixed args (the slice gets the rewrite,
+    // `this` doesn't).
+    #[wasm_bindgen(method, slice_to_array)]
+    fn push_strings(this: &Tagged, v: &[String]) -> Vec<String>;
 }
 
 // Block-level `slice_to_array` propagates to every fn in the block.
@@ -115,6 +121,17 @@ fn optional() {
     assert_eq!(out, Some(vec![10u16, 12, 14]));
     assert_eq!(v, vec![5u16, 6, 7]);
     assert_eq!(js_st2a_optional_u16(None), None);
+}
+
+#[wasm_bindgen_test]
+fn method_with_slice_to_array() {
+    // `slice_to_array` on a method ignores the non-slice `this` arg
+    // and only rewrites the slice arg. Compiles + runs without
+    // complaint about `this: &Tagged`.
+    let t = Tagged::new("prefix");
+    let v = vec!["a".to_string(), "b".to_string()];
+    let out = t.push_strings(&v);
+    assert_eq!(out, vec!["prefix-a".to_string(), "prefix-b".to_string()]);
 }
 
 #[wasm_bindgen_test]

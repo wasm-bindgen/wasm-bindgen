@@ -2176,13 +2176,16 @@ impl TryToTokens for ast::ImportFunction {
             // Wire format is `WasmSlice` either way; the cli-support
             // side picks the right JS shim based on the element
             // `VectorKind` recovered from the descriptor.
-            if arg.slice_to_array {
-                let Some((elem_ty, is_option)) = detect_slice_or_option_slice(ty) else {
-                    bail_span!(
-                        ty,
-                        "`slice_to_array` only applies to `&[T]` or `Option<&[T]>` argument types"
-                    );
-                };
+            // `slice_to_array` is set per-fn or per-`extern "C"` block
+            // and applies to every `&[T]` / `Option<&[T]>` argument of
+            // every fn it covers. Args that aren't slice-shaped (e.g.
+            // the `this: &Foo` of a method, or any other non-slice
+            // argument of a slice_to_array fn) silently fall through to
+            // the default ABI path — there's no per-arg opt-out form
+            // in Rust attribute syntax to require, so silent no-op is
+            // the only sensible behaviour.
+            if arg.slice_to_array && detect_slice_or_option_slice(ty).is_some() {
+                let (elem_ty, is_option) = detect_slice_or_option_slice(ty).unwrap();
 
                 let abi = quote! { #wasm_bindgen::convert::WasmSlice };
                 let (prim_args, prim_names) = splat(wasm_bindgen, &name, &abi);
@@ -2816,6 +2819,10 @@ impl TryToTokens for DescribeImport<'_> {
                 // `Option<&Vec<T>>`) to match the ABI rewrite in
                 // `ImportFunction::try_to_tokens` — the descriptor shape is
                 // `Ref(Vector(T))`, which the cli-support side recognises.
+                // Non-slice args (e.g. `this: &Foo` of a method) under a
+                // fn- or block-level `slice_to_array` silently fall through
+                // to their default describe — slice_to_array is a mode that
+                // only acts on slice-shaped args.
                 if arg.slice_to_array {
                     if let Some((elem_ty, is_option)) = detect_slice_or_option_slice(&ty) {
                         if is_option {
@@ -2825,11 +2832,6 @@ impl TryToTokens for DescribeImport<'_> {
                         } else {
                             return Ok(parse_quote! { &::std::vec::Vec<#elem_ty> });
                         }
-                    } else {
-                        bail_span!(
-                            arg.pat_type.ty,
-                            "`slice_to_array` only applies to `&[T]` or `Option<&[T]>` argument types"
-                        );
                     }
                 }
                 Ok(ty)
