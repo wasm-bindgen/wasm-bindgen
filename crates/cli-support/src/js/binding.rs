@@ -1648,9 +1648,9 @@ fn instruction(
                 // For string + externref kinds the helper produces a plain
                 // `Array` already; we still call `.slice()` for parity with
                 // `VectorLoad` (cheap and keeps semantics identical).
-                VectorKind::String
-                | VectorKind::Externref
-                | VectorKind::NamedExternref(_) => format!("{f}({ptr}, {len}).slice()"),
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    format!("{f}({ptr}, {len}).slice()")
+                }
                 // Primitive kinds: `Array.from(typedArrayView)` coerces each
                 // element to a JS `Number` (or `BigInt` for 64-bit kinds) and
                 // produces a plain `Array`.
@@ -1691,9 +1691,9 @@ fn instruction(
             let i = js.tmp();
             let free = js.cx.export_name_of(*free);
             let load = match kind {
-                VectorKind::String
-                | VectorKind::Externref
-                | VectorKind::NamedExternref(_) => format!("{f}({ptr}, {len}).slice()"),
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    format!("{f}({ptr}, {len}).slice()")
+                }
                 _ => format!("Array.from({f}({ptr}, {len}))"),
             };
             js.prelude(&format!("let v{i};"));
