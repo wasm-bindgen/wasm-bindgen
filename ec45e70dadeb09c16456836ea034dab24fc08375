@@ -1,0 +1,25 @@
+crates/shared/src/lib.rs
+  dc126e205e92235b 16
+crates/shared/src/schema_hash_approval.rs
+  dc126e205e92235b 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ec45e70dadeb09c16456836ea034dab24fc08375",
+  "prompts": {
+    "dc126e205e92235b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_200af90ddffeNpUJBt5QDI6m42",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
