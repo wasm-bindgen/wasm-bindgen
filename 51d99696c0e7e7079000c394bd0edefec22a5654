@@ -1,0 +1,33 @@
+crates/macro-support/src/encode.rs
+  d91764b7d6079bfb 363,427
+crates/cli-support/src/wit/incoming.rs
+  d91764b7d6079bfb 145
+crates/macro-support/src/ast.rs
+  d91764b7d6079bfb 404-405
+guide/src/reference/types/enums.md
+  d91764b7d6079bfb 119,122-127,130-174
+crates/macro-support/src/codegen.rs
+  d91764b7d6079bfb 1621
+crates/cli-support/src/wit/outgoing.rs
+  d91764b7d6079bfb 112,688-689
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "51d99696c0e7e7079000c394bd0edefec22a5654",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 61,
+      "total_deletions": 20,
+      "accepted_lines": 61,
+      "overriden_lines": 0
+    }
+  }
+}
