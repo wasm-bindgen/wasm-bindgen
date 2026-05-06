@@ -66,6 +66,7 @@ pub mod should_panic;
 pub mod simple;
 pub mod slice;
 pub mod slice_jsvalue;
+pub mod slice_to_array;
 pub mod string_vecs;
 pub mod struct_vecs;
 pub mod structural;

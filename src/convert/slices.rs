@@ -312,6 +312,80 @@ where
     }
 }
 
+/// Internal trait used by the `slice_to_array` macro codegen.
+///
+/// Produces the wire representation JS observes when an outgoing `&[T]`
+/// argument is rendered as a plain `Array`. There are two impl shapes,
+/// neither of which requires `T: Clone`:
+///
+/// * For primitive numeric `T` (`u8`, `i32`, `f64`, ...) the wire is a
+///   borrow of the slice memory directly — no allocation, no copy. The
+///   JS-side shim performs `Array.from(typedArrayView)` to materialise
+///   the JS `Array` and never frees the buffer.
+/// * For everything else (`String`, `JsValue`, imported types, exported
+///   types) the wire is a freshly allocated `Box<[u32]>` of externref
+///   indices — one per element, constructed via `&T -> JsValue` (which
+///   for handle-shaped types is a refcount bump on the existing JS
+///   slot, and for `String` / value-shaped types creates a fresh JS
+///   value). The JS-side shim reads the indices into a JS `Array` and
+///   frees the index buffer.
+///
+/// Both shapes carry the same `WasmSlice` (ptr + len) on the wire. The
+/// cli-support side picks the right JS shim based on the element
+/// `VectorKind` recovered from the descriptor.
+///
+/// Not user-facing: users opt in via `#[wasm_bindgen(slice_to_array)]`
+/// on an imported function or `extern "C"` block.
+pub trait VectorRefIntoWasmAbi {
+    /// Construct the wire representation for `Some(slice)`. The returned
+    /// `WasmSlice` is either a borrow of the input slice (primitive
+    /// case) or a buffer JS owns and frees (handle-shaped case).
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice
+    where
+        Self: Sized;
+
+    /// Wire representation for `None` (used by `Option<&[T]>`). A null
+    /// `WasmSlice` (`ptr == 0`) is the convention shared with every
+    /// other vector-like ABI in the crate.
+    #[inline]
+    fn slice_none() -> WasmSlice
+    where
+        Self: Sized,
+    {
+        null_slice()
+    }
+}
+
+macro_rules! vector_ref_into_wasm_abi_primitive {
+    ($($t:ty)*) => ($(
+        impl VectorRefIntoWasmAbi for $t {
+            #[inline]
+            fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+                // Borrow of the slice memory; the JS shim does
+                // `Array.from(view)` and never frees.
+                WasmSlice::from_usize(slice.as_ptr() as usize, slice.len())
+            }
+        }
+    )*);
+}
+
+vector_ref_into_wasm_abi_primitive!(u8 i8 u16 i16 u32 i32 u64 i64 usize isize f32 f64);
+
+impl<T> VectorRefIntoWasmAbi for T
+where
+    for<'a> &'a T: Into<JsValue>,
+{
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        // Build a fresh `[JsValue]` buffer one element at a time. The
+        // existing `Vec<JsValue>` ABI hands off the buffer to JS; the
+        // JS shim drops each externref slot it reads and frees the
+        // buffer.
+        let js_vals: Box<[JsValue]> = slice.iter().map(Into::into).collect();
+        js_vals.into_abi()
+    }
+}
+
 impl<T> FromWasmAbi for Vec<T>
 where
     Box<[T]>: FromWasmAbi<Abi = WasmSlice>,

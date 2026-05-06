@@ -263,6 +263,38 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
+            // `slice_to_array` argument: the macro rewrites a user-facing
+            // `&[T]` into a `&Vec<T>` ABI call, which describes as
+            // `Ref(Vector(T))`. The Rust side cloned the slice contents
+            // into a freshly-allocated buffer JS owns and must free. The
+            // wire format matches `Vec<T>` (transferred ownership), but
+            // the JS-visible type is a plain `Array` rather than a typed
+            // array — emit `VectorLoadAsArray` for primitive kinds.
+            //
+            // This arm is currently produced exclusively by the
+            // `slice_to_array` codegen (`&Box<[T]>` has no `IntoWasmAbi`
+            // impl, and `&Vec<T>` is not exposed as a user-writable
+            // argument type).
+            Descriptor::Vector(_) => {
+                let kind = arg.vector_kind().ok_or_else(|| {
+                    format_err!(
+                        "unsupported argument type for calling JS function from Rust {arg:?}"
+                    )
+                })?;
+                let mem = self.cx.memory()?;
+                let free = self.cx.free()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
+                self.instruction(
+                    &[ptr_ty.clone(), ptr_ty],
+                    Instruction::VectorLoadAsArray {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                    },
+                    &[AdapterType::Vector(kind)],
+                );
+            }
+
             Descriptor::Function(descriptor) => {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
@@ -664,6 +696,31 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
+                    },
+                    &[AdapterType::Vector(kind).option()],
+                );
+            }
+            // `slice_to_array` for `Option<&[T]>`: same rewrite as the
+            // non-optional case yields `Option<&Vec<T>>` whose descriptor
+            // is `Option(Ref(Vector(T)))`. Same wire format as
+            // `Option<Vec<T>>` but produces a plain JS `Array` rather
+            // than a typed array for primitive element kinds. See the
+            // `Descriptor::Vector` arm in `outgoing_ref`.
+            Descriptor::Vector(_) => {
+                let kind = arg.vector_kind().ok_or_else(|| {
+                    format_err!(
+                        "unsupported optional vector type for calling JS function from Rust {arg:?}"
+                    )
+                })?;
+                let mem = self.cx.memory()?;
+                let free = self.cx.free()?;
+                let ptr_ty = self.outgoing_internal_word_ty();
+                self.instruction(
+                    &[ptr_ty.clone(), ptr_ty],
+                    Instruction::OptionVectorLoadAsArray {
+                        kind: kind.clone(),
+                        mem,
+                        free,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );

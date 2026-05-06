@@ -336,8 +336,31 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
     },
+    /// pops ptr/length, pushes a plain JS `Array`, frees the original data.
+    ///
+    /// Identical to `VectorLoad` but, for primitive element kinds, the
+    /// transferred typed-array view is wrapped in `Array.from(...)` so the
+    /// JS side observes a plain heterogeneous `Array` rather than a typed
+    /// array. Used for outgoing `&Vec<T>` arguments where the JS-visible
+    /// type contract is "Array of values" instead of "buffer of bytes".
+    /// For string / externref vector kinds the existing helper already
+    /// builds a plain `Array`, so this instruction behaves identically to
+    /// `VectorLoad` for those kinds.
+    VectorLoadAsArray {
+        kind: VectorKind,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+    },
     /// pops ptr/length, pushes a vector, frees the original data
     OptionVectorLoad {
+        kind: VectorKind,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+    },
+    /// pops ptr/length, pushes an optional plain JS `Array`, frees the
+    /// original data. Counterpart of `VectorLoadAsArray` for
+    /// `Option<&Vec<T>>` outgoing arguments.
+    OptionVectorLoadAsArray {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
@@ -513,7 +536,9 @@ impl walrus::CustomSection for NonstandardWitSection {
                         roots.push_func(malloc);
                     }
                     VectorLoad { free, mem, .. }
+                    | VectorLoadAsArray { free, mem, .. }
                     | OptionVectorLoad { free, mem, .. }
+                    | OptionVectorLoadAsArray { free, mem, .. }
                     | CachedStringLoad { free, mem, .. } => {
                         roots.push_memory(mem);
                         roots.push_func(free);

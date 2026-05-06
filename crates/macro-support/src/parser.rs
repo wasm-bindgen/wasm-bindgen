@@ -113,6 +113,7 @@ macro_rules! attrgen {
             (js_sys, false, JsSys(Span, syn::Path)),
             (wasm_bindgen_futures, false, WasmBindgenFutures(Span, syn::Path)),
             (skip, false, Skip(Span)),
+            (slice_to_array, false, SliceToArray(Span)),
             (typescript_type, false, TypeScriptType(Span, String, Span)),
             (getter_with_clone, false, GetterWithClone(Span)),
             (static_string, false, StaticString(Span)),
@@ -866,15 +867,32 @@ fn get_expr(mut expr: &syn::Expr) -> &syn::Expr {
     expr
 }
 
-impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>)>
-    for syn::ForeignItemFn
+impl<'a>
+    ConvertToAst<(
+        &ast::Program,
+        BindgenAttrs,
+        &'a Option<ast::ImportModule>,
+        bool,
+    )> for syn::ForeignItemFn
 {
     type Target = ast::ImportKind;
 
     fn convert(
-        self,
-        (program, opts, module): (&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>),
+        mut self,
+        (program, opts, module, block_slice_to_array): (
+            &ast::Program,
+            BindgenAttrs,
+            &'a Option<ast::ImportModule>,
+            bool,
+        ),
     ) -> Result<Self::Target, Diagnostic> {
+        // `slice_to_array` is inherited from the enclosing `extern "C"`
+        // block, optionally OR'd with a fn-level attribute, which then
+        // applies to every `&[T]` / `Option<&[T]>` argument unless an
+        // individual arg overrides it via its own attribute (the
+        // attribute is additive — you can only opt in, not out).
+        let fn_slice_to_array = block_slice_to_array || opts.slice_to_array().is_some();
+        let args_attrs = extract_args_attrs(&mut self.sig, fn_slice_to_array)?;
         let (mut wasm, _) = function_from_decl(
             &self.sig.ident,
             &opts,
@@ -882,7 +900,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             self.attrs.clone(),
             self.vis.clone(),
             FunctionPosition::Extern,
-            None,
+            Some(args_attrs),
         )?;
         let catch = opts.catch().is_some();
         let variadic = opts.variadic().is_some();
@@ -1529,6 +1547,7 @@ fn function_from_decl(
                     js_type: attrs.js_type,
                     optional: attrs.optional,
                     desc: attrs.desc,
+                    slice_to_array: attrs.slice_to_array,
                 })
                 .collect(),
         },
@@ -1543,10 +1562,21 @@ struct FnArgAttrs {
     js_type: Option<String>,
     optional: bool,
     desc: Option<String>,
+    /// When set, an `&[T]` (or `Option<&[T]>`) argument is converted to a
+    /// freshly-allocated buffer that JS receives as a plain `Array` rather
+    /// than a typed array (for primitive element kinds). The wire format
+    /// matches `Vec<T>` (ownership transferred + freed by JS) but the
+    /// JS-visible type is always a plain `Array`.
+    slice_to_array: bool,
 }
 
-/// Extracts function arguments attributes
-fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagnostic> {
+/// Extracts function arguments attributes. `default_slice_to_array` is the
+/// inherited flag from the enclosing function / `extern "C"` block; per-arg
+/// `#[wasm_bindgen(slice_to_array)]` ORs on top of it.
+fn extract_args_attrs(
+    sig: &mut syn::Signature,
+    default_slice_to_array: bool,
+) -> Result<Vec<FnArgAttrs>, Diagnostic> {
     let mut args_attrs = vec![];
     let mut seen_optional: Option<Span> = None;
     for input in sig.inputs.iter_mut() {
@@ -1641,6 +1671,7 @@ fn extract_args_attrs(sig: &mut syn::Signature) -> Result<Vec<FnArgAttrs>, Diagn
                         check_js_comment_close(description, span)?;
                         Ok(Some(description.to_string()))
                     })?,
+                slice_to_array: default_slice_to_array || attrs.slice_to_array().is_some(),
             };
             // throw error for any unused attrs
             attrs.enforce_used()?;
@@ -1690,8 +1721,9 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                 if let Some((i, _)) = no_mangle {
                     f.attrs.remove(i);
                 }
-                // extract fn args attributes before parsing to tokens stream
-                let args_attrs = extract_args_attrs(&mut f.sig)?;
+                // extract fn args attributes before parsing to tokens stream;
+                // `slice_to_array` is irrelevant for exported free functions.
+                let args_attrs = extract_args_attrs(&mut f.sig, false)?;
                 let comments = extract_doc_comments(&f.attrs);
                 // If the function isn't used for anything other than being exported to JS,
                 // it'll be unused when not building for the Wasm target and produce a
@@ -1929,7 +1961,10 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         }
 
         let comments = extract_doc_comments(&self.attrs);
-        let args_attrs: Vec<FnArgAttrs> = extract_args_attrs(&mut self.sig)?;
+        // `slice_to_array` is meaningless on exported impl-block methods (the
+        // attribute only changes the outgoing-argument codegen for imported
+        // functions), so we always pass `false` here.
+        let args_attrs: Vec<FnArgAttrs> = extract_args_attrs(&mut self.sig, false)?;
         let (function, method_self) = function_from_decl(
             &self.sig.ident,
             &opts,
@@ -2397,10 +2432,12 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
         let module = module_from_opts(program, &opts)
             .map_err(|e| errors.push(e))
             .unwrap_or_default();
+        let slice_to_array = opts.slice_to_array().is_some();
         for item in self.items.into_iter() {
             let ctx = ForeignItemCtx {
                 module: module.clone(),
                 js_namespace: js_namespace.clone(),
+                slice_to_array,
             };
             if let Err(e) = item.macro_parse(program, ctx) {
                 errors.push(e);
@@ -2415,6 +2452,10 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
 struct ForeignItemCtx {
     module: Option<ast::ImportModule>,
     js_namespace: Option<JsNamespace>,
+    /// Block-level `slice_to_array` flag inherited by every foreign
+    /// function inside the `extern "C"` block. Per-fn / per-arg
+    /// `slice_to_array` ORs on top of this.
+    slice_to_array: bool,
 }
 
 impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
@@ -2455,6 +2496,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .or(ctx.js_namespace)
             .map(|s| s.0);
         let module = ctx.module;
+        let block_slice_to_array = ctx.slice_to_array;
         let reexport = item_opts.reexport().cloned();
 
         // Symbol-form `js_name` on a free imported function only makes sense
@@ -2481,7 +2523,9 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
         }
 
         let kind = match self {
-            syn::ForeignItem::Fn(f) => f.convert((program, item_opts, &module))?,
+            syn::ForeignItem::Fn(f) => {
+                f.convert((program, item_opts, &module, block_slice_to_array))?
+            }
             syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
             syn::ForeignItem::Static(s) => s.convert((program, item_opts, &module))?,
             _ => panic!("only foreign functions/types allowed for now"),

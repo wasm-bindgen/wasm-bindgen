@@ -488,6 +488,11 @@ pub struct FunctionArgumentData {
     pub optional: bool,
     /// Specifies the argument description
     pub desc: Option<String>,
+    /// When set, an `&[T]` (or `Option<&[T]>`) argument is converted to a
+    /// freshly-allocated buffer the JS side observes as a plain `Array`
+    /// rather than a typed array. Only meaningful for outgoing arguments
+    /// (Rust calling JS); ignored on exported functions.
+    pub slice_to_array: bool,
 }
 
 /// Information about a Struct being exported

@@ -1833,6 +1833,42 @@ fn instruction(
             js.push(format!("v{i}"))
         }
 
+        Instruction::VectorLoadAsArray { kind, mem, free } => {
+            // The wire is always `WasmSlice` (ptr+len). The buffer
+            // ownership story differs by element kind though, which is
+            // what makes the `slice_to_array` codegen efficient on the
+            // Rust side:
+            //
+            // * Primitive element kinds: the wire is a *borrow* of the
+            //   caller's slice memory — the Rust side did no allocation.
+            //   We materialise a plain `Array` via
+            //   `Array.from(typedArrayView)` and never free.
+            // * String / externref kinds: the wire is a freshly
+            //   allocated `Box<[u32]>` of externref indices that JS
+            //   owns; the helper drops the externrefs as it reads them
+            //   into a plain `Array`, and we free the index buffer.
+            let len = js.pop();
+            let ptr = js.pop();
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let i = js.tmp();
+            match kind {
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    let free = js.cx.export_name_of(*free);
+                    js.prelude(&format!("var v{i} = {f}({ptr}, {len});"));
+                    js.prelude(&format!(
+                        "wasm.{free}({ptr}, {len} * {size}, {size});",
+                        size = kind.size()
+                    ));
+                }
+                _ => {
+                    // Primitive borrow — no free.
+                    js.prelude(&format!("var v{i} = Array.from({f}({ptr}, {len}));"));
+                    let _ = free;
+                }
+            }
+            js.push(format!("v{i}"))
+        }
+
         Instruction::OptionVectorLoad { kind, mem, free } => {
             let len = js.pop();
             let ptr = js.pop();
@@ -1846,6 +1882,34 @@ fn instruction(
                 "wasm.{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
+            js.prelude("}");
+            js.push(format!("v{i}"));
+        }
+
+        Instruction::OptionVectorLoadAsArray { kind, mem, free } => {
+            // `Option<&[T]>` counterpart of `VectorLoadAsArray`. Same
+            // borrow-vs-owned distinction by element kind; see the arm
+            // above for the rationale.
+            let len = js.pop();
+            let ptr = js.pop();
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let i = js.tmp();
+            js.prelude(&format!("let v{i};"));
+            js.prelude(&format!("if ({ptr} !== 0) {{"));
+            match kind {
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    let free = js.cx.export_name_of(*free);
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+                    js.prelude(&format!(
+                        "wasm.{free}({ptr}, {len} * {size}, {size});",
+                        size = kind.size()
+                    ));
+                }
+                _ => {
+                    js.prelude(&format!("v{i} = Array.from({f}({ptr}, {len}));"));
+                    let _ = free;
+                }
+            }
             js.prelude("}");
             js.push(format!("v{i}"));
         }
