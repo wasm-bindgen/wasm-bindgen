@@ -1,0 +1,23 @@
+crates/shared/src/schema_hash_approval.rs
+  d91764b7d6079bfb 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "1e3e38a918030799903ddb22eef02fbd7afe06a0",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
