@@ -183,8 +183,10 @@ pub enum ImportKind {
     String(ImportString),
     /// Importing a type/class
     Type(ImportType),
-    /// Importing a JS enum
+    /// Importing a JS string enum
     Enum(StringEnum),
+    /// Importing a dynamic union (with fallback variant support)
+    DynamicUnion(DynamicUnion),
 }
 
 /// A function being imported from JS
@@ -390,8 +392,44 @@ pub struct StringEnum {
     pub rust_attrs: Vec<syn::Attribute>,
     /// Whether to generate a typescript definition for this enum
     pub generate_typescript: bool,
+    /// Whether to suppress the `export` keyword on the generated TS type
+    /// alias (matches the existing flag on c-style enums and structs).
+    pub private: bool,
     /// The namespace to export the enum through, if any
     pub js_namespace: Option<Vec<String>>,
+    /// Path to wasm_bindgen
+    pub wasm_bindgen: Path,
+}
+
+/// The metadata for a Dynamic Union (an untagged JS-side union of string
+/// literals and single-field tuple variants, dispatched at runtime).
+#[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub struct DynamicUnion {
+    /// The Rust enum's visibility
+    pub vis: syn::Visibility,
+    /// The Rust enum's identifiers
+    pub name: Ident,
+    /// The name of this enum in JS/TS code
+    pub js_name: String,
+    /// The Rust identifiers for the variants
+    pub variants: Vec<Ident>,
+    /// The JS string values of the known string variants
+    pub variant_values: Vec<String>,
+    /// The field types for each variant (empty for known string variants, one element for fallback variant)
+    pub variant_fields: Vec<Vec<syn::Type>>,
+    /// The doc comments on this enum, if any
+    pub comments: Vec<String>,
+    /// Attributes to apply to the Rust enum
+    pub rust_attrs: Vec<syn::Attribute>,
+    /// Whether to generate a typescript definition for this enum
+    pub generate_typescript: bool,
+    /// Whether to suppress the `export` keyword on the generated TS type alias.
+    pub private: bool,
+    /// Whether the last tuple variant should act as an unconditional
+    /// fallback rather than a runtime-checked variant. Set via the
+    /// `#[wasm_bindgen(fallback)]` attribute on the enum.
+    pub fallback: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }
@@ -623,6 +661,7 @@ impl ImportKind {
             ImportKind::String(_) => false,
             ImportKind::Type(_) => false,
             ImportKind::Enum(_) => false,
+            ImportKind::DynamicUnion(_) => false,
         }
     }
 }

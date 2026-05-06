@@ -141,6 +141,14 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32],
                 );
             },
+            Descriptor::DynamicUnion { name, variant_types: _ } => {
+                // Dynamic unions use the JsValue ABI (externref).
+                self.instruction(
+                    &[AdapterType::DynamicUnion(name.clone())],
+                    Instruction::I32FromExternrefOwned,
+                    &[AdapterType::I32],
+                );
+            },
             Descriptor::Ref(d) => self.incoming_ref(false, d)?,
             Descriptor::RefMut(d) => self.incoming_ref(true, d)?,
             Descriptor::Option(d) => self.incoming_option(d)?,
@@ -306,6 +314,20 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::NamedExternref(name) => {
                 self.instruction(
                     &[AdapterType::NamedExternref(name.clone()).option()],
+                    Instruction::I32FromOptionExternref {
+                        table_and_alloc: None,
+                    },
+                    &[AdapterType::I32],
+                );
+            }
+            Descriptor::DynamicUnion {
+                name,
+                variant_types: _,
+            } => {
+                // Dynamic unions share the externref ABI; reuse the externref
+                // option lowering.
+                self.instruction(
+                    &[AdapterType::DynamicUnion(name.clone()).option()],
                     Instruction::I32FromOptionExternref {
                         table_and_alloc: None,
                     },

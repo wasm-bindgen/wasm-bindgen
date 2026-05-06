@@ -54,6 +54,28 @@
 * Added level 2 bindings for `ViewTransition` to `web-sys`.
   [#5138](https://github.com/wasm-bindgen/wasm-bindgen/pull/5138)
 
+* Add support for dynamic unions: a `#[wasm_bindgen]` enum that mixes string-literal
+  variants with single-field tuple variants is now exported as an untagged TypeScript
+  union and dispatched dynamically at the JS↔Rust boundary. The new enum-level
+  `#[wasm_bindgen(fallback)]` attribute makes the last tuple variant an
+  unconditional catch-all, supporting unions whose trailing variant has no
+  runtime check (e.g., interface-only imports). String enums and dynamic
+  unions now emit `export type` (was bare `type`) so the alias is a named
+  export, and both honour the `private` flag to suppress the keyword.
+  [#4734](https://github.com/wasm-bindgen/wasm-bindgen/pull/4734)
+  [#2153](https://github.com/wasm-bindgen/wasm-bindgen/issues/2153)
+  [#2088](https://github.com/wasm-bindgen/wasm-bindgen/issues/2088)
+
+### Fixed
+
+* `TryFromJsValue` for C-style enums no longer accepts non-numeric values
+  via JS unary `+` coercion. Previously calling `dyn_into::<MyEnum>()` on
+  a string would silently coerce it via `+"foo"` (yielding `NaN`, then
+  `NaN as u32 = 0`) and could match a discriminant by accident; the
+  conversion now returns `None` for any value that is not a JS number.
+  [#4734](https://github.com/wasm-bindgen/wasm-bindgen/pull/4734)
+
+
 ### Fixed
 
 * Fix compilation failure with `no_std` + `release`

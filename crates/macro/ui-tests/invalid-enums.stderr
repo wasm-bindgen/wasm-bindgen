@@ -4,12 +4,6 @@ error: cannot export empty enums to JS
 4 | enum A {}
   | ^^^^^^^^^
 
-error: enum variants with associated data are not supported with #[wasm_bindgen]
- --> ui-tests/invalid-enums.rs:8:6
-  |
-8 |     D(u32),
-  |      ^^^^^
-
 error: C-style enums with #[wasm_bindgen] may only have numeric literal values that fit in a 32-bit integer as discriminants. Expressions or variables are not supported.
   --> ui-tests/invalid-enums.rs:13:9
    |
@@ -75,3 +69,21 @@ error: C-style enums with #[wasm_bindgen] can only support signed numbers that c
    |
 75 |     B = 2147483648, // i32::MAX + 1
    |     ^^^^^^^^^^^^^^
+
+error: enum variants cannot have named fields
+  --> ui-tests/invalid-enums.rs:82:9
+   |
+82 |     Bad { x: u32 },
+   |         ^^^^^^^^^^
+
+error: enum variants with fields must have exactly one unnamed field
+  --> ui-tests/invalid-enums.rs:89:8
+   |
+89 |     Bad(u32, u32),
+   |        ^^^^^^^^^^
+
+error: all unit variants of a string enum must have a string value
+  --> ui-tests/invalid-enums.rs:96:5
+   |
+96 |     Bare,
+   |     ^^^^

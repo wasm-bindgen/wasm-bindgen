@@ -40,6 +40,10 @@ pub enum Descriptor {
         invalid: u32,
         hole: u32,
     },
+    DynamicUnion {
+        name: String,
+        variant_types: Vec<Descriptor>,
+    },
     RustStruct(String),
     Char,
     Option(Box<Descriptor>),
@@ -141,6 +145,18 @@ impl Descriptor {
                     name,
                     invalid,
                     hole,
+                }
+            }
+            DYNAMIC_UNION => {
+                let name = get_string(data);
+                let type_count = get(data);
+                let mut variant_types = Vec::new();
+                for _ in 0..type_count {
+                    variant_types.push(Descriptor::_decode(data, clamped));
+                }
+                Descriptor::DynamicUnion {
+                    name,
+                    variant_types,
                 }
             }
             RUST_STRUCT => {

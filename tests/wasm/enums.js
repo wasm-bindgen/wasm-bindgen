@@ -42,3 +42,16 @@ exports.js_renamed_enum = b => {
 exports.js_enum_with_error_variant = () => {
     assert.strictEqual(wasm.EnumWithErrorVariant.Error, 2);
 };
+
+// Helper to create a Foo object for testing
+exports.makeFoo = () => {
+    return { type: 'Foo', data: 'test' };
+};
+
+// Round-trip helpers that force the wasm/JS boundary so the dynamic-union
+// dispatcher actually runs. Each just calls back into the corresponding
+// exported Rust function with the value unchanged.
+exports.js_string_enum_fallback_roundtrip = e => wasm.string_enum_fallback_roundtrip(e);
+exports.js_nested_union_roundtrip = o => wasm.nested_union_roundtrip(o);
+exports.js_optional_union_roundtrip = o => wasm.optional_union_roundtrip(o);
+exports.js_fallback_union_roundtrip = u => wasm.fallback_union_roundtrip(u);

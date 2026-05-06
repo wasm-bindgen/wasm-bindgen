@@ -721,6 +721,7 @@ impl<'a> Context<'a> {
             decode::ImportKind::String(s) => self.import_string(s),
             decode::ImportKind::Type(_) => self.import_type(import),
             decode::ImportKind::Enum(e) => self.string_enum(e),
+            decode::ImportKind::DynamicUnion(e) => self.dynamic_union(e),
         }
     }
 
@@ -1119,6 +1120,7 @@ impl<'a> Context<'a> {
                 .map(|v| v.to_string())
                 .collect(),
             generate_typescript: string_enum.generate_typescript,
+            private: string_enum.private,
             js_namespace: string_enum
                 .js_namespace
                 .as_ref()
@@ -1130,6 +1132,58 @@ impl<'a> Context<'a> {
             .entry(aux.name.clone())
             .and_modify(|existing| {
                 result = Err(anyhow!("duplicate string enums:\n{existing:?}\n{aux:?}"));
+            })
+            .or_insert(aux);
+        result
+    }
+
+    fn dynamic_union(&mut self, dynamic_union: &decode::DynamicUnion<'_>) -> Result<(), Error> {
+        use crate::wit::AuxDynamicUnionVariant;
+
+        let mut variants = Vec::new();
+
+        // Add all string variants as pre-rendered literals.
+        for string_variant in dynamic_union.variant_strings.iter() {
+            variants.push(AuxDynamicUnionVariant::Literal(format!(
+                "\"{string_variant}\""
+            )));
+        }
+
+        // Add all type variants by looking up their descriptors. Defer the
+        // TypeScript rendering to JS-generation time so that renamed types
+        // resolve through `qualified_to_identifier`.
+        for idx in 0..dynamic_union.variant_type_cnt {
+            let descriptor_name =
+                wasm_bindgen_shared::dynamic_union_variant(dynamic_union.name, idx);
+            let descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(|| {
+                anyhow!("dynamic union variant descriptor not found: {descriptor_name}")
+            })?;
+
+            let mut builder = self.instruction_builder(false);
+            builder.outgoing(&descriptor)?;
+            if builder.output.len() != 1 {
+                bail!(
+                    "Expected exactly one AdapterType for dynamic union variant, got {}",
+                    builder.output.len()
+                );
+            }
+            variants.push(AuxDynamicUnionVariant::Type(builder.output[0].clone()));
+        }
+
+        let aux = AuxDynamicUnion {
+            name: dynamic_union.name.to_string(),
+            comments: concatenate_comments(&dynamic_union.comments),
+            variants,
+            generate_typescript: dynamic_union.generate_typescript,
+            private: dynamic_union.private,
+            fallback: dynamic_union.fallback,
+        };
+        let mut result = Ok(());
+        self.aux
+            .dynamic_unions
+            .entry(aux.name.clone())
+            .and_modify(|existing| {
+                result = Err(anyhow!("duplicate dynamic unions:\n{existing:?}\n{aux:?}"));
             })
             .or_insert(aux);
         result

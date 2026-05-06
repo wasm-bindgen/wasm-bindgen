@@ -106,6 +106,7 @@ macro_rules! attrgen {
             (skip_typescript, false, SkipTypescript(Span)),
             (skip_jsdoc, false, SkipJsDoc(Span)),
             (private, false, Hide(Span)),
+            (fallback, false, Fallback(Span)),
             (main, false, Main(Span)),
             (start, false, Start(Span)),
             (wasm_bindgen, false, WasmBindgen(Span, syn::Path)),
@@ -1979,6 +1980,7 @@ fn string_enum(
     program: &mut ast::Program,
     js_name: String,
     generate_typescript: bool,
+    private: bool,
     comments: Vec<String>,
     js_namespace: Option<Vec<String>>,
 ) -> Result<(), Diagnostic> {
@@ -2020,7 +2022,89 @@ fn string_enum(
             comments,
             rust_attrs: enum_.attrs,
             generate_typescript,
+            private,
             js_namespace,
+            wasm_bindgen: program.wasm_bindgen.clone(),
+        }),
+    });
+
+    Ok(())
+}
+
+fn dynamic_union(
+    enum_: syn::ItemEnum,
+    program: &mut ast::Program,
+    js_name: String,
+    generate_typescript: bool,
+    private: bool,
+    fallback: bool,
+    comments: Vec<String>,
+) -> Result<(), Diagnostic> {
+    let mut variants = vec![];
+    let mut variant_values = vec![];
+    let mut variant_fields = vec![];
+
+    for v in enum_.variants.iter() {
+        // Check if this is a fallback variant (has fields)
+        match &v.fields {
+            syn::Fields::Unit => {
+                // Regular string enum variant - must have a discriminant
+                let (_, expr) = match &v.discriminant {
+                    Some(pair) => pair,
+                    None => {
+                        bail_span!(
+                            v,
+                            "all unit variants of a string enum must have a string value"
+                        );
+                    }
+                };
+                match get_expr(expr) {
+                    syn::Expr::Lit(syn::ExprLit {
+                        attrs: _,
+                        lit: syn::Lit::Str(str_lit),
+                    }) => {
+                        variants.push(v.ident.clone());
+                        variant_values.push(str_lit.value());
+                        variant_fields.push(Vec::new());
+                    }
+                    expr => bail_span!(
+                        expr,
+                        "enums with #[wasm_bindgen] cannot mix string and non-string values",
+                    ),
+                }
+            }
+            syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+                // Fallback variant - add it with an empty string value and the field type
+                // (we'll handle this specially in codegen)
+                variants.push(v.ident.clone());
+                variant_values.push(String::new());
+                variant_fields.push(vec![fields.unnamed.first().unwrap().ty.clone()]);
+            }
+            _ => {
+                bail_span!(
+                    v.fields,
+                    "string enum variants with fields must have exactly one unnamed field"
+                );
+            }
+        }
+    }
+
+    program.imports.push(ast::Import {
+        module: None,
+        js_namespace: None,
+        reexport: None,
+        kind: ast::ImportKind::DynamicUnion(ast::DynamicUnion {
+            vis: enum_.vis,
+            name: enum_.ident,
+            js_name,
+            variants,
+            variant_values,
+            variant_fields,
+            comments,
+            rust_attrs: enum_.attrs,
+            generate_typescript,
+            private,
+            fallback,
             wasm_bindgen: program.wasm_bindgen.clone(),
         }),
     });
@@ -2077,18 +2161,10 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         if self.variants.is_empty() {
             bail_span!(self, "cannot export empty enums to JS");
         }
-        for variant in self.variants.iter() {
-            match variant.fields {
-                syn::Fields::Unit => (),
-                _ => bail_span!(
-                    variant.fields,
-                    "enum variants with associated data are not supported with #[wasm_bindgen]"
-                ),
-            }
-        }
 
         let generate_typescript = opts.skip_typescript().is_none();
         let private = opts.private().is_some();
+        let fallback = opts.fallback().is_some();
         let comments = extract_doc_comments(&self.attrs);
         let js_name = opts
             .js_name_no_symbol("enums with #[wasm_bindgen]")?
@@ -2103,6 +2179,44 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
 
         let js_namespace = opts.js_namespace().map(|(ns, _)| ns.0);
         opts.check_used();
+
+        // Check if the enum is a dynamic union, based on having singular unnamed variants
+        let mut has_unnamed_fields = false;
+        for variant in self.variants.iter() {
+            match &variant.fields {
+                syn::Fields::Unit => (), // Unit variants are always allowed
+                syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+                    has_unnamed_fields = true;
+                }
+                syn::Fields::Unnamed(_) => bail_span!(
+                    variant.fields,
+                    "enum variants with fields must have exactly one unnamed field"
+                ),
+                syn::Fields::Named(_) => {
+                    bail_span!(variant.fields, "enum variants cannot have named fields")
+                }
+            }
+        }
+        if has_unnamed_fields {
+            return dynamic_union(
+                self,
+                program,
+                js_name,
+                generate_typescript,
+                private,
+                fallback,
+                comments,
+            );
+        }
+
+        // The `fallback` attribute only applies to dynamic unions.
+        if fallback {
+            bail_span!(
+                self,
+                "the `fallback` attribute is only supported on dynamic unions \
+                 (enums with at least one tuple variant)"
+            );
+        }
 
         // Check if the enum is a string enum, by checking whether any variant has a string discriminant.
         let is_string_enum = self.variants.iter().any(|v| {
@@ -2123,6 +2237,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
                 program,
                 js_name,
                 generate_typescript,
+                private,
                 comments,
                 js_namespace,
             );
@@ -2415,6 +2530,9 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 }
                 ast::ImportKind::Enum(_) => {
                     // string enums aren't possible here
+                }
+                ast::ImportKind::DynamicUnion(_) => {
+                    // dynamic unions aren't possible here
                 }
             }
         }

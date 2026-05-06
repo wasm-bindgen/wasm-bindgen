@@ -2,6 +2,7 @@
 #![allow(clippy::disallowed_names)]
 
 pub mod custom_section;
+pub mod dynamic_union;
 pub mod enums;
 pub mod function_attrs;
 pub mod getters_setters;
