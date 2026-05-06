@@ -26,6 +26,15 @@
 * Fix compilation failure with `no_std` + `release`
   [#5134](https://github.com/wasm-bindgen/wasm-bindgen/pull/5134)
 
+* Raw identifiers (`r#name`) on enums, enum variants, extern types, statics,
+  and `impl` blocks no longer leak the `r#` prefix into generated JS / TS
+  output and shim names. The Rust-side identifier and the JS-side name are
+  now tracked separately for enum variants, and all known identifier
+  fallback paths apply `Ident::unraw()` so e.g.
+  `pub enum r#Enum { r#A }` generates `Enum.A` instead of producing
+  syntactically invalid JS.
+  [#4323](https://github.com/wasm-bindgen/wasm-bindgen/pull/4323)
+
 ### Changed
 
 * `js_sys::DataView` now implements the `js_sys::TypedArray` trait. A

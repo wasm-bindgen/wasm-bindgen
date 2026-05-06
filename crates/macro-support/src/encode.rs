@@ -274,9 +274,9 @@ fn shared_enum<'a>(e: &'a ast::Enum, intern: &'a Interner) -> Enum<'a> {
     }
 }
 
-fn shared_variant<'a>(v: &'a ast::Variant, intern: &'a Interner) -> EnumVariant<'a> {
+fn shared_variant<'a>(v: &'a ast::Variant, _intern: &'a Interner) -> EnumVariant<'a> {
     EnumVariant {
-        name: intern.intern(&v.name),
+        name: &v.js_name,
         value: v.value,
         comments: v.comments.iter().map(|s| &**s).collect(),
     }
