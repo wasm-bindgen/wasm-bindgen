@@ -6,7 +6,7 @@ export function foo(a) {
     const len0 = WASM_VECTOR_LEN;
     wasm.foo(ptr0, len0);
 }
-export function __wbg___wbindgen_throw_9c75d47bf9e7731e(arg0, arg1) {
+export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

@@ -50,7 +50,7 @@ export function __wbg_Symboliterator_9a3ae6c7dad7d3ed(arg0) {
 export function __wbg_SymboltoPrimitive_4bd6ba9d43ef2762(arg0, arg1) {
     SomeClass[Symbol.toPrimitive](getStringFromWasm0(arg0, arg1));
 }
-export function __wbg___wbindgen_throw_9c75d47bf9e7731e(arg0, arg1) {
+export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_import_static_symbol_getter_00eaaec525eefd39() {
