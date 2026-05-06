@@ -1,0 +1,69 @@
+crates/cli/tests/reference/dynamic-union.wat
+  d91764b7d6079bfb 25,37-45
+crates/macro-support/src/encode.rs
+  d91764b7d6079bfb 363,427,446
+crates/cli/tests/reference/dynamic-union.bg.js
+  d91764b7d6079bfb 40-48
+crates/cli-support/src/wit/mod.rs
+  d91764b7d6079bfb 1179
+crates/cli-support/src/wit/outgoing.rs
+  d91764b7d6079bfb 112,688-689
+CHANGELOG.md
+  d91764b7d6079bfb 45-50,53-62
+tests/wasm/enums.rs
+  d91764b7d6079bfb 18-25,145-148,168,173,178,183,188,194,198,203,208,241,248,254,260,266,269,274,279,281-317
+crates/cli-support/src/wit/nonstandard.rs
+  d91764b7d6079bfb 265-270
+crates/macro-support/src/codegen.rs
+  d91764b7d6079bfb 1492-1511,1641,1712-1740,1742-1743,1746-1766,1768-1769,2791
+tests/wasm/enum_vecs.js
+  d91764b7d6079bfb 17,21-23,25
+crates/macro/ui-tests/invalid-enums.rs
+  d91764b7d6079bfb 78-99
+crates/shared/src/lib.rs
+  d91764b7d6079bfb 140
+benches/enum_roundtrip.rs
+  d91764b7d6079bfb 1-74
+crates/cli/tests/reference/dynamic-union.js
+  d91764b7d6079bfb 8
+crates/macro-support/src/parser.rs
+  d91764b7d6079bfb 109,1827,1894,1954,1994,1996-2004
+crates/shared/src/schema_hash_approval.rs
+  d91764b7d6079bfb 11
+guide/src/reference/types/enums.md
+  d91764b7d6079bfb 112,115-161,163-238
+tests/wasm/enums.js
+  d91764b7d6079bfb 50-57
+crates/typescript-tests/src/dynamic_union.rs
+  d91764b7d6079bfb 31-35,40
+crates/cli/tests/reference/dynamic-union.d.ts
+  d91764b7d6079bfb 4,13-14
+crates/cli/tests/reference/dynamic-union.rs
+  d91764b7d6079bfb 65-78
+crates/macro-support/src/ast.rs
+  d91764b7d6079bfb 404-405,429-432
+crates/macro/ui-tests/invalid-enums.stderr
+  d91764b7d6079bfb 72-89
+crates/cli-support/src/wit/incoming.rs
+  d91764b7d6079bfb 145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a600f54572082289e3ec591db68d5d5913566865",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 496,
+      "total_deletions": 107,
+      "accepted_lines": 488,
+      "overriden_lines": 0
+    }
+  }
+}
